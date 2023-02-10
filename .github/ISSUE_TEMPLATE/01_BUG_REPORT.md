@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Create a report to help Quaireaux to improve
+about: Create a report to help Kakarot to improve
 title: "bug: "
 labels: "bug"
 assignees: ""
@@ -8,7 +8,7 @@ assignees: ""
 
 # Bug Report
 
-**Quaireaux version:**
+**Kakarot version:**
 
 <!-- Please specify commit or tag version. -->
 

@@ -1,11 +1,14 @@
-// Math module
-mod math;
+// Kakarot main module
+mod kakarot;
 
-// Data structures module
-mod data_structures;
+// Memory module
+mod memory;
 
-// Demo module
-mod demo;
+// Stack module
+mod stack;
+
+// Instructions module
+mod instructions;
 
 // Utils module
 mod utils;

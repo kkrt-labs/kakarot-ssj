@@ -1,4 +1,4 @@
-//! Utilities for quaireaux standard library.
+//! Utilities for kakarot standard library.
 use array::ArrayTrait;
 use option::OptionTrait;
 

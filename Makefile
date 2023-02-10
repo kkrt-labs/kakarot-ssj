@@ -1,7 +1,7 @@
 .PHONY: default
 
 # Configuration
-PROJECT_NAME = quaireaux
+PROJECT_NAME = kakarot
 ENTRYPOINT = .
 TEST_ENTRYPOINT = .
 BUILD_DIR = build

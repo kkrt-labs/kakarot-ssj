@@ -1,32 +1,33 @@
+<p align="center">
+    <img src="docs/img/kakarot_github_banner.png" height="200">
+</p>
 <div align="center">
-  <h1>Quaireaux</h1>
-  <img src="docs/images/logo.png" height="400" width="400">
-  <br />
-  <a href="https://github.com/stark-rocket/quaireaux/issues/new?assignees=&labels=bug&template=01_BUG_REPORT.md&title=bug%3A+">Report a Bug</a>
-  -
-  <a href="https://github.com/stark-rocket/quaireaux/issues/new?assignees=&labels=enhancement&template=02_FEATURE_REQUEST.md&title=feat%3A+">Request a Feature</a>
-  -
-  <a href="https://github.com/stark-rocket/quaireaux/discussions">Ask a Question</a>
+  <h3 align="center">
+  EVM interpreter written in Cairo, a sort of ZK-EVM emulator, leveraging STARK
+  proof system.
+  </h3>
 </div>
+
 
 <div align="center">
 <br />
 
-[![GitHub Workflow Status](https://github.com/stark-rocket/quaireaux/actions/workflows/test.yml/badge.svg)](https://github.com/stark-rocket/quaireaux/actions/workflows/test.yml)
-[![Project license](https://img.shields.io/github/license/stark-rocket/quaireaux.svg?style=flat-square)](LICENSE)
-[![Pull Requests welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg?style=flat-square)](https://github.com/stark-rocket/quaireaux/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sayajin-labs/kakarot-ssj/test.yml?branch=main)
+![GitHub](https://img.shields.io/github/license/sayajin-labs/kakarot-ssj?style=flat-square&logo=github)
+![GitHub contributors](https://img.shields.io/github/contributors/sayajin-labs/kakarot-ssj?logo=github&style=flat-square)
+![GitHub top language](https://img.shields.io/github/languages/top/sayajin-labs/kakarot-ssj?style=flat-square)
+[![Telegram](https://img.shields.io/badge/telegram-Kakarot-yellow.svg?logo=telegram)](https://t.me/KakarotZkEvm)
+![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)
+[![Read FAQ](https://img.shields.io/badge/Ask%20Question-Read%20FAQ-000000)](https://www.newton.so/view?tags=kakarot)
+![GitHub Repo stars](https://img.shields.io/github/stars/asayajin-labs/kakarot-ssj?style=social)
+[![Twitter Follow](https://img.shields.io/twitter/follow/KakarotZkEvm?style=social)](https://twitter.com/KakarotZkEvm)
 
 </div>
 
 <details>
 <summary>Table of Contents</summary>
 
-- [Report a Bug](#report-a-bug)
-- [Request a Feature](#request-a-feature)
 - [About](#about)
-- [Features](#features)
-  - [Data Structures](#data-structures)
-  - [Math](#math)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
@@ -51,22 +52,14 @@
 
 ## About
 
-Quaireaux is a community maintained standard library for Cairo 1.0.
-It is a collection of useful algorithms and data structures implemented in Cairo.
+**Kakarot** is an Ethereum Virtual Machine written in Cairo. It means it can be
+deployed on StarkNet, a layer 2 scaling solution for Ethereum, and run any EVM
+bytecode program. Hence, Kakarot can be used to run Ethereum smart contracts on
+StarkNet. Kakarot is the super sayajin zkEVM! Why? Because:
+`It's over 9000!!!!!`.
 
-## Features
+It is a work in progress, and it is not ready for production.
 
-### Data Structures
-
-- [x] [Merkle Tree](src/data_structures/merkle_tree.cairo)
-- [x] [Queue](src/data_structures/queue.cairo)
-
-### Math
-
-- [x] [Fibonacci](src/math/sequence/fibonacci.cairo)
-- [x] [Zeller's congruence](src/math/zellers_congruence.cairo)
-- [x] [Extended Euclidean Algorithm](src/math/extended_euclidean_algorithm.cairo) 
-- [x] [Karatsuba Multiplication Algorithm](src/math/karatsuba.cairo) 
 ## Getting Started
 
 ### Prerequisites
@@ -107,28 +100,28 @@ make format
 
 ## Roadmap
 
-See the [open issues](https://github.com/stark-rocket/quaireaux/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/sayajin-labs/kakarot-ssj/issues) for a list of proposed features (and known issues).
 
-- [Top Feature Requests](https://github.com/stark-rocket/quaireaux/issues?q=label%3Aenhancement+is%3Aopen+sort%3Areactions-%2B1-desc) (Add your votes using the 👍 reaction)
-- [Top Bugs](https://github.com/stark-rocket/quaireaux/issues?q=is%3Aissue+is%3Aopen+label%3Abug+sort%3Areactions-%2B1-desc) (Add your votes using the 👍 reaction)
-- [Newest Bugs](https://github.com/stark-rocket/quaireaux/issues?q=is%3Aopen+is%3Aissue+label%3Abug)
+- [Top Feature Requests](https://github.com/sayajin-labs/kakarot-ssj/issues?q=label%3Aenhancement+is%3Aopen+sort%3Areactions-%2B1-desc) (Add your votes using the 👍 reaction)
+- [Top Bugs](https://github.com/sayajin-labs/kakarot-ssj/issues?q=is%3Aissue+is%3Aopen+label%3Abug+sort%3Areactions-%2B1-desc) (Add your votes using the 👍 reaction)
+- [Newest Bugs](https://github.com/sayajin-labs/kakarot-ssj/issues?q=is%3Aopen+is%3Aissue+label%3Abug)
 
 ## Support
 
 Reach out to the maintainer at one of the following places:
 
-- [GitHub Discussions](https://github.com/stark-rocket/quaireaux/discussions)
+- [GitHub Discussions](https://github.com/sayajin-labs/kakarot-ssj/discussions)
 - Contact options listed on [this GitHub profile](https://github.com/starknet-exploration)
 
 ## Project assistance
 
-If you want to say **thank you** or/and support active development of Quaireaux:
+If you want to say **thank you** or/and support active development of Kakarot:
 
-- Add a [GitHub Star](https://github.com/stark-rocket/quaireaux) to the project.
-- Tweet about the Quaireaux.
+- Add a [GitHub Star](https://github.com/sayajin-labs/kakarot-ssj) to the project.
+- Tweet about the Kakarot.
 - Write interesting articles about the project on [Dev.to](https://dev.to/), [Medium](https://medium.com/) or your personal blog.
 
-Together, we can make Quaireaux **better**!
+Together, we can make Kakarot **better**!
 
 ## Contributing
 
@@ -138,12 +131,12 @@ Please read [our contribution guidelines](docs/CONTRIBUTING.md), and thank you f
 
 ## Authors & contributors
 
-For a full list of all authors and contributors, see [the contributors page](https://github.com/stark-rocket/quaireaux/contributors).
+For a full list of all authors and contributors, see [the contributors page](https://github.com/sayajin-labs/kakarot-ssj/contributors).
 
 ## Security
 
-Quaireaux follows good practices of security, but 100% security cannot be assured.
-Quaireaux is provided **"as is"** without any **warranty**. Use at your own risk.
+Kakarot follows good practices of security, but 100% security cannot be assured.
+Kakarot is provided **"as is"** without any **warranty**. Use at your own risk.
 
 _For more information and to report security issues, please refer to our [security documentation](docs/SECURITY.md)._
 
@@ -155,7 +148,6 @@ See [LICENSE](LICENSE) for more information.
 
 ## Acknowledgements
 
-- [TheAlgorithms/Rust](https://github.com/TheAlgorithms/Rust) for inspiration regarding the implementation of algorithms.
 
 ## Contributors ✨
 
@@ -167,7 +159,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <table>
   <tbody>
     <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/abdelhamidbakhta"><img src="https://avatars.githubusercontent.com/u/45264458?v=4?s=100" width="100px;" alt="Abdel @ StarkWare "/><br /><sub><b>Abdel @ StarkWare </b></sub></a><br /><a href="https://github.com/keep-starknet-strange/quaireaux/commits?author=abdelhamidbakhta" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/abdelhamidbakhta"><img src="https://avatars.githubusercontent.com/u/45264458?v=4?s=100" width="100px;" alt="Abdel @ StarkWare "/><br /><sub><b>Abdel @ StarkWare </b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=abdelhamidbakhta" title="Code">💻</a></td>
     </tr>
   </tbody>
   <tfoot>
