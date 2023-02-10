@@ -1,13 +1,6 @@
 <p align="center">
     <img src="docs/img/kakarot_github_banner_footer.png" height="200">
 </p>
-<div align="center">
-  <h3 align="center">
-  EVM interpreter written in Cairo, a sort of ZK-EVM emulator, leveraging STARK
-  proof system.
-  </h3>
-</div>
-
 
 <div align="center">
 <br />
