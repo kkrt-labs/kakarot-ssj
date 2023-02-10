@@ -1,5 +1,5 @@
 // Kakarot main module
-mod kakarot;
+mod evm;
 
 // Memory module
 mod memory;
@@ -9,6 +9,9 @@ mod stack;
 
 // Instructions module
 mod instructions;
+
+// Context module
+mod context;
 
 // Utils module
 mod utils;
