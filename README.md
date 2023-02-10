@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="docs/img/kakarot_github_banner.png" height="200">
+    <img src="docs/img/kakarot_github_banner_footer.png" height="200">
 </p>
 <div align="center">
   <h3 align="center">
@@ -19,7 +19,7 @@
 [![Telegram](https://img.shields.io/badge/telegram-Kakarot-yellow.svg?logo=telegram)](https://t.me/KakarotZkEvm)
 ![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)
 [![Read FAQ](https://img.shields.io/badge/Ask%20Question-Read%20FAQ-000000)](https://www.newton.so/view?tags=kakarot)
-![GitHub Repo stars](https://img.shields.io/github/stars/asayajin-labs/kakarot-ssj?style=social)
+![GitHub Repo stars](https://img.shields.io/github/stars/sayajin-labs/kakarot-ssj?style=social)
 [![Twitter Follow](https://img.shields.io/twitter/follow/KakarotZkEvm?style=social)](https://twitter.com/KakarotZkEvm)
 
 </div>
@@ -179,3 +179,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
+
+<p align="center">
+    <img src="docs/img/kakarot_github_banner_footer.png" height="200">
+</p>
