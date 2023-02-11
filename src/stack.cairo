@@ -41,7 +41,6 @@ impl StackImpl of StackTrait {
         self = Stack { data };
     }
 
-    /// TODO: implement this
     /// Pop a value from the stack.
     /// # Arguments
     /// * `self` - The stack
@@ -52,11 +51,11 @@ impl StackImpl of StackTrait {
         let Stack{data: mut data } = self;
         let len = array_len::<Array::<u8>>(ref data);
         // Reconstruct the stack struct
+        let value = array_pop_front::<Array::<u8>>(ref data);
         self = Stack { data };
-        Option::<Array::<u8>>::None(())
+        value
     }
 
-    /// TODO: implement this
     /// Peek the Nth item from the stack.
     /// # Arguments
     /// * `self` - The stack
@@ -81,13 +80,14 @@ impl StackImpl of StackTrait {
         self = Stack { data };
         // Compute the actual index of the underlying array
         let actual_idx = stack_len - idx - 1_u32;
+        let value = array_at::<Array::<u8>>(ref data, actual_idx);
 
         // Deconstruct the stack struct because we consume it
         let Stack{data: mut data } = self;
         //let element = array_at::<Array::<u128>>(data, actual_idx);
 
         self = Stack { data };
-        Option::<Array::<u8>>::None(())
+        Option::<Array::<u8>>::Some(value)
     }
 
     /// Return the length of the stack
