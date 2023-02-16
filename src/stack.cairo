@@ -50,7 +50,7 @@ impl StackImpl of StackTrait {
     fn pop(ref self: Stack) -> Option::<Array::<u8>> {
         // Deconstruct the stack struct because we consume it
         let Stack{data: mut data } = self;
-        let len = array_len::<Array::<u8>>(ref data);
+        let len = array_len::<Array::<u8>>(data);
         // Reconstruct the stack struct
         self = Stack { data };
         Option::<Array::<u8>>::None(())
@@ -66,7 +66,7 @@ impl StackImpl of StackTrait {
     fn peek(ref self: Stack, idx: u32) -> Option::<Array::<u8>> {
         // Deconstruct the stack struct because we consume it
         let Stack{data: mut data } = self;
-        let stack_len = array_len::<Array::<u8>>(ref data);
+        let stack_len = array_len::<Array::<u8>>(data);
         // Index must be positive
         if idx < 0_u32 {
             self = Stack { data };
@@ -96,7 +96,7 @@ impl StackImpl of StackTrait {
     fn len(ref self: Stack) -> u32 {
         // Deconstruct the stack struct because we consume it
         let Stack{data: mut data } = self;
-        let len = array_len::<Array::<u8>>(ref data);
+        let len = array_len::<Array::<u8>>(data);
         // Reconstruct the stack struct
         self = Stack { data };
         len
@@ -105,3 +105,4 @@ impl StackImpl of StackTrait {
 
 impl Array2DU8Drop of Drop::<Array::<Array::<u8>>>;
 impl Array2DU8Copy of Copy::<Array::<Array::<u8>>>;
+
