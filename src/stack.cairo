@@ -1,3 +1,5 @@
+use array::ArrayTrait;
+
 //! Stack module
 /// Stack representation.
 #[derive(Drop, Copy)]
@@ -36,12 +38,11 @@ impl StackImpl of StackTrait {
     fn push(ref self: Stack, value: u256) {
         // Deconstruct the stack struct so we can mutate the data
         let Stack{data: mut data } = self;
-        array_append::<u256>(ref data, value);
+        data.append(value);
         // Reconstruct the stack struct
         self = Stack { data };
     }
 
-    /// TODO: implement this
     /// Pop a value from the stack.
     /// # Arguments
     /// * `self` - The stack
@@ -50,13 +51,13 @@ impl StackImpl of StackTrait {
     fn pop(ref self: Stack) -> Option::<u256> {
         // Deconstruct the stack struct because we consume it
         let Stack{data: mut data } = self;
-        let len = array_len::<u256>(data);
+        let len = data.len();
         // Reconstruct the stack struct
+        let value = data.pop_front();
         self = Stack { data };
-        Option::<u256>::None(())
+        value
     }
 
-    /// TODO: implement this
     /// Peek the Nth item from the stack.
     /// # Arguments
     /// * `self` - The stack
@@ -66,7 +67,7 @@ impl StackImpl of StackTrait {
     fn peek(ref self: Stack, idx: u32) -> Option::<u256> {
         // Deconstruct the stack struct because we consume it
         let Stack{data: mut data } = self;
-        let stack_len = array_len::<u256>(data);
+        let stack_len = data.len();
         // Index must be positive
         if idx < 0_u32 {
             self = Stack { data };
@@ -81,6 +82,7 @@ impl StackImpl of StackTrait {
         self = Stack { data };
         // Compute the actual index of the underlying array
         let actual_idx = stack_len - idx - 1_u32;
+        let value = data.at(actual_idx);
 
         // Deconstruct the stack struct because we consume it
         let Stack{data: mut data } = self;
@@ -95,7 +97,7 @@ impl StackImpl of StackTrait {
     fn len(ref self: Stack) -> u32 {
         // Deconstruct the stack struct because we consume it
         let Stack{data: mut data } = self;
-        let len = array_len::<u256>(data);
+        let len = data.len();
         // Reconstruct the stack struct
         self = Stack { data };
         len
