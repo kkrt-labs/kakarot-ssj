@@ -82,13 +82,13 @@ impl StackImpl of StackTrait {
         self = Stack { data };
         // Compute the actual index of the underlying array
         let actual_idx = stack_len - idx - 1_u32;
-        let value = data.at(actual_idx);
-
+        
         // Deconstruct the stack struct because we consume it
         let Stack{data: mut data } = self;
+        let value = data.get(actual_idx);
 
         self = Stack { data };
-        Option::<u256>::None(())
+        value
     }
 
     /// Return the length of the stack

@@ -22,28 +22,48 @@ fn nominal_case() {
 
 #[test]
 fn stack_should_increment_len_on_push() {
+     // Given
      let u256_val = integer::u256_from_felt(2); 
-
      let mut stack = kakarot::stack::StackImpl::new();
 
+     // When
      stack.push(u256_val);
 
+     // Then
      let stack_len = stack.len();
-      
-     assert(stack_len == 1_u32, 1);
 
+     assert(stack_len == 1_u32, 1);
 }
 
 #[test]
 fn stack_should_pop_pushed_value() {
+    // Given
     let u256_val = integer::u256_from_felt(2); 
-
     let mut stack = kakarot::stack::StackImpl::new();
 
+    // When
     stack.push(u256_val);
 
+    // Then
     let unwrapped_val = stack.pop().unwrap();
 
     assert(unwrapped_val == u256_val, 1);    
+}
 
+#[test]
+fn stack_should_peek_pushed_n_value() {
+    // Given
+    let u256_val1 = integer::u256_from_felt(1); 
+    let u256_val0 = integer::u256_from_felt(2); 
+
+    let mut stack = kakarot::stack::StackImpl::new();
+
+    // When
+    stack.push(u256_val1);
+    stack.push(u256_val0);
+
+    // Then
+    let unwrapped_val = stack.peek(0_u32).unwrap();
+
+    assert(unwrapped_val == u256_val0, 1);    
 }
