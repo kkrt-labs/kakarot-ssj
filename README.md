@@ -153,6 +153,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tbody>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/abdelhamidbakhta"><img src="https://avatars.githubusercontent.com/u/45264458?v=4?s=100" width="100px;" alt="Abdel @ StarkWare "/><br /><sub><b>Abdel @ StarkWare </b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=abdelhamidbakhta" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/jobez"><img src="https://avatars.githubusercontent.com/u/615197?v=4?s=100" width="100px;" alt="johann bestowrous"/><br /><sub><b>johann bestowrous</b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=jobez" title="Code">💻</a></td>
     </tr>
   </tbody>
   <tfoot>
