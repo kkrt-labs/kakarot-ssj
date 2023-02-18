@@ -28,7 +28,7 @@ fn to_non_zero(felt: felt) -> Option::<NonZero::<felt>> {
 
 /// Force conversion from `felt` to `u128`.
 fn unsafe_felt_to_u128(a: felt) -> u128 {
-    let res = u128_try_from_felt(a);
+    let res = integer::u128_try_from_felt(a);
     res.unwrap()
 }
 
@@ -36,13 +36,13 @@ fn unsafe_felt_to_u128(a: felt) -> u128 {
 fn unsafe_euclidean_div_no_remainder(a: felt, b: felt) -> felt {
     let a_u128 = unsafe_felt_to_u128(a);
     let b_u128 = unsafe_felt_to_u128(b);
-    u128_to_felt(a_u128 / b_u128)
+    integer::u128_to_felt(a_u128 / b_u128)
 }
 
 fn unsafe_euclidean_div(a: felt, b: felt) -> (felt, felt) {
     let a_u128 = unsafe_felt_to_u128(a);
     let b_u128 = unsafe_felt_to_u128(b);
-    (u128_to_felt(a_u128 / b_u128), u128_to_felt(a_u128 % b_u128))
+    (integer::u128_to_felt(a_u128 / b_u128), integer::u128_to_felt(a_u128 % b_u128))
 }
 
 fn max(a: felt, b: felt) -> felt {
