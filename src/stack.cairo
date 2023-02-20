@@ -71,12 +71,12 @@ impl StackImpl of StackTrait {
         // Index must be positive
         if idx < 0_u32 {
             self = Stack { data };
-            return Option::<u256>::None(());
+            return Option::<@u256>::None(());
         }
         // Index must be greater than the length of the stack
         if idx >= stack_len {
             self = Stack { data };
-            return Option::<u256>::None(());
+            return Option::<@u256>::None(());
         }
         // Reconstruct the stack struct because next line can panic
         self = Stack { data };

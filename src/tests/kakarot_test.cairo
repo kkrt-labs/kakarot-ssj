@@ -61,8 +61,7 @@ fn stack_should_peek_pushed_n_value() {
     // When
     stack.push(u256_val1);
     stack.push(u256_val0);
-// Then
-// TODO: enable assert when * is implemented for U256
-//let unwrapped_val = stack.peek(0_u32).unwrap();
-//assert(*unwrapped_val == u256_val0, 1);
+    // Then
+    let unwrapped_val = stack.peek(0_u32).unwrap();
+    assert(*unwrapped_val == u256_val0, 1);
 }
