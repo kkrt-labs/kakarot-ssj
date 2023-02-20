@@ -1,3 +1,5 @@
+mod stop_and_arithmetic_operations;
+
 use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionSummary;
 

@@ -24,6 +24,8 @@ struct ExecutionContext {
     gas_used: u64,
     /// The stack.
     stack: Stack,
+    /// Whether the execution context is halted.
+    stopped: bool,
 }
 
 /// Execution context trait.
@@ -34,6 +36,8 @@ trait ExecutionContextTrait {
     fn process_intrinsic_gas_cost(ref self: ExecutionContext);
     /// Debug print the execution context.
     fn print_debug(ref self: ExecutionContext);
+    /// Halts execution.
+    fn stop(ref self: ExecutionContext);
 }
 
 /// `ExecutionContext` implementation.
@@ -43,7 +47,11 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     fn new(call_context: CallContext) -> ExecutionContext {
         let mut stack = StackTrait::new();
         ExecutionContext {
-            call_context: call_context, program_counter: 0_u32, gas_used: 0_u64, stack: stack
+            call_context: call_context,
+            program_counter: 0_u32,
+            gas_used: 0_u64,
+            stack: stack,
+            stopped: false
         }
     }
 
@@ -51,21 +59,23 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     /// TODO: Implement this. For now we just increase the gas used by a hard coded value.
     fn process_intrinsic_gas_cost(ref self: ExecutionContext) {
         // Deconstruct self.
-        let ExecutionContext{call_context: call_context,
-        program_counter: program_counter,
+        let ExecutionContext{call_context,
+        program_counter,
         gas_used: mut gas_used,
-        stack: stack } =
+        stack,
+        stopped } =
             self;
         // TODO: debug `Failed to specialize: `dup<kakarot::context::ExecutionContext>` error
         //let new_gas_used = gas_used + 42_u64;
         // Reconstruct self.
         self = ExecutionContext {
-            call_context: call_context,
-            program_counter: program_counter,
-            gas_used: 42_u64,
-            stack: stack
+            call_context, program_counter, gas_used: 42_u64, stack, stopped, 
         };
     }
+
+    /// Halts execution.
+    /// TODO: implement this.
+    fn stop(ref self: ExecutionContext) {}
 
     /// Debug print the execution context.
     fn print_debug(ref self: ExecutionContext) { // debug::print_felt('gas used');
