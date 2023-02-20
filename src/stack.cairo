@@ -16,7 +16,7 @@ trait StackTrait {
     /// Pop a value from the stack.
     fn pop(ref self: Stack) -> Option::<u256>;
     /// Peek the Nth item from the stack.
-    fn peek(ref self: Stack, idx: u32) -> Option::<u256>;
+    fn peek(ref self: Stack, idx: u32) -> Option::<@u256>;
     /// Return the length of the stack
     fn len(ref self: Stack) -> u32;
 }
@@ -64,7 +64,7 @@ impl StackImpl of StackTrait {
     /// * `idx` - The stack index to peek
     /// # Returns
     /// The peeked value
-    fn peek(ref self: Stack, idx: u32) -> Option::<u256> {
+    fn peek(ref self: Stack, idx: u32) -> Option::<@u256> {
         // Deconstruct the stack struct because we consume it
         let Stack{data: mut data } = self;
         let stack_len = data.len();
@@ -82,7 +82,7 @@ impl StackImpl of StackTrait {
         self = Stack { data };
         // Compute the actual index of the underlying array
         let actual_idx = stack_len - idx - 1_u32;
-        
+
         // Deconstruct the stack struct because we consume it
         let Stack{data: mut data } = self;
         let value = data.get(actual_idx);
