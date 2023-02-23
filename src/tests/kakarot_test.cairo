@@ -7,6 +7,7 @@ use kakarot::evm;
 use kakarot::stack::StackTrait;
 
 #[test]
+#[available_gas(2000000)]
 fn nominal_case() {
     let bytecode = ArrayTrait::<u8>::new();
     let call_data = ArrayTrait::<u8>::new();
@@ -21,6 +22,7 @@ fn nominal_case() {
 
 
 #[test]
+#[available_gas(2000000)]
 fn stack_should_increment_len_on_push() {
     // Given
     let u256_val = integer::u256_from_felt(2);
@@ -36,6 +38,7 @@ fn stack_should_increment_len_on_push() {
 }
 
 #[test]
+#[available_gas(2000000)]
 fn stack_should_pop_pushed_value() {
     // Given
     let u256_val = integer::u256_from_felt(2);
@@ -45,12 +48,13 @@ fn stack_should_pop_pushed_value() {
     stack.push(u256_val);
 
     // Then
-    let unwrapped_val = stack.pop().unwrap();
-
+    let (stack, val) = stack.pop();
+    let unwrapped_val = val.unwrap();
     assert(unwrapped_val == u256_val, 1);
 }
 
 #[test]
+#[available_gas(2000000)]
 fn stack_should_peek_pushed_n_value() {
     // Given
     let u256_val1 = integer::u256_from_felt(1);
@@ -62,6 +66,7 @@ fn stack_should_peek_pushed_n_value() {
     stack.push(u256_val1);
     stack.push(u256_val0);
     // Then
-    let unwrapped_val = stack.peek(0_u32).unwrap();
-    assert(*unwrapped_val == u256_val0, 1);
+    let val = stack.peek();
+    let unwrapped_val = val.unwrap();
+    assert(unwrapped_val == u256_val0, 1);
 }
