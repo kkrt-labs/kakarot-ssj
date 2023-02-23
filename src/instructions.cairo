@@ -55,7 +55,7 @@ impl EVMInstructionsImpl of EVMInstructionsTrait {
 
         if opcode == 0_u8 {
             // STOP
-            stop_and_arithmetic_operations::stop(ref context);
+            stop_and_arithmetic_operations::exec_stop(ref context);
         }
         ExecutionSummary {}
     }
