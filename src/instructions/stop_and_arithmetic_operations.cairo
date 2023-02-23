@@ -1,3 +1,5 @@
+//! Stop and Arithmetic Operations.
+
 // Internal imports
 use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionContextTrait;
