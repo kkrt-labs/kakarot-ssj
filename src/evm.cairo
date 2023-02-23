@@ -12,8 +12,8 @@ fn execute(call_context: CallContext) -> ExecutionSummary {
     ctx.process_intrinsic_gas_cost();
     // Print the execution context.
     ctx.print_debug();
-    let mut evm = EVMInstructionsTrait::new();
+    let mut evm_instructions = EVMInstructionsTrait::new();
     // Execute the transaction.
-    evm.execute(ref ctx)
+    evm_instructions.execute(ref ctx)
 }
 

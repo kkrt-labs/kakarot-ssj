@@ -23,7 +23,7 @@ build: FORCE
 # Run the project
 run:
 	@echo "Running..."
-	cairo-run -p $(ENTRYPOINT)
+	#cairo-run -p $(ENTRYPOINT)
 
 # Test the project
 test:
