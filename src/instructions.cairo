@@ -52,15 +52,11 @@ impl EVMInstructionsImpl of EVMInstructionsTrait {
         //let opcode_felt = (*opcode).into();
         //debug::print_felt(opcode_felt);
         let opcode = 0_u8;
-        let opcode_felt = opcode.into();
-        match opcode_felt {
-            0 => {
-                // STOP
-                stop_and_arithmetic_operations::stop(ref context);
-            },
-            _ => {},
-        }
 
+        if opcode == 0_u8 {
+            // STOP
+            stop_and_arithmetic_operations::stop(ref context);
+        }
         ExecutionSummary {}
     }
 }
