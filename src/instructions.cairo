@@ -47,7 +47,10 @@ impl EVMInstructionsImpl of EVMInstructionsTrait {
     fn execute(ref self: EVMInstructions, ref context: ExecutionContext) -> ExecutionSummary {
         // TODO: investigate why this is not working. The next line triggers this error:
         // thread 'main' panicked at 'Failed to specialize: `dup<kakarot::context::ExecutionContext>`
+        // Retrieve the current program counter.
         //let pc = context.program_counter;
+        // For now we mock the PC to be 0.
+        let pc = 0_u32;
         //let opcode = context.call_context.bytecode.at(pc);
         //let opcode_felt = (*opcode).into();
         //debug::print_felt(opcode_felt);
