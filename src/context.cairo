@@ -38,6 +38,8 @@ trait ExecutionContextTrait {
     fn print_debug(ref self: ExecutionContext);
     /// Halts execution.
     fn stop(ref self: ExecutionContext);
+    /// Returns the stack.
+    fn stack(ref self: ExecutionContext) -> Stack;
 }
 
 /// `ExecutionContext` implementation.
@@ -82,8 +84,12 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     // TODO: debug `Failed to specialize: `dup<kakarot::context::ExecutionContext>` error
     //debug::print_felt(u64_to_felt(self.gas_used));
     }
-}
 
+    /// Returns the stack.
+    fn stack(ref self: ExecutionContext) -> Stack {
+        self.stack
+    }
+}
 
 /// The execution summary.
 #[derive(Drop, Copy)]
