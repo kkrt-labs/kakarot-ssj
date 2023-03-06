@@ -43,7 +43,7 @@ impl EVMInstructionsImpl of EVMInstructionsTrait {
 
     /// Execute the EVM bytecode.
     fn run(ref self: EVMInstructions, ref context: ExecutionContext) {
-        match try_fetch_gas() {
+        match gas::get_gas() {
             Option::Some(_) => {},
             Option::None(_) => {
                 let mut data = ArrayTrait::new();

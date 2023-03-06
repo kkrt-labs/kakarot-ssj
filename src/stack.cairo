@@ -133,7 +133,7 @@ fn array_slice(src: @Array::<u256>, begin: usize, end: usize) -> Array::<u256> {
 fn fill_array_256(ref dst: Array::<u256>, src: @Array::<u256>, index: u32, count: u32) {
     // Check if out of gas.
     // TODO: Remove when automatically handled by compiler.
-    match try_fetch_gas() {
+    match gas::get_gas() {
         Option::Some(_) => {},
         Option::None(_) => {
             let mut data = ArrayTrait::new();

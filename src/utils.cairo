@@ -71,7 +71,7 @@ fn count_digits(num: felt) -> felt {
 fn _count_digits(num: felt, count: felt, divisor: felt) -> felt {
     // Check if out of gas.
     // TODO: Remove when automatically handled by compiler.
-    match try_fetch_gas() {
+    match gas::get_gas() {
         Option::Some(_) => {},
         Option::None(_) => {
             let mut data = ArrayTrait::new();
@@ -95,7 +95,7 @@ fn _count_digits(num: felt, count: felt, divisor: felt) -> felt {
 fn pow(base: felt, exp: felt) -> felt {
     // Check if out of gas.
     // TODO: Remove when automatically handled by compiler.
-    match try_fetch_gas() {
+    match gas::get_gas() {
         Option::Some(_) => {},
         Option::None(_) => {
             let mut data = ArrayTrait::new();
