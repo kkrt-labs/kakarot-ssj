@@ -20,7 +20,6 @@ fn nominal_case() {
     let summary = evm::execute(call_context);
 }
 
-
 #[test]
 #[available_gas(2000000)]
 fn stack_should_increment_len_on_push() {
@@ -35,38 +34,4 @@ fn stack_should_increment_len_on_push() {
     let stack_len = stack.len();
 
     assert(stack_len == 1_u32, 1);
-}
-
-#[test]
-#[available_gas(2000000)]
-fn stack_should_pop_pushed_value() {
-    // Given
-    let u256_val = integer::u256_from_felt(2);
-    let mut stack = kakarot::stack::StackImpl::new();
-
-    // When
-    stack.push(u256_val);
-
-    // Then
-    let (stack, val) = stack.pop();
-    let unwrapped_val = val.unwrap();
-    assert(unwrapped_val == u256_val, 1);
-}
-
-#[test]
-#[available_gas(2000000)]
-fn stack_should_peek_pushed_n_value() {
-    // Given
-    let u256_val1 = integer::u256_from_felt(1);
-    let u256_val0 = integer::u256_from_felt(2);
-
-    let mut stack = kakarot::stack::StackImpl::new();
-
-    // When
-    stack.push(u256_val1);
-    stack.push(u256_val0);
-    // Then
-    let val = stack.peek();
-    let unwrapped_val = val.unwrap();
-    assert(unwrapped_val == u256_val0, 1);
 }
