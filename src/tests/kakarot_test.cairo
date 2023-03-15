@@ -24,7 +24,7 @@ fn nominal_case() {
 #[available_gas(2000000)]
 fn stack_should_increment_len_on_push() {
     // Given
-    let u256_val = integer::u256_from_felt(2);
+    let u256_val = integer::u256_from_felt252(2);
     let mut stack = kakarot::stack::StackImpl::new();
 
     // When

@@ -9,7 +9,7 @@ struct CallContext {
     /// The call data.
     call_data: Array::<u8>,
     /// Amount of native token to transfer.
-    value: felt,
+    value: felt252,
 }
 
 /// The execution context.
@@ -80,9 +80,9 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     fn stop(ref self: ExecutionContext) {}
 
     /// Debug print the execution context.
-    fn print_debug(ref self: ExecutionContext) { // debug::print_felt('gas used');
+    fn print_debug(ref self: ExecutionContext) { // debug::print_felt252('gas used');
     // TODO: debug `Failed to specialize: `dup<kakarot::context::ExecutionContext>` error
-    //debug::print_felt(u64_to_felt(self.gas_used));
+    //debug::print_felt252(u64_to_felt252(self.gas_used));
     }
 
     /// Returns the stack.
@@ -95,5 +95,4 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 #[derive(Drop, Copy)]
 struct ExecutionSummary {}
 
-impl ArrayU8Drop of Drop::<Array::<u8>>;
 impl ArrayU8Copy of Copy::<Array::<u8>>;
