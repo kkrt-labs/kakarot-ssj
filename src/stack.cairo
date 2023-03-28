@@ -1,155 +1,187 @@
-//! Temporary copied from Quaireaux.
-//! Remove when Qaireaux dependencies can be used through Scarb.
 //! Stack implementation.
-//!
 //! # Example
 //! ```
-//! use quaireaux::data_structures::stack::StackTrait;
+//! use kakarot::stack::StackTrait;
 //!
 //! // Create a new stack instance.
 //! let mut stack = StackTrait::new();
-//! // Create an item and push it to the stack.
-//! let mut item:u256 = 1.into();
-//! stack.push(item);
-//! Remove the item from the stack;
-//! let (stack, _) = stack.pop();
+//! let val_1: u256 = 1.into();
+//! let val_2: u256 = 1.into();
+
+//! stack.push(val_1);
+//! stack.push(val_2);
+
+//! let value = stack.pop();
 //! ```
 
 // Core lib imports
-use array::ArrayTrait;
+use dict::Felt252DictTrait;
 use option::OptionTrait;
+use traits::Into;
+use result::ResultTrait;
+use array::ArrayTrait;
 
 const ZERO_USIZE: usize = 0_usize;
 
-#[derive(Copy, Drop)]
 struct Stack {
-    elements: Array::<u256>, 
+    items: Felt252Dict<u128>,
+    len: usize,
+}
+
+impl DestructStack of Destruct::<Stack> {
+    fn destruct(self: Stack) nopanic {
+        self.items.squash();
+    }
 }
 
 trait StackTrait {
-    /// Creates a new Stack instance.
     fn new() -> Stack;
-    /// Pushes a new value onto the stack.
-    fn push(ref self: Stack, value: u256);
-    /// Removes the last item from the stack and returns it, or None if the stack is empty.
-    fn pop(self: Stack) -> (Stack, Option::<u256>);
-    /// Returns the last item from the stack without removing it, or None if the stack is empty.
-    fn peek(self: @Stack) -> Option::<u256>;
-    /// Returns the number of items in the stack.
+    fn push(ref self: Stack, item: u256) -> ();
+    fn pop(ref self: Stack) -> Option<u256>;
+    fn peek(ref self: Stack) -> Option<u256>;
     fn len(self: @Stack) -> usize;
-    /// Returns true if the stack is empty.
     fn is_empty(self: @Stack) -> bool;
 }
 
 impl StackImpl of StackTrait {
-    #[inline(always)]
+    //TODO report bug: using #[inline(new)] causes ap change error
+    // #[inline(always)]
     /// Creates a new Stack instance.
     /// Returns
     /// * Stack The new stack instance.
     fn new() -> Stack {
-        let mut elements = ArrayTrait::<u256>::new();
-        Stack { elements }
+        let items = Felt252DictTrait::<u128>::new();
+        Stack { items, len: 0_usize }
     }
 
-    /// Pushes a new value onto the stack.
-    /// * `self` - The stack to push the value onto.
-    /// * `value` - The value to push onto the stack.
-    fn push(ref self: Stack, value: u256) {
-        let Stack{mut elements } = self;
-        elements.append(value);
-        self = Stack { elements }
+    /// Pushes a new item onto the stack.
+    /// Parameters
+    /// * self The stack instance.
+    /// * item The item to push onto the stack.
+    fn push(ref self: Stack, item: u256) -> () {
+        self.insert_u256(item, self.dict_len());
+        self.len += 1_usize;
     }
 
-
-    /// Removes the last item from the stack and returns it, or None if the stack is empty.
-    /// * `self` - The stack to pop the item off of.
+    /// Pops the top item off the stack.
     /// Returns
-    /// * Stack The stack with the item removed.
-    /// * Option::<u256> The item removed or None if the stack is empty.
-    fn pop(mut self: Stack) -> (Stack, Option::<u256>) {
-        if self.is_empty() {
-            return (self, Option::None(()));
+    /// * Option<u256> The popped item, or None if the stack is empty.
+    fn pop(ref self: Stack) -> Option<u256> {
+        if self.len() == 0_usize {
+            Option::None(())
+        } else {
+            let last_index = self.dict_len() - 2;
+            self.len -= 1_usize;
+            Option::Some(self.get_u256(last_index))
         }
-        // Deconstruct the stack struct because we consume it
-        let Stack{elements: mut elements } = self;
-        let stack_len = elements.len();
-        let last_idx = stack_len - 1_usize;
-
-        let sliced_elements = array_slice(@elements, begin: 0_usize, end: last_idx);
-
-        let value = elements.at(last_idx);
-        // Update the returned stack with the sliced array
-        self = Stack { elements: sliced_elements };
-        (self, Option::Some(*value))
     }
 
-    /// Returns the last item from the stack without removing it, or None if the stack is empty.
-    /// * `self` - The stack to peek the item off of.
+    /// Peeks at the top item on the stack.
     /// Returns
-    /// * Option::<u256> The last item of the stack
-    fn peek(self: @Stack) -> Option::<u256> {
-        if self.is_empty() {
-            return Option::None(());
+    /// * Option<u256> The top item, or None if the stack is empty.
+    fn peek(ref self: Stack) -> Option<u256> {
+        if self.len() == 0_usize {
+            Option::None(())
+        } else {
+            let last_index = self.dict_len() - 2;
+            Option::Some(self.get_u256(last_index))
         }
-        Option::Some(*self.elements.at(self.elements.len() - 1_usize))
     }
 
-    /// Returns the number of items in the stack.
-    /// * `self` - The stack to get the length of.
+    /// Returns the length of the stack.
+    /// Parameters
+    /// * self The stack instance.
     /// Returns
-    /// * usize The number of items in the stack.
+    /// * usize The length of the stack.
     fn len(self: @Stack) -> usize {
-        self.elements.len()
+        *self.len
     }
 
     /// Returns true if the stack is empty.
-    /// * `self` - The stack to check if it is empty.
+    /// Parameters
+    /// * self The stack instance.
     /// Returns
     /// * bool True if the stack is empty, false otherwise.
     fn is_empty(self: @Stack) -> bool {
-        self.len() == ZERO_USIZE
+        *self.len == ZERO_USIZE
     }
 }
 
-impl ArrayU256Copy of Copy::<Array::<u256>>;
-
-/// Returns the slice of an array.
-/// * `arr` - The array to slice.
-/// * `begin` - The index to start the slice at.
-/// * `end` - The index to end the slice at (not included).
-/// # Returns
-/// * `Array::<u256>` - The slice of the array.
-fn array_slice(src: @Array::<u256>, begin: usize, end: usize) -> Array::<u256> {
-    let mut slice = ArrayTrait::<u256>::new();
-    fill_array_256(ref dst: slice, :src, index: begin, count: end);
-    slice
+/// Trait for helping with stack operations on 256-bit unsigned integers
+trait StackU256HelperTrait {
+    fn dict_len(ref self: Stack) -> felt252;
+    fn insert_u256(ref self: Stack, item: u256, index: felt252);
+    fn get_u256(ref self: Stack, index: felt252) -> u256;
 }
 
-// Fill an array with a value.
-/// * `dst` - The array to fill.
-/// * `src` - The array to fill with.
-/// * `index` - The index to start filling at.
-/// * `count` - The number of elements to fill.
-fn fill_array_256(ref dst: Array::<u256>, src: @Array::<u256>, index: u32, count: u32) {
-    // Check if out of gas.
-    // TODO: Remove when automatically handled by compiler.
-    match gas::get_gas() {
-        Option::Some(_) => {},
-        Option::None(_) => {
-            let mut data = ArrayTrait::new();
-            data.append('OOG');
-            panic(data);
-        }
+/// Implementation of `StackU256HelperTrait`
+impl StackU256HelperImpl of StackU256HelperTrait {
+    /// Returns the length of the dictionary
+    ///
+    /// # Returns
+    /// `felt252` - the length of the dictionary
+    fn dict_len(ref self: Stack) -> felt252 {
+        (self.len * 2_usize).into()
     }
 
-    if count == 0_u32 {
-        return ();
+    /// Inserts a 256-bit unsigned integer `item` into the stack at the given `index`
+    ///
+    /// # Arguments
+    /// * `item` - the 256-bit unsigned integer to insert into the stack
+    /// * `index` - the index at which to insert the item in the stack
+    fn insert_u256(ref self: Stack, item: u256, index: felt252) {
+        let dict_len: felt252 = self.dict_len();
+        self.items.insert(dict_len, item.low);
+        self.items.insert(dict_len + 1, item.high);
     }
-    if index >= src.len() {
-        return ();
-    }
-    let element = src.at(index);
-    dst.append(*element);
 
-    fill_array_256(ref dst, src, index + 1_u32, count - 1_u32)
+    /// Gets a 256-bit unsigned integer from the stack at the given `index`
+    ///
+    /// # Arguments
+    /// * `index` - the index of the item to retrieve from the stack
+    ///
+    /// # Returns
+    /// `u256` - the 256-bit unsigned integer retrieved from the stack
+    fn get_u256(ref self: Stack, index: felt252) -> u256 {
+        let low = self.items.get(index);
+        let high = self.items.get(index + 1);
+        let item = u256 { low: low, high: high };
+        item
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::StackTrait;
+    use super::StackU256HelperTrait;
+    use dict::Felt252DictTrait;
+    use traits::Into;
+
+    #[test]
+    fn test_dict_len() {
+        let mut stack = StackTrait::new();
+        stack.len = 1_usize;
+        let dict_len = stack.dict_len();
+        assert(dict_len == 2, 'dict length should be 2');
+    }
+
+    #[test]
+    fn test_insert_u256() {
+        let mut stack = StackTrait::new();
+        let expected: u256 = u256 { low: 100_u128, high: 100_u128 };
+        stack.insert_u256(expected, 0);
+        let low = stack.items.get(0);
+        let high = stack.items.get(1);
+        let actual = u256 { low: low, high: high };
+        assert(expected == actual, 'u256 item should be 1');
+    }
+
+    #[test]
+    fn test_get_u256() {
+        let mut stack = StackTrait::new();
+        let expected: u256 = u256 { low: 100_u128, high: 100_u128 };
+        stack.insert_u256(expected, 0);
+        let item = stack.get_u256(0);
+        assert(expected == item, 'u256 item should be 1');
+    }
 }

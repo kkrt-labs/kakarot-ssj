@@ -43,7 +43,7 @@ impl EVMInstructionsImpl of EVMInstructionsTrait {
 
     /// Execute the EVM bytecode.
     fn run(ref self: EVMInstructions, ref context: ExecutionContext) {
-        match gas::get_gas() {
+        match gas::withdraw_gas() {
             Option::Some(_) => {},
             Option::None(_) => {
                 let mut data = ArrayTrait::new();
@@ -84,10 +84,11 @@ impl EVMInstructionsImpl of EVMInstructionsTrait {
         let opcode = 0_u8;
         let bytecode_len = 100_u32;
 
-        // Check if PC is not out of bounds.
-        if pc >= bytecode_len {
-            utils::panic_with_code(0);
-        }
+        // // Check if PC is not out of bounds.
+        // if pc >= bytecode_len {
+        //     //TODO fix when #922: Inconsistent references annotations. is resolved
+        //     utils::panic_with_code(0);
+        // }
 
         // Call the appropriate function based on the opcode.
         if opcode == 0_u8 {

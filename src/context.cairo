@@ -2,7 +2,7 @@ use kakarot::stack::Stack;
 use kakarot::stack::StackTrait;
 
 /// The call context.
-#[derive(Drop, Copy)]
+#[derive(Drop)]
 struct CallContext {
     /// The bytecode to execute.
     bytecode: Array::<u8>,
@@ -12,9 +12,10 @@ struct CallContext {
     value: felt252,
 }
 
+
 /// The execution context.
 /// Stores all data relevant to the current execution context.
-#[derive(Drop, Copy)]
+#[derive(Destruct)]
 struct ExecutionContext {
     /// The call context.
     call_context: CallContext,
@@ -38,8 +39,6 @@ trait ExecutionContextTrait {
     fn print_debug(ref self: ExecutionContext);
     /// Halts execution.
     fn stop(ref self: ExecutionContext);
-    /// Returns the stack.
-    fn stack(ref self: ExecutionContext) -> Stack;
 }
 
 /// `ExecutionContext` implementation.
@@ -84,15 +83,9 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     // TODO: debug `Failed to specialize: `dup<kakarot::context::ExecutionContext>` error
     //debug::print_felt252(u64_to_felt252(self.gas_used));
     }
-
-    /// Returns the stack.
-    fn stack(ref self: ExecutionContext) -> Stack {
-        self.stack
-    }
 }
 
 /// The execution summary.
 #[derive(Drop, Copy)]
 struct ExecutionSummary {}
 
-impl ArrayU8Copy of Copy::<Array::<u8>>;
