@@ -35,3 +35,4 @@ fn stack_should_increment_len_on_push() {
 
     assert(stack_len == 1_u32, 1);
 }
+
