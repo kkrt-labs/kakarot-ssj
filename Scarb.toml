@@ -1,3 +1,16 @@
 [package]
 name = "kakarot"
 version = "0.1.0"
+
+[dependencies]
+
+[lib]
+sierra = true  # Enable Sierra codegen.
+casm = false   # Enable CASM codegen.
+
+[scripts]
+test = "cairo-test ."
+run = "cairo-run . --available-gas=200000"
+format= "cairo-format src"
+clean = "rm -rf target"
+test-stack = "cairo-test . -f stack"
