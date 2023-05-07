@@ -1,15 +1,40 @@
 use kakarot::stack::Stack;
 use kakarot::stack::StackTrait;
+use debug::PrintTrait;
+use array::ArrayTrait;
 
 /// The call context.
 #[derive(Drop)]
 struct CallContext {
     /// The bytecode to execute.
-    bytecode: Array::<u8>,
+    bytecode: Array<u8>,
     /// The call data.
-    call_data: Array::<u8>,
+    call_data: Array<u8>,
     /// Amount of native token to transfer.
     value: felt252,
+}
+
+// I think we should not directly access the fields of the call context;
+// instead we should use the methods defined in the trait. 
+// This is not enforced until there are `pub` and `priv` visibility on struct fields.
+trait CallContextTrait {
+    fn bytecode(self: @CallContext) -> Span<u8>;
+    fn call_data(self: @CallContext) -> Span<u8>;
+    fn value(self: @CallContext) -> felt252;
+}
+
+impl CallContextImpl of CallContextTrait {
+    fn bytecode(self: @CallContext) -> Span<u8> {
+        self.bytecode.span()
+    }
+
+    fn call_data(self: @CallContext) -> Span<u8> {
+        self.call_data.span()
+    }
+
+    fn value(self: @CallContext) -> felt252 {
+        *self.value
+    }
 }
 
 
@@ -49,8 +74,8 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         let mut stack = StackTrait::new();
         ExecutionContext {
             call_context: call_context,
-            program_counter: 0_u32,
-            gas_used: 0_u64,
+            program_counter: 0,
+            gas_used: 0,
             stack: stack,
             stopped: false
         }
@@ -59,19 +84,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     /// Compute the intrinsic gas cost for the current transaction and increase the gas used.
     /// TODO: Implement this. For now we just increase the gas used by a hard coded value.
     fn process_intrinsic_gas_cost(ref self: ExecutionContext) {
-        // Deconstruct self.
-        let ExecutionContext{call_context,
-        program_counter,
-        gas_used: mut gas_used,
-        stack,
-        stopped } =
-            self;
-        // TODO: debug `Failed to specialize: `dup<kakarot::context::ExecutionContext>` error
-        //let new_gas_used = gas_used + 42_u64;
-        // Reconstruct self.
-        self = ExecutionContext {
-            call_context, program_counter, gas_used: 42_u64, stack, stopped, 
-        };
+        self.gas_used = self.gas_used + 42;
     }
 
     /// Halts execution.
@@ -79,9 +92,9 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     fn stop(ref self: ExecutionContext) {}
 
     /// Debug print the execution context.
-    fn print_debug(ref self: ExecutionContext) { // debug::print_felt252('gas used');
-    // TODO: debug `Failed to specialize: `dup<kakarot::context::ExecutionContext>` error
-    //debug::print_felt252(u64_to_felt252(self.gas_used));
+    fn print_debug(ref self: ExecutionContext) {
+        debug::print_felt252('gas used');
+        self.gas_used.print();
     }
 }
 

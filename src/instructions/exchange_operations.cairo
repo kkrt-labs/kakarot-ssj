@@ -25,7 +25,7 @@ fn exec_swap_i(ref context: ExecutionContext, i: u8) {}
 /// # TODO
 /// - Implement me.
 fn exec_swap1(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 1_u8);
+    exec_swap_i(ref context, 1);
 }
 
 /// SWAP2 operation
@@ -40,7 +40,7 @@ fn exec_swap1(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap2(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 2_u8);
+    exec_swap_i(ref context, 2);
 }
 
 /// SWAP3 operation
@@ -55,7 +55,7 @@ fn exec_swap2(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap3(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 3_u8);
+    exec_swap_i(ref context, 3);
 }
 
 /// SWAP4 operation
@@ -70,7 +70,7 @@ fn exec_swap3(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap4(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 4_u8);
+    exec_swap_i(ref context, 4);
 }
 
 /// SWAP5 operation
@@ -85,7 +85,7 @@ fn exec_swap4(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap5(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 5_u8);
+    exec_swap_i(ref context, 5);
 }
 
 /// SWAP6 operation
@@ -100,7 +100,7 @@ fn exec_swap5(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap6(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 6_u8);
+    exec_swap_i(ref context, 6);
 }
 
 /// SWAP7 operation
@@ -115,7 +115,7 @@ fn exec_swap6(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap7(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 7_u8);
+    exec_swap_i(ref context, 7);
 }
 
 /// SWAP8 operation
@@ -130,7 +130,7 @@ fn exec_swap7(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap8(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 8_u8);
+    exec_swap_i(ref context, 8);
 }
 
 /// SWAP9 operation
@@ -145,7 +145,7 @@ fn exec_swap8(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap9(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 9_u8);
+    exec_swap_i(ref context, 9);
 }
 
 /// SWAP10 operation
@@ -160,7 +160,7 @@ fn exec_swap9(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap10(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 10_u8);
+    exec_swap_i(ref context, 10);
 }
 
 /// SWAP11 operation
@@ -175,7 +175,7 @@ fn exec_swap10(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap11(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 11_u8);
+    exec_swap_i(ref context, 11);
 }
 
 /// SWAP12 operation
@@ -190,7 +190,7 @@ fn exec_swap11(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap12(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 12_u8);
+    exec_swap_i(ref context, 12);
 }
 
 /// SWAP13 operation
@@ -205,7 +205,7 @@ fn exec_swap12(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap13(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 13_u8);
+    exec_swap_i(ref context, 13);
 }
 
 /// SWAP14 operation
@@ -220,7 +220,7 @@ fn exec_swap13(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap14(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 14_u8);
+    exec_swap_i(ref context, 14);
 }
 
 /// SWAP15 operation
@@ -235,7 +235,7 @@ fn exec_swap14(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap15(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 15_u8);
+    exec_swap_i(ref context, 15);
 }
 
 /// SWAP16 operation
@@ -250,5 +250,5 @@ fn exec_swap15(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_swap16(ref context: ExecutionContext) {
-    exec_swap_i(ref context, 16_u8);
+    exec_swap_i(ref context, 16);
 }

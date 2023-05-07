@@ -21,7 +21,7 @@ fn exec_log_i(ref context: ExecutionContext, topics_len: u8) {}
 /// # TODO
 /// - Implement me.
 fn exec_log0(ref context: ExecutionContext) {
-    exec_log_i(ref context, 0_u8);
+    exec_log_i(ref context, 0);
 }
 
 
@@ -33,7 +33,7 @@ fn exec_log0(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_log1(ref context: ExecutionContext) {
-    exec_log_i(ref context, 1_u8);
+    exec_log_i(ref context, 1);
 }
 
 /// LOG2 operation
@@ -44,7 +44,7 @@ fn exec_log1(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_log2(ref context: ExecutionContext) {
-    exec_log_i(ref context, 2_u8);
+    exec_log_i(ref context, 2);
 }
 
 /// LOG3 operation
@@ -55,7 +55,7 @@ fn exec_log2(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_log3(ref context: ExecutionContext) {
-    exec_log_i(ref context, 3_u8);
+    exec_log_i(ref context, 3);
 }
 
 /// LOG4 operation
@@ -66,5 +66,5 @@ fn exec_log3(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_log4(ref context: ExecutionContext) {
-    exec_log_i(ref context, 4_u8);
+    exec_log_i(ref context, 4);
 }

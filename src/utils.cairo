@@ -17,11 +17,11 @@ fn panic_with(err: felt252) {
 /// # Returns
 /// * `Option::<NonZero::<felt252>>` - The `felt252` as a `NonZero` type.
 /// * `Option::<NonZero::<felt252>>::None` - If `felt252` is 0.
-fn to_non_zero(felt252: felt252) -> Option::<NonZero::<felt252>> {
+fn to_non_zero(felt252: felt252) -> Option::<NonZero<felt252>> {
     let res = felt252_is_zero(felt252);
     match res {
-        IsZeroResult::Zero(()) => Option::<NonZero::<felt252>>::None(()),
-        IsZeroResult::NonZero(val) => Option::<NonZero::<felt252>>::Some(val),
+        zeroable::IsZeroResult::Zero(()) => Option::<NonZero<felt252>>::None(()),
+        zeroable::IsZeroResult::NonZero(val) => Option::<NonZero<felt252>>::Some(val),
     }
 }
 
@@ -59,17 +59,6 @@ fn max(a: usize, b: usize) -> usize {
 /// # Returns
 /// * `felt252` - The result of base raised to the power of exp.
 fn pow(base: felt252, exp: felt252) -> felt252 {
-    // Check if out of gas.
-    // TODO: Remove when automatically handled by compiler.
-    match gas::withdraw_gas() {
-        Option::Some(_) => {},
-        Option::None(_) => {
-            let mut data = ArrayTrait::new();
-            data.append('OOG');
-            panic(data);
-        }
-    }
-
     match exp {
         0 => 1,
         _ => base * pow(base, exp - 1),

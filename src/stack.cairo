@@ -21,14 +21,13 @@ use traits::Into;
 use result::ResultTrait;
 use array::ArrayTrait;
 
-const ZERO_USIZE: usize = 0_usize;
 
 struct Stack {
     items: Felt252Dict<u128>,
     len: usize,
 }
 
-impl DestructStack of Destruct::<Stack> {
+impl DestructStack of Destruct<Stack> {
     fn destruct(self: Stack) nopanic {
         self.items.squash();
     }
@@ -51,7 +50,7 @@ impl StackImpl of StackTrait {
     /// * Stack The new stack instance.
     fn new() -> Stack {
         let items = Felt252DictTrait::<u128>::new();
-        Stack { items, len: 0_usize }
+        Stack { items, len: 0}
     }
 
     /// Pushes a new item onto the stack.
@@ -60,18 +59,18 @@ impl StackImpl of StackTrait {
     /// * item The item to push onto the stack.
     fn push(ref self: Stack, item: u256) -> () {
         self.insert_u256(item, self.dict_len());
-        self.len += 1_usize;
+        self.len += 1;
     }
 
     /// Pops the top item off the stack.
     /// Returns
     /// * Option<u256> The popped item, or None if the stack is empty.
     fn pop(ref self: Stack) -> Option<u256> {
-        if self.len() == 0_usize {
+        if self.len() == 0{
             Option::None(())
         } else {
             let last_index = self.dict_len() - 2;
-            self.len -= 1_usize;
+            self.len -= 1;
             Option::Some(self.get_u256(last_index))
         }
     }
@@ -80,7 +79,7 @@ impl StackImpl of StackTrait {
     /// Returns
     /// * Option<u256> The top item, or None if the stack is empty.
     fn peek(ref self: Stack) -> Option<u256> {
-        if self.len() == 0_usize {
+        if self.len() == 0{
             Option::None(())
         } else {
             let last_index = self.dict_len() - 2;
@@ -103,7 +102,7 @@ impl StackImpl of StackTrait {
     /// Returns
     /// * bool True if the stack is empty, false otherwise.
     fn is_empty(self: @Stack) -> bool {
-        *self.len == ZERO_USIZE
+        *self.len == 0 
     }
 }
 
@@ -121,7 +120,7 @@ impl StackU256HelperImpl of StackU256HelperTrait {
     /// # Returns
     /// `felt252` - the length of the dictionary
     fn dict_len(ref self: Stack) -> felt252 {
-        (self.len * 2_usize).into()
+        (self.len * 2).into()
     }
 
     /// Inserts a 256-bit unsigned integer `item` into the stack at the given `index`
@@ -160,7 +159,7 @@ mod tests {
     #[test]
     fn test_dict_len() {
         let mut stack = StackTrait::new();
-        stack.len = 1_usize;
+        stack.len = 1;
         let dict_len = stack.dict_len();
         assert(dict_len == 2, 'dict length should be 2');
     }
@@ -168,7 +167,7 @@ mod tests {
     #[test]
     fn test_insert_u256() {
         let mut stack = StackTrait::new();
-        let expected: u256 = u256 { low: 100_u128, high: 100_u128 };
+        let expected: u256 = u256 { low: 100, high: 100};
         stack.insert_u256(expected, 0);
         let low = stack.items.get(0);
         let high = stack.items.get(1);
@@ -179,7 +178,7 @@ mod tests {
     #[test]
     fn test_get_u256() {
         let mut stack = StackTrait::new();
-        let expected: u256 = u256 { low: 100_u128, high: 100_u128 };
+        let expected: u256 = u256 { low: 100, high: 100};
         stack.insert_u256(expected, 0);
         let item = stack.get_u256(0);
         assert(expected == item, 'u256 item should be 1');
