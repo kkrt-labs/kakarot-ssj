@@ -60,7 +60,7 @@ fn max(a: usize, b: usize) -> usize {
 /// * `exp` - The exponent.
 /// # Returns
 /// * `felt252` - The result of base raised to the power of exp.
-fn pow(base: u128, exp: u128) -> u128 {
+fn pow(base: felt252, exp: felt252) -> felt252 {
     if exp == 0 {
         return 1;
     } else {
