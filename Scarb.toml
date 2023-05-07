@@ -1,6 +1,3 @@
 [package]
 name = "kakarot"
 version = "0.1.0"
-
-[dependencies]
-quaireaux = { git = "https://github.com/keep-starknet-strange/quaireaux.git" }

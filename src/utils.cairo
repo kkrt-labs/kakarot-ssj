@@ -2,6 +2,8 @@
 use array::ArrayTrait;
 use option::OptionTrait;
 
+mod helpers;
+
 /// Panic with a custom message.
 /// # Arguments
 /// * `msg` - The message to panic with. Must be a short string to fit in a felt252.
@@ -58,10 +60,11 @@ fn max(a: usize, b: usize) -> usize {
 /// * `exp` - The exponent.
 /// # Returns
 /// * `felt252` - The result of base raised to the power of exp.
-fn pow(base: felt252, exp: felt252) -> felt252 {
-    match exp {
-        0 => 1,
-        _ => base * pow(base, exp - 1),
+fn pow(base: u128, exp: u128) -> u128 {
+    if exp == 0 {
+        return 1;
+    } else {
+        return base * pow(base, exp - 1);
     }
 }
 

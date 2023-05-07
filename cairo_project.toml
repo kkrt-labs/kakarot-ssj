@@ -1,2 +1,3 @@
 [crate_roots]
-kakarot = "src"
+kakarot = "/Users/msaug/Workspace/kakarot-ssj/src"
+tests = "tests"

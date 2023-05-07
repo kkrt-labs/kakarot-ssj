@@ -28,7 +28,7 @@ run:
 # Test the project
 test:
 	@echo "Testing..."
-	cairo-test $(TEST_ENTRYPOINT)
+	sh scripts/generate_cairo_project.sh && cairo-test $(TEST_ENTRYPOINT)
 
 # Format the project
 format:
