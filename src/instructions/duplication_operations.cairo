@@ -25,7 +25,7 @@ fn exec_dup_i(ref context: ExecutionContext, i: u8) {}
 /// # TODO
 /// - Implement me.
 fn exec_dup1(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 1_u8);
+    exec_dup_i(ref context, 1);
 }
 
 /// DUP2 operation
@@ -40,7 +40,7 @@ fn exec_dup1(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup2(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 2_u8);
+    exec_dup_i(ref context, 2);
 }
 
 /// DUP3 operation
@@ -55,7 +55,7 @@ fn exec_dup2(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup3(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 3_u8);
+    exec_dup_i(ref context, 3);
 }
 
 
@@ -71,7 +71,7 @@ fn exec_dup3(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup4(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 4_u8);
+    exec_dup_i(ref context, 4);
 }
 
 
@@ -87,7 +87,7 @@ fn exec_dup4(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup5(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 5_u8);
+    exec_dup_i(ref context, 5);
 }
 
 
@@ -103,7 +103,7 @@ fn exec_dup5(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup6(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 6_u8);
+    exec_dup_i(ref context, 6);
 }
 
 
@@ -119,7 +119,7 @@ fn exec_dup6(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup7(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 7_u8);
+    exec_dup_i(ref context, 7);
 }
 
 
@@ -135,7 +135,7 @@ fn exec_dup7(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup8(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 8_u8);
+    exec_dup_i(ref context, 8);
 }
 
 /// DUP9 operation
@@ -150,7 +150,7 @@ fn exec_dup8(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup9(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 9_u8);
+    exec_dup_i(ref context, 9);
 }
 
 
@@ -166,7 +166,7 @@ fn exec_dup9(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup10(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 10_u8);
+    exec_dup_i(ref context, 10);
 }
 
 /// DUP11 operation
@@ -181,7 +181,7 @@ fn exec_dup10(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup11(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 11_u8);
+    exec_dup_i(ref context, 11);
 }
 
 /// DUP12 operation
@@ -196,7 +196,7 @@ fn exec_dup11(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup12(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 12_u8);
+    exec_dup_i(ref context, 12);
 }
 
 /// DUP13 operation
@@ -211,7 +211,7 @@ fn exec_dup12(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup13(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 13_u8);
+    exec_dup_i(ref context, 13);
 }
 
 /// DUP14 operation
@@ -226,7 +226,7 @@ fn exec_dup13(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup14(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 14_u8);
+    exec_dup_i(ref context, 14);
 }
 
 /// DUP15 operation
@@ -241,7 +241,7 @@ fn exec_dup14(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup15(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 15_u8);
+    exec_dup_i(ref context, 15);
 }
 /// DUP16 operation
 /// Duplicate the top 16th stack item to the top of the stack.
@@ -255,5 +255,5 @@ fn exec_dup15(ref context: ExecutionContext) {
 /// # TODO
 /// - Implement me.
 fn exec_dup16(ref context: ExecutionContext) {
-    exec_dup_i(ref context, 16_u8);
+    exec_dup_i(ref context, 16);
 }

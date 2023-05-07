@@ -8,7 +8,8 @@ use kakarot::stack::StackTrait;
 
 #[test]
 #[available_gas(2000000)]
-fn nominal_case() {
+#[should_panic(expected: (0, ))]
+fn nominal_case_empty_pc() {
     let bytecode = ArrayTrait::<u8>::new();
     let call_data = ArrayTrait::<u8>::new();
     let call_value = 0;
@@ -33,6 +34,6 @@ fn stack_should_increment_len_on_push() {
     // Then
     let stack_len = stack.len();
 
-    assert(stack_len == 1_u32, 1);
+    assert(stack_len == 1, 1);
 }
 

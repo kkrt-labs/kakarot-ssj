@@ -15,7 +15,7 @@ const U32_MAX: u32 = 4294967295_u32;
 fn stack_new_test() {
     let mut stack = StackTrait::new();
     let result_len = stack.len();
-    assert(result_len == 0_usize, 'stack length should be 0');
+    assert(result_len == 0, 'stack length should be 0');
 }
 
 #[test]
@@ -41,13 +41,13 @@ fn stack_push_test() {
     let high = stack.items.get(1);
     let stack_val_1 = u256 { low: low, high: high };
     assert(result_is_empty == false, 'must not be empty');
-    assert(result_len == 2_usize, 'len should be 2');
+    assert(result_len == 2, 'len should be 2');
     assert(stack_val_1 == val_1, 'wrong result');
 }
 
 #[test]
 #[available_gas(2000000)]
-#[should_panic(expected = ('u32_mul Overflow', ))]
+#[should_panic(expected: ('u32_mul Overflow', ))]
 fn stack_push_u32_max_test() {
     let mut stack = StackTrait::new();
     stack.len = U32_MAX;
@@ -86,7 +86,7 @@ fn stack_pop_test() {
     stack.push(val_2);
     let result = stack.pop().unwrap();
     let result_len = stack.len();
-    assert(result_len == 1_usize, 'should remove item');
+    assert(result_len == 1, 'should remove item');
     assert(result == val_2, 'wrong result');
 }
 
