@@ -23,6 +23,7 @@ struct Memory {
 
 trait Felt252DictExtension {
     fn store_u256(ref self: Felt252Dict<felt252>, element: u256, index: usize);
+    fn read_u256(ref self: Felt252Dict<felt252>, index: usize) -> u256;
 }
 
 impl Felt252DictExtensionImpl of Felt252DictExtension {
@@ -30,6 +31,31 @@ impl Felt252DictExtensionImpl of Felt252DictExtension {
         let index: felt252 = index.into();
         self.insert(index, element.low.into());
         self.insert(index + 1, element.high.into());
+    }
+
+    fn read_u256(ref self: Felt252Dict<felt252>, index: usize) -> u256 {
+        let index: felt252 = index.into();
+        let high: felt252 = self.get(index);
+        let low: felt252 = self.get(index + 1);
+        u256 { low: low.try_into().unwrap(), high: high.try_into().unwrap() }
+    }
+}
+
+trait PrintTraitCustom<T> {
+    fn print_mem(ref self: T, begin: usize, end: usize);
+}
+
+impl MemoryPrintImpl of PrintTraitCustom<Memory> {
+    fn print_mem(ref self: Memory, mut begin: usize, end: usize) {
+        '____MEMORY_BEGIN___'.print();
+        loop {
+            if begin == end {
+                break ();
+            }
+            self.items.get(begin.into()).print();
+            begin += 1;
+        };
+        '____MEMORY_END___'.print();
     }
 }
 
@@ -39,6 +65,11 @@ trait MemoryTrait {
     fn store_n(ref self: Memory, elements: Span<u8>, offset: usize);
     fn store_aligned_words(
         ref self: Memory, chunk_index: usize, chunk_index_f: usize, elements: Span<u8>
+    );
+    fn _load(ref self: Memory, offset: usize) -> u256;
+    fn _load_n(ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize);
+    fn load_aligned_words(
+        ref self: Memory, chunk_index: usize, chunk_index_f: usize, ref elements: Array<u8>
     );
 }
 
@@ -145,7 +176,6 @@ impl MemoryImpl of MemoryTrait {
         // Special case: within the same word.
         if chunk_index_i == chunk_index_f {
             let w: u128 = self.items.get(offset_in_chunk_i.into()).try_into().unwrap();
-
             let (w_h, w_l) = u256_safe_divmod(u256 { low: w, high: 0 }, u256_as_non_zero(mask_i));
             let (_, w_ll) = u256_safe_divmod(w_l, u256_as_non_zero(mask_f));
             let x = helpers::load_word(elements.len(), elements);
@@ -158,7 +188,7 @@ impl MemoryImpl of MemoryTrait {
         let w_i = self.items.get(chunk_index_i.into());
         let w_i_h = (w_i.into() / mask_i);
         let x_i = helpers::load_word(16 - offset_in_chunk_i, elements);
-        let w1: felt252 = (x_i.into() * mask_i + w_i_h).try_into().unwrap();
+        let w1: felt252 = (w_i_h * mask_i + x_i.into()).try_into().unwrap();
         self.items.insert(chunk_index_i.into(), w1);
 
         // Fill last word
@@ -205,6 +235,92 @@ impl MemoryImpl of MemoryTrait {
             self.items.insert(chunk_index.into(), current);
             chunk_index += 1;
             elements.pop_front_n(16);
+        }
+    }
+
+    fn _load(ref self: Memory, offset: usize) -> u256 {
+        let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
+
+        if offset == 0 { // Offset is aligned. This is the simplest and most efficient case,
+            // so we optimize for it. Note that no locals were allocated at all.
+            return self.items.read_u256(chunk_index);
+        }
+        // Offset is misaligned.
+        // |   W0   |   W1   |   w2   |
+        //     |  EL_H  |  EL_L  |
+        //      ^---^
+        //         |-- mask = 256 ** offset_in_chunk
+
+        // Compute mask.
+
+        let mask: u256 = helpers::pow256_rev(offset_in_chunk);
+        let mask_c: u256 = utils::pow(2, 128).into() / mask;
+
+        // Read the words at chunk_index, +1, +2.
+        let w0: felt252 = self.items.get(chunk_index.into());
+        let w1: felt252 = self.items.get(chunk_index.into() + 1);
+        let w2: felt252 = self.items.get(chunk_index.into() + 2);
+
+        // Compute element words
+        let w0_l: u256 = w0.into() % mask;
+        let (w1_h, w1_l): (u256, u256) = u256_safe_divmod(w1.into(), u256_as_non_zero(mask));
+        let w2_h: u256 = w2.into() / mask;
+        let el_h: u128 = (w0_l * mask_c + w1_h).try_into().unwrap();
+        let el_l: u128 = (w1_l * mask_c + w2_h).try_into().unwrap();
+
+        return u256 { low: el_l, high: el_h };
+    }
+
+    fn _load_n(ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize) {
+        if elements.len() == 0 {
+            return ();
+        }
+
+        // Check alignment of offset to 16B chunks.
+        let (chunk_index_i, offset_in_chunk_i) = u32_safe_divmod(offset, u32_as_non_zero(16));
+        let (chunk_index_f, mut offset_in_chunk_f) = u32_safe_divmod(
+            offset + elements_len - 1, u32_as_non_zero(16)
+        );
+        offset_in_chunk_f += 1;
+        let mask_i: u256 = helpers::pow256_rev(offset_in_chunk_i);
+        let mask_f: u256 = helpers::pow256_rev(offset_in_chunk_f);
+
+        // Special case: within the same word.
+        if chunk_index_i == chunk_index_f {
+            let w: felt252 = self.items.get(chunk_index_i.into());
+            //TODO(eni) special div_rem function here
+            let w_l = w.into() % mask_i;
+            let w_lh = w_l / mask_f;
+            helpers::split_word(w_lh, elements_len, ref elements)
+        }
+
+        // Otherwise.
+        // Get first word.
+        // Otherwise, fill first word.
+        let w_i = self.items.get(chunk_index_i.into());
+        let w_i_l = (w_i.into() % mask_i);
+        let elements_first_word = helpers::split_word(w_i_l, 16 - offset_in_chunk_i, ref elements);
+
+        // Get blocks.
+        self.load_aligned_words(chunk_index_i + 1, chunk_index_f, ref elements);
+
+        // Get last word.
+        let w_f = self.items.get(chunk_index_f.into());
+        let w_f_h = w_f.into() / mask_f;
+        let elements_last_word = helpers::split_word(w_f_h, offset_in_chunk_f, ref elements);
+    }
+
+    fn load_aligned_words(
+        ref self: Memory, mut chunk_index: usize, chunk_index_f: usize, ref elements: Array<u8>
+    ) {
+        loop {
+            if chunk_index == chunk_index_f {
+                break ();
+            }
+            let value = self.items.get(chunk_index.into());
+            // Pushes 16 items to `elements`
+            helpers::split_word_128(value.into(), ref elements);
+            chunk_index += 1;
         }
     }
 }

@@ -96,6 +96,66 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
     bytes_vec_reversed
 }
 
+/// Splits a felt into `len` bytes, big-endian, and outputs to `dst`.
+//TODO(eni) this might need to be refactored and pass the array as arg.
+fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
+    let little_endian = split_word_little(value, len);
+    let big_endian = reverse_array(little_endian.span());
+    concat_array(ref dst, big_endian.span());
+}
+
+/// Splits a felt into `len` bytes, little-endian, and outputs to `dst`.
+fn split_word_little(mut value: u256, mut len: usize) -> Array<u8> {
+    let mut dst: Array<u8> = ArrayTrait::new();
+    let FELT252_PRIME: u256 = 0x800000000000011000000000000000000000000000000000000000000000001;
+    loop {
+        if len == 0 {
+            assert(value == 0, 'split_words:value not 0');
+            break ();
+        }
+
+        let base = 256;
+        let bound = 256;
+        let low_part = (value % FELT252_PRIME) % base;
+        dst.append(low_part.try_into().unwrap());
+
+        len = len - 1;
+        value = (value - low_part) / 256;
+    };
+    dst
+}
+
+/// Splits a felt into 16 bytes, big-endien, and outputs to `dst`.
+fn split_word_128(value: u256, ref dst: Array<u8>) {
+    split_word(value, 16, ref dst)
+}
+
+// Concatenates two arrays by adding the elements of arr2 to arr1.
+fn concat_array<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(
+    ref arr1: Array<T>, mut arr2: Span<T>
+) {
+    loop {
+        if arr2.len() == 0 {
+            break ();
+        }
+        let elem = *arr2.pop_front().unwrap();
+        arr1.append(elem);
+    }
+}
+
+fn reverse_array<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(src: Span<T>) -> Array<T> {
+    let mut counter = src.len();
+    let mut dst: Array<T> = ArrayTrait::new();
+    loop {
+        if counter == 0 {
+            break ();
+        }
+        dst.append(*src[counter - 1]);
+        counter -= 1;
+    };
+    dst
+}
+
 impl U256TryIntoU8 of TryInto<u256, u8> {
     fn try_into(self: u256) -> Option<u8> {
         if self.high != 0 {
