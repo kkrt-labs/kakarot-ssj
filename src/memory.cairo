@@ -17,27 +17,27 @@ use debug::PrintTrait;
 
 #[derive(Destruct)]
 struct Memory {
-    items: Felt252Dict<felt252>,
+    items: Felt252Dict<u128>,
     bytes_len: usize,
 }
 
 trait Felt252DictExtension {
-    fn store_u256(ref self: Felt252Dict<felt252>, element: u256, index: usize);
-    fn read_u256(ref self: Felt252Dict<felt252>, index: usize) -> u256;
+    fn store_u256(ref self: Felt252Dict<u128>, element: u256, index: usize);
+    fn read_u256(ref self: Felt252Dict<u128>, index: usize) -> u256;
 }
 
 impl Felt252DictExtensionImpl of Felt252DictExtension {
-    fn store_u256(ref self: Felt252Dict<felt252>, element: u256, index: usize) {
+    fn store_u256(ref self: Felt252Dict<u128>, element: u256, index: usize) {
         let index: felt252 = index.into();
         self.insert(index, element.low.into());
         self.insert(index + 1, element.high.into());
     }
 
-    fn read_u256(ref self: Felt252Dict<felt252>, index: usize) -> u256 {
+    fn read_u256(ref self: Felt252Dict<u128>, index: usize) -> u256 {
         let index: felt252 = index.into();
-        let high: felt252 = self.get(index);
-        let low: felt252 = self.get(index + 1);
-        u256 { low: low.try_into().unwrap(), high: high.try_into().unwrap() }
+        let high: u128 = self.get(index);
+        let low: u128 = self.get(index + 1);
+        u256 { low: low, high: high }
     }
 }
 
@@ -137,17 +137,17 @@ impl MemoryImpl of MemoryTrait {
         );
 
         // Read the words at chunk_index, chunk_index + 2.
-        let w0: felt252 = self.items.get(chunk_index.into());
-        let w2: felt252 = self.items.get(chunk_index.into() + 2);
+        let w0: u128 = self.items.get(chunk_index.into());
+        let w2: u128 = self.items.get(chunk_index.into() + 2);
 
         // Compute the new words
         let w0_h: u256 = (w0.into() / mask);
         let w2_l: u256 = (w2.into() / mask);
 
         // We can convert them back to felt252 as we know they fit in one word.
-        let new_w0: felt252 = (w0_h.into() * mask + el_hh).try_into().unwrap();
-        let new_w1: felt252 = (el_hl.into() * mask + el_lh).try_into().unwrap();
-        let new_w2: felt252 = (el_ll.into() * mask + w2_l).try_into().unwrap();
+        let new_w0: u128 = (w0_h.into() * mask + el_hh).try_into().unwrap();
+        let new_w1: u128 = (el_hl.into() * mask + el_lh).try_into().unwrap();
+        let new_w2: u128 = (el_ll.into() * mask + w2_l).try_into().unwrap();
 
         // Write the new words
         self.items.insert(chunk_index.into(), new_w0);
@@ -188,11 +188,11 @@ impl MemoryImpl of MemoryTrait {
 
         // Special case: within the same word.
         if chunk_index_i == chunk_index_f {
-            let w: u128 = self.items.get(offset_in_chunk_i.into()).try_into().unwrap();
+            let w: u128 = self.items.get(offset_in_chunk_i.into());
             let (w_h, w_l) = u256_safe_divmod(u256 { low: w, high: 0 }, u256_as_non_zero(mask_i));
             let (_, w_ll) = u256_safe_divmod(w_l, u256_as_non_zero(mask_f));
             let x = helpers::load_word(elements.len(), elements);
-            let new_w: felt252 = (w_h * mask_i + x.into() * mask_f + w_ll).try_into().unwrap();
+            let new_w: u128 = (w_h * mask_i + x.into() * mask_f + w_ll).try_into().unwrap();
             self.items.insert(chunk_index_i.into(), new_w);
             return ();
         }
@@ -201,7 +201,7 @@ impl MemoryImpl of MemoryTrait {
         let w_i = self.items.get(chunk_index_i.into());
         let w_i_h = (w_i.into() / mask_i);
         let x_i = helpers::load_word(16 - offset_in_chunk_i, elements);
-        let w1: felt252 = (w_i_h * mask_i + x_i.into()).try_into().unwrap();
+        let w1: u128 = (w_i_h * mask_i + x_i.into()).try_into().unwrap();
         self.items.insert(chunk_index_i.into(), w1);
 
         // Write blocks
@@ -216,7 +216,7 @@ impl MemoryImpl of MemoryTrait {
         let mut elements_clone = elements.clone();
         elements_clone.pop_front_n(elements.len() - offset_in_chunk_f);
         let x_f = helpers::load_word(offset_in_chunk_f, elements_clone);
-        let w2: felt252 = (x_f.into() * mask_f + w_f_l).try_into().unwrap();
+        let w2: u128 = (x_f.into() * mask_f + w_f_l).try_into().unwrap();
         self.items.insert(chunk_index_f.into(), w2);
     }
 
@@ -254,7 +254,7 @@ impl MemoryImpl of MemoryTrait {
                 + (*elements[14]).into() * utils::pow(256, 1)
                 + (*elements[15]).into() * utils::pow(256, 0));
 
-            self.items.insert(chunk_index.into(), current);
+            self.items.insert(chunk_index.into(), current.try_into().unwrap());
             chunk_index += 1;
             elements.pop_front_n(16);
         }
@@ -286,9 +286,9 @@ impl MemoryImpl of MemoryTrait {
         let mask_c: u256 = utils::pow(2, 128).into() / mask;
 
         // Read the words at chunk_index, +1, +2.
-        let w0: felt252 = self.items.get(chunk_index.into());
-        let w1: felt252 = self.items.get(chunk_index.into() + 1);
-        let w2: felt252 = self.items.get(chunk_index.into() + 2);
+        let w0: u128 = self.items.get(chunk_index.into());
+        let w1: u128 = self.items.get(chunk_index.into() + 1);
+        let w2: u128 = self.items.get(chunk_index.into() + 2);
 
         // Compute element words
         let w0_l: u256 = w0.into() % mask;
@@ -323,7 +323,7 @@ impl MemoryImpl of MemoryTrait {
 
         // Special case: within the same word.
         if chunk_index_i == chunk_index_f {
-            let w: felt252 = self.items.get(chunk_index_i.into());
+            let w: u128 = self.items.get(chunk_index_i.into());
             //TODO(eni) special div_rem function here
             let w_l = w.into() % mask_i;
             let w_lh = w_l / mask_f;

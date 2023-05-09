@@ -84,20 +84,20 @@ fn split_word_128(value: u256, ref dst: Array<u8>) {
     split_word(value, 16, ref dst)
 }
 
-/// Loads a sequence of bytes into a single felt252 in big-endian
+/// Loads a sequence of bytes into a single u128 in big-endian
 ///
 /// # Arguments
 /// * `len` - The number of bytes to load
 /// * `words` - The bytes to load
 ///
 /// # Returns
-/// The packed felt252
-fn load_word(mut len: usize, words: Span<u8>) -> felt252 {
+/// The packed u128
+fn load_word(mut len: usize, words: Span<u8>) -> u128 {
     if len == 0 {
         return 0;
     }
 
-    let mut current: felt252 = 0;
+    let mut current: u128 = 0;
     let mut counter = 0;
 
     loop {

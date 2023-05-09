@@ -47,7 +47,7 @@ fn test_store_should_add_an_element_to_the_memory() {
 }
 
 #[test]
-#[available_gas(2000000)]
+#[available_gas(20000000)]
 fn test_store_should_add_n_elements_to_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();
