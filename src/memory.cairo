@@ -41,11 +41,13 @@ impl Felt252DictExtensionImpl of Felt252DictExtension {
     }
 }
 
-trait PrintTraitCustom<T> {
+/// A custom print trait for the `Memory` struct.
+trait MemoryPrintTrait<T> {
     fn print_mem(ref self: T, begin: usize, end: usize);
 }
 
-impl MemoryPrintImpl of PrintTraitCustom<Memory> {
+impl MemoryPrintImpl of MemoryPrintTrait<Memory> {
+    /// Prints the memory content between offset begin and end
     fn print_mem(ref self: Memory, mut begin: usize, end: usize) {
         '____MEMORY_BEGIN___'.print();
         loop {
@@ -89,8 +91,7 @@ impl MemoryImpl of MemoryTrait {
         Memory { items: Felt252DictTrait::new(), bytes_len: 0,  }
     }
 
-    /// Stores an element into the memory.
-    ///
+    /// Stores a 32-bytes element into the memory.
     /// # Arguments
     ///
     /// * `self` - A mutable reference to the `Memory` instance.
@@ -154,6 +155,12 @@ impl MemoryImpl of MemoryTrait {
         self.items.insert(chunk_index.into() + 2, new_w2);
     }
 
+    /// Stores N bytes into the memory.
+    ///
+    /// # Arguments
+    /// * `self` - A mutable reference to the `Memory` instance.
+    /// * `elements` - The bytes to store as a Span.
+    /// * `offset` - The `usize` offset at which to store the element.
     fn store_n(ref self: Memory, elements: Span<u8>, offset: usize) {
         if elements.len() == 0 {
             return ();
@@ -197,6 +204,11 @@ impl MemoryImpl of MemoryTrait {
         let w1: felt252 = (w_i_h * mask_i + x_i.into()).try_into().unwrap();
         self.items.insert(chunk_index_i.into(), w1);
 
+        // Write blocks
+        let mut elements_clone = elements.clone();
+        elements_clone.pop_front_n(elements.len() + 15 - offset_in_chunk_i);
+        self.store_aligned_words(chunk_index_i + 1, chunk_index_f, elements_clone);
+
         // Fill last word
         let w_f = self.items.get(chunk_index_f.into());
         //TODO(eni) might need to use a special div_rem for 2*128 here.
@@ -206,13 +218,17 @@ impl MemoryImpl of MemoryTrait {
         let x_f = helpers::load_word(offset_in_chunk_f, elements_clone);
         let w2: felt252 = (x_f.into() * mask_f + w_f_l).try_into().unwrap();
         self.items.insert(chunk_index_f.into(), w2);
-
-        // Write blocks
-        let mut elements_clone = elements.clone();
-        elements_clone.pop_front_n(elements.len() + 15 - offset_in_chunk_i);
-        self.store_aligned_words(chunk_index_i + 1, chunk_index_f, elements_clone);
     }
 
+    /// Stores a sequence of bytes into memory in chunks of 16 bytes each.
+    /// The function combines each byte together into a single 16 bytes value,
+    /// big-endian order, and stores this value in memory.
+    ///
+    /// # Arguments
+    /// * `self` - A mutable reference to the `Memory` instance.
+    /// * `chunk_index` - The index of the chunk to start storing at.
+    /// * `chunk_index_f` - The index of the chunk to stop storing at.
+    /// * `elements` - The bytes to store as a Span.
     fn store_aligned_words(
         ref self: Memory, mut chunk_index: usize, chunk_index_f: usize, mut elements: Span<u8>
     ) {
@@ -244,13 +260,20 @@ impl MemoryImpl of MemoryTrait {
         }
     }
 
+    /// Loads a 32 bytes element from the memory.
+    ///
+    /// # Arguments
+    /// * `self` - A reference to the `Memory` instance.
+    /// * `offset` - The offset to load the element from.
     fn _load(ref self: Memory, offset: usize) -> u256 {
         let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
 
-        if offset == 0 { // Offset is aligned. This is the simplest and most efficient case,
+        if offset == 0 {
+            // Offset is aligned. This is the simplest and most efficient case,
             // so we optimize for it. Note that no locals were allocated at all.
             return self.items.read_u256(chunk_index);
         }
+
         // Offset is misaligned.
         // |   W0   |   W1   |   w2   |
         //     |  EL_H  |  EL_L  |
@@ -277,8 +300,15 @@ impl MemoryImpl of MemoryTrait {
         return u256 { low: el_l, high: el_h };
     }
 
+    /// Loads N bytes from the memory
+    ///
+    /// # Arguments
+    /// * `self` - A reference to the `Memory` instance.
+    /// * `elements_len` - The number of bytes to load.
+    /// * `elements` - Output array that will contain the loaded bytes.
+    /// * `offset` - The memory offset to load from.
     fn _load_n(ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize) {
-        if elements.len() == 0 {
+        if elements_len == 0 {
             return ();
         }
 
@@ -302,7 +332,6 @@ impl MemoryImpl of MemoryTrait {
 
         // Otherwise.
         // Get first word.
-        // Otherwise, fill first word.
         let w_i = self.items.get(chunk_index_i.into());
         let w_i_l = (w_i.into() % mask_i);
         let elements_first_word = helpers::split_word(w_i_l, 16 - offset_in_chunk_i, ref elements);
@@ -316,6 +345,15 @@ impl MemoryImpl of MemoryTrait {
         let elements_last_word = helpers::split_word(w_f_h, offset_in_chunk_f, ref elements);
     }
 
+
+    /// Retrieves aligned values from the memory structure, converts them back into a bytes array,
+    /// and appends them to the `elements` array.
+    ///
+    /// # Arguments
+    /// * `self` - A reference to the `Memory` instance.
+    /// * `chunk_index` - The index of the chunk to load from.
+    /// * `chunk_index_f` - The index of the last chunk to load from.
+    /// * `elements` - Output array to which the loaded bytes will be appended.
     fn load_aligned_words(
         ref self: Memory, mut chunk_index: usize, chunk_index_f: usize, ref elements: Array<u8>
     ) {
@@ -330,10 +368,18 @@ impl MemoryImpl of MemoryTrait {
         }
     }
 
+    /// Expands the memory by `length` bytes.
+    ///
+    /// # Arguments
+    /// * `self` - A reference to the `Memory` instance.
+    /// * `length` - The number of bytes to expand the memory by.
+    ///
+    /// # Returns
+    /// * `usize` - The cost of expanding the memory.
     fn expand(ref self: Memory, length: usize) -> usize {
         let last_memory_size_word = (self.bytes_len + 31) / 32;
-        let last_memory_cost = (last_memory_size_word * last_memory_size_word) / 512;
-        let last_memory_cost = last_memory_cost + (3 * last_memory_size_word);
+        let mut last_memory_cost = (last_memory_size_word * last_memory_size_word) / 512;
+        last_memory_cost += (3 * last_memory_size_word);
 
         let new_bytes_len = self.bytes_len + length;
         let new_memory_size_word = (new_bytes_len + 31) / 32;
@@ -341,12 +387,23 @@ impl MemoryImpl of MemoryTrait {
         let new_memory_cost = new_memory_cost + (3 * new_memory_size_word);
 
         let cost = new_memory_cost - last_memory_cost;
+
+        // Update memory size.
         self.bytes_len = new_bytes_len;
+
         cost
     }
 
+    /// Ensures that the memory is at least `length` bytes long. Expands if necessary.
+    ///
+    /// # Arguments
+    /// * `self` - A reference to the `Memory` instance.
+    /// * `length` - The minimum number of bytes the memory should be.
+    ///
+    /// # Returns
+    /// The gas cost of expanding the memory.
     fn ensure_length(ref self: Memory, length: usize) -> usize {
-        if self.bytes_len + 1 <= length {
+        if self.bytes_len < length {
             let cost = self.expand(length - self.bytes_len);
             return cost;
         } else {
@@ -354,25 +411,47 @@ impl MemoryImpl of MemoryTrait {
         }
     }
 
+    /// Expands memory if necessary, then load 32 bytes from it at the given offset.
+    ///
+    /// # Arguments
+    /// * `self` - A reference to the `Memory` instance.
+    /// * `offset` - The offset to load from and the number of bytes to add.
+    ///
+    /// # Returns
+    /// * `u256` - The loaded value.
+    /// * `usize` - The gas cost of expanding the memory.
     fn load(ref self: Memory, offset: usize) -> (u256, usize) {
         let gas_cost = self.ensure_length(32 + offset);
         let loaded_element = self._load(offset);
         (loaded_element, gas_cost)
     }
 
+    /// Expands memory if necessary, then load elements_len bytes from it at given offset.
+    ///
+    /// # Arguments
+    /// * `self` - A reference to the `Memory` instance.
+    /// * `elements_len` - The number of bytes to load.
+    /// * `elements` - The array to append the loaded elements to.
+    /// * `offset` - The offset to load from and number of bytes to expand.
+    /// # Returns
+    /// * `usize` - The gas cost of expanding the memory.
     fn load_n(
         ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize
     ) -> usize {
         let gas_cost = self.ensure_length(elements_len + offset);
+        self._load_n(elements_len, ref elements, offset);
         gas_cost
     }
 }
+
+//TODO(eni) make PR and add this in corelib
 
 trait SpanExtensionTrait<T> {
     fn pop_front_n(ref self: Span<T>, n: usize);
 }
 
 impl SpanExtenstionImpl<T> of SpanExtensionTrait<T> {
+    /// Removes the first `n` elements from the Span.
     fn pop_front_n(ref self: Span<T>, mut n: usize) {
         loop {
             if n == 0 {
@@ -384,7 +463,6 @@ impl SpanExtenstionImpl<T> of SpanExtensionTrait<T> {
     }
 }
 
-//TODO(eni) make PR and add this in corelib
 impl U128IntoU256 of Into<u128, u256> {
     fn into(self: u128) -> u256 {
         u256 { low: self, high: 0 }

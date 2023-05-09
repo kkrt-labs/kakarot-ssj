@@ -1,7 +1,7 @@
 use core::dict::Felt252DictTrait;
 use core::debug::PrintTrait;
 use kakarot::memory::MemoryTrait;
-use kakarot::memory::PrintTraitCustom;
+use kakarot::memory::MemoryPrintTrait;
 use kakarot::utils::helpers;
 use kakarot::utils;
 use array::{ArrayTrait, SpanTrait};
