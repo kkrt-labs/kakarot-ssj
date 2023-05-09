@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This script is used to generate the `cairo_project.toml` file
+# from the Scarb project's metadata.
+# It is required to run the `cairo-test` runner.
+
 # Run the scarb metadata command and store the JSON output in a variable
 json_output=$(scarb metadata --format-version 1| sed -n '/^{/,$p')
 
@@ -7,36 +11,15 @@ json_output=$(scarb metadata --format-version 1| sed -n '/^{/,$p')
 temp_file=$(mktemp)
 echo "$json_output" > "$temp_file"
 
-# Run the NodeJS script to process the JSON output and create the cairo_project.toml file
-node -e "
-  const fs = require('fs');
-  const path = require('path');
+# Initialize cairo_project.toml file
+echo "[crate_roots]" > cairo_project.toml
 
-  const jsonFile = '$temp_file';
-  const rawData = fs.readFileSync(jsonFile, 'utf-8');
-  const jsonData = JSON.parse(rawData);
+# Process the JSON output and create the cairo_project.toml file using jq
+jq -r '.packages[] | select(.name != "core" and .name != "kakarot") | .name + " = \"" + .root + "/src\""' "$temp_file" >> cairo_project.toml
 
-  const packagesData = jsonData.packages;
-  const crateRoots = {};
-
-  packagesData.forEach(component => {
-    const sourcePath = component.root+\"\/src\";
-    const name = component.name;
-    if (name != \"core\" && name != \"kakarot\"){
-        crateRoots[name] = sourcePath;
-    }
-  });
-
-  let cairoProjectToml = '[crate_roots]\n';
-
-  for (const [key, value] of Object.entries(crateRoots)) {
-    cairoProjectToml += key + ' = \"' + value + '\"\n';
-  }
-    cairoProjectToml += 'kakarot = \"src\" \n';
-    cairoProjectToml += 'tests = \"tests\"';
-
-  fs.writeFileSync('cairo_project.toml', cairoProjectToml);
-"
+# Add kakarot and tests to the cairo_project.toml
+echo 'kakarot = "src"' >> cairo_project.toml
+echo 'tests = "tests"' >> cairo_project.toml
 
 # Remove the temporary file
 rm "$temp_file"

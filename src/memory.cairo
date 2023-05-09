@@ -11,6 +11,7 @@ use integer::{
 };
 use traits::{TryInto, Into};
 use kakarot::{utils, utils::helpers};
+use helpers::{SpanExtensionTrait};
 use option::OptionTrait;
 use debug::PrintTrait;
 
@@ -42,16 +43,16 @@ impl Felt252DictExtensionImpl of Felt252DictExtension {
 }
 
 /// A custom print trait for the `Memory` struct.
-trait MemoryPrintTrait<T> {
-    fn print_mem(ref self: T, begin: usize, end: usize);
+trait MemoryPrintTrait {
+    fn print_segment(ref self: Memory, begin: usize, end: usize);
 }
 
-impl MemoryPrintImpl of MemoryPrintTrait<Memory> {
+impl MemoryPrintImpl of MemoryPrintTrait {
     /// Prints the memory content between offset begin and end
-    fn print_mem(ref self: Memory, mut begin: usize, end: usize) {
+    fn print_segment(ref self: Memory, mut begin: usize, end: usize) {
         '____MEMORY_BEGIN___'.print();
         loop {
-            if begin == end {
+            if begin >= end {
                 break ();
             }
             self.items.get(begin.into()).print();
@@ -107,7 +108,7 @@ impl MemoryImpl of MemoryTrait {
         };
         self.bytes_len = new_bytes_len;
 
-        // Check alignment of offset to 16B chunks
+        // Check alignment of offset to bytes16 chunks
         let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
 
         if offset_in_chunk == 0 {
@@ -126,7 +127,7 @@ impl MemoryImpl of MemoryTrait {
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
         let mask_c: u256 = utils::pow(2, 128).into() / mask;
 
-        // Split the 2 input 16B chunks at offset_in_chunk.
+        // Split the 2 input bytes16 chunks at offset_in_chunk.
 
         let (el_hh, el_hl) = u256_safe_divmod(
             u256 { low: element.high, high: 0 }, u256_as_non_zero(mask_c)
@@ -177,7 +178,7 @@ impl MemoryImpl of MemoryTrait {
         };
         self.bytes_len = new_bytes_len;
 
-        // Check alignment of offset to 16B chunks.
+        // Check alignment of offset to bytes16 chunks.
         let (chunk_index_i, offset_in_chunk_i) = u32_safe_divmod(offset, u32_as_non_zero(16));
         let (chunk_index_f, offset_in_chunk_f) = u32_safe_divmod(
             offset + elements.len() - 1, u32_as_non_zero(16)
@@ -312,7 +313,7 @@ impl MemoryImpl of MemoryTrait {
             return ();
         }
 
-        // Check alignment of offset to 16B chunks.
+        // Check alignment of offset to bytes16 chunks.
         let (chunk_index_i, offset_in_chunk_i) = u32_safe_divmod(offset, u32_as_non_zero(16));
         let (chunk_index_f, mut offset_in_chunk_f) = u32_safe_divmod(
             offset + elements_len - 1, u32_as_non_zero(16)
@@ -441,45 +442,5 @@ impl MemoryImpl of MemoryTrait {
         let gas_cost = self.ensure_length(elements_len + offset);
         self._load_n(elements_len, ref elements, offset);
         gas_cost
-    }
-}
-
-//TODO(eni) make PR and add this in corelib
-
-trait SpanExtensionTrait<T> {
-    fn pop_front_n(ref self: Span<T>, n: usize);
-}
-
-impl SpanExtenstionImpl<T> of SpanExtensionTrait<T> {
-    /// Removes the first `n` elements from the Span.
-    fn pop_front_n(ref self: Span<T>, mut n: usize) {
-        loop {
-            if n == 0 {
-                break ();
-            }
-            self.pop_front();
-            n = n - 1;
-        };
-    }
-}
-
-impl U128IntoU256 of Into<u128, u256> {
-    fn into(self: u128) -> u256 {
-        u256 { low: self, high: 0 }
-    }
-}
-
-impl U32IntoU256 of Into<u32, u256> {
-    fn into(self: u32) -> u256 {
-        u256 { low: self.into(), high: 0 }
-    }
-}
-
-impl U256TryIntoU128 of TryInto<u256, u128> {
-    fn try_into(self: u256) -> Option<u128> {
-        if self.high != 0 {
-            return Option::None(());
-        }
-        Option::Some(self.low)
     }
 }

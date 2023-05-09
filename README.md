@@ -59,6 +59,7 @@ It is a work in progress, and it is not ready for production.
 
 - [Cairo](https://github.com/starkware-libs/cairo)
 - [Rust](https://www.rust-lang.org/tools/install)
+- [Scarb](https://docs.swmansion.com/scarb/download)
 
 ### Installation
 
@@ -81,7 +82,12 @@ make run
 
 ### Test
 
+We use the `cairo-test` runner to run unit tests the Kakarot.
+However, it is not directly compatible with Scarb. Hence, we use a script
+to generate the `cairo_project.toml` file from Scarb's metadata.
+
 ```bash
+make cairo-project
 make test
 ```
 

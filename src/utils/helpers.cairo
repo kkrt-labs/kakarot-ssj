@@ -187,7 +187,7 @@ fn reverse_array<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(src: Span<T>) -> A
     dst
 }
 
-/// Tries to convert a U256 into a u8.
+/// Tries to convert a u256 into a u8.
 impl U256TryIntoU8 of TryInto<u256, u8> {
     fn try_into(self: u256) -> Option<u8> {
         if self.high != 0 {
@@ -197,9 +197,50 @@ impl U256TryIntoU8 of TryInto<u256, u8> {
     }
 }
 
-/// Tries to convert a U256 into a u8.
+/// Converts a u8 into a u256.
 impl U8IntoU256 of Into<u8, u256> {
     fn into(self: u8) -> u256 {
         u256 { low: self.into(), high: 0 }
+    }
+}
+
+
+//TODO(eni) make PR and add this in corelib
+
+trait SpanExtensionTrait<T> {
+    fn pop_front_n(ref self: Span<T>, n: usize);
+}
+
+impl SpanExtensionImpl<T> of SpanExtensionTrait<T> {
+    /// Removes the first `n` elements from the Span.
+    fn pop_front_n(ref self: Span<T>, mut n: usize) {
+        loop {
+            if n == 0 {
+                break ();
+            }
+            self.pop_front();
+            n = n - 1;
+        };
+    }
+}
+
+impl U128IntoU256 of Into<u128, u256> {
+    fn into(self: u128) -> u256 {
+        u256 { low: self, high: 0 }
+    }
+}
+
+impl U32IntoU256 of Into<u32, u256> {
+    fn into(self: u32) -> u256 {
+        u256 { low: self.into(), high: 0 }
+    }
+}
+
+impl U256TryIntoU128 of TryInto<u256, u128> {
+    fn try_into(self: u256) -> Option<u128> {
+        if self.high != 0 {
+            return Option::None(());
+        }
+        Option::Some(self.low)
     }
 }

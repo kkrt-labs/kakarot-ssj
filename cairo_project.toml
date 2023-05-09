@@ -1,3 +1,3 @@
 [crate_roots]
-kakarot = "src" 
+kakarot = "src"
 tests = "tests"

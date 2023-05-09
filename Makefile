@@ -25,10 +25,17 @@ run:
 	@echo "Running..."
 	#cairo-run -p $(ENTRYPOINT)
 
+# There is no integration between Scarb and the default `cairo-test` runner.
+# Therefore, we need to generate the cairo_project.toml file, required
+# by the `cairo-test` runner, manually. This is done by the generate_cairo_project script.
+cairo-project:
+	@echo "Generating cairo project..."
+	sh scripts/generate_cairo_project.sh
 # Test the project
+
 test:
 	@echo "Testing..."
-	sh scripts/generate_cairo_project.sh && cairo-test $(TEST_ENTRYPOINT)
+	cairo-test $(TEST_ENTRYPOINT)
 
 # Format the project
 format:
