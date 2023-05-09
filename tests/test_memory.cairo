@@ -161,6 +161,101 @@ fn test__load__should_load_an_element_from_the_memory_with_offset_6() {
 
 #[test]
 #[available_gas(200000000)]
-fn test__expand__should_return_the_same_memory_and_no_cost(){
-    //TODO
+fn test__expand__should_return_the_same_memory_and_no_cost() {
+    // Given
+    let mut memory = MemoryTrait::new();
+    let value: u256 = 1;
+    let bytes_array = helpers::u256_to_bytes_array(value);
+    memory.store_n(bytes_array.span(), 0);
+
+    // When
+    let cost = memory.expand(0);
+
+    // Then
+    assert(cost == 0, 'cost should be 0');
+    assert(memory.bytes_len == 32, 'memory should be 32bytes');
+    let value = memory._load(0);
+    assert(value == 1, 'value should be 1');
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test__expand__should_return_expanded_memory_and_cost() {
+    // Given
+    let mut memory = MemoryTrait::new();
+    let value: u256 = 1;
+    let bytes_array = helpers::u256_to_bytes_array(value);
+
+    memory.store_n(bytes_array.span(), 0);
+
+    // When
+    let cost = memory.expand(1);
+
+    // Then
+    assert(cost >= 0, 'cost should be positive');
+    assert(memory.bytes_len == 33, 'memory should be 33bytes');
+    let value = memory._load(0);
+    assert(value == 1, 'value should be 1');
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test__ensure_length__should_return_the_same_memory_and_no_cost() {
+    // Given
+    let mut memory = MemoryTrait::new();
+    let value: u256 = 1;
+    let bytes_array = helpers::u256_to_bytes_array(value);
+
+    memory.store_n(bytes_array.span(), 0);
+
+    // When
+    let cost = memory.ensure_length(1);
+
+    // Then
+    assert(cost == 0, 'cost should be 0');
+    assert(memory.bytes_len == 32, 'memory should be 32bytes');
+    let value = memory._load(0);
+    assert(value == 1, 'value should be 1');
+}
+
+#[test]
+#[available_gas(20000000000)]
+fn test__ensure_length__should_return_expanded_memory_and_cost() {
+    // Given
+    let mut memory = MemoryTrait::new();
+    let value: u256 = 1;
+    let bytes_array = helpers::u256_to_bytes_array(value);
+
+    memory.store_n(bytes_array.span(), 0);
+
+    // When
+    let cost = memory.ensure_length(33);
+
+    // Then
+    assert(cost >= 0, 'cost should be positive');
+    assert(memory.bytes_len == 33, 'memory should be 33bytes');
+    let value = memory._load(0);
+    assert(value == 1, 'value should be 1');
+}
+
+#[test]
+#[available_gas(20000000000)]
+fn test__expand_and_load__should_return_expanded_memory_and_element_and_cost() {
+    // Given
+    let mut memory = MemoryTrait::new();
+    let value: u256 = 1;
+    let bytes_array = helpers::u256_to_bytes_array(value);
+    memory.store_n(bytes_array.span(), 0);
+
+    // When
+    let (loaded_element, cost) = memory.load(32);
+
+    // Then
+    assert(cost >= 0, 'cost should be positive');
+    assert(memory.bytes_len == 64, 'memory should be 64 bytes');
+    let value = memory._load(0);
+    assert(value == 1, 'loaded_element should be 1');
+
+    let value = memory._load(32);
+    assert(value == 0, 'value should be 0');
 }

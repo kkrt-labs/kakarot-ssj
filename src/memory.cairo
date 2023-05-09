@@ -71,6 +71,12 @@ trait MemoryTrait {
     fn load_aligned_words(
         ref self: Memory, chunk_index: usize, chunk_index_f: usize, ref elements: Array<u8>
     );
+    fn expand(ref self: Memory, length: usize) -> usize;
+    fn ensure_length(ref self: Memory, length: usize) -> usize;
+    fn load(ref self: Memory, offset: usize) -> (u256, usize);
+    fn load_n(
+        ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize
+    ) -> usize;
 }
 
 impl MemoryImpl of MemoryTrait {
@@ -322,6 +328,43 @@ impl MemoryImpl of MemoryTrait {
             helpers::split_word_128(value.into(), ref elements);
             chunk_index += 1;
         }
+    }
+
+    fn expand(ref self: Memory, length: usize) -> usize {
+        let last_memory_size_word = (self.bytes_len + 31) / 32;
+        let last_memory_cost = (last_memory_size_word * last_memory_size_word) / 512;
+        let last_memory_cost = last_memory_cost + (3 * last_memory_size_word);
+
+        let new_bytes_len = self.bytes_len + length;
+        let new_memory_size_word = (new_bytes_len + 31) / 32;
+        let new_memory_cost = (new_memory_size_word * new_memory_size_word) / 512;
+        let new_memory_cost = new_memory_cost + (3 * new_memory_size_word);
+
+        let cost = new_memory_cost - last_memory_cost;
+        self.bytes_len = new_bytes_len;
+        cost
+    }
+
+    fn ensure_length(ref self: Memory, length: usize) -> usize {
+        if self.bytes_len + 1 <= length {
+            let cost = self.expand(length - self.bytes_len);
+            return cost;
+        } else {
+            return 0;
+        }
+    }
+
+    fn load(ref self: Memory, offset: usize) -> (u256, usize) {
+        let gas_cost = self.ensure_length(32 + offset);
+        let loaded_element = self._load(offset);
+        (loaded_element, gas_cost)
+    }
+
+    fn load_n(
+        ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize
+    ) -> usize {
+        let gas_cost = self.ensure_length(elements_len + offset);
+        gas_cost
     }
 }
 
