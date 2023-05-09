@@ -50,15 +50,14 @@ fn pow256_rev(i: usize) -> u256 {
 }
 
 
-/// Splits a felt into `len` bytes, big-endian, and appends the result to `dst`.
-//TODO(eni) this might need to be refactored and pass the array as arg.
+/// Splits a u256 into `len` bytes, big-endian, and appends the result to `dst`.
 fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
     let little_endian = split_word_little(value, len);
     let big_endian = reverse_array(little_endian.span());
     concat_array(ref dst, big_endian.span());
 }
 
-/// Splits a felt into `len` bytes, little-endian, and returns the bytes array.
+/// Splits a u256 into `len` bytes, little-endian, and returns the bytes array.
 fn split_word_little(mut value: u256, mut len: usize) -> Array<u8> {
     let mut dst: Array<u8> = ArrayTrait::new();
     let FELT252_PRIME: u256 = 0x800000000000011000000000000000000000000000000000000000000000001;
@@ -79,11 +78,13 @@ fn split_word_little(mut value: u256, mut len: usize) -> Array<u8> {
     dst
 }
 
-/// Splits a felt into 16 bytes, big-endien, and appends the result to `dst`.
+/// Splits a u256 into 16 bytes, big-endien, and appends the result to `dst`.
 fn split_word_128(value: u256, ref dst: Array<u8>) {
     split_word(value, 16, ref dst)
 }
 
+
+//TODO(eni): question: do we need to load more than 16 bytes?
 /// Loads a sequence of bytes into a single u128 in big-endian
 ///
 /// # Arguments
@@ -193,5 +194,12 @@ impl U256TryIntoU8 of TryInto<u256, u8> {
             return Option::None(());
         }
         self.low.try_into()
+    }
+}
+
+/// Tries to convert a U256 into a u8.
+impl U8IntoU256 of Into<u8, u256> {
+    fn into(self: u8) -> u256 {
+        u256 { low: self.into(), high: 0 }
     }
 }
