@@ -22,7 +22,7 @@ node -e "
   packagesData.forEach(component => {
     const sourcePath = component.root+\"\/src\";
     const name = component.name;
-    if (name != \"core\"){
+    if (name != \"core\" && name != \"kakarot\"){
         crateRoots[name] = sourcePath;
     }
   });
@@ -32,6 +32,7 @@ node -e "
   for (const [key, value] of Object.entries(crateRoots)) {
     cairoProjectToml += key + ' = \"' + value + '\"\n';
   }
+    cairoProjectToml += 'kakarot = \"src\" \n';
     cairoProjectToml += 'tests = \"tests\"';
 
   fs.writeFileSync('cairo_project.toml', cairoProjectToml);
