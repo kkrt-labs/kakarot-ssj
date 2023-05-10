@@ -33,7 +33,7 @@ cairo-project:
 	sh scripts/generate_cairo_project.sh
 # Test the project
 
-test:
+test: cairo-project
 	@echo "Testing..."
 	cairo-test $(TEST_ENTRYPOINT)
 

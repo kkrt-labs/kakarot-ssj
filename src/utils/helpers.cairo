@@ -1,6 +1,7 @@
 use array::ArrayTrait;
 use array::SpanTrait;
 use traits::{Into, TryInto};
+use kakarot::utils::constants;
 use option::OptionTrait;
 use debug::PrintTrait;
 
@@ -74,7 +75,6 @@ fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
 /// Splits a u256 into `len` bytes, little-endian, and returns the bytes array.
 fn split_word_little(mut value: u256, mut len: usize) -> Array<u8> {
     let mut dst: Array<u8> = ArrayTrait::new();
-    let FELT252_PRIME: u256 = 0x800000000000011000000000000000000000000000000000000000000000001;
     loop {
         if len == 0 {
             assert(value == 0, 'split_words:value not 0');
@@ -83,7 +83,7 @@ fn split_word_little(mut value: u256, mut len: usize) -> Array<u8> {
 
         let base = 256;
         let bound = 256;
-        let low_part = (value % FELT252_PRIME) % base;
+        let low_part = (value % constants::FELT252_PRIME) % base;
         dst.append(low_part.try_into().unwrap());
 
         len = len - 1;

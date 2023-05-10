@@ -63,7 +63,7 @@ fn test_store_should_add_n_elements_to_the_memory() {
 }
 
 #[test]
-#[available_gas(200000000)]
+#[available_gas(20000000)]
 fn test__load__should_load_an_element_from_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();

@@ -1,4 +1,4 @@
-mod kakarot_test;
-mod stack_test;
+mod test_kakarot;
+mod test_stack;
 mod test_memory;
 mod utils;

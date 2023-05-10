@@ -3,6 +3,7 @@ use array::ArrayTrait;
 use option::OptionTrait;
 
 mod helpers;
+mod constants;
 
 /// Panic with a custom message.
 /// # Arguments

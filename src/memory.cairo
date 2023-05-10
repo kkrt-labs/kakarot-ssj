@@ -125,7 +125,7 @@ impl MemoryImpl of MemoryTrait {
         //   |-- mask = 256 ** offset_in_chunk
 
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
-        let mask_c: u256 = utils::pow(2, 128).into() / mask;
+        let mask_c: u256 = utils::pow(256, 16).into() / mask;
 
         // Split the 2 input bytes16 chunks at offset_in_chunk.
 
