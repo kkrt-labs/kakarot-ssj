@@ -28,12 +28,31 @@ trait Felt252DictExtension {
 }
 
 impl Felt252DictExtensionImpl of Felt252DictExtension {
+    /// Stores a u256 element into the dictionary.
+    /// The element will be stored as two distinct u128 elements,
+    /// thus taking two indexes.
+    /// 
+    /// # Arguments
+    /// * `self` - A mutable reference to the `Felt252Dict` instance.
+    /// * `element` - The element to store, of type `u256`.
+    /// * `index` - The `usize` index at which to store the element.
     fn store_u256(ref self: Felt252Dict<u128>, element: u256, index: usize) {
         let index: felt252 = index.into();
-        self.insert(index, element.low.into());
-        self.insert(index + 1, element.high.into());
+        self.insert(index, element.high.into());
+        self.insert(index + 1, element.low.into());
     }
 
+    /// Reads a u256 element from the dictionary.
+    /// The element is stored as two distinct u128 elements,
+    /// thus we have to read the low and high parts and combine them.
+    /// The memory is big-endian organized, so the high part is stored first.
+    ///
+    /// # Arguments
+    /// * `self` - A mutable reference to the `Felt252Dict` instance.
+    /// * `index` - The `usize` index at which the element is stored.
+    ///
+    /// # Returns
+    /// * The element read, of type `u256`.
     fn read_u256(ref self: Felt252Dict<u128>, index: usize) -> u256 {
         let index: felt252 = index.into();
         let high: u128 = self.get(index);

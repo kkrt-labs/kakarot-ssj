@@ -106,13 +106,13 @@ fn split_word_128(value: u256, ref dst: Array<u8>) {
 /// * `words` - The bytes to load
 ///
 /// # Returns
-/// The packed u128
-fn load_word(mut len: usize, words: Span<u8>) -> u128 {
+/// The packed u256
+fn load_word(mut len: usize, words: Span<u8>) -> u256 {
     if len == 0 {
         return 0;
     }
 
-    let mut current: u128 = 0;
+    let mut current: u256 = 0;
     let mut counter = 0;
 
     loop {
