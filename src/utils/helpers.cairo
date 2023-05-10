@@ -26,27 +26,41 @@ fn pow256_rev(i: usize) -> u256 {
         panic_with_felt252('pow256_rev: i > 16');
     }
 
-    let mut pow256_rev_table: Array<u256> = ArrayTrait::new();
-
-    pow256_rev_table.append(340282366920938463463374607431768211456);
-    pow256_rev_table.append(1329227995784915872903807060280344576);
-    pow256_rev_table.append(5192296858534827628530496329220096);
-    pow256_rev_table.append(20282409603651670423947251286016);
-    pow256_rev_table.append(79228162514264337593543950336);
-    pow256_rev_table.append(309485009821345068724781056);
-    pow256_rev_table.append(1208925819614629174706176);
-    pow256_rev_table.append(4722366482869645213696);
-    pow256_rev_table.append(18446744073709551616);
-    pow256_rev_table.append(72057594037927936);
-    pow256_rev_table.append(281474976710656);
-    pow256_rev_table.append(1099511627776);
-    pow256_rev_table.append(4294967296);
-    pow256_rev_table.append(16777216);
-    pow256_rev_table.append(65536);
-    pow256_rev_table.append(256);
-    pow256_rev_table.append(1);
-
-    return *pow256_rev_table[i];
+    if i == 0 {
+        return 340282366920938463463374607431768211456;
+    } else if i == 1 {
+        return 1329227995784915872903807060280344576;
+    } else if i == 2 {
+        return 5192296858534827628530496329220096;
+    } else if i == 3 {
+        return 20282409603651670423947251286016;
+    } else if i == 4 {
+        return 79228162514264337593543950336;
+    } else if i == 5 {
+        return 309485009821345068724781056;
+    } else if i == 6 {
+        return 1208925819614629174706176;
+    } else if i == 7 {
+        return 4722366482869645213696;
+    } else if i == 8 {
+        return 18446744073709551616;
+    } else if i == 9 {
+        return 72057594037927936;
+    } else if i == 10 {
+        return 281474976710656;
+    } else if i == 11 {
+        return 1099511627776;
+    } else if i == 12 {
+        return 4294967296;
+    } else if i == 13 {
+        return 16777216;
+    } else if i == 14 {
+        return 65536;
+    } else if i == 15 {
+        return 256;
+    } else {
+        return 1;
+    }
 }
 
 
