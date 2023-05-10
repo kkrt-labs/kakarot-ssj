@@ -231,7 +231,6 @@ impl MemoryImpl of MemoryTrait {
 
         // Fill last word
         let w_f = self.items.get(chunk_index_f.into());
-        //TODO(eni) might need to use a special div_rem for 2*128 here.
         let w_f_l = (w_f.into() % mask_f);
         let mut elements_clone = elements.clone();
         elements_clone.pop_front_n(elements.len() - offset_in_chunk_f);
@@ -344,7 +343,6 @@ impl MemoryImpl of MemoryTrait {
         // Special case: within the same word.
         if chunk_index_i == chunk_index_f {
             let w: u128 = self.items.get(chunk_index_i.into());
-            //TODO(eni): question: do we need a special div_rem function here
             let w_l = w.into() % mask_i;
             let w_lh = w_l / mask_f;
             helpers::split_word(w_lh, elements_len, ref elements)

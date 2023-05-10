@@ -98,7 +98,6 @@ fn split_word_128(value: u256, ref dst: Array<u8>) {
 }
 
 
-//TODO(eni): question: do we need to load more than 16 bytes?
 /// Loads a sequence of bytes into a single u128 in big-endian
 ///
 /// # Arguments
