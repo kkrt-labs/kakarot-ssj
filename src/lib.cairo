@@ -15,6 +15,3 @@ mod context;
 
 // Utils module
 mod utils;
-
-// Test modules
-mod tests;

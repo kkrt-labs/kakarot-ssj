@@ -59,13 +59,14 @@ It is a work in progress, and it is not ready for production.
 
 - [Cairo](https://github.com/starkware-libs/cairo)
 - [Rust](https://www.rust-lang.org/tools/install)
+- [Scarb](https://docs.swmansion.com/scarb/download)
+- [jq](https://stedolan.github.io/jq/download/)
 
 ### Installation
 
 > **[TODO]**
 
 ## Usage
-
 
 ### Build
 
@@ -80,6 +81,11 @@ make run
 ```
 
 ### Test
+
+We use the `cairo-test` runner to run the unit tests on Kakarot.
+However, it is not directly compatible with Scarb. Hence, we use a script
+to generate the `cairo_project.toml` file from Scarb's metadata.
+Running this script requires `jq` to be installed.
 
 ```bash
 make test
@@ -140,7 +146,6 @@ This project is licensed under the **MIT license**.
 See [LICENSE](LICENSE) for more information.
 
 ## Acknowledgements
-
 
 ## Contributors ✨
 

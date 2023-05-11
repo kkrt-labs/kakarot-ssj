@@ -14,8 +14,16 @@ all: build run test
 
 # Targets
 
+# There is no integration between Scarb and the default `cairo-test` runner.
+# Therefore, we need to generate the cairo_project.toml file, required
+# by the `cairo-test` runner, manually. This is done by the generate_cairo_project script.
+cairo-project:
+	@echo "Generating cairo project..."
+	sh scripts/generate_cairo_project.sh
+# Test the project
+
 # Compile the project
-build: FORCE
+build: cairo-project FORCE
 	$(MAKE) clean format
 	@echo "Building..."
 	cairo-compile . > $(BUILD_DIR)/$(PROJECT_NAME).sierra
@@ -25,8 +33,9 @@ run:
 	@echo "Running..."
 	#cairo-run -p $(ENTRYPOINT)
 
-# Test the project
-test:
+
+
+test: cairo-project
 	@echo "Testing..."
 	cairo-test $(TEST_ENTRYPOINT)
 

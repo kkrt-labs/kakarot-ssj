@@ -50,7 +50,7 @@ impl StackImpl of StackTrait {
     /// * Stack The new stack instance.
     fn new() -> Stack {
         let items = Felt252DictTrait::<u128>::new();
-        Stack { items, len: 0}
+        Stack { items, len: 0 }
     }
 
     /// Pushes a new item onto the stack.
@@ -66,7 +66,7 @@ impl StackImpl of StackTrait {
     /// Returns
     /// * Option<u256> The popped item, or None if the stack is empty.
     fn pop(ref self: Stack) -> Option<u256> {
-        if self.len() == 0{
+        if self.len() == 0 {
             Option::None(())
         } else {
             let last_index = self.dict_len() - 2;
@@ -79,7 +79,7 @@ impl StackImpl of StackTrait {
     /// Returns
     /// * Option<u256> The top item, or None if the stack is empty.
     fn peek(ref self: Stack) -> Option<u256> {
-        if self.len() == 0{
+        if self.len() == 0 {
             Option::None(())
         } else {
             let last_index = self.dict_len() - 2;
@@ -102,7 +102,7 @@ impl StackImpl of StackTrait {
     /// Returns
     /// * bool True if the stack is empty, false otherwise.
     fn is_empty(self: @Stack) -> bool {
-        *self.len == 0 
+        *self.len == 0
     }
 }
 
@@ -167,7 +167,7 @@ mod tests {
     #[test]
     fn test_insert_u256() {
         let mut stack = StackTrait::new();
-        let expected: u256 = u256 { low: 100, high: 100};
+        let expected: u256 = u256 { low: 100, high: 100 };
         stack.insert_u256(expected, 0);
         let low = stack.items.get(0);
         let high = stack.items.get(1);
@@ -178,7 +178,7 @@ mod tests {
     #[test]
     fn test_get_u256() {
         let mut stack = StackTrait::new();
-        let expected: u256 = u256 { low: 100, high: 100};
+        let expected: u256 = u256 { low: 100, high: 100 };
         stack.insert_u256(expected, 0);
         let item = stack.get_u256(0);
         assert(expected == item, 'u256 item should be 1');
