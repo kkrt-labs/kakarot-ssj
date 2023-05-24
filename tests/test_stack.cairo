@@ -44,7 +44,7 @@ fn test__len__should_return_the_length_of_the_stack() {
     assert(stack.len() == 0, 'stack length should be 0');
 
     // When
-    stack.len = 1;
+    stack.push(1);
     // Then
     assert(stack.len() == 1, 'stack length should be 1');
 }
@@ -59,13 +59,11 @@ fn test__push__should_add_an_element_to_the_stack() {
     stack.push(1);
 
     // Then
-    let high = stack.items.get(0);
-    let low = stack.items.get(1);
-    let stack_val_1 = u256 { low: low, high: high };
+    let res = stack.peek().unwrap();
 
     assert(stack.is_empty() == false, 'stack should not be empty');
-    assert(stack.len() == 1, 'len should be 3');
-    assert(stack_val_1 == 1, 'wrong result');
+    assert(stack.len() == 1, 'len should be 1');
+    assert(res == 1, 'wrong result');
 }
 
 #[test]
@@ -84,7 +82,7 @@ fn test__push__should_fail_when_overflow() {
 
 #[test]
 #[available_gas(2000000)]
-fn test__pop__should_pop_an_element_to_the_stack() {
+fn test__pop__should_pop_an_element_from_the_stack() {
     // Given
     let mut stack = StackTrait::new();
     stack.push(1);
@@ -115,9 +113,9 @@ fn test__pop_n__should_pop_N_elements_from_the_stack() {
     // Then
     assert(stack.len == 0, 'wrong length');
     assert(elements.len() == 3, 'wrong returned array length');
-    assert(*elements[0] == 3, 'wrong result');
-    assert(*elements[1] == 2, 'wrong result');
-    assert(*elements[2] == 1, 'wrong result');
+    assert(*elements[0] == 3, 'wrong result at index 0');
+    assert(*elements[1] == 2, 'wrong result at index 1');
+    assert(*elements[2] == 1, 'wrong result at index 2');
 }
 
 #[test]

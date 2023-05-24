@@ -125,7 +125,7 @@ impl StackImpl of StackTrait {
     /// Returns
     /// * u256 The item at the given index, or None if the stack is empty.
     fn peek_at(ref self: Stack, index: usize) -> u256 {
-        if index > self.len() {
+        if index >= self.len() {
             panic_with_felt252('Kakarot: StackUnderflow');
         }
 
@@ -156,6 +156,7 @@ impl StackImpl of StackTrait {
     /// * self The stack instance.
     /// Returns
     /// * usize The length of the stack.
+    #[inline(always)]
     fn len(self: @Stack) -> usize {
         *self.len
     }
@@ -165,6 +166,7 @@ impl StackImpl of StackTrait {
     /// * self The stack instance.
     /// Returns
     /// * bool True if the stack is empty, false otherwise.
+    #[inline(always)]
     fn is_empty(self: @Stack) -> bool {
         *self.len == 0
     }
