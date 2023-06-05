@@ -38,7 +38,7 @@ impl DestructStack of Destruct<Stack> {
 trait StackTrait {
     fn new() -> Stack;
     fn push(ref self: Stack, item: u256) -> ();
-    fn pop(ref self: Stack) -> u256;
+    fn pop(ref self: Stack) -> Option<u256>;
     fn pop_n(ref self: Stack, n: usize) -> Array<u256>;
     fn peek(ref self: Stack) -> Option<u256>;
     fn peek_at(ref self: Stack, index: usize) -> u256;
@@ -73,13 +73,13 @@ impl StackImpl of StackTrait {
     /// Pops the top item off the stack.
     /// Returns
     /// * Option<u256> The popped item, or None if the stack is empty.
-    fn pop(ref self: Stack) -> u256 {
+    fn pop(ref self: Stack) -> Option<u256> {
         if self.len() == 0 {
-            panic_with_felt252('Kakarot: StackUnderflow');
+            return Option::None(());
         }
         let last_index = self.len - 1;
         self.len -= 1;
-        self.get_u256(last_index)
+        Option::Some(self.get_u256(last_index))
     }
 
     /// Pops N elements from the stack.
@@ -98,7 +98,7 @@ impl StackImpl of StackTrait {
             if n == 0 {
                 break ();
             }
-            popped_items.append(self.pop());
+            popped_items.append(self.pop().unwrap());
             n -= 1;
         };
         popped_items
