@@ -63,10 +63,10 @@ impl StackImpl of StackTrait {
     /// * item The item to push onto the stack.
     fn push(ref self: Stack, item: u256) -> () {
         // we can store at most 1024 256-bits words
-        if self.len == constants::STACK_MAX_DEPTH {
+        if self.len() == constants::STACK_MAX_DEPTH {
             panic_with_felt252('Kakarot: StackOverflow')
         }
-        self.insert_u256(item, self.len);
+        self.insert_u256(item, self.len());
         self.len += 1;
     }
 
@@ -77,7 +77,7 @@ impl StackImpl of StackTrait {
         if self.len() == 0 {
             return Option::None(());
         }
-        let last_index = self.len - 1;
+        let last_index = self.len() - 1;
         self.len -= 1;
         Option::Some(self.get_u256(last_index))
     }
@@ -144,10 +144,10 @@ impl StackImpl of StackTrait {
             panic_with_felt252('Kakarot: StackUnderflow');
         }
         let position_0 = self.len() - 1;
-        let index_from_top = position_0 - index;
+        let position_item = position_0 - index;
         let top_item = self.get_u256(position_0);
-        let swapped_item = self.get_u256(index_from_top);
-        self.insert_u256(top_item, index_from_top);
+        let swapped_item = self.get_u256(position_item);
+        self.insert_u256(top_item, position_item);
         self.insert_u256(swapped_item, position_0);
     }
 
@@ -186,7 +186,7 @@ impl StackU256HelperImpl of StackU256HelperTrait {
     /// # Returns
     /// `felt252` - the length of the dictionary
     fn dict_len(ref self: Stack) -> usize {
-        (self.len * 2)
+        (self.len() * 2)
     }
 
     /// Inserts a 256-bit unsigned integer `item` into the stack at the given `index`
