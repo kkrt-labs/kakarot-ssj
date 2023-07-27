@@ -45,56 +45,41 @@
 
 ## About
 
-**Kakarot** is an Ethereum Virtual Machine written in Cairo. It means it can be
-deployed on StarkNet, a layer 2 scaling solution for Ethereum, and run any EVM
-bytecode program. Hence, Kakarot can be used to run Ethereum smart contracts on
-StarkNet. Kakarot is the super sayajin zkEVM! Why? Because:
-`It's over 9000!!!!!`.
+Kakarot is an (zk)-Ethereum Virtual Machine implementation written in Cairo. Kakarot is Ethereum compatible, i.e. all existing smart contracts, developer tools and wallets work out-of-the-box on Kakarot. It's been open source from day one. Soon available on Starknet L2 and L3.
 
 It is a work in progress, and it is not ready for production.
 
 ## Getting Started
 
+This repository is a rewrite of [the first version of Kakarot zkEVM](https://github.com/kkrt-labs/kakarot).
+
 ### Prerequisites
 
 - [Cairo](https://github.com/starkware-libs/cairo)
-- [Rust](https://www.rust-lang.org/tools/install)
 - [Scarb](https://docs.swmansion.com/scarb/download)
-- [jq](https://stedolan.github.io/jq/download/)
 
 ### Installation
 
-> **[TODO]**
-
-## Usage
+- Install Scarb:
+  - `curl --proto '=https' --tlsv1.2 -sSf https://docs.swmansion.com/scarb/install.sh | sh`
+- [Fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) the repository and clone your fork (`git clone https://github.com/<YOUR_USERNAME>/kakarot-ssj`)
 
 ### Build
 
 ```bash
-make build
-```
-
-### Run
-
-```bash
-make run
+scarb build
 ```
 
 ### Test
 
-We use the `cairo-test` runner to run the unit tests on Kakarot.
-However, it is not directly compatible with Scarb. Hence, we use a script
-to generate the `cairo_project.toml` file from Scarb's metadata.
-Running this script requires `jq` to be installed.
-
 ```bash
-make test
+scarb test
 ```
 
 ### Format
 
 ```bash
-make format
+scarb fmt
 ```
 
 ## Roadmap
@@ -117,7 +102,7 @@ Reach out to the maintainer at one of the following places:
 If you want to say **thank you** or/and support active development of Kakarot:
 
 - Add a [GitHub Star](https://github.com/sayajin-labs/kakarot-ssj) to the project.
-- Tweet about the Kakarot.
+- Tweet about [Kakarot](https://twitter.com/KakarotZkEvm).
 - Write interesting articles about the project on [Dev.to](https://dev.to/), [Medium](https://medium.com/) or your personal blog.
 
 Together, we can make Kakarot **better**!

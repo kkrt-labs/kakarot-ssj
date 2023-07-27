@@ -108,7 +108,7 @@ impl MemoryImpl of MemoryTrait {
     ///
     /// * A new `Memory` instance.
     fn new() -> Memory {
-        Memory { items: Felt252DictTrait::new(), bytes_len: 0,  }
+        Memory { items: Default::default(), bytes_len: 0,  }
     }
 
     /// Stores a 32-bytes element into the memory.

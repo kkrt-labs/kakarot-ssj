@@ -200,23 +200,6 @@ fn reverse_array<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(src: Span<T>) -> A
     dst
 }
 
-/// Tries to convert a u256 into a u8.
-impl U256TryIntoU8 of TryInto<u256, u8> {
-    fn try_into(self: u256) -> Option<u8> {
-        if self.high != 0 {
-            return Option::None(());
-        }
-        self.low.try_into()
-    }
-}
-
-/// Converts a u8 into a u256.
-impl U8IntoU256 of Into<u8, u256> {
-    fn into(self: u8) -> u256 {
-        u256 { low: self.into(), high: 0 }
-    }
-}
-
 
 //TODO(eni) make PR and add this in corelib
 
