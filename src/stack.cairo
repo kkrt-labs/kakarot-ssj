@@ -53,7 +53,7 @@ impl StackImpl of StackTrait {
     /// Returns
     /// * Stack The new stack instance.
     fn new() -> Stack {
-        let items = Felt252DictTrait::<u128>::new();
+        let items: Felt252Dict<u128> = Default::default();
         Stack { items, len: 0 }
     }
 
