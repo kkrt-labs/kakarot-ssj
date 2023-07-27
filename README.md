@@ -51,22 +51,18 @@ It is a work in progress, and it is not ready for production.
 
 ## Getting Started
 
+This repository is a rewrite of [the first version of Kakarot zkEVM](https://github.com/kkrt-labs/kakarot).
+
 ### Prerequisites
 
 - [Cairo](https://github.com/starkware-libs/cairo)
-- [Rust](https://www.rust-lang.org/tools/install)
 - [Scarb](https://docs.swmansion.com/scarb/download)
-- [jq](https://stedolan.github.io/jq/download/)
 
 ### Installation
 
-- Install Rust:
-  - `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
 - Install Scarb:
   - `curl --proto '=https' --tlsv1.2 -sSf https://docs.swmansion.com/scarb/install.sh | sh`
 - [Fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) the repository and clone your fork (`git clone https://github.com/<YOUR_USERNAME>/kakarot-ssj`)
-
-## Usage
 
 ### Build
 
