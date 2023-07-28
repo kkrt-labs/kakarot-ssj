@@ -6,7 +6,7 @@ struct EthereumTransaction {
     gas_limit: felt252,
     destination: felt252,
     amount: felt252,
-    payload: @Array<felt252>,
+    payload: Span<felt252>,
     tx_hash: u256,
     v: felt252,
     r: u256,
@@ -21,7 +21,7 @@ trait EthTransaction {
     /// transaction data, which includes the chain ID in accordance with EIP-155.
     /// # Arguments
     /// tx_data The raw transaction data
-    fn decode_legacy_tx(tx_data: @Array<u8>) -> EthereumTransaction;
+    fn decode_legacy_tx(tx_data: Span<u8>) -> EthereumTransaction;
 
     /// Decode a modern Ethereum transaction
     /// This function decodes a modern Ethereum transaction in accordance with EIP-2718.
@@ -30,14 +30,14 @@ trait EthTransaction {
     /// transaction data, which includes the chain ID as part of the transaction data itself.
     /// # Arguments
     /// tx_data The raw transaction data
-    fn decode_tx(tx_data: @Array<u8>) -> EthereumTransaction;
+    fn decode_tx(tx_data: Span<u8>) -> EthereumTransaction;
 
     /// Check if a raw transaction is a legacy Ethereum transaction
     /// This function checks if a raw transaction is a legacy Ethereum transaction by checking the transaction type
     /// according to EIP-2718. If the transaction type is less than or equal to 0xc0, it's a legacy transaction.
     /// # Arguments 
     /// - `tx_data` The raw transaction data
-    fn is_legacy_tx(tx_data: @Array<u8>) -> bool;
+    fn is_legacy_tx(tx_data: Span<u8>) -> bool;
 
     /// Decode a raw Ethereum transaction
     /// This function decodes a raw Ethereum transaction. It checks if the transaction
@@ -45,7 +45,7 @@ trait EthTransaction {
     /// resp. `decode_legacy_tx` or `decode_tx` based on the result.
     /// # Arguments
     /// - `tx_data` The raw transaction data
-    fn decode(tx_data: @Array<u8>) -> EthereumTransaction;
+    fn decode(tx_data: Span<u8>) -> EthereumTransaction;
 
     /// Validate an Ethereum transaction
     /// This function validates an Ethereum transaction by checking if the transaction
@@ -57,5 +57,5 @@ trait EthTransaction {
     /// - `address` The ethereum address that is supposed to have signed the transaction
     /// - `account_nonce` The nonce of the account
     /// - `param tx_data` The raw transaction data
-    fn validate_eth_tx(address: felt252, account_nonce: felt252, tx_data: @Array<u8>) -> bool;
+    fn validate_eth_tx(address: felt252, account_nonce: felt252, tx_data: Span<u8>) -> bool;
 }
