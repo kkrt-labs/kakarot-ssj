@@ -4,3 +4,4 @@
 // That being said, we can modify the way we store it with new mappings and storage outlays to optimize steps.
 // Use Traits, impls blocks and idiomatic Cairo 1.0
 
+
