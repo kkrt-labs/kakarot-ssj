@@ -2,3 +2,6 @@
 cairo-version = "2.0.2"
 name = "kakarot"
 version = "0.1.0"
+
+[tool.snforge]
+exit_first = true
