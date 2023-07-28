@@ -238,3 +238,34 @@ impl ArrayPartialEq<T, impl PartialEqImpl: PartialEq<T>> of PartialEq<Array<T>> 
         !ArrayPartialEq::eq(lhs, rhs)
     }
 }
+
+
+fn max(a: usize, b: usize) -> usize {
+    if a > b {
+        return a;
+    } else {
+        return b;
+    }
+}
+
+// Raise a number to a power.
+/// * `base` - The number to raise.
+/// * `exp` - The exponent.
+/// # Returns
+/// * `felt252` - The result of base raised to the power of exp.
+fn pow(base: felt252, exp: felt252) -> felt252 {
+    if exp == 0 {
+        return 1;
+    } else {
+        return base * pow(base, exp - 1);
+    }
+}
+
+/// Panic with a custom code.
+/// # Arguments
+/// * `code` - The code to panic with. Must be a short string to fit in a felt252.
+fn panic_with_code(code: felt252) {
+    let mut data = ArrayTrait::new();
+    data.append(code);
+    panic(data);
+}

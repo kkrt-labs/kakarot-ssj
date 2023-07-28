@@ -134,21 +134,23 @@ fn _load_should_load_an_element_from_the_memory_with_offset(offset: usize, low: 
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_1() {
     _load_should_load_an_element_from_the_memory_with_offset(
-        8, 2 * utils::pow(256, 8).try_into().unwrap(), utils::pow(256, 8).try_into().unwrap()
+        8, 2 * helpers::pow(256, 8).try_into().unwrap(), helpers::pow(256, 8).try_into().unwrap()
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_2() {
     _load_should_load_an_element_from_the_memory_with_offset(
-        7, 2 * utils::pow(256, 7).try_into().unwrap(), utils::pow(256, 7).try_into().unwrap()
+        7, 2 * helpers::pow(256, 7).try_into().unwrap(), helpers::pow(256, 7).try_into().unwrap()
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_3() {
     _load_should_load_an_element_from_the_memory_with_offset(
-        23, 3 * utils::pow(256, 7).try_into().unwrap(), 2 * utils::pow(256, 7).try_into().unwrap()
+        23,
+        3 * helpers::pow(256, 7).try_into().unwrap(),
+        2 * helpers::pow(256, 7).try_into().unwrap()
     );
 }
 
@@ -156,14 +158,16 @@ fn test__load__should_load_an_element_from_the_memory_with_offset_3() {
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_4() {
     _load_should_load_an_element_from_the_memory_with_offset(
-        33, 4 * utils::pow(256, 1).try_into().unwrap(), 3 * utils::pow(256, 1).try_into().unwrap()
+        33,
+        4 * helpers::pow(256, 1).try_into().unwrap(),
+        3 * helpers::pow(256, 1).try_into().unwrap()
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_5() {
     _load_should_load_an_element_from_the_memory_with_offset(
-        63, 0, 4 * utils::pow(256, 15).try_into().unwrap()
+        63, 0, 4 * helpers::pow(256, 15).try_into().unwrap()
     );
 }
 
