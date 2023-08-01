@@ -3,9 +3,7 @@
   "projectOwner": "sayajin-labs",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "files": [
-    "README.md"
-  ],
+  "files": ["README.md"],
   "imageSize": 100,
   "commit": true,
   "commitConvention": "gitmoji",
@@ -15,20 +13,24 @@
       "name": "Abdel @ StarkWare ",
       "avatar_url": "https://avatars.githubusercontent.com/u/45264458?v=4",
       "profile": "https://github.com/abdelhamidbakhta",
-      "contributions": [
-        "code"
-      ]
+      "contributions": ["code"]
     },
     {
       "login": "jobez",
       "name": "johann bestowrous",
       "avatar_url": "https://avatars.githubusercontent.com/u/615197?v=4",
       "profile": "https://github.com/jobez",
-      "contributions": [
-        "code"
-      ]
+      "contributions": ["code"]
+    },
+    {
+      "login": "Eikix",
+      "name": "Elias Tazartes",
+      "avatar_url": "https://avatars.githubusercontent.com/u/66871571?v=4",
+      "profile": "https://github.com/Eikix",
+      "contributions": ["review", "tutorial", "talk"]
     }
   ],
   "contributorsPerLine": 7,
   "linkToUsage": true
 }
+
