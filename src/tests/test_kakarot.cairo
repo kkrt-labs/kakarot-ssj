@@ -1,10 +1,9 @@
-// Core lib imports
 use array::ArrayTrait;
-use option::OptionTrait;
-// Internal imports
-use kakarot::context::CallContext;
 use kakarot::evm;
 use kakarot::stack::StackTrait;
+use option::OptionTrait;
+use kakarot::context::CallContext;
+
 
 #[test]
 #[available_gas(2000000)]
@@ -13,6 +12,7 @@ fn nominal_case_empty_pc() {
     let bytecode = ArrayTrait::<u8>::new();
     let call_data = ArrayTrait::<u8>::new();
     let call_value = 0;
+
     // Create a call context.
     let call_context = CallContext {
         bytecode: bytecode, call_data: call_data, value: call_value, 
@@ -36,4 +36,3 @@ fn stack_should_increment_len_on_push() {
 
     assert(stack_len == 1, 1);
 }
-
