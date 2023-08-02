@@ -16,5 +16,8 @@ mod context;
 // Utils module
 mod utils;
 
+// Errors module
+mod errors;
+
 // tests
 mod tests;
