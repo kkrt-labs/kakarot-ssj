@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="docs/img/kakarot_github_banner_footer.png" height="200">
+    <img src="docs/img/kakarot_github_banner.png" height="200">
 </p>
 
 <div align="center">
@@ -57,12 +57,7 @@ This repository is a rewrite of
 
 ### Installation
 
-- Install Scarb:
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://docs.swmansion.com/scarb/install.sh | sh
-```
-
+- Install [Scarb](https://docs.swmansion.com/scarb)
 - [Fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) the
   repository and clone your fork
   (`git clone https://github.com/<YOUR_USERNAME>/kakarot-ssj`)
