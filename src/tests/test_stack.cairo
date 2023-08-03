@@ -10,7 +10,7 @@ use kakarot::stack::StackTrait;
 use kakarot::utils::constants;
 
 #[test]
-#[available_gas(2000000)]
+#[available_gas(11500)]
 fn test_stack_new_should_return_empty_stack() {
     // When
     let mut stack = StackTrait::new();
@@ -20,7 +20,7 @@ fn test_stack_new_should_return_empty_stack() {
 }
 
 #[test]
-#[available_gas(2000000)]
+#[available_gas(40000)]
 fn test__empty__should_return_if_stack_is_empty() {
     // Given
     let mut stack = StackTrait::new();
@@ -35,7 +35,7 @@ fn test__empty__should_return_if_stack_is_empty() {
 }
 
 #[test]
-#[available_gas(2000000)]
+#[available_gas(35000)]
 fn test__len__should_return_the_length_of_the_stack() {
     // Given
     let mut stack = StackTrait::new();
@@ -55,7 +55,7 @@ mod push {
     use option::OptionTrait;
     use super::constants;
     #[test]
-    #[available_gas(2000000)]
+    #[available_gas(60000)]
     fn test_should_add_an_element_to_the_stack() {
         // Given
         let mut stack = StackTrait::new();
@@ -72,7 +72,7 @@ mod push {
     }
 
     #[test]
-    #[available_gas(2000000000000000)]
+    #[available_gas(27000000)]
     #[should_panic(expected: ('Kakarot: StackOverflow', ))]
     fn test_should_fail_when_overflow() {
         // Given
@@ -101,7 +101,7 @@ mod pop {
     use option::OptionTrait;
 
     #[test]
-    #[available_gas(2000000)]
+    #[available_gas(95000)]
     fn test_should_pop_an_element_from_the_stack() {
         // Given
         let mut stack = StackTrait::new();
@@ -118,7 +118,7 @@ mod pop {
     }
 
     #[test]
-    #[available_gas(2000000)]
+    #[available_gas(220000)]
     fn test_should_pop_N_elements_from_the_stack() {
         // Given
         let mut stack = StackTrait::new();
@@ -138,7 +138,7 @@ mod pop {
     }
 
     #[test]
-    #[available_gas(2000000)]
+    #[available_gas(35000)]
     fn test_pop_return_none_when_stack_underflow() {
         // Given
         let mut stack = StackTrait::new();
@@ -149,7 +149,7 @@ mod pop {
     }
 
     #[test]
-    #[available_gas(2000000)]
+    #[available_gas(50000)]
     #[should_panic(expected: ('Kakarot: StackUnderflow', ))]
     fn test_pop_n_should_fail_when_stack_underflow() {
         // Given
@@ -167,7 +167,7 @@ mod peek {
     use option::OptionTrait;
 
     #[test]
-    #[available_gas(2000000)]
+    #[available_gas(80000)]
     fn test_should_return_last_item() {
         // Given
         let mut stack = StackTrait::new();
@@ -182,7 +182,7 @@ mod peek {
     }
 
     #[test]
-    #[available_gas(2000000)]
+    #[available_gas(95000)]
     fn test_should_return_stack_at_given_index_when_value_is_0() {
         // Given
         let mut stack = StackTrait::new();
@@ -198,7 +198,7 @@ mod peek {
     }
 
     #[test]
-    #[available_gas(2000000)]
+    #[available_gas(95000)]
     fn test_should_return_stack_at_given_index_when_value_is_1() {
         // Given
         let mut stack = StackTrait::new();
@@ -214,7 +214,7 @@ mod peek {
     }
 
     #[test]
-    #[available_gas(2000000)]
+    #[available_gas(35000)]
     #[should_panic(expected: ('Kakarot: StackUnderflow', ))]
     fn test_should_fail_when_underflow() {
         // Given
@@ -229,7 +229,7 @@ mod peek {
 mod swap {
     use super::StackTrait;
     #[test]
-    #[available_gas(2000000)]
+    #[available_gas(400000)]
     fn test_should_swap_2_stack_items() {
         // Given
         let mut stack = StackTrait::new();
@@ -261,7 +261,7 @@ mod swap {
     }
 
     #[test]
-    #[available_gas(2000000)]
+    #[available_gas(50000)]
     #[should_panic(expected: ('Kakarot: StackUnderflow', ))]
     fn test_should_fail_when_index_1_is_underflow() {
         // Given
@@ -272,7 +272,7 @@ mod swap {
     }
 
     #[test]
-    #[available_gas(2000000)]
+    #[available_gas(60000)]
     #[should_panic(expected: ('Kakarot: StackUnderflow', ))]
     fn test_should_fail_when_index_2_is_underflow() {
         // Given
@@ -281,45 +281,5 @@ mod swap {
 
         // When & Then
         let result = stack.swap_i(2);
-    }
-}
-
-
-#[cfg(test)]
-mod stack_helper_tests {
-    use super::StackTrait;
-    use kakarot::stack::StackU256HelperTrait;
-    use dict::Felt252DictTrait;
-    use traits::Into;
-    use debug::PrintTrait;
-
-    #[test]
-    fn test_dict_len() {
-        let mut stack = StackTrait::new();
-        stack.len = 1;
-        let dict_len = stack.dict_len();
-        assert(dict_len == 2, 'dict length should be 2');
-    }
-
-    #[test]
-    fn test_insert_u256() {
-        let mut stack = StackTrait::new();
-        let expected: u256 = u256 { low: 100, high: 100 };
-        stack.insert_u256(expected, 0);
-        let high = stack.items.get(0);
-        let low = stack.items.get(1);
-        let actual = u256 { low: low, high: high };
-        assert(expected == actual, 'u256 not matching expected');
-    }
-
-    #[test]
-    fn test_get_u256() {
-        let mut stack = StackTrait::new();
-        let v1: u256 = 100;
-        let v2: u256 = 101;
-        stack.insert_u256(v1, 0);
-        stack.insert_u256(v2, 1);
-        let item = stack.get_u256(1);
-        assert(v2 == item, 'u256 item should be 101');
     }
 }

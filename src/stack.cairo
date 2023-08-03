@@ -17,22 +17,32 @@
 // Core lib imports
 use dict::Felt252DictTrait;
 use option::OptionTrait;
+use array::ArrayTrait;
 use traits::Into;
 use result::ResultTrait;
-use array::ArrayTrait;
 use kakarot::utils::constants;
 use debug::PrintTrait;
+use box::BoxTrait;
+use nullable::{nullable_from_box, NullableTrait};
+use kakarot::errors;
 
 
-struct Stack {
-    items: Felt252Dict<u128>,
-    len: usize,
+// This should be in the corelib
+trait NullableTraitExt<T> {
+    fn new(value: T) -> Nullable<T>;
 }
 
-impl DestructStack of Destruct<Stack> {
-    fn destruct(self: Stack) nopanic {
-        self.items.squash();
+impl NullableTraitExtImpl of NullableTraitExt<u256> {
+    fn new(value: u256) -> Nullable<u256> {
+        let nullable = nullable_from_box(BoxTrait::new(value));
+        nullable
     }
+}
+
+#[derive(Destruct)]
+struct Stack {
+    items: Felt252Dict<Nullable<u256>>,
+    len: usize,
 }
 
 trait StackTrait {
@@ -53,24 +63,26 @@ impl StackImpl of StackTrait {
     /// Returns
     /// * Stack The new stack instance.
     fn new() -> Stack {
-        let items: Felt252Dict<u128> = Default::default();
+        let items: Felt252Dict<Nullable<u256>> = Default::default();
         Stack { items, len: 0 }
     }
 
-    /// Pushes a new item onto the stack.
+    /// Pushes a new item onto the stack. If this operation would overflow the stack, 
+    /// panics with a StackOverflow error.
     /// Parameters
     /// * self The stack instance.
     /// * item The item to push onto the stack.
     fn push(ref self: Stack, item: u256) -> () {
         // we can store at most 1024 256-bits words
         if self.len() == constants::STACK_MAX_DEPTH {
-            panic_with_felt252('Kakarot: StackOverflow')
+            panic_with_felt252(errors::STACK_OVERFLOW)
         }
-        self.insert_u256(item, self.len());
+        self.items.insert(self.len.into(), NullableTraitExt::new(item));
         self.len += 1;
     }
 
-    /// Pops the top item off the stack.
+    /// Pops the top item off the stack. If the stack is empty,
+    /// leaves the stack unchanged.
     /// Returns
     /// * Option<u256> The popped item, or None if the stack is empty.
     fn pop(ref self: Stack) -> Option<u256> {
@@ -79,7 +91,8 @@ impl StackImpl of StackTrait {
         }
         let last_index = self.len() - 1;
         self.len -= 1;
-        Option::Some(self.get_u256(last_index))
+        let item = self.items.get(last_index.into());
+        Option::Some(item.deref())
     }
 
     /// Pops N elements from the stack.
@@ -91,7 +104,7 @@ impl StackImpl of StackTrait {
     /// * Array<u256> An array containing the popped items
     fn pop_n(ref self: Stack, mut n: usize) -> Array<u256> {
         if n > self.len() {
-            panic_with_felt252('Kakarot: StackUnderflow');
+            panic_with_felt252(errors::STACK_UNDERFLOW);
         }
         let mut popped_items = ArrayTrait::<u256>::new();
         loop {
@@ -112,25 +125,29 @@ impl StackImpl of StackTrait {
             Option::None(())
         } else {
             let last_index = self.len() - 1;
-            Option::Some(self.get_u256(last_index))
+            let item = self.items.get(last_index.into());
+            Option::Some(item.deref())
         }
     }
 
     /// Peeks at the item at the given index on the stack.
     /// index is 0-based, 0 being the top of the stack.
+    /// If the index is too large, panics with a StackUnderflow error.
     /// # Arguments
     /// * `self` - the Stack instance
     /// * `index` - the index of the item to peek at
-
+    ///
     /// Returns
     /// * u256 The item at the given index, or None if the stack is empty.
     fn peek_at(ref self: Stack, index: usize) -> u256 {
         if index >= self.len() {
-            panic_with_felt252('Kakarot: StackUnderflow');
+            panic_with_felt252(errors::STACK_UNDERFLOW);
         }
 
-        let item = self.get_u256(self.len() - 1 - index);
-        item
+        let position = self.len() - 1 - index;
+        let item = self.items.get(position.into());
+
+        item.deref()
     }
 
     /// Swaps the item at the given index with the on on the top of the stack.
@@ -145,10 +162,10 @@ impl StackImpl of StackTrait {
         }
         let position_0 = self.len() - 1;
         let position_item = position_0 - index;
-        let top_item = self.get_u256(position_0);
-        let swapped_item = self.get_u256(position_item);
-        self.insert_u256(top_item, position_item);
-        self.insert_u256(swapped_item, position_0);
+        let top_item = self.items.get(position_0.into());
+        let swapped_item = self.items.get(position_item.into());
+        self.items.insert(position_0.into(), swapped_item.into());
+        self.items.insert(position_item.into(), top_item.into());
     }
 
     /// Returns the length of the stack.
@@ -171,48 +188,3 @@ impl StackImpl of StackTrait {
         *self.len == 0
     }
 }
-
-/// Trait for helping with stack operations on 256-bit unsigned integers
-trait StackU256HelperTrait {
-    fn dict_len(ref self: Stack) -> usize;
-    fn insert_u256(ref self: Stack, item: u256, index: usize);
-    fn get_u256(ref self: Stack, index: usize) -> u256;
-}
-
-/// Implementation of `StackU256HelperTrait`
-impl StackU256HelperImpl of StackU256HelperTrait {
-    /// Returns the length of the dictionary
-    ///
-    /// # Returns
-    /// `felt252` - the length of the dictionary
-    fn dict_len(ref self: Stack) -> usize {
-        (self.len() * 2)
-    }
-
-    /// Inserts a 256-bit unsigned integer `item` into the stack at the given `index`
-    ///
-    /// # Arguments
-    /// * `item` - the 256-bit unsigned integer to insert into the stack
-    /// * `index` - the index at which to insert the item in the stack
-    fn insert_u256(ref self: Stack, item: u256, index: usize) {
-        let real_index: felt252 = index.into() * 2;
-        self.items.insert(real_index, item.high);
-        self.items.insert(real_index + 1, item.low);
-    }
-
-    /// Gets a 256-bit unsigned integer from the stack at the given `index`
-    ///
-    /// # Arguments
-    /// * `index` - the index of the item to retrieve from the stack
-    ///
-    /// # Returns
-    /// `u256` - the 256-bit unsigned integer retrieved from the stack
-    fn get_u256(ref self: Stack, index: usize) -> u256 {
-        let real_index: felt252 = index.into() * 2;
-        let high = self.items.get(real_index.into());
-        let low = self.items.get(real_index.into() + 1);
-        let item = u256 { low: low, high: high };
-        item
-    }
-}
-
