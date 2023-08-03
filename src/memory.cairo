@@ -6,7 +6,7 @@ use clone::Clone;
 use dict::Felt252Dict;
 use dict::Felt252DictTrait;
 use integer::{
-    u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_divmod,
+    u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_div_rem,
     u256_as_non_zero
 };
 use traits::{TryInto, Into};
@@ -148,11 +148,11 @@ impl MemoryImpl of MemoryTrait {
 
         // Split the 2 input bytes16 chunks at offset_in_chunk.
 
-        let (el_hh, el_hl) = u256_safe_divmod(
+        let (el_hh, el_hl) = u256_safe_div_rem(
             u256 { low: element.high, high: 0 }, u256_as_non_zero(mask_c)
         );
 
-        let (el_lh, el_ll) = u256_safe_divmod(
+        let (el_lh, el_ll) = u256_safe_div_rem(
             u256 { low: element.low, high: 0 }, u256_as_non_zero(mask_c)
         );
 
@@ -209,8 +209,8 @@ impl MemoryImpl of MemoryTrait {
         // Special case: within the same word.
         if chunk_index_i == chunk_index_f {
             let w: u128 = self.items.get(offset_in_chunk_i.into());
-            let (w_h, w_l) = u256_safe_divmod(u256 { low: w, high: 0 }, u256_as_non_zero(mask_i));
-            let (_, w_ll) = u256_safe_divmod(w_l, u256_as_non_zero(mask_f));
+            let (w_h, w_l) = u256_safe_div_rem(u256 { low: w, high: 0 }, u256_as_non_zero(mask_i));
+            let (_, w_ll) = u256_safe_div_rem(w_l, u256_as_non_zero(mask_f));
             let x = helpers::load_word(elements.len(), elements);
             let new_w: u128 = (w_h * mask_i + x.into() * mask_f + w_ll).try_into().unwrap();
             self.items.insert(chunk_index_i.into(), new_w);
@@ -311,7 +311,7 @@ impl MemoryImpl of MemoryTrait {
 
         // Compute element words
         let w0_l: u256 = w0.into() % mask;
-        let (w1_h, w1_l): (u256, u256) = u256_safe_divmod(w1.into(), u256_as_non_zero(mask));
+        let (w1_h, w1_l): (u256, u256) = u256_safe_div_rem(w1.into(), u256_as_non_zero(mask));
         let w2_h: u256 = w2.into() / mask;
         let el_h: u128 = (w0_l * mask_c + w1_h).try_into().unwrap();
         let el_l: u128 = (w1_l * mask_c + w2_h).try_into().unwrap();
