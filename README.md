@@ -57,7 +57,10 @@ This repository is a rewrite of
 
 ### Installation
 
-- Install [Scarb](https://docs.swmansion.com/scarb)
+- Install [Scarb](https://docs.swmansion.com/scarb). To make sure your version
+  always matches the one used by Kakarot, you can install Scarb
+  [via asdf](https://docs.swmansion.com/scarb/download#install-via-asdf).
+
 - [Fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) the
   repository and clone your fork
   (`git clone https://github.com/<YOUR_USERNAME>/kakarot-ssj`)

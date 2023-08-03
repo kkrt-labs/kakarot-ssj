@@ -1,4 +1,12 @@
 [package]
-cairo-version = "2.0.2"
+cairo-version = "2.1.0-rc2"
 name = "kakarot"
 version = "0.1.0"
+readme = "README.md"
+repository = "https://github.com/kkrt-labs/kakarot-ssj/"
+license-file = "LICENSE"
+
+[dependencies]
+starknet = "2.1.0-rc2"
+
+[[tool.starknet-contract]]

@@ -27,7 +27,7 @@ use nullable::{nullable_from_box, NullableTrait};
 use kakarot::errors;
 
 
-// This should be in the corelib
+// TODO remove this trait once merged in corelib
 trait NullableTraitExt<T> {
     fn new(value: T) -> Nullable<T>;
 }
@@ -160,12 +160,12 @@ impl StackImpl of StackTrait {
         if index >= self.len() {
             panic_with_felt252('Kakarot: StackUnderflow');
         }
-        let position_0 = self.len() - 1;
-        let position_item = position_0 - index;
-        let top_item = self.items.get(position_0.into());
-        let swapped_item = self.items.get(position_item.into());
-        self.items.insert(position_0.into(), swapped_item.into());
-        self.items.insert(position_item.into(), top_item.into());
+        let position_0: felt252 = (self.len() - 1).into();
+        let position_item: felt252 = position_0 - index.into();
+        let top_item = self.items.get(position_0);
+        let swapped_item = self.items.get(position_item);
+        self.items.insert(position_0, swapped_item.into());
+        self.items.insert(position_item, top_item.into());
     }
 
     /// Returns the length of the stack.

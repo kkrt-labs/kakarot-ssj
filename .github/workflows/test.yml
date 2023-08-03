@@ -8,8 +8,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: "0.5.2"
       - run: scarb fmt --check
       - run: scarb build
       - run: scarb test
