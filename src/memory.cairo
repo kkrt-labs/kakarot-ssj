@@ -9,9 +9,9 @@ use integer::{
     u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_div_rem,
     u256_as_non_zero
 };
+use helpers::{max};
 use traits::{TryInto, Into};
 use kakarot::{utils, utils::helpers};
-use helpers::{SpanExtensionTrait};
 use option::OptionTrait;
 use debug::PrintTrait;
 
@@ -120,12 +120,7 @@ impl MemoryImpl of MemoryTrait {
     fn store(ref self: Memory, element: u256, offset: usize) {
         let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(offset + 32);
 
-        let new_bytes_len = if new_min_bytes_len > self.bytes_len {
-            new_min_bytes_len
-        } else {
-            self.bytes_len
-        };
-        self.bytes_len = new_bytes_len;
+        self.bytes_len = helpers::max(new_min_bytes_len, self.bytes_len);
 
         // Check alignment of offset to bytes16 chunks
         let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
@@ -190,11 +185,7 @@ impl MemoryImpl of MemoryTrait {
         let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(
             offset + elements.len()
         );
-        let new_bytes_len = if new_min_bytes_len > self.bytes_len {
-            new_min_bytes_len
-        } else {
-            self.bytes_len
-        };
+        let new_bytes_len = helpers::max(new_min_bytes_len, self.bytes_len);
         self.bytes_len = new_bytes_len;
 
         // Check alignment of offset to bytes16 chunks.
@@ -225,16 +216,15 @@ impl MemoryImpl of MemoryTrait {
         self.items.insert(chunk_index_i.into(), w1);
 
         // Write blocks
-        let mut elements_clone = elements.clone();
-        elements_clone.pop_front_n(elements.len() + 15 - offset_in_chunk_i);
-        self.store_aligned_words(chunk_index_i + 1, chunk_index_f, elements_clone);
+        let sliced_elements = elements
+            .slice(16 - offset_in_chunk_i, elements.len() - 16 - offset_in_chunk_i, );
+        self.store_aligned_words(chunk_index_i + 1, chunk_index_f, sliced_elements);
 
         // Fill last word
         let w_f = self.items.get(chunk_index_f.into());
         let w_f_l = (w_f.into() % mask_f);
-        let mut elements_clone = elements.clone();
-        elements_clone.pop_front_n(elements.len() - offset_in_chunk_f);
-        let x_f = helpers::load_word(offset_in_chunk_f, elements_clone);
+        let mut slice = elements.slice(0, elements.len() - offset_in_chunk_f);
+        let x_f = helpers::load_word(offset_in_chunk_f, slice);
         let w2: u128 = (x_f.into() * mask_f + w_f_l).try_into().unwrap();
         self.items.insert(chunk_index_f.into(), w2);
     }
@@ -275,7 +265,7 @@ impl MemoryImpl of MemoryTrait {
 
             self.items.insert(chunk_index.into(), current.try_into().unwrap());
             chunk_index += 1;
-            elements.pop_front_n(16);
+            elements = elements.slice(0, 16);
         }
     }
 
