@@ -223,7 +223,7 @@ impl MemoryImpl of MemoryTrait {
         // Fill last word
         let w_f = self.items.get(chunk_index_f.into());
         let w_f_l = (w_f.into() % mask_f);
-        let mut slice = elements.slice(0, elements.len() - offset_in_chunk_f);
+        let slice = elements.slice(elements.len() - offset_in_chunk_f, offset_in_chunk_f);
         let x_f = helpers::load_word(offset_in_chunk_f, slice);
         let w2: u128 = (x_f.into() * mask_f + w_f_l).try_into().unwrap();
         self.items.insert(chunk_index_f.into(), w2);
