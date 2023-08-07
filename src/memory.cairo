@@ -120,8 +120,10 @@ impl MemoryImpl of MemoryTrait {
 
         // Store aligned bytes in [initial_chunk + 1, final_chunk - 1].
         let aligned_bytes = elements
-            .slice(16 - offset_in_chunk_i, elements.len() - 16 - offset_in_chunk_i, );
-        self._store_aligned_words(initial_chunk + 1, final_chunk, aligned_bytes);
+            .slice(
+                16 - offset_in_chunk_i, elements.len() - 16 - offset_in_chunk_i - offset_in_chunk_f, 
+            );
+        self._store_aligned_words(initial_chunk + 1, aligned_bytes);
 
         let final_bytes = elements.slice(elements.len() - offset_in_chunk_f, offset_in_chunk_f);
         self._store_last_word(final_chunk, offset_in_chunk_f, mask_f, final_bytes);
@@ -256,13 +258,10 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     ///
     /// * `self` - A mutable reference to the `Memory` instance to store the bytes in.
     /// * `chunk_index` - The index of the chunk to start storing at.
-    /// * `final_chunk` - The index of the chunk to stop storing at.
     /// * `elements` - A span of bytes to store in memory.
-    fn _store_aligned_words(
-        ref self: Memory, mut chunk_index: usize, final_chunk: usize, mut elements: Span<u8>
-    ) {
+    fn _store_aligned_words(ref self: Memory, mut chunk_index: usize, mut elements: Span<u8>) {
         loop {
-            if chunk_index == final_chunk {
+            if elements.len() == 0 {
                 break ();
             }
 
