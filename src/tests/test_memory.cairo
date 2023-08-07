@@ -1,7 +1,6 @@
 use core::dict::Felt252DictTrait;
 use core::debug::PrintTrait;
-use kakarot::memory::MemoryTrait;
-use kakarot::memory::MemoryPrintTrait;
+use kakarot::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
 use kakarot::utils::helpers;
 use kakarot::utils;
 use array::{ArrayTrait, SpanTrait};
@@ -44,6 +43,21 @@ fn test_store_should_add_an_element_to_the_memory() {
     // Then
     let len = memory.bytes_len;
     assert(len == 32, 'memory should be 32bytes');
+}
+
+#[test]
+#[available_gas(2000000)]
+fn test_store_should_add_an_element_with_offset_to_the_memory() {
+    // Given
+    let mut memory = MemoryTrait::new();
+
+    // When
+    let value: u256 = 1;
+    let result = memory.store(value, 1);
+
+    // Then
+    let len = memory.bytes_len;
+    assert(len == 64, 'memory should be 64bytes');
 }
 
 #[test]
@@ -169,7 +183,7 @@ fn test__expand__should_return_the_same_memory_and_no_cost() {
     memory.store_n(bytes_array.span(), 0);
 
     // When
-    let cost = memory.expand(0);
+    let cost = memory._expand(0);
 
     // Then
     assert(cost == 0, 'cost should be 0');
@@ -189,7 +203,7 @@ fn test__expand__should_return_expanded_memory_and_cost() {
     memory.store_n(bytes_array.span(), 0);
 
     // When
-    let cost = memory.expand(1);
+    let cost = memory._expand(1);
 
     // Then
     assert(cost >= 0, 'cost should be positive');

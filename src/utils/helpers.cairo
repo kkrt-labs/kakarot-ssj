@@ -12,8 +12,8 @@ use debug::PrintTrait;
 ///
 /// # Returns
 /// The number of bytes that are needed to store `bytes_len` bits in 32-bytes words.
-/// 
-/// # Examples 
+///
+/// # Examples
 /// ceil_bytes_len_to_next_32_bytes_word(2) = 32
 /// ceil_bytes_len_to_next_32_bytes_word(34) = 64
 fn ceil_bytes_len_to_next_32_bytes_word(bytes_len: usize) -> usize {
@@ -129,7 +129,7 @@ fn load_word(mut len: usize, words: Span<u8>) -> u256 {
 }
 
 /// Converts a u256 to a bytes array represented by an array of felts (1 felt represents 1 byte).
-/// 
+///
 /// # Arguments
 /// * `value` - The value to convert
 ///
