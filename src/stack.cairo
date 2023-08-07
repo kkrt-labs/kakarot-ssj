@@ -188,3 +188,9 @@ impl StackImpl of StackTrait {
         *self.len == 0
     }
 }
+
+impl DefaultStackImpl of Default<Stack> {
+    fn default() -> Stack {
+        StackTrait::new()
+    }
+}

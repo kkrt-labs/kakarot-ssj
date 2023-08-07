@@ -6,7 +6,8 @@ use array::ArrayTrait;
 use starknet::{EthAddress, ContractAddress};
 use box::BoxTrait;
 use nullable::NullableTrait;
-use traits::Destruct;
+use traits::{Into, TryInto, Destruct};
+use option::OptionTrait;
 
 /// The call context.
 #[derive(Destruct)]
@@ -46,6 +47,16 @@ impl CallContextImpl of CallContextTrait {
     }
 }
 
+impl DefaultCallContextImpl of Default<CallContext> {
+    fn default() -> CallContext {
+        CallContext {
+            bytecode: Default::default().span(),
+            call_data: Default::default().span(),
+            value: Default::default(),
+        }
+    }
+}
+
 
 /// The execution context.
 /// Stores all data relevant to the current execution context.
@@ -62,8 +73,10 @@ struct ExecutionContext {
     gas_price: u64,
     starknet_address: ContractAddress,
     evm_address: EthAddress,
-    calling_context: Nullable<ExecutionContext>,
-    sub_context: Nullable<ExecutionContext>,
+    // TODO: refactor using smart pointers
+    // once compiler supports it
+    //calling_context: Nullable<ExecutionContext>,
+    //sub_context: Nullable<ExecutionContext>,
     destroy_contracts: Array<EthAddress>,
     events: Array<Event>,
     create_addresses: Array<EthAddress>,
@@ -94,7 +107,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         evm_address: EthAddress,
         gas_limit: u64,
         gas_price: u64,
-        calling_context: Nullable<ExecutionContext>,
+        // calling_context: Nullable<ExecutionContext>,
         returned_data: Array<felt252>,
         read_only: bool
     ) -> ExecutionContext {
@@ -111,8 +124,8 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             gas_price,
             starknet_address,
             evm_address,
-            calling_context,
-            sub_context: Default::default(),
+            // calling_context,
+            // sub_context: Default::default(),
             destroy_contracts: Default::default(),
             events: Default::default(),
             create_addresses: Default::default(),
@@ -136,6 +149,32 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     fn print_debug(ref self: ExecutionContext) {
         debug::print_felt252('gas used');
         self.gas_used.print();
+    }
+}
+
+impl DefaultExecutionContext of Default<ExecutionContext> {
+    fn default() -> ExecutionContext {
+        ExecutionContext {
+            call_context: Default::default(),
+            program_counter: 0,
+            stack: Default::default(),
+            stopped: false,
+            return_data: Default::default(),
+            memory: Default::default(),
+            gas_used: 0,
+            gas_limit: 0,
+            gas_price: 0,
+            starknet_address: 0.try_into().unwrap(),
+            evm_address: 0.try_into().unwrap(),
+            // calling_context: Default::default(),
+            // sub_context: Default::default(),
+            destroy_contracts: Default::default(),
+            events: Default::default(),
+            create_addresses: Default::default(),
+            revert_contract_state: Default::default(),
+            reverted: false,
+            read_only: false,
+        }
     }
 }
 
