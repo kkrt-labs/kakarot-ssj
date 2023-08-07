@@ -2,12 +2,14 @@ use kakarot::stack::{Stack, StackTrait};
 use kakarot::memory::{Memory, MemoryTrait};
 use kakarot::model::Event;
 use debug::PrintTrait;
-use array::ArrayTrait;
+use array::{ArrayTrait, SpanTrait};
+use kakarot::utils::helpers::{ArrayExtension, ArrayExtensionTrait};
 use starknet::{EthAddress, ContractAddress};
 use box::BoxTrait;
 use nullable::NullableTrait;
 use traits::{Into, TryInto, Destruct};
 use option::OptionTrait;
+use starknet::get_caller_address;
 
 /// The call context.
 #[derive(Destruct)]
@@ -66,7 +68,7 @@ struct ExecutionContext {
     program_counter: u32,
     stack: Stack,
     stopped: bool,
-    return_data: Array<felt252>,
+    return_data: Array<u8>,
     memory: Memory,
     gas_used: u64,
     gas_limit: u64,
@@ -141,9 +143,67 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         self.gas_used = self.gas_used + 42;
     }
 
-    /// Halts execution.
-    /// TODO: implement this.
-    fn stop(ref self: ExecutionContext) {}
+    /// Stops the current execution context.
+    fn stop(ref self: ExecutionContext) {
+        self.stopped = true;
+    }
+
+    /// Revert the current execution context.
+    /// 
+    /// When the execution context is reverted, no more instructions can be executed 
+    /// (it is stopped) and contract creation and contract storage writes are 
+    /// reverted on its finalization.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The `ExecutionContext` instance to revert.
+    /// * `revert_reason` - The revert reason.
+    fn revert(ref self: ExecutionContext, revert_reason: Span<u8>) {
+        self.reverted = true;
+        ArrayExtensionTrait::concat(ref self.return_data, revert_reason);
+    }
+
+    /// Reads and return data from bytecode.
+    /// The program counter is incremented accordingly.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `self` - The `ExecutionContext` instance to read the data from.
+    /// * `len` - The length of the data to read from the bytecode.
+    fn read_code(ref self: ExecutionContext, len: usize) -> Span<u8> {
+        // Copy code slice from [pc, pc+len]
+        let code = self.call_context.bytecode().slice(self.program_counter, len);
+
+        // Update program counter
+        self.program_counter += len;
+        code
+    }
+
+    fn is_stopped(self: @ExecutionContext) -> bool {
+        *self.stopped
+    }
+
+    fn is_root(self: @ExecutionContext) { //TODO: implement this (returns a bool)
+    // self.calling_context.is_null()
+    // true
+    }
+
+    fn is_leaf(self: @ExecutionContext) { //TODO implement this(returns a bool)
+    // self.sub_context.is_null()
+    }
+
+    fn is_reverted(self: @ExecutionContext) -> bool {
+        *self.reverted
+    }
+
+    /// Returns if starknet contract address is an EOA
+    fn is_caller_eoa(self: @ExecutionContext) -> bool {
+        if get_caller_address() == *self.starknet_address {
+            return true;
+        };
+        false
+    }
+
 
     /// Debug print the execution context.
     fn print_debug(ref self: ExecutionContext) {
