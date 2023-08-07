@@ -75,19 +75,19 @@ fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
 /// Splits a u256 into `len` bytes, little-endian, and returns the bytes array.
 fn split_word_little(mut value: u256, mut len: usize) -> Array<u8> {
     let mut dst: Array<u8> = ArrayTrait::new();
+    let base = 256;
+    let bound = 256;
     loop {
         if len == 0 {
             assert(value == 0, 'split_words:value not 0');
             break ();
         }
 
-        let base = 256;
-        let bound = 256;
         let low_part = (value % constants::FELT252_PRIME) % base;
         dst.append(low_part.try_into().unwrap());
 
-        len = len - 1;
         value = (value - low_part) / 256;
+        len -= 1;
     };
     dst
 }
@@ -137,13 +137,13 @@ fn load_word(mut len: usize, words: Span<u8>) -> u256 {
 /// The bytes array representation of the value.
 fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
     let mut counter = 0;
-    let mut bytes_vec: Array<u8> = ArrayTrait::new();
+    let mut bytes_arr: Array<u8> = ArrayTrait::new();
     // low part
     loop {
         if counter == 16 {
             break ();
         }
-        bytes_vec.append((value.low % 256).try_into().unwrap());
+        bytes_arr.append((value.low % 256).try_into().unwrap());
         value.low /= 256;
         counter += 1;
     };
@@ -154,22 +154,22 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
         if counter == 16 {
             break ();
         }
-        bytes_vec.append((value.high % 256).try_into().unwrap());
+        bytes_arr.append((value.high % 256).try_into().unwrap());
         value.high /= 256;
         counter += 1;
     };
 
     // Reverse the array as memory is arranged in big endian order.
-    let mut counter = bytes_vec.len();
-    let mut bytes_vec_reversed: Array<u8> = ArrayTrait::new();
+    let mut counter = bytes_arr.len();
+    let mut bytes_arr_reversed: Array<u8> = ArrayTrait::new();
     loop {
         if counter == 0 {
             break ();
         }
-        bytes_vec_reversed.append(*bytes_vec[counter - 1]);
+        bytes_arr_reversed.append(*bytes_arr[counter - 1]);
         counter -= 1;
     };
-    bytes_vec_reversed
+    bytes_arr_reversed
 }
 
 
@@ -198,45 +198,4 @@ fn reverse_array<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(src: Span<T>) -> A
         counter -= 1;
     };
     dst
-}
-
-
-//TODO(eni) make PR and add this in corelib
-
-trait SpanExtensionTrait<T> {
-    fn pop_front_n(ref self: Span<T>, n: usize);
-}
-
-impl SpanExtensionImpl<T> of SpanExtensionTrait<T> {
-    /// Removes the first `n` elements from the Span.
-    fn pop_front_n(ref self: Span<T>, mut n: usize) {
-        loop {
-            if n == 0 {
-                break ();
-            }
-            self.pop_front();
-            n = n - 1;
-        };
-    }
-}
-
-impl U128IntoU256 of Into<u128, u256> {
-    fn into(self: u128) -> u256 {
-        u256 { low: self, high: 0 }
-    }
-}
-
-impl U32IntoU256 of Into<u32, u256> {
-    fn into(self: u32) -> u256 {
-        u256 { low: self.into(), high: 0 }
-    }
-}
-
-impl U256TryIntoU128 of TryInto<u256, u128> {
-    fn try_into(self: u256) -> Option<u128> {
-        if self.high != 0 {
-            return Option::None(());
-        }
-        Option::Some(self.low)
-    }
 }
