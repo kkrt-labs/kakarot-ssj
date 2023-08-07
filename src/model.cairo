@@ -4,4 +4,3 @@ struct Event {
     data: Array<felt252>,
 }
 
-

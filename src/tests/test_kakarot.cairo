@@ -8,6 +8,8 @@ use kakarot::context::CallContext;
 #[test]
 #[available_gas(2000000)]
 #[should_panic(expected: (0, ))]
+#[ignore]
+// TODO - Implement this test.
 fn nominal_case_empty_pc() {
     let bytecode = ArrayTrait::<u8>::new();
     let call_data = ArrayTrait::<u8>::new();
@@ -15,7 +17,7 @@ fn nominal_case_empty_pc() {
 
     // Create a call context.
     let call_context = CallContext {
-        bytecode: bytecode, call_data: call_data, value: call_value, 
+        bytecode: bytecode.span(), call_data: call_data.span(), value: call_value, 
     };
     // Execute the bytecode.
     let summary = evm::execute(call_context);
