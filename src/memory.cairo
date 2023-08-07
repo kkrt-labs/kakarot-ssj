@@ -9,7 +9,7 @@ use integer::{
     u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_div_rem,
     u256_as_non_zero
 };
-use helpers::{max};
+use cmp::{max};
 use traits::{TryInto, Into};
 use kakarot::{utils, utils::helpers};
 use option::OptionTrait;
@@ -120,7 +120,7 @@ impl MemoryImpl of MemoryTrait {
     fn store(ref self: Memory, element: u256, offset: usize) {
         let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(offset + 32);
 
-        self.bytes_len = helpers::max(new_min_bytes_len, self.bytes_len);
+        self.bytes_len = cmp::max(new_min_bytes_len, self.bytes_len);
 
         // Check alignment of offset to bytes16 chunks
         let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
@@ -185,7 +185,7 @@ impl MemoryImpl of MemoryTrait {
         let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(
             offset + elements.len()
         );
-        let new_bytes_len = helpers::max(new_min_bytes_len, self.bytes_len);
+        let new_bytes_len = cmp::max(new_min_bytes_len, self.bytes_len);
         self.bytes_len = new_bytes_len;
 
         // Check alignment of offset to bytes16 chunks.
@@ -216,15 +216,15 @@ impl MemoryImpl of MemoryTrait {
         self.items.insert(chunk_index_i.into(), w1);
 
         // Write blocks
-        let sliced_elements = elements
+        let next_elements = elements
             .slice(16 - offset_in_chunk_i, elements.len() - 16 - offset_in_chunk_i, );
-        self.store_aligned_words(chunk_index_i + 1, chunk_index_f, sliced_elements);
+        self.store_aligned_words(chunk_index_i + 1, chunk_index_f, next_elements);
 
         // Fill last word
         let w_f = self.items.get(chunk_index_f.into());
         let w_f_l = (w_f.into() % mask_f);
-        let slice = elements.slice(elements.len() - offset_in_chunk_f, offset_in_chunk_f);
-        let x_f = helpers::load_word(offset_in_chunk_f, slice);
+        let next_elements = elements.slice(elements.len() - offset_in_chunk_f, offset_in_chunk_f);
+        let x_f = helpers::load_word(offset_in_chunk_f, next_elements);
         let w2: u128 = (x_f.into() * mask_f + w_f_l).try_into().unwrap();
         self.items.insert(chunk_index_f.into(), w2);
     }

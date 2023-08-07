@@ -199,12 +199,3 @@ fn reverse_array<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(src: Span<T>) -> A
     };
     dst
 }
-
-#[inline(always)]
-fn max(a: usize, b: usize) -> usize {
-    return if a > b {
-        a
-    } else {
-        b
-    };
-}
