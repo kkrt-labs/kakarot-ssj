@@ -13,6 +13,9 @@ mod instructions;
 // Context module
 mod context;
 
+// Data Models module
+mod model;
+
 // Utils module
 mod utils;
 

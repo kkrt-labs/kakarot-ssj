@@ -4,7 +4,8 @@ use array::SpanTrait;
 use traits::Into;
 
 /// Internal imports.
-use kakarot::context::ExecutionContext;
+// TODO remove destruct imports when no longer required
+use kakarot::context::{ExecutionContext, NullableDestruct, BoxDestruct};
 use kakarot::context::CallContextTrait;
 use kakarot::context::ExecutionSummary;
 use kakarot::utils;
@@ -48,8 +49,7 @@ impl EVMInstructionsImpl of EVMInstructionsTrait {
         // Decode and execute the current opcode.
         self.decode_and_execute(ref context);
         // Check if the execution is complete.
-        let stopped = *(@context).stopped;
-        if !stopped {
+        if !*(@context).stopped {
             // Execute the next opcode.
             self.run(ref context);
         }
