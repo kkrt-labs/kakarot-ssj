@@ -23,12 +23,16 @@ struct CallContext {
 // instead we should use the methods defined in the trait. 
 // This is not enforced until there are `pub` and `priv` visibility on struct fields.
 trait CallContextTrait {
+    fn new(bytecode: Span<u8>, call_data: Span<u8>, value: u256) -> CallContext;
     fn bytecode(self: @CallContext) -> Span<u8>;
     fn call_data(self: @CallContext) -> Span<u8>;
     fn value(self: @CallContext) -> u256;
 }
 
 impl CallContextImpl of CallContextTrait {
+    fn new(bytecode: Span<u8>, call_data: Span<u8>, value: u256) -> CallContext {
+        CallContext { bytecode, call_data, value,  }
+    }
     fn bytecode(self: @CallContext) -> Span<u8> {
         *self.bytecode
     }
