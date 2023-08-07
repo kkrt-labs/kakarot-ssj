@@ -199,7 +199,7 @@ impl MemoryImpl of MemoryTrait {
 
         // Special case: within the same word.
         if chunk_index_i == chunk_index_f {
-            let w: u128 = self.items.get(offset_in_chunk_i.into());
+            let w: u128 = self.items.get(chunk_index_i.into());
             let (w_h, w_l) = u256_safe_div_rem(u256 { low: w, high: 0 }, u256_as_non_zero(mask_i));
             let (_, w_ll) = u256_safe_div_rem(w_l, u256_as_non_zero(mask_f));
             let x = helpers::load_word(elements.len(), elements);
