@@ -9,6 +9,7 @@ use kakarot::context::{ExecutionContext, NullableDestruct, BoxDestruct};
 use kakarot::context::CallContextTrait;
 use kakarot::context::ExecutionSummary;
 use kakarot::utils;
+use kakarot::errors;
 
 /// Sub modules.
 mod block_information;
@@ -69,7 +70,7 @@ impl EVMInstructionsImpl of EVMInstructionsTrait {
 
         // Check if PC is not out of bounds.
         if pc >= bytecode_len {
-            utils::panic_with_code(0);
+            utils::panic_with_code(errors::PC_OUT_OF_BOUNDS);
         }
 
         let opcode: u8 = *bytecode.at(pc);

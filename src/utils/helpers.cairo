@@ -200,3 +200,28 @@ impl ArrayExtension of ArrayExtensionTrait {
         dst
     }
 }
+
+impl SpanPartialEq<T, impl PartialEqImpl: PartialEq<T>> of PartialEq<Span<T>> {
+    fn eq(lhs: @Span<T>, rhs: @Span<T>) -> bool {
+        if (*lhs).len() != (*rhs).len() {
+            return false;
+        }
+        let mut lhs_span = *lhs;
+        let mut rhs_span = *rhs;
+        loop {
+            match lhs_span.pop_front() {
+                Option::Some(lhs_v) => {
+                    if lhs_v != rhs_span.pop_front().unwrap() {
+                        break false;
+                    }
+                },
+                Option::None => {
+                    break true;
+                },
+            };
+        }
+    }
+    fn ne(lhs: @Span<T>, rhs: @Span<T>) -> bool {
+        !(lhs == rhs)
+    }
+}

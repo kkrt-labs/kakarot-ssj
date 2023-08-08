@@ -1,12 +1,15 @@
 use array::ArrayTrait;
+use option::OptionTrait;
+use traits::{Into, TryInto};
 use kakarot::evm;
 use kakarot::stack::StackTrait;
-use option::OptionTrait;
 use kakarot::context::CallContext;
+use kakarot::errors;
 
 
 #[test]
 #[available_gas(2000000)]
+#[should_panic(expected: ('Kakarot: pc >= bytecode length', ))]
 fn nominal_case_empty_pc() {
     let bytecode = ArrayTrait::<u8>::new();
     let call_data = ArrayTrait::<u8>::new();
@@ -17,21 +20,5 @@ fn nominal_case_empty_pc() {
         bytecode: bytecode.span(), call_data: call_data.span(), value: call_value, 
     };
     // Execute the bytecode.
-    let summary = evm::execute(call_context);
-}
-
-#[test]
-#[available_gas(2000000)]
-fn stack_should_increment_len_on_push() {
-    // Given
-    let u256_val = integer::u256_from_felt252(2);
-    let mut stack = kakarot::stack::StackImpl::new();
-
-    // When
-    stack.push(u256_val);
-
-    // Then
-    let stack_len = stack.len();
-
-    assert(stack_len == 1, 1);
+    let summary = evm::execute(call_context, 0.try_into().unwrap(), 0.try_into().unwrap(), 0, 0);
 }

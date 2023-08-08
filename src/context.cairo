@@ -110,7 +110,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         gas_limit: u64,
         gas_price: u64,
         // calling_context: Nullable<ExecutionContext>,
-        returned_data: Array<felt252>,
+        returned_data: Array<u8>,
         read_only: bool
     ) -> ExecutionContext {
         let mut stack = StackTrait::new();
