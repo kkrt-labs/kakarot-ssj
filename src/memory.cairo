@@ -2,7 +2,6 @@ use traits::Index;
 use array::SpanTrait;
 use array::ArrayTrait;
 use clone::Clone;
-
 use dict::Felt252Dict;
 use dict::Felt252DictTrait;
 use integer::{
@@ -564,5 +563,11 @@ impl MemoryPrintImpl of MemoryPrintTrait {
             begin += 1;
         };
         '____MEMORY_END___'.print();
+    }
+}
+
+impl DefaultMemoryImpl of Default<Memory> {
+    fn default() -> Memory {
+        MemoryTrait::new()
     }
 }

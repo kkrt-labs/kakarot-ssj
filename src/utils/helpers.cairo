@@ -1,7 +1,7 @@
 use array::ArrayTrait;
 use array::SpanTrait;
 use traits::{Into, TryInto};
-use kakarot::utils::constants;
+use kakarot::utils::{constants};
 use option::OptionTrait;
 use debug::PrintTrait;
 
@@ -68,8 +68,8 @@ fn pow256_rev(i: usize) -> u256 {
 /// Splits a u256 into `len` bytes, big-endian, and appends the result to `dst`.
 fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
     let little_endian = split_word_little(value, len);
-    let big_endian = reverse_array(little_endian.span());
-    concat_array(ref dst, big_endian.span());
+    let big_endian = ArrayExtensionTrait::reverse(little_endian.span());
+    ArrayExtensionTrait::concat(ref dst, big_endian.span());
 }
 
 /// Splits a u256 into `len` bytes, little-endian, and returns the bytes array.
@@ -172,30 +172,56 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
     bytes_arr_reversed
 }
 
-
-// Concatenates two arrays by adding the elements of arr2 to arr1.
-fn concat_array<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(
-    ref arr1: Array<T>, mut arr2: Span<T>
-) {
-    loop {
-        if arr2.len() == 0 {
-            break ();
+#[generate_trait]
+impl ArrayExtension of ArrayExtensionTrait {
+    // Concatenates two arrays by adding the elements of arr2 to arr1.
+    fn concat<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(ref self: Array<T>, mut arr2: Span<T>) {
+        loop {
+            match arr2.pop_front() {
+                Option::Some(elem) => self.append(*elem),
+                Option::None => {
+                    break;
+                }
+            };
         }
-        let elem = *arr2.pop_front().unwrap();
-        arr1.append(elem);
+    }
+
+    /// Reverses an array
+    fn reverse<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(self: Span<T>) -> Array<T> {
+        let mut counter = self.len();
+        let mut dst: Array<T> = ArrayTrait::new();
+        loop {
+            if counter == 0 {
+                break ();
+            }
+            dst.append(*self[counter - 1]);
+            counter -= 1;
+        };
+        dst
     }
 }
 
-/// Reverses an array
-fn reverse_array<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(src: Span<T>) -> Array<T> {
-    let mut counter = src.len();
-    let mut dst: Array<T> = ArrayTrait::new();
-    loop {
-        if counter == 0 {
-            break ();
+impl SpanPartialEq<T, impl PartialEqImpl: PartialEq<T>> of PartialEq<Span<T>> {
+    fn eq(lhs: @Span<T>, rhs: @Span<T>) -> bool {
+        if (*lhs).len() != (*rhs).len() {
+            return false;
         }
-        dst.append(*src[counter - 1]);
-        counter -= 1;
-    };
-    dst
+        let mut lhs_span = *lhs;
+        let mut rhs_span = *rhs;
+        loop {
+            match lhs_span.pop_front() {
+                Option::Some(lhs_v) => {
+                    if lhs_v != rhs_span.pop_front().unwrap() {
+                        break false;
+                    }
+                },
+                Option::None => {
+                    break true;
+                },
+            };
+        }
+    }
+    fn ne(lhs: @Span<T>, rhs: @Span<T>) -> bool {
+        !(lhs == rhs)
+    }
 }
