@@ -7,9 +7,6 @@ use kakarot::context::CallContext;
 
 #[test]
 #[available_gas(2000000)]
-#[should_panic(expected: (0, ))]
-#[ignore]
-// TODO - Implement this test.
 fn nominal_case_empty_pc() {
     let bytecode = ArrayTrait::<u8>::new();
     let call_data = ArrayTrait::<u8>::new();
