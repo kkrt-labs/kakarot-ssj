@@ -11,7 +11,7 @@ use kakarot::context::{CallContext, CallContextTrait, ExecutionContext, Executio
 use kakarot::utils::helpers::{SpanPartialEq};
 use traits::PartialEq;
 use starknet::{EthAddress, ContractAddress};
-use kakarot::tests::utils;
+use kakarot::tests::test_utils;
 use starknet::testing::{set_contract_address, set_caller_address};
 
 fn setup_call_context() -> CallContext {
@@ -24,8 +24,8 @@ fn setup_call_context() -> CallContext {
 
 fn setup_execution_context() -> ExecutionContext {
     let call_context = setup_call_context();
-    let starknet_address: ContractAddress = utils::starknet_address();
-    let evm_address: EthAddress = utils::evm_address();
+    let starknet_address: ContractAddress = test_utils::starknet_address();
+    let evm_address: EthAddress = test_utils::evm_address();
     let gas_limit: u64 = 1000;
     let gas_price: u64 = 10;
     let read_only: bool = false;
@@ -142,14 +142,14 @@ fn test_is_caller_eoa() {
     let mut execution_context = setup_execution_context();
 
     // When
-    set_caller_address(utils::starknet_address());
+    set_caller_address(test_utils::starknet_address());
     let is_eoa = execution_context.is_caller_eoa();
 
     // Then
     assert(is_eoa == true, 'should be an eoa');
 
     // When
-    set_caller_address(utils::zero_address());
+    set_caller_address(test_utils::zero_address());
     let is_eoa = execution_context.is_caller_eoa();
 
     // Then

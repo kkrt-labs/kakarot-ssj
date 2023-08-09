@@ -8,7 +8,10 @@ mod test_stack;
 mod test_memory;
 
 #[cfg(test)]
-mod utils;
+mod test_utils;
 
 #[cfg(test)]
 mod test_execution_context;
+
+#[cfg(test)]
+mod test_instructions;
