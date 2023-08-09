@@ -7,7 +7,10 @@ mod memory;
 // Stack module
 mod stack;
 
-// Instructions module
+// interpreter module
+mod interpreter;
+
+// instructions module
 mod instructions;
 
 // Context module
@@ -23,4 +26,5 @@ mod utils;
 mod errors;
 
 // tests
+#[cfg(test)]
 mod tests;
