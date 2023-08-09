@@ -14,7 +14,7 @@ use kakarot::stack::{Stack, StackTrait};
 use kakarot::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait};
 //TODO remove import once merged in corelib
 use kakarot::utils::helpers::{SpanPartialEq, ArrayPartialEq};
-use kakarot::tests::utils::{setup_call_context, setup_execution_context, CallContextPartialEq};
+use kakarot::tests::test_utils::{setup_call_context, setup_execution_context, CallContextPartialEq};
 use kakarot::tests::test_utils;
 
 // TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)

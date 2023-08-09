@@ -2,7 +2,7 @@ use starknet::{contract_address_try_from_felt252, ContractAddress, EthAddress};
 use traits::{Into, TryInto};
 use option::OptionTrait;
 use array::{ArrayTrait, SpanTrait};
-
+use kakarot::utils::helpers::{SpanPartialEq};
 use kakarot::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait};
 
 mod test_helpers;
@@ -40,4 +40,13 @@ fn setup_execution_context() -> ExecutionContext {
     ExecutionContextTrait::new(
         call_context, starknet_address, evm_address, gas_limit, gas_price, returned_data, read_only
     )
+}
+
+impl CallContextPartialEq of PartialEq<CallContext> {
+    fn eq(lhs: @CallContext, rhs: @CallContext) -> bool {
+        lhs.bytecode() == rhs.bytecode() && lhs.call_data == rhs.call_data && lhs.value == rhs.value
+    }
+    fn ne(lhs: @CallContext, rhs: @CallContext) -> bool {
+        !(lhs == rhs)
+    }
 }
