@@ -6,7 +6,7 @@ use traits::Into;
 /// Internal imports.
 // TODO remove destruct imports when no longer required
 use kakarot::context::{ExecutionContext, NullableDestruct, BoxDestruct};
-use kakarot::context::CallContextTrait;
+use kakarot::context::{ExecutionContextTrait, CallContextTrait};
 use kakarot::context::ExecutionSummary;
 use kakarot::utils;
 use kakarot::errors;
@@ -43,7 +43,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         // Decode and execute the current opcode.
         self.decode_and_execute(ref context);
         // Check if the execution is complete.
-        if !*(@context).stopped {
+        if !(context.is_stopped()) {
             // Execute the next opcode.
             self.run(ref context);
         }
