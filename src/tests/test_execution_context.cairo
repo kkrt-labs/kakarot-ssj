@@ -3,53 +3,90 @@ use traits::Into;
 use traits::TryInto;
 use option::OptionTrait;
 use debug::PrintTrait;
+use traits::PartialEq;
 use array::{ArrayTrait, SpanTrait};
+use starknet::{EthAddress, ContractAddress};
+use starknet::testing::{set_contract_address, set_caller_address};
+
 use kakarot::memory::{Memory, MemoryTrait};
 use kakarot::model::Event;
 use kakarot::stack::{Stack, StackTrait};
 use kakarot::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait};
-use kakarot::utils::helpers::{SpanPartialEq};
-use traits::PartialEq;
-use starknet::{EthAddress, ContractAddress};
+//TODO remove import once merged in corelib
+use kakarot::utils::helpers::{SpanPartialEq, ArrayPartialEq};
+use kakarot::tests::utils::{setup_call_context, setup_execution_context, CallContextPartialEq};
 use kakarot::tests::test_utils;
-use starknet::testing::{set_contract_address, set_caller_address};
 
-fn setup_call_context() -> CallContext {
-    let bytecode: Span<u8> = array![1, 2, 3].span();
-    let call_data: Span<u8> = array![4, 5, 6].span();
-    let value: u256 = 100;
-
-    CallContextTrait::new(bytecode, call_data, value)
-}
-
-fn setup_execution_context() -> ExecutionContext {
-    let call_context = setup_call_context();
-    let starknet_address: ContractAddress = test_utils::starknet_address();
-    let evm_address: EthAddress = test_utils::evm_address();
-    let gas_limit: u64 = 1000;
-    let gas_price: u64 = 10;
-    let read_only: bool = false;
-    let returned_data = Default::default();
-
-    ExecutionContextTrait::new(
-        call_context, starknet_address, evm_address, gas_limit, gas_price, returned_data, read_only
-    )
-}
+// TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)
+#[inline(never)]
+fn no_op() {}
 
 
 #[test]
 #[available_gas(1000000)]
 fn test_call_context_new() {
     // When
-    let call_context = setup_call_context();
-// Then
-// TODO: uncomment once cairo-test bug is solved
+    let bytecode: Span<u8> = array![1, 2, 3].span();
+    let call_data: Span<u8> = array![4, 5, 6].span();
+    let value: u256 = 100;
 
-// assert(call_context.bytecode() == bytecode, 'wrong bytecode');
-// assert(call_context.value() == value, 'wrong value');
-// assert(call_context.call_data() == call_data, 'wrong call_data');
+    let call_ctx = CallContextTrait::new(bytecode, call_data, value);
+    // TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)
+    no_op();
+
+    // Then
+    assert(call_ctx.bytecode() == bytecode, 'wrong bytecode');
+    assert(call_ctx.call_data() == call_data, 'wrong call_data');
+    assert(call_ctx.value() == value, 'wrong value');
 }
 
+#[test]
+#[available_gas(500000)]
+fn test_execution_context_new() {
+    // Given
+    let call_context = setup_call_context();
+    let program_counter: u32 = 0;
+    let stack = StackTrait::new();
+    let stopped: bool = false;
+    let return_data: Array<u8> = ArrayTrait::new();
+    let memory = MemoryTrait::new();
+    let gas_used: u64 = 0;
+    let gas_limit: u64 = 1000;
+    let gas_price: u64 = 10;
+    let starknet_address: ContractAddress = 0.try_into().unwrap();
+    let evm_address: EthAddress = 0.try_into().unwrap();
+    let destroy_contracts: Array<EthAddress> = Default::default();
+    let events: Array<Event> = Default::default();
+    let create_addresses: Array<EthAddress> = Default::default();
+    let revert_contract_state: Felt252Dict<felt252> = Default::default();
+    let reverted: bool = false;
+    let read_only: bool = false;
+
+    // When
+    let execution_context = ExecutionContextTrait::new(
+        call_context, starknet_address, evm_address, gas_limit, gas_price, return_data, read_only
+    );
+
+    // Then
+    let call_context = setup_call_context();
+    assert(execution_context.call_context == call_context, 'wrong call_context');
+    assert(execution_context.program_counter == program_counter, 'wrong program_counter');
+    assert(execution_context.stack.is_empty(), 'wrong stack');
+    assert(execution_context.stopped == stopped, 'wrong stopped');
+    assert(execution_context.return_data == Default::default(), 'wrong return_data');
+    assert(execution_context.memory.bytes_len == 0, 'wrong memory');
+    assert(execution_context.gas_used == gas_used, 'wrong gas_used');
+    assert(execution_context.gas_limit == gas_limit, 'wrong gas_limit');
+    assert(execution_context.gas_price == gas_price, 'wrong gas_price');
+    assert(execution_context.starknet_address == starknet_address, 'wrong starknet_address');
+    assert(execution_context.evm_address == evm_address, 'wrong evm_address');
+    assert(execution_context.destroy_contracts == destroy_contracts, 'wrong destroy_contracts');
+    assert(execution_context.events.len() == events.len(), 'wrong events');
+    assert(execution_context.create_addresses == create_addresses, 'wrong create_addresses');
+    // can't compare dictionaries directly
+    assert(execution_context.reverted == reverted, 'wrong reverted');
+    assert(execution_context.read_only == read_only, 'wrong read_only');
+}
 
 #[test]
 #[available_gas(100000)]
@@ -88,6 +125,7 @@ fn test_execution_context_revert() {
 
     // Then
     assert(execution_context.is_reverted() == true, 'should be reverted');
+    assert(execution_context.return_data.span() == revert_reason, 'wrong revert reason');
 }
 
 #[test]
@@ -137,7 +175,6 @@ fn test_is_root() {
 #[test]
 #[available_gas(300000)]
 fn test_is_caller_eoa() {
-    // TODO: finish this test once calling_contexts are implemented
     // Given
     let mut execution_context = setup_execution_context();
 
