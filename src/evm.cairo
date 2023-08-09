@@ -24,8 +24,8 @@ fn execute(
     ctx.process_intrinsic_gas_cost();
     // Print the execution context.
     ctx.print_debug();
-    let mut evm_instructions = EVMInterpreterTrait::new();
+    let mut interpreter = EVMInterpreterTrait::new();
     // Execute the transaction.
-    evm_instructions.run(ref ctx)
+    interpreter.run(ref ctx)
 }
 
