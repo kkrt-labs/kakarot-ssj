@@ -235,6 +235,6 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// * `self` - the execution context
     /// TODO
     /// - Implement me.
-    fn exec_signextend(ref self: ExecutionContext) {// TODO signed integer extension algorithm
+    fn exec_signextend(ref self: ExecutionContext) { // TODO signed integer extension algorithm
     }
 }
