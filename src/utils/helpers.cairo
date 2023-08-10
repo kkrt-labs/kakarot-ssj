@@ -1,9 +1,11 @@
 use array::ArrayTrait;
 use array::SpanTrait;
 use traits::{Into, TryInto};
-use kakarot::utils::{constants};
 use option::OptionTrait;
 use debug::PrintTrait;
+
+
+use kakarot::utils::{constants};
 
 /// Ceils a number of bits to the next word (32 bytes)
 ///
@@ -225,3 +227,4 @@ impl SpanPartialEq<T, impl PartialEqImpl: PartialEq<T>> of PartialEq<Span<T>> {
         !(lhs == rhs)
     }
 }
+
