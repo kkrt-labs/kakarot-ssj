@@ -49,13 +49,19 @@ fn test_signed_div_rem() {
     assert(u256_signed_div_rem(0xc0ffee, 0) == (0, 0), 'Zero Division failed - 2.');
 
     // Division by -1
-    assert(u256_signed_div_rem(1, MAX_U256) == (MAX_U256, 0), 'Division by -1 failed - 1.');
-    assert(u256_signed_div_rem(0, MAX_U256) == (0, 0), 'Division by -1 failed - 3.');
-    assert(u256_signed_div_rem(MAX_U256, MAX_U256) == (1, 0), 'Division by -1 failed - 2.');
+    assert(
+        u256_signed_div_rem(1, MAX_U256) == (MAX_U256, 0), 'Division by -1 failed - 1.'
+    ); // 1 / -1 == -1
+    assert(
+        u256_signed_div_rem(MAX_U256, MAX_U256) == (1, 0), 'Division by -1 failed - 2.'
+    ); // -1 / -1 == 1
+    assert(u256_signed_div_rem(0, MAX_U256) == (0, 0), 'Division by -1 failed - 3.'); // 0 / -1 == 0
 
     // Simple Division
-    assert(u256_signed_div_rem(10, 2) == (5, 0), 'Simple Division failed - 1.');
-    assert(u256_signed_div_rem(10, 3) == (3, 1), 'Simple Division failed - 2.');
+    assert(u256_signed_div_rem(10, 2) == (5, 0), 'Simple Division failed - 1.'); // 10 / 2 == 5
+    assert(
+        u256_signed_div_rem(10, 3) == (3, 1), 'Simple Division failed - 2.'
+    ); // 10 / 3 == 3 remainder 1
 
     // Dividing a Negative Number
     assert(
@@ -127,7 +133,6 @@ fn test_signed_div_rem() {
         ) == (0, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
         'Div with rem failed - 2.'
     ); // -1 / 2 == 0 remainder -1
-
 
     // Edge Case: Dividing Minimum Value by -1
     assert(
