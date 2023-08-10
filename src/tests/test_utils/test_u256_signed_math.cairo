@@ -91,7 +91,7 @@ fn test_signed_div_rem() {
             MAX_SIGNED_VALUE, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         ) == (MIN_SIGNED_VALUE + 1, 0),
         'Div by a neg num failed - 2.'
-    ); // MAX_VALUE (2**255 -1) / -1 == MIN_VALUE + 1 
+    ); // MAX_VALUE (2**255 -1) / -1 == MIN_VALUE + 1
     assert(
         u256_signed_div_rem(
             0x1, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF

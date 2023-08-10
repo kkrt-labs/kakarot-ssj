@@ -198,3 +198,53 @@ fn test__exec_addmod_overflow() {
     assert(ctx.stack.peek().unwrap() == 100, 'stack top should be 100');
 }
 
+
+
+#[test]
+#[available_gas(20000000)]
+fn test__exec_sdiv_pos() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(5);
+    ctx.stack.push(10);
+
+    // When
+    ctx.exec_sdiv(); // 10 / 5
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack len should be 1');
+    assert(ctx.stack.peek().unwrap() == 2, 'ctx not stopped');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test__exec_sdiv_neg() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(BoundedInt::max());
+    ctx.stack.push(2);
+
+    // When
+    ctx.exec_sdiv(); // 2 / -1
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack len should be 1');
+    assert(ctx.stack.peek().unwrap() == BoundedInt::max() - 1, 'ctx not stopped');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test__exec_sdiv_by_0() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0);
+    ctx.stack.push(10);
+
+    // When
+    ctx.exec_sdiv();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack len should be 1');
+    assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 0');
+}
+

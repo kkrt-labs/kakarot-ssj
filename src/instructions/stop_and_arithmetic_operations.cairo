@@ -4,6 +4,7 @@
 use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionContextTrait;
 use kakarot::stack::StackTrait;
+use kakarot::utils::u256_signed_math::u256_signed_div_rem;
 use integer::{u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod};
 
 #[generate_trait]
@@ -13,7 +14,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// # Additional informations:
     /// - Since:  Frontier
     /// - Group:
-    /// - Gas: 
+    /// - Gas:
     /// # Arguments
     /// * `self` - the execution context
     fn exec_stop(ref self: ExecutionContext) {
@@ -130,12 +131,23 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// - Stack consumed elements: 2
     /// - Stack produced elements: 1
     /// # Arguments
-    ///TODO 
+    ///TODO
     /// - Implement me.
     /// * `self` - the execution context
-    fn exec_sdiv(
-        ref self: ExecutionContext
-    ) { //TODO implement two's complement u256 signed division
+    fn exec_sdiv(ref self: ExecutionContext) {
+        // Stack input:
+        // 0 - a: numerator.
+        // 1 - b: denominator.
+        let popped = self.stack.pop_n(2);
+        let a = *popped[0];
+        let b = *popped[1];
+
+        // Compute the division
+        let (result, _) = u256_signed_div_rem(a, b);
+
+        // Stack output:
+        // a / b: signed integer result of the division of a by b
+        self.stack.push(result);
     }
 
     /// MOD operation.
