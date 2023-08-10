@@ -4,7 +4,7 @@
 use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionContextTrait;
 use kakarot::stack::StackTrait;
-use integer::u256_safe_divmod;
+use integer::{u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod};
 
 #[generate_trait]
 impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
@@ -37,7 +37,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let popped = self.stack.pop_n(2);
 
         // Compute the addition
-        let result = *popped[0] + *popped[1];
+        let (result, _) = u256_overflowing_add(*popped[0], *popped[1]);
 
         // Stack output:
         // a+b: integer addition of a and b.
@@ -61,7 +61,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let popped = self.stack.pop_n(2);
 
         // Compute the multiplication
-        let result = *popped[0] * *popped[1];
+        let (result, _) = u256_overflow_mul(*popped[0], *popped[1]);
 
         // Stack output:
         // a*b: integer multiplication of a and b.
@@ -85,7 +85,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let popped = self.stack.pop_n(2);
 
         // Compute the substraction
-        let result = *popped[0] - *popped[1];
+        let (result, _) = u256_overflow_sub(*popped[0], *popped[1]);
 
         // Stack output:
         // a-b: integer subtraction of a and b.
@@ -187,7 +187,8 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let popped = self.stack.pop_n(3);
 
         // Compute the addition
-        let result = (*popped[0] + *popped[1]) % *popped[2];
+        let (add_res, _) = u256_overflowing_add(*popped[0], *popped[1]);
+        let result = add_res % *popped[2];
 
         // Stack output:
         // (a+b)%n: integer addition of a and b modulo n.
