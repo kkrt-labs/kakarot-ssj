@@ -108,7 +108,13 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let popped = self.stack.pop_n(2);
 
         // Compute the division
-        let result = *popped[0] / *popped[1];
+        // Won't panic since 0 case is handled manually
+        let a = *popped[0];
+        let b = *popped[1];
+        let mut result = 0;
+        if b != 0 {
+            result = a / b;
+        }
 
         // Stack output:
         // a/b: integer division of a and b.

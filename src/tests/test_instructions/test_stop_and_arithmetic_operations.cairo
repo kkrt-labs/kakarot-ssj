@@ -134,6 +134,22 @@ fn test__exec_div() {
 
 #[test]
 #[available_gas(20000000)]
+fn test__exec_div_by_zero() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0);
+    ctx.stack.push(100);
+
+    // When
+    ctx.exec_div();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 0');
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test__exec_mod() {
     // Given
     let mut ctx = setup_execution_context();
