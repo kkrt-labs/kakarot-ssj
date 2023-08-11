@@ -1,6 +1,4 @@
-use kakarot::utils::u256_signed_math::{
-    u256_not, u256_neg, u256_signed_div_rem, SHIFT, ALL_ONES, MAX_U256, TWO_POW_127
-};
+use kakarot::utils::u256_signed_math::{u256_not, u256_neg, u256_signed_div_rem, ALL_ONES, MAX_U256};
 use integer::u256_safe_div_rem;
 use debug::PrintTrait;
 

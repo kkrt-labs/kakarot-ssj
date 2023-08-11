@@ -2,7 +2,6 @@ use integer::u256_safe_div_rem;
 use traits::TryInto;
 use option::OptionTrait;
 
-const SHIFT: u128 = 0x100000000000000000000000000000000;
 const ALL_ONES: u128 = 0xffffffffffffffffffffffffffffffff;
 const TWO_POW_127: u128 = 0x80000000000000000000000000000000;
 const MAX_U256: u256 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -54,6 +53,7 @@ fn u256_signed_div_rem(a: u256, div: u256) -> (u256, u256) {
     };
 
     // Compute the quotient and remainder.
+    // Can't panic as zero case is handled in the first instruction
     let (quot, rem) = u256_safe_div_rem(a, div.try_into().unwrap());
 
     // Restore remainder sign.
