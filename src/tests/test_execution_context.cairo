@@ -83,7 +83,8 @@ fn test_execution_context_new() {
     assert(execution_context.destroy_contracts == destroy_contracts, 'wrong destroy_contracts');
     assert(execution_context.events.len() == events.len(), 'wrong events');
     assert(execution_context.create_addresses == create_addresses, 'wrong create_addresses');
-    // can't compare dictionaries directly
+    // Can't verify that reverted_contract_state is empty as we can't compare dictionaries directly
+    // But initializing it using `Default`, it will be empty.
     assert(execution_context.reverted == reverted, 'wrong reverted');
     assert(execution_context.read_only == read_only, 'wrong read_only');
 }
