@@ -202,7 +202,7 @@ fn test__exec_addmod_overflow() {
 
 #[test]
 #[available_gas(20000000)]
-fn test__exec_sdiv_pos() {
+fn test_exec_sdiv_pos() {
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(5);
