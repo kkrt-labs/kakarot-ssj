@@ -1,14 +1,14 @@
 use array::ArrayTrait;
 
 struct EthereumTransaction {
-    nonce: felt252,
-    gas_price: felt252,
-    gas_limit: felt252,
-    destination: felt252,
-    amount: felt252,
+    nonce: u128,
+    gas_price: u128,
+    gas_limit: u128,
+    destination: EthAddress,
+    amount: u256,
     payload: Span<felt252>,
     tx_hash: u256,
-    v: felt252,
+    v: u128,
     r: u256,
     s: u256,
 }
@@ -57,5 +57,5 @@ trait EthTransaction {
     /// - `address` The ethereum address that is supposed to have signed the transaction
     /// - `account_nonce` The nonce of the account
     /// - `param tx_data` The raw transaction data
-    fn validate_eth_tx(address: felt252, account_nonce: felt252, tx_data: Span<u8>) -> bool;
+    fn validate_eth_tx(address: EthAddress, account_nonce: u128, tx_data: Span<u8>) -> bool;
 }
