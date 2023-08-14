@@ -239,15 +239,6 @@ impl ArrayPartialEq<T, impl PartialEqImpl: PartialEq<T>> of PartialEq<Array<T>> 
     }
 }
 
-
-fn max(a: usize, b: usize) -> usize {
-    if a > b {
-        return a;
-    } else {
-        return b;
-    }
-}
-
 // Raise a number to a power.
 /// * `base` - The number to raise.
 /// * `exp` - The exponent.
