@@ -86,12 +86,9 @@ fn test__load__should_load_an_element_from_the_memory() {
     let second_value = u256 { low: 4, high: 3 };
     let first_bytes_array = helpers::u256_to_bytes_array(first_value);
     let second_bytes_array = helpers::u256_to_bytes_array(second_value);
-    let x = testing::get_available_gas();
-    gas::withdraw_gas().unwrap();
     memory.store_n(first_bytes_array.span(), 0);
 
     memory.store_n(second_bytes_array.span(), 32);
-    (x - testing::get_available_gas()).print();
 
     // When
     let result: u256 = memory._load(0);
