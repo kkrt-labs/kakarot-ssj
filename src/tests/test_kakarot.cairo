@@ -8,7 +8,7 @@ use kakarot::errors;
 
 
 #[test]
-#[available_gas(2000000)]
+#[available_gas(20000000)]
 #[should_panic(expected: ('Kakarot: pc >= bytecode length', ))]
 fn nominal_case_empty_pc() {
     let bytecode = ArrayTrait::<u8>::new();
