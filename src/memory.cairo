@@ -196,7 +196,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// * `offset_in_chunk` - The offset within the memory chunk to store the element at.
     fn _store_element(ref self: Memory, element: u256, chunk_index: usize, offset_in_chunk: u32) {
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
-        let mask_c: u256 = utils::pow(256, 16).into() / mask;
+        let mask_c: u256 = helpers::pow(256, 16).into() / mask;
 
         // Split the 2 input bytes16 chunks at offset_in_chunk.
         let (el_hh, el_hl) = u256_safe_div_rem(element.high.into(), u256_as_non_zero(mask_c));
@@ -264,22 +264,22 @@ impl InternalMemoryMethods of InternalMemoryTrait {
                 break ();
             }
 
-            let current: felt252 = ((*elements[0]).into() * utils::pow(256, 15)
-                + (*elements[1]).into() * utils::pow(256, 14)
-                + (*elements[2]).into() * utils::pow(256, 13)
-                + (*elements[3]).into() * utils::pow(256, 12)
-                + (*elements[4]).into() * utils::pow(256, 11)
-                + (*elements[5]).into() * utils::pow(256, 10)
-                + (*elements[6]).into() * utils::pow(256, 9)
-                + (*elements[7]).into() * utils::pow(256, 8)
-                + (*elements[8]).into() * utils::pow(256, 7)
-                + (*elements[9]).into() * utils::pow(256, 6)
-                + (*elements[10]).into() * utils::pow(256, 5)
-                + (*elements[11]).into() * utils::pow(256, 4)
-                + (*elements[12]).into() * utils::pow(256, 3)
-                + (*elements[13]).into() * utils::pow(256, 2)
-                + (*elements[14]).into() * utils::pow(256, 1)
-                + (*elements[15]).into() * utils::pow(256, 0));
+            let current: felt252 = ((*elements[0]).into() * helpers::pow(256, 15)
+                + (*elements[1]).into() * helpers::pow(256, 14)
+                + (*elements[2]).into() * helpers::pow(256, 13)
+                + (*elements[3]).into() * helpers::pow(256, 12)
+                + (*elements[4]).into() * helpers::pow(256, 11)
+                + (*elements[5]).into() * helpers::pow(256, 10)
+                + (*elements[6]).into() * helpers::pow(256, 9)
+                + (*elements[7]).into() * helpers::pow(256, 8)
+                + (*elements[8]).into() * helpers::pow(256, 7)
+                + (*elements[9]).into() * helpers::pow(256, 6)
+                + (*elements[10]).into() * helpers::pow(256, 5)
+                + (*elements[11]).into() * helpers::pow(256, 4)
+                + (*elements[12]).into() * helpers::pow(256, 3)
+                + (*elements[13]).into() * helpers::pow(256, 2)
+                + (*elements[14]).into() * helpers::pow(256, 1)
+                + (*elements[15]).into() * helpers::pow(256, 0));
 
             self.items.insert(chunk_index.into(), current.try_into().unwrap());
             chunk_index += 1;
@@ -349,7 +349,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         // Compute mask.
 
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
-        let mask_c: u256 = utils::pow(2, 128).into() / mask;
+        let mask_c: u256 = helpers::pow(2, 128).into() / mask;
 
         // Read the words at chunk_index, +1, +2.
         let w0: u128 = self.items.get(chunk_index.into());
