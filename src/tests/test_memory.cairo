@@ -1,8 +1,7 @@
 use core::dict::Felt252DictTrait;
 use core::debug::PrintTrait;
 use kakarot::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
-use kakarot::utils::helpers;
-use kakarot::utils;
+use kakarot::{utils, utils::helpers};
 use array::{ArrayTrait, SpanTrait};
 use traits::{Into, TryInto};
 use option::OptionTrait;
