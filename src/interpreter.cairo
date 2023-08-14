@@ -63,7 +63,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
 
         // Check if PC is not out of bounds.
         if pc >= bytecode_len {
-            utils::panic_with_code(errors::PC_OUT_OF_BOUNDS);
+            panic_with_felt252(errors::PC_OUT_OF_BOUNDS);
         }
 
         let opcode: u8 = *bytecode.at(pc);
