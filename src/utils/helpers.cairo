@@ -260,12 +260,3 @@ fn pow(base: felt252, exp: felt252) -> felt252 {
         return base * pow(base, exp - 1);
     }
 }
-
-/// Panic with a custom code.
-/// # Arguments
-/// * `code` - The code to panic with. Must be a short string to fit in a felt252.
-fn panic_with_code(code: felt252) {
-    let mut data = ArrayTrait::new();
-    data.append(code);
-    panic(data);
-}
