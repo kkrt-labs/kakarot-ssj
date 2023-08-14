@@ -199,7 +199,6 @@ fn test__exec_addmod_overflow() {
 }
 
 
-
 #[test]
 #[available_gas(20000000)]
 fn test_exec_sdiv_pos() {
