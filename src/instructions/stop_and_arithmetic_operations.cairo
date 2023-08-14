@@ -5,6 +5,7 @@ use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionContextTrait;
 use kakarot::stack::StackTrait;
 use kakarot::utils::u256_signed_math::u256_signed_div_rem;
+use kakarot::utils::math::{Exponentiation, ExponentiationModulo};
 use integer::{u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod};
 
 #[generate_trait]
@@ -41,7 +42,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let (result, _) = u256_overflowing_add(*popped[0], *popped[1]);
 
         // Stack output:
-        // a+b: integer addition of a and b.
+        // a+b: integer result of the addition modulo 2^256.
         self.stack.push(result);
     }
 
@@ -65,7 +66,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let (result, _) = u256_overflow_mul(*popped[0], *popped[1]);
 
         // Stack output:
-        // a*b: integer multiplication of a and b.
+        // a*b: integer result of the multiplication modulo 2^256.
         self.stack.push(result);
     }
 
@@ -89,7 +90,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let (result, _) = u256_overflow_sub(*popped[0], *popped[1]);
 
         // Stack output:
-        // a-b: integer subtraction of a and b.
+        // a-b: nteger result of the subtraction modulo 2^256.
         self.stack.push(result);
     }
 
@@ -118,7 +119,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         }
 
         // Stack output:
-        // a/b: integer division of a and b.
+        // a/b: integer result of the integer division. If the denominator is 0, the result will be 0.
         self.stack.push(result);
     }
 
@@ -146,7 +147,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let (result, _) = u256_signed_div_rem(a, b);
 
         // Stack output:
-        // a / b: signed integer result of the division of a by b
+        // a / b: integer result of the signed integer division. If the denominator is 0, the result will be 0.
         self.stack.push(result);
     }
 
@@ -165,11 +166,15 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         // 1 = b: modulo
         let popped = self.stack.pop_n(2);
 
-        // Compute the result of a mod b
-        let result = *popped[0] % *popped[1];
+        let mut result = 0;
+        let b = *popped[1];
+        if b != 0 {
+            // Compute the result of a mod b
+            result = *popped[0] % *popped[1];
+        }
 
         // Stack output:
-        // a%b: unsigned integer result of a mod b
+        // a % b: integer result of the integer modulo. If the denominator is 0, the result will be 0.
         self.stack.push(result);
     }
 
@@ -204,12 +209,15 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         // 2 = n: modulo
         let popped = self.stack.pop_n(3);
 
-        // Compute the addition
-        let (add_res, _) = u256_overflowing_add(*popped[0], *popped[1]);
-        let result = add_res % *popped[2];
-
+        let n = *popped[2];
+        let mut result = 0;
+        if n != 0 {
+            // Compute the addition
+            let (add_res, _) = u256_overflowing_add(*popped[0], *popped[1]);
+            result = add_res % *popped[2];
+        }
         // Stack output:
-        // (a+b)%n: integer addition of a and b modulo n.
+        // (a + b) % N: integer result of the addition followed by a modulo. If the denominator is 0, the result will be 0.
         self.stack.push(result);
     }
 
@@ -239,7 +247,20 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// * `self` - the execution context
     /// # TODO
     /// - Implement me.
-    fn exec_exp(ref self: ExecutionContext) { //TODO exponentiation algorithm
+    fn exec_exp(ref self: ExecutionContext) {
+        // Stack input:
+        // 0 - a: integer base.
+        // 1 - exponent: integer exponent.
+        let popped = self.stack.pop_n(2);
+        let a = *popped[0];
+        let b = *popped[1];
+
+        // Compute the result of a**exponent
+        let result = a.pow_mod(b);
+
+        // Stack output:
+        // a ** exponent: integer result of the exponential operation modulo 2256.
+        self.stack.push(result);
     }
 
     /// SIGNEXTEND - 0x0B

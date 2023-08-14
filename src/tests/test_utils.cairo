@@ -7,6 +7,7 @@ use kakarot::context::{CallContext, CallContextTrait, ExecutionContext, Executio
 
 mod test_helpers;
 mod test_u256_signed_math;
+mod test_math;
 
 fn starknet_address() -> ContractAddress {
     'starknet_address'.try_into().unwrap()

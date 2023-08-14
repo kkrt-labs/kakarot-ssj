@@ -3,10 +3,11 @@ use kakarot::instructions::StopAndArithmeticOperationsTrait;
 use kakarot::stack::StackTrait;
 use option::OptionTrait;
 use integer::BoundedInt;
+use traits::{TryInto, Into};
 
 #[test]
 #[available_gas(20000000)]
-fn test__exec_stop() {
+fn test_exec_stop() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -19,7 +20,7 @@ fn test__exec_stop() {
 
 #[test]
 #[available_gas(20000000)]
-fn test__exec_add() {
+fn test_exec_add() {
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(1);
@@ -37,7 +38,7 @@ fn test__exec_add() {
 
 #[test]
 #[available_gas(20000000)]
-fn test__exec_add_overflow() {
+fn test_exec_add_overflow() {
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(BoundedInt::<u256>::max());
@@ -53,7 +54,7 @@ fn test__exec_add_overflow() {
 
 #[test]
 #[available_gas(20000000)]
-fn test__exec_mul() {
+fn test_exec_mul() {
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(4);
@@ -69,7 +70,7 @@ fn test__exec_mul() {
 
 #[test]
 #[available_gas(20000000)]
-fn test__exec_mul_overflow() {
+fn test_exec_mul_overflow() {
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(BoundedInt::<u256>::max());
@@ -85,7 +86,7 @@ fn test__exec_mul_overflow() {
 
 #[test]
 #[available_gas(20000000)]
-fn test__exec_sub() {
+fn test_exec_sub() {
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(7);
@@ -101,7 +102,7 @@ fn test__exec_sub() {
 
 #[test]
 #[available_gas(20000000)]
-fn test__exec_sub_underflow() {
+fn test_exec_sub_underflow() {
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(1);
@@ -118,7 +119,7 @@ fn test__exec_sub_underflow() {
 
 #[test]
 #[available_gas(20000000)]
-fn test__exec_div() {
+fn test_exec_div() {
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(4);
@@ -134,7 +135,7 @@ fn test__exec_div() {
 
 #[test]
 #[available_gas(20000000)]
-fn test__exec_div_by_zero() {
+fn test_exec_div_by_zero() {
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(0);
@@ -147,57 +148,6 @@ fn test__exec_div_by_zero() {
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 0');
 }
-
-#[test]
-#[available_gas(20000000)]
-fn test__exec_mod() {
-    // Given
-    let mut ctx = setup_execution_context();
-    ctx.stack.push(6);
-    ctx.stack.push(100);
-
-    // When
-    ctx.exec_mod();
-
-    // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 4, 'stack top should be 100%6');
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test__exec_addmod() {
-    // Given
-    let mut ctx = setup_execution_context();
-    ctx.stack.push(7);
-    ctx.stack.push(10);
-    ctx.stack.push(20);
-
-    // When
-    ctx.exec_addmod();
-
-    // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 2, 'stack top should be (10+20)%7');
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test__exec_addmod_overflow() {
-    // Given
-    let mut ctx = setup_execution_context();
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(101);
-    ctx.stack.push(BoundedInt::<u256>::max());
-
-    // When
-    ctx.exec_addmod();
-
-    // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 100, 'stack top should be 100');
-}
-
 
 #[test]
 #[available_gas(20000000)]
@@ -233,7 +183,7 @@ fn test__exec_sdiv_neg() {
 
 #[test]
 #[available_gas(20000000)]
-fn test__exec_sdiv_by_0() {
+fn test_exec_sdiv_by_0() {
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(0);
@@ -247,3 +197,120 @@ fn test__exec_sdiv_by_0() {
     assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 0');
 }
 
+#[test]
+#[available_gas(20000000)]
+fn test_exec_mod() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(6);
+    ctx.stack.push(100);
+
+    // When
+    ctx.exec_mod();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 4, 'stack top should be 100%6');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_mod_by_zero() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0);
+    ctx.stack.push(100);
+
+    // When
+    ctx.exec_mod();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 100%6');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_addmod() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(7);
+    ctx.stack.push(10);
+    ctx.stack.push(20);
+
+    // When
+    ctx.exec_addmod();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 2, 'stack top should be (10+20)%7');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_addmod_by_zero() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0);
+    ctx.stack.push(10);
+    ctx.stack.push(20);
+
+    // When
+    ctx.exec_addmod();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 0');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_addmod_overflow() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(101);
+    ctx.stack.push(BoundedInt::<u256>::max());
+
+    // When
+    ctx.exec_addmod();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 100, 'stack top should be 100');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_exp() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(2);
+    ctx.stack.push(10);
+
+    // When
+    ctx.exec_exp();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 100, 'stack top should be 100');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_exp_overflow() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(2);
+    ctx.stack.push(BoundedInt::<u128>::max().into() + 1);
+
+    // When
+    ctx.exec_exp();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(
+        ctx.stack.peek().unwrap() == 0, 'stack top should be 0'
+    ); // (2^128)^2 = 2^256 = 0 % 2^256
+}
