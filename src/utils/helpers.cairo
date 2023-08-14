@@ -203,6 +203,7 @@ impl ArrayExtension of ArrayExtensionTrait {
     }
 }
 
+//TODO remove once merged in corelib
 impl SpanPartialEq<T, impl PartialEqImpl: PartialEq<T>> of PartialEq<Span<T>> {
     fn eq(lhs: @Span<T>, rhs: @Span<T>) -> bool {
         if (*lhs).len() != (*rhs).len() {
@@ -228,3 +229,12 @@ impl SpanPartialEq<T, impl PartialEqImpl: PartialEq<T>> of PartialEq<Span<T>> {
     }
 }
 
+//TODO remove once merged in corelib
+impl ArrayPartialEq<T, impl PartialEqImpl: PartialEq<T>> of PartialEq<Array<T>> {
+    fn eq(lhs: @Array<T>, rhs: @Array<T>) -> bool {
+        lhs.span() == rhs.span()
+    }
+    fn ne(lhs: @Array<T>, rhs: @Array<T>) -> bool {
+        !ArrayPartialEq::eq(lhs, rhs)
+    }
+}

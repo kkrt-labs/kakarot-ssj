@@ -113,14 +113,13 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         returned_data: Array<u8>,
         read_only: bool
     ) -> ExecutionContext {
-        let mut stack = StackTrait::new();
         ExecutionContext {
             call_context,
             program_counter: 0,
-            stack: StackTrait::new(),
+            stack: Default::default(),
             stopped: false,
-            return_data: ArrayTrait::new(),
-            memory: MemoryTrait::new(),
+            return_data: Default::default(),
+            memory: Default::default(),
             gas_used: 0,
             gas_limit,
             gas_price,
@@ -241,4 +240,3 @@ impl DefaultExecutionContext of Default<ExecutionContext> {
 /// The execution summary.
 #[derive(Drop, Copy)]
 struct ExecutionSummary {}
-
