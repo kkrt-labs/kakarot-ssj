@@ -1,14 +1,18 @@
 //! Stop and Arithmetic Operations.
 
-use integer::{u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod};
+use integer::{
+    u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod,
+    u512_safe_div_rem_by_u256
+};
 use traits::TryInto;
 use option::OptionTrait;
+
 
 use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionContextTrait;
 use kakarot::stack::StackTrait;
 use kakarot::utils::u256_signed_math::u256_signed_div_rem;
-use kakarot::utils::math::{Exponentiation, ExponentiationModulo};
+use kakarot::utils::math::{Exponentiation, ExponentiationModulo, u256_wide_add};
 
 #[generate_trait]
 impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
@@ -121,21 +125,16 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// All intermediate calculations of this operation are not subject to the 2256 modulo.
     /// # Specification: https://www.evm.codes/#08?fork=shanghai
     fn exec_addmod(ref self: ExecutionContext) {
-        // Stack input:
-        // 0 = a: first integer value to add.
-        // 1 = b: second integer value to add.
-        // 2 = n: modulo
         let popped = self.stack.pop_n(3);
 
-        let n = *popped[2];
+        let n: u256 = *popped[2];
         let mut result = 0;
         if n != 0 {
-            // Compute the addition
-            let (add_res, _) = u256_overflowing_add(*popped[0], *popped[1]);
-            result = add_res % *popped[2];
+            let add_res = u256_wide_add(*popped[0], *popped[1]);
+            let (_, r) = u512_safe_div_rem_by_u256(add_res, n.try_into().unwrap());
+            result = r;
         }
-        // Stack output:
-        // (a + b) % N: integer result of the addition followed by a modulo. If the denominator is 0, the result will be 0.
+
         self.stack.push(result);
     }
 

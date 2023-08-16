@@ -269,16 +269,19 @@ fn test_exec_addmod_by_zero() {
 fn test_exec_addmod_overflow() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(101);
+    ctx.stack.push(2);
+    ctx.stack.push(2);
     ctx.stack.push(BoundedInt::<u256>::max());
 
     // When
+    let x = testing::get_available_gas();
+    gas::withdraw_gas().unwrap();
     ctx.exec_addmod();
+    (x - testing::get_available_gas()).print();
 
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 100, 'stack top should be 100');
+    assert(ctx.stack.peek().unwrap() == 1, 'stack top should be 1');
 }
 
 #[test]
