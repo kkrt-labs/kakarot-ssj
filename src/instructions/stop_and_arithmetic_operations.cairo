@@ -145,11 +145,10 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let n = *popped[2];
 
         let result: u256 = match u256_try_as_non_zero(n) {
-            Option::Some(_) => {
+            Option::Some(nonzero_n) => {
                 // This is more gas efficient than computing (a mod N) + (b mod N) mod N
                 let add_res = u256_wide_add(*popped[0], *popped[1]);
-                // Won't panic since 0 case is handled manually
-                let (_, r) = u512_safe_div_rem_by_u256(add_res, n.try_into().unwrap());
+                let (_, r) = u512_safe_div_rem_by_u256(add_res, nonzero_n);
                 r
             },
             Option::None => 0,
