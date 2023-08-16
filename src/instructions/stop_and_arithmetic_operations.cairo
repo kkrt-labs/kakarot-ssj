@@ -148,7 +148,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::Some(nonzero_n) => {
                 // This is more gas efficient than computing (a mod N) + (b mod N) mod N
                 let sum = u256_wide_add(*popped[0], *popped[1]);
-                let (_, r) = u512_safe_div_rem_by_u256(add_res, nonzero_n);
+                let (_, r) = u512_safe_div_rem_by_u256(sum, nonzero_n);
                 r
             },
             Option::None => 0,
