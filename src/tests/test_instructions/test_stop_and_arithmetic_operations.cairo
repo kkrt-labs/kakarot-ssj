@@ -269,19 +269,18 @@ fn test_exec_addmod_by_zero() {
 fn test_exec_addmod_overflow() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2);
+    ctx.stack.push(3);
     ctx.stack.push(2);
     ctx.stack.push(BoundedInt::<u256>::max());
 
     // When
-    let x = testing::get_available_gas();
-    gas::withdraw_gas().unwrap();
     ctx.exec_addmod();
-    (x - testing::get_available_gas()).print();
 
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 1, 'stack top should be 1');
+    assert(
+        ctx.stack.peek().unwrap() == 2, 'stack top should be 2'
+    ); // (MAX_U256 + 2) % 3 = 2^256 + 1 % 3 = 2
 }
 
 #[test]
@@ -293,10 +292,7 @@ fn test_mulmod_basic() {
     ctx.stack.push(5);
 
     // When
-    let x = testing::get_available_gas();
-    gas::withdraw_gas().unwrap();
     ctx.exec_mulmod();
-    (x - testing::get_available_gas()).print();
 
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.peek().unwrap() == 5, 'stack top should be 5'); // 5 * 7 % 10 = 5
@@ -316,7 +312,6 @@ fn test_mulmod_zero_modulus() {
     assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 0'); // modulus is 0
 }
 
-use debug::PrintTrait;
 #[test]
 #[available_gas(20000000)]
 fn test_mulmod_overflow() {
@@ -325,10 +320,7 @@ fn test_mulmod_overflow() {
     ctx.stack.push(BoundedInt::<u256>::max());
     ctx.stack.push(BoundedInt::<u256>::max());
 
-    let x = testing::get_available_gas();
-    gas::withdraw_gas().unwrap();
     ctx.exec_mulmod();
-    (x - testing::get_available_gas()).print();
 
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(
