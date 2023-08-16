@@ -2,9 +2,9 @@
 
 use integer::{
     u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod,
-    u512_safe_div_rem_by_u256
+    u512_safe_div_rem_by_u256, u256_try_as_non_zero
 };
-use traits::TryInto;
+use traits::{TryInto};
 use option::OptionTrait;
 
 
@@ -69,13 +69,16 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     fn exec_div(ref self: ExecutionContext) {
         let popped = self.stack.pop_n(2);
 
-        let a = *popped[0];
-        let b = *popped[1];
-        let mut result = 0;
-        // Won't panic since 0 case is handled manually
-        if b != 0 {
-            result = a / b;
-        }
+        let a: u256 = *popped[0];
+        let b: u256 = *popped[1];
+
+        let result: u256 = match u256_try_as_non_zero(b) {
+            Option::Some(_) => {
+                // Won't panic because b is not zero
+                a / b
+            },
+            Option::None => 0,
+        };
 
         self.stack.push(result);
     }
@@ -90,12 +93,13 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let a = *popped[0];
         let b = *popped[1];
 
-        let mut result = 0;
-        if b != 0 {
-            // Won't panic since 0 case is handled manually
-            let (q, _) = u256_signed_div_rem(a, b.try_into().unwrap());
-            result = q;
-        }
+        let result: u256 = match u256_try_as_non_zero(b) {
+            Option::Some(nonzero_b) => {
+                let (q, _) = u256_signed_div_rem(a, nonzero_b);
+                q
+            },
+            Option::None => 0,
+        };
 
         self.stack.push(result);
     }
@@ -107,11 +111,16 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     fn exec_mod(ref self: ExecutionContext) {
         let popped = self.stack.pop_n(2);
 
-        let mut result = 0;
-        let b = *popped[1];
-        if b != 0 {
-            result = *popped[0] % *popped[1];
-        }
+        let a: u256 = *popped[0];
+        let b: u256 = *popped[1];
+
+        let result: u256 = match u256_try_as_non_zero(b) {
+            Option::Some(_) => {
+                // Won't panic because b is not zero
+                a % b
+            },
+            Option::None => 0,
+        };
 
         self.stack.push(result);
     }
@@ -131,15 +140,20 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     fn exec_addmod(ref self: ExecutionContext) {
         let popped = self.stack.pop_n(3);
 
-        let n: u256 = *popped[2];
-        let mut result = 0;
-        if n != 0 {
-            // This is more gas efficient than computing (a mod N) + (b mod N) mod N
-            let add_res = u256_wide_add(*popped[0], *popped[1]);
-            // Won't panic since 0 case is handled manually
-            let (_, r) = u512_safe_div_rem_by_u256(add_res, n.try_into().unwrap());
-            result = r;
-        }
+        let a: u256 = *popped[0];
+        let b: u256 = *popped[1];
+        let n = *popped[2];
+
+        let result: u256 = match u256_try_as_non_zero(n) {
+            Option::Some(_) => {
+                // This is more gas efficient than computing (a mod N) + (b mod N) mod N
+                let add_res = u256_wide_add(*popped[0], *popped[1]);
+                // Won't panic since 0 case is handled manually
+                let (_, r) = u512_safe_div_rem_by_u256(add_res, n.try_into().unwrap());
+                r
+            },
+            Option::None => 0,
+        };
 
         self.stack.push(result);
     }
@@ -152,13 +166,20 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     fn exec_mulmod(ref self: ExecutionContext) {
         let popped = self.stack.pop_n(3);
 
-        let n: u256 = *popped[2];
-        let mut result = 0;
-        if n != 0 {
-            // (x * y) mod N <=> (x mod N) * (y mod N) mod N
-            // It is more gas-efficient than to use u256_wide_mul
-            result = (*popped[0] % n) * (*popped[1] % n) % n;
-        }
+        let a: u256 = *popped[0];
+        let b: u256 = *popped[1];
+        let n = *popped[2];
+
+        let result: u256 = match u256_try_as_non_zero(n) {
+            Option::Some(_) => {
+                // (x * y) mod N <=> (x mod N) * (y mod N) mod N
+                // It is more gas-efficient than to use u256_wide_mul
+                // Won't panic because n is not zero
+                (*popped[0] % n) * (*popped[1] % n) % n
+            },
+            Option::None => 0,
+        };
+
         self.stack.push(result);
     }
 
