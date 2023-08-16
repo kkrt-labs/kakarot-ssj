@@ -280,7 +280,7 @@ fn test_exec_addmod_overflow() {
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(
         ctx.stack.peek().unwrap() == 2, 'stack top should be 2'
-    ); // (MAX_U256 + 2) % 3 = 2^256 + 1 % 3 = 2
+    ); // (MAX_U256 + 2) % 3 = (2^256 + 1) % 3 = 2
 }
 
 #[test]
