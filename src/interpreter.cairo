@@ -249,8 +249,8 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
             block_information::exec_number(ref context);
         }
         if opcode == 68 {
-            // DIFFICULTY
-            block_information::exec_difficulty(ref context);
+            // PREVRANDAO
+            block_information::exec_prevrandao(ref context);
         }
         if opcode == 69 {
             // GASLIMIT
