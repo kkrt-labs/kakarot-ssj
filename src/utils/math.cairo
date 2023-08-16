@@ -1,4 +1,4 @@
-use integer::{u256_overflow_mul};
+use integer::{u256_overflow_mul, u256_overflowing_add, u512, BoundedInt};
 
 trait Exponentiation<T> {
     // Raise a number to a power.
@@ -63,4 +63,25 @@ impl U256ExpModImpl of ExponentiationModulo<u256> {
         };
         result
     }
+}
+
+/// Adds two 256-bit unsigned integers, returning a 512-bit unsigned integer result.
+///
+/// limb3 will always be 0, because the maximum sum of two 256-bit numbers is at most
+/// 2**257 - 2 which fits in 257 bits.
+fn u256_wide_add(a: u256, b: u256) -> u512 {
+    let (sum, overflow) = u256_overflowing_add(a, b);
+
+    let limb0 = sum.low;
+    let limb1 = sum.high;
+
+    let limb2 = if overflow {
+        1
+    } else {
+        0
+    };
+
+    let limb3 = 0;
+
+    u512 { limb0, limb1, limb2, limb3 }
 }
