@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- math: u256_signed_div now enforces div to be NonZero
 - fix: ADDMOD opcode
 - opcodes: add 0x09-MULMOD opcode
 - ci: add `CHANGELOG.md` and enforce it is edited for each PR on `main`
