@@ -132,6 +132,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         if n != 0 {
             // This is more gas efficient than computing (a mod N) + (b mod N) mod N
             let add_res = u256_wide_add(*popped[0], *popped[1]);
+            // Won't panic since 0 case is handled manually
             let (_, r) = u512_safe_div_rem_by_u256(add_res, n.try_into().unwrap());
             result = r;
         }
