@@ -117,7 +117,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
 
     /// 0x08 - ADDMOD
     /// Addition and modulo operation
-    /// a % b: integer result of the signed integer modulo. If the denominator is 0, the result will be 0.
+    /// (a + b) % N: integer result of the addition followed by a modulo. If the denominator is 0, the result will be 0.
     /// All intermediate calculations of this operation are not subject to the 2256 modulo.
     /// # Specification: https://www.evm.codes/#08?fork=shanghai
     fn exec_addmod(ref self: ExecutionContext) {
