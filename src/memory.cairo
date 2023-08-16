@@ -72,6 +72,12 @@ impl MemoryImpl of MemoryTrait {
     /// stored are within the same word in memory using the `_store_bytes_in_single_chunk` function. If the bytes
     /// span multiple words, the function stores the first word using the `_store_first_word` function, the aligned
     /// words using the `_store_aligned_words` function, and the last word using the `_store_last_word` function.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `Memory` instance to store the bytes in.
+    /// * `elements` - A span of bytes to store in memory.
+    /// * `offset` - The offset within memory to store the bytes at.
     fn store_n(ref self: Memory, elements: Span<u8>, offset: usize) {
         if elements.len() == 0 {
             return ();

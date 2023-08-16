@@ -159,6 +159,11 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     /// Reads and return data from bytecode.
     /// The program counter is incremented accordingly.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `self` - The `ExecutionContext` instance to read the data from.
+    /// * `len` - The length of the data to read from the bytecode.
     fn read_code(ref self: ExecutionContext, len: usize) -> Span<u8> {
         // Copy code slice from [pc, pc+len]
         let code = self.call_context.bytecode().slice(self.program_counter, len);
