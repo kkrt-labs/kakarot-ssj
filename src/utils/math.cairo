@@ -1,4 +1,4 @@
-use integer::u256_overflow_mul;
+use integer::{u256_overflow_mul};
 
 trait Exponentiation<T> {
     // Raise a number to a power.

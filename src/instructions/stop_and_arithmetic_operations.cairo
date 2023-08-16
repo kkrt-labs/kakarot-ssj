@@ -1,12 +1,14 @@
 //! Stop and Arithmetic Operations.
 
-// Internal imports
+use integer::{u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod};
+use traits::TryInto;
+use option::OptionTrait;
+
 use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionContextTrait;
 use kakarot::stack::StackTrait;
 use kakarot::utils::u256_signed_math::u256_signed_div_rem;
 use kakarot::utils::math::{Exponentiation, ExponentiationModulo};
-use integer::{u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod};
 
 #[generate_trait]
 impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
@@ -222,18 +224,20 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     }
 
     /// MULMOD operation.
-    /// Multiplication modulo operation.
-    /// # Additional informations:
-    /// - Since:  Frontier
-    /// - Group: Stop and Arithmetic Operations
-    /// - Gas: 8
-    /// - Stack consumed elements: 2
-    /// - Stack produced elements: 1
-    /// # Arguments
-    /// * `self` - the execution context
-    /// # TODO
-    /// - Implement me.
-    fn exec_mulmod(ref self: ExecutionContext) { //TODO implement u256 mulmod
+    /// (a * b) % N: integer result of the multiplication followed by a modulo.
+    /// All intermediate calculations of this operation are not subject to the 2^256 modulo.
+    /// If the denominator is 0, the result will be 0.
+    fn exec_mulmod(ref self: ExecutionContext) {
+        let popped = self.stack.pop_n(3);
+
+        let n: u256 = *popped[2];
+        let mut result = 0;
+        if n != 0 {
+            // (x * y) mod N <=> (x mod N) * (y mod N) mod N
+            // It is more gas-efficient than to use u256_wide_mul
+            result = (*popped[0] % n) * (*popped[1] % n) % n;
+        }
+        self.stack.push(result);
     }
 
     /// EXP operation.
