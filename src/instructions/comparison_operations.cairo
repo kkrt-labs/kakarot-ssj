@@ -1,201 +1,63 @@
-//! Comparison & Bitwise Logic Operations
-
 // Internal imports
 use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionContextTrait;
 
-/// LT operation
-/// Comparison operation
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 2
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// 0x10 - LT
+/// # Specification: https://www.evm.codes/#10?fork=shanghai
 fn exec_lt(ref context: ExecutionContext) {}
 
-/// GT operation.
-/// Comparison operation.
-/// # Additional informations:
-/// - Since: Frontier
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 2
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// 0x11 - GT
+/// # Specification: https://www.evm.codes/#11?fork=shanghai
 fn exec_gt(ref context: ExecutionContext) {}
 
 
-/// SLT operation.
-/// Comparison operation.
-/// # Additional informations:
-/// - Since: Frontier
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 2
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context 
-/// # TODO
-/// - Implement me.
+/// 0x12 - SLT
+/// # Specification: https://www.evm.codes/#12?fork=shanghai
 fn exec_slt(ref context: ExecutionContext) {}
 
-/// SGT operation.
-/// Comparison operation.
-/// # Additional informations:
-/// - Since: Frontier
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 2
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// 0x13 - SGT
+/// # Specification: https://www.evm.codes/#13?fork=shanghai
 fn exec_sgt(ref context: ExecutionContext) {}
 
 
-/// EQ operation.
-/// Comparison operation.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 2
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// 0x14 - EQ
+/// # Specification: https://www.evm.codes/#14?fork=shanghai
 fn exec_eq(ref context: ExecutionContext) {}
 
-/// ISZERO operation.
-/// Comparison operation
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 2
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// 0x15 - ISZERO
+/// # Specification: https://www.evm.codes/#15?fork=shanghai
 fn exec_iszero(ref context: ExecutionContext) {}
 
 /// 0x16 - AND
-/// Comparison operation
-/// # Additional informations:
-/// - Since: Frontier
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 2
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#16?fork=shanghai
 fn exec_and(ref context: ExecutionContext) {}
 
-/// OR operation.
-/// Comparison operation.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 2
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// 0x17 - OR
+/// # Specification: https://www.evm.codes/#17?fork=shanghai
 fn exec_or(ref context: ExecutionContext) {}
 
-/// XOR operation
-/// Comparison operation
-/// # Additional informations:
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 2
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// 0x18 - XOR operation
+/// # Specification: https://www.evm.codes/#18?fork=shanghai
 fn exec_xor(ref context: ExecutionContext) {}
 
-/// BYTE operation.
-/// Bitwise operation.
-/// # Additional informations: 
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 2
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// 0x19 - NOT
+/// Bitwise NOT operation
+/// # Specification: https://www.evm.codes/#19?fork=shanghai
+fn exec_not(ref context: ExecutionContext) {}
+
+/// 0x1A - BYTE
+/// # Specification: https://www.evm.codes/#1a?fork=shanghai
 fn exec_byte(ref context: ExecutionContext) {}
 
-/// SHL operation.
-/// Bitwise operation.
-/// # Additional informations:
-/// - Since:  Constantinople
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 2
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// 0x1B - SHL
+/// # Specification: https://www.evm.codes/#1b?fork=shanghai
 fn exec_shl(ref context: ExecutionContext) {}
 
-/// SHR operation.
-/// Bitwise operation.
-/// # Additional informations:
-/// - Since:  Constantinople
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 2
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// 0x1C - SHR
+/// # Specification: https://www.evm.codes/#1c?fork=shanghai
 fn exec_shr(ref context: ExecutionContext) {}
 
-/// SAR operation.
-/// Bitwise operation
-/// # Additional informations:
-/// - Since:  Constantinople
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 2
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// 0x1D - SAR
+/// # Specification: https://www.evm.codes/#1d?fork=shanghai
 fn exec_sar(ref context: ExecutionContext) {}
 
-/// NOT operation.
-/// Bitwise operation.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Comparison & Bitwise Logic Operations
-/// - Gas: 3
-/// - Stack consumed elements: 1
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
-fn exec_not(ref context: ExecutionContext) {}

@@ -34,10 +34,6 @@ trait MemoryTrait {
 
 impl MemoryImpl of MemoryTrait {
     /// Initializes a new `Memory` instance.
-    ///
-    /// # Returns
-    ///
-    /// * A new `Memory` instance.
     fn new() -> Memory {
         Memory { items: Default::default(), bytes_len: 0,  }
     }
@@ -46,12 +42,6 @@ impl MemoryImpl of MemoryTrait {
     ///
     /// If the offset is aligned with the 16-bytes words in memory, the element is stored directly.
     /// Otherwise, the element is split and stored in multiple words.
-    ///
-    /// # Arguments
-    ///
-    /// * `self` - A mutable reference to the `Memory` instance.
-    /// * `element` - The element to store, of type `u256`.
-    /// * `offset` - The `usize` offset at which to store the element.
     fn store(ref self: Memory, element: u256, offset: usize) {
         let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(offset + 32);
 
@@ -130,11 +120,6 @@ impl MemoryImpl of MemoryTrait {
 
 
     /// Ensures that the memory is at least `length` bytes long. Expands if necessary.
-    ///
-    /// # Arguments
-    /// * `self` - A reference to the `Memory` instance.
-    /// * `length` - The minimum number of bytes the memory should be.
-    ///
     /// # Returns
     /// The gas cost of expanding the memory.
     fn ensure_length(ref self: Memory, length: usize) -> usize {
@@ -147,11 +132,6 @@ impl MemoryImpl of MemoryTrait {
     }
 
     /// Expands memory if necessary, then load 32 bytes from it at the given offset.
-    ///
-    /// # Arguments
-    /// * `self` - A reference to the `Memory` instance.
-    /// * `offset` - The offset to load from and the number of bytes to add.
-    ///
     /// # Returns
     /// * `u256` - The loaded value.
     /// * `usize` - The gas cost of expanding the memory.
@@ -161,13 +141,7 @@ impl MemoryImpl of MemoryTrait {
         (loaded_element, gas_cost)
     }
 
-    /// Expands memory if necessary, then load elements_len bytes from it at given offset.
-    ///
-    /// # Arguments
-    /// * `self` - A reference to the `Memory` instance.
-    /// * `elements_len` - The number of bytes to load.
-    /// * `elements` - The array to append the loaded elements to.
-    /// * `offset` - The offset to load from and number of bytes to expand.
+    /// Expands memory if necessary, then load elements_len bytes from the memory at given offset inside elements.
     /// # Returns
     /// * `usize` - The gas cost of expanding the memory.
     fn load_n(

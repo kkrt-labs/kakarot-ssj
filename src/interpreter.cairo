@@ -50,11 +50,6 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
     }
 
     ///  Decode the current opcode and execute associated function.
-    /// # Arguments
-    /// * `self` - The EVM instructions.
-    /// * `context` - The execution context.
-    /// # Returns
-    /// The execution summary.
     fn decode_and_execute(ref self: EVMInterpreter, ref context: ExecutionContext) {
         // Retrieve the current program counter.
         let pc = context.program_counter;
@@ -254,8 +249,8 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
             block_information::exec_number(ref context);
         }
         if opcode == 68 {
-            // DIFFICULTY
-            block_information::exec_difficulty(ref context);
+            // PREVRANDAO
+            block_information::exec_prevrandao(ref context);
         }
         if opcode == 69 {
             // GASLIMIT

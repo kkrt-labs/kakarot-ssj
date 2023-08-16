@@ -4,226 +4,82 @@
 use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionContextTrait;
 
-/// ADDRESS operation.
+/// 0x30 - ADDRESS 
 /// Get address of currently executing account.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Environmental Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#30?fork=shanghai
 fn exec_address(ref context: ExecutionContext) {}
 
-/// BALANCE opcode.
+/// 0x31 - BALANCE opcode.
 /// Get ETH balance of the specified address.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Environmental Information
-/// - Gas: 100 || 2600
-/// - Stack consumed elements: 1
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#31?fork=shanghai
 fn exec_balance(ref context: ExecutionContext) {}
 
-/// ORIGIN operation.
+/// 0x32 - ORIGIN 
 /// Get execution origination address.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Environmental Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#32?fork=shanghai
 fn exec_origin(ref context: ExecutionContext) {}
 
-/// CALLER operation.
+/// 0x33 - CALLER 
 /// Get caller address.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Environmental Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#33?fork=shanghai
 fn exec_caller(ref context: ExecutionContext) {}
 
-/// CALLVALUE operation.
+/// 0x34 - CALLVALUE 
 /// Get deposited value by the instruction/transaction responsible for this execution.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Environmental Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#34?fork=shanghai
 fn exec_callvalue(ref context: ExecutionContext) {}
 
-/// CALLDATALOAD operation.
+/// 0x35 - CALLDATALOAD 
 /// Push a word from the calldata onto the stack.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Environmental Information
-/// - Gas: 3
-/// - Stack consumed elements: 1
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#35?fork=shanghai
 fn exec_calldataload(ref context: ExecutionContext) {}
 
-/// CALLDATASIZE operation.
+/// 0x36 - CALLDATASIZE 
 /// Get the size of return data.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Environmental Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#36?fork=shanghai
 fn exec_calldatasize(ref context: ExecutionContext) {}
 
-/// CALLDATACOPY operation
+/// 0x37 - CALLDATACOPY operation
 /// Save word to memory.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Stack Memory Storage and Flow operations.
-/// - Gas: 3
-/// - Stack consumed elements: 3
-/// - Stack produced elements: 0
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#37?fork=shanghai
 fn exec_calldatacopy(ref context: ExecutionContext) {}
 
-/// CODESIZE operation.
+/// 0x38 - CODESIZE 
 /// Get size of bytecode running in current environment.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Environmental Information
-/// - Gas: 3
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#38?fork=shanghai
 fn exec_codesize(ref context: ExecutionContext) {}
 
-/// CODECOPY (0x39) operation.
+/// 0x39 - CODECOPY 
 /// Copies slice of bytecode to memory.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Environmental Information
-/// - Gas: 3
-/// - Stack consumed elements: 3
-/// - Stack produced elements: 0
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#39?fork=shanghai
 fn exec_codecopy(ref context: ExecutionContext) {}
 
-/// GASPRICE operation.
+/// 0x3A - GASPRICE 
 /// Get price of gas in current environment.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Environmental Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#3a?fork=shanghai
 fn exec_gasprice(ref context: ExecutionContext) {}
 
-/// EXTCODESIZE operation.
+/// 0x3B - EXTCODESIZE 
 /// Get size of an account's code.
-/// # Additional informations:
-/// - Since: Frontier
-/// - Group: Environmental Information
-/// - Gas: 100 || 2600
-/// - Stack consumed elements: 1
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#3b?fork=shanghai
 fn exec_extcodesize(ref context: ExecutionContext) {}
 
-/// EXTCODECOPY operation
+/// 0x3C - EXTCODECOPY 
 /// Copy an account's code to memory
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Environmental Information
-/// - Gas: 100 || 2600
-/// - Stack consumed elements: 4
-/// - Stack produced elements: 0
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#3c?fork=shanghai
 fn exec_extcodecopy(ref context: ExecutionContext) {}
 
-/// RETURNDATASIZE operation.
+/// 0x3D - RETURNDATASIZE 
 /// Get the size of return data.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Environmental Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#3d?fork=shanghai
 fn exec_returndatasize(ref context: ExecutionContext) {}
 
-/// RETURNDATACOPY operation.
+/// 0x3E - RETURNDATACOPY 
 /// Save word to memory.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Stack Memory Storage and Flow operations.
-/// - Gas: 3
-/// - Stack consumed elements: 3
-/// - Stack produced elements: 0
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#3e?fork=shanghai
 fn exec_returndatacopy(ref context: ExecutionContext) {}
 
-/// EXTCODEHASH operation.
+/// 0x3F - EXTCODEHASH 
 /// Get hash of a contract's code.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Environmental Information
-/// - Gas: 100 || 2600
-/// - Stack consumed elements: 1
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#3f?fork=shanghai
 fn exec_extcodehash(ref context: ExecutionContext) {}

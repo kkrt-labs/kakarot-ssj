@@ -59,19 +59,16 @@ trait StackTrait {
 
 impl StackImpl of StackTrait {
     #[inline(always)]
-    /// Creates a new Stack instance.
-    /// Returns
-    /// * Stack The new stack instance.
     fn new() -> Stack {
         let items: Felt252Dict<Nullable<u256>> = Default::default();
         Stack { items, len: 0 }
     }
 
-    /// Pushes a new item onto the stack. If this operation would overflow the stack, 
+    /// Pushes a new bytes32 word onto the stack. 
+    ///
+    /// # Panics
+    /// If this operation would overflow the stack, 
     /// panics with a StackOverflow error.
-    /// Parameters
-    /// * self The stack instance.
-    /// * item The item to push onto the stack.
     fn push(ref self: Stack, item: u256) -> () {
         // we can store at most 1024 256-bits words
         if self.len() == constants::STACK_MAX_DEPTH {
@@ -83,8 +80,6 @@ impl StackImpl of StackTrait {
 
     /// Pops the top item off the stack. If the stack is empty,
     /// leaves the stack unchanged.
-    /// Returns
-    /// * Option<u256> The popped item, or None if the stack is empty.
     fn pop(ref self: Stack) -> Option<u256> {
         if self.len() == 0 {
             return Option::None(());
@@ -96,12 +91,6 @@ impl StackImpl of StackTrait {
     }
 
     /// Pops N elements from the stack.
-    /// 
-    /// # Arguments
-    /// * `self` - the Stack instance
-    /// * `n` - the number of elements to pop from the stack
-    /// Returns
-    /// * Array<u256> An array containing the popped items
     fn pop_n(ref self: Stack, mut n: usize) -> Array<u256> {
         if n > self.len() {
             panic_with_felt252(errors::STACK_UNDERFLOW);
@@ -118,8 +107,6 @@ impl StackImpl of StackTrait {
     }
 
     /// Peeks at the top item on the stack.
-    /// Returns
-    /// * Option<u256> The top item, or None if the stack is empty.
     fn peek(ref self: Stack) -> Option<u256> {
         if self.len() == 0 {
             Option::None(())
@@ -132,13 +119,8 @@ impl StackImpl of StackTrait {
 
     /// Peeks at the item at the given index on the stack.
     /// index is 0-based, 0 being the top of the stack.
-    /// If the index is too large, panics with a StackUnderflow error.
-    /// # Arguments
-    /// * `self` - the Stack instance
-    /// * `index` - the index of the item to peek at
-    ///
-    /// Returns
-    /// * u256 The item at the given index, or None if the stack is empty.
+    /// # Panics
+    /// If the index is out of bounds, panics with a StackUnderflow error.
     fn peek_at(ref self: Stack, index: usize) -> u256 {
         if index >= self.len() {
             panic_with_felt252(errors::STACK_UNDERFLOW);
@@ -150,12 +132,8 @@ impl StackImpl of StackTrait {
         item.deref()
     }
 
-    /// Swaps the item at the given index with the on on the top of the stack.
+    /// Swaps the item at the given index with the item on top of the stack.
     /// index is 0-based, 0 being the top of the stack (unallocated).
-    /// 
-    /// # Arguments
-    /// * `self` - the Stack instance
-    /// * `index` - the top-based index of the item to swap with the top of the stack
     fn swap_i(ref self: Stack, index: usize) {
         if index >= self.len() {
             panic_with_felt252('Kakarot: StackUnderflow');
@@ -169,20 +147,12 @@ impl StackImpl of StackTrait {
     }
 
     /// Returns the length of the stack.
-    /// Parameters
-    /// * self The stack instance.
-    /// Returns
-    /// * usize The length of the stack.
     #[inline(always)]
     fn len(self: @Stack) -> usize {
         *self.len
     }
 
     /// Returns true if the stack is empty.
-    /// Parameters
-    /// * self The stack instance.
-    /// Returns
-    /// * bool True if the stack is empty, false otherwise.
     #[inline(always)]
     fn is_empty(self: @Stack) -> bool {
         *self.len == 0

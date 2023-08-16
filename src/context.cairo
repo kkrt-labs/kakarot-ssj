@@ -152,11 +152,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     /// When the execution context is reverted, no more instructions can be executed 
     /// (it is stopped) and contract creation and contract storage writes are 
     /// reverted on its finalization.
-    ///
-    /// # Arguments
-    ///
-    /// * `self` - The `ExecutionContext` instance to revert.
-    /// * `revert_reason` - The revert reason.
     fn revert(ref self: ExecutionContext, revert_reason: Span<u8>) {
         self.reverted = true;
         ArrayExtensionTrait::concat(ref self.return_data, revert_reason);
