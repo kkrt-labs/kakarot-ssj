@@ -240,10 +240,6 @@ impl ArrayPartialEq<T, impl PartialEqImpl: PartialEq<T>> of PartialEq<Array<T>> 
 }
 
 // Raise a number to a power.
-/// * `base` - The number to raise.
-/// * `exp` - The exponent.
-/// # Returns
-/// * `felt252` - The result of base raised to the power of exp.
 fn pow(base: felt252, exp: felt252) -> felt252 {
     if exp == 0 {
         return 1;

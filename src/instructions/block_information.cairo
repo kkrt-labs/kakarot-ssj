@@ -4,129 +4,46 @@
 use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionContextTrait;
 
-/// BLOCKHASH operation.
+/// 0x40 - BLOCKHASH 
 /// Get the hash of one of the 256 most recent complete blocks.
-/// if the block number is not in the valid range.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Block Information
-/// - Gas: 20
-/// - Stack consumed elements: 1
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#40?fork=shanghai
 fn exec_blockhash(ref context: ExecutionContext) {}
 
-/// COINBASE operation.
+/// 0x41 - COINBASE 
 /// Get the block's beneficiary address.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Block Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#41?fork=shanghai
 fn exec_coinbase(ref context: ExecutionContext) {}
 
-/// TIMESTAMP operation.
+/// 0x42 - TIMESTAMP 
 /// Get the block’s timestamp
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Block Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#42?fork=shanghai
 fn exec_timestamp(ref context: ExecutionContext) {}
 
-/// NUMBER operation.
+/// 0x43 - NUMBER 
 /// Get the block number.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Block Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#43?fork=shanghai
 fn exec_number(ref context: ExecutionContext) {}
 
-/// DIFFICULTY operation.
-/// Get Difficulty.
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Block Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
-fn exec_difficulty(ref context: ExecutionContext) {}
+/// 0x44 - PREVRANDAO 
+/// # Specification: https://www.evm.codes/#44?fork=shanghai
+fn exec_prevrandao(ref context: ExecutionContext) {}
 
-/// GASLIMIT operation.
+/// 0x45 - GASLIMIT 
 /// Get gas limit
-/// # Additional informations:
-/// - Since:  Frontier
-/// - Group: Block Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#45?fork=shanghai
 fn exec_gaslimit(ref context: ExecutionContext) {}
 
-/// CHAINID operation.
+/// 0x46 - CHAINID 
 /// Get the chain ID.
-/// # Additional informations:
-/// - Since:  Instanbul
-/// - Group: Block Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#46?fork=shanghai
 fn exec_chainid(ref context: ExecutionContext) {}
 
-/// SELFBALANCE operation.
+/// 0x47 - SELFBALANCE 
 /// Get balance of currently executing contract
-/// # Additional informations:
-/// - Since: Istanbul
-/// - Group: Block Information
-/// - Gas: 5
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#47?fork=shanghai
 fn exec_selfbalance(ref context: ExecutionContext) {}
 
-/// BASEFEE operation.
+/// 0x48 - BASEFEE 
 /// Get base fee.
-/// # Additional informations:
-/// - Since: Frontier
-/// - Group: Block Information
-/// - Gas: 2
-/// - Stack consumed elements: 0
-/// - Stack produced elements: 1
-/// # Arguments
-/// * `ctx` - the execution context
-/// # TODO
-/// - Implement me.
+/// # Specification: https://www.evm.codes/#48?fork=shanghai
 fn exec_basefee(ref context: ExecutionContext) {}
