@@ -295,7 +295,7 @@ fn test_mulmod_basic() {
     ctx.exec_mulmod();
 
     assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 5, 'stack top should be 5'); // 5 * 7 % 10 = 5
+    assert(ctx.stack.peek().unwrap() == 5, 'stack top should be 5'); // (5 * 7) % 10 = 5
 }
 
 #[test]
