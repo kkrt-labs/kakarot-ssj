@@ -47,7 +47,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
 
     /// 0x03 - SUB
     /// Subtraction operation
-    /// a - b: nteger result of the subtraction modulo 2^256.
+    /// a - b: integer result of the subtraction modulo 2^256.
     /// # Specification: https://www.evm.codes/#03?fork=shanghai
     fn exec_sub(ref self: ExecutionContext) {
         let popped = self.stack.pop_n(2);
