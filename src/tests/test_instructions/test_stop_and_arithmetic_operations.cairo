@@ -283,6 +283,72 @@ fn test_exec_addmod_overflow() {
 
 #[test]
 #[available_gas(20000000)]
+fn test_mulmod_basic() {
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(10);
+    ctx.stack.push(7);
+    ctx.stack.push(5);
+
+    // When
+    let x = testing::get_available_gas();
+    gas::withdraw_gas().unwrap();
+    ctx.exec_mulmod();
+    (x - testing::get_available_gas()).print();
+
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 5, 'stack top should be 5'); // 5 * 7 % 10 = 5
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_mulmod_zero_modulus() {
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0);
+    ctx.stack.push(7);
+    ctx.stack.push(5);
+
+    ctx.exec_mulmod();
+
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 0'); // modulus is 0
+}
+
+use debug::PrintTrait;
+#[test]
+#[available_gas(20000000)]
+fn test_mulmod_overflow() {
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(12);
+    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(BoundedInt::<u256>::max());
+
+    let x = testing::get_available_gas();
+    gas::withdraw_gas().unwrap();
+    ctx.exec_mulmod();
+    (x - testing::get_available_gas()).print();
+
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(
+        ctx.stack.peek().unwrap() == 9, 'stack top should be 1'
+    ); // (MAX_U256 * MAX_U256) % 12 = 9
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_mulmod_zero() {
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(10);
+    ctx.stack.push(7);
+    ctx.stack.push(0);
+
+    ctx.exec_mulmod();
+
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 0'); // 0 * 7 % 10 = 0
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test_exec_exp() {
     // Given
     let mut ctx = setup_execution_context();
