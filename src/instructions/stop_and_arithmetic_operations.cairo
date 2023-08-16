@@ -90,8 +90,12 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let a = *popped[0];
         let b = *popped[1];
 
-        // Compute the division
-        let (result, _) = u256_signed_div_rem(a, b);
+        let mut result = 0;
+        if b != 0 {
+            // Won't panic since 0 case is handled manually
+            let (q, _) = u256_signed_div_rem(a, b.try_into().unwrap());
+            result = q;
+        }
 
         self.stack.push(result);
     }

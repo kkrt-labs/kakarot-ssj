@@ -1,5 +1,5 @@
 use integer::u256_safe_div_rem;
-use traits::TryInto;
+use traits::{Into, TryInto};
 use option::OptionTrait;
 
 const ALL_ONES: u128 = 0xffffffffffffffffffffffffffffffff;
@@ -23,14 +23,12 @@ fn u256_neg(a: u256) -> u256 {
 }
 
 /// Signed integer division between two integers. Returns the quotient and the remainder.
-/// Conforms to EVM specifications.
+/// Conforms to EVM specifications - except that the type system enforces div != zero.
 /// See ethereum yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf, page 29).
 /// Note that the remainder may be negative if one of the inputs is negative and that
 /// (-2**255) / (-1) = -2**255 because 2*255 is out of range.
-fn u256_signed_div_rem(a: u256, div: u256) -> (u256, u256) {
-    if div == 0 {
-        return (0, 0);
-    }
+fn u256_signed_div_rem(a: u256, div: NonZero<u256>) -> (u256, u256) {
+    let mut div: u256 = div.into();
 
     // When div=-1, simply return -a.
     if div == MAX_U256 {
@@ -45,8 +43,9 @@ fn u256_signed_div_rem(a: u256, div: u256) -> (u256, u256) {
     } else {
         u256_neg(a)
     };
+
     let div_positive = div.high < TWO_POW_127;
-    let div = if div_positive {
+    div = if div_positive {
         div
     } else {
         u256_neg(div)
