@@ -10,4 +10,5 @@ and this project adheres to
 
 ### Added
 
+- opcodes: add 0x09-MULMOD opcode
 - ci: add `CHANGELOG.md` and enforce it is edited for each PR on `main`
