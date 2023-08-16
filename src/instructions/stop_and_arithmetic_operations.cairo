@@ -111,7 +111,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// 0x07 - SMOD
     /// Signed modulo operation
     /// a % b: integer result of the signed integer modulo. If the denominator is 0, the result will be 0.
-    /// All values are treated as two’s complement signed 256-bit integers. Note the overflow semantic when −2255 is negated.
+    /// All values are treated as two’s complement signed 256-bit integers. Note the overflow semantic when −2^255 is negated.
     /// # Specification: https://www.evm.codes/#07?fork=shanghai
     fn exec_smod(ref self: ExecutionContext) {}
 
