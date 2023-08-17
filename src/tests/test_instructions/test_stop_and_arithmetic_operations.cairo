@@ -476,7 +476,7 @@ fn test_exec_signextend_no_effect() {
 fn test_exec_signextend_on_negative() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000);
+    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0001);
     ctx.stack.push(0x01); // s = 15, v = 0
 
     // When
@@ -485,7 +485,7 @@ fn test_exec_signextend_on_negative() {
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(
-        ctx.stack.peek().unwrap() == 0x00, 'stack top should be 0'
-    ); // The 241-th bit of x is 0, so the output is not changed.
+        ctx.stack.peek().unwrap() == 0x01, 'stack top should be 0'
+    ); // The 241-th bit of x is 0, so all bits before t are switched to 0
 }
 
