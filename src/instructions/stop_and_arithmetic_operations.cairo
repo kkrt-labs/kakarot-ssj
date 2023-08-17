@@ -130,7 +130,22 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a % b: integer result of the signed integer modulo. If the denominator is 0, the result will be 0.
     /// All values are treated as two’s complement signed 256-bit integers. Note the overflow semantic when −2^255 is negated.
     /// # Specification: https://www.evm.codes/#07?fork=shanghai
-    fn exec_smod(ref self: ExecutionContext) {}
+    fn exec_smod(ref self: ExecutionContext) {
+        let popped = self.stack.pop_n(2);
+
+        let a: u256 = *popped[0];
+        let b: u256 = *popped[1];
+
+        let result: u256 = match u256_try_as_non_zero(b) {
+            Option::Some(nonzero_b) => {
+                let (_, r) = u256_signed_div_rem(a, nonzero_b);
+                r
+            },
+            Option::None => 0,
+        };
+
+        self.stack.push(result);
+    }
 
     /// 0x08 - ADDMOD
     /// Addition and modulo operation

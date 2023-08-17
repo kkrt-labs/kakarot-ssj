@@ -222,12 +222,67 @@ fn test_exec_mod_by_zero() {
     ctx.stack.push(100);
 
     // When
-    ctx.exec_mod();
+    ctx.exec_smod();
 
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 100%6');
 }
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_smod() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(3);
+    ctx.stack.push(10);
+
+    // When
+    ctx.exec_smod();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 1, 'stack top should be 10%3 = 1');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_smod_neg() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD); // -3
+    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8); // -8
+
+    // When
+    ctx.exec_smod();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(
+        ctx
+            .stack
+            .peek()
+            .unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE,
+        'stack top should be -8%-3 = -1'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_smod_zero() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0);
+    ctx.stack.push(10);
+
+    // When
+    ctx.exec_mod();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 0');
+}
+
 
 #[test]
 #[available_gas(20000000)]
