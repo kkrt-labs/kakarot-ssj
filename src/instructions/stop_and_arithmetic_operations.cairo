@@ -218,8 +218,43 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     }
 
     /// 0x0B - SIGNEXTEND
+    /// SIGNEXTEND takes two inputs `b` and `x` where x: integer value to sign extend
+    /// and b: size in byte - 1 of the integer to sign extend and extends the length of
+    /// x as a two’s complement signed integer.
+    /// The first `i` bits of the output (numbered from the /!\LEFT/!\ counting from zero)
+    /// are equal to the `t`-th bit of `x`, where `t` is equal to
+    /// `256 - 8(b + 1)`. The remaining bits of the output are equal to the corresponding bits of `x`.
+    /// If b >= 32, then the output is x because t<=0.
+    /// To efficiently implement this algorithm we can implement it using a mask, which is all zeroes until the t-th bit included,
+    /// and all ones afterwards. The index of `t` when numbered from the RIGHT is s = `255 - t` = `8b + 7`; so the integer value
+    /// of the mask used is 2^s - 1.
+    /// Let v be the t-th bit of x. If v == 1, then the output should be all 1s until the t-th bit included, 
+    /// followed by the remaining bits of x; which is corresponds to (x | !mask).
+    /// If v == 0, then the output should be all 0s until the t-th bit included, followed by the remaining bits of x;
+    /// which corresponds to (x & mask).
     /// # Specification: https://www.evm.codes/#0b?fork=shanghai
     /// Complex opcode, check: https://ethereum.github.io/yellowpaper/paper.pdf
-    fn exec_signextend(ref self: ExecutionContext) { // TODO signed integer extension algorithm
+    fn exec_signextend(ref self: ExecutionContext) {
+        let popped = self.stack.pop_n(2);
+        let b = *popped[0];
+        let x = *popped[1];
+
+        let result = if b < 32 {
+            let s = 8 * b + 7;
+            let two_pow_s = 2.pow(s);
+            // Get v, the t-th bit of x. To do this we bitshift x by s bits to the right and apply a mask to get the last bit.
+            let v = (x / two_pow_s) & 1;
+            // Compute the mask with 8b+7 bits set to one
+            let mask = two_pow_s - 1;
+            if v == 0 {
+                x & mask
+            } else {
+                x | ~mask
+            }
+        } else {
+            x
+        };
+
+        self.stack.push(result);
     }
 }
