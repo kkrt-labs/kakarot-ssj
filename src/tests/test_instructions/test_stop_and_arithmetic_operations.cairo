@@ -470,3 +470,22 @@ fn test_exec_signextend_no_effect() {
         ctx.stack.peek().unwrap() == 0x7F, 'stack top should be 0x7F'
     ); // The 248-th bit of x is 0, so the output is not changed.
 }
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_signextend_on_negative() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000);
+    ctx.stack.push(0x01); // s = 15, v = 0
+
+    // When
+    ctx.exec_signextend();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(
+        ctx.stack.peek().unwrap() == 0x00, 'stack top should be 0'
+    ); // The 241-th bit of x is 0, so the output is not changed.
+}
+
