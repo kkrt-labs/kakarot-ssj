@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- opcodes: add 0x07-SMOD opcode
 - math: u256_signed_div now enforces div to be NonZero
 - fix: ADDMOD opcode
 - opcodes: add 0x09-MULMOD opcode
