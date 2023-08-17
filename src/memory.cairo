@@ -63,15 +63,15 @@ impl MemoryImpl of MemoryTrait {
         // ^---^
         // |-- mask = 256 ** offset_in_chunk
 
-        self._store_element(element, chunk_index, offset_in_chunk);
+        self.store_element(element, chunk_index, offset_in_chunk);
     }
 
     /// Stores a span of N bytes into memory at a specified offset.
     ///
     /// This function checks the alignment of the offset to 16-byte chunks, and handles the special case where the bytes to be
-    /// stored are within the same word in memory using the `_store_bytes_in_single_chunk` function. If the bytes
-    /// span multiple words, the function stores the first word using the `_store_first_word` function, the aligned
-    /// words using the `_store_aligned_words` function, and the last word using the `_store_last_word` function.
+    /// stored are within the same word in memory using the `store_bytes_in_single_chunk` function. If the bytes
+    /// span multiple words, the function stores the first word using the `store_first_word` function, the aligned
+    /// words using the `store_aligned_words` function, and the last word using the `store_last_word` function.
     ///
     /// # Arguments
     ///
@@ -100,22 +100,22 @@ impl MemoryImpl of MemoryTrait {
 
         // Special case: the bytes are stored within the same word.
         if initial_chunk == final_chunk {
-            self._store_bytes_in_single_chunk(initial_chunk, mask_i, mask_f, elements);
+            self.store_bytes_in_single_chunk(initial_chunk, mask_i, mask_f, elements);
             return ();
         }
 
         // Otherwise, fill first word.
-        self._store_first_word(initial_chunk, offset_in_chunk_i, mask_i, elements);
+        self.store_first_word(initial_chunk, offset_in_chunk_i, mask_i, elements);
 
         // Store aligned bytes in [initial_chunk + 1, final_chunk - 1].
         let aligned_bytes = elements
             .slice(
                 16 - offset_in_chunk_i, elements.len() - 16 - offset_in_chunk_i - offset_in_chunk_f, 
             );
-        self._store_aligned_words(initial_chunk + 1, aligned_bytes);
+        self.store_aligned_words(initial_chunk + 1, aligned_bytes);
 
         let final_bytes = elements.slice(elements.len() - offset_in_chunk_f, offset_in_chunk_f);
-        self._store_last_word(final_chunk, offset_in_chunk_f, mask_f, final_bytes);
+        self.store_last_word(final_chunk, offset_in_chunk_f, mask_f, final_bytes);
     }
 
 
@@ -124,7 +124,7 @@ impl MemoryImpl of MemoryTrait {
     /// The gas cost of expanding the memory.
     fn ensure_length(ref self: Memory, length: usize) -> usize {
         if self.bytes_len < length {
-            let cost = self._expand(length - self.bytes_len);
+            let cost = self.expand(length - self.bytes_len);
             return cost;
         } else {
             return 0;
@@ -137,7 +137,7 @@ impl MemoryImpl of MemoryTrait {
     /// * `usize` - The gas cost of expanding the memory.
     fn load(ref self: Memory, offset: usize) -> (u256, usize) {
         let gas_cost = self.ensure_length(32 + offset);
-        let loaded_element = self._load(offset);
+        let loaded_element = self.load_internal(offset);
         (loaded_element, gas_cost)
     }
 
@@ -148,7 +148,7 @@ impl MemoryImpl of MemoryTrait {
         ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize
     ) -> usize {
         let gas_cost = self.ensure_length(elements_len + offset);
-        self._load_n(elements_len, ref elements, offset);
+        self.load_n_internal(elements_len, ref elements, offset);
         gas_cost
     }
 }
@@ -168,7 +168,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// * `element` - The `u256` element to store in memory.
     /// * `chunk_index` - The index of the memory chunk to start storing the element in.
     /// * `offset_in_chunk` - The offset within the memory chunk to store the element at.
-    fn _store_element(ref self: Memory, element: u256, chunk_index: usize, offset_in_chunk: u32) {
+    fn store_element(ref self: Memory, element: u256, chunk_index: usize, offset_in_chunk: u32) {
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
         let mask_c: u256 = 256.pow(16).into() / mask;
 
@@ -208,7 +208,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// * `mask_i` - The mask for the high part of the word.
     /// * `mask_f` - The mask for the low part of the word.
     /// * `elements` - A span of bytes to store in memory.
-    fn _store_bytes_in_single_chunk(
+    fn store_bytes_in_single_chunk(
         ref self: Memory, initial_chunk: usize, mask_i: u256, mask_f: u256, elements: Span<u8>
     ) {
         let word: u128 = self.items.get(initial_chunk.into());
@@ -232,7 +232,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// * `self` - A mutable reference to the `Memory` instance to store the bytes in.
     /// * `chunk_index` - The index of the chunk to start storing at.
     /// * `elements` - A span of bytes to store in memory.
-    fn _store_aligned_words(ref self: Memory, mut chunk_index: usize, mut elements: Span<u8>) {
+    fn store_aligned_words(ref self: Memory, mut chunk_index: usize, mut elements: Span<u8>) {
         loop {
             if elements.len() == 0 {
                 break ();
@@ -275,7 +275,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// * `chunk_index` - The index of the first chunk to load from.
     /// * `final_chunk` - The index of the last chunk to load from.
     /// * `elements` - A reference to the byte array to append the loaded bytes to.
-    fn _load_aligned_words(
+    fn load_aligned_words(
         ref self: Memory, mut chunk_index: usize, final_chunk: usize, ref elements: Array<u8>
     ) {
         loop {
@@ -305,7 +305,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// # Returns
     ///
     /// The `u256` element at the specified offset in the memory chunk.
-    fn _load(ref self: Memory, offset: usize) -> u256 {
+    fn load_internal(ref self: Memory, offset: usize) -> u256 {
         let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
 
         if offset == 0 {
@@ -352,7 +352,9 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// * `elements_len` - The length of the array of bytes to load.
     /// * `elements` - A reference to the array of bytes to load.
     /// * `offset` - The chunk memory offset to load the bytes from.
-    fn _load_n(ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize) {
+    fn load_n_internal(
+        ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize
+    ) {
         if elements_len == 0 {
             return ();
         }
@@ -381,7 +383,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         let elements_first_word = helpers::split_word(w_i_l, 16 - offset_in_chunk_i, ref elements);
 
         // Get blocks.
-        self._load_aligned_words(initial_chunk + 1, final_chunk, ref elements);
+        self.load_aligned_words(initial_chunk + 1, final_chunk, ref elements);
 
         // Get last word.
         let w_f = self.items.get(final_chunk.into());
@@ -405,7 +407,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// # Returns
     ///
     /// The cost of the expansion.
-    fn _expand(ref self: Memory, length: usize) -> usize {
+    fn expand(ref self: Memory, length: usize) -> usize {
         let last_memory_size_word = (self.bytes_len + 31) / 32;
         let mut last_memory_cost = (last_memory_size_word * last_memory_size_word) / 512;
         last_memory_cost += (3 * last_memory_size_word);
@@ -441,7 +443,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// # Panics
     ///
     /// This function panics if the resulting word cannot be converted to a `u128` - which should never happen.
-    fn _store_first_word(
+    fn store_first_word(
         ref self: Memory,
         chunk_index: usize,
         start_offset_in_chunk: usize,
@@ -472,7 +474,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// # Panics
     ///
     /// This function panics if the resulting word cannot be converted to a `u128` - which should never happen.
-    fn _store_last_word(
+    fn store_last_word(
         ref self: Memory,
         chunk_index: usize,
         end_offset_in_chunk: usize,
