@@ -6,11 +6,6 @@ const ALL_ONES: u128 = 0xffffffffffffffffffffffffffffffff;
 const TWO_POW_127: u128 = 0x80000000000000000000000000000000;
 const MAX_U256: u256 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
-// Returns the bitwise NOT of an integer.
-fn u256_not(a: u256) -> u256 {
-    u256 { low: ALL_ONES - a.low, high: ALL_ONES - a.high }
-}
-
 
 // Returns the negation of an integer.
 // Note that the negation of -2**255 is -2**255.
@@ -19,7 +14,7 @@ fn u256_neg(a: u256) -> u256 {
     if a == 0 {
         return 0;
     }
-    u256_not(a) + 1
+    ~a + 1
 }
 
 /// Signed integer division between two integers. Returns the quotient and the remainder.

@@ -430,3 +430,62 @@ fn test_exec_exp_overflow() {
         ctx.stack.peek().unwrap() == 0, 'stack top should be 0'
     ); // (2^128)^2 = 2^256 = 0 % 2^256
 }
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_signextend() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0xFF);
+    ctx.stack.push(0x00);
+
+    // When
+    ctx.exec_signextend();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(
+        ctx
+            .stack
+            .peek()
+            .unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+        'stack top should be MAX_u256 -1'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_signextend_no_effect() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0x7F);
+    ctx.stack.push(0x00);
+
+    // When
+    ctx.exec_signextend();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(
+        ctx.stack.peek().unwrap() == 0x7F, 'stack top should be 0x7F'
+    ); // The 248-th bit of x is 0, so the output is not changed.
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_signextend_on_negative() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0001);
+    ctx.stack.push(0x01); // s = 15, v = 0
+
+    // When
+    ctx.exec_signextend();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(
+        ctx.stack.peek().unwrap() == 0x01, 'stack top should be 0'
+    ); // The 241-th bit of x is 0, so all bits before t are switched to 0
+}
+

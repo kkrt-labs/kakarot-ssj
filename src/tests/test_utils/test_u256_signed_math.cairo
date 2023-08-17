@@ -1,4 +1,4 @@
-use kakarot::utils::u256_signed_math::{u256_not, u256_neg, u256_signed_div_rem, ALL_ONES, MAX_U256};
+use kakarot::utils::u256_signed_math::{u256_neg, u256_signed_div_rem, ALL_ONES, MAX_U256};
 use integer::u256_safe_div_rem;
 use debug::PrintTrait;
 use traits::{Into, TryInto};
@@ -6,22 +6,6 @@ use option::OptionTrait;
 
 const MAX_SIGNED_VALUE: u256 = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
 const MIN_SIGNED_VALUE: u256 = 0x8000000000000000000000000000000000000000000000000000000000000000;
-
-#[test]
-#[available_gas(20000000)]
-fn test_u256_not() {
-    let x = u256_not(1);
-    /// 0000_0001 turns into 1111_1110
-    assert(x == u256 { low: ALL_ONES - 1, high: ALL_ONES }, 'u256_not failed.');
-
-    let x = u256_not(0);
-    /// 0000_0000 turns into 1111_1111
-    assert(x == MAX_U256, 'u256_not with zero failed.');
-
-    let x = MAX_U256;
-    /// 1111_1111 turns into 0000_0000
-    assert(u256_not(x) == 0, 'u256_not with MAX_U256 failed.');
-}
 
 
 #[test]
