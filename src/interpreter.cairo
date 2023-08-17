@@ -11,9 +11,9 @@ use kakarot::context::ExecutionSummary;
 use kakarot::utils;
 use kakarot::errors;
 use kakarot::instructions::{
-    context.duplication_operations, environmental_information,
-    exchange_operations, logging_operations, memory_operations, push_operations, sha3,
-    StopAndArithmeticOperationsTrait, system_operations
+    duplication_operations, environmental_information, exchange_operations, logging_operations,
+    memory_operations, push_operations, sha3, StopAndArithmeticOperationsTrait,
+    ComparisonAndBitwiseOperationsTrait, system_operations, block_information
 };
 
 
@@ -114,59 +114,59 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 16 {
             // LT
-            context.exec_lt(ref context);
+            context.exec_lt();
         }
         if opcode == 17 {
             // GT
-            context.exec_gt(ref context);
+            context.exec_gt();
         }
         if opcode == 18 {
             // SLT
-            context.exec_slt(ref context);
+            context.exec_slt();
         }
         if opcode == 19 {
             // SGT
-            context.exec_sgt(ref context);
+            context.exec_sgt();
         }
         if opcode == 20 {
             // EQ
-            context.exec_eq(ref context);
+            context.exec_eq();
         }
         if opcode == 21 {
             // ISZERO
-            context.exec_iszero(ref context);
+            context.exec_iszero();
         }
         if opcode == 22 {
             // AND
-            context.exec_and(ref context);
+            context.exec_and();
         }
         if opcode == 23 {
             // OR
-            context.exec_or(ref context);
+            context.exec_or();
         }
         if opcode == 24 {
             // XOR
-            context.exec_xor(ref context);
+            context.exec_xor();
         }
         if opcode == 25 {
             // NOT
-            context.exec_not(ref context);
+            context.exec_not();
         }
         if opcode == 26 {
             // BYTE
-            context.exec_byte(ref context);
+            context.exec_byte();
         }
         if opcode == 27 {
             // SHL
-            context.exec_shl(ref context);
+            context.exec_shl();
         }
         if opcode == 28 {
             // SHR
-            context.exec_shr(ref context);
+            context.exec_shr();
         }
         if opcode == 29 {
             // SAR
-            context.exec_sar(ref context);
+            context.exec_sar();
         }
         if opcode == 48 {
             // ADDRESS

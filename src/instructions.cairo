@@ -2,6 +2,7 @@
 mod block_information;
 
 mod comparison_operations;
+use comparison_operations::ComparisonAndBitwiseOperationsTrait;
 
 mod duplication_operations;
 
