@@ -263,7 +263,7 @@ fn test_exec_smod_neg() {
             .stack
             .peek()
             .unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE,
-        'stack top should be -8%-3 = -1'
+        'stack top should be -8%-3 = -2'
     );
 }
 
