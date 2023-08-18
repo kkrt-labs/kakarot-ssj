@@ -6,7 +6,6 @@ use debug::PrintTrait;
 use traits::PartialEq;
 use array::{ArrayTrait, SpanTrait};
 use starknet::{EthAddress, ContractAddress};
-use starknet::testing::{set_contract_address, set_caller_address};
 
 use kakarot::memory::{Memory, MemoryTrait};
 use kakarot::model::Event;
@@ -16,6 +15,8 @@ use kakarot::context::{CallContext, CallContextTrait, ExecutionContext, Executio
 use kakarot::utils::helpers::{SpanPartialEq, ArrayPartialEq};
 use kakarot::tests::test_utils::{setup_call_context, setup_execution_context, CallContextPartialEq};
 use kakarot::tests::test_utils;
+
+use snforge_std::start_prank;
 
 // TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)
 #[inline(never)]
@@ -180,14 +181,14 @@ fn test_is_caller_eoa() {
     let mut execution_context = setup_execution_context();
 
     // When
-    set_caller_address(test_utils::starknet_address());
+    start_prank(0.try_into().unwrap(), test_utils::starknet_address());
     let is_eoa = execution_context.is_caller_eoa();
 
     // Then
     assert(is_eoa == true, 'should be an eoa');
 
     // When
-    set_caller_address(test_utils::zero_address());
+    start_prank(0.try_into().unwrap(), test_utils::zero_address());
     let is_eoa = execution_context.is_caller_eoa();
 
     // Then
