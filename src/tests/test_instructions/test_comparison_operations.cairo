@@ -3,7 +3,7 @@ use kakarot::tests::test_utils::setup_execution_context;
 use kakarot::stack::StackTrait;
 use option::OptionTrait;
 use debug::PrintTrait;
-
+use integer::BoundedInt;
 
 #[test]
 #[available_gas(20000000)]
