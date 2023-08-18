@@ -26,7 +26,7 @@ fn test_and_zero_and_max() {
 fn test_and_max_and_max() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+    ctx.stack.push(BoundedInt::<u256>::max());
     ctx.stack.push(BoundedInt::<u256>::max());
 
     // When
