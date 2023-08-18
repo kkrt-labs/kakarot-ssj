@@ -35,11 +35,7 @@ fn test_and_max_and_max() {
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(
-        ctx
-            .stack
-            .peek()
-            .unwrap() == BoundedInt::<u256>::max(),
-        'stack top should be 0xFF...FFF'
+        ctx.stack.peek().unwrap() == BoundedInt::<u256>::max(), 'stack top should be 0xFF...FFF'
     );
 }
 
