@@ -34,7 +34,13 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
 
     /// 0x16 - AND
     /// # Specification: https://www.evm.codes/#16?fork=shanghai
-    fn exec_and(ref self: ExecutionContext) {}
+    fn exec_and(ref self: ExecutionContext) {
+        let popped = self.stack.pop_n(2);
+        let a = *popped[0];
+        let b = *popped[1];
+        let result = a & b;
+        self.stack.push(result);
+    }
 
     /// 0x17 - OR
     /// # Specification: https://www.evm.codes/#17?fork=shanghai
