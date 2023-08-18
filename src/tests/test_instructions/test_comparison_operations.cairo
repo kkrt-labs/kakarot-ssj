@@ -38,7 +38,7 @@ fn test_and_max_and_max() {
         ctx
             .stack
             .peek()
-            .unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+            .unwrap() == BoundedInt::<u256>::max(),
         'stack top should be 0xFF...FFF'
     );
 }
