@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- opcodes: add 0x18-XOR opcode
 - opcodes: add 0x0B-SIGNEXTEND opcode
 - opcodes: add 0x07-SMOD opcode
 - math: u256_signed_div now enforces div to be NonZero

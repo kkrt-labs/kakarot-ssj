@@ -11,9 +11,9 @@ use kakarot::context::ExecutionSummary;
 use kakarot::utils;
 use kakarot::errors;
 use kakarot::instructions::{
-    block_information, comparison_operations, duplication_operations, environmental_information,
-    exchange_operations, logging_operations, memory_operations, push_operations, sha3,
-    StopAndArithmeticOperationsTrait, system_operations
+    duplication_operations, environmental_information, exchange_operations, logging_operations,
+    memory_operations, push_operations, sha3, StopAndArithmeticOperationsTrait,
+    ComparisonAndBitwiseOperationsTrait, system_operations, block_information
 };
 
 
@@ -114,59 +114,59 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 16 {
             // LT
-            comparison_operations::exec_lt(ref context);
+            context.exec_lt();
         }
         if opcode == 17 {
             // GT
-            comparison_operations::exec_gt(ref context);
+            context.exec_gt();
         }
         if opcode == 18 {
             // SLT
-            comparison_operations::exec_slt(ref context);
+            context.exec_slt();
         }
         if opcode == 19 {
             // SGT
-            comparison_operations::exec_sgt(ref context);
+            context.exec_sgt();
         }
         if opcode == 20 {
             // EQ
-            comparison_operations::exec_eq(ref context);
+            context.exec_eq();
         }
         if opcode == 21 {
             // ISZERO
-            comparison_operations::exec_iszero(ref context);
+            context.exec_iszero();
         }
         if opcode == 22 {
             // AND
-            comparison_operations::exec_and(ref context);
+            context.exec_and();
         }
         if opcode == 23 {
             // OR
-            comparison_operations::exec_or(ref context);
+            context.exec_or();
         }
         if opcode == 24 {
             // XOR
-            comparison_operations::exec_xor(ref context);
+            context.exec_xor();
         }
         if opcode == 25 {
             // NOT
-            comparison_operations::exec_not(ref context);
+            context.exec_not();
         }
         if opcode == 26 {
             // BYTE
-            comparison_operations::exec_byte(ref context);
+            context.exec_byte();
         }
         if opcode == 27 {
             // SHL
-            comparison_operations::exec_shl(ref context);
+            context.exec_shl();
         }
         if opcode == 28 {
             // SHR
-            comparison_operations::exec_shr(ref context);
+            context.exec_shr();
         }
         if opcode == 29 {
             // SAR
-            comparison_operations::exec_sar(ref context);
+            context.exec_sar();
         }
         if opcode == 48 {
             // ADDRESS
