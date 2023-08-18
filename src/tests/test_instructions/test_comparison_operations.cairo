@@ -130,7 +130,7 @@ fn test_not_zero() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_max_uint() {
+fn test_not_max_uint() {
     // Given 
     let mut ctx = setup_execution_context();
     ctx.stack.push(BoundedInt::<u256>::max());
