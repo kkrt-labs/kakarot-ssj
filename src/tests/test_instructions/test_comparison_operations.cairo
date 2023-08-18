@@ -109,3 +109,57 @@ fn test_xor_half_same_pair() {
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.peek().unwrap() == 0b111000, 'stack top should be 0xFF');
 }
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_not_zero() {
+    // Given 
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0x00);
+
+    // When
+    ctx.exec_not();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(
+        ctx.stack.peek().unwrap() == BoundedInt::<u256>::max(), 'stack top should be 0xFFF..FFFF'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_max_uint() {
+    // Given 
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(BoundedInt::<u256>::max());
+
+    // When
+    ctx.exec_not();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_not_random_uint() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0x123456789ABCDEF123456789ABCDEF123456789ABCDEF123456789ABCDEF1234);
+
+    // When
+    ctx.exec_not();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(
+        ctx
+            .stack
+            .peek()
+            .unwrap() == 0xEDCBA9876543210EDCBA9876543210EDCBA9876543210EDCBA9876543210EDCB,
+        'stack top should be 0x7553'
+    );
+}

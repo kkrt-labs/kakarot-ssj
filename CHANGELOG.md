@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- opcodes: add 0x19-NOT opcode
 - opcodes: add 0x16-AND opcode
 - opcodes: add 0x18-XOR opcode
 - opcodes: add 0x0B-SIGNEXTEND opcode
