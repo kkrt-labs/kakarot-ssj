@@ -4,12 +4,22 @@
 use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionContextTrait;
 
+
 mod internal {
     use kakarot::context::ExecutionContext;
     use kakarot::context::ExecutionContextTrait;
+    use kakarot::stack::StackTrait;
+    use traits::Into;
 
     /// Generic DUP operation
-    fn exec_dup_i(ref context: ExecutionContext, i: u8) {}
+    fn exec_dup_i(ref context: ExecutionContext, i: u8) {
+        if i == 0 {
+            panic_with_felt252('Shouldnt be call with 0');
+        }
+
+        let item = context.stack.peek_at((i - 1).into());
+        context.stack.push(item);
+    }
 }
 
 /// 0x80 - DUP1 operation

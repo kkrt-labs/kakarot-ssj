@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- opcodes: add 0x80-DUP1 to 0x8F-DUP16 opcode
 - opcodes: add 0x16-AND opcode
 - opcodes: add 0x18-XOR opcode
 - opcodes: add 0x0B-SIGNEXTEND opcode
