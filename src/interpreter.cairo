@@ -13,7 +13,8 @@ use kakarot::errors;
 use kakarot::instructions::{
     duplication_operations, environmental_information, exchange_operations, logging_operations,
     memory_operations, push_operations, sha3, StopAndArithmeticOperationsTrait,
-    ComparisonAndBitwiseOperationsTrait, system_operations, block_information
+    ComparisonAndBitwiseOperationsTrait, system_operations, block_information,
+    DuplicationOperationsTrait,
 };
 
 
@@ -446,67 +447,67 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 128 {
             // DUP1
-            duplication_operations::exec_dup1(ref context);
+            context.exec_dup1();
         }
         if opcode == 129 {
             // DUP2
-            duplication_operations::exec_dup2(ref context);
+            context.exec_dup2();
         }
         if opcode == 130 {
             // DUP3
-            duplication_operations::exec_dup3(ref context);
+            context.exec_dup3();
         }
         if opcode == 131 {
             // DUP4
-            duplication_operations::exec_dup4(ref context);
+            context.exec_dup4();
         }
         if opcode == 132 {
             // DUP5
-            duplication_operations::exec_dup5(ref context);
+            context.exec_dup5();
         }
         if opcode == 133 {
             // DUP6
-            duplication_operations::exec_dup6(ref context);
+            context.exec_dup6();
         }
         if opcode == 134 {
             // DUP7
-            duplication_operations::exec_dup7(ref context);
+            context.exec_dup7();
         }
         if opcode == 135 {
             // DUP8
-            duplication_operations::exec_dup8(ref context);
+            context.exec_dup8();
         }
         if opcode == 136 {
             // DUP9
-            duplication_operations::exec_dup9(ref context);
+            context.exec_dup9();
         }
         if opcode == 137 {
             // DUP10
-            duplication_operations::exec_dup10(ref context);
+            context.exec_dup10();
         }
         if opcode == 138 {
             // DUP11
-            duplication_operations::exec_dup11(ref context);
+            context.exec_dup11();
         }
         if opcode == 139 {
             // DUP12
-            duplication_operations::exec_dup12(ref context);
+            context.exec_dup12();
         }
         if opcode == 140 {
             // DUP13
-            duplication_operations::exec_dup13(ref context);
+            context.exec_dup13();
         }
         if opcode == 141 {
             // DUP14
-            duplication_operations::exec_dup14(ref context);
+            context.exec_dup14();
         }
         if opcode == 142 {
             // DUP15
-            duplication_operations::exec_dup15(ref context);
+            context.exec_dup15();
         }
         if opcode == 143 {
             // DUP16
-            duplication_operations::exec_dup16(ref context);
+            context.exec_dup16();
         }
         if opcode == 144 {
             // SWAP1
