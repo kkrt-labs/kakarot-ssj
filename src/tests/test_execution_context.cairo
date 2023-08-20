@@ -11,7 +11,10 @@ use starknet::testing::{set_contract_address, set_caller_address};
 use kakarot::memory::{Memory, MemoryTrait};
 use kakarot::model::Event;
 use kakarot::stack::{Stack, StackTrait};
-use kakarot::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, DynamicExecutionContextTrait, StaticExecutionContextTrait};
+use kakarot::context::{
+    CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait,
+    DynamicExecutionContextTrait, StaticExecutionContextTrait
+};
 //TODO remove import once merged in corelib
 use kakarot::utils::helpers::{SpanPartialEq, ArrayPartialEq};
 use kakarot::tests::test_utils::{setup_call_context, setup_execution_context, CallContextPartialEq};
@@ -122,7 +125,9 @@ fn test_execution_context_revert() {
 
     // Then
     assert(execution_context.is_reverted() == true, 'should be reverted');
-    assert(execution_context.dynamic_context.get_return_data() == revert_reason, 'wrong revert reason');
+    assert(
+        execution_context.dynamic_context.get_return_data() == revert_reason, 'wrong revert reason'
+    );
 }
 
 #[test]

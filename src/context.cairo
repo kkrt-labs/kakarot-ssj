@@ -81,6 +81,15 @@ impl DefaultStaticExecutionContext of Default<StaticExecutionContext> {
 
 #[generate_trait]
 impl StaticExecutionContextImpl of StaticExecutionContextTrait {
+    fn new(
+        call_context: CallContext,
+        starknet_address: ContractAddress,
+        evm_address: EthAddress,
+        read_only: bool
+    ) -> StaticExecutionContext {
+        StaticExecutionContext { call_context, starknet_address, evm_address, read_only,  }
+    }
+
     #[inline(always)]
     fn get_call_context(self: @StaticExecutionContext) -> CallContext {
         *self.call_context
@@ -99,6 +108,10 @@ impl StaticExecutionContextImpl of StaticExecutionContextTrait {
     #[inline(always)]
     fn is_read_only(self: @StaticExecutionContext) -> bool {
         *self.read_only
+    }
+    #[inline(always)]
+    fn bytecode(self: @StaticExecutionContext) -> Span<u8> {
+        *self.call_context.bytecode
     }
 }
 
@@ -221,8 +234,10 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         read_only: bool
     ) -> ExecutionContext {
         ExecutionContext {
-            static_context: Default::default(),
-            dynamic_context: Default::default(),
+            static_context: StaticExecutionContextTrait::new(
+                call_context, starknet_address, evm_address, read_only
+            ),
+            dynamic_context: DynamicExecutionContextTrait::new(returned_data),
             program_counter: 0,
             stack: Default::default(),
             memory: Default::default(),
@@ -261,7 +276,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         // Copy code slice from [pc, pc+len]
         let code = self.static_context.call_context.bytecode().slice(self.program_counter, len);
 
-        // Update program counter
         self.program_counter += len;
         code
     }
@@ -284,7 +298,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     fn is_stopped(self: @ExecutionContext) -> bool {
         *self.dynamic_context.stopped
     }
-    
+
     /// Returns if starknet contract address is an EOA
     fn is_caller_eoa(self: @ExecutionContext) -> bool {
         if get_caller_address() == *self.static_context.starknet_address {
