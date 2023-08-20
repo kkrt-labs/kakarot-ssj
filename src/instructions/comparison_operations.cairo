@@ -2,6 +2,8 @@
 use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionContextTrait;
 use kakarot::stack::StackTrait;
+use kakarot::errors::STACK_UNDERFLOW;
+use option::{OptionTrait};
 
 #[generate_trait]
 impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
@@ -58,7 +60,19 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x19 - NOT
     /// Bitwise NOT operation
     /// # Specification: https://www.evm.codes/#19?fork=shanghai
-    fn exec_not(ref self: ExecutionContext) {}
+    fn exec_not(ref self: ExecutionContext) {
+        let maybe_a = self.stack.pop();
+        let mut result: u256 = 0;
+        match maybe_a {
+            Option::Some(a) => {
+                result = ~a;
+            },
+            Option::None => {
+                panic_with_felt252(STACK_UNDERFLOW);
+            }
+        }
+        self.stack.push(result);
+    }
 
     /// 0x1A - BYTE
     /// # Specification: https://www.evm.codes/#1a?fork=shanghai
