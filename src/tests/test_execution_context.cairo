@@ -11,7 +11,7 @@ use starknet::testing::{set_contract_address, set_caller_address};
 use kakarot::memory::{Memory, MemoryTrait};
 use kakarot::model::Event;
 use kakarot::stack::{Stack, StackTrait};
-use kakarot::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait};
+use kakarot::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, DynamicExecutionContextTrait, StaticExecutionContextTrait};
 //TODO remove import once merged in corelib
 use kakarot::utils::helpers::{SpanPartialEq, ArrayPartialEq};
 use kakarot::tests::test_utils::{setup_call_context, setup_execution_context, CallContextPartialEq};
@@ -69,36 +69,32 @@ fn test_execution_context_new() {
 
     // Then
     let call_context = setup_call_context();
-    assert(execution_context.call_context == call_context, 'wrong call_context');
+    assert(execution_context.static_context.call_context == call_context, 'wrong call_context');
     assert(execution_context.program_counter == program_counter, 'wrong program_counter');
     assert(execution_context.stack.is_empty(), 'wrong stack');
-    assert(execution_context.stopped == stopped, 'wrong stopped');
-    assert(execution_context.return_data == Default::default(), 'wrong return_data');
+    assert(execution_context.dynamic_context.stopped == stopped, 'wrong stopped');
+    assert(
+        execution_context.dynamic_context.return_data == Default::default(), 'wrong return_data'
+    );
     assert(execution_context.memory.bytes_len == 0, 'wrong memory');
-    assert(execution_context.gas_used == gas_used, 'wrong gas_used');
-    assert(execution_context.gas_limit == gas_limit, 'wrong gas_limit');
-    assert(execution_context.gas_price == gas_price, 'wrong gas_price');
-    assert(execution_context.starknet_address == starknet_address, 'wrong starknet_address');
-    assert(execution_context.evm_address == evm_address, 'wrong evm_address');
-    assert(execution_context.destroy_contracts == destroy_contracts, 'wrong destroy_contracts');
-    assert(execution_context.events.len() == events.len(), 'wrong events');
-    assert(execution_context.create_addresses == create_addresses, 'wrong create_addresses');
+    assert(
+        execution_context.static_context.starknet_address == starknet_address,
+        'wrong starknet_address'
+    );
+    assert(execution_context.static_context.evm_address == evm_address, 'wrong evm_address');
+    assert(
+        execution_context.dynamic_context.destroy_contracts == destroy_contracts,
+        'wrong destroy_contracts'
+    );
+    assert(execution_context.dynamic_context.events.len() == events.len(), 'wrong events');
+    assert(
+        execution_context.dynamic_context.create_addresses == create_addresses,
+        'wrong create_addresses'
+    );
     // Can't verify that reverted_contract_state is empty as we can't compare dictionaries directly
     // But initializing it using `Default`, it will be empty.
-    assert(execution_context.reverted == reverted, 'wrong reverted');
-    assert(execution_context.read_only == read_only, 'wrong read_only');
-}
-
-#[test]
-#[available_gas(100000)]
-fn test_execution_context_new_and_intrinsic_gas() {
-    // Given
-    let mut execution_context = setup_execution_context();
-
-    // Then
-    execution_context.process_intrinsic_gas_cost();
-    //TODO update checked value once the intrinsic gas cost is implemented in a dynamic way
-    assert(execution_context.gas_used == 42, 'wrong gas used');
+    assert(execution_context.dynamic_context.reverted == reverted, 'wrong reverted');
+    assert(execution_context.static_context.read_only == read_only, 'wrong read_only');
 }
 
 #[test]
@@ -111,7 +107,7 @@ fn test_execution_context_stop_and_revert() {
     execution_context.stop();
 
     // Then
-    assert(execution_context.is_stopped() == true, 'should be stopped');
+    assert(execution_context.dynamic_context.is_stopped() == true, 'should be stopped');
 }
 
 #[test]
@@ -126,7 +122,7 @@ fn test_execution_context_revert() {
 
     // Then
     assert(execution_context.is_reverted() == true, 'should be reverted');
-    assert(execution_context.return_data.span() == revert_reason, 'wrong revert reason');
+    assert(execution_context.dynamic_context.get_return_data() == revert_reason, 'wrong revert reason');
 }
 
 #[test]

@@ -6,7 +6,7 @@ use traits::Into;
 /// Internal imports.
 // TODO remove destruct imports when no longer required
 use kakarot::context::{ExecutionContext, NullableDestruct, BoxDestruct};
-use kakarot::context::{ExecutionContextTrait, CallContextTrait};
+use kakarot::context::{ExecutionContextTrait, CallContextTrait, DynamicExecutionContextTrait};
 use kakarot::context::ExecutionSummary;
 use kakarot::utils;
 use kakarot::errors;
@@ -43,6 +43,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         // Decode and execute the current opcode.
         self.decode_and_execute(ref context);
         // Check if the execution is complete.
+        // TODO: Check why context.dynamic_context.is_stopped() movess the context variable
         if !(context.is_stopped()) {
             // Execute the next opcode.
             self.run(ref context);
@@ -53,7 +54,10 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
     fn decode_and_execute(ref self: EVMInterpreter, ref context: ExecutionContext) {
         // Retrieve the current program counter.
         let pc = context.program_counter;
-        let bytecode = (@context).call_context.bytecode(); //Note: here, bytecode returns a Span
+        let bytecode = (@context)
+            .static_context
+            .call_context
+            .bytecode(); //Note: here, bytecode returns a Span
         let bytecode_len = bytecode.len();
 
         // Check if PC is not out of bounds.
