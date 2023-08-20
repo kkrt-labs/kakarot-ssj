@@ -25,7 +25,7 @@ fn ensures_zeros(ref stack: Stack, from: u32, to: u32) {
 }
 
 // push `n` number of `0x0` to the stack
-fn put_zeros(ref stack: Stack, n: u8) {
+fn push_zeros(ref stack: Stack, n: u8) {
     let mut i = 0;
     loop {
         if i == n {
@@ -69,7 +69,7 @@ fn test_dup2() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 1);
+    push_zeros(ref ctx.stack, 1);
 
     let old_stack_len = ctx.stack.len();
 
@@ -95,7 +95,7 @@ fn test_dup3() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 2);
+    push_zeros(ref ctx.stack, 2);
 
     let old_stack_len = ctx.stack.len();
 
@@ -121,7 +121,7 @@ fn test_dup4() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 3);
+    push_zeros(ref ctx.stack, 3);
 
     let old_stack_len = ctx.stack.len();
 
@@ -147,7 +147,7 @@ fn test_dup5() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 4);
+    push_zeros(ref ctx.stack, 4);
 
     let old_stack_len = ctx.stack.len();
 
@@ -173,7 +173,7 @@ fn test_dup6() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 5);
+    push_zeros(ref ctx.stack, 5);
 
     let old_stack_len = ctx.stack.len();
 
@@ -199,7 +199,7 @@ fn test_dup7() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 6);
+    push_zeros(ref ctx.stack, 6);
 
     let old_stack_len = ctx.stack.len();
 
@@ -225,7 +225,7 @@ fn test_dup8() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 7);
+    push_zeros(ref ctx.stack, 7);
 
     let old_stack_len = ctx.stack.len();
 
@@ -251,7 +251,7 @@ fn test_dup9() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 8);
+    push_zeros(ref ctx.stack, 8);
 
     let old_stack_len = ctx.stack.len();
 
@@ -277,7 +277,7 @@ fn test_dup10() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 9);
+    push_zeros(ref ctx.stack, 9);
 
     let old_stack_len = ctx.stack.len();
 
@@ -303,7 +303,7 @@ fn test_dup11() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 10);
+    push_zeros(ref ctx.stack, 10);
 
     let old_stack_len = ctx.stack.len();
 
@@ -329,7 +329,7 @@ fn test_dup12() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 11);
+    push_zeros(ref ctx.stack, 11);
 
     let old_stack_len = ctx.stack.len();
 
@@ -355,7 +355,7 @@ fn test_dup13() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 12);
+    push_zeros(ref ctx.stack, 12);
 
     let old_stack_len = ctx.stack.len();
 
@@ -381,7 +381,7 @@ fn test_dup14() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 13);
+    push_zeros(ref ctx.stack, 13);
 
     let old_stack_len = ctx.stack.len();
 
@@ -407,7 +407,7 @@ fn test_dup15() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 14);
+    push_zeros(ref ctx.stack, 14);
 
     let old_stack_len = ctx.stack.len();
 
@@ -433,7 +433,7 @@ fn test_dup16() {
     let initial_len = ctx.stack.len();
 
     ctx.stack.push(0x01);
-    put_zeros(ref ctx.stack, 15);
+    push_zeros(ref ctx.stack, 15);
 
     let old_stack_len = ctx.stack.len();
 
