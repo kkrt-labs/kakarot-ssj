@@ -91,17 +91,17 @@ impl StaticExecutionContextImpl of StaticExecutionContextTrait {
     }
 
     #[inline(always)]
-    fn get_call_context(self: @StaticExecutionContext) -> CallContext {
+    fn call_context(self: @StaticExecutionContext) -> CallContext {
         *self.call_context
     }
 
     #[inline(always)]
-    fn get_starknet_address(self: @StaticExecutionContext) -> ContractAddress {
+    fn starknet_address(self: @StaticExecutionContext) -> ContractAddress {
         *self.starknet_address
     }
 
     #[inline(always)]
-    fn get_evm_address(self: @StaticExecutionContext) -> EthAddress {
+    fn evm_address(self: @StaticExecutionContext) -> EthAddress {
         *self.evm_address
     }
 
@@ -141,38 +141,37 @@ impl DynamicExecutionContextImpl of DynamicExecutionContextTrait {
     }
 
     #[inline(always)]
-    fn get_destroy_contracts(self: @DynamicExecutionContext) -> Span<EthAddress> {
+    fn destroy_contracts(self: @DynamicExecutionContext) -> Span<EthAddress> {
         self.destroy_contracts.span()
     }
 
     #[inline(always)]
-    fn get_events(self: @DynamicExecutionContext) -> Span<Event> {
+    fn events(self: @DynamicExecutionContext) -> Span<Event> {
         self.events.span()
     }
 
     #[inline(always)]
-    fn get_create_addresses(self: @DynamicExecutionContext) -> Span<EthAddress> {
+    fn create_addresses(self: @DynamicExecutionContext) -> Span<EthAddress> {
         self.create_addresses.span()
     }
 
-    //TODO: Check if this will make make self Out of Context
     #[inline(always)]
-    fn get_revert_contract_state(self: @DynamicExecutionContext) -> @Felt252Dict<felt252> {
+    fn revert_contract_state(self: @DynamicExecutionContext) -> @Felt252Dict<felt252> {
         self.revert_contract_state
     }
 
     #[inline(always)]
-    fn get_return_data(self: @DynamicExecutionContext) -> Span<u8> {
+    fn return_data(self: @DynamicExecutionContext) -> Span<u8> {
         self.return_data.span()
     }
 
     #[inline(always)]
-    fn is_reverted(self: @DynamicExecutionContext) -> bool {
+    fn reverted(self: @DynamicExecutionContext) -> bool {
         *self.reverted
     }
 
     #[inline(always)]
-    fn is_stopped(self: @DynamicExecutionContext) -> bool {
+    fn stopped(self: @DynamicExecutionContext) -> bool {
         *self.stopped
     }
 }
@@ -246,7 +245,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         }
     }
 
-    //TODO: Check if this should be here or within dynamic_context
     /// Stops the current execution context.
     #[inline(always)]
     fn stop(ref self: ExecutionContext) {
@@ -292,22 +290,22 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     fn is_reverted(self: @ExecutionContext) -> bool {
-        *self.dynamic_context.reverted
+        self.dynamic_context.reverted()
     }
 
     fn is_stopped(self: @ExecutionContext) -> bool {
-        *self.dynamic_context.stopped
+        self.dynamic_context.stopped()
     }
 
     /// Returns if starknet contract address is an EOA
     fn is_caller_eoa(self: @ExecutionContext) -> bool {
-        if get_caller_address() == *self.static_context.starknet_address {
+        if get_caller_address() == self.static_context.starknet_address() {
             return true;
         };
         false
     }
 
-
+    // TODO: Implement print_debug
     /// Debug print the execution context.
     fn print_debug(ref self: ExecutionContext) {
         // debug::print_felt252('gas used');

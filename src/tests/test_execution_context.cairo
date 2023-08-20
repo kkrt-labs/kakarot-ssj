@@ -110,7 +110,7 @@ fn test_execution_context_stop_and_revert() {
     execution_context.stop();
 
     // Then
-    assert(execution_context.dynamic_context.is_stopped() == true, 'should be stopped');
+    assert(execution_context.is_stopped() == true, 'should be stopped');
 }
 
 #[test]
@@ -125,9 +125,7 @@ fn test_execution_context_revert() {
 
     // Then
     assert(execution_context.is_reverted() == true, 'should be reverted');
-    assert(
-        execution_context.dynamic_context.get_return_data() == revert_reason, 'wrong revert reason'
-    );
+    assert(execution_context.dynamic_context.return_data() == revert_reason, 'wrong revert reason');
 }
 
 #[test]
