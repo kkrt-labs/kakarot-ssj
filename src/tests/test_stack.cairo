@@ -305,7 +305,7 @@ mod swap {
 
     #[test]
     #[available_gas(600000)]
-    fn test_should_fail_when_index_2_is_underflow() {
+    fn test_should_return_err_when_index_2_is_underflow() {
         // Given
         let mut stack = StackTrait::new();
         stack.push(1);
