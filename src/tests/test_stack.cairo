@@ -157,7 +157,8 @@ mod pop {
         let result = stack.pop();
         assert(result.is_err(), 'should return Err ');
         assert(
-            res.unwrap_err() == EVMError::StackError(STACK_UNDERFLOW), 'should return StackUnderflow'
+            res.unwrap_err() == EVMError::StackError(STACK_UNDERFLOW),
+            'should return StackUnderflow'
         );
     }
 
