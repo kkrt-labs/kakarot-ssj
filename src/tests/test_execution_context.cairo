@@ -78,7 +78,8 @@ fn test_execution_context_new() {
     assert(execution_context.starknet_address() == starknet_address, 'wrong starknet_address');
     assert(execution_context.evm_address() == evm_address, 'wrong evm_address');
     assert(
-        execution_context.destroyed_contracts() == destroyed_contracts.span(), 'wrong destroyed_contracts'
+        execution_context.destroyed_contracts() == destroyed_contracts.span(),
+        'wrong destroyed_contracts'
     );
     assert(execution_context.events().len() == events.len(), 'wrong events');
     assert(
