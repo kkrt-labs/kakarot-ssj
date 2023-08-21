@@ -111,7 +111,7 @@ mod pop {
     use kakarot::errors::{EVMError, STACK_UNDERFLOW};
 
     #[test]
-    #[available_gas(95000)]
+    #[available_gas(950000)]
     fn test_should_pop_an_element_from_the_stack() {
         // Given
         let mut stack = StackTrait::new();

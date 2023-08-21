@@ -21,12 +21,15 @@ def compare_snapshots(current, previous):
     improvements = []
     
     for key in previous:
+        if key not in current:
+            continue
         prev = previous[key]
         cur = current[key]
+        percentage_change = (cur - prev)*100/prev
         if prev < cur:
-            worsened.append(f"{key} {prev} --> {cur} {(cur - prev)*100/prev} %")
+            worsened.append(f"{key} {prev} --> {cur} {format(percentage_change, '.2f')} %")
         elif prev > cur:
-            improvements.append(f"{key} {prev} --> {cur} | {(cur - prev)*100/prev} %"  )
+            improvements.append(f"{key} {prev} --> {cur} | {format(percentage_change, '.2f')} %"  )
     
     return improvements, worsened
 
@@ -42,8 +45,9 @@ def print_colored_output(improvements, worsened, gas_changes):
         for elem in worsened:
             print(RED + elem + ENDC)
         
-        color = GREEN if gas_changes > 0 else RED
-        print(color + f"Overall gas change: {gas_changes} %" + ENDC)
+        color = RED if gas_changes > 0 else GREEN
+        gas_statement = "performance degradation, gas consumption +" if gas_changes > 0 else "performance improvement, gas consumption"
+        print(color + f"Overall gas change: {gas_statement}{format(gas_changes, '.2f')} %" + ENDC)
 
         exit(1)
 
