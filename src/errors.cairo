@@ -9,6 +9,6 @@ const PC_OUT_OF_BOUNDS: felt252 = 'Kakarot: pc >= bytecode length';
 
 #[derive(Drop, Copy, PartialEq)]
 enum EVMError {
-    StackError: felt252, 
+    StackError: felt252,
 }
 
