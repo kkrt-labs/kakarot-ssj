@@ -5,7 +5,6 @@ use kakarot::stack::StackTrait;
 use kakarot::errors::STACK_UNDERFLOW;
 use option::{OptionTrait};
 
-
 #[generate_trait]
 impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x10 - LT

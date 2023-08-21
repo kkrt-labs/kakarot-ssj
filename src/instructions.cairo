@@ -5,6 +5,7 @@ mod comparison_operations;
 use comparison_operations::ComparisonAndBitwiseOperationsTrait;
 
 mod duplication_operations;
+use duplication_operations::DuplicationOperationsTrait;
 
 mod environmental_information;
 
