@@ -80,7 +80,7 @@ impl StackImpl of StackTrait {
     }
 
     /// Pops the top item off the stack. If the stack is empty,
-    /// leaves the stack unchanged.
+    /// returns with a StackOverflow error.
     fn pop(ref self: Stack) -> Result<u256, EVMError> {
         if self.len() == 0 {
             return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
