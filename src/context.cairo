@@ -33,17 +33,22 @@ trait CallContextTrait {
 }
 
 impl CallContextImpl of CallContextTrait {
+    #[inline(always)]
     fn new(bytecode: Span<u8>, call_data: Span<u8>, value: u256) -> CallContext {
         CallContext { bytecode, call_data, value,  }
     }
+
+    #[inline(always)]
     fn bytecode(self: @CallContext) -> Span<u8> {
         *self.bytecode
     }
 
+    #[inline(always)]
     fn call_data(self: @CallContext) -> Span<u8> {
         *self.call_data
     }
 
+    #[inline(always)]
     fn value(self: @CallContext) -> u256 {
         *self.value
     }
@@ -104,6 +109,7 @@ struct DynamicExecutionContext {
 
 #[generate_trait]
 impl DynamicExecutionContextImpl of DynamicExecutionContextTrait {
+    #[inline(always)]
     fn new(return_data: Array<u8>) -> DynamicExecutionContext {
         DynamicExecutionContext {
             destroy_contracts: Default::default(),

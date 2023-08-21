@@ -11,10 +11,7 @@ use starknet::testing::{set_contract_address, set_caller_address};
 use kakarot::memory::{Memory, MemoryTrait};
 use kakarot::model::Event;
 use kakarot::stack::{Stack, StackTrait};
-use kakarot::context::{
-    CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait,
-    DynamicExecutionContextTrait, StaticExecutionContextTrait
-};
+use kakarot::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait};
 //TODO remove import once merged in corelib
 use kakarot::utils::helpers::{SpanPartialEq, ArrayPartialEq};
 use kakarot::tests::test_utils::{setup_call_context, setup_execution_context, CallContextPartialEq};
