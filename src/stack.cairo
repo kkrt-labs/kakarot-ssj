@@ -8,10 +8,10 @@
 //! let val_1: u256 = 1.into();
 //! let val_2: u256 = 1.into();
 
-//! stack.push(val_1);
-//! stack.push(val_2);
+//! stack.push(val_1)?;
+//! stack.push(val_2)?;
 
-//! let value = stack.pop();
+//! let value = stack.pop()?;
 //! ```
 
 // Core lib imports
@@ -65,10 +65,7 @@ impl StackImpl of StackTrait {
     }
 
     /// Pushes a new bytes32 word onto the stack. 
-    ///
-    /// # Panics
-    /// If this operation would overflow the stack, 
-    /// returns with a StackOverflow error.
+    /// If the stack is full, returns with a StackOverflow error.
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError> {
         // we can store at most 1024 256-bits words
         if self.len() == constants::STACK_MAX_DEPTH {
@@ -92,6 +89,7 @@ impl StackImpl of StackTrait {
     }
 
     /// Pops N elements from the stack.
+    /// If the stack length is less than than N, returns with a StackUnderflow error.
     fn pop_n(ref self: Stack, mut n: usize) -> Result<Array<u256>, EVMError> {
         if n > self.len() {
             return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
@@ -108,6 +106,7 @@ impl StackImpl of StackTrait {
     }
 
     /// Peeks at the top item on the stack.
+    /// If the stack is empty, returns None.
     fn peek(ref self: Stack) -> Option<u256> {
         if self.len() == 0 {
             Option::None(())
@@ -120,6 +119,7 @@ impl StackImpl of StackTrait {
 
     /// Peeks at the item at the given index on the stack.
     /// index is 0-based, 0 being the top of the stack.
+    /// If the index is greather than the stack length, returns with a StackUnderflow error.
     fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError> {
         if index >= self.len() {
             return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
