@@ -16,7 +16,7 @@ fn test_exec_stop() {
     ctx.exec_stop();
 
     // Then
-    assert(ctx.is_stopped(), 'ctx not stopped');
+    assert(ctx.stopped(), 'ctx not stopped');
 }
 
 #[test]

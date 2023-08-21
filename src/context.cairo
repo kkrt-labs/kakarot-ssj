@@ -237,12 +237,12 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     #[inline(always)]
-    fn is_reverted(self: @ExecutionContext) -> bool {
+    fn reverted(self: @ExecutionContext) -> bool {
         *self.dynamic_context.reverted
     }
 
     #[inline(always)]
-    fn is_stopped(self: @ExecutionContext) -> bool {
+    fn stopped(self: @ExecutionContext) -> bool {
         *self.dynamic_context.stopped
     }
 
@@ -287,7 +287,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     #[inline(always)]
-    fn is_read_only(self: @ExecutionContext) -> bool {
+    fn read_only(self: @ExecutionContext) -> bool {
         *self.static_context.read_only
     }
 

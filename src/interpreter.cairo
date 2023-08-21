@@ -43,7 +43,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         // Decode and execute the current opcode.
         self.decode_and_execute(ref context);
         // Check if the execution is complete.
-        if !(context.is_stopped()) {
+        if !(context.stopped()) {
             // Execute the next opcode.
             self.run(ref context);
         }

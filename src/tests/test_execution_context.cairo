@@ -72,29 +72,29 @@ fn test_execution_context_new() {
     assert(execution_context.call_context() == call_context, 'wrong call_context');
     assert(execution_context.program_counter == program_counter, 'wrong program_counter');
     assert(execution_context.stack.is_empty(), 'wrong stack');
-    assert(execution_context.is_stopped() == stopped, 'wrong stopped');
+    assert(execution_context.stopped() == stopped, 'wrong stopped');
     assert(
-        execution_context.dynamic_context.return_data == Default::default(), 'wrong return_data'
+        execution_context.return_data() == Default::default().span(), 'wrong return_data'
     );
     assert(execution_context.memory.bytes_len == 0, 'wrong memory');
     assert(
-        execution_context.static_context.starknet_address == starknet_address,
+        execution_context.starknet_address() == starknet_address,
         'wrong starknet_address'
     );
-    assert(execution_context.static_context.evm_address == evm_address, 'wrong evm_address');
+    assert(execution_context.evm_address() == evm_address, 'wrong evm_address');
     assert(
-        execution_context.dynamic_context.destroy_contracts == destroy_contracts,
+        execution_context.destroy_contracts() == destroy_contracts.span(),
         'wrong destroy_contracts'
     );
-    assert(execution_context.dynamic_context.events.len() == events.len(), 'wrong events');
+    assert(execution_context.events().len() == events.len(), 'wrong events');
     assert(
-        execution_context.dynamic_context.create_addresses == create_addresses,
+        execution_context.create_addresses() == create_addresses.span(),
         'wrong create_addresses'
     );
     // Can't verify that reverted_contract_state is empty as we can't compare dictionaries directly
     // But initializing it using `Default`, it will be empty.
-    assert(execution_context.dynamic_context.reverted == reverted, 'wrong reverted');
-    assert(execution_context.static_context.read_only == read_only, 'wrong read_only');
+    assert(execution_context.reverted() == reverted, 'wrong reverted');
+    assert(execution_context.read_only() == read_only, 'wrong read_only');
 }
 
 #[test]
@@ -107,7 +107,7 @@ fn test_execution_context_stop_and_revert() {
     execution_context.stop();
 
     // Then
-    assert(execution_context.is_stopped() == true, 'should be stopped');
+    assert(execution_context.stopped() == true, 'should be stopped');
 }
 
 #[test]
@@ -121,7 +121,7 @@ fn test_execution_context_revert() {
     execution_context.revert(revert_reason);
 
     // Then
-    assert(execution_context.is_reverted() == true, 'should be reverted');
+    assert(execution_context.reverted() == true, 'should be reverted');
     assert(execution_context.return_data() == revert_reason, 'wrong revert reason');
 }
 
