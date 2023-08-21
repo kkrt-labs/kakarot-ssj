@@ -5,7 +5,7 @@ use traits::Into;
 
 /// Internal imports.
 // TODO remove destruct imports when no longer required
-use kakarot::context::{ExecutionContext, NullableDestruct, BoxDestruct};
+use kakarot::context::{ExecutionContext};
 use kakarot::context::{ExecutionContextTrait, CallContextTrait};
 use kakarot::context::ExecutionSummary;
 use kakarot::utils::{helpers::u256_to_bytes_array};

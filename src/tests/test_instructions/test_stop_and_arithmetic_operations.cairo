@@ -6,6 +6,7 @@ use kakarot::context::ExecutionContextTrait;
 use option::OptionTrait;
 use integer::BoundedInt;
 use traits::{TryInto, Into};
+use kakarot::context::BoxDynamicExecutionContextDestruct;
 
 #[test]
 #[available_gas(20000000)]

@@ -22,7 +22,12 @@ struct CallContext {
     value: u256,
 }
 
-// I think we should not directly access the fields of the call context;
+
+// *************************************************************************
+//                              CallContext
+// *************************************************************************
+
+// We should not directly access the fields of the call context;
 // instead we should use the methods defined in the trait. 
 // This is not enforced until there are `pub` and `priv` visibility on struct fields.
 trait CallContextTrait {
@@ -55,6 +60,7 @@ impl CallContextImpl of CallContextTrait {
 }
 
 impl DefaultCallContextImpl of Default<CallContext> {
+    #[inline(always)]
     fn default() -> CallContext {
         CallContext {
             bytecode: Default::default().span(),
@@ -64,6 +70,9 @@ impl DefaultCallContextImpl of Default<CallContext> {
     }
 }
 
+// *************************************************************************
+//                              StaticExecutionContext
+// *************************************************************************
 
 #[derive(Drop, Copy)]
 struct StaticExecutionContext {
@@ -74,6 +83,7 @@ struct StaticExecutionContext {
 }
 
 impl DefaultStaticExecutionContext of Default<StaticExecutionContext> {
+    #[inline(always)]
     fn default() -> StaticExecutionContext {
         StaticExecutionContext {
             call_context: Default::default(),
@@ -86,6 +96,7 @@ impl DefaultStaticExecutionContext of Default<StaticExecutionContext> {
 
 #[generate_trait]
 impl StaticExecutionContextImpl of StaticExecutionContextTrait {
+    #[inline(always)]
     fn new(
         call_context: CallContext,
         starknet_address: ContractAddress,
@@ -95,6 +106,10 @@ impl StaticExecutionContextImpl of StaticExecutionContextTrait {
         StaticExecutionContext { call_context, starknet_address, evm_address, read_only, }
     }
 }
+
+// *************************************************************************
+//                              DynamicExecutionContext
+// *************************************************************************
 
 #[derive(Destruct)]
 struct DynamicExecutionContext {
@@ -124,6 +139,7 @@ impl DynamicExecutionContextImpl of DynamicExecutionContextTrait {
 }
 
 impl DefaultDynamicExecutionContext of Default<DynamicExecutionContext> {
+    #[inline(always)]
     fn default() -> DynamicExecutionContext {
         DynamicExecutionContext {
             destroyed_contracts: Default::default(),
@@ -137,13 +153,16 @@ impl DefaultDynamicExecutionContext of Default<DynamicExecutionContext> {
     }
 }
 
+// *************************************************************************
+//                              ExecutionContext
+// *************************************************************************
 
 /// The execution context.
 /// Stores all data relevant to the current execution context.
 #[derive(Destruct)]
 struct ExecutionContext {
-    static_context: StaticExecutionContext,
-    dynamic_context: DynamicExecutionContext,
+    static_context: Box<StaticExecutionContext>,
+    dynamic_context: Box<DynamicExecutionContext>,
     program_counter: u32,
     stack: Stack,
     memory: Memory,
@@ -153,15 +172,10 @@ struct ExecutionContext {
 //sub_context: Nullable<ExecutionContext>,
 }
 
-
-// TODO remove once merged in core library
-impl NullableDestruct<T, impl TDestruct: Destruct<T>> of Destruct<Nullable<T>> {
-    fn destruct(self: Nullable<T>) nopanic {}
-}
-
-// TODO remove once merged in core library
-impl BoxDestruct<T, impl TDestruct: Destruct<T>> of Destruct<Box<T>> {
-    fn destruct(self: Box<T>) nopanic {}
+impl BoxDynamicExecutionContextDestruct of Destruct<Box<DynamicExecutionContext>> {
+    fn destruct(self: Box<DynamicExecutionContext>) nopanic {
+        self.unbox().destruct();
+    }
 }
 
 /// `ExecutionContext` implementation.
@@ -180,10 +194,12 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         read_only: bool
     ) -> ExecutionContext {
         ExecutionContext {
-            static_context: StaticExecutionContextTrait::new(
-                call_context, starknet_address, evm_address, read_only
+            static_context: BoxTrait::new(
+                StaticExecutionContextTrait::new(
+                    call_context, starknet_address, evm_address, read_only
+                )
             ),
-            dynamic_context: DynamicExecutionContextTrait::new(returned_data),
+            dynamic_context: BoxTrait::new(DynamicExecutionContextTrait::new(returned_data)),
             program_counter: 0,
             stack: Default::default(),
             memory: Default::default(),
@@ -192,10 +208,69 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         }
     }
 
+    // *************************************************************************
+    //                      DynamicExecutionContext getters
+    // *************************************************************************
+
+    #[inline(always)]
+    fn reverted(ref self: ExecutionContext) -> bool {
+        let dyn_ctx = self.dynamic_context.unbox();
+        let reverted = dyn_ctx.reverted;
+        self.dynamic_context = BoxTrait::new(dyn_ctx);
+        reverted
+    }
+
+    #[inline(always)]
+    fn stopped(ref self: ExecutionContext) -> bool {
+        let dyn_ctx = self.dynamic_context.unbox();
+        let stopped = dyn_ctx.stopped;
+        self.dynamic_context = BoxTrait::new(dyn_ctx);
+        stopped
+    }
+
+    #[inline(always)]
+    fn call_context(self: @ExecutionContext) -> CallContext {
+        (*self.static_context).unbox().call_context
+    }
+
+    #[inline(always)]
+    fn destroyed_contracts(ref self: ExecutionContext) -> Span<EthAddress> {
+        let dyn_ctx = self.dynamic_context.unbox();
+        let destroyed_contracts = dyn_ctx.destroyed_contracts.span();
+        self.dynamic_context = BoxTrait::new(dyn_ctx);
+        destroyed_contracts
+    }
+
+    #[inline(always)]
+    fn events(ref self: ExecutionContext) -> Span<Event> {
+        let dyn_ctx = self.dynamic_context.unbox();
+        let events = dyn_ctx.events.span();
+        self.dynamic_context = BoxTrait::new(dyn_ctx);
+        events
+    }
+
+    #[inline(always)]
+    fn create_addresses(ref self: ExecutionContext) -> Span<EthAddress> {
+        let dyn_ctx = self.dynamic_context.unbox();
+        let create_addresses = dyn_ctx.create_addresses.span();
+        self.dynamic_context = BoxTrait::new(dyn_ctx);
+        create_addresses
+    }
+
+    #[inline(always)]
+    fn return_data(ref self: ExecutionContext) -> Span<u8> {
+        let dyn_ctx = self.dynamic_context.unbox();
+        let return_data = dyn_ctx.return_data.span();
+        self.dynamic_context = BoxTrait::new(dyn_ctx);
+        return_data
+    }
+
     /// Stops the current execution context.
     #[inline(always)]
     fn stop(ref self: ExecutionContext) {
-        self.dynamic_context.stopped = true;
+        let mut dyn_ctx = self.dynamic_context.unbox();
+        dyn_ctx.stopped = true;
+        self.dynamic_context = BoxTrait::new(dyn_ctx)
     }
 
     /// Revert the current execution context.
@@ -205,9 +280,34 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     /// reverted on its finalization.
     #[inline(always)]
     fn revert(ref self: ExecutionContext, revert_reason: Span<u8>) {
-        self.dynamic_context.reverted = true;
-        ArrayExtensionTrait::concat(ref self.dynamic_context.return_data, revert_reason);
+        let mut dyn_ctx = self.dynamic_context.unbox();
+        dyn_ctx.reverted = true;
+        ArrayExtensionTrait::concat(ref dyn_ctx.return_data, revert_reason);
+        self.dynamic_context = BoxTrait::new(dyn_ctx);
     }
+
+    // *************************************************************************
+    //                        StaticExecutionContext getters
+    // *************************************************************************
+
+    #[inline(always)]
+    fn starknet_address(self: @ExecutionContext) -> ContractAddress {
+        (*self.static_context).unbox().starknet_address
+    }
+
+    #[inline(always)]
+    fn evm_address(self: @ExecutionContext) -> EthAddress {
+        (*self.static_context).unbox().evm_address
+    }
+
+    #[inline(always)]
+    fn read_only(self: @ExecutionContext) -> bool {
+        (*self.static_context).unbox().read_only
+    }
+
+    // *************************************************************************
+    //                          ExecutionContext methods
+    // *************************************************************************
 
     /// Reads and return data from bytecode.
     /// The program counter is incremented accordingly.
@@ -219,71 +319,15 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn read_code(ref self: ExecutionContext, len: usize) -> Span<u8> {
         // Copy code slice from [pc, pc+len]
-        let code = self.static_context.call_context.bytecode().slice(self.program_counter, len);
+        let code = self
+            .static_context
+            .unbox()
+            .call_context
+            .bytecode()
+            .slice(self.program_counter, len);
 
         self.program_counter += len;
         code
-    }
-
-
-    #[inline(always)]
-    fn is_root(self: @ExecutionContext) { //TODO: implement this (returns a bool)
-    // self.calling_context.is_null()
-    // true
-    }
-    #[inline(always)]
-    fn is_leaf(self: @ExecutionContext) { //TODO implement this(returns a bool)
-    // self.sub_context.is_null()
-    }
-
-    #[inline(always)]
-    fn reverted(self: @ExecutionContext) -> bool {
-        *self.dynamic_context.reverted
-    }
-
-    #[inline(always)]
-    fn stopped(self: @ExecutionContext) -> bool {
-        *self.dynamic_context.stopped
-    }
-
-    #[inline(always)]
-    fn call_context(self: @ExecutionContext) -> CallContext {
-        *self.static_context.call_context
-    }
-
-    #[inline(always)]
-    fn destroyed_contracts(self: @ExecutionContext) -> Span<EthAddress> {
-        self.dynamic_context.destroyed_contracts.span()
-    }
-
-    #[inline(always)]
-    fn events(self: @ExecutionContext) -> Span<Event> {
-        self.dynamic_context.events.span()
-    }
-
-    #[inline(always)]
-    fn create_addresses(self: @ExecutionContext) -> Span<EthAddress> {
-        self.dynamic_context.create_addresses.span()
-    }
-
-    #[inline(always)]
-    fn return_data(self: @ExecutionContext) -> Span<u8> {
-        self.dynamic_context.return_data.span()
-    }
-
-    #[inline(always)]
-    fn starknet_address(self: @ExecutionContext) -> ContractAddress {
-        *self.static_context.starknet_address
-    }
-
-    #[inline(always)]
-    fn evm_address(self: @ExecutionContext) -> EthAddress {
-        *self.static_context.evm_address
-    }
-
-    #[inline(always)]
-    fn read_only(self: @ExecutionContext) -> bool {
-        *self.static_context.read_only
     }
 
     /// Returns if starknet contract address is an EOA
@@ -293,6 +337,16 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             return true;
         };
         false
+    }
+
+    #[inline(always)]
+    fn is_root(self: @ExecutionContext) { //TODO: implement this (returns a bool)
+    // self.calling_context.is_null()
+    // true
+    }
+    #[inline(always)]
+    fn is_leaf(self: @ExecutionContext) { //TODO implement this(returns a bool)
+    // self.sub_context.is_null()
     }
 
     // TODO: Implement print_debug
@@ -306,10 +360,11 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 }
 
 impl DefaultExecutionContext of Default<ExecutionContext> {
+    #[inline(always)]
     fn default() -> ExecutionContext {
         ExecutionContext {
-            static_context: Default::default(),
-            dynamic_context: Default::default(),
+            static_context: BoxTrait::new(Default::default()),
+            dynamic_context: BoxTrait::new(Default::default()),
             program_counter: 0,
             stack: Default::default(),
             memory: Default::default(),
@@ -321,12 +376,14 @@ impl DefaultExecutionContext of Default<ExecutionContext> {
 }
 
 impl DefaultEthAddress of Default<EthAddress> {
+    #[inline(always)]
     fn default() -> EthAddress {
         0.try_into().unwrap()
     }
 }
 
 impl DefaultContractAddress of Default<ContractAddress> {
+    #[inline(always)]
     fn default() -> ContractAddress {
         0.try_into().unwrap()
     }

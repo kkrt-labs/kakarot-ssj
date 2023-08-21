@@ -6,6 +6,7 @@ use kakarot::errors::STACK_UNDERFLOW;
 use option::{OptionTrait};
 use kakarot::errors::EVMError;
 use result::ResultTrait;
+use kakarot::context::BoxDynamicExecutionContextDestruct;
 
 #[generate_trait]
 impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
