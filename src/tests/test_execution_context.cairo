@@ -73,23 +73,16 @@ fn test_execution_context_new() {
     assert(execution_context.program_counter == program_counter, 'wrong program_counter');
     assert(execution_context.stack.is_empty(), 'wrong stack');
     assert(execution_context.stopped() == stopped, 'wrong stopped');
-    assert(
-        execution_context.return_data() == Default::default().span(), 'wrong return_data'
-    );
+    assert(execution_context.return_data() == Default::default().span(), 'wrong return_data');
     assert(execution_context.memory.bytes_len == 0, 'wrong memory');
-    assert(
-        execution_context.starknet_address() == starknet_address,
-        'wrong starknet_address'
-    );
+    assert(execution_context.starknet_address() == starknet_address, 'wrong starknet_address');
     assert(execution_context.evm_address() == evm_address, 'wrong evm_address');
     assert(
-        execution_context.destroy_contracts() == destroy_contracts.span(),
-        'wrong destroy_contracts'
+        execution_context.destroy_contracts() == destroy_contracts.span(), 'wrong destroy_contracts'
     );
     assert(execution_context.events().len() == events.len(), 'wrong events');
     assert(
-        execution_context.create_addresses() == create_addresses.span(),
-        'wrong create_addresses'
+        execution_context.create_addresses() == create_addresses.span(), 'wrong create_addresses'
     );
     // Can't verify that reverted_contract_state is empty as we can't compare dictionaries directly
     // But initializing it using `Default`, it will be empty.
