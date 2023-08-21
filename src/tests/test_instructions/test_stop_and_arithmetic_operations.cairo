@@ -1,3 +1,4 @@
+use core::result::ResultTrait;
 use kakarot::tests::test_utils::setup_execution_context;
 use kakarot::instructions::StopAndArithmeticOperationsTrait;
 use kakarot::stack::StackTrait;
@@ -34,7 +35,7 @@ fn test_exec_add() {
     // Then
     assert(ctx.stack.len == 2, 'stack should have two elems');
     assert(ctx.stack.peek().unwrap() == 5, 'stack top should be 3+2');
-    assert(ctx.stack.peek_at(1) == 1, 'stack[1] should be 1');
+    assert(ctx.stack.peek_at(1).unwrap() == 1, 'stack[1] should be 1');
 }
 
 #[test]

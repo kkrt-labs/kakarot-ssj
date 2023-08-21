@@ -13,61 +13,87 @@ use kakarot::context::ExecutionContextTrait;
 use kakarot::stack::StackTrait;
 use kakarot::utils::u256_signed_math::u256_signed_div_rem;
 use kakarot::utils::math::{Exponentiation, ExponentiationModulo, u256_wide_add};
+use kakarot::errors::EVMError;
+use result::ResultTrait;
 
 #[generate_trait]
 impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// 0x00 - STOP
     /// Halts the execution of the current program.
     /// # Specification: https://www.evm.codes/#00?fork=shanghai
-    fn exec_stop(ref self: ExecutionContext) {
+    fn exec_stop(ref self: ExecutionContext) -> Result<(), EVMError> {
         self.stop();
+        Result::Ok(())
     }
 
     /// 0x01 - ADD
     /// Addition operation 
     /// a + b: integer result of the addition modulo 2^256.
     /// # Specification: https://www.evm.codes/#01?fork=shanghai
-    fn exec_add(ref self: ExecutionContext) {
-        let popped = self.stack.pop_n(2);
+    fn exec_add(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = match self.stack.pop_n(2) {
+            Result::Ok(popped) => popped,
+            Result::Err(err) => {
+                return Result::Err(err);
+            }
+        };
 
         // Compute the addition
         let (result, _) = u256_overflowing_add(*popped[0], *popped[1]);
 
         self.stack.push(result);
+        Result::Ok(())
     }
 
     /// 0x02 - MUL
     /// Multiplication
     /// a * b: integer result of the multiplication modulo 2^256.
     /// # Specification: https://www.evm.codes/#02?fork=shanghai
-    fn exec_mul(ref self: ExecutionContext) {
-        let popped = self.stack.pop_n(2);
+    fn exec_mul(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = match self.stack.pop_n(2) {
+            Result::Ok(popped) => popped,
+            Result::Err(err) => {
+                return Result::Err(err);
+            }
+        };
 
         // Compute the multiplication
         let (result, _) = u256_overflow_mul(*popped[0], *popped[1]);
 
         self.stack.push(result);
+        Result::Ok(())
     }
 
     /// 0x03 - SUB
     /// Subtraction operation
     /// a - b: integer result of the subtraction modulo 2^256.
     /// # Specification: https://www.evm.codes/#03?fork=shanghai
-    fn exec_sub(ref self: ExecutionContext) {
-        let popped = self.stack.pop_n(2);
+    fn exec_sub(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = match self.stack.pop_n(2) {
+            Result::Ok(popped) => popped,
+            Result::Err(err) => {
+                return Result::Err(err);
+            }
+        };
 
         // Compute the substraction
         let (result, _) = u256_overflow_sub(*popped[0], *popped[1]);
 
         self.stack.push(result);
+        Result::Ok(())
     }
 
     /// 0x04 - DIV
     /// If the denominator is 0, the result will be 0.
     /// a / b: integer result of the integer division. 
     /// # Specification: https://www.evm.codes/#04?fork=shanghai
-    fn exec_div(ref self: ExecutionContext) {
-        let popped = self.stack.pop_n(2);
+    fn exec_div(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = match self.stack.pop_n(2) {
+            Result::Ok(popped) => popped,
+            Result::Err(err) => {
+                return Result::Err(err);
+            }
+        };
 
         let a: u256 = *popped[0];
         let b: u256 = *popped[1];
@@ -81,6 +107,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         };
 
         self.stack.push(result);
+        Result::Ok(())
     }
 
     /// 0x05 - SDIV
@@ -88,8 +115,13 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a / b: integer result of the signed integer division. 
     /// If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#05?fork=shanghai
-    fn exec_sdiv(ref self: ExecutionContext) {
-        let popped = self.stack.pop_n(2);
+    fn exec_sdiv(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = match self.stack.pop_n(2) {
+            Result::Ok(popped) => popped,
+            Result::Err(err) => {
+                return Result::Err(err);
+            }
+        };
         let a = *popped[0];
         let b = *popped[1];
 
@@ -102,14 +134,20 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         };
 
         self.stack.push(result);
+        Result::Ok(())
     }
 
     /// 0x06 - MOD
     /// Modulo operation
     /// a % b: integer result of the integer modulo. If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#06?fork=shanghai
-    fn exec_mod(ref self: ExecutionContext) {
-        let popped = self.stack.pop_n(2);
+    fn exec_mod(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = match self.stack.pop_n(2) {
+            Result::Ok(popped) => popped,
+            Result::Err(err) => {
+                return Result::Err(err);
+            }
+        };
 
         let a: u256 = *popped[0];
         let b: u256 = *popped[1];
@@ -123,6 +161,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         };
 
         self.stack.push(result);
+        Result::Ok(())
     }
 
     /// 0x07 - SMOD
@@ -130,8 +169,13 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a % b: integer result of the signed integer modulo. If the denominator is 0, the result will be 0.
     /// All values are treated as two’s complement signed 256-bit integers. Note the overflow semantic when −2^255 is negated.
     /// # Specification: https://www.evm.codes/#07?fork=shanghai
-    fn exec_smod(ref self: ExecutionContext) {
-        let popped = self.stack.pop_n(2);
+    fn exec_smod(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = match self.stack.pop_n(2) {
+            Result::Ok(popped) => popped,
+            Result::Err(err) => {
+                return Result::Err(err);
+            }
+        };
 
         let a: u256 = *popped[0];
         let b: u256 = *popped[1];
@@ -143,8 +187,8 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             },
             Option::None => 0,
         };
-
         self.stack.push(result);
+        Result::Ok(())
     }
 
     /// 0x08 - ADDMOD
@@ -152,8 +196,13 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// (a + b) % N: integer result of the addition followed by a modulo. If the denominator is 0, the result will be 0.
     /// All intermediate calculations of this operation are not subject to the 2256 modulo.
     /// # Specification: https://www.evm.codes/#08?fork=shanghai
-    fn exec_addmod(ref self: ExecutionContext) {
-        let popped = self.stack.pop_n(3);
+    fn exec_addmod(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = match self.stack.pop_n(3) {
+            Result::Ok(popped) => popped,
+            Result::Err(err) => {
+                return Result::Err(err);
+            }
+        };
 
         let a: u256 = *popped[0];
         let b: u256 = *popped[1];
@@ -170,6 +219,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         };
 
         self.stack.push(result);
+        Result::Ok(())
     }
 
     /// 0x09 - MULMOD operation.
@@ -177,8 +227,13 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// All intermediate calculations of this operation are not subject to the 2^256 modulo.
     /// If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#09?fork=shanghai
-    fn exec_mulmod(ref self: ExecutionContext) {
-        let popped = self.stack.pop_n(3);
+    fn exec_mulmod(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = match self.stack.pop_n(3) {
+            Result::Ok(popped) => popped,
+            Result::Err(err) => {
+                return Result::Err(err);
+            }
+        };
 
         let a: u256 = *popped[0];
         let b: u256 = *popped[1];
@@ -195,26 +250,27 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         };
 
         self.stack.push(result);
+        Result::Ok(())
     }
 
     /// 0x0A - EXP
     /// Exponential operation
     /// a ** b: integer result of raising a to the bth power modulo 2^256.
     /// # Specification: https://www.evm.codes/#0a?fork=shanghai
-    fn exec_exp(ref self: ExecutionContext) {
-        // Stack input:
-        // 0 - a: integer base.
-        // 1 - exponent: integer exponent.
-        let popped = self.stack.pop_n(2);
+    fn exec_exp(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = match self.stack.pop_n(2) {
+            Result::Ok(popped) => popped,
+            Result::Err(err) => {
+                return Result::Err(err);
+            }
+        };
         let a = *popped[0];
         let b = *popped[1];
 
-        // Compute the result of a**exponent
         let result = a.pow_mod(b);
 
-        // Stack output:
-        // a ** exponent: integer result of the exponential operation modulo 2256.
         self.stack.push(result);
+        Result::Ok(())
     }
 
     /// 0x0B - SIGNEXTEND
@@ -234,8 +290,13 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// which corresponds to (x & mask).
     /// # Specification: https://www.evm.codes/#0b?fork=shanghai
     /// Complex opcode, check: https://ethereum.github.io/yellowpaper/paper.pdf
-    fn exec_signextend(ref self: ExecutionContext) {
-        let popped = self.stack.pop_n(2);
+    fn exec_signextend(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = match self.stack.pop_n(2) {
+            Result::Ok(popped) => popped,
+            Result::Err(err) => {
+                return Result::Err(err);
+            }
+        };
         let b = *popped[0];
         let x = *popped[1];
 
@@ -256,5 +317,6 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         };
 
         self.stack.push(result);
+        Result::Ok(())
     }
 }
