@@ -163,7 +163,7 @@ mod pop {
 
     #[test]
     #[available_gas(50000)]
-    fn test_pop_n_should_fail_when_stack_underflow() {
+    fn test_pop_n_should_return_err_when_stack_underflow() {
         // Given
         let mut stack = StackTrait::new();
         stack.push(1);
