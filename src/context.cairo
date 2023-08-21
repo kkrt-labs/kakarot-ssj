@@ -77,8 +77,8 @@ impl DefaultStaticExecutionContext of Default<StaticExecutionContext> {
     fn default() -> StaticExecutionContext {
         StaticExecutionContext {
             call_context: Default::default(),
-            starknet_address: 0.try_into().unwrap(),
-            evm_address: 0.try_into().unwrap(),
+            starknet_address: Default::default(),
+            evm_address: Default::default(),
             read_only: false,
         }
     }
@@ -322,6 +322,18 @@ impl DefaultExecutionContext of Default<ExecutionContext> {
         // sub_context: Default::default(),
 
         }
+    }
+}
+
+impl DefaultEthAddress of Default<EthAddress> {
+    fn default() -> EthAddress {
+        0.try_into().unwrap()
+    }
+}
+
+impl DefaultContractAddress of Default<ContractAddress> {
+    fn default() -> ContractAddress {
+        0.try_into().unwrap()
     }
 }
 
