@@ -234,7 +234,7 @@ mod peek {
 
     #[test]
     #[available_gas(350000)]
-    fn test_should_fail_when_underflow() {
+    fn test_should_return_err_when_underflow() {
         // Given
         let mut stack = StackTrait::new();
 
