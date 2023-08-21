@@ -2,7 +2,6 @@ use starknet::{contract_address_try_from_felt252, ContractAddress, EthAddress};
 use traits::{Into, TryInto};
 use option::OptionTrait;
 use array::{ArrayTrait, SpanTrait};
-use kakarot::utils::helpers::{SpanPartialEq};
 use kakarot::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait};
 
 mod test_helpers;
