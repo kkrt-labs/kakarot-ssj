@@ -55,7 +55,7 @@ fn test_execution_context_new() {
     let gas_price: u64 = 10;
     let starknet_address: ContractAddress = 0.try_into().unwrap();
     let evm_address: EthAddress = 0.try_into().unwrap();
-    let destroy_contracts: Array<EthAddress> = Default::default();
+    let destroyed_contracts: Array<EthAddress> = Default::default();
     let events: Array<Event> = Default::default();
     let create_addresses: Array<EthAddress> = Default::default();
     let revert_contract_state: Felt252Dict<felt252> = Default::default();
@@ -78,7 +78,7 @@ fn test_execution_context_new() {
     assert(execution_context.starknet_address() == starknet_address, 'wrong starknet_address');
     assert(execution_context.evm_address() == evm_address, 'wrong evm_address');
     assert(
-        execution_context.destroy_contracts() == destroy_contracts.span(), 'wrong destroy_contracts'
+        execution_context.destroyed_contracts() == destroyed_contracts.span(), 'wrong destroyed_contracts'
     );
     assert(execution_context.events().len() == events.len(), 'wrong events');
     assert(

@@ -98,7 +98,7 @@ impl StaticExecutionContextImpl of StaticExecutionContextTrait {
 
 #[derive(Destruct)]
 struct DynamicExecutionContext {
-    destroy_contracts: Array<EthAddress>,
+    destroyed_contracts: Array<EthAddress>,
     events: Array<Event>,
     create_addresses: Array<EthAddress>,
     revert_contract_state: Felt252Dict<felt252>,
@@ -112,7 +112,7 @@ impl DynamicExecutionContextImpl of DynamicExecutionContextTrait {
     #[inline(always)]
     fn new(return_data: Array<u8>) -> DynamicExecutionContext {
         DynamicExecutionContext {
-            destroy_contracts: Default::default(),
+            destroyed_contracts: Default::default(),
             events: Default::default(),
             create_addresses: Default::default(),
             revert_contract_state: Default::default(),
@@ -126,7 +126,7 @@ impl DynamicExecutionContextImpl of DynamicExecutionContextTrait {
 impl DefaultDynamicExecutionContext of Default<DynamicExecutionContext> {
     fn default() -> DynamicExecutionContext {
         DynamicExecutionContext {
-            destroy_contracts: Default::default(),
+            destroyed_contracts: Default::default(),
             events: Default::default(),
             create_addresses: Default::default(),
             revert_contract_state: Default::default(),
@@ -252,8 +252,8 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     #[inline(always)]
-    fn destroy_contracts(self: @ExecutionContext) -> Span<EthAddress> {
-        self.dynamic_context.destroy_contracts.span()
+    fn destroyed_contracts(self: @ExecutionContext) -> Span<EthAddress> {
+        self.dynamic_context.destroyed_contracts.span()
     }
 
     #[inline(always)]
@@ -264,11 +264,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn create_addresses(self: @ExecutionContext) -> Span<EthAddress> {
         self.dynamic_context.create_addresses.span()
-    }
-
-    #[inline(always)]
-    fn revert_contract_state(self: @ExecutionContext) -> @Felt252Dict<felt252> {
-        self.dynamic_context.revert_contract_state
     }
 
     #[inline(always)]
