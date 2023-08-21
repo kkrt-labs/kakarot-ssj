@@ -44,7 +44,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         // Decode and execute the current opcode.
         self.decode_and_execute(ref context);
         // Check if the execution is complete.
-        if !(context.is_stopped()) {
+        if !(context.stopped()) {
             // Execute the next opcode.
             self.run(ref context);
         }
@@ -54,7 +54,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
     fn decode_and_execute(ref self: EVMInterpreter, ref context: ExecutionContext) {
         // Retrieve the current program counter.
         let pc = context.program_counter;
-        let bytecode = (@context).call_context.bytecode(); //Note: here, bytecode returns a Span
+        let bytecode = context.call_context().bytecode(); //Note: here, bytecode returns a Span
         let bytecode_len = bytecode.len();
 
         // Check if PC is not out of bounds.
