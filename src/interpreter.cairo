@@ -54,10 +54,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
     fn decode_and_execute(ref self: EVMInterpreter, ref context: ExecutionContext) {
         // Retrieve the current program counter.
         let pc = context.program_counter;
-        let bytecode = (@context)
-            .static_context
-            .call_context
-            .bytecode(); //Note: here, bytecode returns a Span
+        let bytecode = (@context).call_context().bytecode(); //Note: here, bytecode returns a Span
         let bytecode_len = bytecode.len();
 
         // Check if PC is not out of bounds.

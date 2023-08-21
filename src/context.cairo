@@ -12,7 +12,7 @@ use option::OptionTrait;
 use starknet::get_caller_address;
 
 /// The call context.
-#[derive(Destruct, Copy)]
+#[derive(Drop, Copy)]
 struct CallContext {
     /// The bytecode to execute.
     bytecode: Span<u8>,
@@ -60,7 +60,7 @@ impl DefaultCallContextImpl of Default<CallContext> {
 }
 
 
-#[derive(Destruct, Copy)]
+#[derive(Drop, Copy)]
 struct StaticExecutionContext {
     call_context: CallContext,
     starknet_address: ContractAddress,
@@ -89,30 +89,6 @@ impl StaticExecutionContextImpl of StaticExecutionContextTrait {
     ) -> StaticExecutionContext {
         StaticExecutionContext { call_context, starknet_address, evm_address, read_only,  }
     }
-
-    #[inline(always)]
-    fn call_context(self: @StaticExecutionContext) -> CallContext {
-        *self.call_context
-    }
-
-    #[inline(always)]
-    fn starknet_address(self: @StaticExecutionContext) -> ContractAddress {
-        *self.starknet_address
-    }
-
-    #[inline(always)]
-    fn evm_address(self: @StaticExecutionContext) -> EthAddress {
-        *self.evm_address
-    }
-
-    #[inline(always)]
-    fn is_read_only(self: @StaticExecutionContext) -> bool {
-        *self.read_only
-    }
-    #[inline(always)]
-    fn bytecode(self: @StaticExecutionContext) -> Span<u8> {
-        *self.call_context.bytecode
-    }
 }
 
 #[derive(Destruct)]
@@ -138,31 +114,6 @@ impl DynamicExecutionContextImpl of DynamicExecutionContextTrait {
             reverted: false,
             stopped: false
         }
-    }
-
-    #[inline(always)]
-    fn destroy_contracts(self: @DynamicExecutionContext) -> Span<EthAddress> {
-        self.destroy_contracts.span()
-    }
-
-    #[inline(always)]
-    fn events(self: @DynamicExecutionContext) -> Span<Event> {
-        self.events.span()
-    }
-
-    #[inline(always)]
-    fn create_addresses(self: @DynamicExecutionContext) -> Span<EthAddress> {
-        self.create_addresses.span()
-    }
-
-    #[inline(always)]
-    fn revert_contract_state(self: @DynamicExecutionContext) -> @Felt252Dict<felt252> {
-        self.revert_contract_state
-    }
-
-    #[inline(always)]
-    fn return_data(self: @DynamicExecutionContext) -> Span<u8> {
-        self.return_data.span()
     }
 
     #[inline(always)]
@@ -200,10 +151,10 @@ struct ExecutionContext {
     program_counter: u32,
     stack: Stack,
     memory: Memory,
-// TODO: refactor using smart pointers
-// once compiler supports it
-//calling_context: Nullable<ExecutionContext>,
-//sub_context: Nullable<ExecutionContext>,
+    // TODO: refactor using smart pointers
+    // once compiler supports it
+    //calling_context: Nullable<ExecutionContext>,
+    //sub_context: Nullable<ExecutionContext>,
 }
 
 
@@ -284,22 +235,70 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     // self.calling_context.is_null()
     // true
     }
-
+    #[inline(always)]
     fn is_leaf(self: @ExecutionContext) { //TODO implement this(returns a bool)
     // self.sub_context.is_null()
     }
 
+    #[inline(always)]
     fn is_reverted(self: @ExecutionContext) -> bool {
         self.dynamic_context.reverted()
     }
 
+    #[inline(always)]
     fn is_stopped(self: @ExecutionContext) -> bool {
         self.dynamic_context.stopped()
     }
 
+    #[inline(always)]
+    fn call_context(self: @ExecutionContext) -> CallContext {
+        *self.static_context.call_context
+    }
+
+    #[inline(always)]
+    fn destroy_contracts(self: @ExecutionContext) -> Span<EthAddress> {
+        self.dynamic_context.destroy_contracts.span()
+    }
+
+    #[inline(always)]
+    fn events(self: @ExecutionContext) -> Span<Event> {
+        self.dynamic_context.events.span()
+    }
+
+    #[inline(always)]
+    fn create_addresses(self: @ExecutionContext) -> Span<EthAddress> {
+        self.dynamic_context.create_addresses.span()
+    }
+
+    #[inline(always)]
+    fn revert_contract_state(self: @ExecutionContext) -> @Felt252Dict<felt252> {
+        self.dynamic_context.revert_contract_state
+    }
+
+    #[inline(always)]
+    fn return_data(self: @ExecutionContext) -> Span<u8> {
+        self.dynamic_context.return_data.span()
+    }
+
+    #[inline(always)]
+    fn starknet_address(self: @ExecutionContext) -> ContractAddress {
+        *self.static_context.starknet_address
+    }
+
+    #[inline(always)]
+    fn evm_address(self: @ExecutionContext) -> EthAddress {
+        *self.static_context.evm_address
+    }
+
+    #[inline(always)]
+    fn is_read_only(self: @ExecutionContext) -> bool {
+        *self.static_context.read_only
+    }
+
     /// Returns if starknet contract address is an EOA
+    #[inline(always)]
     fn is_caller_eoa(self: @ExecutionContext) -> bool {
-        if get_caller_address() == self.static_context.starknet_address() {
+        if get_caller_address() == self.starknet_address() {
             return true;
         };
         false
@@ -307,6 +306,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     // TODO: Implement print_debug
     /// Debug print the execution context.
+    #[inline(always)]
     fn print_debug(ref self: ExecutionContext) {
         // debug::print_felt252('gas used');
         // self.gas_used.print();
@@ -322,8 +322,8 @@ impl DefaultExecutionContext of Default<ExecutionContext> {
             program_counter: 0,
             stack: Default::default(),
             memory: Default::default(),
-        // calling_context: Default::default(),
-        // sub_context: Default::default(),
+            // calling_context: Default::default(),
+            // sub_context: Default::default(),
 
         }
     }

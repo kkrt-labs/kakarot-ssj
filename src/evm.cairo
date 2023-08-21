@@ -21,6 +21,7 @@ fn execute(
         call_context, starknet_address, evm_address, gas_limit, gas_price, returned_data, false
     );
     // Compute the intrinsic gas cost for the current transaction and increase the gas used.
+    //TODO: Implement Wait for Starnet gas calculation
     // ctx.process_intrinsic_gas_cost();
     // Print the execution context.
     ctx.print_debug();

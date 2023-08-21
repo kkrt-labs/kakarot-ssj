@@ -72,10 +72,10 @@ fn test_execution_context_new() {
 
     // Then
     let call_context = setup_call_context();
-    assert(execution_context.static_context.call_context == call_context, 'wrong call_context');
+    assert(execution_context.call_context() == call_context, 'wrong call_context');
     assert(execution_context.program_counter == program_counter, 'wrong program_counter');
     assert(execution_context.stack.is_empty(), 'wrong stack');
-    assert(execution_context.dynamic_context.stopped == stopped, 'wrong stopped');
+    assert(execution_context.is_stopped() == stopped, 'wrong stopped');
     assert(
         execution_context.dynamic_context.return_data == Default::default(), 'wrong return_data'
     );
@@ -125,7 +125,7 @@ fn test_execution_context_revert() {
 
     // Then
     assert(execution_context.is_reverted() == true, 'should be reverted');
-    assert(execution_context.dynamic_context.return_data() == revert_reason, 'wrong revert reason');
+    assert(execution_context.return_data() == revert_reason, 'wrong revert reason');
 }
 
 #[test]

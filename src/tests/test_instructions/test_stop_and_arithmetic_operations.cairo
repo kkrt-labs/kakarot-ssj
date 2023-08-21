@@ -1,6 +1,7 @@
 use kakarot::tests::test_utils::setup_execution_context;
 use kakarot::instructions::StopAndArithmeticOperationsTrait;
 use kakarot::stack::StackTrait;
+use kakarot::context::ExecutionContextTrait;
 use option::OptionTrait;
 use integer::BoundedInt;
 use traits::{TryInto, Into};
@@ -15,7 +16,7 @@ fn test_exec_stop() {
     ctx.exec_stop();
 
     // Then
-    assert(ctx.dynamic_context.stopped, 'ctx not stopped');
+    assert(ctx.is_stopped(), 'ctx not stopped');
 }
 
 #[test]
