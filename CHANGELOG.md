@@ -12,6 +12,8 @@ and this project adheres to
 
 - refactor(22/08/2023): add result-based error management in execution context
   run method.
+- refactor(21/08/2023): wrap StaticExecutionContext and DynamicExecutionContext
+  in boxes
 - tooling: added scripts for gas snapshots generation/comparison. bumped scarb
   version to use nightlies.
 - refactor(21/08/2023): add result-based error management in stack methods and
