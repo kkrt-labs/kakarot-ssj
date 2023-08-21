@@ -31,12 +31,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a + b: integer result of the addition modulo 2^256.
     /// # Specification: https://www.evm.codes/#01?fork=shanghai
     fn exec_add(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = match self.stack.pop_n(2) {
-            Result::Ok(popped) => popped,
-            Result::Err(err) => {
-                return Result::Err(err);
-            }
-        };
+        let popped = self.stack.pop_n(2)?;
 
         // Compute the addition
         let (result, _) = u256_overflowing_add(*popped[0], *popped[1]);
@@ -50,12 +45,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a * b: integer result of the multiplication modulo 2^256.
     /// # Specification: https://www.evm.codes/#02?fork=shanghai
     fn exec_mul(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = match self.stack.pop_n(2) {
-            Result::Ok(popped) => popped,
-            Result::Err(err) => {
-                return Result::Err(err);
-            }
-        };
+        let popped = self.stack.pop_n(2)?;
 
         // Compute the multiplication
         let (result, _) = u256_overflow_mul(*popped[0], *popped[1]);
@@ -69,12 +59,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a - b: integer result of the subtraction modulo 2^256.
     /// # Specification: https://www.evm.codes/#03?fork=shanghai
     fn exec_sub(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = match self.stack.pop_n(2) {
-            Result::Ok(popped) => popped,
-            Result::Err(err) => {
-                return Result::Err(err);
-            }
-        };
+        let popped = self.stack.pop_n(2)?;
 
         // Compute the substraction
         let (result, _) = u256_overflow_sub(*popped[0], *popped[1]);
@@ -88,12 +73,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a / b: integer result of the integer division. 
     /// # Specification: https://www.evm.codes/#04?fork=shanghai
     fn exec_div(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = match self.stack.pop_n(2) {
-            Result::Ok(popped) => popped,
-            Result::Err(err) => {
-                return Result::Err(err);
-            }
-        };
+        let popped = self.stack.pop_n(2)?;
 
         let a: u256 = *popped[0];
         let b: u256 = *popped[1];
@@ -116,12 +96,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#05?fork=shanghai
     fn exec_sdiv(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = match self.stack.pop_n(2) {
-            Result::Ok(popped) => popped,
-            Result::Err(err) => {
-                return Result::Err(err);
-            }
-        };
+        let popped = self.stack.pop_n(2)?;
         let a = *popped[0];
         let b = *popped[1];
 
@@ -142,12 +117,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a % b: integer result of the integer modulo. If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#06?fork=shanghai
     fn exec_mod(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = match self.stack.pop_n(2) {
-            Result::Ok(popped) => popped,
-            Result::Err(err) => {
-                return Result::Err(err);
-            }
-        };
+        let popped = self.stack.pop_n(2)?;
 
         let a: u256 = *popped[0];
         let b: u256 = *popped[1];
@@ -170,12 +140,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// All values are treated as two’s complement signed 256-bit integers. Note the overflow semantic when −2^255 is negated.
     /// # Specification: https://www.evm.codes/#07?fork=shanghai
     fn exec_smod(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = match self.stack.pop_n(2) {
-            Result::Ok(popped) => popped,
-            Result::Err(err) => {
-                return Result::Err(err);
-            }
-        };
+        let popped = self.stack.pop_n(2)?;
 
         let a: u256 = *popped[0];
         let b: u256 = *popped[1];
@@ -197,12 +162,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// All intermediate calculations of this operation are not subject to the 2256 modulo.
     /// # Specification: https://www.evm.codes/#08?fork=shanghai
     fn exec_addmod(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = match self.stack.pop_n(3) {
-            Result::Ok(popped) => popped,
-            Result::Err(err) => {
-                return Result::Err(err);
-            }
-        };
+        let popped = self.stack.pop_n(3)?;
 
         let a: u256 = *popped[0];
         let b: u256 = *popped[1];
@@ -228,12 +188,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#09?fork=shanghai
     fn exec_mulmod(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = match self.stack.pop_n(3) {
-            Result::Ok(popped) => popped,
-            Result::Err(err) => {
-                return Result::Err(err);
-            }
-        };
+        let popped = self.stack.pop_n(3)?;
 
         let a: u256 = *popped[0];
         let b: u256 = *popped[1];
@@ -258,12 +213,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a ** b: integer result of raising a to the bth power modulo 2^256.
     /// # Specification: https://www.evm.codes/#0a?fork=shanghai
     fn exec_exp(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = match self.stack.pop_n(2) {
-            Result::Ok(popped) => popped,
-            Result::Err(err) => {
-                return Result::Err(err);
-            }
-        };
+        let popped = self.stack.pop_n(2)?;
         let a = *popped[0];
         let b = *popped[1];
 
@@ -291,12 +241,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// # Specification: https://www.evm.codes/#0b?fork=shanghai
     /// Complex opcode, check: https://ethereum.github.io/yellowpaper/paper.pdf
     fn exec_signextend(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = match self.stack.pop_n(2) {
-            Result::Ok(popped) => popped,
-            Result::Err(err) => {
-                return Result::Err(err);
-            }
-        };
+        let popped = self.stack.pop_n(2)?;
         let b = *popped[0];
         let x = *popped[1];
 

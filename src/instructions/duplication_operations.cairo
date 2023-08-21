@@ -20,14 +20,7 @@ mod internal {
     fn exec_dup_i(ref context: ExecutionContext, i: NonZero<u8>) -> Result<(), EVMError> {
         let i: u8 = i.into();
 
-        let item = match context.stack.peek_at((i - 1).into()) {
-            Result::Ok(item) => {
-                item
-            },
-            Result::Err(err) => {
-                return Result::Err(err);
-            }
-        };
+        let item = context.stack.peek_at((i - 1).into())?;
         context.stack.push(item);
         Result::Ok(())
     }

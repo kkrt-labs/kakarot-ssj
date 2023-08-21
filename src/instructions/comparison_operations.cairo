@@ -50,12 +50,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x16 - AND
     /// # Specification: https://www.evm.codes/#16?fork=shanghai
     fn exec_and(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = match self.stack.pop_n(2) {
-            Result::Ok(popped) => popped,
-            Result::Err(e) => {
-                return Result::Err(e);
-            }
-        };
+        let popped = self.stack.pop_n(2)?;
         let a = *popped[0];
         let b = *popped[1];
         let result = a & b;
@@ -72,12 +67,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x18 - XOR operation
     /// # Specification: https://www.evm.codes/#18?fork=shanghai
     fn exec_xor(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = match self.stack.pop_n(2) {
-            Result::Ok(popped) => popped,
-            Result::Err(e) => {
-                return Result::Err(e);
-            }
-        };
+        let popped = self.stack.pop_n(2)?;
         let a = *popped[0];
         let b = *popped[1];
         let result = a ^ b;
@@ -89,12 +79,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// Bitwise NOT operation
     /// # Specification: https://www.evm.codes/#19?fork=shanghai
     fn exec_not(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let a = match self.stack.pop() {
-            Result::Ok(a) => a,
-            Result::Err(e) => {
-                return Result::Err(e);
-            },
-        };
+        let a = self.stack.pop()?;
         let result = ~a;
         self.stack.push(result);
         Result::Ok(())
