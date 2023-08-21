@@ -8,10 +8,10 @@
 //! let val_1: u256 = 1.into();
 //! let val_2: u256 = 1.into();
 
-//! stack.push(val_1);
-//! stack.push(val_2);
+//! stack.push(val_1)?;
+//! stack.push(val_2)?;
 
-//! let value = stack.pop();
+//! let value = stack.pop()?;
 //! ```
 
 // Core lib imports
@@ -19,12 +19,12 @@ use dict::Felt252DictTrait;
 use option::OptionTrait;
 use array::ArrayTrait;
 use traits::Into;
-use result::ResultTrait;
+use result::{ResultTrait, Result};
 use kakarot::utils::constants;
 use debug::PrintTrait;
 use box::BoxTrait;
 use nullable::{nullable_from_box, NullableTrait};
-use kakarot::errors;
+use kakarot::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW};
 
 
 // TODO remove this trait once merged in corelib
@@ -47,12 +47,12 @@ struct Stack {
 
 trait StackTrait {
     fn new() -> Stack;
-    fn push(ref self: Stack, item: u256) -> ();
-    fn pop(ref self: Stack) -> Option<u256>;
-    fn pop_n(ref self: Stack, n: usize) -> Array<u256>;
+    fn push(ref self: Stack, item: u256) -> Result<(), EVMError>;
+    fn pop(ref self: Stack) -> Result<u256, EVMError>;
+    fn pop_n(ref self: Stack, n: usize) -> Result<Array<u256>, EVMError>;
     fn peek(ref self: Stack) -> Option<u256>;
-    fn peek_at(ref self: Stack, index: usize) -> u256;
-    fn swap_i(ref self: Stack, index: usize);
+    fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError>;
+    fn swap_i(ref self: Stack, index: usize) -> Result<(), EVMError>;
     fn len(self: @Stack) -> usize;
     fn is_empty(self: @Stack) -> bool;
 }
@@ -65,35 +65,34 @@ impl StackImpl of StackTrait {
     }
 
     /// Pushes a new bytes32 word onto the stack. 
-    ///
-    /// # Panics
-    /// If this operation would overflow the stack, 
-    /// panics with a StackOverflow error.
-    fn push(ref self: Stack, item: u256) -> () {
+    /// If the stack is full, returns with a StackOverflow error.
+    fn push(ref self: Stack, item: u256) -> Result<(), EVMError> {
         // we can store at most 1024 256-bits words
         if self.len() == constants::STACK_MAX_DEPTH {
-            panic_with_felt252(errors::STACK_OVERFLOW)
+            return Result::Err(EVMError::StackError(STACK_OVERFLOW));
         }
         self.items.insert(self.len.into(), NullableTraitExt::new(item));
         self.len += 1;
+        Result::Ok(())
     }
 
     /// Pops the top item off the stack. If the stack is empty,
-    /// leaves the stack unchanged.
-    fn pop(ref self: Stack) -> Option<u256> {
+    /// returns with a StackOverflow error.
+    fn pop(ref self: Stack) -> Result<u256, EVMError> {
         if self.len() == 0 {
-            return Option::None(());
+            return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
         }
         let last_index = self.len() - 1;
         self.len -= 1;
         let item = self.items.get(last_index.into());
-        Option::Some(item.deref())
+        Result::Ok(item.deref())
     }
 
     /// Pops N elements from the stack.
-    fn pop_n(ref self: Stack, mut n: usize) -> Array<u256> {
+    /// If the stack length is less than than N, returns with a StackUnderflow error.
+    fn pop_n(ref self: Stack, mut n: usize) -> Result<Array<u256>, EVMError> {
         if n > self.len() {
-            panic_with_felt252(errors::STACK_UNDERFLOW);
+            return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
         }
         let mut popped_items = ArrayTrait::<u256>::new();
         loop {
@@ -103,10 +102,11 @@ impl StackImpl of StackTrait {
             popped_items.append(self.pop().unwrap());
             n -= 1;
         };
-        popped_items
+        Result::Ok(popped_items)
     }
 
     /// Peeks at the top item on the stack.
+    /// If the stack is empty, returns None.
     fn peek(ref self: Stack) -> Option<u256> {
         if self.len() == 0 {
             Option::None(())
@@ -119,24 +119,23 @@ impl StackImpl of StackTrait {
 
     /// Peeks at the item at the given index on the stack.
     /// index is 0-based, 0 being the top of the stack.
-    /// # Panics
-    /// If the index is out of bounds, panics with a StackUnderflow error.
-    fn peek_at(ref self: Stack, index: usize) -> u256 {
+    /// If the index is greather than the stack length, returns with a StackUnderflow error.
+    fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError> {
         if index >= self.len() {
-            panic_with_felt252(errors::STACK_UNDERFLOW);
+            return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
         }
 
         let position = self.len() - 1 - index;
         let item = self.items.get(position.into());
 
-        item.deref()
+        Result::Ok(item.deref())
     }
 
     /// Swaps the item at the given index with the item on top of the stack.
     /// index is 0-based, 0 being the top of the stack (unallocated).
-    fn swap_i(ref self: Stack, index: usize) {
+    fn swap_i(ref self: Stack, index: usize) -> Result<(), EVMError> {
         if index >= self.len() {
-            panic_with_felt252('Kakarot: StackUnderflow');
+            return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
         }
         let position_0: felt252 = (self.len() - 1).into();
         let position_item: felt252 = position_0 - index.into();
@@ -144,6 +143,7 @@ impl StackImpl of StackTrait {
         let swapped_item = self.items.get(position_item);
         self.items.insert(position_0, swapped_item.into());
         self.items.insert(position_item, top_item.into());
+        Result::Ok(())
     }
 
     /// Returns the length of the stack.

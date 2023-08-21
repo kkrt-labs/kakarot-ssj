@@ -5,6 +5,7 @@ use kakarot::stack::StackTrait;
 use option::OptionTrait;
 use debug::PrintTrait;
 use integer::BoundedInt;
+use result::ResultTrait;
 
 // ensures all values start from index `from` upto index `to` of stack are `0x0`
 fn ensures_zeros(ref stack: Stack, from: u32, to: u32) {
@@ -19,7 +20,7 @@ fn ensures_zeros(ref stack: Stack, from: u32, to: u32) {
             break;
         }
 
-        assert(stack.peek_at(idx) == 0x00, 'should be zero');
+        assert(stack.peek_at(idx).unwrap() == 0x00, 'should be zero');
         idx += 1;
     }
 }
@@ -55,8 +56,8 @@ fn test_dup1() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -81,8 +82,8 @@ fn test_dup2() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -107,8 +108,8 @@ fn test_dup3() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -133,8 +134,8 @@ fn test_dup4() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -159,8 +160,8 @@ fn test_dup5() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -185,8 +186,8 @@ fn test_dup6() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -211,8 +212,8 @@ fn test_dup7() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -237,8 +238,8 @@ fn test_dup8() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -263,8 +264,8 @@ fn test_dup9() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -289,8 +290,8 @@ fn test_dup10() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -315,8 +316,8 @@ fn test_dup11() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -341,8 +342,8 @@ fn test_dup12() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -367,8 +368,8 @@ fn test_dup13() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -393,8 +394,8 @@ fn test_dup14() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -419,8 +420,8 @@ fn test_dup15() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
@@ -445,8 +446,8 @@ fn test_dup16() {
 
     assert(new_stack_len == old_stack_len + 1, 'len should increase by 1');
 
-    assert(ctx.stack.peek_at(initial_len) == 0x01, 'first inserted spot should be 1');
-    assert(ctx.stack.peek_at(new_stack_len - 1) == 0x01, 'top of stack should be 1');
+    assert(ctx.stack.peek_at(initial_len).unwrap() == 0x01, 'first inserted spot should be 1');
+    assert(ctx.stack.peek_at(new_stack_len - 1).unwrap() == 0x01, 'top of stack should be 1');
 
     ensures_zeros(ref ctx.stack, initial_len + 1, new_stack_len - 1);
 }
