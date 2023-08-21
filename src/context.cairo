@@ -35,7 +35,7 @@ trait CallContextTrait {
 impl CallContextImpl of CallContextTrait {
     #[inline(always)]
     fn new(bytecode: Span<u8>, call_data: Span<u8>, value: u256) -> CallContext {
-        CallContext { bytecode, call_data, value,  }
+        CallContext { bytecode, call_data, value, }
     }
 
     #[inline(always)]
@@ -92,7 +92,7 @@ impl StaticExecutionContextImpl of StaticExecutionContextTrait {
         evm_address: EthAddress,
         read_only: bool
     ) -> StaticExecutionContext {
-        StaticExecutionContext { call_context, starknet_address, evm_address, read_only,  }
+        StaticExecutionContext { call_context, starknet_address, evm_address, read_only, }
     }
 }
 

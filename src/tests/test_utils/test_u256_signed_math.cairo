@@ -152,7 +152,7 @@ fn test_signed_div_rem() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('u256 is 0', ))]
+#[should_panic(expected: ('u256 is 0',))]
 fn test_signed_div_rem_by_zero() {
     //     Zero Division
     assert(
