@@ -115,16 +115,6 @@ impl DynamicExecutionContextImpl of DynamicExecutionContextTrait {
             stopped: false
         }
     }
-
-    #[inline(always)]
-    fn reverted(self: @DynamicExecutionContext) -> bool {
-        *self.reverted
-    }
-
-    #[inline(always)]
-    fn stopped(self: @DynamicExecutionContext) -> bool {
-        *self.stopped
-    }
 }
 
 impl DefaultDynamicExecutionContext of Default<DynamicExecutionContext> {
@@ -151,10 +141,10 @@ struct ExecutionContext {
     program_counter: u32,
     stack: Stack,
     memory: Memory,
-    // TODO: refactor using smart pointers
-    // once compiler supports it
-    //calling_context: Nullable<ExecutionContext>,
-    //sub_context: Nullable<ExecutionContext>,
+// TODO: refactor using smart pointers
+// once compiler supports it
+//calling_context: Nullable<ExecutionContext>,
+//sub_context: Nullable<ExecutionContext>,
 }
 
 
@@ -242,12 +232,12 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     #[inline(always)]
     fn is_reverted(self: @ExecutionContext) -> bool {
-        self.dynamic_context.reverted()
+        *self.dynamic_context.reverted
     }
 
     #[inline(always)]
     fn is_stopped(self: @ExecutionContext) -> bool {
-        self.dynamic_context.stopped()
+        *self.dynamic_context.stopped
     }
 
     #[inline(always)]
@@ -322,8 +312,8 @@ impl DefaultExecutionContext of Default<ExecutionContext> {
             program_counter: 0,
             stack: Default::default(),
             memory: Default::default(),
-            // calling_context: Default::default(),
-            // sub_context: Default::default(),
+        // calling_context: Default::default(),
+        // sub_context: Default::default(),
 
         }
     }
