@@ -73,7 +73,7 @@ mod push {
 
     #[test]
     #[available_gas(27000000)]
-    #[should_panic(expected: ('Kakarot: StackOverflow', ))]
+    #[should_panic(expected: ('Kakarot: StackOverflow',))]
     fn test_should_fail_when_overflow() {
         // Given
         let mut stack = StackTrait::new();
@@ -150,7 +150,7 @@ mod pop {
 
     #[test]
     #[available_gas(50000)]
-    #[should_panic(expected: ('Kakarot: StackUnderflow', ))]
+    #[should_panic(expected: ('Kakarot: StackUnderflow',))]
     fn test_pop_n_should_fail_when_stack_underflow() {
         // Given
         let mut stack = StackTrait::new();
@@ -215,7 +215,7 @@ mod peek {
 
     #[test]
     #[available_gas(35000)]
-    #[should_panic(expected: ('Kakarot: StackUnderflow', ))]
+    #[should_panic(expected: ('Kakarot: StackUnderflow',))]
     fn test_should_fail_when_underflow() {
         // Given
         let mut stack = StackTrait::new();
@@ -262,7 +262,7 @@ mod swap {
 
     #[test]
     #[available_gas(50000)]
-    #[should_panic(expected: ('Kakarot: StackUnderflow', ))]
+    #[should_panic(expected: ('Kakarot: StackUnderflow',))]
     fn test_should_fail_when_index_1_is_underflow() {
         // Given
         let mut stack = StackTrait::new();
@@ -273,7 +273,7 @@ mod swap {
 
     #[test]
     #[available_gas(60000)]
-    #[should_panic(expected: ('Kakarot: StackUnderflow', ))]
+    #[should_panic(expected: ('Kakarot: StackUnderflow',))]
     fn test_should_fail_when_index_2_is_underflow() {
         // Given
         let mut stack = StackTrait::new();

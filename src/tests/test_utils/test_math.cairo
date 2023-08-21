@@ -34,7 +34,7 @@ fn test_wide_add_basic() {
 
     let (sum, overflow) = u256_overflowing_add(a, b);
 
-    let expected = u512 { limb0: 1500, limb1: 0, limb2: 0, limb3: 0,  };
+    let expected = u512 { limb0: 1500, limb1: 0, limb2: 0, limb3: 0, };
 
     let result = u256_wide_add(a, b);
 
@@ -50,7 +50,7 @@ fn test_wide_add_overflow() {
 
     let (sum, overflow) = u256_overflowing_add(a, b);
 
-    let expected = u512 { limb0: 0, limb1: 0, limb2: 1, limb3: 0,  };
+    let expected = u512 { limb0: 0, limb1: 0, limb2: 1, limb3: 0, };
 
     let result = u256_wide_add(a, b);
 
