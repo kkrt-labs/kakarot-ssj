@@ -68,7 +68,7 @@ impl StackImpl of StackTrait {
     ///
     /// # Panics
     /// If this operation would overflow the stack, 
-    /// panics with a StackOverflow error.
+    /// returns with a StackOverflow error.
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError> {
         // we can store at most 1024 256-bits words
         if self.len() == constants::STACK_MAX_DEPTH {
