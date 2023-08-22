@@ -92,17 +92,17 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// Retrieve single byte located at the byte offset of value, starting from the most significant byte.
     fn exec_byte(ref self: ExecutionContext) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
-        let value = *popped[0];
-        let offset = *popped[1];
+        let i = *popped[0];
+        let x = *popped[1];
 
         /// If the byte offset is out of range, we early return with 0.
-        if offset > 31 {
+        if i > 31 {
             self.stack.push(0);
             return Result::Ok(());
         }
 
         // Right shift value by offset bits and then take the least significant byte by applying modulo 256.
-        let result = (value / 2.pow((31 - offset) * 8)) % 256;
+        let result = (x / 2.pow((31 - i) * 8)) % 256;
         self.stack.push(result);
         Result::Ok(())
     }
