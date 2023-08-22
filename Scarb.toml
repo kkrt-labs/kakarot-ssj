@@ -1,15 +1,19 @@
-[package]
+[workspace]
+members = ["crates/*"]
+
+[workspace.package]
+description = "Kakarot is an (zk)-Ethereum Virtual Machine implementation written in Cairo."
+documentation = "https://www.kakarot.org/"
 cairo-version = "2.1.0"
-name = "kakarot"
 version = "0.1.0"
 readme = "README.md"
 repository = "https://github.com/kkrt-labs/kakarot-ssj/"
 license-file = "LICENSE"
 
-[dependencies]
+[workspace.dependencies]
 starknet = "2.1.0"
 
-[[tool.starknet-contract]]
+[[workspace.tool.starknet-contract]]
 
 [scripts]
 install = "bash scripts/install_hook.sh"
