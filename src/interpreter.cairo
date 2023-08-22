@@ -63,7 +63,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
                 // If an error occurred, revert execution context.
                 // Currently, revert reason is a Span<u8>. 
                 context.revert(u256_to_bytes_array(error.into()).span());
-                self.run(ref context);
+            // TODO: Revert logic
             }
         }
     }
@@ -83,6 +83,9 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
 
         let opcode: u8 = *bytecode.at(pc);
+
+        // Increment pc
+        context.program_counter += 1;
 
         // Call the appropriate function based on the opcode.
         if opcode == 0 {
