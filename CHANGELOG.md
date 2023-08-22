@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- tooling: CI now generates gas snapshots artifacts. pre-push hook to compare
+  gas snapshots changes
 - refactor(22/08/2023): add result-based error management in execution context
   run method.
 - refactor(21/08/2023): wrap StaticExecutionContext and DynamicExecutionContext
