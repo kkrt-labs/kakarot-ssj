@@ -19,7 +19,7 @@ def compare_snapshots(current, previous):
     """Compare current and previous snapshots and return differences."""
     worsened = []
     improvements = []
-    
+
     for key in previous:
         if key not in current:
             continue
@@ -30,7 +30,7 @@ def compare_snapshots(current, previous):
             worsened.append(f"{key} {prev} --> {cur} {format(percentage_change, '.2f')} %")
         elif prev > cur:
             improvements.append(f"{key} {prev} --> {cur} | {format(percentage_change, '.2f')} %"  )
-    
+
     return improvements, worsened
 
 def print_colored_output(improvements, worsened, gas_changes):
@@ -39,12 +39,12 @@ def print_colored_output(improvements, worsened, gas_changes):
         print(GREEN + "___IMPROVEMENTS___" + ENDC)
         for elem in improvements:
             print(GREEN + elem + ENDC)
-        
+
         print("\n\n")
         print(RED + "___WORSENED___" + ENDC)
         for elem in worsened:
             print(RED + elem + ENDC)
-        
+
         color = RED if gas_changes > 0 else GREEN
         gas_statement = "performance degradation, gas consumption +" if gas_changes > 0 else "performance improvement, gas consumption"
         print(color + f"Overall gas change: {gas_statement}{format(gas_changes, '.2f')} %" + ENDC)
@@ -60,7 +60,7 @@ def main():
     # Load previous snapshot
     with open("gas_snapshots.json", "r") as f:
         previous_snapshot = json.load(f)
-    
+
     current_snapshots = get_current_gas_snapshots()
     improvements, worsened = compare_snapshots(current_snapshots, previous_snapshot)
     cur_gas, prev_gas = total_gas_used(current_snapshots, previous_snapshot)

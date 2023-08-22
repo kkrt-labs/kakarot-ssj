@@ -3,6 +3,7 @@
 // Internal imports
 use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionContextTrait;
+use kakarot::context::BoxDynamicExecutionContextDestruct;
 use core::TryInto;
 use core::option::OptionTrait;
 use result::ResultTrait;
@@ -11,6 +12,7 @@ use kakarot::errors::EVMError;
 mod internal {
     use kakarot::context::ExecutionContext;
     use kakarot::context::ExecutionContextTrait;
+    use kakarot::context::BoxDynamicExecutionContextDestruct;
     use kakarot::stack::StackTrait;
     use traits::Into;
     use result::ResultTrait;

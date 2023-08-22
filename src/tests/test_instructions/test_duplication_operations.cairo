@@ -2,6 +2,8 @@ use kakarot::instructions::DuplicationOperationsTrait;
 use kakarot::stack::Stack;
 use kakarot::tests::test_utils::setup_execution_context;
 use kakarot::stack::StackTrait;
+use kakarot::context::BoxDynamicExecutionContextDestruct;
+
 use option::OptionTrait;
 use debug::PrintTrait;
 use integer::BoundedInt;

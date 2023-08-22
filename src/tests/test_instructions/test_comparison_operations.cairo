@@ -4,6 +4,7 @@ use kakarot::stack::StackTrait;
 use option::OptionTrait;
 use debug::PrintTrait;
 use integer::BoundedInt;
+use kakarot::context::BoxDynamicExecutionContextDestruct;
 
 #[test]
 #[available_gas(20000000)]

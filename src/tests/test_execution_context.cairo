@@ -15,6 +15,7 @@ use kakarot::context::{CallContext, CallContextTrait, ExecutionContext, Executio
 //TODO remove import once merged in corelib
 use kakarot::tests::test_utils::{setup_call_context, setup_execution_context, CallContextPartialEq};
 use kakarot::tests::test_utils;
+use kakarot::context::BoxDynamicExecutionContextDestruct;
 
 // TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)
 #[inline(never)]
@@ -62,7 +63,7 @@ fn test_execution_context_new() {
     let read_only: bool = false;
 
     // When
-    let execution_context = ExecutionContextTrait::new(
+    let mut execution_context = ExecutionContextTrait::new(
         call_context, starknet_address, evm_address, gas_limit, gas_price, return_data, read_only
     );
 

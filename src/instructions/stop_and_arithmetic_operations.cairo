@@ -10,6 +10,7 @@ use option::OptionTrait;
 
 use kakarot::context::ExecutionContext;
 use kakarot::context::ExecutionContextTrait;
+use kakarot::context::BoxDynamicExecutionContextDestruct;
 use kakarot::stack::StackTrait;
 use kakarot::utils::u256_signed_math::u256_signed_div_rem;
 use kakarot::utils::math::{Exponentiation, ExponentiationModulo, u256_wide_add};
