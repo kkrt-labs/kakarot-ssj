@@ -14,5 +14,5 @@ results = {match[0]: int(match[1]) for match in matches}
 sorted_results = {k: results[k] for k in sorted(results.keys())}
 
 # Dump the results to a JSON file
-with open("gas_snapshots.json", "w") as outfile:
+with open("gas_snapshot.json", "w") as outfile:
     json.dump(sorted_results, outfile, indent=4)
