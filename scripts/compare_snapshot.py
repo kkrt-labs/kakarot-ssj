@@ -1,11 +1,54 @@
 import subprocess
 import re
 import json
+import os
 
 # ANSI escape codes for coloring text
 GREEN = '\033[92m'
 RED = '\033[91m'
 ENDC = '\033[0m'
+
+def get_previous_snapshot():
+
+    try:
+        REPO = "kkrt-labs/kakarot-ssj"
+
+        # Fetch the list of workflow runs
+        cmd = f"curl -H 'Accept: application/vnd.github.v3+json' 'https://api.github.com/repos/{REPO}/actions/runs'"
+        result = subprocess.check_output(cmd, shell=True)
+        runs = json.loads(result)
+
+        # Find the latest successful run
+        latest_successful_run = next(run for run in runs["workflow_runs"] if run["conclusion"] == "success")
+
+        # Fetch the artifacts for that run
+        run_id = latest_successful_run["id"]
+        cmd = f"curl -H 'Accept: application/vnd.github.v3+json' 'https://api.github.com/repos/{REPO}/actions/runs/{run_id}/artifacts'"
+        result = subprocess.check_output(cmd, shell=True)
+        artifacts = json.loads(result)
+
+        # Find the gas_snapshots.json artifact
+        snapshot_artifact = next(artifact for artifact in artifacts["artifacts"] if artifact["name"] == "gas-snapshot")
+
+        # Download the gas_snapshots.json file
+        cmd = f"curl -L -o gas_snapshots.json -H 'Accept: application/vnd.github.v3+json' '{snapshot_artifact['archive_download_url']}'"
+        subprocess.check_call(cmd, shell=True)
+
+        # Load and return the snapshot data
+        with open("gas_snapshots.json", "r") as f:
+            return json.load(f)
+
+    except subprocess.CalledProcessError:
+        print("Error: Failed to execute a subprocess command.")
+    except StopIteration:
+        print("Error: Couldn't find the desired workflow run or artifact.")
+    except FileNotFoundError:
+        print("Error: Couldn't find the gas_snapshots.json file after download.")
+    except json.JSONDecodeError:
+        print("Error: Failed to parse JSON data.")
+
+    return {}
+
 
 def get_current_gas_snapshots():
     """Execute command and return current gas snapshots."""
@@ -56,9 +99,10 @@ def total_gas_used(current,previous):
 def main():
     """Main function to execute the snapshot test framework."""
     # Load previous snapshot
-    with open("gas_snapshots.json", "r") as f:
-        previous_snapshot = json.load(f)
-
+    previous_snapshot = get_previous_snapshot()
+    if previous_snapshot == {}:
+        print("Error: Failed to load previous snapshot.")
+        return
     current_snapshots = get_current_gas_snapshots()
     improvements, worsened = compare_snapshots(current_snapshots, previous_snapshot)
     cur_gas, prev_gas = total_gas_used(current_snapshots, previous_snapshot)
