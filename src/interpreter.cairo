@@ -8,14 +8,15 @@ use traits::Into;
 use kakarot::context::{ExecutionContext, NullableDestruct, BoxDestruct};
 use kakarot::context::{ExecutionContextTrait, CallContextTrait};
 use kakarot::context::ExecutionSummary;
-use kakarot::utils;
-use kakarot::errors;
+use kakarot::utils::{helpers::u256_to_bytes_array};
+use kakarot::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use kakarot::instructions::{
     duplication_operations, environmental_information, exchange_operations, logging_operations,
     memory_operations, push_operations, sha3, StopAndArithmeticOperationsTrait,
     ComparisonAndBitwiseOperationsTrait, system_operations, block_information,
     DuplicationOperationsTrait,
 };
+use result::ResultTrait;
 
 
 /// EVM instructions as defined in the Yellow Paper and the EIPs.
@@ -28,7 +29,9 @@ trait EVMInterpreterTrait {
     /// Execute the EVM bytecode.
     fn run(ref self: EVMInterpreter, ref context: ExecutionContext);
     /// Decode the current opcode and execute associated function.
-    fn decode_and_execute(ref self: EVMInterpreter, ref context: ExecutionContext);
+    fn decode_and_execute(
+        ref self: EVMInterpreter, ref context: ExecutionContext
+    ) -> Result<(), EVMError>;
 }
 
 
@@ -42,132 +45,152 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
     /// Execute the EVM bytecode.
     fn run(ref self: EVMInterpreter, ref context: ExecutionContext) {
         // Decode and execute the current opcode.
-        self.decode_and_execute(ref context);
-        // Check if the execution is complete.
-        if !(context.stopped()) {
-            // Execute the next opcode.
-            self.run(ref context);
+        let result = self.decode_and_execute(ref context);
+
+        match result {
+            Result::Ok(_) => {
+                // Check if the execution is complete.
+                if !(context.stopped()) {
+                    // Execute the next opcode.
+                    self.run(ref context);
+                }
+                if context.reverted() { // TODO: Revert logic
+                }
+                if context.stopped() { // TODO: stopped logic
+                }
+            },
+            Result::Err(error) => {
+                // If an error occurred, revert execution context.
+                // Currently, revert reason is a Span<u8>. 
+                context.revert(u256_to_bytes_array(error.into()).span());
+            // TODO: Revert logic
+            }
         }
     }
 
     ///  Decode the current opcode and execute associated function.
-    fn decode_and_execute(ref self: EVMInterpreter, ref context: ExecutionContext) {
+    fn decode_and_execute(
+        ref self: EVMInterpreter, ref context: ExecutionContext
+    ) -> Result<(), EVMError> {
         // Retrieve the current program counter.
         let pc = context.program_counter;
-        let bytecode = context.call_context().bytecode(); //Note: here, bytecode returns a Span
+        let bytecode = context.call_context().bytecode();
         let bytecode_len = bytecode.len();
 
         // Check if PC is not out of bounds.
         if pc >= bytecode_len {
-            panic_with_felt252(errors::PC_OUT_OF_BOUNDS);
+            return Result::Err(EVMError::InvalidProgramCounter(PC_OUT_OF_BOUNDS));
         }
 
         let opcode: u8 = *bytecode.at(pc);
 
+        // Increment pc
+        context.program_counter += 1;
+
         // Call the appropriate function based on the opcode.
         if opcode == 0 {
             // STOP
-            context.exec_stop();
+            context.exec_stop()?;
         }
         if opcode == 1 {
             // ADD
-            context.exec_add();
+            context.exec_add()?;
         }
         if opcode == 2 {
             // MUL
-            context.exec_mul();
+            context.exec_mul()?;
         }
         if opcode == 3 {
             // SUB
-            context.exec_sub();
+            context.exec_sub()?;
         }
         if opcode == 4 {
             // DIV
-            context.exec_div();
+            context.exec_div()?;
         }
         if opcode == 5 {
             // SDIV
-            context.exec_sdiv();
+            context.exec_sdiv()?;
         }
         if opcode == 6 {
             // MOD
-            context.exec_mod();
+            context.exec_mod()?;
         }
         if opcode == 7 {
             // SMOD
-            context.exec_smod();
+            context.exec_smod()?;
         }
         if opcode == 8 {
             // ADDMOD
-            context.exec_addmod();
+            context.exec_addmod()?;
         }
         if opcode == 9 {
             // MULMOD
-            context.exec_mulmod();
+            context.exec_mulmod()?;
         }
         if opcode == 10 {
             // EXP
-            context.exec_exp();
+            context.exec_exp()?;
         }
         if opcode == 11 {
             // SIGNEXTEND
-            context.exec_signextend();
+            context.exec_signextend()?;
         }
         if opcode == 16 {
             // LT
-            context.exec_lt();
+            context.exec_lt()?;
         }
         if opcode == 17 {
             // GT
-            context.exec_gt();
+            context.exec_gt()?;
         }
         if opcode == 18 {
             // SLT
-            context.exec_slt();
+            context.exec_slt()?;
         }
         if opcode == 19 {
             // SGT
-            context.exec_sgt();
+            context.exec_sgt()?;
         }
         if opcode == 20 {
             // EQ
-            context.exec_eq();
+            context.exec_eq()?;
         }
         if opcode == 21 {
             // ISZERO
-            context.exec_iszero();
+            context.exec_iszero()?;
         }
         if opcode == 22 {
             // AND
-            context.exec_and();
+            context.exec_and()?;
         }
         if opcode == 23 {
             // OR
-            context.exec_or();
+            context.exec_or()?;
         }
         if opcode == 24 {
             // XOR
-            context.exec_xor();
+            context.exec_xor()?;
         }
         if opcode == 25 {
             // NOT
-            context.exec_not();
+            context.exec_not()?;
         }
         if opcode == 26 {
             // BYTE
-            context.exec_byte();
+            context.exec_byte()?;
         }
         if opcode == 27 {
             // SHL
-            context.exec_shl();
+            context.exec_shl()?;
         }
         if opcode == 28 {
             // SHR
-            context.exec_shr();
+            context.exec_shr()?;
         }
         if opcode == 29 {
             // SAR
-            context.exec_sar();
+            context.exec_sar()?;
         }
         if opcode == 48 {
             // ADDRESS
@@ -317,6 +340,10 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
             // JUMPDEST
             memory_operations::exec_jumpdest(ref context);
         }
+        if opcode == 95 {
+            // PUSH0
+            push_operations::exec_push0(ref context);
+        }
         if opcode == 96 {
             // PUSH1
             push_operations::exec_push1(ref context);
@@ -447,67 +474,67 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 128 {
             // DUP1
-            context.exec_dup1();
+            context.exec_dup1()?;
         }
         if opcode == 129 {
             // DUP2
-            context.exec_dup2();
+            context.exec_dup2()?;
         }
         if opcode == 130 {
             // DUP3
-            context.exec_dup3();
+            context.exec_dup3()?;
         }
         if opcode == 131 {
             // DUP4
-            context.exec_dup4();
+            context.exec_dup4()?;
         }
         if opcode == 132 {
             // DUP5
-            context.exec_dup5();
+            context.exec_dup5()?;
         }
         if opcode == 133 {
             // DUP6
-            context.exec_dup6();
+            context.exec_dup6()?;
         }
         if opcode == 134 {
             // DUP7
-            context.exec_dup7();
+            context.exec_dup7()?;
         }
         if opcode == 135 {
             // DUP8
-            context.exec_dup8();
+            context.exec_dup8()?;
         }
         if opcode == 136 {
             // DUP9
-            context.exec_dup9();
+            context.exec_dup9()?;
         }
         if opcode == 137 {
             // DUP10
-            context.exec_dup10();
+            context.exec_dup10()?;
         }
         if opcode == 138 {
             // DUP11
-            context.exec_dup11();
+            context.exec_dup11()?;
         }
         if opcode == 139 {
             // DUP12
-            context.exec_dup12();
+            context.exec_dup12()?;
         }
         if opcode == 140 {
             // DUP13
-            context.exec_dup13();
+            context.exec_dup13()?;
         }
         if opcode == 141 {
             // DUP14
-            context.exec_dup14();
+            context.exec_dup14()?;
         }
         if opcode == 142 {
             // DUP15
-            context.exec_dup15();
+            context.exec_dup15()?;
         }
         if opcode == 143 {
             // DUP16
-            context.exec_dup16();
+            context.exec_dup16()?;
         }
         if opcode == 144 {
             // SWAP1
@@ -635,6 +662,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         // Unknown opcode
         unknown_opcode(opcode);
+        Result::Ok(())
     }
 }
 

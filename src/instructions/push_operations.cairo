@@ -12,6 +12,10 @@ mod internal {
     fn exec_push_i(ref context: ExecutionContext, i: u8) {}
 }
 
+/// 5F - PUSH0 operation
+/// # Specification: https://www.evm.codes/#5f?fork=shanghai
+fn exec_push0(ref context: ExecutionContext) {}
+
 
 /// 0x60 - PUSH1 operation
 /// # Specification: https://www.evm.codes/#60?fork=shanghai

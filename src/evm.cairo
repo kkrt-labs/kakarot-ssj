@@ -20,11 +20,7 @@ fn execute(
     let mut ctx = ExecutionContextTrait::new(
         call_context, starknet_address, evm_address, gas_limit, gas_price, returned_data, false
     );
-    // Compute the intrinsic gas cost for the current transaction and increase the gas used.
-    //TODO: Implement Wait for Starnet gas calculation
-    // ctx.process_intrinsic_gas_cost();
-    // Print the execution context.
-    ctx.print_debug();
+
     let mut interpreter = EVMInterpreterTrait::new();
     // Execute the transaction.
     interpreter.run(ref ctx)
