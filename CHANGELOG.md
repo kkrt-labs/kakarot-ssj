@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- refactor(22/08/2023): add result-based error management in execution context
+  run method.
 - tooling: added scripts for gas snapshots generation/comparison. bumped scarb
   version to use nightlies.
 - refactor(21/08/2023): add result-based error management in stack methods and
