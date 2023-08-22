@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- opcode(22/09/2023): add 0x1A-BYTE opcode
 - tooling: CI now generates gas snapshots artifacts. pre-push hook to compare
   gas snapshots changes
 - refactor(22/08/2023): add result-based error management in execution context

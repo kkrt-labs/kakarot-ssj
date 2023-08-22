@@ -6,6 +6,7 @@ use kakarot::errors::STACK_UNDERFLOW;
 use option::{OptionTrait};
 use kakarot::errors::EVMError;
 use result::ResultTrait;
+use kakarot::utils::math::Exponentiation;
 use kakarot::context::BoxDynamicExecutionContextDestruct;
 
 #[generate_trait]
@@ -88,7 +89,21 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
 
     /// 0x1A - BYTE
     /// # Specification: https://www.evm.codes/#1a?fork=shanghai
+    /// Retrieve single byte located at the byte offset of value, starting from the most significant byte.
     fn exec_byte(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = self.stack.pop_n(2)?;
+        let i = *popped[0];
+        let x = *popped[1];
+
+        /// If the byte offset is out of range, we early return with 0.
+        if i > 31 {
+            self.stack.push(0);
+            return Result::Ok(());
+        }
+
+        // Right shift value by offset bits and then take the least significant byte by applying modulo 256.
+        let result = (x / 2.pow((31 - i) * 8)) % 256;
+        self.stack.push(result);
         Result::Ok(())
     }
 
