@@ -130,7 +130,7 @@ fn load_word(mut len: usize, words: Span<u8>) -> u256 {
     current
 }
 
-/// Converts a u256 to a bytes array represented by an array of felts (1 felt represents 1 byte).
+/// Converts a u256 to a bytes array represented by an array of u8 values.
 ///
 /// # Arguments
 /// * `value` - The value to convert
