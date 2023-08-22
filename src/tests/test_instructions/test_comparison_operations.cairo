@@ -164,3 +164,35 @@ fn test_not_random_uint() {
         'stack top should be 0x7553'
     );
 }
+
+#[test]
+#[available_gas(20000000)]
+fn test_byte_random_u256() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0x08);
+    ctx.stack.push(0xf7ec8b2ea4a6b7fd5f4ed41b66197fcc14c4a37d68275ea151d899bb4d7c2ae7);
+
+    // When
+    ctx.exec_byte();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x5f, 'stack top should be 0x22');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_byte_offset_out_of_range() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(32_u256);
+    ctx.stack.push(0x01be893aefcfa1592f60622b80d45c2db74281d2b9e10c14b0f6ce7c8f58e209);
+
+    // When
+    ctx.exec_byte();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
+}
