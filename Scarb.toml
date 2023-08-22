@@ -10,3 +10,6 @@ license-file = "LICENSE"
 starknet = "2.1.0"
 
 [[tool.starknet-contract]]
+
+[scripts]
+install = "bash scripts/install_hook.sh"

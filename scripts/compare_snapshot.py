@@ -1,13 +1,83 @@
 import subprocess
 import re
 import json
+import os
 
 # ANSI escape codes for coloring text
 GREEN = '\033[92m'
 RED = '\033[91m'
 ENDC = '\033[0m'
 
-def get_current_gas_snapshots():
+def get_github_token_from_env(file_path=".env"):
+    """Read the .env file and extract the GITHUB_TOKEN value."""
+    try:
+        with open(file_path, "r") as file:
+            for line in file:
+                if line.startswith("#"):
+                    continue
+                key, value = line.strip().split('=', 1)
+                if key == "GITHUB_TOKEN":
+                    return value
+    except FileNotFoundError:
+        print(f"Error: {file_path} file not found.")
+    except ValueError:
+        print(f"Error: Invalid format in {file_path}. Expected 'KEY=VALUE' format.")
+    return None
+
+def get_previous_snapshot():
+    REPO = "enitrat/kakarot-ssj"  # Replace with your GitHub username and repo name
+    GITHUB_TOKEN = get_github_token_from_env()
+
+    try:
+        REPO = "kkrt-labs/kakarot-ssj"
+
+        # Fetch the list of workflow runs
+        cmd = f"curl -s -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' 'https://api.github.com/repos/{REPO}/actions/runs'"
+        result = subprocess.check_output(cmd, shell=True)
+        runs = json.loads(result)
+
+        # Find the latest successful run
+        latest_successful_run = next(run for run in runs["workflow_runs"] if run["conclusion"] == "success")
+
+        # Fetch the artifacts for that run
+        run_id = latest_successful_run["id"]
+        cmd = f"curl -s -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' 'https://api.github.com/repos/{REPO}/actions/runs/{run_id}/artifacts'"
+        result = subprocess.check_output(cmd, shell=True)
+        artifacts = json.loads(result)
+
+        # Find the gas_snapshot.json artifact
+        snapshot_artifact = next(artifact for artifact in artifacts["artifacts"] if artifact["name"] == "gas-snapshot")
+
+        # Download the gas_snapshots.json archive
+        archive_name = "gas_snapshot.zip"
+        json_name = "gas_snapshot.json"
+        cmd = f"curl -s -L -o {archive_name} -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' '{snapshot_artifact['archive_download_url']}'"
+        subprocess.check_call(cmd, shell=True)
+
+        # Extract the archive to get gas_snapshots.json using the unzip command
+        cmd = f"unzip -o {archive_name}"  # -o option is to overwrite files without prompting
+        subprocess.check_call(cmd, shell=True)
+
+        with open(json_name, "r") as f:
+            # Load and return the snapshot data
+            text = f.read()
+
+        os.remove(json_name)
+        os.remove(archive_name)
+        return json.loads(text)
+    except subprocess.CalledProcessError:
+        print("Error: Failed to execute a subprocess command.")
+    except StopIteration:
+        print("Error: Couldn't find the desired workflow run or artifact.")
+    except FileNotFoundError:
+        print("Error: Couldn't find the gas_snapshot.json file after download.")
+    except json.JSONDecodeError:
+        print("Error: Failed to parse JSON data.")
+
+    return {}
+
+
+def get_current_gas_snapshot():
     """Execute command and return current gas snapshots."""
     output = subprocess.check_output("scarb cairo-test", shell=True).decode('utf-8')
     pattern = r"test (.+?) \.\.\. ok \(gas usage est.: (\d+)\)"
@@ -36,20 +106,18 @@ def compare_snapshots(current, previous):
 def print_colored_output(improvements, worsened, gas_changes):
     """Print results in a colored format."""
     if improvements or worsened:
-        print(GREEN + "___IMPROVEMENTS___" + ENDC)
+        print(GREEN + "****IMPROVEMENTS****" + ENDC)
         for elem in improvements:
             print(GREEN + elem + ENDC)
 
-        print("\n\n")
-        print(RED + "___WORSENED___" + ENDC)
+        print("\n")
+        print(RED + "****WORSENED****" + ENDC)
         for elem in worsened:
             print(RED + elem + ENDC)
 
         color = RED if gas_changes > 0 else GREEN
         gas_statement = "performance degradation, gas consumption +" if gas_changes > 0 else "performance improvement, gas consumption"
         print(color + f"Overall gas change: {gas_statement}{format(gas_changes, '.2f')} %" + ENDC)
-
-        exit(1)
 
 def total_gas_used(current,previous):
     """Return the total gas used in the current and previous snapshot."""
@@ -58,10 +126,12 @@ def total_gas_used(current,previous):
 def main():
     """Main function to execute the snapshot test framework."""
     # Load previous snapshot
-    with open("gas_snapshots.json", "r") as f:
-        previous_snapshot = json.load(f)
+    previous_snapshot = get_previous_snapshot()
+    if previous_snapshot == {}:
+        print("Error: Failed to load previous snapshot.")
+        return
 
-    current_snapshots = get_current_gas_snapshots()
+    current_snapshots = get_current_gas_snapshot()
     improvements, worsened = compare_snapshots(current_snapshots, previous_snapshot)
     cur_gas, prev_gas = total_gas_used(current_snapshots, previous_snapshot)
     print_colored_output(improvements, worsened, (cur_gas-prev_gas)*100/prev_gas)

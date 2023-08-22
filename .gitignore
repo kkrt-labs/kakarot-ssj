@@ -23,3 +23,5 @@ target/
 
 build
 
+# Gas snapshots generated with scripts
+gas_snapshot.json

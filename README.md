@@ -65,6 +65,9 @@ This repository is a rewrite of
   repository and clone your fork
   (`git clone https://github.com/<YOUR_USERNAME>/kakarot-ssj`)
 
+- Run `scarb run install` to install the pre-push hook.
+- Add your environment variables to `.env` (see `.env.example` for an example).
+
 ## Usage
 
 ### Build
