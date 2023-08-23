@@ -19,25 +19,23 @@ def get_github_token_from_env(file_path=".env"):
                 if key == "GITHUB_TOKEN":
                     return value
     except FileNotFoundError:
-        print(f"Error: {file_path} file not found.")
+        return None
     except ValueError:
         print(f"Error: Invalid format in {file_path}. Expected 'KEY=VALUE' format.")
     return None
 
 def get_previous_snapshot():
-    REPO = "enitrat/kakarot-ssj"  # Replace with your GitHub username and repo name
-    GITHUB_TOKEN = get_github_token_from_env()
+    REPO = "kkrt-labs/kakarot-ssj"  # Replace with your GitHub username and repo name
+    GITHUB_TOKEN = get_github_token_from_env() or os.environ.get("GITHUB_TOKEN")
 
     try:
-        REPO = "kkrt-labs/kakarot-ssj"
-
         # Fetch the list of workflow runs
         cmd = f"curl -s -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' 'https://api.github.com/repos/{REPO}/actions/runs'"
         result = subprocess.check_output(cmd, shell=True)
         runs = json.loads(result)
 
         # Find the latest successful run
-        latest_successful_run = next(run for run in runs["workflow_runs"] if run["conclusion"] == "success")
+        latest_successful_run = next(run for run in runs["workflow_runs"] if (run["conclusion"] == "success" and run["head_branch"] == "main"))
 
         # Fetch the artifacts for that run
         run_id = latest_successful_run["id"]
@@ -118,6 +116,8 @@ def print_colored_output(improvements, worsened, gas_changes):
         color = RED if gas_changes > 0 else GREEN
         gas_statement = "performance degradation, gas consumption +" if gas_changes > 0 else "performance improvement, gas consumption"
         print(color + f"Overall gas change: {gas_statement}{format(gas_changes, '.2f')} %" + ENDC)
+    else:
+        print("No changes in gas consumption.")
 
 def total_gas_used(current,previous):
     """Return the total gas used in the current and previous snapshot."""
