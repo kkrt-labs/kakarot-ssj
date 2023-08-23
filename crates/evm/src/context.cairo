@@ -3,7 +3,7 @@ use evm::memory::{Memory, MemoryTrait};
 use evm::model::Event;
 use debug::PrintTrait;
 use array::{ArrayTrait, SpanTrait};
-use evm::utils::helpers::{ArrayExtension, ArrayExtensionTrait};
+use utils::helpers::{ArrayExtension, ArrayExtensionTrait};
 use starknet::{EthAddress, ContractAddress};
 use box::BoxTrait;
 use nullable::NullableTrait;

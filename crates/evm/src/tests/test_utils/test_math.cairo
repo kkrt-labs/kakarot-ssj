@@ -1,5 +1,5 @@
 use integer::{u256_overflowing_add, BoundedInt, u512};
-use evm::utils::math::{Exponentiation, ExponentiationModulo, u256_wide_add};
+use utils::math::{Exponentiation, ExponentiationModulo, u256_wide_add};
 
 #[test]
 #[available_gas(20000000)]
