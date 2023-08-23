@@ -1,0 +1,44 @@
+name: Compare Snapshot
+
+on:
+  pull_request:
+    paths:
+      - "scripts/compare_snapshot.py"
+
+jobs:
+  compare-snapshot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x" # Specify the Python version required
+
+      - name: Set up Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: "nightly-2023-08-12"
+
+      - name: Run compare_snapshot script
+        id: run-script
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        run: |
+          result=$(python scripts/compare_snapshot.py)
+          result=$(echo "$result" | tail -n +3) # Strip the first two lines
+          result="${result//'%'/'%25'}"
+          result="${result//$'\n'/'%0A'}"
+          result="${result//$'\r'/'%0D'}"
+          echo "::set-output name=result::${result}"
+
+      - name: Comment on PR
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: "Snapshot Comparison Report:\n\n${{
+            steps.run-script.outputs.result }}" # Access the result output variable
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          comment_tag: gas-report
