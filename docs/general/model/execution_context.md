@@ -47,7 +47,7 @@ opcode removes the top two elements from the stack and pushes back their sum.
 
 ## Run execution flow
 
-The following diagrams describe the flow of the execution context when executing
+The following diagram describe the flow of the execution context when executing
 the `run` function given an instance of the `ExecutionContext` struct.
 
 The run function is responsible for executing EVM bytecode. The flow of
