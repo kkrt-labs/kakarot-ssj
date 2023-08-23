@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- add pre-commit hook to format project
 - tooling: PR bot displays gas changes induced by PR 
 - refactor(22/08/2023): refactor project to use scarb workspace
 - opcode(22/08/2023): add 0x1A-BYTE opcode
