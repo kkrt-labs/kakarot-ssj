@@ -22,12 +22,15 @@ scarb fmt
 changed_files=$(git diff --name-only)
 
 if [ -n "$changed_files" ]; then
-    echo "The following files were reformatted. Please add them to your commit and try again:"
+    echo "The following files were reformatted and staged:"
     echo "$changed_files"
-    exit 1
+    # Stage the changes.
+    git add $changed_files
+else
+    echo "No files were reformatted."
 fi
 
-# Continue with the commit if no issues were found.
+# Continue with the commit
 exit 0
 '
 
