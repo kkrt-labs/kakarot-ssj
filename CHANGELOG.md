@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+
+- tooling(23/08/2023): delete stale and label CI actions
 - add pre-commit hook to format project
 - tooling: PR bot displays gas changes induced by PR 
 - refactor(22/08/2023): refactor project to use scarb workspace
