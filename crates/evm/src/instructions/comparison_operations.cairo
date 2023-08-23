@@ -6,7 +6,7 @@ use evm::errors::STACK_UNDERFLOW;
 use option::{OptionTrait};
 use evm::errors::EVMError;
 use result::ResultTrait;
-use utils::math::Exponentiation;
+use utils::math::{Exponentiation, Bitwise};
 use evm::context::BoxDynamicExecutionContextDestruct;
 
 #[generate_trait]
@@ -102,7 +102,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         }
 
         // Right shift value by offset bits and then take the least significant byte by applying modulo 256.
-        let result = (x / 2.pow((31 - i) * 8)) % 256;
+        let result = x.right_shift((31 - i) * 8) % 256;
         self.stack.push(result)?;
         Result::Ok(())
     }

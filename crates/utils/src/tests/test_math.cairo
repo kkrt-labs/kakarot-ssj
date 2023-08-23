@@ -1,13 +1,13 @@
 use integer::{u256_overflowing_add, BoundedInt, u512};
-use utils::math::{Exponentiation, ExponentiationModulo, u256_wide_add};
+use utils::math::{Exponentiation, ExponentiationUnsafe, u256_wide_add, Bitwise};
 
 #[test]
 #[available_gas(20000000)]
 fn test_pow_mod() {
-    assert(5_u256.pow_mod(10) == 9765625, '5^10 should be 9765625');
-    assert(2_u256.pow_mod(256) == 0, 'should wrap to 0');
-    assert(123456_u256.pow_mod(0) == 1, 'n^0 should be 1');
-    assert(0_u256.pow_mod(123456) == 0, '0^n should be 0');
+    assert(5_u256.pow(10) == 9765625, '5^10 should be 9765625');
+    assert(2_u256.pow(256) == 0, 'should wrap to 0');
+    assert(123456_u256.pow(0) == 1, 'n^0 should be 1');
+    assert(0_u256.pow(123456) == 0, '0^n should be 0');
 }
 
 #[test]
@@ -16,13 +16,17 @@ fn test_pow() {
     assert(5_u256.pow(10) == 9765625, '5^10 should be 9765625');
     assert(123456_u256.pow(0) == 1, 'n^0 should be 1');
     assert(0_u256.pow(123456) == 0, '0^n should be 0');
+    assert(
+        2_felt252.pow(252) == 0x7ffffffffffffeeffffffffffffffffffffffffffffffffffffffffffffffff,
+        '2^252 should wrap around'
+    );
 }
 
 #[test]
 #[should_panic]
 #[available_gas(2000000)]
-fn test_pow_should_overflow() {
-    assert(2_u256.pow(256) == 0, 'should overflow');
+fn test_pow_unsafe_should_overflow() {
+    assert(2_u256.pow_unsafe(256) == 0, 'should overflow');
 }
 
 
@@ -73,5 +77,70 @@ fn test_wide_add_max_values() {
 
     let result = u256_wide_add(a, b);
 
+    assert(result == expected, 'wrong result');
+}
+
+#[test]
+#[available_gas(2000000)]
+fn test_bitshift_left() {
+    // Given
+    let a = 0x00000091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aab3f_u256;
+    // 1-byte shift is an 8-bit shift
+    let shift = 3 * 8;
+
+    // When
+    let result = a.left_shift(shift);
+
+    // Then
+    let expected = 0x91b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aab3f000000_u256;
+    assert(result == expected, 'wrong result');
+}
+
+#[test]
+#[available_gas(2000000000000)]
+fn test_bitshift_left_overflow() {
+    // Given
+    let a = 0x00000091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498faab3fe_u256;
+    // 1-byte shift is an 8-bit shift
+    let shift = 12 * 8;
+
+    // When
+    let result = a.left_shift(shift);
+
+    // Then
+    let expected = 0xf24201bac4e64f70ca2b9d9491e82a498faab3fe000000000000000000000000_u256;
+    assert(result == expected, 'wrong result');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_bitshift_right() {
+    // Given
+    let a = 0x0091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade6263a_u256;
+    // 1-byte shift is an 8-bit shift
+    let shift = 1 * 8;
+
+    // When
+    let result = a.right_shift(shift);
+
+    // Then
+    let expected = 0x000091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade626_u256;
+    assert(result == expected, 'wrong result');
+}
+
+#[test]
+#[available_gas(20000000000)]
+fn test_bitshift_right_to_zero() {
+    // Given
+    let a = 0xab91b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade6263a_u256;
+    // 1-byte shift is an 8-bit shift
+    let shift = 32 * 8;
+
+    // When
+    let result = a.right_shift(shift);
+
+    // Then
+    let expected = 0_u256;
     assert(result == expected, 'wrong result');
 }

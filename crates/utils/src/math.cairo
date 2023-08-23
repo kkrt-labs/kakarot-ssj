@@ -1,54 +1,19 @@
 use integer::{u256_overflow_mul, u256_overflowing_add, u512, BoundedInt};
 
 trait Exponentiation<T> {
-    // Raise a number to a power.
-    /// * `base` - The number to raise.
-    /// * `exp` - The exponent.
-    /// # Returns
-    /// * `T` - The result of base raised to the power of exp.
-    fn pow(self: T, exp: T) -> T;
+    // Raise a number to a power modulo MAX<T> (max value of type T).
+    fn pow(self: T, exponent: T) -> T;
+}
+
+trait ExponentiationUnsafe<T> {
+    // Raise a number to a power exponent.
+    // # Panics
+    // Panics if the result overflows the type T.
+    fn pow_unsafe(self: T, exponent: T) -> T;
 }
 
 impl U256ExpImpl of Exponentiation<u256> {
-    fn pow(self: u256, exp: u256) -> u256 {
-        if self == 0 {
-            return 0;
-        }
-        if exp == 0 {
-            return 1;
-        } else {
-            return self * Exponentiation::pow(self, exp - 1);
-        }
-    }
-}
-
-impl Felt252ExpImpl of Exponentiation<felt252> {
-    fn pow(self: felt252, exp: felt252) -> felt252 {
-        if self == 0 {
-            return 0;
-        }
-        if exp == 0 {
-            return 1;
-        } else {
-            return self * Exponentiation::pow(self, exp - 1);
-        }
-    }
-}
-
-
-trait ExponentiationModulo<T> {
-    // Raise a number to a power modulo MAX<T> (max value of type T).
-    // Instead of explicitly providing a modulo, we use overflowing functions
-    // from the core library, which wrap around when overflowing.
-    /// * `base` - The number to raise.
-    /// * `exp` - The exponent.
-    /// # Returns
-    /// * `T` - The result of base raised to the power of exp modulo MAX<T>.
-    fn pow_mod(self: T, exponent: T) -> T;
-}
-
-impl U256ExpModImpl of ExponentiationModulo<u256> {
-    fn pow_mod(self: u256, mut exponent: u256) -> u256 {
+    fn pow(self: u256, mut exponent: u256) -> u256 {
         if self == 0 {
             return 0;
         }
@@ -64,6 +29,33 @@ impl U256ExpModImpl of ExponentiationModulo<u256> {
         result
     }
 }
+
+impl U256ExpUnsafeImpl of ExponentiationUnsafe<u256> {
+    fn pow_unsafe(self: u256, exponent: u256) -> u256 {
+        if self == 0 {
+            return 0;
+        }
+        if exponent == 0 {
+            return 1;
+        } else {
+            return self * ExponentiationUnsafe::pow_unsafe(self, exponent - 1);
+        }
+    }
+}
+
+impl Felt252ExpImpl of Exponentiation<felt252> {
+    fn pow(self: felt252, mut exponent: felt252) -> felt252 {
+        if self == 0 {
+            return 0;
+        }
+        if exponent == 0 {
+            return 1;
+        } else {
+            return self * Exponentiation::pow(self, exponent - 1);
+        }
+    }
+}
+
 
 /// Adds two 256-bit unsigned integers, returning a 512-bit unsigned integer result.
 ///
@@ -84,4 +76,29 @@ fn u256_wide_add(a: u256, b: u256) -> u512 {
     let limb3 = 0;
 
     u512 { limb0, limb1, limb2, limb3 }
+}
+
+trait Bitwise<T> {
+    // Shift a number left by a given number of bits.
+    fn left_shift(self: T, shift: T) -> T;
+
+    // Shift a number right by a given number of bits.
+    fn right_shift(self: T, shift: T) -> T;
+}
+
+impl U256BitwiseImpl of Bitwise<u256> {
+    fn left_shift(self: u256, shift: u256) -> u256 {
+        let (result, _) = u256_overflow_mul(self, 2.pow(shift));
+        result
+    }
+
+    fn right_shift(self: u256, shift: u256) -> u256 {
+        // if we shift by more than 255 bits, the result is 0 (the type is 256 bits wide)
+        // we early return to save gas
+        // and prevent unexpected behavior, e.g. 2.pow(256) == 0 mod 2^256, but we can't divide by zero
+        if shift > 255 {
+            return 0;
+        }
+        self / 2.pow(shift)
+    }
 }
