@@ -10,7 +10,7 @@ use integer::{
 };
 use cmp::{max};
 use traits::{TryInto, Into};
-use evm::{utils, utils::helpers, utils::math::Exponentiation};
+use utils::{helpers, math::Exponentiation};
 use option::OptionTrait;
 use debug::PrintTrait;
 

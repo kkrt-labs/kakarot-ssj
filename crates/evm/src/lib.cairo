@@ -19,9 +19,6 @@ mod context;
 // Data Models module
 mod model;
 
-// Utils module
-mod utils;
-
 // Errors module
 mod errors;
 

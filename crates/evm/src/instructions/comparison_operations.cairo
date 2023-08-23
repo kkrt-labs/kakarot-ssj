@@ -6,7 +6,7 @@ use evm::errors::STACK_UNDERFLOW;
 use option::{OptionTrait};
 use evm::errors::EVMError;
 use result::ResultTrait;
-use evm::utils::math::Exponentiation;
+use utils::math::Exponentiation;
 use evm::context::BoxDynamicExecutionContextDestruct;
 
 #[generate_trait]

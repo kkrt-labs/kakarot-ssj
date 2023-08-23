@@ -12,8 +12,8 @@ use evm::context::ExecutionContext;
 use evm::context::ExecutionContextTrait;
 use evm::context::BoxDynamicExecutionContextDestruct;
 use evm::stack::StackTrait;
-use evm::utils::u256_signed_math::u256_signed_div_rem;
-use evm::utils::math::{Exponentiation, ExponentiationModulo, u256_wide_add};
+use utils::u256_signed_math::u256_signed_div_rem;
+use utils::math::{Exponentiation, ExponentiationModulo, u256_wide_add};
 use evm::errors::EVMError;
 use result::ResultTrait;
 

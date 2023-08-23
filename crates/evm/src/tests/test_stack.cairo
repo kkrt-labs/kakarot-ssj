@@ -8,7 +8,7 @@ use result::ResultTrait;
 
 // Internal imports
 use evm::stack::StackTrait;
-use evm::utils::constants;
+use utils::constants;
 
 #[test]
 #[available_gas(11500)]

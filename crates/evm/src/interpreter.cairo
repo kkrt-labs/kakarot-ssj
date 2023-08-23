@@ -9,7 +9,7 @@ use evm::context::{
     ExecutionSummary, ExecutionContext, ExecutionContextTrait, CallContextTrait,
     BoxDynamicExecutionContextDestruct
 };
-use evm::utils::{helpers::u256_to_bytes_array};
+use utils::{helpers::u256_to_bytes_array};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
     duplication_operations, environmental_information, exchange_operations, logging_operations,

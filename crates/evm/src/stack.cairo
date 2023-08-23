@@ -20,7 +20,7 @@ use option::OptionTrait;
 use array::ArrayTrait;
 use traits::Into;
 use result::{ResultTrait, Result};
-use evm::utils::constants;
+use utils::constants;
 use debug::PrintTrait;
 use box::BoxTrait;
 use nullable::{nullable_from_box, NullableTrait};
