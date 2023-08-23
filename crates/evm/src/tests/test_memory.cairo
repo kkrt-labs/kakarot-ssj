@@ -1,7 +1,7 @@
 use core::dict::Felt252DictTrait;
 use core::debug::PrintTrait;
 use evm::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
-use utils::{math::Exponentiation, helpers};
+use utils::{math::Exponentiation, math::WrappingExponentiation, helpers};
 use array::{ArrayTrait, SpanTrait};
 use traits::{Into, TryInto};
 use option::OptionTrait;
@@ -140,21 +140,21 @@ fn test__load__should_load_an_element_from_the_memory() {
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_1() {
     internal::load_should_load_an_element_from_the_memory_with_offset(
-        8, 2 * 256.pow(8).try_into().unwrap(), 256.pow(8).try_into().unwrap()
+        8, 2 * 256.wrapping_pow(8).try_into().unwrap(), 256.wrapping_pow(8).try_into().unwrap()
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_2() {
     internal::load_should_load_an_element_from_the_memory_with_offset(
-        7, 2 * 256.pow(7).try_into().unwrap(), 256.pow(7).try_into().unwrap()
+        7, 2 * 256.wrapping_pow(7).try_into().unwrap(), 256.wrapping_pow(7).try_into().unwrap()
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_3() {
     internal::load_should_load_an_element_from_the_memory_with_offset(
-        23, 3 * 256.pow(7).try_into().unwrap(), 2 * 256.pow(7).try_into().unwrap()
+        23, 3 * 256.wrapping_pow(7).try_into().unwrap(), 2 * 256.wrapping_pow(7).try_into().unwrap()
     );
 }
 
@@ -162,14 +162,14 @@ fn test__load__should_load_an_element_from_the_memory_with_offset_3() {
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_4() {
     internal::load_should_load_an_element_from_the_memory_with_offset(
-        33, 4 * 256.pow(1).try_into().unwrap(), 3 * 256.pow(1).try_into().unwrap()
+        33, 4 * 256.wrapping_pow(1).try_into().unwrap(), 3 * 256.wrapping_pow(1).try_into().unwrap()
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_5() {
     internal::load_should_load_an_element_from_the_memory_with_offset(
-        63, 0, 4 * 256.pow(15).try_into().unwrap()
+        63, 0, 4 * 256.wrapping_pow(15).try_into().unwrap()
     );
 }
 
