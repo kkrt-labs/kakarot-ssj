@@ -20,7 +20,7 @@ jobs:
       - name: Set up Scarb
         uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "nightly-2023-08-12"
+          scarb-version: "0.7.0"
 
       - name: Generate gas snapshot
         run: python scripts/gen_snapshot.py
