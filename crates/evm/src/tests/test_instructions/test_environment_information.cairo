@@ -4,6 +4,7 @@ use evm::stack::StackTrait;
 use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
 use evm::context::BoxDynamicExecutionContextDestruct;
+use utils::helpers::EthAddressIntoU256;
 
 #[test]
 #[available_gas(20000000)]
@@ -16,13 +17,13 @@ fn test_address_basic() {
 
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
-    let expected_address: felt252 = evm_address().into();
-    let expected_address: u256 = expected_address.into();
-    assert(ctx.stack.pop().unwrap() == expected_address, '');
+    assert(ctx.stack.pop().unwrap() == evm_address().into(), 'should be `evm_address`');
 }
 
 #[test]
 #[available_gas(20000000)]
 #[ignore]
-fn test_address_nested_call() { // TODO: Figure out a way to do nested calls
+fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls)-> C (smart contract)
+// TODO: Once we have ability to do nested smart contract calls, check that in `C`s context `ADDRESS` should return address `B`
+// ref: https://github.com/kkrt-labs/kakarot-ssj/issues/183
 }

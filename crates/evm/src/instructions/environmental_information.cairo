@@ -6,6 +6,7 @@ use evm::context::ExecutionContext;
 use evm::context::ExecutionContextTrait;
 use evm::context::BoxDynamicExecutionContextDestruct;
 use evm::errors::EVMError;
+use utils::helpers::EthAddressIntoU256;
 
 #[generate_trait]
 impl EnvironmentInformationImpl of EnvironmentInformationTrait {
@@ -13,10 +14,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get address of currently executing account.
     /// # Specification: https://www.evm.codes/#30?fork=shanghai
     fn exec_address(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let current_addr = self.evm_address();
-        let addr_felt252: felt252 = current_addr.into();
-        let addr_u256: u256 = addr_felt252.into();
-        self.stack.push(addr_u256)?;
+        self.stack.push(self.evm_address().into())?;
         Result::Ok(())
     }
 
