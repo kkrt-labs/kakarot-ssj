@@ -15,7 +15,7 @@ use evm::instructions::{
     duplication_operations, environmental_information, exchange_operations, logging_operations,
     memory_operations, push_operations, sha3, StopAndArithmeticOperationsTrait,
     ComparisonAndBitwiseOperationsTrait, system_operations, BlockInformationTrait,
-    DuplicationOperationsTrait,
+    DuplicationOperationsTrait, EnvironmentInformationTrait
 };
 use result::ResultTrait;
 
@@ -195,67 +195,67 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 48 {
             // ADDRESS
-            environmental_information::exec_address(ref context);
+            context.exec_address()?;
         }
         if opcode == 49 {
             // BALANCE
-            environmental_information::exec_balance(ref context);
+            context.exec_balance()?;
         }
         if opcode == 50 {
             // ORIGIN
-            environmental_information::exec_origin(ref context);
+            context.exec_origin()?;
         }
         if opcode == 51 {
             // CALLER
-            environmental_information::exec_caller(ref context);
+            context.exec_caller()?;
         }
         if opcode == 52 {
             // CALLVALUE
-            environmental_information::exec_callvalue(ref context);
+            context.exec_callvalue()?;
         }
         if opcode == 53 {
             // CALLDATALOAD
-            environmental_information::exec_calldataload(ref context);
+            context.exec_calldataload()?;
         }
         if opcode == 54 {
             // CALLDATASIZE
-            environmental_information::exec_calldatasize(ref context);
+            context.exec_calldatasize()?;
         }
         if opcode == 55 {
             // CALLDATACOPY
-            environmental_information::exec_calldatacopy(ref context);
+            context.exec_calldatacopy()?;
         }
         if opcode == 56 {
             // CODESIZE
-            environmental_information::exec_codesize(ref context);
+            context.exec_codesize()?;
         }
         if opcode == 57 {
             // CODECOPY
-            environmental_information::exec_codecopy(ref context);
+            context.exec_codecopy()?;
         }
         if opcode == 58 {
             // GASPRICE
-            environmental_information::exec_gasprice(ref context);
+            context.exec_gasprice()?;
         }
         if opcode == 59 {
             // EXTCODESIZE
-            environmental_information::exec_extcodesize(ref context);
+            context.exec_extcodesize()?;
         }
         if opcode == 60 {
             // EXTCODECOPY
-            environmental_information::exec_extcodecopy(ref context);
+            context.exec_extcodecopy()?;
         }
         if opcode == 61 {
             // RETURNDATASIZE
-            environmental_information::exec_returndatasize(ref context);
+            context.exec_returndatasize()?;
         }
         if opcode == 62 {
             // RETURNDATACOPY
-            environmental_information::exec_returndatacopy(ref context);
+            context.exec_returndatacopy()?;
         }
         if opcode == 63 {
             // EXTCODEHASH
-            environmental_information::exec_extcodehash(ref context);
+            context.exec_extcodehash()?;
         }
         if opcode == 64 {
             // BLOCKHASH
