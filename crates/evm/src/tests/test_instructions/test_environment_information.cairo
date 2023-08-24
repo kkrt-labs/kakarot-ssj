@@ -25,5 +25,5 @@ fn test_address_basic() {
 #[test]
 #[available_gas(20000000)]
 #[ignore]
-fn test_address_nested_call() {// TODO: Figure out a way to do nested calls
+fn test_address_nested_call() { // TODO: Figure out a way to do nested calls
 }
