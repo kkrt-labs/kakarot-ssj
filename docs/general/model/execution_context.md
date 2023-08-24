@@ -38,7 +38,7 @@ classDiagram
 ```
 
 When submitting a transaction to the EVM, the `call_context` field of the
-`ExecutionContext` is initialized with the bytecode of the contract to executed,
+`ExecutionContext` is initialized with the bytecode of the contract to execute,
 the call data sent in the transaction, and the value of the transaction. The
 stack and memory are initialized empty.
 
