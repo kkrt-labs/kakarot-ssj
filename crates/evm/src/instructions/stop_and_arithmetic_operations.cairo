@@ -37,7 +37,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         // Compute the addition
         let (result, _) = u256_overflowing_add(*popped[0], *popped[1]);
 
-        self.stack.push(result);
+        self.stack.push(result)?;
         Result::Ok(())
     }
 
@@ -51,7 +51,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         // Compute the multiplication
         let (result, _) = u256_overflow_mul(*popped[0], *popped[1]);
 
-        self.stack.push(result);
+        self.stack.push(result)?;
         Result::Ok(())
     }
 
@@ -65,7 +65,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         // Compute the substraction
         let (result, _) = u256_overflow_sub(*popped[0], *popped[1]);
 
-        self.stack.push(result);
+        self.stack.push(result)?;
         Result::Ok(())
     }
 
@@ -87,7 +87,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result);
+        self.stack.push(result)?;
         Result::Ok(())
     }
 
@@ -109,7 +109,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result);
+        self.stack.push(result)?;
         Result::Ok(())
     }
 
@@ -131,7 +131,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result);
+        self.stack.push(result)?;
         Result::Ok(())
     }
 
@@ -153,7 +153,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             },
             Option::None => 0,
         };
-        self.stack.push(result);
+        self.stack.push(result)?;
         Result::Ok(())
     }
 
@@ -179,7 +179,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result);
+        self.stack.push(result)?;
         Result::Ok(())
     }
 
@@ -205,7 +205,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result);
+        self.stack.push(result)?;
         Result::Ok(())
     }
 
@@ -220,7 +220,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
 
         let result = a.pow_mod(b);
 
-        self.stack.push(result);
+        self.stack.push(result)?;
         Result::Ok(())
     }
 
@@ -262,7 +262,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             x
         };
 
-        self.stack.push(result);
+        self.stack.push(result)?;
         Result::Ok(())
     }
 }
