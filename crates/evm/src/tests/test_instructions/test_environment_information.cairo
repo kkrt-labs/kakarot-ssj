@@ -16,10 +16,9 @@ fn test_address_basic() {
 
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
-    let address = ctx.stack.peek().unwrap();
     let expected_address: felt252 = evm_address().into();
     let expected_address: u256 = expected_address.into();
-    assert(address == expected_address, 'stack top should be 0x00');
+    assert(ctx.stack.pop().unwrap() == expected_address, '');
 }
 
 #[test]
