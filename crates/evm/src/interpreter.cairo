@@ -14,7 +14,7 @@ use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
     duplication_operations, environmental_information, exchange_operations, logging_operations,
     memory_operations, push_operations, sha3, StopAndArithmeticOperationsTrait,
-    ComparisonAndBitwiseOperationsTrait, system_operations, block_information,
+    ComparisonAndBitwiseOperationsTrait, system_operations, BlockInformationTrait,
     DuplicationOperationsTrait,
 };
 use result::ResultTrait;
@@ -259,39 +259,39 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 64 {
             // BLOCKHASH
-            block_information::exec_blockhash(ref context);
+            context.exec_blockhash()?;
         }
         if opcode == 65 {
             // COINBASE
-            block_information::exec_coinbase(ref context);
+            context.exec_coinbase()?;
         }
         if opcode == 66 {
             // TIMESTAMP
-            block_information::exec_timestamp(ref context);
+            context.exec_timestamp()?;
         }
         if opcode == 67 {
             // NUMBER
-            block_information::exec_number(ref context);
+            context.exec_number()?;
         }
         if opcode == 68 {
             // PREVRANDAO
-            block_information::exec_prevrandao(ref context);
+            context.exec_prevrandao()?;
         }
         if opcode == 69 {
             // GASLIMIT
-            block_information::exec_gaslimit(ref context);
+            context.exec_gaslimit()?;
         }
         if opcode == 70 {
             // CHAINID
-            block_information::exec_chainid(ref context);
+            context.exec_chainid()?;
         }
         if opcode == 71 {
             // SELFBALANCE
-            block_information::exec_selfbalance(ref context);
+            context.exec_selfbalance()?;
         }
         if opcode == 72 {
             // BASEFEE
-            block_information::exec_basefee(ref context);
+            context.exec_basefee()?;
         }
         if opcode == 80 {
             // POP

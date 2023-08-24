@@ -10,7 +10,7 @@ and this project adheres to
 
 ### Added
 
-
+- opcodes: add 0x42-TIMESTAMP opcode
 - tooling(23/08/2023): delete stale and label CI actions
 - add pre-commit hook to format project
 - tooling: PR bot displays gas changes induced by PR 
@@ -27,9 +27,7 @@ and this project adheres to
 - refactor(21/08/2023): add result-based error management in stack methods and
   related opcodes
 - refactor: split execution context struct items into dynamic and static parts,
-
   to lower gas consumption of updates
-
 - opcodes: add 0x80-DUP1 to 0x8F-DUP16 opcode
 - opcodes: add 0x19-NOT opcode
 - opcodes: add 0x16-AND opcode

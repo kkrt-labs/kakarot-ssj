@@ -1,5 +1,6 @@
 /// Sub modules.
 mod block_information;
+use block_information::BlockInformationTrait;
 
 mod comparison_operations;
 use comparison_operations::ComparisonAndBitwiseOperationsTrait;
