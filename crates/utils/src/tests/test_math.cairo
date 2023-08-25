@@ -90,7 +90,7 @@ fn test_bitshift_left() {
     let shift = 3 * 8;
 
     // When
-    let result = a.left_shift(shift);
+    let result = a.shl(shift);
 
     // Then
     let expected = 0x91b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aab3f000000_u256;
@@ -108,7 +108,7 @@ fn test_bitshift_left_256_bits_overflow() {
     let shift = 32 * 8;
 
     // When & Then 2.pow(256) overflows u256
-    let result = a.left_shift(shift);
+    let result = a.shl(shift);
 }
 
 #[test]
@@ -121,7 +121,7 @@ fn test_bitshift_left_overflow() {
     let shift = 4 * 8;
 
     // When & Then a << 32 overflows u256 
-    let result = a.left_shift(shift);
+    let result = a.shl(shift);
 }
 
 #[test]
@@ -133,7 +133,7 @@ fn test_bitshift_left_wide_overflow() {
     let shift = 12 * 8;
 
     // When
-    let result = a.left_shift_wide(shift);
+    let result = a.wrapping_shl(shift);
 
     // Then
     // The bits moved after the 256th one are discarded, the new bits are set to 0.
@@ -151,7 +151,7 @@ fn test_bitshift_left_wide() {
     let shift = 3 * 8;
 
     // When
-    let result = a.left_shift_wide(shift);
+    let result = a.wrapping_shl(shift);
 
     // Then
     let expected = 0x91b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aab3f000000_u256;
@@ -167,7 +167,7 @@ fn test_bitshift_right() {
     let shift = 1 * 8;
 
     // When
-    let result = a.right_shift(shift);
+    let result = a.shr(shift);
 
     // Then
     let expected = 0x000091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade626_u256;
@@ -182,7 +182,7 @@ fn test_bitshift_right_256_bits_overflow() {
     let shift = 32 * 8;
 
     // When & Then 2.pow(256) overflows u256
-    let result = a.right_shift(shift);
+    let result = a.shr(shift);
 }
 
 
@@ -195,7 +195,7 @@ fn test_bitshift_right_wide() {
     let shift = 2 * 8;
 
     // When
-    let result = a.right_shift_wide(shift);
+    let result = a.wrapping_shr(shift);
 
     // Then
     let expected = 0x00000091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade6_u256;
@@ -212,7 +212,7 @@ fn test_bitshift_right_wide_to_zero() {
     let shift = 32 * 8;
 
     // When
-    let result = a.right_shift_wide(shift);
+    let result = a.wrapping_shr(shift);
 
     // Then
     let expected = 0_u256;
