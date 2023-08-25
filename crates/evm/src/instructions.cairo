@@ -9,6 +9,7 @@ mod duplication_operations;
 use duplication_operations::DuplicationOperationsTrait;
 
 mod environmental_information;
+use environmental_information::EnvironmentInformationTrait;
 
 mod exchange_operations;
 
