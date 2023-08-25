@@ -251,7 +251,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             // Get v, the t-th bit of x. To do this we bitshift x by s bits to the right and apply a mask to get the last bit.
             let v = x.right_shift(s) & 1;
             // Compute the mask with 8b+7 bits set to one
-            let mask = 1_u256.left_shift(s) - 1;
+            let mask = 2.pow(s) - 1;
             if v == 0 {
                 x & mask
             } else {
