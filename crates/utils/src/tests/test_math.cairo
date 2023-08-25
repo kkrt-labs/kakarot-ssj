@@ -27,7 +27,7 @@ fn test_pow() {
 #[should_panic(expected: ('u256_mul Overflow',))]
 #[available_gas(20000000)]
 fn test_pow_should_overflow() {
-    assert(2_u256.pow(256) == 0, 'should overflow');
+    2_u256.pow(256);
 }
 
 
