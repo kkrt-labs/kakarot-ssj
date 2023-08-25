@@ -30,7 +30,7 @@ fn test__empty__should_return_if_stack_is_empty() {
     assert(stack.is_empty() == true, 'stack should be empty');
 
     // When
-    stack.push(1);
+    stack.push(1).unwrap();
     // Then
     assert(stack.is_empty() == false, 'stack should not be empty');
 }
@@ -45,7 +45,7 @@ fn test__len__should_return_the_length_of_the_stack() {
     assert(stack.len() == 0, 'stack length should be 0');
 
     // When
-    stack.push(1);
+    stack.push(1).unwrap();
     // Then
     assert(stack.len() == 1, 'stack length should be 1');
 }
@@ -65,7 +65,7 @@ mod push {
         let mut stack = StackTrait::new();
 
         // When
-        stack.push(1);
+        stack.push(1).unwrap();
 
         // Then
         let res = stack.peek().unwrap();
@@ -76,7 +76,7 @@ mod push {
     }
 
     #[test]
-    #[available_gas(27000000)]
+    #[available_gas(30000000)]
     fn test_should_fail_when_overflow() {
         // Given
         let mut stack = StackTrait::new();
@@ -89,7 +89,7 @@ mod push {
             }
             i += 1;
 
-            stack.push(1);
+            stack.push(1).unwrap();
         };
 
         // Then
@@ -115,9 +115,9 @@ mod pop {
     fn test_should_pop_an_element_from_the_stack() {
         // Given
         let mut stack = StackTrait::new();
-        stack.push(1);
-        stack.push(2);
-        stack.push(3);
+        stack.push(1).unwrap();
+        stack.push(2).unwrap();
+        stack.push(3).unwrap();
 
         // When
         let last_item = stack.pop().unwrap();
@@ -132,9 +132,9 @@ mod pop {
     fn test_should_pop_N_elements_from_the_stack() {
         // Given
         let mut stack = StackTrait::new();
-        stack.push(1);
-        stack.push(2);
-        stack.push(3);
+        stack.push(1).unwrap();
+        stack.push(2).unwrap();
+        stack.push(3).unwrap();
 
         // When
         let elements = stack.pop_n(3).unwrap();
@@ -163,11 +163,11 @@ mod pop {
     }
 
     #[test]
-    #[available_gas(50000)]
+    #[available_gas(55000)]
     fn test_pop_n_should_return_err_when_stack_underflow() {
         // Given
         let mut stack = StackTrait::new();
-        stack.push(1);
+        stack.push(1).unwrap();
 
         // When & Then
         let result = stack.pop_n(2);
@@ -193,8 +193,8 @@ mod peek {
         let mut stack = StackTrait::new();
 
         // When
-        stack.push(1);
-        stack.push(2);
+        stack.push(1).unwrap();
+        stack.push(2).unwrap();
 
         // Then
         let last_item = stack.peek().unwrap();
@@ -206,9 +206,9 @@ mod peek {
     fn test_should_return_stack_at_given_index_when_value_is_0() {
         // Given
         let mut stack = StackTrait::new();
-        stack.push(1);
-        stack.push(2);
-        stack.push(3);
+        stack.push(1).unwrap();
+        stack.push(2).unwrap();
+        stack.push(3).unwrap();
 
         // When
         let result = stack.peek_at(0).unwrap();
@@ -222,9 +222,9 @@ mod peek {
     fn test_should_return_stack_at_given_index_when_value_is_1() {
         // Given
         let mut stack = StackTrait::new();
-        stack.push(1);
-        stack.push(2);
-        stack.push(3);
+        stack.push(1).unwrap();
+        stack.push(2).unwrap();
+        stack.push(3).unwrap();
 
         // When
         let result = stack.peek_at(1).unwrap();
@@ -261,10 +261,10 @@ mod swap {
     fn test_should_swap_2_stack_items() {
         // Given
         let mut stack = StackTrait::new();
-        stack.push(1);
-        stack.push(2);
-        stack.push(3);
-        stack.push(4);
+        stack.push(1).unwrap();
+        stack.push(2).unwrap();
+        stack.push(3).unwrap();
+        stack.push(4).unwrap();
         let index3 = stack.peek_at(3).unwrap();
         assert(index3 == 1, 'wrong index3');
         let index2 = stack.peek_at(2).unwrap();
@@ -309,7 +309,7 @@ mod swap {
     fn test_should_return_err_when_index_2_is_underflow() {
         // Given
         let mut stack = StackTrait::new();
-        stack.push(1);
+        stack.push(1).unwrap();
 
         // When & Then
         let result = stack.swap_i(2);
