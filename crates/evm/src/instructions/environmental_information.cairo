@@ -15,8 +15,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get address of currently executing account.
     /// # Specification: https://www.evm.codes/#30?fork=shanghai
     fn exec_address(ref self: ExecutionContext) -> Result<(), EVMError> {
-        self.stack.push(self.evm_address().into())?;
-        Result::Ok(())
+        self.stack.push(self.evm_address().into())
     }
 
     /// 0x31 - BALANCE opcode.
@@ -44,8 +43,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get deposited value by the instruction/transaction responsible for this execution.
     /// # Specification: https://www.evm.codes/#34?fork=shanghai
     fn exec_callvalue(ref self: ExecutionContext) -> Result<(), EVMError> {
-        self.stack.push(self.call_context().value())?;
-        Result::Ok(())
+        self.stack.push(self.call_context().value())
     }
 
     /// 0x35 - CALLDATALOAD 
