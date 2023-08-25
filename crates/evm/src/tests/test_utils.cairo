@@ -2,11 +2,7 @@ use starknet::{contract_address_try_from_felt252, ContractAddress, EthAddress};
 use traits::{Into, TryInto};
 use option::OptionTrait;
 use array::{ArrayTrait, SpanTrait};
-use evm::context::{
-    CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, StackTrait,
-    BoxDynamicExecutionContextDestruct
-};
-use utils::constants;
+use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait,};
 
 fn starknet_address() -> ContractAddress {
     'starknet_address'.try_into().unwrap()
@@ -44,21 +40,6 @@ fn setup_execution_context() -> ExecutionContext {
     ExecutionContextTrait::new(
         call_context, starknet_address, evm_address, gas_limit, gas_price, returned_data, read_only
     )
-}
-
-fn setup_execution_context_max_stack_depth() -> ExecutionContext {
-    let mut ctx = setup_execution_context();
-
-    // push to the stack until it's full
-    let mut i = 0;
-    loop {
-        if i == constants::STACK_MAX_DEPTH {
-            break;
-        }
-        ctx.stack.push(1).unwrap();
-        i += 1;
-    };
-    ctx
 }
 
 impl CallContextPartialEq of PartialEq<CallContext> {
