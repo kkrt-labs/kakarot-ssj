@@ -11,8 +11,8 @@ use evm::context::BoxDynamicExecutionContextDestruct;
 fn test_and_zero_and_max() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0x00);
-    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(0x00).unwrap();
+    ctx.stack.push(BoundedInt::<u256>::max()).unwrap();
 
     // When
     ctx.exec_and();
@@ -27,8 +27,8 @@ fn test_and_zero_and_max() {
 fn test_and_max_and_max() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(BoundedInt::<u256>::max()).unwrap();
+    ctx.stack.push(BoundedInt::<u256>::max()).unwrap();
 
     // When
     ctx.exec_and();
@@ -45,8 +45,8 @@ fn test_and_max_and_max() {
 fn test_and_two_random_uint() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0xAB8765432DCBA98765410F149E87610FDCBA98765432543217654DCBA93210F8);
-    ctx.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210);
+    ctx.stack.push(0xAB8765432DCBA98765410F149E87610FDCBA98765432543217654DCBA93210F8).unwrap();
+    ctx.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
 
     // When
     ctx.exec_and();
@@ -68,8 +68,8 @@ fn test_and_two_random_uint() {
 fn test_xor_different_pair() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0b010101);
-    ctx.stack.push(0b101010);
+    ctx.stack.push(0b010101).unwrap();
+    ctx.stack.push(0b101010).unwrap();
 
     // When
     ctx.exec_xor();
@@ -84,8 +84,8 @@ fn test_xor_different_pair() {
 fn test_xor_same_pair() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0b000111);
-    ctx.stack.push(0b000111);
+    ctx.stack.push(0b000111).unwrap();
+    ctx.stack.push(0b000111).unwrap();
 
     // When
     ctx.exec_xor();
@@ -100,8 +100,8 @@ fn test_xor_same_pair() {
 fn test_xor_half_same_pair() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0b111000);
-    ctx.stack.push(0b000000);
+    ctx.stack.push(0b111000).unwrap();
+    ctx.stack.push(0b000000).unwrap();
 
     // When
     ctx.exec_xor();
@@ -117,7 +117,7 @@ fn test_xor_half_same_pair() {
 fn test_not_zero() {
     // Given 
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0x00);
+    ctx.stack.push(0x00).unwrap();
 
     // When
     ctx.exec_not();
@@ -134,7 +134,7 @@ fn test_not_zero() {
 fn test_not_max_uint() {
     // Given 
     let mut ctx = setup_execution_context();
-    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(BoundedInt::<u256>::max()).unwrap();
 
     // When
     ctx.exec_not();
@@ -149,7 +149,7 @@ fn test_not_max_uint() {
 fn test_not_random_uint() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0x123456789ABCDEF123456789ABCDEF123456789ABCDEF123456789ABCDEF1234);
+    ctx.stack.push(0x123456789ABCDEF123456789ABCDEF123456789ABCDEF123456789ABCDEF1234).unwrap();
 
     // When
     ctx.exec_not();
@@ -170,8 +170,8 @@ fn test_not_random_uint() {
 fn test_byte_random_u256() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0xf7ec8b2ea4a6b7fd5f4ed41b66197fcc14c4a37d68275ea151d899bb4d7c2ae7);
-    ctx.stack.push(0x08);
+    ctx.stack.push(0xf7ec8b2ea4a6b7fd5f4ed41b66197fcc14c4a37d68275ea151d899bb4d7c2ae7).unwrap();
+    ctx.stack.push(0x08).unwrap();
 
     // When
     ctx.exec_byte();
@@ -186,8 +186,8 @@ fn test_byte_random_u256() {
 fn test_byte_offset_out_of_range() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0x01be893aefcfa1592f60622b80d45c2db74281d2b9e10c14b0f6ce7c8f58e209);
-    ctx.stack.push(32_u256);
+    ctx.stack.push(0x01be893aefcfa1592f60622b80d45c2db74281d2b9e10c14b0f6ce7c8f58e209).unwrap();
+    ctx.stack.push(32_u256).unwrap();
 
     // When
     ctx.exec_byte();

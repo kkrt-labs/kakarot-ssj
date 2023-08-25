@@ -26,9 +26,9 @@ fn test_exec_stop() {
 fn test_exec_add() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(1);
-    ctx.stack.push(2);
-    ctx.stack.push(3);
+    ctx.stack.push(1).unwrap();
+    ctx.stack.push(2).unwrap();
+    ctx.stack.push(3).unwrap();
 
     // When
     ctx.exec_add();
@@ -44,8 +44,8 @@ fn test_exec_add() {
 fn test_exec_add_overflow() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(1);
+    ctx.stack.push(BoundedInt::<u256>::max()).unwrap();
+    ctx.stack.push(1).unwrap();
 
     // When
     ctx.exec_add();
@@ -60,8 +60,8 @@ fn test_exec_add_overflow() {
 fn test_exec_mul() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(4);
-    ctx.stack.push(5);
+    ctx.stack.push(4).unwrap();
+    ctx.stack.push(5).unwrap();
 
     // When
     ctx.exec_mul();
@@ -76,8 +76,8 @@ fn test_exec_mul() {
 fn test_exec_mul_overflow() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(2);
+    ctx.stack.push(BoundedInt::<u256>::max()).unwrap();
+    ctx.stack.push(2).unwrap();
 
     // When
     ctx.exec_mul();
@@ -92,8 +92,8 @@ fn test_exec_mul_overflow() {
 fn test_exec_sub() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(7);
-    ctx.stack.push(10);
+    ctx.stack.push(7).unwrap();
+    ctx.stack.push(10).unwrap();
 
     // When
     ctx.exec_sub();
@@ -108,8 +108,8 @@ fn test_exec_sub() {
 fn test_exec_sub_underflow() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(1);
-    ctx.stack.push(0);
+    ctx.stack.push(1).unwrap();
+    ctx.stack.push(0).unwrap();
 
     // When
     ctx.exec_sub();
@@ -125,8 +125,8 @@ fn test_exec_sub_underflow() {
 fn test_exec_div() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(4);
-    ctx.stack.push(100);
+    ctx.stack.push(4).unwrap();
+    ctx.stack.push(100).unwrap();
 
     // When
     ctx.exec_div();
@@ -141,8 +141,8 @@ fn test_exec_div() {
 fn test_exec_div_by_zero() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0);
-    ctx.stack.push(100);
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(100).unwrap();
 
     // When
     ctx.exec_div();
@@ -157,8 +157,8 @@ fn test_exec_div_by_zero() {
 fn test_exec_sdiv_pos() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(5);
-    ctx.stack.push(10);
+    ctx.stack.push(5).unwrap();
+    ctx.stack.push(10).unwrap();
 
     // When
     ctx.exec_sdiv(); // 10 / 5
@@ -173,8 +173,8 @@ fn test_exec_sdiv_pos() {
 fn test__exec_sdiv_neg() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(BoundedInt::max());
-    ctx.stack.push(2);
+    ctx.stack.push(BoundedInt::max()).unwrap();
+    ctx.stack.push(2).unwrap();
 
     // When
     ctx.exec_sdiv(); // 2 / -1
@@ -189,8 +189,8 @@ fn test__exec_sdiv_neg() {
 fn test_exec_sdiv_by_0() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0);
-    ctx.stack.push(10);
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(10).unwrap();
 
     // When
     ctx.exec_sdiv();
@@ -205,8 +205,8 @@ fn test_exec_sdiv_by_0() {
 fn test_exec_mod() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(6);
-    ctx.stack.push(100);
+    ctx.stack.push(6).unwrap();
+    ctx.stack.push(100).unwrap();
 
     // When
     ctx.exec_mod();
@@ -221,8 +221,8 @@ fn test_exec_mod() {
 fn test_exec_mod_by_zero() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0);
-    ctx.stack.push(100);
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(100).unwrap();
 
     // When
     ctx.exec_smod();
@@ -237,8 +237,8 @@ fn test_exec_mod_by_zero() {
 fn test_exec_smod() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(3);
-    ctx.stack.push(10);
+    ctx.stack.push(3).unwrap();
+    ctx.stack.push(10).unwrap();
 
     // When
     ctx.exec_smod();
@@ -253,8 +253,14 @@ fn test_exec_smod() {
 fn test_exec_smod_neg() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD); // -3
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8); // -8
+    ctx
+        .stack
+        .push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD)
+        .unwrap(); // -3
+    ctx
+        .stack
+        .push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8)
+        .unwrap(); // -8
 
     // When
     ctx.exec_smod();
@@ -275,8 +281,8 @@ fn test_exec_smod_neg() {
 fn test_exec_smod_zero() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0);
-    ctx.stack.push(10);
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(10).unwrap();
 
     // When
     ctx.exec_mod();
@@ -292,9 +298,9 @@ fn test_exec_smod_zero() {
 fn test_exec_addmod() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(7);
-    ctx.stack.push(10);
-    ctx.stack.push(20);
+    ctx.stack.push(7).unwrap();
+    ctx.stack.push(10).unwrap();
+    ctx.stack.push(20).unwrap();
 
     // When
     ctx.exec_addmod();
@@ -309,9 +315,9 @@ fn test_exec_addmod() {
 fn test_exec_addmod_by_zero() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0);
-    ctx.stack.push(10);
-    ctx.stack.push(20);
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(10).unwrap();
+    ctx.stack.push(20).unwrap();
 
     // When
     ctx.exec_addmod();
@@ -327,9 +333,9 @@ fn test_exec_addmod_by_zero() {
 fn test_exec_addmod_overflow() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(3);
-    ctx.stack.push(2);
-    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(3).unwrap();
+    ctx.stack.push(2).unwrap();
+    ctx.stack.push(BoundedInt::<u256>::max()).unwrap();
 
     // When
     ctx.exec_addmod();
@@ -345,9 +351,9 @@ fn test_exec_addmod_overflow() {
 #[available_gas(20000000)]
 fn test_mulmod_basic() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(10);
-    ctx.stack.push(7);
-    ctx.stack.push(5);
+    ctx.stack.push(10).unwrap();
+    ctx.stack.push(7).unwrap();
+    ctx.stack.push(5).unwrap();
 
     // When
     ctx.exec_mulmod();
@@ -360,9 +366,9 @@ fn test_mulmod_basic() {
 #[available_gas(20000000)]
 fn test_mulmod_zero_modulus() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0);
-    ctx.stack.push(7);
-    ctx.stack.push(5);
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(7).unwrap();
+    ctx.stack.push(5).unwrap();
 
     ctx.exec_mulmod();
 
@@ -374,9 +380,9 @@ fn test_mulmod_zero_modulus() {
 #[available_gas(20000000)]
 fn test_mulmod_overflow() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(12);
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(12).unwrap();
+    ctx.stack.push(BoundedInt::<u256>::max()).unwrap();
+    ctx.stack.push(BoundedInt::<u256>::max()).unwrap();
 
     ctx.exec_mulmod();
 
@@ -390,9 +396,9 @@ fn test_mulmod_overflow() {
 #[available_gas(20000000)]
 fn test_mulmod_zero() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(10);
-    ctx.stack.push(7);
-    ctx.stack.push(0);
+    ctx.stack.push(10).unwrap();
+    ctx.stack.push(7).unwrap();
+    ctx.stack.push(0).unwrap();
 
     ctx.exec_mulmod();
 
@@ -405,8 +411,8 @@ fn test_mulmod_zero() {
 fn test_exec_exp() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2);
-    ctx.stack.push(10);
+    ctx.stack.push(2).unwrap();
+    ctx.stack.push(10).unwrap();
 
     // When
     ctx.exec_exp();
@@ -421,8 +427,8 @@ fn test_exec_exp() {
 fn test_exec_exp_overflow() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2);
-    ctx.stack.push(BoundedInt::<u128>::max().into() + 1);
+    ctx.stack.push(2).unwrap();
+    ctx.stack.push(BoundedInt::<u128>::max().into() + 1).unwrap();
 
     // When
     ctx.exec_exp();
@@ -439,8 +445,8 @@ fn test_exec_exp_overflow() {
 fn test_exec_signextend() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0xFF);
-    ctx.stack.push(0x00);
+    ctx.stack.push(0xFF).unwrap();
+    ctx.stack.push(0x00).unwrap();
 
     // When
     ctx.exec_signextend();
@@ -461,8 +467,8 @@ fn test_exec_signextend() {
 fn test_exec_signextend_no_effect() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0x7F);
-    ctx.stack.push(0x00);
+    ctx.stack.push(0x7F).unwrap();
+    ctx.stack.push(0x00).unwrap();
 
     // When
     ctx.exec_signextend();
@@ -479,8 +485,8 @@ fn test_exec_signextend_no_effect() {
 fn test_exec_signextend_on_negative() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0001);
-    ctx.stack.push(0x01); // s = 15, v = 0
+    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0001).unwrap();
+    ctx.stack.push(0x01).unwrap(); // s = 15, v = 0
 
     // When
     ctx.exec_signextend();

@@ -34,7 +34,7 @@ fn push_zeros(ref stack: Stack, n: u8) {
         if i == n {
             break;
         }
-        stack.push(0x0);
+        stack.push(0x0).unwrap();
         i += 1;
     }
 }
@@ -46,7 +46,7 @@ fn test_dup1() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
 
     let old_stack_len = ctx.stack.len();
 
@@ -71,7 +71,7 @@ fn test_dup2() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 1);
 
     let old_stack_len = ctx.stack.len();
@@ -97,7 +97,7 @@ fn test_dup3() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 2);
 
     let old_stack_len = ctx.stack.len();
@@ -123,7 +123,7 @@ fn test_dup4() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 3);
 
     let old_stack_len = ctx.stack.len();
@@ -149,7 +149,7 @@ fn test_dup5() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 4);
 
     let old_stack_len = ctx.stack.len();
@@ -175,7 +175,7 @@ fn test_dup6() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 5);
 
     let old_stack_len = ctx.stack.len();
@@ -201,7 +201,7 @@ fn test_dup7() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 6);
 
     let old_stack_len = ctx.stack.len();
@@ -227,7 +227,7 @@ fn test_dup8() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 7);
 
     let old_stack_len = ctx.stack.len();
@@ -253,7 +253,7 @@ fn test_dup9() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 8);
 
     let old_stack_len = ctx.stack.len();
@@ -279,7 +279,7 @@ fn test_dup10() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 9);
 
     let old_stack_len = ctx.stack.len();
@@ -305,7 +305,7 @@ fn test_dup11() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 10);
 
     let old_stack_len = ctx.stack.len();
@@ -331,7 +331,7 @@ fn test_dup12() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 11);
 
     let old_stack_len = ctx.stack.len();
@@ -357,7 +357,7 @@ fn test_dup13() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 12);
 
     let old_stack_len = ctx.stack.len();
@@ -383,7 +383,7 @@ fn test_dup14() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 13);
 
     let old_stack_len = ctx.stack.len();
@@ -409,7 +409,7 @@ fn test_dup15() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 14);
 
     let old_stack_len = ctx.stack.len();
@@ -435,7 +435,7 @@ fn test_dup16() {
     let mut ctx = setup_execution_context();
     let initial_len = ctx.stack.len();
 
-    ctx.stack.push(0x01);
+    ctx.stack.push(0x01).unwrap();
     push_zeros(ref ctx.stack, 15);
 
     let old_stack_len = ctx.stack.len();
