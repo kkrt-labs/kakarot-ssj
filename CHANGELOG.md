@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- opcode: add 0x34-CALLVALUE opcode
 - opcode: add 0x30-ADDRESS opcode
 - opcodes: add 0x42-TIMESTAMP opcode
 - tooling(23/08/2023): delete stale and label CI actions

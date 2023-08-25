@@ -4,6 +4,7 @@ use result::ResultTrait;
 use evm::stack::StackTrait;
 use evm::context::ExecutionContext;
 use evm::context::ExecutionContextTrait;
+use evm::context::CallContextTrait;
 use evm::context::BoxDynamicExecutionContextDestruct;
 use evm::errors::EVMError;
 use utils::helpers::EthAddressIntoU256;
@@ -43,6 +44,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get deposited value by the instruction/transaction responsible for this execution.
     /// # Specification: https://www.evm.codes/#34?fork=shanghai
     fn exec_callvalue(ref self: ExecutionContext) -> Result<(), EVMError> {
+        self.stack.push(self.call_context().value())?;
         Result::Ok(())
     }
 
