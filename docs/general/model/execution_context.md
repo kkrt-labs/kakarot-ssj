@@ -4,7 +4,7 @@ The execution context is the environment in which the EVM bytecode code is
 executed. It is modeled through the ExecutionContext struct, which contains the
 following fields
 
-> Note: the actual implementation of the execution context doesn't match the
+> Note: the [actual implementation of the execution context](https://github.com/kkrt-labs/kakarot-ssj/blob/main/crates/evm/src/context.cairo#L163) doesn't match the
 > description below, as some fields are packed together in sub-structs for
 > optimisation purposes. However, the general idea remains the same.
 
