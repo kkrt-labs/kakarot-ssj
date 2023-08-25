@@ -170,7 +170,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// * `offset_in_chunk` - The offset within the memory chunk to store the element at.
     fn store_element(ref self: Memory, element: u256, chunk_index: usize, offset_in_chunk: u32) {
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
-        let mask_c: u256 = 256.into().pow(16) / mask;
+        let mask_c: u256 = 256.pow(16) / mask;
 
         // Split the 2 input bytes16 chunks at offset_in_chunk.
         let (el_hh, el_hl) = u256_safe_div_rem(element.high.into(), u256_as_non_zero(mask_c));
@@ -323,7 +323,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         // Compute mask.
 
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
-        let mask_c: u256 = 2.into().pow(128) / mask;
+        let mask_c: u256 = 2.pow(128) / mask;
 
         // Read the words at chunk_index, +1, +2.
         let w0: u128 = self.items.get(chunk_index.into());
