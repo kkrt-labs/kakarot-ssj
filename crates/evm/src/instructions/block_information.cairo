@@ -70,6 +70,9 @@ impl BlockInformation of BlockInformationTrait {
     /// Get base fee.
     /// # Specification: https://www.evm.codes/#48?fork=shanghai
     fn exec_basefee(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        // Get the current base fee. (Kakarot doesn't use EIP 1559 
+        // so basefee doesn't really exists there)
+        let base_fee = 0;
+        self.stack.push(base_fee)
     }
 }
