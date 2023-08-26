@@ -13,9 +13,9 @@ use utils::{helpers::u256_to_bytes_array};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
     duplication_operations, environmental_information, exchange_operations, logging_operations,
-    memory_operations, push_operations, sha3, StopAndArithmeticOperationsTrait,
-    ComparisonAndBitwiseOperationsTrait, system_operations, BlockInformationTrait,
-    DuplicationOperationsTrait, EnvironmentInformationTrait
+    memory_operations, sha3, StopAndArithmeticOperationsTrait, ComparisonAndBitwiseOperationsTrait,
+    system_operations, BlockInformationTrait, DuplicationOperationsTrait,
+    EnvironmentInformationTrait, PushOperationsTrait
 };
 use result::ResultTrait;
 
@@ -343,135 +343,135 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 95 {
             // PUSH0
-            push_operations::exec_push0(ref context);
+            context.exec_push0()?;
         }
         if opcode == 96 {
             // PUSH1
-            push_operations::exec_push1(ref context);
+            context.exec_push1()?;
         }
         if opcode == 97 {
             // PUSH2
-            push_operations::exec_push2(ref context);
+            context.exec_push2()?;
         }
         if opcode == 98 {
             // PUSH3
-            push_operations::exec_push3(ref context);
+            context.exec_push3()?;
         }
         if opcode == 99 {
             // PUSH4
-            push_operations::exec_push4(ref context);
+            context.exec_push4()?;
         }
         if opcode == 100 {
             // PUSH5
-            push_operations::exec_push5(ref context);
+            context.exec_push5()?;
         }
         if opcode == 101 {
             // PUSH6
-            push_operations::exec_push6(ref context);
+            context.exec_push6()?;
         }
         if opcode == 102 {
             // PUSH7
-            push_operations::exec_push7(ref context);
+            context.exec_push7()?;
         }
         if opcode == 103 {
             // PUSH8
-            push_operations::exec_push8(ref context);
+            context.exec_push8()?;
         }
         if opcode == 104 {
             // PUSH9
-            push_operations::exec_push9(ref context);
+            context.exec_push9()?;
         }
         if opcode == 105 {
             // PUSH10
-            push_operations::exec_push10(ref context);
+            context.exec_push10()?;
         }
         if opcode == 106 {
             // PUSH11
-            push_operations::exec_push11(ref context);
+            context.exec_push11()?;
         }
         if opcode == 107 {
             // PUSH12
-            push_operations::exec_push12(ref context);
+            context.exec_push12()?;
         }
         if opcode == 108 {
             // PUSH13
-            push_operations::exec_push13(ref context);
+            context.exec_push13()?;
         }
         if opcode == 109 {
             // PUSH14
-            push_operations::exec_push14(ref context);
+            context.exec_push14()?;
         }
         if opcode == 110 {
             // PUSH15
-            push_operations::exec_push15(ref context);
+            context.exec_push15()?;
         }
         if opcode == 111 {
             // PUSH16
-            push_operations::exec_push16(ref context);
+            context.exec_push16()?;
         }
         if opcode == 112 {
             // PUSH17
-            push_operations::exec_push17(ref context);
+            context.exec_push17()?;
         }
         if opcode == 113 {
             // PUSH18
-            push_operations::exec_push18(ref context);
+            context.exec_push18()?;
         }
         if opcode == 114 {
             // PUSH19
-            push_operations::exec_push19(ref context);
+            context.exec_push19()?;
         }
         if opcode == 115 {
             // PUSH20
-            push_operations::exec_push20(ref context);
+            context.exec_push20()?;
         }
         if opcode == 116 {
             // PUSH21
-            push_operations::exec_push21(ref context);
+            context.exec_push21()?;
         }
         if opcode == 117 {
             // PUSH22
-            push_operations::exec_push22(ref context);
+            context.exec_push22()?;
         }
         if opcode == 118 {
             // PUSH23
-            push_operations::exec_push23(ref context);
+            context.exec_push23()?;
         }
         if opcode == 119 {
             // PUSH24
-            push_operations::exec_push24(ref context);
+            context.exec_push24()?;
         }
         if opcode == 120 {
             // PUSH25
-            push_operations::exec_push25(ref context);
+            context.exec_push25()?;
         }
         if opcode == 121 {
             // PUSH26
-            push_operations::exec_push26(ref context);
+            context.exec_push26()?;
         }
         if opcode == 122 {
             // PUSH27
-            push_operations::exec_push27(ref context);
+            context.exec_push27()?;
         }
         if opcode == 123 {
             // PUSH28
-            push_operations::exec_push28(ref context);
+            context.exec_push28()?;
         }
         if opcode == 124 {
             // PUSH29
-            push_operations::exec_push29(ref context);
+            context.exec_push29()?;
         }
         if opcode == 125 {
             // PUSH30
-            push_operations::exec_push30(ref context);
+            context.exec_push30()?;
         }
         if opcode == 126 {
             // PUSH31
-            push_operations::exec_push31(ref context);
+            context.exec_push31()?;
         }
         if opcode == 127 {
             // PUSH32
-            push_operations::exec_push32(ref context);
+            context.exec_push32()?;
         }
         if opcode == 128 {
             // DUP1
