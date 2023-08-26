@@ -166,6 +166,7 @@ struct ExecutionContext {
     program_counter: u32,
     stack: Stack,
     memory: Memory,
+    gas_limit: u64,
 // TODO: refactor using smart pointers
 // once compiler supports it
 //calling_context: Nullable<ExecutionContext>,
@@ -203,6 +204,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             program_counter: 0,
             stack: Default::default(),
             memory: Default::default(),
+            gas_limit
         // calling_context,
         // sub_context: Default::default(),
         }
@@ -368,6 +370,7 @@ impl DefaultExecutionContext of Default<ExecutionContext> {
             program_counter: 0,
             stack: Default::default(),
             memory: Default::default(),
+            gas_limit: 0,
         // calling_context: Default::default(),
         // sub_context: Default::default(),
 
