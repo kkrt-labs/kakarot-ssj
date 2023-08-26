@@ -42,7 +42,13 @@ impl BlockInformation of BlockInformationTrait {
     /// Get the block number.
     /// # Specification: https://www.evm.codes/#43?fork=shanghai
     fn exec_number(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        match get_execution_info_syscall() {
+            Result::Ok(execution_info) => {
+                let block_number = execution_info.unbox().block_info.unbox().block_number.into();
+                self.stack.push(block_number)
+            },
+            Result::Err(_) => Result::Err(EVMError::SyscallError('Could not get block exec info')),
+        }
     }
 
     /// 0x44 - PREVRANDAO 
