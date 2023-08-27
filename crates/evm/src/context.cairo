@@ -80,6 +80,7 @@ struct StaticExecutionContext {
     starknet_address: ContractAddress,
     evm_address: EthAddress,
     read_only: bool,
+    gas_limit: u64,
 }
 
 impl DefaultStaticExecutionContext of Default<StaticExecutionContext> {
@@ -90,6 +91,7 @@ impl DefaultStaticExecutionContext of Default<StaticExecutionContext> {
             starknet_address: Default::default(),
             evm_address: Default::default(),
             read_only: false,
+            gas_limit: 0,
         }
     }
 }
@@ -101,9 +103,10 @@ impl StaticExecutionContextImpl of StaticExecutionContextTrait {
         call_context: CallContext,
         starknet_address: ContractAddress,
         evm_address: EthAddress,
-        read_only: bool
+        read_only: bool,
+        gas_limit: u64
     ) -> StaticExecutionContext {
-        StaticExecutionContext { call_context, starknet_address, evm_address, read_only, }
+        StaticExecutionContext { call_context, starknet_address, evm_address, read_only, gas_limit }
     }
 }
 
@@ -166,7 +169,6 @@ struct ExecutionContext {
     program_counter: u32,
     stack: Stack,
     memory: Memory,
-    gas_limit: u64,
 // TODO: refactor using smart pointers
 // once compiler supports it
 //calling_context: Nullable<ExecutionContext>,
@@ -197,14 +199,13 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         ExecutionContext {
             static_context: BoxTrait::new(
                 StaticExecutionContextTrait::new(
-                    call_context, starknet_address, evm_address, read_only
+                    call_context, starknet_address, evm_address, read_only, gas_limit
                 )
             ),
             dynamic_context: BoxTrait::new(DynamicExecutionContextTrait::new(returned_data)),
             program_counter: 0,
             stack: Default::default(),
             memory: Default::default(),
-            gas_limit
         // calling_context,
         // sub_context: Default::default(),
         }
@@ -307,6 +308,11 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         (*self.static_context).unbox().read_only
     }
 
+    #[inline(always)]
+    fn gas_limit(self: @ExecutionContext) -> u64 {
+        (*self.static_context).unbox().gas_limit
+    }
+
     // *************************************************************************
     //                          ExecutionContext methods
     // *************************************************************************
@@ -370,7 +376,6 @@ impl DefaultExecutionContext of Default<ExecutionContext> {
             program_counter: 0,
             stack: Default::default(),
             memory: Default::default(),
-            gas_limit: 0,
         // calling_context: Default::default(),
         // sub_context: Default::default(),
 

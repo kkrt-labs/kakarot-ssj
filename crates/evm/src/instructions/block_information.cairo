@@ -50,7 +50,7 @@ impl BlockInformation of BlockInformationTrait {
     /// Get gas limit
     /// # Specification: https://www.evm.codes/#45?fork=shanghai
     fn exec_gaslimit(ref self: ExecutionContext) -> Result<(), EVMError> {
-        self.stack.push(self.gas_limit.into())
+        self.stack.push(self.gas_limit().into())
     }
 
     /// 0x46 - CHAINID 
