@@ -2,9 +2,9 @@
 use starknet::{EthAddressIntoFelt252};
 use result::ResultTrait;
 use evm::stack::StackTrait;
-use evm::context::ExecutionContext;
-use evm::context::ExecutionContextTrait;
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::{
+    BoxDynamicExecutionContextDestruct, ExecutionContext, ExecutionContextTrait, CallContextTrait
+};
 use evm::errors::EVMError;
 use utils::helpers::EthAddressIntoU256;
 
@@ -50,6 +50,42 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Push a word from the calldata onto the stack.
     /// # Specification: https://www.evm.codes/#35?fork=shanghai
     fn exec_calldataload(ref self: ExecutionContext) -> Result<(), EVMError> {
+        // Stack input:
+        // 0 - offset: calldata offset of the word we read (32 byte steps).
+        let offset = self.stack.pop()?.try_into().unwrap();
+
+        let calldata = self.call_context().call_data();
+        let calldata_len = calldata.len();
+
+        // Early return if the offset is beyond calldata
+        if offset >= calldata_len.into() {
+            self.stack.push(0);
+            return Result::Ok(());
+        }
+
+        // Init data to load
+        let mut data_to_load: u256 = 0;
+        data_to_load += (*calldata[0 + offset]).into();
+
+        let mut i: usize = 1;
+        loop {
+            if i > 31 {
+                break;
+            }
+
+            // Shift left
+            data_to_load *= 256;
+
+            // Append if not out of bounds
+            if i + offset < calldata_len {
+                data_to_load += (*calldata[i + offset]).into();
+            }
+
+            i += 1;
+        };
+
+        self.stack.push(data_to_load);
+
         Result::Ok(())
     }
 
