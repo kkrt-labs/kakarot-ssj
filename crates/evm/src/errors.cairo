@@ -12,7 +12,6 @@ const PC_OUT_OF_BOUNDS: felt252 = 'Kakarot: pc >= bytecode length';
 enum EVMError {
     StackError: felt252,
     InvalidProgramCounter: felt252,
-    SyscallError: felt252,
 }
 
 
@@ -21,7 +20,6 @@ impl EVMErrorIntoU256 of Into<EVMError, u256> {
         match self {
             EVMError::StackError(error_message) => error_message.into(),
             EVMError::InvalidProgramCounter(error_message) => error_message.into(),
-            EVMError::SyscallError(error_message) => error_message.into(),
         }
     }
 }
