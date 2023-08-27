@@ -1,5 +1,7 @@
 use evm::instructions::EnvironmentInformationTrait;
-use evm::tests::test_utils::{setup_execution_context, evm_address, callvalue};
+use evm::tests::test_utils::{
+    setup_execution_context, evm_address, callvalue, setup_execution_context_with_returndata
+};
 use evm::stack::StackTrait;
 use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
@@ -40,4 +42,20 @@ fn test__exec_callvalue() {
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.pop().unwrap() == callvalue(), 'should be `123456789');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_returndatasize() {
+    // Given
+    let return_data: Array<u8> = array![1, 2, 3, 4, 5];
+    let size = return_data.len();
+    let mut ctx = setup_execution_context_with_returndata(return_data);
+
+    // When
+    ctx.exec_returndatasize();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.pop().unwrap() == size.into(), 'wrong returndatasize');
 }
