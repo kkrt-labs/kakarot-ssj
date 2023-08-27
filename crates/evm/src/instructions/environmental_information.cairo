@@ -2,11 +2,12 @@
 use starknet::{EthAddressIntoFelt252};
 use result::ResultTrait;
 use evm::stack::StackTrait;
-use evm::context::ExecutionContext;
-use evm::context::ExecutionContextTrait;
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::{
+    BoxDynamicExecutionContextDestruct, ExecutionContext, ExecutionContextTrait, CallContextTrait
+};
 use evm::errors::EVMError;
 use utils::helpers::EthAddressIntoU256;
+use evm::memory::MemoryTrait;
 
 #[generate_trait]
 impl EnvironmentInformationImpl of EnvironmentInformationTrait {
@@ -64,6 +65,33 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#37?fork=shanghai
     fn exec_calldatacopy(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = self.stack.pop_n(3)?;
+        let destOffset: u32 = (*popped[0]).try_into().unwrap();
+        let offset: u32 = (*popped[1]).try_into().unwrap();
+        let size: u32 = (*popped[2]).try_into().unwrap();
+
+        let call_data: Span<u8> = self.call_context().call_data();
+
+        let mut data_to_copy: Array<u8> = ArrayTrait::new();
+
+        let mut i: u32 = 0;
+        loop {
+            if (i == size) {
+                break;
+            }
+
+            // For out of bound bytes, 0s will be copied.
+            if (i + offset >= call_data.len()) {
+                data_to_copy.append(0);
+            } else {
+                data_to_copy.append(*call_data[i + offset]);
+            }
+
+            i += 1;
+        };
+
+        self.memory.store_n(data_to_copy.span(), destOffset);
+
         Result::Ok(())
     }
 
