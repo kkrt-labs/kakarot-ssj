@@ -6,7 +6,7 @@ use evm::context::{
     BoxDynamicExecutionContextDestruct, ExecutionContext, ExecutionContextTrait, CallContextTrait
 };
 use evm::errors::EVMError;
-use utils::helpers::EthAddressIntoU256;
+use utils::helpers::{EthAddressIntoU256, u256_to_u32};
 use evm::memory::MemoryTrait;
 
 #[generate_trait]
@@ -65,31 +65,33 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// # Specification: https://www.evm.codes/#37?fork=shanghai
     fn exec_calldatacopy(ref self: ExecutionContext) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(3)?;
-        let destOffset: u32 = (*popped[0]).try_into().unwrap();
-        let offset: u32 = (*popped[1]).try_into().unwrap();
-        let size: u32 = (*popped[2]).try_into().unwrap();
+        let destOffset: u32 = u256_to_u32(*popped[0])?;
+        let offset: u32 = u256_to_u32(*popped[1])?;
+        let size: u32 = u256_to_u32(*popped[2])?;
 
         let call_data: Span<u8> = self.call_context().call_data();
 
-        let mut data_to_copy: Array<u8> = ArrayTrait::new();
+        let mut slice_size = size;
+        if (offset + slice_size > call_data.len()) {
+            slice_size = call_data.len() - offset;
+        }
 
-        let mut i: u32 = 0;
-        loop {
-            if (i == size) {
-                break;
-            }
+        let data_to_copy: Span<u8> = call_data.slice(offset, slice_size);
+        self.memory.store_n(data_to_copy, destOffset);
 
-            // For out of bound bytes, 0s will be copied.
-            if (i + offset >= call_data.len()) {
-                data_to_copy.append(0);
-            } else {
-                data_to_copy.append(*call_data[i + offset]);
-            }
+        // For out of bound bytes, 0s will be copied.
+        if (slice_size < size) {
+            let mut out_of_bounds_bytes: Array<u8> = ArrayTrait::new();
+            loop {
+                if (out_of_bounds_bytes.len() + slice_size == size) {
+                    break;
+                }
 
-            i += 1;
-        };
+                out_of_bounds_bytes.append(0);
+            };
 
-        self.memory.store_n(data_to_copy.span(), destOffset);
+            self.memory.store_n(out_of_bounds_bytes.span(), destOffset + slice_size);
+        }
 
         Result::Ok(())
     }
