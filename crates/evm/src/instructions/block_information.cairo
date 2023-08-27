@@ -1,7 +1,7 @@
 //! Block Information.
 
 // Corelib imports
-use starknet::syscalls::get_execution_info_syscall;
+use starknet::info::{get_block_number, get_block_timestamp};
 use result::ResultTrait;
 
 // Internal imports
@@ -29,20 +29,14 @@ impl BlockInformation of BlockInformationTrait {
     /// Get the block’s timestamp
     /// # Specification: https://www.evm.codes/#42?fork=shanghai
     fn exec_timestamp(ref self: ExecutionContext) -> Result<(), EVMError> {
-        match get_execution_info_syscall() {
-            Result::Ok(execution_info) => {
-                let timestamp = execution_info.unbox().block_info.unbox().block_timestamp.into();
-                self.stack.push(timestamp)
-            },
-            Result::Err(_) => Result::Err(EVMError::SyscallError('Could not get block exec info')),
-        }
+        self.stack.push(get_block_timestamp().into())
     }
 
     /// 0x43 - NUMBER 
     /// Get the block number.
     /// # Specification: https://www.evm.codes/#43?fork=shanghai
     fn exec_number(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        self.stack.push(get_block_number().into())
     }
 
     /// 0x44 - PREVRANDAO 
