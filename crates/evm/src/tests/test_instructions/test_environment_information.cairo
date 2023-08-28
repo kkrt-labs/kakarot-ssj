@@ -41,3 +41,16 @@ fn test__exec_callvalue() {
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.pop().unwrap() == callvalue(), 'should be `123456789');
 }
+
+#[test]
+#[available_gas(20000000)]
+fn test_gaslimit() {
+    // Given
+    let mut ctx = setup_execution_context();
+    // When
+    ctx.exec_gasprice();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 10, 'stack top should be 10');
+}
