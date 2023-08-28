@@ -40,6 +40,11 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x14 - EQ
     /// # Specification: https://www.evm.codes/#14?fork=shanghai
     fn exec_eq(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = self.stack.pop_n(2)?;
+        let a = *popped[0];
+        let b = *popped[1];
+        let result = a == b;
+        self.stack.push(result)?;
         Result::Ok(())
     }
 
