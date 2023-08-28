@@ -6,8 +6,9 @@ use evm::errors::STACK_UNDERFLOW;
 use option::{OptionTrait};
 use evm::errors::EVMError;
 use result::ResultTrait;
-use utils::math::Exponentiation;
+use utils::math::{Exponentiation, ExponentiationModulo};
 use evm::context::BoxDynamicExecutionContextDestruct;
+use integer::{u256_overflow_mul};
 
 #[generate_trait]
 impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
@@ -110,6 +111,17 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x1B - SHL
     /// # Specification: https://www.evm.codes/#1b?fork=shanghai
     fn exec_shl(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = self.stack.pop_n(2)?;
+        let shift = *popped[0];
+        let val = *popped[1];
+
+        // if shift is bigger than 255 return 0
+        if shift > 255 {
+            return self.stack.push(0);
+        }
+
+        let (shifted, _) = u256_overflow_mul(val, 2.pow_mod(shift));
+        self.stack.push(shifted)?;
         Result::Ok(())
     }
 
