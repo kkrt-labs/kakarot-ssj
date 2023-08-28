@@ -13,8 +13,8 @@ mod internal {
     /// Place i bytes items on stack.
     #[inline(always)]
     fn exec_push_i(ref context: ExecutionContext, i: u8) -> Result<(), EVMError> {
-        let data = context.read_code(i.into());
-        let mut i: usize = i.into();
+        let i = i.into();
+        let data = context.read_code(i);
         context.stack.push(load_word(i, data))
     }
 }
