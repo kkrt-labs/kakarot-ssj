@@ -20,8 +20,18 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x11 - GT
     /// # Specification: https://www.evm.codes/#11?fork=shanghai
     fn exec_gt(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = self.stack.pop_n(2)?;
+        let a = *popped[0];
+        let b = *popped[1];
+        let result = a > b;
+        if result {
+            self.stack.push(1)?;
+        } else {
+            self.stack.push(0)?;
+        }
         Result::Ok(())
     }
+
 
 
     /// 0x12 - SLT
