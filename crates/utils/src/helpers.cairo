@@ -5,7 +5,6 @@ use option::OptionTrait;
 use debug::PrintTrait;
 use starknet::{EthAddress, EthAddressIntoFelt252};
 use result::ResultTrait;
-use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use cmp::min;
 use utils::constants;
 
@@ -220,15 +219,5 @@ impl EthAddressIntoU256 of Into<EthAddress, u256> {
     fn into(self: EthAddress) -> u256 {
         let intermediate: felt252 = self.into();
         intermediate.into()
-    }
-}
-
-// Try converting u256 to u32
-impl U256IntoResultU32 of Into<u256, Result<u32, EVMError>> {
-    fn into(self: u256) -> Result<u32, EVMError> {
-         match self.try_into() {
-            Option::Some(value) => Result::Ok(value),
-            Option::None(_) => Result::Err(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
-        }
     }
 }

@@ -6,7 +6,8 @@ use evm::context::{
     BoxDynamicExecutionContextDestruct, ExecutionContext, ExecutionContextTrait, CallContextTrait
 };
 use evm::errors::EVMError;
-use utils::helpers::{EthAddressIntoU256, U256IntoResultU32};
+use utils::helpers::EthAddressIntoU256;
+use evm::helpers::U256IntoResultU32;
 use evm::memory::MemoryTrait;
 
 #[generate_trait]
