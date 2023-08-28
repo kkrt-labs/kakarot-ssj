@@ -61,8 +61,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let call_data_size: u32 = call_data.len();
         let result: u256 = call_data_size.into();
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x37 - CALLDATACOPY operation
