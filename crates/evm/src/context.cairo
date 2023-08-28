@@ -109,7 +109,9 @@ impl StaticExecutionContextImpl of StaticExecutionContextTrait {
         gas_limit: u64,
         gas_price: u64
     ) -> StaticExecutionContext {
-        StaticExecutionContext { call_context, starknet_address, evm_address, read_only, gas_price }
+        StaticExecutionContext {
+            call_context, starknet_address, evm_address, read_only, gas_limit, gas_price
+        }
     }
 }
 
@@ -315,7 +317,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     fn gas_limit(self: @ExecutionContext) -> u64 {
         (*self.static_context).unbox().gas_limit
     }
-    
+
     #[inline(always)]
     fn gas_price(self: @ExecutionContext) -> u64 {
         (*self.static_context).unbox().gas_price
