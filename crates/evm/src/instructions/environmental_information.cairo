@@ -65,7 +65,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// # Specification: https://www.evm.codes/#37?fork=shanghai
     fn exec_calldatacopy(ref self: ExecutionContext) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(3)?;
-        let destOffset: u32 = u256_to_u32(*popped[0])?;
+        let dest_offset: u32 = u256_to_u32(*popped[0])?;
         let offset: u32 = u256_to_u32(*popped[1])?;
         let size: u32 = u256_to_u32(*popped[2])?;
 
