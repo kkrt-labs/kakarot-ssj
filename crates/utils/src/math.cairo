@@ -107,12 +107,17 @@ trait Bitwise<T> {
 
 impl U256BitwiseImpl of Bitwise<u256> {
     fn shl(self: u256, shift: u256) -> u256 {
+        if shift > 255 {
+            // 2.pow(shift) for shift > 255 will panic with 'u256_mul Overflow'
+            panic_with_felt252('u256_mul Overflow');
+        }
         self * 2.pow(shift)
     }
 
     fn shr(self: u256, shift: u256) -> u256 {
         if shift > 255 {
-            return 0;
+            // 2.pow(shift) for shift > 255 will panic with 'u256_mul Overflow'
+            panic_with_felt252('u256_mul Overflow');
         }
         self / 2.pow(shift)
     }
