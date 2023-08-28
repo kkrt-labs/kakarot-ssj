@@ -7,7 +7,8 @@ use evm::context::ExecutionContextTrait;
 use evm::context::CallContextTrait;
 use evm::context::BoxDynamicExecutionContextDestruct;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR};
-use utils::helpers::{EthAddressIntoU256, u256_to_u32};
+use evm::helpers::U256IntoResultU32;
+use utils::helpers::EthAddressIntoU256;
 use evm::memory::MemoryTrait;
 
 #[generate_trait]
@@ -115,19 +116,18 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// # Specification: https://www.evm.codes/#3e?fork=shanghai
     fn exec_returndatacopy(ref self: ExecutionContext) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(3)?;
-        let destOffset: u32 = u256_to_u32(*popped[0])?;
-        let offset: u32 = u256_to_u32(*popped[1])?;
-        let size: u32 = u256_to_u32(*popped[2])?;
+        let dest_offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[0]))?;
+        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[1]))?;
+        let size: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[2]))?;
 
         let return_data: Span<u8> = self.return_data();
 
-        let mut slice_size = size;
         if (offset + size > return_data.len()) {
             return Result::Err(EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR));
         }
 
-        let data_to_copy: Span<u8> = return_data.slice(offset, slice_size);
-        self.memory.store_n(data_to_copy, destOffset);
+        let data_to_copy: Span<u8> = return_data.slice(offset, size);
+        self.memory.store_n(data_to_copy, dest_offset);
 
         Result::Ok(())
     }
