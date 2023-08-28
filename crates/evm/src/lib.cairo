@@ -22,6 +22,9 @@ mod model;
 // Errors module
 mod errors;
 
+// Helpers module
+mod helpers;
+
 // tests
 #[cfg(test)]
 mod tests;
