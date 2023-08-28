@@ -205,7 +205,7 @@ fn test_wrapping_shr() {
 
 #[test]
 #[available_gas(20000000000)]
-fn test_bitshift_right_wide_to_zero() {
+fn test_wrapping_shr_to_zero() {
     // Given
     let a = 0xab91b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade6263a_u256;
     // 1-byte shift is an 8-bit shift
