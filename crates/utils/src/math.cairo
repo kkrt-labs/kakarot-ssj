@@ -1,7 +1,7 @@
-use integer::{u256_overflow_mul, u256_overflowing_add, u512, BoundedInt};
+use integer::{u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt};
 
 trait Exponentiation<T> {
-    /// Raise a number to a power modulo MAX<T> (max value of type T).
+    /// Raise a number to a power.
     /// # Panics
     /// Panics if the result overflows the type T.
     fn pow(self: T, exponent: T) -> T;
@@ -111,6 +111,9 @@ impl U256BitwiseImpl of Bitwise<u256> {
     }
 
     fn shr(self: u256, shift: u256) -> u256 {
+        if shift > 255 {
+            return 0;
+        }
         self / 2.pow(shift)
     }
 
