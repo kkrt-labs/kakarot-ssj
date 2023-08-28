@@ -85,9 +85,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
             i += 1;
         };
 
-        self.stack.push(data_to_load);
-
-        Result::Ok(())
+        self.stack.push(data_to_load)
     }
 
     /// 0x36 - CALLDATASIZE 
