@@ -2,9 +2,10 @@
 use starknet::{EthAddressIntoFelt252};
 use result::ResultTrait;
 use evm::stack::StackTrait;
-use evm::context::{
-    BoxDynamicExecutionContextDestruct, ExecutionContext, ExecutionContextTrait, CallContextTrait
-};
+use evm::context::ExecutionContext;
+use evm::context::ExecutionContextTrait;
+use evm::context::CallContextTrait;
+use evm::context::BoxDynamicExecutionContextDestruct;
 use evm::errors::EVMError;
 use utils::helpers::{EthAddressIntoU256, u256_to_u32};
 
@@ -15,8 +16,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get address of currently executing account.
     /// # Specification: https://www.evm.codes/#30?fork=shanghai
     fn exec_address(ref self: ExecutionContext) -> Result<(), EVMError> {
-        self.stack.push(self.evm_address().into())?;
-        Result::Ok(())
+        self.stack.push(self.evm_address().into())
     }
 
     /// 0x31 - BALANCE opcode.
@@ -44,7 +44,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get deposited value by the instruction/transaction responsible for this execution.
     /// # Specification: https://www.evm.codes/#34?fork=shanghai
     fn exec_callvalue(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        self.stack.push(self.call_context().value())
     }
 
     /// 0x35 - CALLDATALOAD 
