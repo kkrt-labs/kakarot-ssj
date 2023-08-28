@@ -1,8 +1,9 @@
 //! Push Operations.
 
 // Internal imports
-use evm::context::{ExecutionContext, ExecutionContextTrait};
+use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
 use evm::errors::EVMError;
+use evm::stack::StackTrait;
 
 mod internal {
     use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
@@ -25,7 +26,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#5f?fork=shanghai
     #[inline(always)]
     fn exec_push0(ref self: ExecutionContext) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 0)
+        self.stack.push(0)
     }
 
 
