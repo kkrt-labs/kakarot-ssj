@@ -3,6 +3,7 @@ use evm::context::BoxDynamicExecutionContextDestruct;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::setup_execution_context;
 use starknet::testing::{set_block_timestamp, set_block_number};
+use utils::constants::CHAIN_ID;
 
 #[test]
 #[available_gas(20000000)]
@@ -43,7 +44,7 @@ fn test_chainId_should_push_chain_id_to_stack() {
 
     // CHAIN_ID = KKRT (0x4b4b5254) in ASCII
     // TODO: Replace the hardcoded value by a value set in kakarot main contract constructor
-    let chain_id: u256 = 1263227476;
+    let chain_id: u256 = CHAIN_ID;
 
     // When
     ctx.exec_chainid();

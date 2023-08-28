@@ -59,13 +59,8 @@ impl BlockInformation of BlockInformationTrait {
     fn exec_chainid(ref self: ExecutionContext) -> Result<(), EVMError> {
         // CHAIN_ID = KKRT (0x4b4b5254) in ASCII
         // TODO: Replace the hardcoded value by a value set in kakarot main contract constructor
-        // Get the chain ID.
-        let chain_id = CHAIN_ID;
-
         // Push the chain ID to stack
-        self.stack.push(chain_id);
-
-        Result::Ok(())
+        self.stack.push(CHAIN_ID)
     }
 
     /// 0x47 - SELFBALANCE 
