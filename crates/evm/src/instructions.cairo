@@ -18,6 +18,7 @@ mod logging_operations;
 mod memory_operations;
 
 mod push_operations;
+use push_operations::PushOperationsTrait;
 
 mod sha3;
 

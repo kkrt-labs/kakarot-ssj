@@ -80,7 +80,7 @@ impl MemoryImpl of MemoryTrait {
     /// * `offset` - The offset within memory to store the bytes at.
     fn store_n(ref self: Memory, elements: Span<u8>, offset: usize) {
         if elements.len() == 0 {
-            return ();
+            return;
         }
 
         // Compute new bytes_len.
@@ -124,8 +124,7 @@ impl MemoryImpl of MemoryTrait {
     /// The gas cost of expanding the memory.
     fn ensure_length(ref self: Memory, length: usize) -> usize {
         if self.bytes_len < length {
-            let cost = self.expand(length - self.bytes_len);
-            return cost;
+            self.expand(length - self.bytes_len)
         } else {
             return 0;
         }
@@ -235,7 +234,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     fn store_aligned_words(ref self: Memory, mut chunk_index: usize, mut elements: Span<u8>) {
         loop {
             if elements.len() == 0 {
-                break ();
+                break;
             }
 
             let current: felt252 = ((*elements[0]).into() * 256.pow(15)
@@ -280,7 +279,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     ) {
         loop {
             if chunk_index == final_chunk {
-                break ();
+                break;
             }
             let value = self.items.get(chunk_index.into());
             // Pushes 16 items to `elements`
@@ -337,7 +336,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         let el_h: u128 = (w0_l * mask_c + w1_h).try_into().unwrap();
         let el_l: u128 = (w1_l * mask_c + w2_h).try_into().unwrap();
 
-        return u256 { low: el_l, high: el_h };
+        u256 { low: el_l, high: el_h }
     }
 
     /// Loads a span of bytes from the memory chunk at a specified offset.
@@ -356,7 +355,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize
     ) {
         if elements_len == 0 {
-            return ();
+            return;
         }
 
         // Check alignment of offset to bytes16 chunks.
@@ -533,7 +532,7 @@ impl MemoryPrintImpl of MemoryPrintTrait {
         '____MEMORY_BEGIN___'.print();
         loop {
             if begin >= end {
-                break ();
+                break;
             }
             self.items.get(begin.into()).print();
             begin += 1;

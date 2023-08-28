@@ -3,6 +3,7 @@
 // Corelib imports
 use starknet::info::{get_block_number, get_block_timestamp};
 use result::ResultTrait;
+use traits::Into;
 
 // Internal imports
 use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
@@ -49,7 +50,7 @@ impl BlockInformation of BlockInformationTrait {
     /// Get gas limit
     /// # Specification: https://www.evm.codes/#45?fork=shanghai
     fn exec_gaslimit(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        self.stack.push(self.gas_limit().into())
     }
 
     /// 0x46 - CHAINID 
@@ -70,6 +71,8 @@ impl BlockInformation of BlockInformationTrait {
     /// Get base fee.
     /// # Specification: https://www.evm.codes/#48?fork=shanghai
     fn exec_basefee(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        // Get the current base fee. (Kakarot doesn't use EIP 1559 so basefee
+        //  doesn't really exists there so we just use the gas price)
+        self.stack.push(self.gas_price().into())
     }
 }

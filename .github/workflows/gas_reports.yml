@@ -1,9 +1,6 @@
 name: Compare Snapshot
 
-on:
-  pull_request:
-    paths:
-      - "scripts/compare_snapshot.py"
+on: pull_request
 
 jobs:
   compare-snapshot:
