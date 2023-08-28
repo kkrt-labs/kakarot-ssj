@@ -4,9 +4,7 @@ use traits::{Into, TryInto};
 use option::OptionTrait;
 use debug::PrintTrait;
 use starknet::{EthAddress, EthAddressIntoFelt252};
-use result::ResultTrait;
 use cmp::min;
-
 use utils::constants;
 
 /// Ceils a number of bits to the next word (32 bytes)
