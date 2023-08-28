@@ -47,6 +47,7 @@ fn test__exec_callvalue() {
 fn test_gaslimit() {
     // Given
     let mut ctx = setup_execution_context();
+
     // When
     ctx.exec_gasprice();
 
