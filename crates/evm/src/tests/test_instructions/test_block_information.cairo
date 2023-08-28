@@ -38,6 +38,20 @@ fn test_block_number_set_to_32() {
 
 #[test]
 #[available_gas(20000000)]
+fn test_gaslimit() {
+    // Given
+    let mut ctx = setup_execution_context();
+    // When
+    ctx.exec_gaslimit();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    // This value is set in [setup_execution_context].
+    assert(ctx.stack.peek().unwrap() == 1000, 'stack top should be 1000');
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test_basefee() {
     // Given
     let mut ctx = setup_execution_context();

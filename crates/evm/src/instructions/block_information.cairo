@@ -3,6 +3,7 @@
 // Corelib imports
 use starknet::info::{get_block_number, get_block_timestamp};
 use result::ResultTrait;
+use traits::Into;
 
 // Internal imports
 use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
@@ -50,7 +51,7 @@ impl BlockInformation of BlockInformationTrait {
     /// Get gas limit
     /// # Specification: https://www.evm.codes/#45?fork=shanghai
     fn exec_gaslimit(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        self.stack.push(self.gas_limit().into())
     }
 
     /// 0x46 - CHAINID 
