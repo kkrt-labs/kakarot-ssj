@@ -8,6 +8,7 @@ use result::ResultTrait;
 use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
 use evm::stack::StackTrait;
 use evm::errors::EVMError;
+use utils::constants::CHAIN_ID;
 
 #[generate_trait]
 impl BlockInformation of BlockInformationTrait {
@@ -62,6 +63,14 @@ impl BlockInformation of BlockInformationTrait {
     /// Get the chain ID.
     /// # Specification: https://www.evm.codes/#46?fork=shanghai
     fn exec_chainid(ref self: ExecutionContext) -> Result<(), EVMError> {
+        // CHAIN_ID = KKRT (0x4b4b5254) in ASCII
+        // TODO: Replace the hardcoded value by a value set in kakarot main contract constructor
+        // Get the chain ID.
+        let chain_id = CHAIN_ID;
+
+        // Push the chain ID to stack
+        self.stack.push(chain_id);
+
         Result::Ok(())
     }
 

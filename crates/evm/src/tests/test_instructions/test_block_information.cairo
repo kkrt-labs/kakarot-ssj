@@ -19,3 +19,21 @@ fn test_block_timestamp_set_to_1692873993() {
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.peek().unwrap() == 1692873993, 'stack top should be 1692873993');
 }
+
+#[test]
+#[available_gas(20000000)]
+fn test_chainId_should_push_chain_id_to_stack() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    // CHAIN_ID = KKRT (0x4b4b5254) in ASCII
+    // TODO: Replace the hardcoded value by a value set in kakarot main contract constructor
+    let chain_id: u256 = 1263227476;
+
+    // When
+    ctx.exec_chainid();
+
+    // Then
+    let result = ctx.stack.peek().unwrap();
+    assert(result == chain_id, 'stack should have chain id');
+}
