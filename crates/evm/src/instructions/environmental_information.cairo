@@ -6,7 +6,8 @@ use evm::context::{
     BoxDynamicExecutionContextDestruct, ExecutionContext, ExecutionContextTrait, CallContextTrait
 };
 use evm::errors::EVMError;
-use utils::helpers::EthAddressIntoU256;
+use utils::helpers::{EthAddressIntoU256, u256_to_u32};
+
 
 #[generate_trait]
 impl EnvironmentInformationImpl of EnvironmentInformationTrait {
@@ -51,8 +52,8 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// # Specification: https://www.evm.codes/#35?fork=shanghai
     fn exec_calldataload(ref self: ExecutionContext) -> Result<(), EVMError> {
         // Stack input:
-        // 0 - offset: calldata offset of the word we read (32 byte steps).
-        let offset = self.stack.pop()?.try_into().unwrap();
+        // 0 - offset: calldata offset of the word we read
+        let offset: u32 = u256_to_u32(self.stack.pop()?)?;
 
         let calldata = self.call_context().call_data();
         let calldata_len = calldata.len();

@@ -5,6 +5,8 @@ use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
 use evm::context::{BoxDynamicExecutionContextDestruct, ExecutionContextTrait, CallContextTrait};
 use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array};
+use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
+
 
 #[test]
 #[available_gas(20000000)]
@@ -116,4 +118,28 @@ fn test_calldata_load_with_offset_beyond_calldata() {
     // Then
     let result: u256 = ctx.stack.pop().unwrap();
     assert(result == 0, 'result should be 0');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldata_load_with_offset_conversion_error() {
+    // Given
+    let mut ctx = setup_execution_context();
+    let call_data: Span<u8> = ctx.call_context().call_data();
+    let call_data_len = call_data.len();
+
+    let offset: u256 = 5000000000;
+
+    ctx.stack.push(offset);
+
+    // When
+    let result = ctx.exec_calldataload();
+
+    // Then
+    assert(result.is_err(), 'should return error');
+    assert(
+        result.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
+        'should return ConversionError'
+    );
 }
