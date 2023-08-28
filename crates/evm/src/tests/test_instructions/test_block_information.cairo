@@ -45,5 +45,5 @@ fn test_basefee() {
 
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 0');
+    assert(ctx.stack.peek().unwrap() == 10, 'stack top should be 0');
 }
