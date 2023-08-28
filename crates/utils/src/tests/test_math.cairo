@@ -83,7 +83,7 @@ fn test_wide_add_max_values() {
 
 #[test]
 #[available_gas(2000000)]
-fn test_bitshift_left() {
+fn test_shl() {
     // Given
     let a = 0x00000091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aab3f_u256;
     // 1-byte shift is an 8-bit shift
