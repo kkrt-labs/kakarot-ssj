@@ -6,7 +6,7 @@ use evm::context::{
     BoxDynamicExecutionContextDestruct, ExecutionContext, ExecutionContextTrait, CallContextTrait
 };
 use evm::errors::EVMError;
-use utils::helpers::{EthAddressIntoU256, u256_to_u32};
+use utils::helpers::{EthAddressIntoU256, U256IntoResultU32};
 use evm::memory::MemoryTrait;
 
 #[generate_trait]
@@ -65,19 +65,20 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// # Specification: https://www.evm.codes/#37?fork=shanghai
     fn exec_calldatacopy(ref self: ExecutionContext) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(3)?;
-        let dest_offset: u32 = u256_to_u32(*popped[0])?;
-        let offset: u32 = u256_to_u32(*popped[1])?;
-        let size: u32 = u256_to_u32(*popped[2])?;
+        let dest_offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[0]))?;
+        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[1]))?;
+        let size: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[2]))?;
 
         let call_data: Span<u8> = self.call_context().call_data();
 
-        let mut slice_size = size;
-        if (offset + slice_size > call_data.len()) {
-            slice_size = call_data.len() - offset;
-        }
+        let slice_size = if (offset + size > call_data.len()) {
+            call_data.len() - offset
+        } else {
+            size
+        };
 
         let data_to_copy: Span<u8> = call_data.slice(offset, slice_size);
-        self.memory.store_n(data_to_copy, destOffset);
+        self.memory.store_n(data_to_copy, dest_offset);
 
         // For out of bound bytes, 0s will be copied.
         if (slice_size < size) {
@@ -90,7 +91,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
                 out_of_bounds_bytes.append(0);
             };
 
-            self.memory.store_n(out_of_bounds_bytes.span(), destOffset + slice_size);
+            self.memory.store_n(out_of_bounds_bytes.span(), dest_offset + slice_size);
         }
 
         Result::Ok(())

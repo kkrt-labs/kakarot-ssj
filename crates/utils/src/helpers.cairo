@@ -224,9 +224,11 @@ impl EthAddressIntoU256 of Into<EthAddress, u256> {
 }
 
 // Try converting u256 to u32
-fn u256_to_u32(value: u256) -> Result<u32, EVMError> {
-    match value.try_into() {
-        Option::Some(value) => Result::Ok(value),
-        Option::None(_) => Result::Err(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
+impl U256IntoResultU32 of Into<u256, Result<u32, EVMError>> {
+    fn into(self: u256) -> Result<u32, EVMError> {
+         match self.try_into() {
+            Option::Some(value) => Result::Ok(value),
+            Option::None(_) => Result::Err(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
+        }
     }
 }
