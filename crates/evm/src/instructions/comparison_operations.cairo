@@ -56,8 +56,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         let a = *popped[0];
         let b = *popped[1];
         let result = a & b;
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x17 - OR
@@ -73,8 +72,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         let a = *popped[0];
         let b = *popped[1];
         let result = a ^ b;
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x19 - NOT
@@ -83,8 +81,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     fn exec_not(ref self: ExecutionContext) -> Result<(), EVMError> {
         let a = self.stack.pop()?;
         let result = ~a;
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x1A - BYTE
@@ -97,14 +94,12 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
 
         /// If the byte offset is out of range, we early return with 0.
         if i > 31 {
-            self.stack.push(0)?;
-            return Result::Ok(());
+            return self.stack.push(0);
         }
 
         // Right shift value by offset bits and then take the least significant byte by applying modulo 256.
         let result = (x / 2.pow((31 - i) * 8)) % 256;
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x1B - SHL

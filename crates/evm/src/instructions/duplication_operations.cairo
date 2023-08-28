@@ -23,8 +23,7 @@ mod internal {
         let i: u8 = i.into();
 
         let item = context.stack.peek_at((i - 1).into())?;
-        context.stack.push(item)?;
-        Result::Ok(())
+        context.stack.push(item)
     }
 }
 
