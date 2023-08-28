@@ -38,6 +38,19 @@ fn test_block_number_set_to_32() {
 
 #[test]
 #[available_gas(20000000)]
+fn test_basefee() {
+    // Given
+    let mut ctx = setup_execution_context();
+    // When
+    ctx.exec_basefee();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 10, 'stack top should be 0');
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test_chainid_should_push_chain_id_to_stack() {
     // Given
     let mut ctx = setup_execution_context();
