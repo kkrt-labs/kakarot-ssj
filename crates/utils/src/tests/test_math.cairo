@@ -160,7 +160,7 @@ fn test_wrapping_shl() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_bitshift_right() {
+fn test_shr() {
     // Given
     let a = 0x0091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade6263a_u256;
     // 1-byte shift is an 8-bit shift
