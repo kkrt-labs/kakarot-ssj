@@ -4,7 +4,6 @@ use traits::{Into, TryInto};
 use option::OptionTrait;
 use debug::PrintTrait;
 use starknet::{EthAddress, EthAddressIntoFelt252};
-use result::ResultTrait;
 use cmp::min;
 use utils::constants;
 
