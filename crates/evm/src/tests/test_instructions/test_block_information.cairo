@@ -48,3 +48,16 @@ fn test_gaslimit() {
     // This value is set in [setup_execution_context].
     assert(ctx.stack.peek().unwrap() == 1000, 'stack top should be 1000');
 }
+
+#[test]
+#[available_gas(20000000)]
+fn test_basefee() {
+    // Given
+    let mut ctx = setup_execution_context();
+    // When
+    ctx.exec_basefee();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 10, 'stack top should be 0');
+}
