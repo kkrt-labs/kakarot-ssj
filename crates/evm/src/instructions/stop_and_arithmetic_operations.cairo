@@ -13,7 +13,7 @@ use evm::context::ExecutionContextTrait;
 use evm::context::BoxDynamicExecutionContextDestruct;
 use evm::stack::StackTrait;
 use utils::u256_signed_math::u256_signed_div_rem;
-use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add, Bitwise};
+use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
 use evm::errors::EVMError;
 use result::ResultTrait;
 
@@ -248,10 +248,11 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
 
         let result = if b < 32 {
             let s = 8 * b + 7;
+            let two_pow_s = 2.pow(s);
             // Get v, the t-th bit of x. To do this we bitshift x by s bits to the right and apply a mask to get the last bit.
-            let v = x.shr(s) & 1;
+            let v = (x / two_pow_s) & 1;
             // Compute the mask with 8b+7 bits set to one
-            let mask = 2.pow(s) - 1;
+            let mask = two_pow_s - 1;
             if v == 0 {
                 x & mask
             } else {
