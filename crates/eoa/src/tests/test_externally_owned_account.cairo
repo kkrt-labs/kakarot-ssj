@@ -8,19 +8,16 @@ mod test_external_owned_account {
     };
     use starknet::class_hash::Felt252TryIntoClassHash;
     use starknet::{deploy_syscall, ContractAddress, get_contract_address, contract_address_const};
-    // Use debug print trait to be able to print result if needed.
-    use debug::PrintTrait;
     use array::{ArrayTrait};
     use traits::{Into, TryInto};
     use result::ResultTrait;
     use option::OptionTrait;
 
-    // Use starknet test utils to fake the transaction context.
     use starknet::testing::{set_caller_address, set_contract_address};
 
-    fn deploy_external_owned_account() -> IExternallyOwnedAccountDispatcher {
+    fn deploy_eoa() -> IExternallyOwnedAccountDispatcher {
         let mut calldata = ArrayTrait::new();
-        // Declare and deploy
+
         let (contract_address, _) = deploy_syscall(
             ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
         )
@@ -35,12 +32,9 @@ mod test_external_owned_account {
         let owner = contract_address_const::<1>();
         set_contract_address(owner);
 
-        let external_owner_account_contract = deploy_external_owned_account();
+        let eoa_contract = deploy_eoa();
 
-        assert(
-            external_owner_account_contract.bytecode() == ArrayTrait::<u8>::new().span(),
-            'wrong bytecode'
-        );
+        assert(eoa_contract.bytecode() == ArrayTrait::<u8>::new().span(), 'wrong bytecode');
     }
 
     #[test]
@@ -49,9 +43,9 @@ mod test_external_owned_account {
         let owner = contract_address_const::<1>();
         set_contract_address(owner);
 
-        let external_owner_account_contract = deploy_external_owned_account();
+        let eoa_contract = deploy_eoa();
         let value: u32 = 0;
 
-        assert(external_owner_account_contract.bytecode_len() == value, 'wrong bytecode');
+        assert(eoa_contract.bytecode_len() == value, 'wrong bytecode');
     }
 }
