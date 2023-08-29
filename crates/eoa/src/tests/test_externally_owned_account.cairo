@@ -14,6 +14,7 @@ mod test_external_owned_account {
     use traits::{Into, TryInto};
     use result::ResultTrait;
     use option::OptionTrait;
+    use starknet::EthAddress;
 
     // Use starknet test utils to fake the transaction context.
     use starknet::testing::{set_caller_address, set_contract_address};
@@ -53,5 +54,20 @@ mod test_external_owned_account {
         let value: u32 = 0;
 
         assert(external_owner_account_contract.bytecode_len() == value, 'wrong bytecode');
+    }
+
+    #[test]
+    #[available_gas(2000000000)]
+    fn test_get_evm_address(){
+        let owner = contract_address_const::<1>();
+        set_contract_address(owner);
+
+        let external_owner_account_contract = deploy_external_owned_account();
+        let address: EthAddress = 0.try_into().unwrap();
+
+        assert(
+            external_owner_account_contract.get_evm_address() == address,
+            'wrong evm address'
+        );
     }
 }
