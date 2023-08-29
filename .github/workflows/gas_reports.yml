@@ -39,6 +39,6 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: "Snapshot Comparison Report: \n\n${{
-                steps.run-script.outputs.result }}" # Access the result output variable
+              body: ${{steps.run-script.outputs.result}}
+                # Access the result output variable
             })
