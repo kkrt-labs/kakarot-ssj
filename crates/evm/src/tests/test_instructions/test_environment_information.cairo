@@ -85,7 +85,7 @@ fn test_calldata_copy_with_out_of_bound_bytes() {
     test_calldata_copy(32, 0, 8);
 }
 
-fn test_calldata_copy(destOffset: u32, offset: u32, mut size: u32) {
+fn test_calldata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
     let mut ctx = setup_execution_context();
     let call_data: Span<u8> = ctx.call_context().call_data();
