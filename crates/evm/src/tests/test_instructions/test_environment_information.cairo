@@ -3,7 +3,9 @@ use evm::tests::test_utils::{setup_execution_context, setup_execution_context_wi
 use evm::stack::StackTrait;
 use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::{
+    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
+};
 use utils::helpers::EthAddressIntoU256;
 
 #[test]
@@ -40,6 +42,21 @@ fn test__exec_callvalue() {
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.pop().unwrap() == callvalue(), 'should be `123456789');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldata_size() {
+    // Given
+    let mut ctx = setup_execution_context();
+    let call_data: Span<u8> = ctx.call_context().call_data();
+
+    // When
+    ctx.exec_calldatasize();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == call_data.len().into(), 'stack top is not calldatasize');
 }
 
 #[test]
