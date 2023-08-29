@@ -1,5 +1,7 @@
 use evm::instructions::EnvironmentInformationTrait;
-use evm::tests::test_utils::{setup_execution_context, evm_address, callvalue};
+use evm::tests::test_utils::{
+    setup_execution_context, setup_execution_context_with_bytecode, evm_address, callvalue
+};
 use evm::stack::StackTrait;
 use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
@@ -57,6 +59,21 @@ fn test_calldata_size() {
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.peek().unwrap() == call_data.len().into(), 'stack top is not calldatasize');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_codesize() {
+    // Given
+    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
+    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+
+    // When
+    ctx.exec_codesize();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.pop().unwrap() == bytecode.len().into(), 'wrong codesize');
 }
 
 #[test]
