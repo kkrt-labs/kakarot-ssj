@@ -2,6 +2,9 @@ name: Compare Snapshot
 
 on: pull_request
 
+permissions:
+  pull-requests: write
+
 jobs:
   compare-snapshot:
     runs-on: ubuntu-latest
@@ -32,13 +35,10 @@ jobs:
           result="${result//$'\r'/'%0D'}"
           echo "::set-output name=result::${result}"
 
-      - uses: actions/github-script@v6
+      - name: Comment on PR
+        uses: thollander/actions-comment-pull-request@v2
         with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: ${{steps.run-script.outputs.result}}
-                # Access the result output variable
-            })
+          message: "Snapshot Comparison Report:\n\n${{
+            steps.run-script.outputs.result }}" # Access the result output variable
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          comment_tag: gas-report
