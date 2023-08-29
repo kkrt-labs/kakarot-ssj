@@ -199,39 +199,7 @@ fn test_byte_offset_out_of_range() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_greater_than() {
-    // Given
-    let mut ctx = setup_execution_context();
-    ctx.stack.push(2_u256).unwrap();
-    ctx.stack.push(1_u256).unwrap();
-
-    // When
-    ctx.exec_gt();
-
-    // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 0x22');
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_greater_than_false() {
-    // Given
-    let mut ctx = setup_execution_context();
-    ctx.stack.push(10_u256).unwrap();
-    ctx.stack.push(9_u256).unwrap();
-
-    // When
-    ctx.exec_gt();
-
-    // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 0');
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_greater_than_true() {
+fn test_exec_gt_true() {
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(9_u256).unwrap();
@@ -247,7 +215,23 @@ fn test_greater_than_true() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_greater_than_false_equal() {
+fn test_exec_gt_false() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(10_u256).unwrap();
+    ctx.stack.push(9_u256).unwrap();
+
+    // When
+    ctx.exec_gt();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0, 'stack top should be 0');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_gt_false_equal() {
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(10_u256).unwrap();

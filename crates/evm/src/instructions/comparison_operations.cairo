@@ -24,13 +24,13 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         let a = *popped[0];
         let b = *popped[1];
         let result = a > b;
-        if result {
-            self.stack.push(1)
+        let result = if (a > b) {
+            1
         } else {
-            self.stack.push(0)
-        }
+            0
+        };
+        self.stack.push(result)
     }
-
 
 
     /// 0x12 - SLT
