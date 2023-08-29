@@ -4,7 +4,7 @@ use evm::stack::StackTrait;
 use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
 use evm::context::{BoxDynamicExecutionContextDestruct, ExecutionContextTrait, CallContextTrait};
-use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array};
+use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array, load_word};
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 
 
@@ -61,22 +61,18 @@ fn test_calldata_load() {
 
     // Then
     let result: u256 = ctx.stack.pop().unwrap();
-    let mut results: Array<u8> = u256_to_bytes_array(result);
 
-    let mut i: u32 = 0;
+    let mut expected = load_word(call_data_len, call_data);
+
+    let mut i = 32 - call_data_len;
     loop {
-        if i > 31 {
+        if i == 0 {
             break;
         }
-
-        if i + offset < call_data_len {
-            assert(call_data[i + offset] == results[i], 'wrong byte value');
-        } else {
-            assert(*results[i] == 0, 'byte should be 0');
-        }
-
-        i += 1;
-    }
+        expected *= 256;
+        i -= 1;
+    };
+    assert(expected == result, 'wrong results');
 }
 
 #[test]
@@ -96,22 +92,20 @@ fn test_calldata_load_with_offset() {
 
     // Then
     let result: u256 = ctx.stack.pop().unwrap();
-    let mut results: Array<u8> = u256_to_bytes_array(result);
 
-    let mut i: u32 = 0;
+    let bytes_len = cmp::min(32, call_data_len - offset);
+    let sliced = call_data.slice(offset, bytes_len);
+    let mut expected = load_word(bytes_len, sliced);
+
+    let mut i = 32 - bytes_len;
     loop {
-        if i > 31 {
+        if i == 0 {
             break;
         }
-
-        if i + offset < call_data_len {
-            assert(call_data[i + offset] == results[i], 'wrong byte value');
-        } else {
-            assert(*results[i] == 0, 'byte should be 0');
-        }
-
-        i += 1;
-    }
+        expected *= 256;
+        i -= 1;
+    };
+    assert(expected == result, 'wrong results');
 }
 
 #[test]

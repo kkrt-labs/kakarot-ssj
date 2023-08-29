@@ -7,8 +7,7 @@ use evm::context::ExecutionContextTrait;
 use evm::context::CallContextTrait;
 use evm::context::BoxDynamicExecutionContextDestruct;
 use evm::errors::EVMError;
-use utils::helpers::{EthAddressIntoU256, u256_to_u32};
-
+use utils::helpers::{EthAddressIntoU256, U256IntoResultU32, load_word};
 
 #[generate_trait]
 impl EnvironmentInformationImpl of EnvironmentInformationTrait {
@@ -51,38 +50,32 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Push a word from the calldata onto the stack.
     /// # Specification: https://www.evm.codes/#35?fork=shanghai
     fn exec_calldataload(ref self: ExecutionContext) -> Result<(), EVMError> {
-        // Stack input:
-        // 0 - offset: calldata offset of the word we read
-        let offset: u32 = u256_to_u32(self.stack.pop()?)?;
+        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((self.stack.pop()?))?;
 
         let calldata = self.call_context().call_data();
         let calldata_len = calldata.len();
 
-        // Early return if the offset is beyond calldata
-        if offset >= calldata_len.into() {
-            self.stack.push(0);
-            return Result::Ok(());
+        // All bytes after the end of the calldata are set to 0.
+        if offset >= calldata_len {
+            return self.stack.push(0);
         }
 
-        // Init data to load
-        let mut data_to_load: u256 = 0;
-        data_to_load += (*calldata[0 + offset]).into();
+        // Slice the calldata
+        let bytes_len = cmp::min(32, calldata_len - offset);
+        let sliced = calldata.slice(offset, bytes_len);
 
-        let mut i: usize = 1;
+        // Fill data to load with bytes in calldata
+        let mut data_to_load: u256 = load_word(bytes_len, sliced);
+
+        // Fill the rest of the data to load with zeros
+        // TODO: optimize once we have dw-based exponentiation
+        let mut i = 32 - bytes_len;
         loop {
-            if i > 31 {
+            if i == 0 {
                 break;
             }
-
-            // Shift left
             data_to_load *= 256;
-
-            // Append if not out of bounds
-            if i + offset < calldata_len {
-                data_to_load += (*calldata[i + offset]).into();
-            }
-
-            i += 1;
+            i -= 1;
         };
 
         self.stack.push(data_to_load)
