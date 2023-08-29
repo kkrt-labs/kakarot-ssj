@@ -1,5 +1,3 @@
-// tests go here
-
 #[cfg(test)]
 mod test_external_owned_account {
     use eoa::externally_owned_account::{
