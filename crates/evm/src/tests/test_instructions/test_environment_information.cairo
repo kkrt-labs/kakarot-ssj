@@ -1,12 +1,16 @@
 use evm::instructions::EnvironmentInformationTrait;
-use evm::tests::test_utils::{setup_execution_context, setup_execution_context_with_bytecode, evm_address, callvalue};
+use evm::tests::test_utils::{
+    setup_execution_context, setup_execution_context_with_bytecode, evm_address, callvalue
+};
 use evm::stack::StackTrait;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
-use evm::context::{BoxDynamicExecutionContextDestruct, ExecutionContextTrait, CallContextTrait};
 use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array};
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
+use evm::context::{
+    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
+};
 
 #[test]
 #[available_gas(20000000)]
@@ -46,6 +50,50 @@ fn test__exec_callvalue() {
 
 #[test]
 #[available_gas(20000000)]
+fn test_gasprice() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    // When
+    ctx.exec_gasprice();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 10, 'stack top should be 10');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldata_size() {
+    // Given
+    let mut ctx = setup_execution_context();
+    let call_data: Span<u8> = ctx.call_context().call_data();
+
+    // When
+    ctx.exec_calldatasize();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == call_data.len().into(), 'stack top is not calldatasize');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_codesize() {
+    // Given
+    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
+    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+
+    // When
+    ctx.exec_codesize();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.pop().unwrap() == bytecode.len().into(), 'wrong codesize');
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test_codecopy_type_conversion_error() {
     // Given
     let bytecode: Span<u8> = array![1,2,3,4,5].span();
@@ -65,7 +113,6 @@ fn test_codecopy_type_conversion_error() {
         'should return ConversionError'
     );
 }
-
 
 #[test]
 #[available_gas(20000000)]
