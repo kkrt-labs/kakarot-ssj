@@ -96,7 +96,7 @@ fn test_codesize() {
 #[available_gas(20000000)]
 fn test_codecopy_type_conversion_error() {
     // Given
-    let bytecode: Span<u8> = array![1,2,3,4,5].span();
+    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context_with_bytecode(bytecode);
 
     ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
@@ -132,9 +132,9 @@ fn test_codecopy_with_out_of_bound_bytes() {
     test_codecopy(32, 0, 8);
 }
 
-fn test_codecopy(destOffset: u32, offset: u32, mut size: u32) {
+fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
-    let bytecode: Span<u8> = array![1,2,3,4,5].span();
+    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context_with_bytecode(bytecode);
 
     if (size == 0) {
@@ -143,12 +143,12 @@ fn test_codecopy(destOffset: u32, offset: u32, mut size: u32) {
 
     ctx.stack.push(size.into());
     ctx.stack.push(offset.into());
-    ctx.stack.push(destOffset.into());
+    ctx.stack.push(dest_offset.into());
 
     ctx
         .memory
-        .store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, destOffset);
-    let initial: u256 = ctx.memory.load_internal(destOffset).into();
+        .store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, dest_offset);
+    let initial: u256 = ctx.memory.load_internal(dest_offset).into();
     assert(
         initial == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
         'memory has not been initialized'
@@ -160,7 +160,7 @@ fn test_codecopy(destOffset: u32, offset: u32, mut size: u32) {
     // Then
     assert(ctx.stack.is_empty(), 'stack should be empty');
 
-    let result: u256 = ctx.memory.load_internal(destOffset).into();
+    let result: u256 = ctx.memory.load_internal(dest_offset).into();
     let mut results: Array<u8> = u256_to_bytes_array(result);
 
     let mut i = 0;
