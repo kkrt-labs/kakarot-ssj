@@ -44,7 +44,7 @@ fn test__exec_callvalue() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_gasPrice() {
+fn test_gasprice() {
     // Given
     let mut ctx = setup_execution_context();
 
