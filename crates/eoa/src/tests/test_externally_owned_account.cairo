@@ -8,10 +8,9 @@ mod test_external_owned_account {
     };
     use starknet::class_hash::Felt252TryIntoClassHash;
     use starknet::{deploy_syscall, ContractAddress, get_contract_address, contract_address_const};
-
     // Use debug print trait to be able to print result if needed.
     use debug::PrintTrait;
-    use array::ArrayTrait;
+    use array::{ArrayTrait};
     use traits::{Into, TryInto};
     use result::ResultTrait;
     use option::OptionTrait;
@@ -30,20 +29,19 @@ mod test_external_owned_account {
         IExternallyOwnedAccountDispatcher { contract_address }
     }
 
-    // #[test]
-    // #[available_gas(2000000000)]
-    // fn test_bytecode() {
-    //     let owner = contract_address_const::<1>();
-    //     set_contract_address(owner);
+    #[test]
+    #[available_gas(2000000000)]
+    fn test_bytecode() {
+        let owner = contract_address_const::<1>();
+        set_contract_address(owner);
 
-    //     let external_owner_account_contract = deploy_external_owned_account();
-    //     // let bytecode = external_owner_account_contract.bytecode();
+        let external_owner_account_contract = deploy_external_owned_account();
 
-    //     assert(
-    //         external_owner_account_contract.bytecode() == ArrayTrait::<u8>::new().span(),
-    //         'wrong bytecode'
-    //     );
-    // }
+        assert(
+            external_owner_account_contract.bytecode() == ArrayTrait::<u8>::new().span(),
+            'wrong bytecode'
+        );
+    }
 
     #[test]
     #[available_gas(2000000000)]
@@ -53,9 +51,6 @@ mod test_external_owned_account {
 
         let external_owner_account_contract = deploy_external_owned_account();
         let value: u32 = 0;
-
-        let test = external_owner_account_contract.bytecode_len();
-        test.print();
 
         assert(external_owner_account_contract.bytecode_len() == value, 'wrong bytecode');
     }
