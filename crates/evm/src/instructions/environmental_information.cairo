@@ -7,6 +7,8 @@ use evm::context::{
 };
 use evm::errors::EVMError;
 use utils::helpers::EthAddressIntoU256;
+use evm::helpers::U256IntoResultU32;
+use evm::memory::MemoryTrait;
 
 #[generate_trait]
 impl EnvironmentInformationImpl of EnvironmentInformationTrait {
@@ -79,6 +81,36 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Copies slice of bytecode to memory.
     /// # Specification: https://www.evm.codes/#39?fork=shanghai
     fn exec_codecopy(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = self.stack.pop_n(3)?;
+        let dest_offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[0]))?;
+        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[1]))?;
+        let size: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[2]))?;
+
+        let bytecode: Span<u8> = self.call_context().bytecode();
+
+        let slice_size = if (offset + size > bytecode.len()) {
+            bytecode.len() - offset
+        } else {
+            size
+        };
+
+        let data_to_copy: Span<u8> = bytecode.slice(offset, slice_size);
+        self.memory.store_n(data_to_copy, dest_offset);
+
+        // For out of bound bytes, 0s will be copied.
+        if (slice_size < size) {
+            let mut out_of_bounds_bytes: Array<u8> = ArrayTrait::new();
+            loop {
+                if (out_of_bounds_bytes.len() + slice_size == size) {
+                    break;
+                }
+
+                out_of_bounds_bytes.append(0);
+            };
+
+            self.memory.store_n(out_of_bounds_bytes.span(), dest_offset + slice_size);
+        }
+
         Result::Ok(())
     }
 
