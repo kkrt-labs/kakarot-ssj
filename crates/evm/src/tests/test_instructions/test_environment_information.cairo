@@ -111,7 +111,7 @@ fn test_codecopy_type_conversion_error() {
 
     // When
     let res = ctx.exec_codecopy();
-    
+
     // Then
     assert(res.is_err(), 'should return error');
     assert(
@@ -233,7 +233,7 @@ fn test_returndatasize() {
 #[available_gas(20000000)]
 fn test_returndata_copy_type_conversion_error() {
     // Given
-    let mut ctx = setup_execution();
+    let mut ctx = setup_execution_context();
     ctx.set_return_data(array![1, 2, 3, 4, 5]);
 
     ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
@@ -241,7 +241,7 @@ fn test_returndata_copy_type_conversion_error() {
     ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
 
     // When
-     let res = ctx.exec_returndatacopy();
+    let res = ctx.exec_returndatacopy();
     // Then
     assert(res.is_err(), 'should return error');
     assert(
