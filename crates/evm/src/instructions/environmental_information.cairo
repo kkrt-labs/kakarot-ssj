@@ -9,6 +9,7 @@ use evm::context::{
 };
 use utils::helpers::EthAddressIntoU256;
 use evm::memory::MemoryTrait;
+use integer::u32_overflowing_add;
 
 #[generate_trait]
 impl EnvironmentInformationImpl of EnvironmentInformationTrait {
@@ -154,8 +155,15 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
         let return_data: Span<u8> = self.return_data();
 
-        if (offset + size > return_data.len()) {
-            return Result::Err(EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR));
+        match u32_overflowing_add(offset, size) {
+            Result::Ok(x) => {
+                if (x > return_data.len()) {
+                    return Result::Err(EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR));
+                }
+            },
+            Result::Err(x) => {
+                return Result::Err(EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR));
+            }
         }
 
         let data_to_copy: Span<u8> = return_data.slice(offset, size);

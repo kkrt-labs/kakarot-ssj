@@ -12,7 +12,7 @@ const PC_OUT_OF_BOUNDS: felt252 = 'Kakarot: pc >= bytecode length';
 const TYPE_CONVERSION_ERROR: felt252 = 'Kakarot: type conversion error';
 
 // RETURNDATA
-const RETURNDATA_OUT_OF_BOUNDS_ERROR: felt252 = 'Kakarot: out of bounds';
+const RETURNDATA_OUT_OF_BOUNDS_ERROR: felt252 = 'Kakarot: ReturnDataOutOfBounds';
 
 #[derive(Drop, Copy, PartialEq)]
 enum EVMError {
