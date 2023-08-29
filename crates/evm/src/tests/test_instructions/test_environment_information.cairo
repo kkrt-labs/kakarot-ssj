@@ -1,11 +1,9 @@
-use evm::context::{BoxDynamicExecutionContextDestruct, ExecutionContextTrait};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::tests::test_utils::{
     setup_execution_context, setup_execution_context_with_bytecode, evm_address, callvalue
 };
 use evm::stack::StackTrait;
-use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
 use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array};
@@ -13,6 +11,10 @@ use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERRO
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
 };
+
+// *************************************************************************
+// 0x30: ADDRESS
+// *************************************************************************
 
 #[test]
 #[available_gas(20000000)]
@@ -36,6 +38,10 @@ fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls
 // ref: https://github.com/kkrt-labs/kakarot-ssj/issues/183
 }
 
+// *************************************************************************
+// 0x34: CALLVALUE
+// *************************************************************************
+
 #[test]
 #[available_gas(120000)]
 fn test__exec_callvalue() {
@@ -50,36 +56,9 @@ fn test__exec_callvalue() {
     assert(ctx.stack.pop().unwrap() == callvalue(), 'should be `123456789');
 }
 
-#[test]
-#[available_gas(20000000)]
-fn test_gasprice() {
-    // Given
-    let mut ctx = setup_execution_context();
-
-    // When
-    ctx.exec_gasprice();
-
-    // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 10, 'stack top should be 10');
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_returndatasize() {
-    // Given
-    let return_data: Array<u8> = array![1, 2, 3, 4, 5];
-    let size = return_data.len();
-    let mut ctx = setup_execution_context();
-    ctx.set_return_data(return_data);
-
-    // When
-    ctx.exec_returndatasize();
-
-    // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.pop().unwrap() == size.into(), 'wrong returndatasize');
-}
+// *************************************************************************
+// 0x36: CALLDATASIZE
+// *************************************************************************
 
 #[test]
 #[available_gas(20000000)]
@@ -96,6 +75,10 @@ fn test_calldata_size() {
     assert(ctx.stack.peek().unwrap() == call_data.len().into(), 'stack top is not calldatasize');
 }
 
+// *************************************************************************
+// 0x38: CODESIZE
+// *************************************************************************
+
 #[test]
 #[available_gas(20000000)]
 fn test_codesize() {
@@ -110,6 +93,10 @@ fn test_codesize() {
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.pop().unwrap() == bytecode.len().into(), 'wrong codesize');
 }
+
+// *************************************************************************
+// 0x39: CODECOPY
+// *************************************************************************
 
 #[test]
 #[available_gas(20000000)]
@@ -199,15 +186,55 @@ fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
     };
 }
 
+// *************************************************************************
+// 0x3A: GASPRICE
+// *************************************************************************
+
+#[test]
+#[available_gas(20000000)]
+fn test_gasprice() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    // When
+    ctx.exec_gasprice();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 10, 'stack top should be 10');
+}
+
+// *************************************************************************
+// 0x3D: RETURNDATASIZE
+// *************************************************************************
+
+#[test]
+#[available_gas(20000000)]
+fn test_returndatasize() {
+    // Given
+    let return_data: Array<u8> = array![1, 2, 3, 4, 5];
+    let size = return_data.len();
+    let mut ctx = setup_execution_context();
+    ctx.set_return_data(return_data);
+
+    // When
+    ctx.exec_returndatasize();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.pop().unwrap() == size.into(), 'wrong returndatasize');
+}
+
+// *************************************************************************
+// 0x3E: RETURNDATACOPY
+// *************************************************************************
+
 #[test]
 #[available_gas(20000000)]
 fn test_returndata_copy_type_conversion_error() {
     // Given
-    let mut ctx = setup_execution_context_with_returndata(array![1, 2, 3, 4, 5]);
-    
-    // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
-    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let mut ctx = setup_execution();
+    ctx.set_return_data(array![1, 2, 3, 4, 5]);
 
     ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
@@ -243,8 +270,9 @@ fn test_returndata_copy_with_out_of_bound_bytes() {
 
 fn test_returndata_copy(destOffset: u32, offset: u32, mut size: u32) {
     // Given
+    let mut ctx = setup_execution_context();
+    ctx.set_return_data(array![1, 2, 3, 4, 5]);
 
-    let mut ctx = setup_execution_context_with_returndata(array![1, 2, 3, 4, 5]);
     let return_data: Span<u8> = ctx.return_data();
 
     if (size == 0) {
