@@ -80,7 +80,8 @@ struct StaticExecutionContext {
     starknet_address: ContractAddress,
     evm_address: EthAddress,
     read_only: bool,
-    gas_price: u64,
+    gas_limit: u64,
+    gas_price: u64
 }
 
 impl DefaultStaticExecutionContext of Default<StaticExecutionContext> {
@@ -91,7 +92,8 @@ impl DefaultStaticExecutionContext of Default<StaticExecutionContext> {
             starknet_address: Default::default(),
             evm_address: Default::default(),
             read_only: false,
-            gas_price: 0,
+            gas_limit: 0,
+            gas_price: 0
         }
     }
 }
@@ -104,9 +106,12 @@ impl StaticExecutionContextImpl of StaticExecutionContextTrait {
         starknet_address: ContractAddress,
         evm_address: EthAddress,
         read_only: bool,
+        gas_limit: u64,
         gas_price: u64
     ) -> StaticExecutionContext {
-        StaticExecutionContext { call_context, starknet_address, evm_address, read_only, gas_price }
+        StaticExecutionContext {
+            call_context, starknet_address, evm_address, read_only, gas_limit, gas_price
+        }
     }
 }
 
@@ -199,7 +204,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         ExecutionContext {
             static_context: BoxTrait::new(
                 StaticExecutionContextTrait::new(
-                    call_context, starknet_address, evm_address, read_only, gas_price
+                    call_context, starknet_address, evm_address, read_only, gas_limit, gas_price
                 )
             ),
             dynamic_context: BoxTrait::new(DynamicExecutionContextTrait::new(returned_data)),
@@ -306,6 +311,11 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn read_only(self: @ExecutionContext) -> bool {
         (*self.static_context).unbox().read_only
+    }
+
+    #[inline(always)]
+    fn gas_limit(self: @ExecutionContext) -> u64 {
+        (*self.static_context).unbox().gas_limit
     }
 
     #[inline(always)]
