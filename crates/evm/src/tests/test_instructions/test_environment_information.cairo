@@ -5,7 +5,6 @@ use evm::tests::test_utils::{
     setup_execution_context, setup_execution_context_with_bytecode, evm_address, callvalue
 };
 use evm::stack::StackTrait;
-use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
 use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array};
@@ -317,5 +316,4 @@ fn test_returndatasize() {
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.pop().unwrap() == size.into(), 'wrong returndatasize');
 }
-
 
