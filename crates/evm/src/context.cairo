@@ -375,6 +375,13 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         // self.gas_used.print();
         'print debug'.print();
     }
+
+    #[inline(always)]
+    fn set_return_data(ref self: ExecutionContext, value: Array<u8>) {
+        let mut dyn_ctx = self.dynamic_context.unbox();
+        dyn_ctx.return_data = value;
+        self.dynamic_context = BoxTrait::new(dyn_ctx);
+    }
 }
 
 impl DefaultExecutionContext of Default<ExecutionContext> {

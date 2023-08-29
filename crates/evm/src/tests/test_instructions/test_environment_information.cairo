@@ -1,11 +1,11 @@
 use evm::instructions::EnvironmentInformationTrait;
 use evm::tests::test_utils::{
-    setup_execution_context, evm_address, callvalue, setup_execution_context_with_returndata
+    setup_execution_context, evm_address, callvalue
 };
 use evm::stack::StackTrait;
 use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::{BoxDynamicExecutionContextDestruct, ExecutionContextTrait};
 use utils::helpers::EthAddressIntoU256;
 
 #[test]
@@ -50,7 +50,8 @@ fn test_returndatasize() {
     // Given
     let return_data: Array<u8> = array![1, 2, 3, 4, 5];
     let size = return_data.len();
-    let mut ctx = setup_execution_context_with_returndata(return_data);
+    let mut ctx = setup_execution_context();
+    ctx.set_return_data(return_data);
 
     // When
     ctx.exec_returndatasize();
