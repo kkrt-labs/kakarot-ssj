@@ -85,7 +85,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get price of gas in current environment.
     /// # Specification: https://www.evm.codes/#3a?fork=shanghai
     fn exec_gasprice(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        self.stack.push(self.gas_price().into())
     }
 
     /// 0x3B - EXTCODESIZE 
