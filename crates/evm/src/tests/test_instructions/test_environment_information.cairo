@@ -179,3 +179,20 @@ fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
         i += 1;
     };
 }
+
+#[test]
+#[available_gas(20000000)]
+fn test_returndatasize() {
+    // Given
+    let return_data: Array<u8> = array![1, 2, 3, 4, 5];
+    let size = return_data.len();
+    let mut ctx = setup_execution_context();
+    ctx.set_return_data(return_data);
+
+    // When
+    ctx.exec_returndatasize();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.pop().unwrap() == size.into(), 'wrong returndatasize');
+}
