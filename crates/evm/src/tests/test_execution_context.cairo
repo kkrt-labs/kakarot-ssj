@@ -17,6 +17,8 @@ use evm::tests::test_utils::{setup_call_context, setup_execution_context, CallCo
 use evm::tests::test_utils;
 use evm::context::BoxDynamicExecutionContextDestruct;
 
+use test_utils::callvalue;
+
 // TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)
 #[inline(never)]
 fn no_op() {}
@@ -28,7 +30,7 @@ fn test_call_context_new() {
     // When
     let bytecode: Span<u8> = array![1, 2, 3].span();
     let call_data: Span<u8> = array![4, 5, 6].span();
-    let value: u256 = 100;
+    let value: u256 = callvalue();
 
     let call_ctx = CallContextTrait::new(bytecode, call_data, value);
     // TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)
@@ -37,7 +39,7 @@ fn test_call_context_new() {
     // Then
     assert(call_ctx.bytecode() == bytecode, 'wrong bytecode');
     assert(call_ctx.call_data() == call_data, 'wrong call_data');
-    assert(call_ctx.value() == value, 'wrong value');
+    assert(call_ctx.value() == callvalue(), 'wrong value');
 }
 
 #[test]

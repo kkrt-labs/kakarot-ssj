@@ -1,13 +1,15 @@
 //! Block Information.
 
 // Corelib imports
-use starknet::syscalls::get_execution_info_syscall;
+use starknet::info::{get_block_number, get_block_timestamp};
 use result::ResultTrait;
+use traits::Into;
 
 // Internal imports
 use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
 use evm::stack::StackTrait;
 use evm::errors::EVMError;
+use utils::constants::CHAIN_ID;
 
 #[generate_trait]
 impl BlockInformation of BlockInformationTrait {
@@ -29,20 +31,14 @@ impl BlockInformation of BlockInformationTrait {
     /// Get the block’s timestamp
     /// # Specification: https://www.evm.codes/#42?fork=shanghai
     fn exec_timestamp(ref self: ExecutionContext) -> Result<(), EVMError> {
-        match get_execution_info_syscall() {
-            Result::Ok(execution_info) => {
-                let timestamp = execution_info.unbox().block_info.unbox().block_timestamp.into();
-                self.stack.push(timestamp)
-            },
-            Result::Err(_) => Result::Err(EVMError::SyscallError('Could not get block exec info')),
-        }
+        self.stack.push(get_block_timestamp().into())
     }
 
     /// 0x43 - NUMBER 
     /// Get the block number.
     /// # Specification: https://www.evm.codes/#43?fork=shanghai
     fn exec_number(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        self.stack.push(get_block_number().into())
     }
 
     /// 0x44 - PREVRANDAO 
@@ -55,14 +51,17 @@ impl BlockInformation of BlockInformationTrait {
     /// Get gas limit
     /// # Specification: https://www.evm.codes/#45?fork=shanghai
     fn exec_gaslimit(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        self.stack.push(self.gas_limit().into())
     }
 
     /// 0x46 - CHAINID 
     /// Get the chain ID.
     /// # Specification: https://www.evm.codes/#46?fork=shanghai
     fn exec_chainid(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        // CHAIN_ID = KKRT (0x4b4b5254) in ASCII
+        // TODO: Replace the hardcoded value by a value set in kakarot main contract constructor
+        // Push the chain ID to stack
+        self.stack.push(CHAIN_ID)
     }
 
     /// 0x47 - SELFBALANCE 
@@ -76,6 +75,8 @@ impl BlockInformation of BlockInformationTrait {
     /// Get base fee.
     /// # Specification: https://www.evm.codes/#48?fork=shanghai
     fn exec_basefee(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        // Get the current base fee. (Kakarot doesn't use EIP 1559 so basefee
+        //  doesn't really exists there so we just use the gas price)
+        self.stack.push(self.gas_price().into())
     }
 }

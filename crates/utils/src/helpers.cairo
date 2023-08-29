@@ -4,9 +4,8 @@ use traits::{Into, TryInto};
 use option::OptionTrait;
 use debug::PrintTrait;
 use starknet::{EthAddress, EthAddressIntoFelt252};
-
-
-use utils::{constants};
+use cmp::min;
+use utils::constants;
 
 /// Ceils a number of bits to the next word (32 bytes)
 ///
@@ -75,23 +74,25 @@ fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
     ArrayExtensionTrait::concat(ref dst, big_endian.span());
 }
 
-/// Splits a u256 into `len` bytes, little-endian, and returns the bytes array.
-fn split_word_little(mut value: u256, mut len: usize) -> Array<u8> {
-    let mut dst: Array<u8> = ArrayTrait::new();
-    let base = 256;
-    let bound = 256;
+fn split_u128_little(ref dest: Array<u8>, mut value: u128, mut len: usize) {
     loop {
         if len == 0 {
             assert(value == 0, 'split_words:value not 0');
-            break ();
+            break;
         }
-
-        let low_part = (value % constants::FELT252_PRIME) % base;
-        dst.append(low_part.try_into().unwrap());
-
-        value = (value - low_part) / 256;
+        dest.append((value % 256).try_into().unwrap());
+        value /= 256;
         len -= 1;
-    };
+    }
+}
+
+/// Splits a u256 into `len` bytes, little-endian, and returns the bytes array.
+fn split_word_little(mut value: u256, mut len: usize) -> Array<u8> {
+    let mut dst: Array<u8> = ArrayTrait::new();
+    let low_len = min(len, 16);
+    split_u128_little(ref dst, value.low, low_len);
+    let high_len = min(len - low_len, 16);
+    split_u128_little(ref dst, value.high, high_len);
     dst
 }
 

@@ -13,9 +13,9 @@ use utils::{helpers::u256_to_bytes_array};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
     duplication_operations, environmental_information, exchange_operations, logging_operations,
-    memory_operations, push_operations, sha3, StopAndArithmeticOperationsTrait,
-    ComparisonAndBitwiseOperationsTrait, system_operations, BlockInformationTrait,
-    DuplicationOperationsTrait, EnvironmentInformationTrait
+    memory_operations, sha3, StopAndArithmeticOperationsTrait, ComparisonAndBitwiseOperationsTrait,
+    system_operations, BlockInformationTrait, DuplicationOperationsTrait,
+    EnvironmentInformationTrait, PushOperationsTrait
 };
 use result::ResultTrait;
 
@@ -91,207 +91,207 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         // Call the appropriate function based on the opcode.
         if opcode == 0 {
             // STOP
-            context.exec_stop()?;
+            return context.exec_stop();
         }
         if opcode == 1 {
             // ADD
-            context.exec_add()?;
+            return context.exec_add();
         }
         if opcode == 2 {
             // MUL
-            context.exec_mul()?;
+            return context.exec_mul();
         }
         if opcode == 3 {
             // SUB
-            context.exec_sub()?;
+            return context.exec_sub();
         }
         if opcode == 4 {
             // DIV
-            context.exec_div()?;
+            return context.exec_div();
         }
         if opcode == 5 {
             // SDIV
-            context.exec_sdiv()?;
+            return context.exec_sdiv();
         }
         if opcode == 6 {
             // MOD
-            context.exec_mod()?;
+            return context.exec_mod();
         }
         if opcode == 7 {
             // SMOD
-            context.exec_smod()?;
+            return context.exec_smod();
         }
         if opcode == 8 {
             // ADDMOD
-            context.exec_addmod()?;
+            return context.exec_addmod();
         }
         if opcode == 9 {
             // MULMOD
-            context.exec_mulmod()?;
+            return context.exec_mulmod();
         }
         if opcode == 10 {
             // EXP
-            context.exec_exp()?;
+            return context.exec_exp();
         }
         if opcode == 11 {
             // SIGNEXTEND
-            context.exec_signextend()?;
+            return context.exec_signextend();
         }
         if opcode == 16 {
             // LT
-            context.exec_lt()?;
+            return context.exec_lt();
         }
         if opcode == 17 {
             // GT
-            context.exec_gt()?;
+            return context.exec_gt();
         }
         if opcode == 18 {
             // SLT
-            context.exec_slt()?;
+            return context.exec_slt();
         }
         if opcode == 19 {
             // SGT
-            context.exec_sgt()?;
+            return context.exec_sgt();
         }
         if opcode == 20 {
             // EQ
-            context.exec_eq()?;
+            return context.exec_eq();
         }
         if opcode == 21 {
             // ISZERO
-            context.exec_iszero()?;
+            return context.exec_iszero();
         }
         if opcode == 22 {
             // AND
-            context.exec_and()?;
+            return context.exec_and();
         }
         if opcode == 23 {
             // OR
-            context.exec_or()?;
+            return context.exec_or();
         }
         if opcode == 24 {
             // XOR
-            context.exec_xor()?;
+            return context.exec_xor();
         }
         if opcode == 25 {
             // NOT
-            context.exec_not()?;
+            return context.exec_not();
         }
         if opcode == 26 {
             // BYTE
-            context.exec_byte()?;
+            return context.exec_byte();
         }
         if opcode == 27 {
             // SHL
-            context.exec_shl()?;
+            return context.exec_shl();
         }
         if opcode == 28 {
             // SHR
-            context.exec_shr()?;
+            return context.exec_shr();
         }
         if opcode == 29 {
             // SAR
-            context.exec_sar()?;
+            return context.exec_sar();
         }
         if opcode == 48 {
             // ADDRESS
-            context.exec_address()?;
+            return context.exec_address();
         }
         if opcode == 49 {
             // BALANCE
-            context.exec_balance()?;
+            return context.exec_balance();
         }
         if opcode == 50 {
             // ORIGIN
-            context.exec_origin()?;
+            return context.exec_origin();
         }
         if opcode == 51 {
             // CALLER
-            context.exec_caller()?;
+            return context.exec_caller();
         }
         if opcode == 52 {
             // CALLVALUE
-            context.exec_callvalue()?;
+            return context.exec_callvalue();
         }
         if opcode == 53 {
             // CALLDATALOAD
-            context.exec_calldataload()?;
+            return context.exec_calldataload();
         }
         if opcode == 54 {
             // CALLDATASIZE
-            context.exec_calldatasize()?;
+            return context.exec_calldatasize();
         }
         if opcode == 55 {
             // CALLDATACOPY
-            context.exec_calldatacopy()?;
+            return context.exec_calldatacopy();
         }
         if opcode == 56 {
             // CODESIZE
-            context.exec_codesize()?;
+            return context.exec_codesize();
         }
         if opcode == 57 {
             // CODECOPY
-            context.exec_codecopy()?;
+            return context.exec_codecopy();
         }
         if opcode == 58 {
             // GASPRICE
-            context.exec_gasprice()?;
+            return context.exec_gasprice();
         }
         if opcode == 59 {
             // EXTCODESIZE
-            context.exec_extcodesize()?;
+            return context.exec_extcodesize();
         }
         if opcode == 60 {
             // EXTCODECOPY
-            context.exec_extcodecopy()?;
+            return context.exec_extcodecopy();
         }
         if opcode == 61 {
             // RETURNDATASIZE
-            context.exec_returndatasize()?;
+            return context.exec_returndatasize();
         }
         if opcode == 62 {
             // RETURNDATACOPY
-            context.exec_returndatacopy()?;
+            return context.exec_returndatacopy();
         }
         if opcode == 63 {
             // EXTCODEHASH
-            context.exec_extcodehash()?;
+            return context.exec_extcodehash();
         }
         if opcode == 64 {
             // BLOCKHASH
-            context.exec_blockhash()?;
+            return context.exec_blockhash();
         }
         if opcode == 65 {
             // COINBASE
-            context.exec_coinbase()?;
+            return context.exec_coinbase();
         }
         if opcode == 66 {
             // TIMESTAMP
-            context.exec_timestamp()?;
+            return context.exec_timestamp();
         }
         if opcode == 67 {
             // NUMBER
-            context.exec_number()?;
+            return context.exec_number();
         }
         if opcode == 68 {
             // PREVRANDAO
-            context.exec_prevrandao()?;
+            return context.exec_prevrandao();
         }
         if opcode == 69 {
             // GASLIMIT
-            context.exec_gaslimit()?;
+            return context.exec_gaslimit();
         }
         if opcode == 70 {
             // CHAINID
-            context.exec_chainid()?;
+            return context.exec_chainid();
         }
         if opcode == 71 {
             // SELFBALANCE
-            context.exec_selfbalance()?;
+            return context.exec_selfbalance();
         }
         if opcode == 72 {
             // BASEFEE
-            context.exec_basefee()?;
+            return context.exec_basefee();
         }
         if opcode == 80 {
             // POP
@@ -343,199 +343,199 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 95 {
             // PUSH0
-            push_operations::exec_push0(ref context);
+            return context.exec_push0();
         }
         if opcode == 96 {
             // PUSH1
-            push_operations::exec_push1(ref context);
+            return context.exec_push1();
         }
         if opcode == 97 {
             // PUSH2
-            push_operations::exec_push2(ref context);
+            return context.exec_push2();
         }
         if opcode == 98 {
             // PUSH3
-            push_operations::exec_push3(ref context);
+            return context.exec_push3();
         }
         if opcode == 99 {
             // PUSH4
-            push_operations::exec_push4(ref context);
+            return context.exec_push4();
         }
         if opcode == 100 {
             // PUSH5
-            push_operations::exec_push5(ref context);
+            return context.exec_push5();
         }
         if opcode == 101 {
             // PUSH6
-            push_operations::exec_push6(ref context);
+            return context.exec_push6();
         }
         if opcode == 102 {
             // PUSH7
-            push_operations::exec_push7(ref context);
+            return context.exec_push7();
         }
         if opcode == 103 {
             // PUSH8
-            push_operations::exec_push8(ref context);
+            return context.exec_push8();
         }
         if opcode == 104 {
             // PUSH9
-            push_operations::exec_push9(ref context);
+            return context.exec_push9();
         }
         if opcode == 105 {
             // PUSH10
-            push_operations::exec_push10(ref context);
+            return context.exec_push10();
         }
         if opcode == 106 {
             // PUSH11
-            push_operations::exec_push11(ref context);
+            return context.exec_push11();
         }
         if opcode == 107 {
             // PUSH12
-            push_operations::exec_push12(ref context);
+            return context.exec_push12();
         }
         if opcode == 108 {
             // PUSH13
-            push_operations::exec_push13(ref context);
+            return context.exec_push13();
         }
         if opcode == 109 {
             // PUSH14
-            push_operations::exec_push14(ref context);
+            return context.exec_push14();
         }
         if opcode == 110 {
             // PUSH15
-            push_operations::exec_push15(ref context);
+            return context.exec_push15();
         }
         if opcode == 111 {
             // PUSH16
-            push_operations::exec_push16(ref context);
+            return context.exec_push16();
         }
         if opcode == 112 {
             // PUSH17
-            push_operations::exec_push17(ref context);
+            return context.exec_push17();
         }
         if opcode == 113 {
             // PUSH18
-            push_operations::exec_push18(ref context);
+            return context.exec_push18();
         }
         if opcode == 114 {
             // PUSH19
-            push_operations::exec_push19(ref context);
+            return context.exec_push19();
         }
         if opcode == 115 {
             // PUSH20
-            push_operations::exec_push20(ref context);
+            return context.exec_push20();
         }
         if opcode == 116 {
             // PUSH21
-            push_operations::exec_push21(ref context);
+            return context.exec_push21();
         }
         if opcode == 117 {
             // PUSH22
-            push_operations::exec_push22(ref context);
+            return context.exec_push22();
         }
         if opcode == 118 {
             // PUSH23
-            push_operations::exec_push23(ref context);
+            return context.exec_push23();
         }
         if opcode == 119 {
             // PUSH24
-            push_operations::exec_push24(ref context);
+            return context.exec_push24();
         }
         if opcode == 120 {
             // PUSH25
-            push_operations::exec_push25(ref context);
+            return context.exec_push25();
         }
         if opcode == 121 {
             // PUSH26
-            push_operations::exec_push26(ref context);
+            return context.exec_push26();
         }
         if opcode == 122 {
             // PUSH27
-            push_operations::exec_push27(ref context);
+            return context.exec_push27();
         }
         if opcode == 123 {
             // PUSH28
-            push_operations::exec_push28(ref context);
+            return context.exec_push28();
         }
         if opcode == 124 {
             // PUSH29
-            push_operations::exec_push29(ref context);
+            return context.exec_push29();
         }
         if opcode == 125 {
             // PUSH30
-            push_operations::exec_push30(ref context);
+            return context.exec_push30();
         }
         if opcode == 126 {
             // PUSH31
-            push_operations::exec_push31(ref context);
+            return context.exec_push31();
         }
         if opcode == 127 {
             // PUSH32
-            push_operations::exec_push32(ref context);
+            return context.exec_push32();
         }
         if opcode == 128 {
             // DUP1
-            context.exec_dup1()?;
+            return context.exec_dup1();
         }
         if opcode == 129 {
             // DUP2
-            context.exec_dup2()?;
+            return context.exec_dup2();
         }
         if opcode == 130 {
             // DUP3
-            context.exec_dup3()?;
+            return context.exec_dup3();
         }
         if opcode == 131 {
             // DUP4
-            context.exec_dup4()?;
+            return context.exec_dup4();
         }
         if opcode == 132 {
             // DUP5
-            context.exec_dup5()?;
+            return context.exec_dup5();
         }
         if opcode == 133 {
             // DUP6
-            context.exec_dup6()?;
+            return context.exec_dup6();
         }
         if opcode == 134 {
             // DUP7
-            context.exec_dup7()?;
+            return context.exec_dup7();
         }
         if opcode == 135 {
             // DUP8
-            context.exec_dup8()?;
+            return context.exec_dup8();
         }
         if opcode == 136 {
             // DUP9
-            context.exec_dup9()?;
+            return context.exec_dup9();
         }
         if opcode == 137 {
             // DUP10
-            context.exec_dup10()?;
+            return context.exec_dup10();
         }
         if opcode == 138 {
             // DUP11
-            context.exec_dup11()?;
+            return context.exec_dup11();
         }
         if opcode == 139 {
             // DUP12
-            context.exec_dup12()?;
+            return context.exec_dup12();
         }
         if opcode == 140 {
             // DUP13
-            context.exec_dup13()?;
+            return context.exec_dup13();
         }
         if opcode == 141 {
             // DUP14
-            context.exec_dup14()?;
+            return context.exec_dup14();
         }
         if opcode == 142 {
             // DUP15
-            context.exec_dup15()?;
+            return context.exec_dup15();
         }
         if opcode == 143 {
             // DUP16
-            context.exec_dup16()?;
+            return context.exec_dup16();
         }
         if opcode == 144 {
             // SWAP1
