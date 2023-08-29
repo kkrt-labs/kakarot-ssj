@@ -52,7 +52,6 @@ fn test_calldata_size() {
     // Given
     let mut ctx = setup_execution_context();
     let call_data: Span<u8> = ctx.call_context().call_data();
-    let call_data_len = call_data.len();
 
     // When
     ctx.exec_calldatasize();
