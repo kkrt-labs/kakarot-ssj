@@ -73,3 +73,17 @@ fn test_codesize() {
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.pop().unwrap() == bytecode.len().into(), 'wrong codesize');
 }
+
+#[test]
+#[available_gas(20000000)]
+fn test_gasprice() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    // When
+    ctx.exec_gasprice();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 10, 'stack top should be 10');
+}
