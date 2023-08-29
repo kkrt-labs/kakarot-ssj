@@ -100,8 +100,8 @@ fn test_calldata_copy(dest_offset: u32, offset: u32, mut size: u32) {
 
     ctx
         .memory
-        .store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, destOffset);
-    let initial: u256 = ctx.memory.load_internal(destOffset).into();
+        .store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, dest_offset);
+    let initial: u256 = ctx.memory.load_internal(dest_offset).into();
     assert(
         initial == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
         'memory has not been initialized'
@@ -113,7 +113,7 @@ fn test_calldata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Then
     assert(ctx.stack.is_empty(), 'stack should be empty');
 
-    let result: u256 = ctx.memory.load_internal(destOffset).into();
+    let result: u256 = ctx.memory.load_internal(dest_offset).into();
     let mut results: Array<u8> = u256_to_bytes_array(result);
 
     let mut i = 0;
