@@ -63,13 +63,6 @@ fn test_execution_context_new() {
     let revert_contract_state: Felt252Dict<felt252> = Default::default();
     let reverted: bool = false;
     let read_only: bool = false;
-    let mut i = 0;
-    loop {
-        if i == 10 {
-            break;
-        }
-        i += 1;
-    };
 
     // When
     let mut execution_context = ExecutionContextTrait::new(
