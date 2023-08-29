@@ -93,7 +93,7 @@ impl DefaultStaticExecutionContext of Default<StaticExecutionContext> {
             evm_address: Default::default(),
             read_only: false,
             gas_limit: 0,
-            gas_price: 0
+            gas_price: 0,
         }
     }
 }
