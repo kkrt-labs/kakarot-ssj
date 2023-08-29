@@ -15,8 +15,7 @@ const TYPE_CONVERSION_ERROR: felt252 = 'Kakarot: type conversion error';
 enum EVMError {
     StackError: felt252,
     InvalidProgramCounter: felt252,
-    SyscallError: felt252,
-    TypeConversionError: felt252,
+    TypeConversionError: felt252
 }
 
 
@@ -25,7 +24,6 @@ impl EVMErrorIntoU256 of Into<EVMError, u256> {
         match self {
             EVMError::StackError(error_message) => error_message.into(),
             EVMError::InvalidProgramCounter(error_message) => error_message.into(),
-            EVMError::SyscallError(error_message) => error_message.into(),
             EVMError::TypeConversionError(error_message) => error_message.into(),
         }
     }
