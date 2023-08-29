@@ -2,10 +2,9 @@
 use starknet::{EthAddressIntoFelt252};
 use result::ResultTrait;
 use evm::stack::StackTrait;
-use evm::context::ExecutionContext;
-use evm::context::ExecutionContextTrait;
-use evm::context::CallContextTrait;
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::{
+    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
+};
 use evm::errors::EVMError;
 use utils::helpers::EthAddressIntoU256;
 
@@ -57,7 +56,8 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get the size of return data.
     /// # Specification: https://www.evm.codes/#36?fork=shanghai
     fn exec_calldatasize(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let result: u256 = self.call_context().call_data().len().into();
+        self.stack.push(result)
     }
 
     /// 0x37 - CALLDATACOPY operation
