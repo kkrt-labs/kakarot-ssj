@@ -3,10 +3,9 @@ use evm::tests::test_utils::{setup_execution_context, evm_address, callvalue};
 use evm::stack::StackTrait;
 use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
-use evm::context::ExecutionContext;
-use evm::context::ExecutionContextTrait;
-use evm::context::CallContextTrait;
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::{
+    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
+};
 use evm::errors::EVMError;
 use utils::helpers::EthAddressIntoU256;
 
