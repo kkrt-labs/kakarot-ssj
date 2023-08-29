@@ -1,5 +1,7 @@
 use evm::instructions::EnvironmentInformationTrait;
-use evm::tests::test_utils::{setup_execution_context, setup_execution_context_with_bytecode, evm_address, callvalue};
+use evm::tests::test_utils::{
+    setup_execution_context, setup_execution_context_with_bytecode, evm_address, callvalue
+};
 use evm::stack::StackTrait;
 use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
@@ -63,7 +65,7 @@ fn test_calldata_size() {
 #[available_gas(20000000)]
 fn test_codesize() {
     // Given
-    let bytecode: Span<u8> = array![1,2,3,4,5].span();
+    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context_with_bytecode(bytecode);
 
     // When
