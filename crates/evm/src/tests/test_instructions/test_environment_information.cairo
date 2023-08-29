@@ -6,7 +6,6 @@ use starknet::EthAddressIntoFelt252;
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
 };
-use evm::errors::EVMError;
 use utils::helpers::EthAddressIntoU256;
 
 #[test]
