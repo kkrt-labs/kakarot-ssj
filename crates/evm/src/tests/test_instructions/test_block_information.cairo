@@ -38,7 +38,7 @@ fn test_block_number_set_to_32() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_chainId_should_push_chain_id_to_stack() {
+fn test_chainid_should_push_chain_id_to_stack() {
     // Given
     let mut ctx = setup_execution_context();
 
