@@ -252,6 +252,48 @@ fn test_returndata_copy_type_conversion_error() {
 
 #[test]
 #[available_gas(20000000)]
+fn test_returndata_copy_overflowing_add_error() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.set_return_data(array![1, 2, 3, 4, 5]);
+
+    ctx.stack.push(0xFFFFFFFF);
+    ctx.stack.push(0xFFFFFFFF);
+    ctx.stack.push(0xFFFFFFFF);
+
+    // When
+    let res = ctx.exec_returndatacopy();
+    // Then
+    assert(res.is_err(), 'should return error');
+    assert(
+        res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
+        'should return OutOfBounds'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_returndata_copy_out_of_bounds_error() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.set_return_data(array![1, 2, 3, 4, 5]);
+
+    ctx.stack.push(10);
+    ctx.stack.push(0);
+    ctx.stack.push(0);
+
+    // When
+    let res = ctx.exec_returndatacopy();
+    // Then
+    assert(res.is_err(), 'should return error');
+    assert(
+        res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
+        'should return OutOfBounds'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test_returndata_copy_basic() {
     test_returndata_copy(32, 0, 0);
 }
