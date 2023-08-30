@@ -103,6 +103,16 @@ fn test_store_should_add_n_elements_to_the_memory() {
     assert(len == 32, 'memory should be 32bytes');
 }
 
+
+#[test]
+#[available_gas(200000000)]
+fn test_store_n_no_aligned_words() {
+    let mut memory = MemoryTrait::new();
+    memory.store_n(array![1, 2].span(), 15);
+    assert(memory.bytes_len == 32, 'memory should be 32 bytes');
+}
+
+
 #[test]
 #[available_gas(20000000)]
 fn test__load__should_load_an_element_from_the_memory() {
