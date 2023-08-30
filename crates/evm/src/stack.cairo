@@ -39,7 +39,7 @@ impl NullableTraitExtImpl of NullableTraitExt<u256> {
     }
 }
 
-#[derive(Destruct)]
+#[derive(Destruct, Default)]
 struct Stack {
     items: Felt252Dict<Nullable<u256>>,
     len: usize,
@@ -60,8 +60,7 @@ trait StackTrait {
 impl StackImpl of StackTrait {
     #[inline(always)]
     fn new() -> Stack {
-        let items: Felt252Dict<Nullable<u256>> = Default::default();
-        Stack { items, len: 0 }
+        Default::default()
     }
 
     /// Pushes a new bytes32 word onto the stack. 
@@ -156,11 +155,5 @@ impl StackImpl of StackTrait {
     #[inline(always)]
     fn is_empty(self: @Stack) -> bool {
         *self.len == 0
-    }
-}
-
-impl DefaultStackImpl of Default<Stack> {
-    fn default() -> Stack {
-        StackTrait::new()
     }
 }
