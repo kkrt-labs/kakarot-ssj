@@ -18,13 +18,14 @@ mod test_external_owned_account {
     use option::OptionTrait;
     use starknet::EthAddress;
     use serde::Serde;
+    use integer::BoundedInt;
 
 
     // Use starknet test utils to fake the transaction context.
     use starknet::testing::{set_caller_address, set_contract_address};
 
     fn deploy_erc20() -> (IERC20Dispatcher, ContractAddress) {
-        let mut calldata: Array<felt252> = array!['name', 'symbol', 100, 0, 10];
+        let mut calldata: Array<felt252> = array!['native_token', 'symbol', 100000, 0, 10000];
 
         let (erc20_address, _) = deploy_syscall(
             ERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
@@ -34,10 +35,12 @@ mod test_external_owned_account {
         return (IERC20Dispatcher { contract_address: erc20_address }, erc20_address);
     }
 
-    fn deploy_external_owned_account(
-        kakarot_address: ContractAddress, evm_address: EthAddress
+    fn deploy_eoa(
+        //TODO: Remove native token and fetch from Kakarot Contract, when Kakarot Contract is ready
+        native_token: ContractAddress, kakarot_address: ContractAddress, evm_address: EthAddress
     ) -> IExternallyOwnedAccountDispatcher {
         let mut calldata = ArrayTrait::<felt252>::new();
+        calldata.append(native_token.into());
         calldata.append(kakarot_address.into());
         calldata.append(evm_address.into());
 
@@ -55,17 +58,13 @@ mod test_external_owned_account {
     fn test_bytecode() {
         let owner = contract_address_const::<1>();
         set_contract_address(owner);
+        let kakarot_address = contract_address_const::<2>();
         let evm_address: EthAddress = 3.try_into().unwrap();
-        let (_, kakarot_address) = deploy_erc20();
+        let (_, native_token) = deploy_erc20();
 
-        let external_owner_account_contract = deploy_external_owned_account(
-            kakarot_address, evm_address
-        );
+        let eoa_contract = deploy_eoa(native_token, kakarot_address, evm_address);
 
-        assert(
-            external_owner_account_contract.bytecode() == ArrayTrait::<u8>::new().span(),
-            'wrong bytecode'
-        );
+        assert(eoa_contract.bytecode() == ArrayTrait::<u8>::new().span(), 'wrong bytecode');
     }
 
     #[test]
@@ -73,15 +72,14 @@ mod test_external_owned_account {
     fn test_bytecode_len() {
         let owner = contract_address_const::<1>();
         set_contract_address(owner);
+        let kakarot_address = contract_address_const::<2>();
         let evm_address: EthAddress = 3.try_into().unwrap();
-        let (_, kakarot_address) = deploy_erc20();
+        let (_, native_token) = deploy_erc20();
 
-        let external_owner_account_contract = deploy_external_owned_account(
-            kakarot_address, evm_address
-        );
+        let eoa_contract = deploy_eoa(native_token, kakarot_address, evm_address);
         let value: u32 = 0;
 
-        assert(external_owner_account_contract.bytecode_len() == value, 'wrong bytecode');
+        assert(eoa_contract.bytecode_len() == value, 'wrong bytecode');
     }
 
     #[test]
@@ -89,15 +87,30 @@ mod test_external_owned_account {
     fn test_get_evm_address() {
         let owner = contract_address_const::<1>();
         set_contract_address(owner);
+        let kakarot_address = contract_address_const::<2>();
         let evm_address: EthAddress = 3.try_into().unwrap();
-        let (_, kakarot_address) = deploy_erc20();
+        let (_, native_token) = deploy_erc20();
 
-        let external_owner_account_contract = deploy_external_owned_account(
-            kakarot_address, evm_address
-        );
+        let eoa_contract = deploy_eoa(native_token, kakarot_address, evm_address);
 
-        assert(
-            external_owner_account_contract.get_evm_address() == evm_address, 'wrong evm address'
-        );
+        assert(eoa_contract.get_evm_address() == evm_address, 'wrong evm address');
+    }
+
+    #[test]
+    #[available_gas(2000000000)]
+    fn test_eoa_approve_on_constructor() {
+        let owner = contract_address_const::<1>();
+        set_contract_address(owner);
+        let kakarot_address = contract_address_const::<2>();
+        let evm_address: EthAddress = 3.try_into().unwrap();
+        let (erc20_contract, native_token) = deploy_erc20();
+
+        let eoa_contract = deploy_eoa(native_token, kakarot_address, evm_address);
+        let infinite = BoundedInt::<u256>::max();
+        'Test Owner'.print();
+        owner.print();
+        'Test Kakarot'.print();
+        kakarot_address.print();
+        assert(erc20_contract.allowance(owner, kakarot_address) == infinite, 'wrong allowance');
     }
 }

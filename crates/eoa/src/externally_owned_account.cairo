@@ -19,7 +19,8 @@ mod ExternallyOwnedAccount {
     use integer::BoundedInt;
     use openzeppelin::token::erc20::{ERC20};
     use openzeppelin::token::erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait};
-
+    use starknet::get_caller_address;
+    use debug::PrintTrait;
 
     #[storage]
     struct Storage {
@@ -30,16 +31,29 @@ mod ExternallyOwnedAccount {
 
     #[constructor]
     fn constructor(
-        ref self: ContractState, kakarot_address: ContractAddress, evm_address: EthAddress
+        //TODO: Remove native token and fetch from Kakarot Contract, when Kakarot Contract is ready
+        ref self: ContractState,
+        native_token: ContractAddress,
+        kakarot_address: ContractAddress,
+        evm_address: EthAddress
     ) {
         let is_initialized = self.is_initialized.read();
         if is_initialized {
             return;
         }
         self.evm_address.write(evm_address);
-        let kakarot_token = IERC20Dispatcher { contract_address: kakarot_address };
+        let kakarot_token = IERC20Dispatcher { contract_address: native_token };
         let infinite = BoundedInt::<u256>::max();
-        kakarot_token.approve(kakarot_address, infinite);
+        let approval_success = kakarot_token.approve(kakarot_address, infinite);
+        let caller_address = get_caller_address();
+        let test_allowance = kakarot_token.allowance(caller_address, kakarot_address);
+        'Caller Address'.print();
+        caller_address.print();
+        'Kakarot Address'.print();
+        kakarot_address.print();
+        // TODO: Check why allowance is 0
+        'Test Allowance'.print();
+        test_allowance.print();
         self.is_initialized.write(true);
         return;
     }
@@ -50,10 +64,12 @@ mod ExternallyOwnedAccount {
             return self.evm_address.read();
         }
 
+        // @notice Empty bytecode needed for EXTCODE opcodes.
         fn bytecode(self: @ContractState) -> Span<u8> {
             return ArrayTrait::<u8>::new().span();
         }
 
+        // @notice Empty bytecode needed for EXTCODE opcodes.
         fn bytecode_len(self: @ContractState) -> u32 {
             return 0;
         }
