@@ -19,8 +19,7 @@ mod ExternallyOwnedAccount {
     use integer::BoundedInt;
     use openzeppelin::token::erc20::{ERC20};
     use openzeppelin::token::erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait};
-    use starknet::get_caller_address;
-    use debug::PrintTrait;
+
 
     #[storage]
     struct Storage {
@@ -45,10 +44,7 @@ mod ExternallyOwnedAccount {
         let kakarot_token = IERC20Dispatcher { contract_address: native_token };
         let infinite = BoundedInt::<u256>::max();
         kakarot_token.approve(kakarot_address, infinite);
-        let caller_address = get_caller_address();
-        let test_allowance = kakarot_token.allowance(caller_address, kakarot_address);
-        'Test Allowance'.print();
-        test_allowance.print();
+
         self.is_initialized.write(true);
         return;
     }
