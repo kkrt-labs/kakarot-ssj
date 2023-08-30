@@ -15,7 +15,7 @@ use option::OptionTrait;
 use debug::PrintTrait;
 
 
-#[derive(Destruct)]
+#[derive(Destruct, Default)]
 struct Memory {
     items: Felt252Dict<u128>,
     bytes_len: usize,
@@ -108,11 +108,15 @@ impl MemoryImpl of MemoryTrait {
         self.store_first_word(initial_chunk, offset_in_chunk_i, mask_i, elements);
 
         // Store aligned bytes in [initial_chunk + 1, final_chunk - 1].
-        let aligned_bytes = elements
-            .slice(
-                16 - offset_in_chunk_i, elements.len() - 16 - offset_in_chunk_i - offset_in_chunk_f,
-            );
-        self.store_aligned_words(initial_chunk + 1, aligned_bytes);
+        // If initial_chunk + 1 == final_chunk, this will store nothing.
+        if initial_chunk + 1 != final_chunk {
+            let aligned_bytes = elements
+                .slice(
+                    16 - offset_in_chunk_i,
+                    elements.len() - 16 - offset_in_chunk_i - offset_in_chunk_f,
+                );
+            self.store_aligned_words(initial_chunk + 1, aligned_bytes);
+        }
 
         let final_bytes = elements.slice(elements.len() - offset_in_chunk_f, offset_in_chunk_f);
         self.store_last_word(final_chunk, offset_in_chunk_f, mask_f, final_bytes);
@@ -538,11 +542,5 @@ impl MemoryPrintImpl of MemoryPrintTrait {
             begin += 1;
         };
         '____MEMORY_END___'.print();
-    }
-}
-
-impl DefaultMemoryImpl of Default<Memory> {
-    fn default() -> Memory {
-        MemoryTrait::new()
     }
 }

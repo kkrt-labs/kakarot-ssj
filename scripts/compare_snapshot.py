@@ -35,7 +35,7 @@ def get_previous_snapshot():
         runs = json.loads(result)
 
         # Find the latest successful run
-        latest_successful_run = next(run for run in runs["workflow_runs"] if (run["conclusion"] == "success" and run["head_branch"] == "main"))
+        latest_successful_run = next((run for run in runs["workflow_runs"] if run["conclusion"] == "success" and run["name"] == "Generate and Upload Gas Snapshot"), None)
 
         # Fetch the artifacts for that run
         run_id = latest_successful_run["id"]
