@@ -44,14 +44,9 @@ mod ExternallyOwnedAccount {
         self.evm_address.write(evm_address);
         let kakarot_token = IERC20Dispatcher { contract_address: native_token };
         let infinite = BoundedInt::<u256>::max();
-        let approval_success = kakarot_token.approve(kakarot_address, infinite);
+        kakarot_token.approve(kakarot_address, infinite);
         let caller_address = get_caller_address();
         let test_allowance = kakarot_token.allowance(caller_address, kakarot_address);
-        'Caller Address'.print();
-        caller_address.print();
-        'Kakarot Address'.print();
-        kakarot_address.print();
-        // TODO: Check why allowance is 0
         'Test Allowance'.print();
         test_allowance.print();
         self.is_initialized.write(true);
