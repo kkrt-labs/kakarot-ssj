@@ -25,7 +25,6 @@ mod ExternallyOwnedAccount {
     struct Storage {
         kakarot_address: ContractAddress,
         evm_address: EthAddress,
-        is_initialized: bool,
     }
 
     #[constructor]
@@ -36,16 +35,10 @@ mod ExternallyOwnedAccount {
         kakarot_address: ContractAddress,
         evm_address: EthAddress
     ) {
-        let is_initialized = self.is_initialized.read();
-        if is_initialized {
-            return;
-        }
         self.evm_address.write(evm_address);
         let kakarot_token = IERC20Dispatcher { contract_address: native_token };
         let infinite = BoundedInt::<u256>::max();
         kakarot_token.approve(kakarot_address, infinite);
-
-        self.is_initialized.write(true);
         return;
     }
 
