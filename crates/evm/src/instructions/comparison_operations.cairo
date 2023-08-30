@@ -61,7 +61,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
                 0
             };
         self.stack.push(result)
-
+    }
     /// 0x16 - AND
     /// # Specification: https://www.evm.codes/#16?fork=shanghai
     fn exec_and(ref self: ExecutionContext) -> Result<(), EVMError> {
