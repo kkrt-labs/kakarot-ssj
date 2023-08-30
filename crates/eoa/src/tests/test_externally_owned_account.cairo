@@ -1,5 +1,3 @@
-// tests go here
-
 #[cfg(test)]
 mod test_external_owned_account {
     use eoa::externally_owned_account::{
@@ -10,7 +8,6 @@ mod test_external_owned_account {
     use openzeppelin::token::erc20::interface::{IERC20, IERC20Dispatcher, IERC20DispatcherTrait};
     use starknet::class_hash::Felt252TryIntoClassHash;
     use starknet::{deploy_syscall, ContractAddress, get_contract_address, contract_address_const};
-    // Use debug print trait to be able to print result if needed.
     use debug::PrintTrait;
     use array::{ArrayTrait};
     use traits::{Into, TryInto};
@@ -21,7 +18,6 @@ mod test_external_owned_account {
     use integer::BoundedInt;
 
 
-    // Use starknet test utils to fake the transaction context.
     use starknet::testing::{set_caller_address, set_contract_address};
 
     fn deploy_erc20() -> IERC20Dispatcher {
