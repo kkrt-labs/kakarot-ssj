@@ -94,14 +94,14 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
             0
         } else {
             // How many bytes to be read from memory
-            let size = if (offset + size > bytecode.len()) {
+            let mem_size = if (offset + size > bytecode.len()) {
                 bytecode.len() - offset
             } else {
                 size
             };
-            let mut data_to_copy: Span<u8> = bytecode.slice(offset, size);
+            let mut data_to_copy: Span<u8> = bytecode.slice(offset, mem_size);
             self.memory.store_n(data_to_copy, dest_offset);
-            size
+            mem_size
         };
 
         // For out of bound bytes, 0s will be copied.
