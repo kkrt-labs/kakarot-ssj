@@ -13,7 +13,7 @@ use evm::context::ExecutionContextTrait;
 use evm::context::BoxDynamicExecutionContextDestruct;
 use evm::stack::StackTrait;
 use utils::u256_signed_math::u256_signed_div_rem;
-use utils::math::{Exponentiation, ExponentiationModulo, u256_wide_add};
+use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
 use evm::errors::EVMError;
 use result::ResultTrait;
 
@@ -209,7 +209,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let a = *popped[0];
         let b = *popped[1];
 
-        let result = a.pow_mod(b);
+        let result = a.wrapping_pow(b);
 
         self.stack.push(result)
     }
