@@ -15,7 +15,7 @@ use option::OptionTrait;
 use debug::PrintTrait;
 
 
-#[derive(Destruct)]
+#[derive(Destruct, Default)]
 struct Memory {
     items: Felt252Dict<u128>,
     bytes_len: usize,
@@ -538,11 +538,5 @@ impl MemoryPrintImpl of MemoryPrintTrait {
             begin += 1;
         };
         '____MEMORY_END___'.print();
-    }
-}
-
-impl DefaultMemoryImpl of Default<Memory> {
-    fn default() -> Memory {
-        MemoryTrait::new()
     }
 }
