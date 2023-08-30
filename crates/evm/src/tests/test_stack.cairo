@@ -11,7 +11,7 @@ use evm::stack::StackTrait;
 use utils::constants;
 
 #[test]
-#[available_gas(11500)]
+#[available_gas(12000)]
 fn test_stack_new_should_return_empty_stack() {
     // When
     let mut stack = StackTrait::new();

@@ -6,6 +6,7 @@ mod u256_signed_math;
 mod math;
 mod eth_transaction;
 mod rlp;
+mod traits;
 
 
 #[cfg(test)]
