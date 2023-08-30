@@ -28,18 +28,16 @@ mod test_external_owned_account {
     #[available_gas(2000000000)]
     fn test_bytecode() {
         let owner = contract_address_const::<1>();
-        set_contract_address(owner);
 
         let eoa_contract = deploy_eoa();
 
-        assert(eoa_contract.bytecode() == ArrayTrait::<u8>::new().span(), 'wrong bytecode');
+        assert(eoa_contract.bytecode() == Default::default().span(), 'wrong bytecode');
     }
 
     #[test]
     #[available_gas(2000000000)]
     fn test_bytecode_len() {
         let owner = contract_address_const::<1>();
-        set_contract_address(owner);
 
         let eoa_contract = deploy_eoa();
 
