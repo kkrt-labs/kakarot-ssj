@@ -54,7 +54,13 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x15 - ISZERO
     /// # Specification: https://www.evm.codes/#15?fork=shanghai
     fn exec_iszero(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(1)?;
+        let result = if *popped[0] == 0 {
+            1
+            } else {
+                0
+            };
+        self.stack.push(result)
     }
 
     /// 0x16 - AND
