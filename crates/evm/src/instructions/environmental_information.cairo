@@ -88,14 +88,21 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
         let bytecode: Span<u8> = self.call_context().bytecode();
 
-        let slice_size = if (offset + size > bytecode.len()) {
-            bytecode.len() - offset
+        // No. of bytes that are read from bytecode
+        let slice_size = if (offset > bytecode.len()) {
+            // When offset is larger then bytecode len, no bytes to be written from bytecode
+            0
         } else {
+            // How many bytes to be read from memory
+            let size = if (offset + size > bytecode.len()) {
+                bytecode.len() - offset
+            } else {
+                size
+            };
+            let mut data_to_copy: Span<u8> = bytecode.slice(offset, size);
+            self.memory.store_n(data_to_copy, dest_offset);
             size
         };
-
-        let data_to_copy: Span<u8> = bytecode.slice(offset, slice_size);
-        self.memory.store_n(data_to_copy, dest_offset);
 
         // For out of bound bytes, 0s will be copied.
         if (slice_size < size) {
