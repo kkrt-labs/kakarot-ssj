@@ -42,8 +42,7 @@ mod test_external_owned_account {
         set_contract_address(owner);
 
         let eoa_contract = deploy_eoa();
-        let value: u32 = 0;
 
-        assert(eoa_contract.bytecode_len() == value, 'wrong bytecode');
+        assert(eoa_contract.bytecode_len() == 0, 'wrong bytecode');
     }
 }

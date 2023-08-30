@@ -18,12 +18,11 @@ mod ExternallyOwnedAccount {
 
     #[external(v0)]
     impl ExternallyOwnedAccount of super::IExternallyOwnedAccount<ContractState> {
-        // @notice Empty bytecode needed for EXTCODE opcodes.
+        /// Returns an empty span, required for the EXTCODE opcode
         fn bytecode(self: @ContractState) -> Span<u8> {
             return ArrayTrait::<u8>::new().span();
         }
-
-        // @notice Empty bytecode needed for EXTCODE opcodes.
+        /// Return 0 bytecode_len, required for the EXTCODE opcode
         fn bytecode_len(self: @ContractState) -> u32 {
             return 0;
         }
