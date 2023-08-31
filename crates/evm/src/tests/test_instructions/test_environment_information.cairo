@@ -138,6 +138,12 @@ fn test_codecopy_with_out_of_bound_bytes() {
     test_codecopy(32, 0, 8);
 }
 
+#[test]
+#[available_gas(20000000)]
+fn test_codecopy_with_out_of_bound_offset() {
+    test_codecopy(0, 0xFFFFFFFE, 2);
+}
+
 fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
