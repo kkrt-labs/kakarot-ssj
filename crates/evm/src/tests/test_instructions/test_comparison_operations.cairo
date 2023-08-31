@@ -247,7 +247,6 @@ fn test_exec_gt_false_equal() {
 
 #[test]
 #[available_gas(22000000)]
-#[tes]
 fn test_exec_slt() {
     // https://github.com/ethereum/go-ethereum/blob/master/core/vm/testdata/testcases_slt.json
     assert_slt(
