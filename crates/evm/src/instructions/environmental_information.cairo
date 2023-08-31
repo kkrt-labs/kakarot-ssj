@@ -88,23 +88,18 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
         let bytecode: Span<u8> = self.call_context().bytecode();
 
-        // No. of bytes that are read from bytecode
-        let slice_size = if (offset > bytecode.len()) {
-            // When offset is larger then bytecode len, no bytes to be written from bytecode
-            0
+        let copied: Span<u8> = if offset > bytecode.len() {
+            array![].span()
+        } else if (offset + size > bytecode.len()) {
+            bytecode.slice(offset, bytecode.len() - offset)
         } else {
-            // How many bytes to be read from memory
-            let mem_size = if (offset + size > bytecode.len()) {
-                bytecode.len() - offset
-            } else {
-                size
-            };
-            let mut data_to_copy: Span<u8> = bytecode.slice(offset, mem_size);
-            self.memory.store_n(data_to_copy, dest_offset);
-            mem_size
+            bytecode.slice(offset, size)
         };
 
+        self.memory.store_n(copied, dest_offset);
+
         // For out of bound bytes, 0s will be copied.
+        let slice_size = copied.len();
         if (slice_size < size) {
             let mut out_of_bounds_bytes: Array<u8> = ArrayTrait::new();
             loop {
