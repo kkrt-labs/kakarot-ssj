@@ -6,7 +6,7 @@ use evm::errors::STACK_UNDERFLOW;
 use option::{OptionTrait};
 use evm::errors::EVMError;
 use result::ResultTrait;
-use utils::math::{Exponentiation, Bitwise};
+use utils::math::{Exponentiation, Bitshift};
 use utils::u256_signed_math::{TWO_POW_127, MAX_U256};
 use evm::context::BoxDynamicExecutionContextDestruct;
 use utils::u256_signed_math::SignedPartialOrd;
