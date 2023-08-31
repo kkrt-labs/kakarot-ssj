@@ -147,7 +147,7 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
         if counter == 16 {
             break ();
         }
-        bytes_arr.append((value.low % 256).try_into().unwrap());
+        bytes_arr.append((value.low & 0xFF).try_into().unwrap());
         value.low /= 256;
         counter += 1;
     };
@@ -158,7 +158,7 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
         if counter == 16 {
             break ();
         }
-        bytes_arr.append((value.high % 256).try_into().unwrap());
+        bytes_arr.append((value.high & 0xFF).try_into().unwrap());
         value.high /= 256;
         counter += 1;
     };
