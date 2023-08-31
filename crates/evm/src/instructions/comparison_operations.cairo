@@ -119,7 +119,17 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x1C - SHR
     /// # Specification: https://www.evm.codes/#1c?fork=shanghai
     fn exec_shr(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(2)?;
+        let shift = *popped[0];
+        let value = *popped[1];
+
+        // If shift is bigger than 255, returns 0.
+        let result = if (shift > 255) {
+            0
+        } else {
+            value.shr(shift)
+        };
+        self.stack.push(result)
     }
 
     /// 0x1D - SAR
