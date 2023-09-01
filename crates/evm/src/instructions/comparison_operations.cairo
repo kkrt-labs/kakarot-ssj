@@ -123,12 +123,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         let shift = *popped[0];
         let value = *popped[1];
 
-        // If shift is bigger than 255, returns 0.
-        let result = if (shift > 255) {
-            0
-        } else {
-            value.shr(shift)
-        };
+        let result = value.wrapping_shr(shift);
         self.stack.push(result)
     }
 
