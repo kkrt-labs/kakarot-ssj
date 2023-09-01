@@ -8,6 +8,7 @@ use evm::errors::EVMError;
 use result::ResultTrait;
 use utils::math::{Exponentiation, Bitwise};
 use evm::context::BoxDynamicExecutionContextDestruct;
+use utils::u256_signed_math::SignedPartialOrd;
 
 #[generate_trait]
 impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
@@ -35,7 +36,15 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x12 - SLT
     /// # Specification: https://www.evm.codes/#12?fork=shanghai
     fn exec_slt(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(2)?;
+        let a = *popped[0];
+        let b = *popped[1];
+        let result = if (a.slt(b)) {
+            1
+        } else {
+            0
+        };
+        self.stack.push(result)
     }
 
     /// 0x13 - SGT
