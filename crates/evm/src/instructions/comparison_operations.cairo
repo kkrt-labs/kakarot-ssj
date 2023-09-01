@@ -9,7 +9,7 @@ use result::ResultTrait;
 use utils::math::{Exponentiation, Bitwise};
 use evm::context::BoxDynamicExecutionContextDestruct;
 use utils::u256_signed_math::SignedPartialOrd;
-use utils::traits::BoolIntoU256;
+use utils::traits::BoolIntoNumeric;
 
 #[generate_trait]
 impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {

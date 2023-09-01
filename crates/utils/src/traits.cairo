@@ -1,5 +1,6 @@
 use starknet::EthAddress;
 use starknet::ContractAddress;
+use math::{Zeroable, Oneable};
 
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
     #[inline(always)]
@@ -22,43 +23,13 @@ impl ContractAddressDefault of Default<ContractAddress> {
     }
 }
 
-impl BoolIntoU8 of Into<bool, u8> {
-    fn into(self: bool) -> u8 {
-        if (self) {
-            1
+impl BoolIntoNumeric<T, impl TZeroable: Zeroable<T>, impl TOneable: Oneable<T>> of Into<bool, T> {
+    #[inline(always)]
+    fn into(self: bool) -> T {
+        if self {
+            Oneable::<T>::one()
         } else {
-            0
+            Zeroable::<T>::zero()
         }
-    }
-}
-
-impl BoolIntoU16 of Into<bool, u16> {
-    fn into(self: bool) -> u16 {
-        BoolIntoU8::into(self).into()
-    }
-}
-
-
-impl BoolIntoU32 of Into<bool, u32> {
-    fn into(self: bool) -> u32 {
-        BoolIntoU8::into(self).into()
-    }
-}
-
-impl BoolIntoU64 of Into<bool, u64> {
-    fn into(self: bool) -> u64 {
-        BoolIntoU8::into(self).into()
-    }
-}
-
-impl BoolIntoU128 of Into<bool, u128> {
-    fn into(self: bool) -> u128 {
-        BoolIntoU8::into(self).into()
-    }
-}
-
-impl BoolIntoU256 of Into<bool, u256> {
-    fn into(self: bool) -> u256 {
-        BoolIntoU8::into(self).into()
     }
 }
