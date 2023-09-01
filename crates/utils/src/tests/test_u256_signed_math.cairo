@@ -163,7 +163,6 @@ fn test_signed_div_rem_by_zero() {
 
 #[test]
 #[available_gas(20000000)]
-#[tes]
 fn test_slt() {
     // https://github.com/ethereum/go-ethereum/blob/master/core/vm/testdata/testcases_slt.json
     assert_slt(
