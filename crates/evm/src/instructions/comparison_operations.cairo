@@ -161,7 +161,5 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
             let result = (sign ^ value).shr(shift) ^ sign;
             self.stack.push(result)
         }
-
-        
     }
 }
