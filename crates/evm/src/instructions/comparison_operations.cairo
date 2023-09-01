@@ -9,6 +9,7 @@ use result::ResultTrait;
 use utils::math::{Exponentiation, Bitwise};
 use evm::context::BoxDynamicExecutionContextDestruct;
 use utils::u256_signed_math::SignedPartialOrd;
+use utils::traits::BoolIntoU256;
 
 #[generate_trait]
 impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
@@ -24,11 +25,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         let popped = self.stack.pop_n(2)?;
         let a = *popped[0];
         let b = *popped[1];
-        let result = if (a > b) {
-            1
-        } else {
-            0
-        };
+        let result = (a > b).into();
         self.stack.push(result)
     }
 
@@ -39,11 +36,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         let popped = self.stack.pop_n(2)?;
         let a = *popped[0];
         let b = *popped[1];
-        let result = if (a.slt(b)) {
-            1
-        } else {
-            0
-        };
+        let result = a.slt(b).into();
         self.stack.push(result)
     }
 
