@@ -7,6 +7,7 @@ use option::{OptionTrait};
 use evm::errors::EVMError;
 use result::ResultTrait;
 use utils::math::{Exponentiation, Bitwise};
+use utils::u256_signed_math::{TWO_POW_127, MAX_U256};
 use evm::context::BoxDynamicExecutionContextDestruct;
 
 #[generate_trait]
@@ -125,6 +126,31 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x1D - SAR
     /// # Specification: https://www.evm.codes/#1d?fork=shanghai
     fn exec_sar(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(2)?;
+        let shift = *popped[0];
+        let value: u256 = *popped[1];
+
+        // Checks the MSB bit sign for a 256-bit integer
+        let positive = value.high < TWO_POW_127;
+        let sign = if positive {
+            // If sign is positive, set it to 0.
+            0
+        } else {
+            // If sign is negative, set the number to -1.
+            MAX_U256
+        };
+
+        if (shift > 256) {
+            self.stack.push(sign)
+        } else {
+            // `sign ^ x`
+            let step1 = sign ^ value;
+            // `sign ^ x >> n`
+            let step2 = step1.shr(shift);
+            // `sign & x >> n ^ sign`
+            let result = step2 ^ sign;
+
+            self.stack.push(result)
+        }
     }
 }
