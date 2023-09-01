@@ -152,14 +152,11 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         if (shift > 256) {
             self.stack.push(sign)
         } else {
-            // `sign ^ x`
-            let step1 = sign ^ value;
-            // `sign ^ x >> n`
-            let step2 = step1.shr(shift);
-            // `sign & x >> n ^ sign`
-            let result = step2 ^ sign;
-
+            // XORing with sign before and after the shift propagates the sign bit of the operation
+            let result = (sign ^ value).shr(shift) ^ sign;
             self.stack.push(result)
         }
+
+        
     }
 }
