@@ -121,8 +121,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         }
 
         let (shifted, _) = u256_overflow_mul(val, 2.pow_mod(shift));
-        self.stack.push(shifted)?;
-        Result::Ok(())
+        self.stack.push(shifted)
     }
 
     /// 0x1C - SHR
