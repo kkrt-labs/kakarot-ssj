@@ -20,6 +20,8 @@ mod test_external_owned_account {
 
     use starknet::testing::{set_caller_address, set_contract_address};
 
+    use starknet::testing::{set_caller_address, set_contract_address};
+
     fn deploy_erc20() -> IERC20Dispatcher {
         let mut calldata: Array<felt252> = array![
             'erc20_token_address', 'symbol', 100000, 0, 10000
@@ -45,6 +47,7 @@ mod test_external_owned_account {
         calldata.append(evm_address.into());
 
         // Declare and deploy
+
         let (contract_address, _) = deploy_syscall(
             ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
         )
@@ -65,6 +68,7 @@ mod test_external_owned_account {
         let eoa_contract = deploy_eoa(erc20_token_address, kakarot_address, evm_address);
 
         assert(eoa_contract.bytecode() == ArrayTrait::<u8>::new().span(), 'wrong bytecode');
+
     }
 
     #[test]
@@ -115,4 +119,5 @@ mod test_external_owned_account {
             'wrong allowance'
         );
     }
+
 }
