@@ -248,6 +248,10 @@ fn test_exec_shl_result() {
         'stack top should be 0xf00000...'
     );
 }
+
+
+#[test]
+#[available_gas(20000000)]
 fn test_exec_gt_false() {
     // Given
     let mut ctx = setup_execution_context();
