@@ -3,6 +3,7 @@
 // Internal imports
 use evm::context::ExecutionContext;
 use evm::context::ExecutionContextTrait;
+use evm::errors::EVMError;
 
 #[generate_trait]
 impl MemoryOperationsImpl of MemoryOperationsTrait {
