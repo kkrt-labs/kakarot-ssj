@@ -1,15 +1,24 @@
 //! Stack Memory Storage and Flow Operations.
 
 // Internal imports
-use evm::context::ExecutionContext;
-use evm::context::ExecutionContextTrait;
+use evm::context::{
+    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct
+};
+use evm::errors::EVMError;
+use evm::stack::StackTrait;
+use evm::memory::MemoryTrait;
+use result::ResultTrait;
+use evm::helpers::U256IntoResultU32;
 
 #[generate_trait]
 impl MemoryOperationsImpl of MemoryOperationsTrait {
     /// 0x51 - MLOAD operation.
     /// Load word from memory and push to stack.
     fn exec_mload(ref self: ExecutionContext) -> Result<(), EVMError> {
-        panic_with_felt252('MLOAD not implement yet')
+        let popped = self.stack.pop()?;
+        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into(popped)?;
+        let (result, _) = self.memory.load(offset);
+        self.stack.push(result)
     }
 
     /// 0x52 - MSTORE operation.

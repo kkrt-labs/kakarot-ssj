@@ -8,7 +8,6 @@ use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionC
 
 #[test]
 #[available_gas(20000000000)]
-#[should_panic(expected: ('MLOAD not implement yet',))]
 fn test_exec_mload() {
     let data: Array<(u256, u256, u256, u32)> = array![
         // (memory_value, input, expected_value, expected_memory_size)
