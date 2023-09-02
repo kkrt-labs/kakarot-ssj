@@ -15,7 +15,7 @@ use evm::instructions::{
     duplication_operations, environmental_information, exchange_operations, logging_operations,
     memory_operations, sha3, StopAndArithmeticOperationsTrait, ComparisonAndBitwiseOperationsTrait,
     system_operations, BlockInformationTrait, DuplicationOperationsTrait,
-    EnvironmentInformationTrait, PushOperationsTrait
+    EnvironmentInformationTrait, PushOperationsTrait, MemoryOperationsTrait
 };
 use result::ResultTrait;
 
@@ -295,51 +295,51 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 80 {
             // POP
-            memory_operations::exec_pop(ref context);
+            context.exec_pop();
         }
         if opcode == 81 {
             // MLOAD
-            memory_operations::exec_mload(ref context);
+            context.exec_mload();
         }
         if opcode == 82 {
             // MSTORE
-            memory_operations::exec_mstore(ref context);
+            context.exec_mstore();
         }
         if opcode == 83 {
             // MSTORE8
-            memory_operations::exec_mstore8(ref context);
+            context.exec_mstore8();
         }
         if opcode == 84 {
             // SLOAD
-            memory_operations::exec_sload(ref context);
+            context.exec_sload();
         }
         if opcode == 85 {
             // SSTORE
-            memory_operations::exec_sstore(ref context);
+            context.exec_sstore();
         }
         if opcode == 86 {
             // JUMP
-            memory_operations::exec_jump(ref context);
+            context.exec_jump();
         }
         if opcode == 87 {
             // JUMPI
-            memory_operations::exec_jumpi(ref context);
+            context.exec_jumpi();
         }
         if opcode == 88 {
             // PC
-            memory_operations::exec_pc(ref context);
+            context.exec_pc();
         }
         if opcode == 89 {
             // MSIZE
-            memory_operations::exec_msize(ref context);
+            context.exec_msize();
         }
         if opcode == 90 {
             // GAS
-            memory_operations::exec_gas(ref context);
+            context.exec_gas();
         }
         if opcode == 91 {
             // JUMPDEST
-            memory_operations::exec_jumpdest(ref context);
+            context.exec_jumpdest();
         }
         if opcode == 95 {
             // PUSH0

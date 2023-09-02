@@ -16,6 +16,7 @@ mod exchange_operations;
 mod logging_operations;
 
 mod memory_operations;
+use memory_operations::MemoryOperationsTrait;
 
 mod push_operations;
 use push_operations::PushOperationsTrait;
