@@ -2,34 +2,6 @@
 use starknet::{EthAddress, ContractAddress};
 use integer::BoundedInt;
 
-#[starknet::interface]
-trait IExternallyOwnedAccount<TContractState> {
-    fn bytecode(self: @TContractState) -> Span<u8>;
-    fn bytecode_len(self: @TContractState) -> u32;
-}
-
-#[starknet::contract]
-mod ExternallyOwnedAccount {
-    use array::{ArrayTrait, SpanTrait};
-    use starknet::ContractAddress;
-
-    #[storage]
-    struct Storage {
-        starknet_address: ContractAddress
-    }
-
-    #[external(v0)]
-    impl ExternallyOwnedAccount of super::IExternallyOwnedAccount<ContractState> {
-        /// Returns an empty span, required for the EXTCODE opcode
-        fn bytecode(self: @ContractState) -> Span<u8> {
-            return ArrayTrait::<u8>::new().span();
-        }
-        /// Return 0 bytecode_len, required for the EXTCODE opcode
-        fn bytecode_len(self: @ContractState) -> u32 {
-            return 0;
-        }
-    }
-}
 
 #[starknet::interface]
 trait IExternallyOwnedAccount<TContractState> {
@@ -67,23 +39,22 @@ mod ExternallyOwnedAccount {
         let kakarot_token = IERC20Dispatcher { contract_address: native_token };
         let infinite = BoundedInt::<u256>::max();
         kakarot_token.approve(kakarot_address, infinite);
-        return;
     }
 
     #[external(v0)]
     impl ExternallyOwnedAccount of super::IExternallyOwnedAccount<ContractState> {
         fn get_evm_address(self: @ContractState) -> EthAddress {
-            return self.evm_address.read();
+            self.evm_address.read()
         }
 
         // @notice Empty bytecode needed for EXTCODE opcodes.
         fn bytecode(self: @ContractState) -> Span<u8> {
-            return ArrayTrait::<u8>::new().span();
+            ArrayTrait::<u8>::new().span()
         }
 
         // @notice Empty bytecode needed for EXTCODE opcodes.
         fn bytecode_len(self: @ContractState) -> u32 {
-            return 0;
+            0
         }
     }
 }

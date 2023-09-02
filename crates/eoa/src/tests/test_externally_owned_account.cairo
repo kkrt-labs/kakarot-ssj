@@ -20,7 +20,6 @@ mod test_external_owned_account {
 
     use starknet::testing::{set_caller_address, set_contract_address};
 
-    use starknet::testing::{set_caller_address, set_contract_address};
 
     fn deploy_erc20() -> IERC20Dispatcher {
         let mut calldata: Array<felt252> = array![
@@ -60,7 +59,6 @@ mod test_external_owned_account {
     #[available_gas(2000000000)]
     fn test_bytecode() {
         let owner = contract_address_const::<1>();
-        set_contract_address(owner);
         let kakarot_address = contract_address_const::<2>();
         let evm_address: EthAddress = 3.try_into().unwrap();
         let erc20_contract = deploy_erc20();
@@ -68,7 +66,6 @@ mod test_external_owned_account {
         let eoa_contract = deploy_eoa(erc20_token_address, kakarot_address, evm_address);
 
         assert(eoa_contract.bytecode() == ArrayTrait::<u8>::new().span(), 'wrong bytecode');
-
     }
 
     #[test]
@@ -90,7 +87,6 @@ mod test_external_owned_account {
     #[available_gas(2000000000)]
     fn test_get_evm_address() {
         let owner = contract_address_const::<1>();
-        set_contract_address(owner);
         let kakarot_address = contract_address_const::<2>();
         let evm_address: EthAddress = 3.try_into().unwrap();
         let erc20_contract = deploy_erc20();
@@ -105,7 +101,6 @@ mod test_external_owned_account {
     #[available_gas(2000000000)]
     fn test_eoa_approve_on_constructor() {
         let owner = contract_address_const::<1>();
-        set_contract_address(owner);
         let kakarot_address = contract_address_const::<2>();
         let evm_address: EthAddress = 3.try_into().unwrap();
         let erc20_contract = deploy_erc20();
@@ -119,5 +114,4 @@ mod test_external_owned_account {
             'wrong allowance'
         );
     }
-
 }
