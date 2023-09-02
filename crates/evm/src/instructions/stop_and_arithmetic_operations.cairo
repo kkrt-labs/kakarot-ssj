@@ -13,7 +13,7 @@ use evm::context::ExecutionContextTrait;
 use evm::context::BoxDynamicExecutionContextDestruct;
 use evm::stack::StackTrait;
 use utils::u256_signed_math::u256_signed_div_rem;
-use utils::math::{Exponentiation, ExponentiationModulo, u256_wide_add};
+use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
 use evm::errors::EVMError;
 use result::ResultTrait;
 
@@ -37,8 +37,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         // Compute the addition
         let (result, _) = u256_overflowing_add(*popped[0], *popped[1]);
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x02 - MUL
@@ -51,8 +50,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         // Compute the multiplication
         let (result, _) = u256_overflow_mul(*popped[0], *popped[1]);
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x03 - SUB
@@ -65,8 +63,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         // Compute the substraction
         let (result, _) = u256_overflow_sub(*popped[0], *popped[1]);
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x04 - DIV
@@ -87,8 +84,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x05 - SDIV
@@ -109,8 +105,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x06 - MOD
@@ -131,8 +126,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x07 - SMOD
@@ -153,8 +147,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             },
             Option::None => 0,
         };
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x08 - ADDMOD
@@ -179,8 +172,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x09 - MULMOD operation.
@@ -205,8 +197,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x0A - EXP
@@ -218,10 +209,9 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let a = *popped[0];
         let b = *popped[1];
 
-        let result = a.pow_mod(b);
+        let result = a.wrapping_pow(b);
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x0B - SIGNEXTEND
@@ -262,7 +252,6 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             x
         };
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 }
