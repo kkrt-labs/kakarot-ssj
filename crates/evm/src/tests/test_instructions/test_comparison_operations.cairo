@@ -167,7 +167,7 @@ fn test_not_random_uint() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_is_zero() {
+fn test_is_zero_true() {
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(0x00).unwrap();
@@ -178,6 +178,21 @@ fn test_is_zero() {
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.peek().unwrap() == 0x01, 'stack top should be 0x01');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_is_zero_false() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0x01).unwrap();
+    
+    // When
+    ctx.exec_iszero();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
 }
 
 #[test]
