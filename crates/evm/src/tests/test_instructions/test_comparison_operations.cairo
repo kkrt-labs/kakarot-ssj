@@ -215,7 +215,7 @@ fn test_exec_gt_true() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_exec_shl_stack() {
+fn test_exec_shl_wrapping() {
     // Given 
     let mut ctx = setup_execution_context();
     ctx.stack.push(0xff00000000000000000000000000000000000000000000000000000000000000).unwrap();
@@ -226,20 +226,6 @@ fn test_exec_shl_stack() {
 
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_exec_shl_result() {
-    // Given 
-    let mut ctx = setup_execution_context();
-    ctx.stack.push(0xff00000000000000000000000000000000000000000000000000000000000000).unwrap();
-    ctx.stack.push(4_u256).unwrap();
-
-    // When 
-    ctx.exec_shl();
-
-    // Then
     assert(
         ctx
             .stack
@@ -249,6 +235,27 @@ fn test_exec_shl_result() {
     );
 }
 
+#[test]
+#[available_gas(20000000)]
+fn test_exec_shl_shift_too_large() {
+    // Given 
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0xff00000000000000000000000000000000000000000000000000000000000000).unwrap();
+    ctx.stack.push(256_u256).unwrap();
+
+    // When 
+    ctx.exec_shl();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(
+        ctx
+            .stack
+            .peek()
+            .unwrap() == 0,
+        'if shift > 255 should return 0'
+    );
+}
 
 #[test]
 #[available_gas(20000000)]
