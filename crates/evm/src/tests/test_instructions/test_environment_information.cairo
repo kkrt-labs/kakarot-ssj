@@ -332,7 +332,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
 
     ctx.stack.push(size.into());
     ctx.stack.push(offset.into());
-    ctx.stack.push(destOffset.into());
+    ctx.stack.push(dest_offset.into());
 
     // When
     let res = ctx.exec_returndatacopy();
