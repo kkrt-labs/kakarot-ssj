@@ -6,7 +6,7 @@ use evm::errors::STACK_UNDERFLOW;
 use option::{OptionTrait};
 use evm::errors::EVMError;
 use result::ResultTrait;
-use utils::math::{Exponentiation, Bitwise};
+use utils::math::{Exponentiation, Bitshift};
 use utils::u256_signed_math::{TWO_POW_127, MAX_U256};
 use evm::context::BoxDynamicExecutionContextDestruct;
 use utils::u256_signed_math::SignedPartialOrd;
@@ -116,7 +116,17 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x1B - SHL
     /// # Specification: https://www.evm.codes/#1b?fork=shanghai
     fn exec_shl(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(2)?;
+        let shift = *popped[0];
+        let val = *popped[1];
+
+        // if shift is bigger than 255 return 0
+        if shift > 255 {
+            return self.stack.push(0);
+        }
+
+        let result = val.wrapping_shl(shift);
+        self.stack.push(result)
     }
 
     /// 0x1C - SHR

@@ -83,7 +83,7 @@ fn u256_wide_add(a: u256, b: u256) -> u512 {
     u512 { limb0, limb1, limb2, limb3 }
 }
 
-trait Bitwise<T> {
+trait Bitshift<T> {
     // Shift a number left by a given number of bits.
     // # Panics
     // Panics if the shift is greater than 255.
@@ -105,7 +105,7 @@ trait Bitwise<T> {
     fn wrapping_shr(self: T, shift: T) -> T;
 }
 
-impl Felt252BitwiseImpl of Bitwise<felt252> {
+impl Felt252BitshiftImpl of Bitshift<felt252> {
     // felt252 should normally not be used for a such operation.
     // However, taking optimisation into account, there are cases that arise
     // where using them is safe when values are bounded, and it is less expensive than their u256 counterparty.
@@ -126,7 +126,7 @@ impl Felt252BitwiseImpl of Bitwise<felt252> {
     }
 }
 
-impl U256BitwiseImpl of Bitwise<u256> {
+impl U256BitshiftImpl of Bitshift<u256> {
     fn shl(self: u256, shift: u256) -> u256 {
         if shift > 255 {
             // 2.pow(shift) for shift > 255 will panic with 'u256_mul Overflow'
