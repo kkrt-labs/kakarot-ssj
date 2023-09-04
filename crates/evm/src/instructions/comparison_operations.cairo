@@ -47,7 +47,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         let popped = self.stack.pop_n(2)?;
         let a = *popped[0];
         let b = *popped[1];
-        let result = a.sgt(b).into();
+        let result = b.slt(a).into();
         self.stack.push(result)
     }
 
