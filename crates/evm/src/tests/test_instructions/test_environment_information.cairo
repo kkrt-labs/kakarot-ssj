@@ -344,7 +344,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
             'should return out of bounds'
         );
     } else {
-        let result: u256 = ctx.memory.load_internal(destOffset).into();
+        let result: u256 = ctx.memory.load_internal(dest_offset).into();
         let mut results: Array<u8> = u256_to_bytes_array(result);
 
         let mut i = 0;
