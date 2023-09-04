@@ -66,7 +66,7 @@ fn test__exec_callvalue() {
 fn test_calldata_size() {
     // Given
     let mut ctx = setup_execution_context();
-    let calldata: Span<u8> = ctx.call_context().call_data();
+    let calldata: Span<u8> = ctx.call_context().calldata();
 
     // When
     ctx.exec_calldatasize();

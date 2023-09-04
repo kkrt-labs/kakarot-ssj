@@ -38,7 +38,7 @@ fn test_call_context_new() {
 
     // Then
     assert(call_ctx.bytecode() == bytecode, 'wrong bytecode');
-    assert(call_ctx.call_data() == calldata, 'wrong calldata');
+    assert(call_ctx.calldata() == calldata, 'wrong calldata');
     assert(call_ctx.value() == callvalue(), 'wrong value');
 }
 

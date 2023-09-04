@@ -65,7 +65,7 @@ fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext
 
 impl CallContextPartialEq of PartialEq<CallContext> {
     fn eq(lhs: @CallContext, rhs: @CallContext) -> bool {
-        lhs.bytecode() == rhs.bytecode() && lhs.call_data == rhs.call_data && lhs.value == rhs.value
+        lhs.bytecode() == rhs.bytecode() && lhs.calldata == rhs.calldata && lhs.value == rhs.value
     }
     fn ne(lhs: @CallContext, rhs: @CallContext) -> bool {
         !(lhs == rhs)
