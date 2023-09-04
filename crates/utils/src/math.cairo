@@ -1,5 +1,9 @@
 use integer::{u256_overflow_mul, u256_overflowing_add, u512, BoundedInt};
 
+use zeroable::Zeroable;
+use math::Oneable;
+use traits::{Sub, Mul};
+
 trait Exponentiation<T> {
     // Raise a number to a power.
     /// * `base` - The number to raise.
@@ -84,4 +88,34 @@ fn u256_wide_add(a: u256, b: u256) -> u512 {
     let limb3 = 0;
 
     u512 { limb0, limb1, limb2, limb3 }
+}
+
+// @notice Computes `base ^ exp`
+// @param base The base of the exponentiation
+// @param exp The exponent of the exponentiation
+// @return The exponentiation result
+fn pow<
+    T,
+    impl TZeroable: Zeroable<T>,
+    impl TSub: Sub<T>,
+    impl TMul: Mul<T>,
+    impl TOneable: Oneable<T>,
+    impl TCopy: Copy<T>,
+    impl TDrop: Drop<T>
+>(
+    base: T, mut exp: T
+) -> T {
+    if exp.is_zero() {
+        TOneable::one()
+    } else {
+        base * pow(base, exp - TOneable::one())
+    }
+}
+
+fn pow_felt252(base: felt252, exp: felt252) -> felt252 {
+    if exp == 0 {
+        1
+    } else {
+        base * pow_felt252(base, exp - 1)
+    }
 }

@@ -21,6 +21,7 @@ mod push_operations;
 use push_operations::PushOperationsTrait;
 
 mod sha3;
+use sha3::Sha3Trait;
 
 mod stop_and_arithmetic_operations;
 use stop_and_arithmetic_operations::StopAndArithmeticOperationsTrait;
