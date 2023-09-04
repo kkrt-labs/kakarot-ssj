@@ -88,7 +88,15 @@ impl U256SignedPartialOrd of SignedPartialOrd<u256> {
     }
 
     fn sgt(self: u256, other: u256) -> bool {
-        // TODO: This method will been implemented by the issue #8 (https://github.com/kkrt-labs/kakarot-ssj/issues/8)
-        panic_with_felt252("not implemented")
+        let self_positive = self.high < TWO_POW_127; // false : +
+        let other_positive = other.high < TWO_POW_127; // true : -
+
+        // First, check if signs are different
+        if (self_positive != other_positive) {
+            self_positive
+        } // otherwise, compare values
+        else {
+            self > other
+        }
     }
 }
