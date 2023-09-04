@@ -316,7 +316,7 @@ fn test_returndata_copy_with_out_of_bound_bytes() {
     test_returndata_copy(32, 0, 8);
 }
 
-fn test_returndata_copy(destOffset: u32, offset: u32, mut size: u32) {
+fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
     let mut ctx = setup_execution_context();
     ctx.set_return_data(array![1, 2, 3, 4, 5]);
