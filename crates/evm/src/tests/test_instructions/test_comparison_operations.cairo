@@ -215,7 +215,7 @@ fn test_exec_gt_true() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_exec_shl_wrapping() {
+fn test_exec_shl() {
     // Given 
     let mut ctx = setup_execution_context();
     ctx.stack.push(0xff00000000000000000000000000000000000000000000000000000000000000).unwrap();
