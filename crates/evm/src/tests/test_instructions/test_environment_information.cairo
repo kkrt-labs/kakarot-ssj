@@ -119,6 +119,13 @@ fn test_calldata_copy_with_out_of_bound_bytes() {
     test_calldata_copy(32, 0, 8);
 }
 
+#[test]
+#[available_gas(20000000)]
+// This test will failed due to bug #275, waiting for resolution
+fn test_calldata_copy_with_out_of_bound_bytes_multiple_words() {
+    test_calldata_copy(32, 0, 34);
+}
+
 fn test_calldata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
     let mut ctx = setup_execution_context();
@@ -132,14 +139,28 @@ fn test_calldata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     ctx.stack.push(offset.into());
     ctx.stack.push(dest_offset.into());
 
-    ctx
-        .memory
-        .store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, dest_offset);
-    let initial: u256 = ctx.memory.load_internal(dest_offset).into();
-    assert(
-        initial == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-        'memory has not been initialized'
-    );
+    let mut i = 0;
+    loop {
+        if i == (size / 32) + 1 {
+            break;
+        }
+
+        ctx
+            .memory
+            .store(
+                0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+                dest_offset + (i * 32)
+            );
+
+        let initial: u256 = ctx.memory.load_internal(dest_offset + (i * 32)).into();
+
+        assert(
+            initial == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+            'memory has not been initialized'
+        );
+
+        i += 1;
+    };
 
     // When
     ctx.exec_calldatacopy();
@@ -147,21 +168,30 @@ fn test_calldata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Then
     assert(ctx.stack.is_empty(), 'stack should be empty');
 
-    let result: u256 = ctx.memory.load_internal(dest_offset).into();
-    let mut results: Array<u8> = u256_to_bytes_array(result);
-
     let mut i = 0;
     loop {
-        if (i == size) {
+        if i == (size / 32) + 1 {
             break;
         }
 
-        // For out of bound bytes, 0s will be copied.
-        if (i + offset >= calldata.len()) {
-            assert(*results[i] == 0, 'wrong data value');
-        } else {
-            assert(*results[i] == *calldata[i + offset], 'wrong data value');
-        }
+        let result: u256 = ctx.memory.load_internal(dest_offset + (i * 32)).into();
+        let mut results: Array<u8> = u256_to_bytes_array(result);
+
+        let mut x = 0;
+        loop {
+            if (x == 32 || x + (i * 32) == size) {
+                break;
+            }
+
+            // For out of bound bytes, 0s will be copied.
+            if (x + (i * 32) + offset >= calldata.len()) {
+                assert(*results[x] == 0, 'wrong data value');
+            } else {
+                assert(*results[x] == *calldata[x + (i * 32) + offset], 'wrong data value');
+            }
+
+            x += 1;
+        };
 
         i += 1;
     };
