@@ -250,7 +250,6 @@ fn test_returndata_copy_type_conversion_error() {
     let res = ctx.exec_returndatacopy();
 
     // Then
-    assert(res.is_err(), 'should return error');
     assert(
         res.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
         'should return ConversionError'
@@ -272,7 +271,6 @@ fn test_returndata_copy_overflowing_add_error() {
     let res = ctx.exec_returndatacopy();
 
     // Then
-    assert(res.is_err(), 'should return error');
     assert(
         res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
         'should return OutOfBounds'
@@ -292,9 +290,8 @@ fn test_returndata_copy_out_of_bounds_error() {
 
     // When
     let res = ctx.exec_returndatacopy();
-    
+
     // Then
-    assert(res.is_err(), 'should return error');
     assert(
         res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
         'should return OutOfBounds'
@@ -341,7 +338,6 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     assert(ctx.stack.is_empty(), 'stack should be empty');
 
     if (offset + size > return_data.len()) {
-        assert(res.is_err(), 'should return error');
         assert(
             res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
             'should return out of bounds'
