@@ -248,6 +248,7 @@ fn test_returndata_copy_type_conversion_error() {
 
     // When
     let res = ctx.exec_returndatacopy();
+
     // Then
     assert(res.is_err(), 'should return error');
     assert(
@@ -269,6 +270,7 @@ fn test_returndata_copy_overflowing_add_error() {
 
     // When
     let res = ctx.exec_returndatacopy();
+
     // Then
     assert(res.is_err(), 'should return error');
     assert(
@@ -290,6 +292,7 @@ fn test_returndata_copy_out_of_bounds_error() {
 
     // When
     let res = ctx.exec_returndatacopy();
+    
     // Then
     assert(res.is_err(), 'should return error');
     assert(
