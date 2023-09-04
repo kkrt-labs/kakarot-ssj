@@ -88,8 +88,8 @@ impl U256SignedPartialOrd of SignedPartialOrd<u256> {
     }
 
     fn sgt(self: u256, other: u256) -> bool {
-        let self_positive = self.high < TWO_POW_127; // false : +
-        let other_positive = other.high < TWO_POW_127; // true : -
+        let self_positive = self.high < TWO_POW_127;
+        let other_positive = other.high < TWO_POW_127;
 
         // First, check if signs are different
         if (self_positive != other_positive) {
