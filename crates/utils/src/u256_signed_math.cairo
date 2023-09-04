@@ -69,10 +69,12 @@ fn u256_signed_div_rem(a: u256, div: NonZero<u256>) -> (u256, u256) {
 // Signed integer comparaison
 trait SignedPartialOrd<T> {
     fn slt(self: T, other: T) -> bool;
+    fn sgt(self: T, other: T) -> bool;
 }
 
 // Signed u256 comparaison
 impl U256SignedPartialOrd of SignedPartialOrd<u256> {
+    #[inline(always)]
     fn slt(self: u256, other: u256) -> bool {
         let self_positive = self.high < TWO_POW_127;
         let other_positive = other.high < TWO_POW_127;
@@ -84,5 +86,9 @@ impl U256SignedPartialOrd of SignedPartialOrd<u256> {
         else {
             self < other
         }
+    }
+    #[inline(always)]
+    fn sgt(self: u256, other: u256) -> bool {
+        SignedPartialOrd::slt(other, self)
     }
 }

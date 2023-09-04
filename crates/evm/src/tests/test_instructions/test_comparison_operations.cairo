@@ -694,11 +694,11 @@ fn test_exec_slt() {
     );
 }
 
-fn assert_slt(a: u256, b: u256, expected: u256) {
+fn assert_slt(b: u256, a: u256, expected: u256) {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(a);
     ctx.stack.push(b);
+    ctx.stack.push(a);
 
     // When
     ctx.exec_slt();
