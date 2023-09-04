@@ -11,6 +11,8 @@ use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERRO
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
 };
+use utils::helpers::{ArrayExtension, ArrayExtensionTrait};
+use integer::u32_overflowing_add;
 
 // *************************************************************************
 // 0x30: ADDRESS
@@ -240,7 +242,6 @@ fn test_returndatasize() {
 fn test_returndata_copy_type_conversion_error() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.set_return_data(array![1, 2, 3, 4, 5]);
 
     ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
@@ -259,43 +260,7 @@ fn test_returndata_copy_type_conversion_error() {
 #[test]
 #[available_gas(20000000)]
 fn test_returndata_copy_overflowing_add_error() {
-    // Given
-    let mut ctx = setup_execution_context();
-    ctx.set_return_data(array![1, 2, 3, 4, 5]);
-
-    ctx.stack.push(0xFFFFFFFF);
-    ctx.stack.push(0xFFFFFFFF);
-    ctx.stack.push(0xFFFFFFFF);
-
-    // When
-    let res = ctx.exec_returndatacopy();
-
-    // Then
-    assert(
-        res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
-        'should return OutOfBounds'
-    );
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_returndata_copy_out_of_bounds_error() {
-    // Given
-    let mut ctx = setup_execution_context();
-    ctx.set_return_data(array![1, 2, 3, 4, 5]);
-
-    ctx.stack.push(10);
-    ctx.stack.push(0);
-    ctx.stack.push(0);
-
-    // When
-    let res = ctx.exec_returndatacopy();
-
-    // Then
-    assert(
-        res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
-        'should return OutOfBounds'
-    );
+    test_returndata_copy(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
 }
 
 #[test]
@@ -313,13 +278,59 @@ fn test_returndata_copy_with_offset() {
 #[test]
 #[available_gas(20000000)]
 fn test_returndata_copy_with_out_of_bound_bytes() {
-    test_returndata_copy(32, 0, 8);
+    test_returndata_copy(32, 30, 10);
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_returndata_copy_with_multiple_words() {
+    test_returndata_copy(32, 0, 33);
 }
 
 fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.set_return_data(array![1, 2, 3, 4, 5]);
+    ctx
+        .set_return_data(
+            array![
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36
+            ]
+        );
 
     let return_data: Span<u8> = ctx.return_data();
 
@@ -337,24 +348,44 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Then
     assert(ctx.stack.is_empty(), 'stack should be empty');
 
-    if (offset + size > return_data.len()) {
-        assert(
-            res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
-            'should return out of bounds'
-        );
-    } else {
-        let result: u256 = ctx.memory.load_internal(dest_offset).into();
-        let mut results: Array<u8> = u256_to_bytes_array(result);
-
-        let mut i = 0;
-        loop {
-            if (i == size) {
-                break;
+    match u32_overflowing_add(offset, size) {
+        Result::Ok(x) => {
+            if (x > return_data.len()) {
+                assert(
+                    res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
+                    'should return out of bounds'
+                );
+                return;
             }
-
-            assert(*results[i] == *return_data[i + offset], 'wrong data value');
-
-            i += 1;
-        };
+        },
+        Result::Err(x) => {
+            assert(
+                res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
+                'should return out of bounds'
+            );
+            return;
+        }
     }
+
+    let result: u256 = ctx.memory.load_internal(dest_offset).into();
+    let mut results: Array<u8> = ArrayTrait::new();
+
+    let mut i = 0;
+    loop {
+        if i == (size / 32) + 1 {
+            break;
+        }
+
+        let result: u256 = ctx.memory.load_internal(dest_offset + (i * 32)).into();
+        let result_span = u256_to_bytes_array(result).span();
+
+        if ((i + 1) * 32 > size) {
+            ArrayExtensionTrait::concat(ref results, result_span.slice(0, size - (i * 32)));
+        } else {
+            ArrayExtensionTrait::concat(ref results, result_span);
+        }
+
+        i += 1;
+    };
+    assert(results.span() == return_data.slice(offset, size), 'wrong data value');
 }
