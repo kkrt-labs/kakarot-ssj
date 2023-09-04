@@ -33,7 +33,7 @@ classDiagram
 
     class CallContext{
         bytecode: Span~u8~,
-        call_data: Span~u8~,
+        calldata: Span~u8~,
         value: u256,
     }
     ExecutionContext *-- CallContext
