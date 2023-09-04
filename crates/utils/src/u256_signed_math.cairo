@@ -87,6 +87,7 @@ impl U256SignedPartialOrd of SignedPartialOrd<u256> {
             self < other
         }
     }
+
     #[inline(always)]
     fn sgt(self: u256, other: u256) -> bool {
         SignedPartialOrd::slt(other, self)
