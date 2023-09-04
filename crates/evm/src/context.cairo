@@ -343,6 +343,11 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         dyn_ctx.return_data = value;
         self.dynamic_context = BoxTrait::new(dyn_ctx);
     }
+
+    #[inline(always)]
+    fn set_pc(ref self: ExecutionContext, value: u32) {
+        self.program_counter = value;
+    }
 }
 
 impl DefaultExecutionContext of Default<ExecutionContext> {
