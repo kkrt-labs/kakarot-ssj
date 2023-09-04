@@ -129,7 +129,7 @@ fn test_calldata_copy_with_out_of_bound_bytes_multiple_words() {
 fn test_calldata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
     let mut ctx = setup_execution_context();
-    let calldata: Span<u8> = ctx.call_context().call_data();
+    let calldata: Span<u8> = ctx.call_context().calldata();
 
     if (size == 0) {
         size = calldata.len() - offset;

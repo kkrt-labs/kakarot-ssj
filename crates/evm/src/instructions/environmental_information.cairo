@@ -71,7 +71,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[1]))?;
         let size: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[2]))?;
 
-        let calldata: Span<u8> = self.call_context().call_data();
+        let calldata: Span<u8> = self.call_context().calldata();
 
         let slice_size = if (offset + size > calldata.len()) {
             calldata.len() - offset
