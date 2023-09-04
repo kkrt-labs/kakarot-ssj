@@ -71,15 +71,15 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[1]))?;
         let size: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[2]))?;
 
-        let call_data: Span<u8> = self.call_context().call_data();
+        let calldata: Span<u8> = self.call_context().call_data();
 
-        let slice_size = if (offset + size > call_data.len()) {
-            call_data.len() - offset
+        let slice_size = if (offset + size > calldata.len()) {
+            calldata.len() - offset
         } else {
             size
         };
 
-        let data_to_copy: Span<u8> = call_data.slice(offset, slice_size);
+        let data_to_copy: Span<u8> = calldata.slice(offset, slice_size);
         self.memory.store_n(data_to_copy, dest_offset);
 
         // For out of bound bytes, 0s will be copied.
