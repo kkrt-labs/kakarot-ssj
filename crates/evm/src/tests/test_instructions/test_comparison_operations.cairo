@@ -248,13 +248,7 @@ fn test_exec_shl_wrapping() {
 
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(
-        ctx
-            .stack
-            .peek()
-            .unwrap() == 0,
-        'if shift > 255 should return 0'
-    );
+    assert(ctx.stack.peek().unwrap() == 0, 'if shift > 255 should return 0');
 }
 
 #[test]

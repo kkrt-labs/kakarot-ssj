@@ -159,7 +159,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         gas_limit: u64,
         gas_price: u64,
         // calling_context: Nullable<ExecutionContext>,
-        returned_data: Array<u8>,
+        return_data: Array<u8>,
         read_only: bool
     ) -> ExecutionContext {
         ExecutionContext {
@@ -168,7 +168,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
                     call_context, starknet_address, evm_address, read_only, gas_limit, gas_price
                 )
             ),
-            dynamic_context: BoxTrait::new(DynamicExecutionContextTrait::new(returned_data)),
+            dynamic_context: BoxTrait::new(DynamicExecutionContextTrait::new(return_data)),
             program_counter: 0,
             stack: Default::default(),
             memory: Default::default(),
