@@ -35,10 +35,10 @@ fn setup_execution_context() -> ExecutionContext {
     let gas_limit: u64 = 1000;
     let gas_price: u64 = 10;
     let read_only: bool = false;
-    let returned_data = Default::default();
+    let return_data = Default::default();
 
     ExecutionContextTrait::new(
-        call_context, starknet_address, evm_address, gas_limit, gas_price, returned_data, read_only
+        call_context, starknet_address, evm_address, gas_limit, gas_price, return_data, read_only
     )
 }
 
@@ -56,10 +56,10 @@ fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext
     let gas_limit: u64 = 1000;
     let gas_price: u64 = 10;
     let read_only: bool = false;
-    let returned_data = Default::default();
+    let return_data = Default::default();
 
     ExecutionContextTrait::new(
-        call_context, starknet_address, evm_address, gas_limit, gas_price, returned_data, read_only
+        call_context, starknet_address, evm_address, gas_limit, gas_price, return_data, read_only
     )
 }
 
