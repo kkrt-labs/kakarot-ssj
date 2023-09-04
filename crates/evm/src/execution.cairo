@@ -15,10 +15,10 @@ fn execute(
 ) {
     /// TODO: implement the execute function. 
     /// TODO: This function should run the given bytecode with the given calldata and parameters.
-    let mut returned_data = Default::default();
+    let mut return_data = Default::default();
     // Create new execution context.
     let mut ctx = ExecutionContextTrait::new(
-        call_context, starknet_address, evm_address, gas_limit, gas_price, returned_data, false
+        call_context, starknet_address, evm_address, gas_limit, gas_price, return_data, false
     );
 
     let mut interpreter = EVMInterpreterTrait::new();
