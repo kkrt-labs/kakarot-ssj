@@ -262,7 +262,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
 
             self.items.insert(chunk_index.into(), current.try_into().unwrap());
             chunk_index += 1;
-            elements = elements.slice(0, 16);
+            elements = elements.slice(16, elements.len() - 16);
         }
     }
 
