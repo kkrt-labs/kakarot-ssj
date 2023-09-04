@@ -66,14 +66,14 @@ fn test__exec_callvalue() {
 fn test_calldata_size() {
     // Given
     let mut ctx = setup_execution_context();
-    let call_data: Span<u8> = ctx.call_context().call_data();
+    let calldata: Span<u8> = ctx.call_context().call_data();
 
     // When
     ctx.exec_calldatasize();
 
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == call_data.len().into(), 'stack top is not calldatasize');
+    assert(ctx.stack.peek().unwrap() == calldata.len().into(), 'stack top is not calldatasize');
 }
 
 // *************************************************************************
@@ -122,10 +122,10 @@ fn test_calldata_copy_with_out_of_bound_bytes() {
 fn test_calldata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
     let mut ctx = setup_execution_context();
-    let call_data: Span<u8> = ctx.call_context().call_data();
+    let calldata: Span<u8> = ctx.call_context().call_data();
 
     if (size == 0) {
-        size = call_data.len() - offset;
+        size = calldata.len() - offset;
     }
 
     ctx.stack.push(size.into());
@@ -157,10 +157,10 @@ fn test_calldata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         }
 
         // For out of bound bytes, 0s will be copied.
-        if (i + offset >= call_data.len()) {
+        if (i + offset >= calldata.len()) {
             assert(*results[i] == 0, 'wrong data value');
         } else {
-            assert(*results[i] == *call_data[i + offset], 'wrong data value');
+            assert(*results[i] == *calldata[i + offset], 'wrong data value');
         }
 
         i += 1;
