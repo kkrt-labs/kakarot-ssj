@@ -287,156 +287,36 @@ fn test_exec_gt_false_equal() {
 #[available_gas(22000000)]
 fn test_exec_slt() {
     // https://github.com/ethereum/go-ethereum/blob/master/core/vm/testdata/testcases_slt.json
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
-        0
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        0
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0x8000000000000000000000000000000000000000000000000000000000000000,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0x8000000000000000000000000000000000000000000000000000000000000001,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
-        0
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        0
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0x8000000000000000000000000000000000000000000000000000000000000000,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0x8000000000000000000000000000000000000000000000000000000000000001,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
-        0
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        0
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0x8000000000000000000000000000000000000000000000000000000000000000,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0x8000000000000000000000000000000000000000000000000000000000000001,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
-        1
-    );
-    assert_slt(
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        1
-    );
-    assert_slt(
-        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        1
-    );
-    assert_slt(
-        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        1
-    );
-    assert_slt(
-        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        1
-    );
+    assert_slt(0x0, 0x0, 0);
+    assert_slt(0x0, 0x1, 0);
+    assert_slt(0x0, 0x5, 0);
+    assert_slt(0x0, 0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0);
+    assert_slt(0x0, 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0);
+    assert_slt(0x0, 0x8000000000000000000000000000000000000000000000000000000000000000, 1);
+    assert_slt(0x0, 0x8000000000000000000000000000000000000000000000000000000000000001, 1);
+    assert_slt(0x0, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb, 1);
+    assert_slt(0x0, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 1);
+    assert_slt(0x1, 0x0, 1);
+    assert_slt(0x1, 0x1, 0);
+    assert_slt(0x1, 0x5, 0);
+    assert_slt(0x1, 0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0);
+    assert_slt(0x1, 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0);
+    assert_slt(0x0, 0x8000000000000000000000000000000000000000000000000000000000000000, 1);
+    assert_slt(0x1, 0x8000000000000000000000000000000000000000000000000000000000000001, 1);
+    assert_slt(0x1, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb, 1);
+    assert_slt(0x1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 1);
+    assert_slt(0x5, 0x0, 1);
+    assert_slt(0x5, 0x1, 1);
+    assert_slt(0x5, 0x5, 0);
+    assert_slt(0x5, 0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0);
+    assert_slt(0x5, 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0);
+    assert_slt(0x5, 0x8000000000000000000000000000000000000000000000000000000000000000, 1);
+    assert_slt(0x5, 0x8000000000000000000000000000000000000000000000000000000000000001, 1);
+    assert_slt(0x5, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb, 1);
+    assert_slt(0x5, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 1);
+    assert_slt(0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0x0, 1);
+    assert_slt(0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0x1, 1);
+    assert_slt(0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0x5, 1);
     assert_slt(
         0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
         0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
@@ -467,21 +347,9 @@ fn test_exec_slt() {
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
         1
     );
-    assert_slt(
-        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        1
-    );
-    assert_slt(
-        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        1
-    );
-    assert_slt(
-        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        1
-    );
+    assert_slt(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0x0, 1);
+    assert_slt(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0x1, 1);
+    assert_slt(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0x5, 1);
     assert_slt(
         0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
         0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
@@ -512,21 +380,9 @@ fn test_exec_slt() {
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
         1
     );
-    assert_slt(
-        0x8000000000000000000000000000000000000000000000000000000000000000,
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0
-    );
-    assert_slt(
-        0x8000000000000000000000000000000000000000000000000000000000000000,
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0
-    );
-    assert_slt(
-        0x8000000000000000000000000000000000000000000000000000000000000000,
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0
-    );
+    assert_slt(0x8000000000000000000000000000000000000000000000000000000000000000, 0x0, 0);
+    assert_slt(0x8000000000000000000000000000000000000000000000000000000000000000, 0x1, 0);
+    assert_slt(0x8000000000000000000000000000000000000000000000000000000000000000, 0x5, 0);
     assert_slt(
         0x8000000000000000000000000000000000000000000000000000000000000000,
         0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
@@ -557,21 +413,9 @@ fn test_exec_slt() {
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
         0
     );
-    assert_slt(
-        0x8000000000000000000000000000000000000000000000000000000000000001,
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0
-    );
-    assert_slt(
-        0x8000000000000000000000000000000000000000000000000000000000000001,
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0
-    );
-    assert_slt(
-        0x8000000000000000000000000000000000000000000000000000000000000001,
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0
-    );
+    assert_slt(0x8000000000000000000000000000000000000000000000000000000000000001, 0x0, 0);
+    assert_slt(0x8000000000000000000000000000000000000000000000000000000000000001, 0x1, 0);
+    assert_slt(0x8000000000000000000000000000000000000000000000000000000000000001, 0x5, 0);
     assert_slt(
         0x8000000000000000000000000000000000000000000000000000000000000001,
         0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
@@ -602,21 +446,9 @@ fn test_exec_slt() {
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
         0
     );
-    assert_slt(
-        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0
-    );
-    assert_slt(
-        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0
-    );
-    assert_slt(
-        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0
-    );
+    assert_slt(0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb, 0x0, 0);
+    assert_slt(0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb, 0x1, 0);
+    assert_slt(0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb, 0x5, 0);
     assert_slt(
         0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
         0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
@@ -647,21 +479,9 @@ fn test_exec_slt() {
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
         0
     );
-    assert_slt(
-        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0
-    );
-    assert_slt(
-        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        0x0000000000000000000000000000000000000000000000000000000000000001,
-        0
-    );
-    assert_slt(
-        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        0x0000000000000000000000000000000000000000000000000000000000000005,
-        0
-    );
+    assert_slt(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0x0, 0);
+    assert_slt(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0x1, 0);
+    assert_slt(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0x5, 0);
     assert_slt(
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
         0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
