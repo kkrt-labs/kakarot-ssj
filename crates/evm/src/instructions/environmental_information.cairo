@@ -59,7 +59,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get the size of return data.
     /// # Specification: https://www.evm.codes/#36?fork=shanghai
     fn exec_calldatasize(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let result: u256 = self.call_context().call_data().len().into();
+        let result: u256 = self.call_context().calldata().len().into();
         self.stack.push(result)
     }
 
