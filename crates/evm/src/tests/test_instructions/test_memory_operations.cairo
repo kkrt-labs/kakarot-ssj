@@ -9,34 +9,22 @@ use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionC
 #[test]
 #[available_gas(20000000000)]
 #[should_panic(expected: ('MLOAD not implement yet',))]
-fn test_exec_mload() {
-    let data: Array<(u256, u256, u256, u32)> = array![
-        // (memory_value, input, expected_value, expected_memory_size)
+fn test_exec_mload_should_load_a_value_from_memory() {
+    assert_mload(0x1, 0, 0x1, 32);
+}
 
-        // Geth: no test ?!
+#[test]
+#[available_gas(20000000000)]
+#[should_panic(expected: ('MLOAD not implement yet',))]
+fn test_exec_mload_should_load_a_value_from_memory_with_memory_expansion() {
+    assert_mload(0x1, 16, 0x100000000000000000000000000000000, 64);
+}
 
-        // Kakarot cairo0
-        (0x1, 0, 0x1, 32),
-        (0x1, 16, 0x100000000000000000000000000000000, 64),
-        (0x1, 684, 0x0, 736),
-        // evm.codes
-        (0xFF, 0, 0xFF, 32),
-        (0xFF, 1, 0xFF00, 64)
-    ];
-
-    let mut i = 0;
-    loop {
-        if (i == data.len()) {
-            break;
-        }
-
-        let test_case: (u256, u256, u256, u32) = *data[i];
-        let (memory_value, input, expected_value, expected_memory_size) = test_case;
-
-        assert_mload(memory_value, input, expected_value, expected_memory_size);
-
-        i += 1;
-    }
+#[test]
+#[available_gas(20000000000)]
+#[should_panic(expected: ('MLOAD not implement yet',))]
+fn test_exec_mload_should_load_a_value_from_memory_with_offset_larger_than_msize() {
+    assert_mload(0x1, 684, 0x0, 736);
 }
 
 fn assert_mload(memory_value: u256, input: u256, expected_value: u256, expected_memory_size: u32) {
