@@ -1,6 +1,7 @@
 use evm::instructions::EnvironmentInformationTrait;
 use evm::tests::test_utils::{
-    setup_execution_context, setup_execution_context_with_bytecode, evm_address, callvalue
+    setup_execution_context, setup_execution_context_with_bytecode,
+    setup_execution_context_with_calldata, evm_address, callvalue
 };
 use evm::stack::StackTrait;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
@@ -199,11 +200,14 @@ fn test_returndatasize() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_calldata_load() {
+fn test_calldataload() {
     // Given
-    let mut ctx = setup_execution_context();
-    let call_data: Span<u8> = ctx.call_context().call_data();
-    let call_data_len = call_data.len();
+    let calldata = u256_to_bytes_array(
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    );
+    let calldata_len = calldata.len();
+
+    let mut ctx = setup_execution_context_with_calldata(calldata.span());
 
     let offset: u32 = 0;
 
@@ -214,29 +218,24 @@ fn test_calldata_load() {
 
     // Then
     let result: u256 = ctx.stack.pop().unwrap();
-
-    let mut expected = load_word(call_data_len, call_data);
-
-    let mut i = 32 - call_data_len;
-    loop {
-        if i == 0 {
-            break;
-        }
-        expected *= 256;
-        i -= 1;
-    };
-    assert(expected == result, 'wrong results');
+    assert(
+        result == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+        'wrong data value'
+    );
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_calldata_load_with_offset() {
+fn test_calldataload_with_offset() {
     // Given
-    let mut ctx = setup_execution_context();
-    let call_data: Span<u8> = ctx.call_context().call_data();
-    let call_data_len = call_data.len();
+    let calldata = u256_to_bytes_array(
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    );
+    let calldata_len = calldata.len();
 
-    let offset: u32 = call_data_len - 2;
+    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+
+    let offset: u32 = 31;
 
     ctx.stack.push(offset.into());
 
@@ -246,30 +245,24 @@ fn test_calldata_load_with_offset() {
     // Then
     let result: u256 = ctx.stack.pop().unwrap();
 
-    let bytes_len = cmp::min(32, call_data_len - offset);
-    let sliced = call_data.slice(offset, bytes_len);
-    let mut expected = load_word(bytes_len, sliced);
-
-    let mut i = 32 - bytes_len;
-    loop {
-        if i == 0 {
-            break;
-        }
-        expected *= 256;
-        i -= 1;
-    };
-    assert(expected == result, 'wrong results');
+    assert(
+        result == 0xFF00000000000000000000000000000000000000000000000000000000000000,
+        'wrong results'
+    );
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_calldata_load_with_offset_beyond_calldata() {
+fn test_calldataload_with_offset_beyond_calldata() {
     // Given
-    let mut ctx = setup_execution_context();
-    let call_data: Span<u8> = ctx.call_context().call_data();
-    let call_data_len = call_data.len();
+    let calldata = u256_to_bytes_array(
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    );
+    let calldata_len = calldata.len();
 
-    let offset: u32 = call_data_len + 1;
+    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+
+    let offset: u32 = calldata_len + 1;
 
     ctx.stack.push(offset.into());
 
@@ -284,11 +277,14 @@ fn test_calldata_load_with_offset_beyond_calldata() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_calldata_load_with_offset_conversion_error() {
+fn test_calldataload_with_offset_conversion_error() {
     // Given
-    let mut ctx = setup_execution_context();
-    let call_data: Span<u8> = ctx.call_context().call_data();
-    let call_data_len = call_data.len();
+    let calldata = u256_to_bytes_array(
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    );
+    let calldata_len = calldata.len();
+
+    let mut ctx = setup_execution_context_with_calldata(calldata.span());
 
     let offset: u256 = 5000000000;
 
