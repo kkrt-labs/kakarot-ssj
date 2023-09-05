@@ -1,19 +1,16 @@
 use evm::instructions::Sha3Trait;
 use evm::tests::test_utils::setup_execution_context;
+use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
+use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::stack::StackTrait;
 use option::OptionTrait;
+use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
+
 use debug::PrintTrait;
-use integer::BoundedInt;
-
-use evm::context::{
-    ExecutionContext, ExecutionContextTrait, CallContextTrait, BoxDynamicExecutionContextDestruct
-};
-use evm::memory::{InternalMemoryTrait, MemoryTrait};
-
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_with_size_0_offset_0() {
+fn test_sha3_size_0_offset_0() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -36,7 +33,7 @@ fn test_sha3_with_size_0_offset_0() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_with_size_5_offset_4() {
+fn test_sha3_size_5_offset_4() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
@@ -58,7 +55,7 @@ fn test_sha3_with_size_5_offset_4() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_with_size_10_offset_10() {
+fn test_sha3_size_10_offset_10() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
@@ -80,8 +77,7 @@ fn test_sha3_with_size_10_offset_10() {
 
 #[test]
 #[available_gas(1000000000000000)]
-fn test_sha3_with_size_0xFFFFF_offset_1000() {
-    //https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code=%27sPutkrequired%20valugin%20memoryj32%200xFFFFFFFFffffz0wMSTOREwwsCallkopcodez4z0wSHA3%27~0000000zj1%20w%5Cns%2F%2F%20k%20thgjwPUSHge%20f~~%01fgjkswz~_
+fn test_sha3_size_0xFFFFF_offset_1000() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
@@ -102,8 +98,8 @@ fn test_sha3_with_size_0xFFFFF_offset_1000() {
 }
 
 #[test]
-#[available_gas(20000000)]
-fn test_sha3_with_size_1000000_offset_2() {
+#[available_gas(8000000000)]
+fn test_sha3_size_1000000_offset_2() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
@@ -115,19 +111,16 @@ fn test_sha3_with_size_1000000_offset_2() {
 
     // When
     ctx.exec_sha3();
-
     // Then
-    // Resultat expected : 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
     let result = ctx.stack.peek().unwrap();
-    result.print();
     assert(
-        result == 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563, 'wrong result'
+        result == 0x4aa461ae9513f3b03ae397740ade979809dd02ae2c14e101b32842fbee21f0a, 'wrong result'
     );
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_with_size_1_offset_960() {
+fn test_sha3_size_1_offset_960() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
@@ -141,9 +134,7 @@ fn test_sha3_with_size_1_offset_960() {
     ctx.exec_sha3();
 
     // Then
-    // Resultat expected : 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a
     let result = ctx.stack.peek().unwrap();
-    result.print();
     assert(
         result == 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a, 'wrong result'
     );
@@ -151,7 +142,7 @@ fn test_sha3_with_size_1_offset_960() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_with_size_1_offset_992() {
+fn test_sha3_size_1_offset_992() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
@@ -165,9 +156,7 @@ fn test_sha3_with_size_1_offset_992() {
     ctx.exec_sha3();
 
     // Then
-    // Resultat expected : 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a
     let result = ctx.stack.peek().unwrap();
-    result.print();
     assert(
         result == 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a, 'wrong result'
     );
@@ -175,7 +164,7 @@ fn test_sha3_with_size_1_offset_992() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_with_size_1_offset_1024() {
+fn test_sha3_size_1_offset_1024() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
@@ -189,9 +178,7 @@ fn test_sha3_with_size_1_offset_1024() {
     ctx.exec_sha3();
 
     // Then
-    // Resultat expected : 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a
     let result = ctx.stack.peek().unwrap();
-    result.print();
     assert(
         result == 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a, 'wrong result'
     );
@@ -199,7 +186,7 @@ fn test_sha3_with_size_1_offset_1024() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_with_size_1_offset_1984() {
+fn test_sha3_size_1_offset_1984() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
@@ -213,9 +200,7 @@ fn test_sha3_with_size_1_offset_1984() {
     ctx.exec_sha3();
 
     // Then
-    // Resultat expected : 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a
     let result = ctx.stack.peek().unwrap();
-    result.print();
     assert(
         result == 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a, 'wrong result'
     );
@@ -223,7 +208,7 @@ fn test_sha3_with_size_1_offset_1984() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_with_size_1_offset_2016() {
+fn test_sha3_size_1_offset_2016() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
@@ -237,9 +222,7 @@ fn test_sha3_with_size_1_offset_2016() {
     ctx.exec_sha3();
 
     // Then
-    // Resultat expected : 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a
     let result = ctx.stack.peek().unwrap();
-    result.print();
     assert(
         result == 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a, 'wrong result'
     );
@@ -247,7 +230,7 @@ fn test_sha3_with_size_1_offset_2016() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_with_size_1_offset_2048() {
+fn test_sha3_size_1_offset_2048() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
@@ -261,9 +244,7 @@ fn test_sha3_with_size_1_offset_2048() {
     ctx.exec_sha3();
 
     // Then
-    // Resultat expected : 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a
     let result = ctx.stack.peek().unwrap();
-    result.print();
     assert(
         result == 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a, 'wrong result'
     );
@@ -271,7 +252,7 @@ fn test_sha3_with_size_1_offset_2048() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_with_size_0_offset_1024() {
+fn test_sha3_size_0_offset_1024() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
@@ -286,7 +267,6 @@ fn test_sha3_with_size_0_offset_1024() {
 
     // Then
     let result = ctx.stack.peek().unwrap();
-    result.print();
     assert(
         result == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470, 'wrong result'
     );
@@ -294,7 +274,7 @@ fn test_sha3_with_size_0_offset_1024() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_with_size_32_offset_2016() {
+fn test_sha3_size_32_offset_2016() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
@@ -309,7 +289,6 @@ fn test_sha3_with_size_32_offset_2016() {
 
     // Then
     let result = ctx.stack.peek().unwrap();
-    result.print();
     assert(
         result == 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563, 'wrong result'
     );
@@ -317,30 +296,73 @@ fn test_sha3_with_size_32_offset_2016() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_with_offset_plus_size_beyond_memory() {
+fn test_sha3_size_32_offset_0() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
 
-    ctx.stack.push(0x20);
-    ctx.stack.push(0x02);
+    ctx.stack.push(32);
+    ctx.stack.push(0);
 
-    ctx.memory.store(0xFAFAFAFA00000000000000000000000000000000000000000000000000000000, 0);
+    ctx.memory.store(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
 
     // When
     ctx.exec_sha3();
 
     // Then
-    // Resultat expected : 0x4c8266c7f1c12d2a0c99f03f5fb7314fcd4b762b34d58442fc0f23d2629b9dae
     let result = ctx.stack.peek().unwrap();
     assert(
-        result == 0x4c8266c7f1c12d2a0c99f03f5fb7314fcd4b762b34d58442fc0f23d2629b9dae, 'wrong result'
+        result == 0x567d6b045256961aee949d6bb4d5f814c5b42e6b8bb49a833e8e89fbcddee86c, 'wrong result'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_sha3_size_31_offset_0() {
+    // Given
+    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(31);
+    ctx.stack.push(0);
+
+    ctx.memory.store(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
+
+    // When
+    ctx.exec_sha3();
+
+    // Then
+    let result = ctx.stack.peek().unwrap();
+    assert(
+        result == 0x4b13f212816c02cc818ba4802e81a4ac1904d2c920fe8d8cf3e4f05233a57d2e, 'wrong result'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_sha3_size_33_offset_0() {
+    // Given
+    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(33);
+    ctx.stack.push(0);
+
+    ctx.memory.store(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
+
+    // When
+    ctx.exec_sha3();
+
+    // Then
+    let result = ctx.stack.peek().unwrap();
+    assert(
+        result == 0xa6fa3edfabbe64b6ce26120b21ac9b8191005115d5e7e03fa58ec9cc74c0f2f4, 'wrong result'
     );
 }
 
 #[test]
 #[available_gas(20000000000)]
-fn test_sha3_with_big_size() {
+fn test_sha3_size_0x0C80_offset_0() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
@@ -363,7 +385,6 @@ fn test_sha3_with_big_size() {
     ctx.exec_sha3();
 
     // Then
-    // Resultat expected : 0x2022ae07f3a362b08ac0a4bcb785c830cb5c368dc0ce6972249c6abbc68a5291
     let result = ctx.stack.peek().unwrap();
     assert(
         result == 0x2022ae07f3a362b08ac0a4bcb785c830cb5c368dc0ce6972249c6abbc68a5291, 'wrong result'
