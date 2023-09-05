@@ -64,7 +64,10 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Pops the first item on the stack (top of the stack).
     /// # Specification: https://www.evm.codes/#50?fork=shanghai
     fn exec_pop(ref self: ExecutionContext) -> Result<(), EVMError> {
-        self.stack.pop();
+        let result = self.stack.pop();
+        if result.is_err() {
+            return Result::Err(result.unwrap_err());
+        }
         Result::Ok(())
     }
 
