@@ -207,7 +207,7 @@ impl ArrayExtension of ArrayExtensionTrait {
 
 #[generate_trait]
 impl SpanExtension of SpanExtensionTrait {
-    fn clone_pad_end_zeroes(ref self: Span<u8>, n_zeroes: usize) -> Array<u8> {
+    fn pad_right(ref self: Span<u8>, n_zeroes: usize) -> Span<u8> {
         let mut res: Array<u8> = array![];
         let mut i = 0;
         loop {
@@ -225,7 +225,7 @@ impl SpanExtension of SpanExtensionTrait {
             res.append(0);
             i += 1;
         };
-        res
+        res.span()
     }
 }
 
