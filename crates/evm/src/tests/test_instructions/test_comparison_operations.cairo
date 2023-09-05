@@ -1572,24 +1572,12 @@ fn test_exec_lt_true() {
 
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 0x01, 'stack top should be 0x01');
+    assert(ctx.stack.peek().unwrap() == 0x01, 'stack top should be true');
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_exec_lt_false() {
-    // Given
-    let mut ctx = setup_execution_context();
-    ctx.stack.push(10_u256).unwrap();
-    ctx.stack.push(10_u256).unwrap();
-
-    // When
-    ctx.exec_lt();
-
-    // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
-
     // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(10_u256).unwrap();
@@ -1600,5 +1588,21 @@ fn test_exec_lt_false() {
 
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
+    assert(ctx.stack.peek().unwrap() == 0x00, 'stack top should be false');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_lt_false_eq() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(10_u256).unwrap();
+    ctx.stack.push(10_u256).unwrap();
+
+    // When
+    ctx.exec_lt();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x00, 'stack top should be false');
 }
