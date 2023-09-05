@@ -113,7 +113,7 @@ impl MemoryImpl of MemoryTrait {
             let aligned_bytes = elements
                 .slice(
                     16 - offset_in_chunk_i,
-                    elements.len() - 16 - offset_in_chunk_i - offset_in_chunk_f,
+                    elements.len() - (16 - offset_in_chunk_i) - offset_in_chunk_f,
                 );
             self.store_aligned_words(initial_chunk + 1, aligned_bytes);
         }
