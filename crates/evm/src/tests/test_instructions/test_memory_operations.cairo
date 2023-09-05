@@ -27,12 +27,12 @@ fn test_exec_mload_should_load_a_value_from_memory_with_offset_larger_than_msize
     assert_mload(0x1, 684, 0x0, 736);
 }
 
-fn assert_mload(memory_value: u256, input: u256, expected_value: u256, expected_memory_size: u32) {
+fn assert_mload(value: u256, output: u256, expected_value: u256, expected_memory_size: u32) {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.memory.store(memory_value, 0);
+    ctx.memory.store(value, 0);
 
-    ctx.stack.push(input);
+    ctx.stack.push(output);
 
     // When
     ctx.exec_mload();
