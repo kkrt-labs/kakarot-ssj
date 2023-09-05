@@ -205,6 +205,30 @@ impl ArrayExtension of ArrayExtensionTrait {
     }
 }
 
+#[generate_trait]
+impl SpanExtension of SpanExtensionTrait {
+    fn clone_pad_end_zeroes(ref self: Span<u8>, n_zeroes: usize) -> Array<u8> {
+        let mut res: Array<u8> = array![];
+        let mut i = 0;
+        loop {
+            if i == self.len() {
+                break;
+            }
+            res.append(*self[i]);
+            i += 1;
+        };
+        let mut i = 0;
+        loop {
+            if i == n_zeroes {
+                break ();
+            }
+            res.append(0);
+            i += 1;
+        };
+        res
+    }
+}
+
 // Raise a number to a power.
 fn pow(base: felt252, exp: felt252) -> felt252 {
     if exp == 0 {
