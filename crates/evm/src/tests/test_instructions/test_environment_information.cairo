@@ -67,14 +67,14 @@ fn test_gasprice() {
 fn test_calldata_size() {
     // Given
     let mut ctx = setup_execution_context();
-    let call_data: Span<u8> = ctx.call_context().call_data();
+    let calldata: Span<u8> = ctx.call_context().calldata();
 
     // When
     ctx.exec_calldatasize();
 
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == call_data.len().into(), 'stack top is not calldatasize');
+    assert(ctx.stack.peek().unwrap() == calldata.len().into(), 'stack top is not calldatasize');
 }
 
 #[test]
