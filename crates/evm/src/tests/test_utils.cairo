@@ -32,7 +32,7 @@ fn setup_execution_context() -> ExecutionContext {
     let call_context = setup_call_context();
     let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
-    let gas_limit: u64 = 100000;
+    let gas_limit: u64 = 1000;
     let gas_price: u64 = 10;
     let read_only: bool = false;
     let return_data = Default::default();
