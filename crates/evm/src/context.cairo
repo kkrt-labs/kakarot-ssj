@@ -18,7 +18,7 @@ struct CallContext {
     /// The bytecode to execute.
     bytecode: Span<u8>,
     /// The call data.
-    call_data: Span<u8>,
+    calldata: Span<u8>,
     /// Amount of native token to transfer.
     value: u256,
 }
@@ -32,16 +32,16 @@ struct CallContext {
 // instead we should use the methods defined in the trait. 
 // This is not enforced until there are `pub` and `priv` visibility on struct fields.
 trait CallContextTrait {
-    fn new(bytecode: Span<u8>, call_data: Span<u8>, value: u256) -> CallContext;
+    fn new(bytecode: Span<u8>, calldata: Span<u8>, value: u256) -> CallContext;
     fn bytecode(self: @CallContext) -> Span<u8>;
-    fn call_data(self: @CallContext) -> Span<u8>;
+    fn calldata(self: @CallContext) -> Span<u8>;
     fn value(self: @CallContext) -> u256;
 }
 
 impl CallContextImpl of CallContextTrait {
     #[inline(always)]
-    fn new(bytecode: Span<u8>, call_data: Span<u8>, value: u256) -> CallContext {
-        CallContext { bytecode, call_data, value, }
+    fn new(bytecode: Span<u8>, calldata: Span<u8>, value: u256) -> CallContext {
+        CallContext { bytecode, calldata, value, }
     }
 
     #[inline(always)]
@@ -50,8 +50,8 @@ impl CallContextImpl of CallContextTrait {
     }
 
     #[inline(always)]
-    fn call_data(self: @CallContext) -> Span<u8> {
-        *self.call_data
+    fn calldata(self: @CallContext) -> Span<u8> {
+        *self.calldata
     }
 
     #[inline(always)]
@@ -159,7 +159,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         gas_limit: u64,
         gas_price: u64,
         // calling_context: Nullable<ExecutionContext>,
-        returned_data: Array<u8>,
+        return_data: Array<u8>,
         read_only: bool
     ) -> ExecutionContext {
         ExecutionContext {
@@ -168,7 +168,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
                     call_context, starknet_address, evm_address, read_only, gas_limit, gas_price
                 )
             ),
-            dynamic_context: BoxTrait::new(DynamicExecutionContextTrait::new(returned_data)),
+            dynamic_context: BoxTrait::new(DynamicExecutionContextTrait::new(return_data)),
             program_counter: 0,
             stack: Default::default(),
             memory: Default::default(),
@@ -342,6 +342,11 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         let mut dyn_ctx = self.dynamic_context.unbox();
         dyn_ctx.return_data = value;
         self.dynamic_context = BoxTrait::new(dyn_ctx);
+    }
+
+    #[inline(always)]
+    fn set_pc(ref self: ExecutionContext, value: u32) {
+        self.program_counter = value;
     }
 }
 

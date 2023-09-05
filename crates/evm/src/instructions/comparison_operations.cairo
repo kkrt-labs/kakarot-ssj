@@ -6,8 +6,11 @@ use evm::errors::STACK_UNDERFLOW;
 use option::{OptionTrait};
 use evm::errors::EVMError;
 use result::ResultTrait;
-use utils::math::Exponentiation;
+use utils::math::{Exponentiation, Bitshift};
+use utils::u256_signed_math::{TWO_POW_127, MAX_U256};
 use evm::context::BoxDynamicExecutionContextDestruct;
+use utils::u256_signed_math::SignedPartialOrd;
+use utils::traits::BoolIntoNumeric;
 
 #[generate_trait]
 impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
@@ -23,11 +26,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         let popped = self.stack.pop_n(2)?;
         let a = *popped[0];
         let b = *popped[1];
-        let result = if (a > b) {
-            1
-        } else {
-            0
-        };
+        let result = (a > b).into();
         self.stack.push(result)
     }
 
@@ -35,13 +34,21 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x12 - SLT
     /// # Specification: https://www.evm.codes/#12?fork=shanghai
     fn exec_slt(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(2)?;
+        let a = *popped[0];
+        let b = *popped[1];
+        let result = a.slt(b).into();
+        self.stack.push(result)
     }
 
     /// 0x13 - SGT
     /// # Specification: https://www.evm.codes/#13?fork=shanghai
     fn exec_sgt(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(2)?;
+        let a = *popped[0];
+        let b = *popped[1];
+        let result = a.sgt(b).into();
+        self.stack.push(result)
     }
 
 
@@ -54,7 +61,13 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x15 - ISZERO
     /// # Specification: https://www.evm.codes/#15?fork=shanghai
     fn exec_iszero(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop()?;
+        let result = if popped == 0 {
+            1
+        } else {
+            0
+        };
+        self.stack.push(result)
     }
 
     /// 0x16 - AND
@@ -106,25 +119,60 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         }
 
         // Right shift value by offset bits and then take the least significant byte by applying modulo 256.
-        let result = (x / 2.pow((31 - i) * 8)) % 256;
+        let result = x.shr((31 - i) * 8) & 0xFF;
         self.stack.push(result)
     }
 
     /// 0x1B - SHL
     /// # Specification: https://www.evm.codes/#1b?fork=shanghai
     fn exec_shl(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(2)?;
+        let shift = *popped[0];
+        let val = *popped[1];
+
+        // if shift is bigger than 255 return 0
+        if shift > 255 {
+            return self.stack.push(0);
+        }
+
+        let result = val.wrapping_shl(shift);
+        self.stack.push(result)
     }
 
     /// 0x1C - SHR
     /// # Specification: https://www.evm.codes/#1c?fork=shanghai
     fn exec_shr(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(2)?;
+        let shift = *popped[0];
+        let value = *popped[1];
+
+        let result = value.wrapping_shr(shift);
+        self.stack.push(result)
     }
 
     /// 0x1D - SAR
     /// # Specification: https://www.evm.codes/#1d?fork=shanghai
     fn exec_sar(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(2)?;
+        let shift = *popped[0];
+        let value: u256 = *popped[1];
+
+        // Checks the MSB bit sign for a 256-bit integer
+        let positive = value.high < TWO_POW_127;
+        let sign = if positive {
+            // If sign is positive, set it to 0.
+            0
+        } else {
+            // If sign is negative, set the number to -1.
+            MAX_U256
+        };
+
+        if (shift > 256) {
+            self.stack.push(sign)
+        } else {
+            // XORing with sign before and after the shift propagates the sign bit of the operation
+            let result = (sign ^ value).shr(shift) ^ sign;
+            self.stack.push(result)
+        }
     }
 }

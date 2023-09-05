@@ -7,6 +7,7 @@ use starknet::{EthAddress, EthAddressIntoFelt252};
 use cmp::min;
 use utils::constants;
 
+
 /// Ceils a number of bits to the next word (32 bytes)
 ///
 /// # Arguments
@@ -116,7 +117,7 @@ fn u128_split(input: u128) -> (u64, u64) {
 }
 
 
-/// Loads a sequence of bytes into a single u128 in big-endian
+/// Loads a sequence of bytes into a single u256 in big-endian
 ///
 /// # Arguments
 /// * `len` - The number of bytes to load
@@ -161,7 +162,7 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
         if counter == 16 {
             break ();
         }
-        bytes_arr.append((value.low % 256).try_into().unwrap());
+        bytes_arr.append((value.low & 0xFF).try_into().unwrap());
         value.low /= 256;
         counter += 1;
     };
@@ -172,7 +173,7 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
         if counter == 16 {
             break ();
         }
-        bytes_arr.append((value.high % 256).try_into().unwrap());
+        bytes_arr.append((value.high & 0xFF).try_into().unwrap());
         value.high /= 256;
         counter += 1;
     };
