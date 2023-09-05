@@ -64,6 +64,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Pops the first item on the stack (top of the stack).
     /// # Specification: https://www.evm.codes/#50?fork=shanghai
     fn exec_pop(ref self: ExecutionContext) -> Result<(), EVMError> {
+        panic_with_felt252('POP not implement yet');
         Result::Ok(())
     }
 
