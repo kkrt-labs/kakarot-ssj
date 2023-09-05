@@ -74,6 +74,7 @@ trait SignedPartialOrd<T> {
 
 // Signed u256 comparaison
 impl U256SignedPartialOrd of SignedPartialOrd<u256> {
+    #[inline(always)]
     fn slt(self: u256, other: u256) -> bool {
         let self_positive = self.high < TWO_POW_127;
         let other_positive = other.high < TWO_POW_127;
@@ -87,8 +88,8 @@ impl U256SignedPartialOrd of SignedPartialOrd<u256> {
         }
     }
 
+    #[inline(always)]
     fn sgt(self: u256, other: u256) -> bool {
-        // TODO: This method will been implemented by the issue #8 (https://github.com/kkrt-labs/kakarot-ssj/issues/8)
-        panic_with_felt252("not implemented")
+        SignedPartialOrd::slt(other, self)
     }
 }
