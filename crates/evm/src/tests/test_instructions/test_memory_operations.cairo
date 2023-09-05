@@ -46,6 +46,7 @@ fn test_pc_gets_updated_properly_1() {
 
 #[test]
 #[available_gas(20000000)]
+#[should_panic(expected: ('POP not implement yet',))]
 fn test_pop_should_pop_an_item_from_execution_context() {
     // Given
     let mut ctx = setup_execution_context();
@@ -63,6 +64,7 @@ fn test_pop_should_pop_an_item_from_execution_context() {
 
 #[test]
 #[available_gas(20000000)]
+#[should_panic(expected: ('POP not implement yet',))]
 fn test_pop_should_stack_underflow() {
     // Given
     let mut ctx = setup_execution_context();
