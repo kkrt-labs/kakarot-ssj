@@ -1,12 +1,13 @@
 use evm::instructions::EnvironmentInformationTrait;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::tests::test_utils::{
-    setup_execution_context, setup_execution_context_with_bytecode, evm_address, callvalue
+    setup_execution_context, setup_execution_context_with_bytecode,
+    setup_execution_context_with_calldata, evm_address, callvalue
 };
 use evm::stack::StackTrait;
 use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
-use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array};
+use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array, load_word};
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
@@ -388,4 +389,107 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         i += 1;
     };
     assert(results.span() == return_data.slice(offset, size), 'wrong data value');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldataload() {
+    // Given
+    let calldata = u256_to_bytes_array(
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    );
+    let calldata_len = calldata.len();
+
+    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+
+    let offset: u32 = 0;
+
+    ctx.stack.push(offset.into());
+
+    // When
+    ctx.exec_calldataload();
+
+    // Then
+    let result: u256 = ctx.stack.pop().unwrap();
+    assert(
+        result == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+        'wrong data value'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldataload_with_offset() {
+    // Given
+    let calldata = u256_to_bytes_array(
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    );
+    let calldata_len = calldata.len();
+
+    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+
+    let offset: u32 = 31;
+
+    ctx.stack.push(offset.into());
+
+    // When
+    ctx.exec_calldataload();
+
+    // Then
+    let result: u256 = ctx.stack.pop().unwrap();
+
+    assert(
+        result == 0xFF00000000000000000000000000000000000000000000000000000000000000,
+        'wrong results'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldataload_with_offset_beyond_calldata() {
+    // Given
+    let calldata = u256_to_bytes_array(
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    );
+    let calldata_len = calldata.len();
+
+    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+
+    let offset: u32 = calldata_len + 1;
+
+    ctx.stack.push(offset.into());
+
+    // When
+    ctx.exec_calldataload();
+
+    // Then
+    let result: u256 = ctx.stack.pop().unwrap();
+    assert(result == 0, 'result should be 0');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldataload_with_offset_conversion_error() {
+    // Given
+    let calldata = u256_to_bytes_array(
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    );
+    let calldata_len = calldata.len();
+
+    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+
+    let offset: u256 = 5000000000;
+
+    ctx.stack.push(offset);
+
+    // When
+    let result = ctx.exec_calldataload();
+
+    // Then
+    assert(result.is_err(), 'should return error');
+    assert(
+        result.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
+        'should return ConversionError'
+    );
 }
