@@ -1,13 +1,15 @@
 //! Stack Memory Storage and Flow Operations.
 
-// Internal imports
-use evm::context::ExecutionContext;
-use evm::context::ExecutionContextTrait;
+use evm::context::{
+    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
+};
 use evm::errors::EVMError;
+use evm::stack::StackTrait;
+
 
 #[generate_trait]
-impl MemoryOperationsImpl of MemoryOperationsTrait {
-    /// 0x51 - MLOAD operation.
+impl MemoryOperation of MemoryOperationTrait {
+    /// MLOAD operation.
     /// Load word from memory and push to stack.
     fn exec_mload(ref self: ExecutionContext) -> Result<(), EVMError> {
         panic_with_felt252('MLOAD not implement yet')
@@ -24,7 +26,8 @@ impl MemoryOperationsImpl of MemoryOperationsTrait {
     /// Get the value of the program counter prior to the increment.
     /// # Specification: https://www.evm.codes/#58?fork=shanghai
     fn exec_pc(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let pc = self.program_counter.into();
+        self.stack.push(pc)
     }
 
     /// 0x59 - MSIZE operation.

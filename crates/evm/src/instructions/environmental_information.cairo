@@ -2,13 +2,14 @@
 use starknet::{EthAddressIntoFelt252};
 use result::ResultTrait;
 use evm::stack::StackTrait;
+use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR};
+use evm::helpers::U256IntoResultU32;
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
 };
-use evm::errors::EVMError;
 use utils::helpers::EthAddressIntoU256;
-use evm::helpers::U256IntoResultU32;
 use evm::memory::MemoryTrait;
+use integer::u32_overflowing_add;
 
 #[generate_trait]
 impl EnvironmentInformationImpl of EnvironmentInformationTrait {
@@ -149,6 +150,27 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#3e?fork=shanghai
     fn exec_returndatacopy(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = self.stack.pop_n(3)?;
+        let dest_offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[0]))?;
+        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[1]))?;
+        let size: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[2]))?;
+
+        let return_data: Span<u8> = self.return_data();
+
+        match u32_overflowing_add(offset, size) {
+            Result::Ok(x) => {
+                if (x > return_data.len()) {
+                    return Result::Err(EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR));
+                }
+            },
+            Result::Err(x) => {
+                return Result::Err(EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR));
+            }
+        }
+
+        let data_to_copy: Span<u8> = return_data.slice(offset, size);
+        self.memory.store_n(data_to_copy, dest_offset);
+
         Result::Ok(())
     }
 
