@@ -2,13 +2,14 @@
 use starknet::{EthAddressIntoFelt252};
 use result::ResultTrait;
 use evm::stack::StackTrait;
+use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR};
+use evm::helpers::U256IntoResultU32;
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
 };
-use evm::errors::EVMError;
-use utils::helpers::EthAddressIntoU256;
-use evm::helpers::U256IntoResultU32;
+use utils::helpers::{EthAddressIntoU256, load_word};
 use evm::memory::MemoryTrait;
+use integer::u32_overflowing_add;
 
 #[generate_trait]
 impl EnvironmentInformationImpl of EnvironmentInformationTrait {
@@ -51,7 +52,35 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Push a word from the calldata onto the stack.
     /// # Specification: https://www.evm.codes/#35?fork=shanghai
     fn exec_calldataload(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((self.stack.pop()?))?;
+
+        let calldata = self.call_context().calldata();
+        let calldata_len = calldata.len();
+
+        // All bytes after the end of the calldata are set to 0.
+        if offset >= calldata_len {
+            return self.stack.push(0);
+        }
+
+        // Slice the calldata
+        let bytes_len = cmp::min(32, calldata_len - offset);
+        let sliced = calldata.slice(offset, bytes_len);
+
+        // Fill data to load with bytes in calldata
+        let mut data_to_load: u256 = load_word(bytes_len, sliced);
+
+        // Fill the rest of the data to load with zeros
+        // TODO: optimize once we have dw-based exponentiation
+        let mut i = 32 - bytes_len;
+        loop {
+            if i == 0 {
+                break;
+            }
+            data_to_load *= 256;
+            i -= 1;
+        };
+
+        self.stack.push(data_to_load)
     }
 
     /// 0x36 - CALLDATASIZE 
@@ -149,6 +178,27 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#3e?fork=shanghai
     fn exec_returndatacopy(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = self.stack.pop_n(3)?;
+        let dest_offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[0]))?;
+        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[1]))?;
+        let size: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[2]))?;
+
+        let return_data: Span<u8> = self.return_data();
+
+        match u32_overflowing_add(offset, size) {
+            Result::Ok(x) => {
+                if (x > return_data.len()) {
+                    return Result::Err(EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR));
+                }
+            },
+            Result::Err(x) => {
+                return Result::Err(EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR));
+            }
+        }
+
+        let data_to_copy: Span<u8> = return_data.slice(offset, size);
+        self.memory.store_n(data_to_copy, dest_offset);
+
         Result::Ok(())
     }
 
