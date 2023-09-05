@@ -7,6 +7,7 @@ use starknet::{EthAddress, EthAddressIntoFelt252};
 use cmp::min;
 use utils::constants;
 
+
 /// Ceils a number of bits to the next word (32 bytes)
 ///
 /// # Arguments
