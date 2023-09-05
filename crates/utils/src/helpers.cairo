@@ -7,6 +7,7 @@ use starknet::{EthAddress, EthAddressIntoFelt252};
 use cmp::min;
 use utils::constants;
 
+
 /// Ceils a number of bits to the next word (32 bytes)
 ///
 /// # Arguments
@@ -102,7 +103,7 @@ fn split_word_128(value: u256, ref dst: Array<u8>) {
 }
 
 
-/// Loads a sequence of bytes into a single u128 in big-endian
+/// Loads a sequence of bytes into a single u256 in big-endian
 ///
 /// # Arguments
 /// * `len` - The number of bytes to load

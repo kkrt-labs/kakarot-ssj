@@ -22,10 +22,10 @@ fn callvalue() -> u256 {
 
 fn setup_call_context() -> CallContext {
     let bytecode: Span<u8> = array![1, 2, 3].span();
-    let call_data: Span<u8> = array![4, 5, 6].span();
+    let calldata: Span<u8> = array![4, 5, 6].span();
     let value: u256 = callvalue();
 
-    CallContextTrait::new(bytecode, call_data, value)
+    CallContextTrait::new(bytecode, calldata, value)
 }
 
 fn setup_execution_context() -> ExecutionContext {
@@ -43,10 +43,10 @@ fn setup_execution_context() -> ExecutionContext {
 }
 
 fn setup_call_context_with_bytecode(bytecode: Span<u8>) -> CallContext {
-    let call_data: Span<u8> = array![4, 5, 6].span();
+    let calldata: Span<u8> = array![4, 5, 6].span();
     let value: u256 = 100;
 
-    CallContextTrait::new(bytecode, call_data, value)
+    CallContextTrait::new(bytecode, calldata, value)
 }
 
 fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext {
@@ -86,7 +86,7 @@ fn setup_execution_context_with_calldata(calldata: Span<u8>) -> ExecutionContext
 
 impl CallContextPartialEq of PartialEq<CallContext> {
     fn eq(lhs: @CallContext, rhs: @CallContext) -> bool {
-        lhs.bytecode() == rhs.bytecode() && lhs.call_data == rhs.call_data && lhs.value == rhs.value
+        lhs.bytecode() == rhs.bytecode() && lhs.calldata == rhs.calldata && lhs.value == rhs.value
     }
     fn ne(lhs: @CallContext, rhs: @CallContext) -> bool {
         !(lhs == rhs)

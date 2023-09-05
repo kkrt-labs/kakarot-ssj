@@ -44,7 +44,11 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x13 - SGT
     /// # Specification: https://www.evm.codes/#13?fork=shanghai
     fn exec_sgt(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(2)?;
+        let a = *popped[0];
+        let b = *popped[1];
+        let result = a.sgt(b).into();
+        self.stack.push(result)
     }
 
 
