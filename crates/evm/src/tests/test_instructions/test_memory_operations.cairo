@@ -145,7 +145,7 @@ fn test_exec_mstore_should_store_0xFF00_offset_1() {
     // Given
     let mut ctx = setup_execution_context();
 
-    ctx.stack.push(0xFF);
+    ctx.stack.push(0xFF00);
     ctx.stack.push(0x01);
 
     // When
