@@ -5,6 +5,8 @@ use evm::context::{
 };
 use evm::errors::EVMError;
 use evm::stack::StackTrait;
+use evm::memory::MemoryTrait;
+use evm::helpers::U256IntoResultU32;
 
 #[generate_trait]
 impl MemoryOperation of MemoryOperationTrait {
@@ -18,7 +20,10 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#52?fork=shanghai
     fn exec_mstore(ref self: ExecutionContext) -> Result<(), EVMError> {
-        panic_with_felt252('MSTORE not implement yet');
+        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((self.stack.pop()?))?;
+        let value: u256 = self.stack.pop()?;
+
+        self.memory.store(value, offset);
         Result::Ok(())
     }
 

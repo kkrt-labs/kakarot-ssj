@@ -80,7 +80,6 @@ fn test_exec_pop_should_stack_underflow() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('MSTORE not implement yet',))]
 fn test_exec_mstore_should_store_only_F_offset_1() {
     // Given
     let mut ctx = setup_execution_context();
@@ -102,7 +101,6 @@ fn test_exec_mstore_should_store_only_F_offset_1() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('MSTORE not implement yet',))]
 fn test_exec_mstore_should_store_1_offset_1() {
     // Given
     let mut ctx = setup_execution_context();
@@ -121,7 +119,6 @@ fn test_exec_mstore_should_store_1_offset_1() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('MSTORE not implement yet',))]
 fn test_exec_mstore_should_store_0xFF_offset_1() {
     // Given
     let mut ctx = setup_execution_context();
@@ -140,7 +137,6 @@ fn test_exec_mstore_should_store_0xFF_offset_1() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('MSTORE not implement yet',))]
 fn test_exec_mstore_should_store_0xFF00_offset_1() {
     // Given
     let mut ctx = setup_execution_context();
