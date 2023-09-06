@@ -190,11 +190,11 @@ fn test_exec_mstore_should_store_0xFF00_offset_0x20() {
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(ctx.memory.bytes_len == 96, 'memory should be 96 bytes long');
+    assert(ctx.memory.bytes_len == 64, 'memory should be 96 bytes long');
     let (stored, _) = ctx.memory.load(0);
     assert(stored == 0x00, 'should be 0x00');
     let (stored, _) = ctx.memory.load(0x20);
     assert(stored == 0xFF00, 'should be 0xFF00');
-    let (stored, _) = ctx.memory.load(0xF9);
-    assert(stored == 0xFF00, 'should be 0xFF');
+    let (stored, _) = ctx.memory.load(0x1F);
+    assert(stored == 0xFF, 'should be 0xFF');
 }
