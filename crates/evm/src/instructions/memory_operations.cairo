@@ -42,9 +42,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Get the value of memory size.
     /// # Specification: https://www.evm.codes/#59?fork=shanghai
     fn exec_msize(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let len = self.memory.bytes_len;
-        let msize: u256 = len.into();
-
+        let msize = self.memory.size();
         self.stack.push(msize)
     }
 
