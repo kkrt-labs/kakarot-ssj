@@ -30,7 +30,7 @@ def get_previous_snapshot():
 
     try:
         # Fetch the list of workflow runs
-        cmd = f"curl -s -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' 'https://api.github.com/repos/{REPO}/actions/runs'"
+        cmd = f"curl -s -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' 'https://api.github.com/repos/{REPO}/actions/runs?branch=main&per_page=100'"
         result = subprocess.check_output(cmd, shell=True)
         runs = json.loads(result)
 
