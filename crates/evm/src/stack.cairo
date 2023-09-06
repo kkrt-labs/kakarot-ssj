@@ -33,6 +33,7 @@ trait NullableTraitExt<T> {
 }
 
 impl NullableTraitExtImpl of NullableTraitExt<u256> {
+    #[inline(always)]
     fn new(value: u256) -> Nullable<u256> {
         let nullable = nullable_from_box(BoxTrait::new(value));
         nullable
@@ -65,6 +66,7 @@ impl StackImpl of StackTrait {
 
     /// Pushes a new bytes32 word onto the stack. 
     /// If the stack is full, returns with a StackOverflow error.
+    #[inline(always)]
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError> {
         // we can store at most 1024 256-bits words
         if self.len() == constants::STACK_MAX_DEPTH {
@@ -77,6 +79,7 @@ impl StackImpl of StackTrait {
 
     /// Pops the top item off the stack. If the stack is empty,
     /// returns with a StackOverflow error.
+    #[inline(always)]
     fn pop(ref self: Stack) -> Result<u256, EVMError> {
         if self.len() == 0 {
             return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
@@ -106,6 +109,7 @@ impl StackImpl of StackTrait {
 
     /// Peeks at the top item on the stack.
     /// If the stack is empty, returns None.
+    #[inline(always)]
     fn peek(ref self: Stack) -> Option<u256> {
         if self.len() == 0 {
             Option::None(())
@@ -119,6 +123,7 @@ impl StackImpl of StackTrait {
     /// Peeks at the item at the given index on the stack.
     /// index is 0-based, 0 being the top of the stack.
     /// If the index is greather than the stack length, returns with a StackUnderflow error.
+    #[inline(always)]
     fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError> {
         if index >= self.len() {
             return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
@@ -132,6 +137,7 @@ impl StackImpl of StackTrait {
 
     /// Swaps the item at the given index with the item on top of the stack.
     /// index is 0-based, 0 being the top of the stack (unallocated).
+    #[inline(always)]
     fn swap_i(ref self: Stack, index: usize) -> Result<(), EVMError> {
         if index >= self.len() {
             return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
