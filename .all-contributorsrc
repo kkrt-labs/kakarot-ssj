@@ -3,9 +3,7 @@
   "projectOwner": "sayajin-labs",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "files": [
-    "README.md"
-  ],
+  "files": ["README.md"],
   "imageSize": 100,
   "commit": true,
   "commitConvention": "gitmoji",
@@ -15,42 +13,122 @@
       "name": "Abdel @ StarkWare ",
       "avatar_url": "https://avatars.githubusercontent.com/u/45264458?v=4",
       "profile": "https://github.com/abdelhamidbakhta",
-      "contributions": [
-        "code"
-      ]
+      "contributions": ["code"]
     },
     {
       "login": "jobez",
       "name": "johann bestowrous",
       "avatar_url": "https://avatars.githubusercontent.com/u/615197?v=4",
       "profile": "https://github.com/jobez",
-      "contributions": [
-        "code"
-      ]
+      "contributions": ["code"]
     },
     {
       "login": "Eikix",
       "name": "Elias Tazartes",
       "avatar_url": "https://avatars.githubusercontent.com/u/66871571?v=4",
       "profile": "https://github.com/Eikix",
-      "contributions": [
-        "review",
-        "tutorial",
-        "talk"
-      ]
+      "contributions": ["review", "tutorial", "talk"]
     },
     {
       "login": "enitrat",
       "name": "Mathieu",
       "avatar_url": "https://avatars.githubusercontent.com/u/60658558?v=4",
       "profile": "https://github.com/enitrat",
-      "contributions": [
-        "code",
-        "test",
-        "doc"
-      ]
+      "contributions": ["code", "test", "doc"]
+    },
+    {
+      "login": "khaeljy",
+      "name": "khaeljy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1810456?v=4",
+      "profile": "https://github.com/khaeljy",
+      "contributions": ["code"]
+    },
+    {
+      "login": "ClementWalter",
+      "name": "Clément Walter",
+      "avatar_url": "https://avatars.githubusercontent.com/u/18620296?v=4",
+      "profile": "https://www.linkedin.com/in/clementwalter/",
+      "contributions": ["code"]
+    },
+    {
+      "login": "LucasLvy",
+      "name": "Lucas @ StarkWare",
+      "avatar_url": "https://avatars.githubusercontent.com/u/70894690?v=4",
+      "profile": "https://github.com/LucasLvy",
+      "contributions": ["code"]
+    },
+    {
+      "login": "lambda-0x",
+      "name": "lambda-0x",
+      "avatar_url": "https://avatars.githubusercontent.com/u/87354252?v=4",
+      "profile": "https://github.com/lambda-0x",
+      "contributions": ["code"]
+    },
+    {
+      "login": "danilowhk",
+      "name": "danilowhk",
+      "avatar_url": "https://avatars.githubusercontent.com/u/12735159?v=4",
+      "profile": "https://github.com/danilowhk",
+      "contributions": ["code"]
+    },
+    {
+      "login": "TAdev0",
+      "name": "TAdev",
+      "avatar_url": "https://avatars.githubusercontent.com/u/122918260?v=4",
+      "profile": "https://nodeguardians.io/character/98995858fd55",
+      "contributions": ["code"]
+    },
+    {
+      "login": "Quentash",
+      "name": "Quentash",
+      "avatar_url": "https://avatars.githubusercontent.com/u/100387965?v=4",
+      "profile": "https://github.com/Quentash",
+      "contributions": ["code"]
+    },
+    {
+      "login": "ftupas",
+      "name": "ftupas",
+      "avatar_url": "https://avatars.githubusercontent.com/u/35031356?v=4",
+      "profile": "https://github.com/ftupas",
+      "contributions": ["code"]
+    },
+    {
+      "login": "aniketpr01",
+      "name": "Aniket Prajapati",
+      "avatar_url": "https://avatars.githubusercontent.com/u/46114123?v=4",
+      "profile": "https://aniketpr01.github.io/",
+      "contributions": ["code"]
+    },
+    {
+      "login": "dbejarano820",
+      "name": "Daniel Bejarano",
+      "avatar_url": "https://avatars.githubusercontent.com/u/58019353?v=4",
+      "profile": "https://github.com/dbejarano820",
+      "contributions": ["code"]
+    },
+    {
+      "login": "Noeljarillo",
+      "name": "Noeljarillo",
+      "avatar_url": "https://avatars.githubusercontent.com/u/77942794?v=4",
+      "profile": "https://github.com/Noeljarillo",
+      "contributions": ["code"]
+    },
+    {
+      "login": "trbutler4",
+      "name": "Thomas Butler",
+      "avatar_url": "https://avatars.githubusercontent.com/u/58192340?v=4",
+      "profile": "https://github.com/trbutler4",
+      "contributions": ["code"]
+    },
+    {
+      "login": "kariy",
+      "name": "Ammar Arif",
+      "avatar_url": "https://avatars.githubusercontent.com/u/26515232?v=4",
+      "profile": "https://github.com/kariy",
+      "contributions": ["doc"]
     }
   ],
   "contributorsPerLine": 7,
   "linkToUsage": true
 }
+
