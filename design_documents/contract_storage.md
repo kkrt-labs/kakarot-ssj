@@ -4,7 +4,7 @@
 
 The current contract storage design in Kakarot Zero is organized as such:
 
-- Each contract has its own storage.
+- The two different kinds of EVM accounts: Externally Owned Accounts (EOA) and Contract Accounts (CA) are both represented by Starknet smart contracts. Each account is mapped to a unique Starknet contract. Each contract has its own storage.
 - Each contract is deployed by Kakarot, and contains its own bytecode in the
   case of a smart contract (no bytecode for an EOA).
 - Each contract account has external functions that can be called by Kakarot to
