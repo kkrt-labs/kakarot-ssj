@@ -11,6 +11,7 @@ use evm::errors::{EVMError, STACK_UNDERFLOW};
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait,
 };
+use integer::BoundedInt;
 
 
 #[test]
@@ -81,23 +82,41 @@ fn test_exec_pop_should_stack_underflow() {
 #[test]
 #[available_gas(20000000)]
 #[should_panic(expected: ('MSTORE not implement yet',))]
+fn test_exec_mstore_should_store_only_F_offset_0() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(0x00);
+
+    // When
+    let result = ctx.exec_mstore();
+
+    // Then
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.memory.bytes_len == 32, 'memory should be 32 bytes long');
+    let (stored, _) = ctx.memory.load(0);
+    assert(stored == BoundedInt::<u256>::max(), 'should have store only Fs');
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('MSTORE not implement yet',))]
 fn test_exec_mstore_should_store_only_F_offset_1() {
     // Given
     let mut ctx = setup_execution_context();
 
-    ctx.stack.push(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    ctx.stack.push(BoundedInt::<u256>::max());
     ctx.stack.push(0x01);
 
     // When
     let result = ctx.exec_mstore();
 
     // Then
-    assert(result.is_ok(), 'should have succeed');
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.memory.bytes_len == 64, 'memory should be 64 bytes long');
     let (stored, _) = ctx.memory.load(1);
-    assert(
-        stored == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        'should have store only Fs'
-    );
+    assert(stored == BoundedInt::<u256>::max(), 'should have store only Fs');
 }
 
 #[test]
@@ -114,7 +133,8 @@ fn test_exec_mstore_should_store_1_offset_1() {
     let result = ctx.exec_mstore();
 
     // Then
-    assert(result.is_ok(), 'should have succeed');
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.memory.bytes_len == 64, 'memory should be 64 bytes long');
     let (stored, _) = ctx.memory.load(1);
     assert(stored == 0x01, 'should have store 0x01');
 }
@@ -133,9 +153,12 @@ fn test_exec_mstore_should_store_0xFF_offset_1() {
     let result = ctx.exec_mstore();
 
     // Then
-    assert(result.is_ok(), 'should have succeed');
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.memory.bytes_len == 64, 'memory should be 64 bytes long');
     let (stored, _) = ctx.memory.load(0);
     assert(stored == 0x00, 'should be 0s');
+    let (stored, _) = ctx.memory.load(2);
+    assert(stored == 0xFF00, 'should be 0xFF00');
 }
 
 #[test]
@@ -152,7 +175,32 @@ fn test_exec_mstore_should_store_0xFF00_offset_1() {
     let result = ctx.exec_mstore();
 
     // Then
-    assert(result.is_ok(), 'should have succeed');
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.memory.bytes_len == 64, 'memory should be 64 bytes long');
     let (stored, _) = ctx.memory.load(0);
+    assert(stored == 0xFF, 'should be 0xFF');
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('MSTORE not implement yet',))]
+fn test_exec_mstore_should_store_0xFF00_offset_0x20() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(0xFF00);
+    ctx.stack.push(0x20);
+
+    // When
+    let result = ctx.exec_mstore();
+
+    // Then
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.memory.bytes_len == 96, 'memory should be 96 bytes long');
+    let (stored, _) = ctx.memory.load(0);
+    assert(stored == 0x00, 'should be 0x00');
+    let (stored, _) = ctx.memory.load(0x20);
+    assert(stored == 0xFF00, 'should be 0xFF00');
+    let (stored, _) = ctx.memory.load(0xF9);
     assert(stored == 0xFF, 'should be 0xFF');
 }
