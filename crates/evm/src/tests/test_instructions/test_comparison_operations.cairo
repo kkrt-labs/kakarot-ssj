@@ -1653,3 +1653,51 @@ fn assert_sar(a: u256, b: u256, expected: u256) {
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.peek().unwrap() == expected, 'sar failed');
 }
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_lt_true() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(10_u256).unwrap();
+    ctx.stack.push(9_u256).unwrap();
+
+    // When
+    ctx.exec_lt();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x01, 'stack top should be true');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_lt_false() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(10_u256).unwrap();
+    ctx.stack.push(20_u256).unwrap();
+
+    // When
+    ctx.exec_lt();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x00, 'stack top should be false');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_lt_false_eq() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(10_u256).unwrap();
+    ctx.stack.push(10_u256).unwrap();
+
+    // When
+    ctx.exec_lt();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x00, 'stack top should be false');
+}
