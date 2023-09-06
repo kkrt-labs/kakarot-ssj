@@ -42,7 +42,10 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Get the value of memory size.
     /// # Specification: https://www.evm.codes/#59?fork=shanghai
     fn exec_msize(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let len = self.memory.bytes_len;
+        let msize: u256 = len.into();
+
+        self.stack.push(msize)
     }
 
     /// 0x56 - JUMP operation
