@@ -43,7 +43,7 @@ impl MemoryImpl of MemoryTrait {
     /// Return size of the memory.
     #[inline(always)]
     fn size(ref self: Memory) -> usize {
-        self.bytes_len.into()
+        self.bytes_len
     }
 
     /// Stores a 32-bytes element into the memory.
