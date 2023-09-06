@@ -55,9 +55,10 @@ fn test_pop_should_pop_an_item_from_execution_context() {
     ctx.stack.push(0x02);
 
     // When
-    ctx.exec_pop();
+    let result = ctx.exec_pop();
 
     // Then
+    assert(result.is_ok(), 'should have succeed');
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.peek().unwrap() == 0x01, 'stack peek should return 0x01');
 }
