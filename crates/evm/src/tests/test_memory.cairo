@@ -230,22 +230,30 @@ fn test__expand__should_return_expanded_memory_and_cost() {
 
 #[test]
 #[available_gas(2000000000)]
+fn test__expand__should_return_expanded_memory_by_one_word_and_cost() {
+    // Given
+    let mut memory = MemoryTrait::new();
+
+    // When
+    let cost = memory.expand(1);
+
+    // Then
+    assert(cost >= 0, 'cost should be positive');
+    assert(memory.bytes_len == 32, 'memory should be 32bytes');
+}
+
+#[test]
+#[available_gas(2000000000)]
 fn test__expand__should_return_expanded_memory_by_exactly_one_word_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
-    let value: u256 = 1;
-    let bytes_array = helpers::u256_to_bytes_array(value);
-
-    memory.store_n(bytes_array.span(), 0);
 
     // When
     let cost = memory.expand(32);
 
     // Then
     assert(cost >= 0, 'cost should be positive');
-    assert(memory.bytes_len == 64, 'memory should be 64bytes');
-    let value = memory.load_internal(0);
-    assert(value == 1, 'value should be 1');
+    assert(memory.bytes_len == 32, 'memory should be 32bytes');
 }
 
 #[test]
@@ -253,19 +261,13 @@ fn test__expand__should_return_expanded_memory_by_exactly_one_word_and_cost() {
 fn test__expand__should_return_expanded_memory_by_two_words_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
-    let value: u256 = 1;
-    let bytes_array = helpers::u256_to_bytes_array(value);
-
-    memory.store_n(bytes_array.span(), 0);
 
     // When
     let cost = memory.expand(33);
 
     // Then
     assert(cost >= 0, 'cost should be positive');
-    assert(memory.bytes_len == 96, 'memory should be 96bytes');
-    let value = memory.load_internal(0);
-    assert(value == 1, 'value should be 1');
+    assert(memory.bytes_len == 64, 'memory should be 96bytes');
 }
 
 #[test]

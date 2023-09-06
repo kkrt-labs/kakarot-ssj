@@ -421,7 +421,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         let mut last_memory_cost = (last_memory_size_word * last_memory_size_word) / 512;
         last_memory_cost += (3 * last_memory_size_word);
 
-        let new_bytes_len = self.bytes_len + (((length + 31) / 32) * 32);
+        let adjusted_length = (((length + 31) / 32) * 32);
+        let new_bytes_len = self.bytes_len + adjusted_length;
         let new_memory_size_word = (new_bytes_len + 31) / 32;
         let new_memory_cost = (new_memory_size_word * new_memory_size_word) / 512;
         let new_memory_cost = new_memory_cost + (3 * new_memory_size_word);
