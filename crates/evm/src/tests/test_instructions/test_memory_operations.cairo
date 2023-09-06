@@ -64,7 +64,7 @@ fn test_exec_pop_should_pop_an_item_from_stack() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_pop_should_stack_underflow() {
+fn test_exec_pop_should_stack_underflow() {
     // Given
     let mut ctx = setup_execution_context();
 
