@@ -20,10 +20,9 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#52?fork=shanghai
     fn exec_mstore(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((self.stack.pop()?))?;
-        let value: u256 = self.stack.pop()?;
+        let popped = self.stack.pop_n(2)?;
 
-        self.memory.store(value, offset);
+        self.memory.store(*popped[1], Into::<u256, Result<u32, EVMError>>::into(*popped[0])?);
         Result::Ok(())
     }
 
