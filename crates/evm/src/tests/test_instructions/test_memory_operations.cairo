@@ -46,7 +46,7 @@ fn test_pc_gets_updated_properly_1() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_pop_should_pop_an_item_from_execution_context() {
+fn test_exec_pop_should_pop_an_item_from_stack() {
     // Given
     let mut ctx = setup_execution_context();
 
