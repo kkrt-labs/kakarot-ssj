@@ -4,7 +4,10 @@
 
 The current contract storage design in Kakarot Zero is organized as such:
 
-- The two different kinds of EVM accounts: Externally Owned Accounts (EOA) and Contract Accounts (CA) are both represented by Starknet smart contracts. Each account is mapped to a unique Starknet contract. Each contract has its own storage.
+- The two different kinds of EVM accounts: Externally Owned Accounts (EOA) and
+  Contract Accounts (CA) are both represented by Starknet smart contracts. Each
+  account is mapped to a unique Starknet contract. Each contract has its own
+  storage.
 - Each contract is deployed by Kakarot, and contains its own bytecode in the
   case of a smart contract (no bytecode for an EOA).
 - Each contract account has external functions that can be called by Kakarot to
@@ -17,8 +20,9 @@ The current contract storage design in Kakarot Zero is organized as such:
 However, this design has some limitations:
 
 - We perform a syscall for each SLOAD/SSTORE, which is expensive. Given that
-  only Kakarot can modify the storage of a contract, we could directly store the whole world state in the main Kakarot contract storage. 
-  modify the storage of the Kakarot main contract.
+  only Kakarot can modify the storage of a contract, we could directly store the
+  whole world state in the main Kakarot contract storage. modify the storage of
+  the Kakarot main contract.
 - It adds external entrypoints with admin rights to read and write from storage
   in each Kakarot contract. This is not ideal from a security perspective.
 - It derives from traditional EVM design, in which execution clients store
@@ -39,6 +43,38 @@ in a database, we store them in the Kakarot main contract storage.
 A contract’s storage on Starknet is a persistent storage space where you can
 read, write, modify, and persist data. The storage is a map with $2^{251}$
 slots, where each slot is a felt which is initialized to 0.
+
+This new model doesn't expose read and write methods on Kakarot contracts.
+Instead of having $n$ contracts with `write_storage` and `read_storage`
+entrypoints, the only way storage can be modified is now through executing SLOAD
+/ SSTORE internally.
+
+```mermaid
+sequenceDiagram
+    participant C as Caller
+    participant K as KakarotCore
+    participant M as Interpreter
+    participant S as ContractState
+
+    C->>K: Executes Kakarot contract
+    K->>M: Executes Opcode (Either SSTORE or SLOAD)
+
+    Note over K,M: If it's an SSTORE operation, it writes to Storage.
+    Note over K,M: If it's an SLOAD operation, it reads from Storage.
+
+    alt SSTORE
+        M->>S: hash(starknet_address, storage_slot)
+        S-->>M: Unique storage address
+        M->>S: Write value at storage address
+    else SLOAD
+        M->>S: hash(starknet_address, storage_slot)
+        S-->>M: Read value from storage address
+    end
+
+    Note over K: Each storage change is stored in accumulator for potential revert.
+    Note over K: If revert happens, the accumulator from ExecutionContext is read to revert changes.
+
+```
 
 ### Eventual security risks
 
