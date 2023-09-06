@@ -6,7 +6,6 @@ use evm::context::{
 use evm::errors::EVMError;
 use evm::stack::StackTrait;
 
-
 #[generate_trait]
 impl MemoryOperation of MemoryOperationTrait {
     /// MLOAD operation.
