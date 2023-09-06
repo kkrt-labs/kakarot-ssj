@@ -80,6 +80,7 @@ fn assert_mload(value: u256, output: u256, expected_value: u256, expected_memory
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.pop().unwrap() == expected_value, 'mload failed');
     assert(ctx.memory.bytes_len == expected_memory_size, 'memory size error');
+}
 
 #[test]
 #[available_gas(20000000)]
