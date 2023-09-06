@@ -77,3 +77,82 @@ fn test_exec_pop_should_stack_underflow() {
         result.unwrap_err() == EVMError::StackError(STACK_UNDERFLOW), 'should return StackUnderflow'
     );
 }
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('MSTORE not implement yet',))]
+fn test_exec_mstore_should_store_only_F_offset_1() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    ctx.stack.push(0x01);
+
+    // When
+    let result = ctx.exec_mstore();
+
+    // Then
+    assert(result.is_ok(), 'should have succeed');
+    let (stored, _) = ctx.memory.load(1);
+    assert(
+        stored == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        'should have store only Fs'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('MSTORE not implement yet',))]
+fn test_exec_mstore_should_store_1_offset_1() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(0x01);
+    ctx.stack.push(0x01);
+
+    // When
+    let result = ctx.exec_mstore();
+
+    // Then
+    assert(result.is_ok(), 'should have succeed');
+    let (stored, _) = ctx.memory.load(1);
+    assert(stored == 0x01, 'should have store 0x01');
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('MSTORE not implement yet',))]
+fn test_exec_mstore_should_store_0xFF_offset_1() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(0xFF);
+    ctx.stack.push(0x01);
+
+    // When
+    let result = ctx.exec_mstore();
+
+    // Then
+    assert(result.is_ok(), 'should have succeed');
+    let (stored, _) = ctx.memory.load(0);
+    assert(stored == 0x00, 'should be 0s');
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('MSTORE not implement yet',))]
+fn test_exec_mstore_should_store_0xFF00_offset_1() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(0xFF);
+    ctx.stack.push(0x01);
+
+    // When
+    let result = ctx.exec_mstore();
+
+    // Then
+    assert(result.is_ok(), 'should have succeed');
+    let (stored, _) = ctx.memory.load(0);
+    assert(stored == 0xFF, 'should be 0xFF');
+}

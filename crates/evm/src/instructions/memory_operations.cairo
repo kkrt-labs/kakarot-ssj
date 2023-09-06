@@ -19,6 +19,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#52?fork=shanghai
     fn exec_mstore(ref self: ExecutionContext) -> Result<(), EVMError> {
+        panic_with_felt252('MSTORE not implement yet');
         Result::Ok(())
     }
 
