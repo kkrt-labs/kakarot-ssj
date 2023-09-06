@@ -39,6 +39,7 @@ impl MemoryImpl of MemoryTrait {
     fn new() -> Memory {
         Memory { items: Default::default(), bytes_len: 0,  }
     }
+
     /// Return size of the memory.
     #[inline(always)]
     fn size(ref self: Memory) -> usize {
