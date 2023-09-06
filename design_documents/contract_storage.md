@@ -5,7 +5,7 @@
 The current contract storage design in Kakarot Zero is organized as such:
 
 - Each contract has its own storage.
-- Each contract is deployed by kakarot, and contains its own bytecode in the
+- Each contract is deployed by Kakarot, and contains its own bytecode in the
   case of a smart contract (no bytecode for an EOA).
 - Each contract account has external functions that can be called by Kakarot to
   modify the bytecode it stores and to read / write to its storage. This makes
@@ -17,11 +17,11 @@ The current contract storage design in Kakarot Zero is organized as such:
 However, this design has some limitations:
 
 - We perform a syscall for each SLOAD/SSTORE, which is expensive. Given that
-  only Kakarot can modify the storage of a contract, we could just directly
+  only Kakarot can modify the storage of a contract, we could directly store the whole world state in the main Kakarot contract storage. 
   modify the storage of the Kakarot main contract.
 - It adds external entrypoints with admin rights to read and write from storage
   in each Kakarot contract. This is not ideal from a security perspective.
-- It derives from traditional EVM design, in which execution client store
+- It derives from traditional EVM design, in which execution clients store
   account states in a database backend.
 
 ## Goal
