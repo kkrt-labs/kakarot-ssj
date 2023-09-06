@@ -37,7 +37,7 @@ impl MemoryImpl of MemoryTrait {
     /// Initializes a new `Memory` instance.
     #[inline(always)]
     fn new() -> Memory {
-        Memory { items: Default::default(), bytes_len: 0,  }
+        Memory { items: Default::default(), bytes_len: 0, }
     }
 
     /// Return size of the memory.
