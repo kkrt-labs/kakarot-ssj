@@ -34,6 +34,7 @@ trait MemoryTrait {
 
 impl MemoryImpl of MemoryTrait {
     /// Initializes a new `Memory` instance.
+    #[inline(always)]
     fn new() -> Memory {
         Memory { items: Default::default(), bytes_len: 0, }
     }
@@ -42,6 +43,7 @@ impl MemoryImpl of MemoryTrait {
     ///
     /// If the offset is aligned with the 16-bytes words in memory, the element is stored directly.
     /// Otherwise, the element is split and stored in multiple words.
+    #[inline(always)]
     fn store(ref self: Memory, element: u256, offset: usize) {
         let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(offset + 32);
 
@@ -78,6 +80,7 @@ impl MemoryImpl of MemoryTrait {
     /// * `self` - A mutable reference to the `Memory` instance to store the bytes in.
     /// * `elements` - A span of bytes to store in memory.
     /// * `offset` - The offset within memory to store the bytes at.
+    #[inline(always)]
     fn store_n(ref self: Memory, elements: Span<u8>, offset: usize) {
         if elements.len() == 0 {
             return;
@@ -113,7 +116,7 @@ impl MemoryImpl of MemoryTrait {
             let aligned_bytes = elements
                 .slice(
                     16 - offset_in_chunk_i,
-                    elements.len() - 16 - offset_in_chunk_i - offset_in_chunk_f,
+                    elements.len() - (16 - offset_in_chunk_i) - offset_in_chunk_f,
                 );
             self.store_aligned_words(initial_chunk + 1, aligned_bytes);
         }
@@ -126,6 +129,7 @@ impl MemoryImpl of MemoryTrait {
     /// Ensures that the memory is at least `length` bytes long. Expands if necessary.
     /// # Returns
     /// The gas cost of expanding the memory.
+    #[inline(always)]
     fn ensure_length(ref self: Memory, length: usize) -> usize {
         if self.bytes_len < length {
             self.expand(length - self.bytes_len)
@@ -138,6 +142,7 @@ impl MemoryImpl of MemoryTrait {
     /// # Returns
     /// * `u256` - The loaded value.
     /// * `usize` - The gas cost of expanding the memory.
+    #[inline(always)]
     fn load(ref self: Memory, offset: usize) -> (u256, usize) {
         let gas_cost = self.ensure_length(32 + offset);
         let loaded_element = self.load_internal(offset);
@@ -147,6 +152,7 @@ impl MemoryImpl of MemoryTrait {
     /// Expands memory if necessary, then load elements_len bytes from the memory at given offset inside elements.
     /// # Returns
     /// * `usize` - The gas cost of expanding the memory.
+    #[inline(always)]
     fn load_n(
         ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize
     ) -> usize {
@@ -171,6 +177,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// * `element` - The `u256` element to store in memory.
     /// * `chunk_index` - The index of the memory chunk to start storing the element in.
     /// * `offset_in_chunk` - The offset within the memory chunk to store the element at.
+    #[inline(always)]
     fn store_element(ref self: Memory, element: u256, chunk_index: usize, offset_in_chunk: u32) {
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
         // explicit conversion to felt252 to compute the mask is way cheaper
@@ -213,6 +220,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// * `mask_i` - The mask for the high part of the word.
     /// * `mask_f` - The mask for the low part of the word.
     /// * `elements` - A span of bytes to store in memory.
+    #[inline(always)]
     fn store_bytes_in_single_chunk(
         ref self: Memory, initial_chunk: usize, mask_i: u256, mask_f: u256, elements: Span<u8>
     ) {
@@ -310,6 +318,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// # Returns
     ///
     /// The `u256` element at the specified offset in the memory chunk.
+    #[inline(always)]
     fn load_internal(ref self: Memory, offset: usize) -> u256 {
         let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
 
@@ -357,6 +366,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// * `elements_len` - The length of the array of bytes to load.
     /// * `elements` - A reference to the array of bytes to load.
     /// * `offset` - The chunk memory offset to load the bytes from.
+    #[inline(always)]
     fn load_n_internal(
         ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize
     ) {
@@ -412,12 +422,18 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// # Returns
     ///
     /// The cost of the expansion.
+    #[inline(always)]
     fn expand(ref self: Memory, length: usize) -> usize {
+        if (length == 0) {
+            return 0;
+        }
+
         let last_memory_size_word = (self.bytes_len + 31) / 32;
         let mut last_memory_cost = (last_memory_size_word * last_memory_size_word) / 512;
         last_memory_cost += (3 * last_memory_size_word);
 
-        let new_bytes_len = self.bytes_len + length;
+        let adjusted_length = (((length + 31) / 32) * 32);
+        let new_bytes_len = self.bytes_len + adjusted_length;
         let new_memory_size_word = (new_bytes_len + 31) / 32;
         let new_memory_cost = (new_memory_size_word * new_memory_size_word) / 512;
         let new_memory_cost = new_memory_cost + (3 * new_memory_size_word);
@@ -448,6 +464,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// # Panics
     ///
     /// This function panics if the resulting word cannot be converted to a `u128` - which should never happen.
+    #[inline(always)]
     fn store_first_word(
         ref self: Memory,
         chunk_index: usize,
@@ -479,6 +496,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// # Panics
     ///
     /// This function panics if the resulting word cannot be converted to a `u128` - which should never happen.
+    #[inline(always)]
     fn store_last_word(
         ref self: Memory,
         chunk_index: usize,
@@ -505,6 +523,7 @@ impl Felt252DictExtensionImpl of Felt252DictExtension {
     /// * `self` - A mutable reference to the `Felt252Dict` instance.
     /// * `element` - The element to store, of type `u256`.
     /// * `index` - The `usize` index at which to store the element.
+    #[inline(always)]
     fn store_u256(ref self: Felt252Dict<u128>, element: u256, index: usize) {
         let index: felt252 = index.into();
         self.insert(index, element.high.into());
@@ -522,6 +541,7 @@ impl Felt252DictExtensionImpl of Felt252DictExtension {
     ///
     /// # Returns
     /// * The element read, of type `u256`.
+    #[inline(always)]
     fn read_u256(ref self: Felt252Dict<u128>, index: usize) -> u256 {
         let index: felt252 = index.into();
         let high: u128 = self.get(index);

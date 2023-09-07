@@ -1,12 +1,13 @@
-import subprocess
-import re
 import json
 import os
+import re
+import subprocess
 
 # ANSI escape codes for coloring text
-GREEN = '\033[92m'
-RED = '\033[91m'
-ENDC = '\033[0m'
+GREEN = "\033[92m"
+RED = "\033[91m"
+ENDC = "\033[0m"
+
 
 def get_github_token_from_env(file_path=".env"):
     """Read the .env file and extract the GITHUB_TOKEN value."""
@@ -15,7 +16,7 @@ def get_github_token_from_env(file_path=".env"):
             for line in file:
                 if line.startswith("#"):
                     continue
-                key, value = line.strip().split('=', 1)
+                key, value = line.strip().split("=", 1)
                 if key == "GITHUB_TOKEN":
                     return value
     except FileNotFoundError:
@@ -24,18 +25,31 @@ def get_github_token_from_env(file_path=".env"):
         print(f"Error: Invalid format in {file_path}. Expected 'KEY=VALUE' format.")
     return None
 
+
 def get_previous_snapshot():
     REPO = "kkrt-labs/kakarot-ssj"  # Replace with your GitHub username and repo name
-    GITHUB_TOKEN = get_github_token_from_env() or os.environ.get("GITHUB_TOKEN")
+    GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", get_github_token_from_env())
+    if GITHUB_TOKEN is None:
+        raise ValueError(
+            "GITHUB_TOKEN doesn't exist in current shell nor is defined .env"
+        )
 
     try:
         # Fetch the list of workflow runs
-        cmd = f"curl -s -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' 'https://api.github.com/repos/{REPO}/actions/runs'"
+        cmd = f"curl -s -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' 'https://api.github.com/repos/{REPO}/actions/runs?branch=main&per_page=100'"
         result = subprocess.check_output(cmd, shell=True)
         runs = json.loads(result)
 
         # Find the latest successful run
-        latest_successful_run = next((run for run in runs["workflow_runs"] if run["conclusion"] == "success" and run["name"] == "Generate and Upload Gas Snapshot"), None)
+        latest_successful_run = next(
+            (
+                run
+                for run in runs["workflow_runs"]
+                if run["conclusion"] == "success"
+                and run["name"] == "Generate and Upload Gas Snapshot"
+            ),
+            None,
+        )
 
         # Fetch the artifacts for that run
         run_id = latest_successful_run["id"]
@@ -44,7 +58,11 @@ def get_previous_snapshot():
         artifacts = json.loads(result)
 
         # Find the gas_snapshot.json artifact
-        snapshot_artifact = next(artifact for artifact in artifacts["artifacts"] if artifact["name"] == "gas-snapshot")
+        snapshot_artifact = next(
+            artifact
+            for artifact in artifacts["artifacts"]
+            if artifact["name"] == "gas-snapshot"
+        )
 
         # Download the gas_snapshots.json archive
         archive_name = "gas_snapshot.zip"
@@ -77,11 +95,12 @@ def get_previous_snapshot():
 
 def get_current_gas_snapshot():
     """Execute command and return current gas snapshots."""
-    output = subprocess.check_output("scarb cairo-test", shell=True).decode('utf-8')
+    output = subprocess.check_output("scarb cairo-test", shell=True).decode("utf-8")
     pattern = r"test (.+?) \.\.\. ok \(gas usage est.: (\d+)\)"
     matches = re.findall(pattern, output)
     matches.sort()
     return {match[0]: int(match[1]) for match in matches}
+
 
 def compare_snapshots(current, previous):
     """Compare current and previous snapshots and return differences."""
@@ -93,13 +112,18 @@ def compare_snapshots(current, previous):
             continue
         prev = previous[key]
         cur = current[key]
-        percentage_change = (cur - prev)*100/prev
+        percentage_change = (cur - prev) * 100 / prev
         if prev < cur:
-            worsened.append(f"{key} {prev} --> {cur} {format(percentage_change, '.2f')} %")
+            worsened.append(
+                f"{key} {prev} --> {cur} {format(percentage_change, '.2f')} %"
+            )
         elif prev > cur:
-            improvements.append(f"{key} {prev} --> {cur} | {format(percentage_change, '.2f')} %"  )
+            improvements.append(
+                f"{key} {prev} --> {cur} | {format(percentage_change, '.2f')} %"
+            )
 
     return improvements, worsened
+
 
 def print_colored_output(improvements, worsened, gas_changes):
     """Print results in a colored format."""
@@ -114,14 +138,24 @@ def print_colored_output(improvements, worsened, gas_changes):
             print(RED + elem + ENDC)
 
         color = RED if gas_changes > 0 else GREEN
-        gas_statement = "performance degradation, gas consumption +" if gas_changes > 0 else "performance improvement, gas consumption"
-        print(color + f"Overall gas change: {gas_statement}{format(gas_changes, '.2f')} %" + ENDC)
+        gas_statement = (
+            "performance degradation, gas consumption +"
+            if gas_changes > 0
+            else "performance improvement, gas consumption"
+        )
+        print(
+            color
+            + f"Overall gas change: {gas_statement}{format(gas_changes, '.2f')} %"
+            + ENDC
+        )
     else:
         print("No changes in gas consumption.")
 
-def total_gas_used(current,previous):
+
+def total_gas_used(current, previous):
     """Return the total gas used in the current and previous snapshot."""
     return sum(current.values()), sum(previous.values())
+
 
 def main():
     """Main function to execute the snapshot test framework."""
@@ -134,7 +168,8 @@ def main():
     current_snapshots = get_current_gas_snapshot()
     improvements, worsened = compare_snapshots(current_snapshots, previous_snapshot)
     cur_gas, prev_gas = total_gas_used(current_snapshots, previous_snapshot)
-    print_colored_output(improvements, worsened, (cur_gas-prev_gas)*100/prev_gas)
+    print_colored_output(improvements, worsened, (cur_gas - prev_gas) * 100 / prev_gas)
+
 
 if __name__ == "__main__":
     main()
