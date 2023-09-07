@@ -112,6 +112,58 @@ fn test_store_n_no_aligned_words() {
     assert(memory.bytes_len == 32, 'memory should be 32 bytes');
 }
 
+#[test]
+#[available_gas(200000000)]
+fn test_store_n_2_aligned_words() {
+    let mut memory = MemoryTrait::new();
+    let bytes_arr = array![
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+    ]
+        .span();
+    memory.store_n(bytes_arr, 15);
+    // value [1], will be stored in first word, values [2:34] will be stored in aligned words,
+    // value [35] will be stored in final word
+    assert(memory.bytes_len == 64, 'memory should be 64 bytes');
+
+    let mut stored_bytes = array![];
+    memory.load_n_internal(35, ref stored_bytes, 15);
+    assert(stored_bytes.span() == bytes_arr, 'stored bytes not == expected');
+}
+
 
 #[test]
 #[available_gas(20000000)]
