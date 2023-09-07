@@ -1,18 +1,20 @@
 //! Duplication Operations.
 
 // Internal imports
-use evm::context::ExecutionContext;
-use evm::context::ExecutionContextTrait;
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::{
+    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct,
+    NullableExecutionContextDestruct
+};
 use core::TryInto;
 use core::option::OptionTrait;
 use result::ResultTrait;
 use evm::errors::EVMError;
 
 mod internal {
-    use evm::context::ExecutionContext;
-    use evm::context::ExecutionContextTrait;
-    use evm::context::BoxDynamicExecutionContextDestruct;
+    use evm::context::{
+        ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct,
+        NullableExecutionContextDestruct
+    };
     use evm::stack::StackTrait;
     use traits::Into;
     use result::ResultTrait;

@@ -1,12 +1,18 @@
 //! Push Operations.
 
 // Internal imports
-use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
+use evm::context::{
+    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct,
+    NullableExecutionContextDestruct
+};
 use evm::errors::EVMError;
 use evm::stack::StackTrait;
 
 mod internal {
-    use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
+    use evm::context::{
+        ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct,
+        NullableExecutionContextDestruct
+    };
     use evm::errors::EVMError;
     use evm::stack::StackTrait;
     use utils::helpers::load_word;

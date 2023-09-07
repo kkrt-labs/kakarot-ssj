@@ -1,5 +1,5 @@
 use evm::instructions::PushOperationsTrait;
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::{BoxDynamicExecutionContextDestruct, NullableExecutionContextDestruct};
 use evm::stack::StackTrait;
 use evm::tests::test_utils::setup_execution_context_with_bytecode;
 use array::ArrayTrait;

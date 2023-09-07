@@ -7,7 +7,7 @@ use traits::Into;
 // TODO remove destruct imports when no longer required
 use evm::context::{
     ExecutionSummary, ExecutionContext, ExecutionContextTrait, CallContextTrait,
-    BoxDynamicExecutionContextDestruct
+    BoxDynamicExecutionContextDestruct, NullableExecutionContextDestruct
 };
 use utils::{helpers::u256_to_bytes_array};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
@@ -62,7 +62,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
             },
             Result::Err(error) => {
                 // If an error occurred, revert execution context.
-                // Currently, revert reason is a Span<u8>. 
+                // Currently, revert reason is a Span<u8>.
                 context.revert(u256_to_bytes_array(error.into()).span());
             // TODO: Revert logic
             }

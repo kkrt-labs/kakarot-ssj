@@ -10,7 +10,8 @@ use starknet::EthAddressIntoFelt252;
 use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array, load_word};
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::context::{
-    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
+    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct,
+    NullableExecutionContextDestruct, CallContextTrait
 };
 use utils::helpers::{ArrayExtension, ArrayExtensionTrait};
 use integer::u32_overflowing_add;

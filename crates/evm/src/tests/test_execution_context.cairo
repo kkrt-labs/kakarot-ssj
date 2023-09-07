@@ -11,18 +11,14 @@ use starknet::testing::{set_contract_address, set_caller_address};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::Event;
 use evm::stack::{Stack, StackTrait};
-use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait};
-//TODO remove import once merged in corelib
+use evm::context::{
+    CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait,
+    BoxDynamicExecutionContextDestruct, NullableExecutionContextDestruct
+};
 use evm::tests::test_utils::{setup_call_context, setup_execution_context, CallContextPartialEq};
 use evm::tests::test_utils;
-use evm::context::BoxDynamicExecutionContextDestruct;
 
 use test_utils::callvalue;
-
-// TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)
-#[inline(never)]
-fn no_op() {}
-
 
 #[test]
 #[available_gas(1000000)]
@@ -33,8 +29,6 @@ fn test_call_context_new() {
     let value: u256 = callvalue();
 
     let call_ctx = CallContextTrait::new(bytecode, calldata, value);
-    // TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)
-    no_op();
 
     // Then
     assert(call_ctx.bytecode() == bytecode, 'wrong bytecode');
@@ -50,7 +44,8 @@ fn test_execution_context_new() {
     let program_counter: u32 = 0;
     let stack = StackTrait::new();
     let stopped: bool = false;
-    let return_data: Array<u8> = ArrayTrait::new();
+    let return_data: Array<u8> = Default::default();
+    let calling_context = Default::default();
     let memory = MemoryTrait::new();
     let gas_used: u64 = 0;
     let gas_limit: u64 = 1000;
@@ -66,7 +61,14 @@ fn test_execution_context_new() {
 
     // When
     let mut execution_context = ExecutionContextTrait::new(
-        call_context, starknet_address, evm_address, gas_limit, gas_price, return_data, read_only
+        call_context,
+        starknet_address,
+        evm_address,
+        gas_limit,
+        gas_price,
+        calling_context,
+        return_data,
+        read_only
     );
 
     // Then

@@ -10,6 +10,7 @@ use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array};
 use evm::errors::{EVMError, STACK_UNDERFLOW};
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait,
+    NullableExecutionContextDestruct
 };
 
 

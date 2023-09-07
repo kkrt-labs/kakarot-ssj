@@ -2,7 +2,7 @@ use starknet::{contract_address_try_from_felt252, ContractAddress, EthAddress};
 use traits::{Into, TryInto};
 use option::OptionTrait;
 use array::{ArrayTrait, SpanTrait};
-use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait,};
+use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait};
 
 fn starknet_address() -> ContractAddress {
     'starknet_address'.try_into().unwrap()
@@ -36,9 +36,17 @@ fn setup_execution_context() -> ExecutionContext {
     let gas_price: u64 = 10;
     let read_only: bool = false;
     let return_data = Default::default();
+    let calling_context = Default::default();
 
     ExecutionContextTrait::new(
-        call_context, starknet_address, evm_address, gas_limit, gas_price, return_data, read_only
+        call_context,
+        starknet_address,
+        evm_address,
+        gas_limit,
+        gas_price,
+        calling_context,
+        return_data,
+        read_only
     )
 }
 
@@ -57,9 +65,17 @@ fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext
     let gas_price: u64 = 10;
     let read_only: bool = false;
     let return_data = Default::default();
+    let calling_context = Default::default();
 
     ExecutionContextTrait::new(
-        call_context, starknet_address, evm_address, gas_limit, gas_price, return_data, read_only
+        call_context,
+        starknet_address,
+        evm_address,
+        gas_limit,
+        gas_price,
+        calling_context,
+        return_data,
+        read_only
     )
 }
 
@@ -77,10 +93,18 @@ fn setup_execution_context_with_calldata(calldata: Span<u8>) -> ExecutionContext
     let gas_limit: u64 = 1000;
     let gas_price: u64 = 10;
     let read_only: bool = false;
-    let returned_data = Default::default();
+    let return_data = Default::default();
+    let calling_context = Default::default();
 
     ExecutionContextTrait::new(
-        call_context, starknet_address, evm_address, gas_limit, gas_price, returned_data, read_only
+        call_context,
+        starknet_address,
+        evm_address,
+        gas_limit,
+        gas_price,
+        calling_context,
+        return_data,
+        read_only
     )
 }
 

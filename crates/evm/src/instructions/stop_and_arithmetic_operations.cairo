@@ -8,8 +8,7 @@ use traits::{TryInto};
 use option::OptionTrait;
 
 
-use evm::context::ExecutionContext;
-use evm::context::ExecutionContextTrait;
+use evm::context::{ExecutionContext, ExecutionContextTrait, NullableExecutionContextDestruct};
 use evm::context::BoxDynamicExecutionContextDestruct;
 use evm::stack::StackTrait;
 use utils::u256_signed_math::u256_signed_div_rem;
@@ -28,7 +27,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     }
 
     /// 0x01 - ADD
-    /// Addition operation 
+    /// Addition operation
     /// a + b: integer result of the addition modulo 2^256.
     /// # Specification: https://www.evm.codes/#01?fork=shanghai
     fn exec_add(ref self: ExecutionContext) -> Result<(), EVMError> {
@@ -68,7 +67,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
 
     /// 0x04 - DIV
     /// If the denominator is 0, the result will be 0.
-    /// a / b: integer result of the integer division. 
+    /// a / b: integer result of the integer division.
     /// # Specification: https://www.evm.codes/#04?fork=shanghai
     fn exec_div(ref self: ExecutionContext) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
@@ -89,7 +88,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
 
     /// 0x05 - SDIV
     /// Signed division operation
-    /// a / b: integer result of the signed integer division. 
+    /// a / b: integer result of the signed integer division.
     /// If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#05?fork=shanghai
     fn exec_sdiv(ref self: ExecutionContext) -> Result<(), EVMError> {
@@ -225,7 +224,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// To efficiently implement this algorithm we can implement it using a mask, which is all zeroes until the t-th bit included,
     /// and all ones afterwards. The index of `t` when numbered from the RIGHT is s = `255 - t` = `8b + 7`; so the integer value
     /// of the mask used is 2^s - 1.
-    /// Let v be the t-th bit of x. If v == 1, then the output should be all 1s until the t-th bit included, 
+    /// Let v be the t-th bit of x. If v == 1, then the output should be all 1s until the t-th bit included,
     /// followed by the remaining bits of x; which is corresponds to (x | !mask).
     /// If v == 0, then the output should be all 0s until the t-th bit included, followed by the remaining bits of x;
     /// which corresponds to (x & mask).

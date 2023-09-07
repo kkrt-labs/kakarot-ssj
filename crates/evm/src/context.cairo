@@ -11,6 +11,8 @@ use nullable::NullableTrait;
 use traits::{Into, TryInto, Destruct};
 use option::OptionTrait;
 use starknet::get_caller_address;
+use nullable::FromNullableResult;
+
 
 /// The call context.
 #[derive(Drop, Copy, Default)]
@@ -29,7 +31,7 @@ struct CallContext {
 // *************************************************************************
 
 // We should not directly access the fields of the call context;
-// instead we should use the methods defined in the trait. 
+// instead we should use the methods defined in the trait.
 // This is not enforced until there are `pub` and `priv` visibility on struct fields.
 trait CallContextTrait {
     fn new(bytecode: Span<u8>, calldata: Span<u8>, value: u256) -> CallContext;
@@ -135,10 +137,8 @@ struct ExecutionContext {
     program_counter: u32,
     stack: Stack,
     memory: Memory,
-// TODO: refactor using smart pointers
-// once compiler supports it
-//calling_context: Nullable<ExecutionContext>,
-//sub_context: Nullable<ExecutionContext>,
+    calling_context: Nullable<ExecutionContext>,
+    sub_context: Nullable<ExecutionContext>,
 }
 
 impl BoxDynamicExecutionContextDestruct of Destruct<Box<DynamicExecutionContext>> {
@@ -146,6 +146,17 @@ impl BoxDynamicExecutionContextDestruct of Destruct<Box<DynamicExecutionContext>
         self.unbox().destruct();
     }
 }
+
+
+impl NullableExecutionContextDestruct of Destruct<Nullable<ExecutionContext>> {
+    fn destruct(self: Nullable<ExecutionContext>) nopanic {
+        match match_nullable(self) {
+            FromNullableResult::Null => {},
+            FromNullableResult::NotNull(value) => value.unbox().destruct(),
+        }
+    }
+}
+
 
 /// `ExecutionContext` implementation.
 #[generate_trait]
@@ -158,7 +169,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         evm_address: EthAddress,
         gas_limit: u64,
         gas_price: u64,
-        // calling_context: Nullable<ExecutionContext>,
+        calling_context: Nullable<ExecutionContext>,
         return_data: Array<u8>,
         read_only: bool
     ) -> ExecutionContext {
@@ -172,8 +183,8 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             program_counter: 0,
             stack: Default::default(),
             memory: Default::default(),
-        // calling_context,
-        // sub_context: Default::default(),
+            calling_context,
+            sub_context: Default::default(),
         }
     }
 
@@ -243,9 +254,9 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     /// Revert the current execution context.
-    /// 
-    /// When the execution context is reverted, no more instructions can be executed 
-    /// (it is stopped) and contract creation and contract storage writes are 
+    ///
+    /// When the execution context is reverted, no more instructions can be executed
+    /// (it is stopped) and contract creation and contract storage writes are
     /// reverted on its finalization.
     #[inline(always)]
     fn revert(ref self: ExecutionContext, revert_reason: Span<u8>) {
@@ -290,9 +301,9 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     /// Reads and return data from bytecode.
     /// The program counter is incremented accordingly.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `self` - The `ExecutionContext` instance to read the data from.
     /// * `len` - The length of the data to read from the bytecode.
     #[inline(always)]
@@ -359,9 +370,8 @@ impl DefaultExecutionContext of Default<ExecutionContext> {
             program_counter: Default::default(),
             stack: Default::default(),
             memory: Default::default(),
-        // calling_context: Default::default(),
-        // sub_context: Default::default(),
-
+            calling_context: Default::default(),
+            sub_context: Default::default(),
         }
     }
 }

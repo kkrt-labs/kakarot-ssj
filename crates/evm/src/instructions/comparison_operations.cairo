@@ -1,6 +1,5 @@
 // Internal imports
-use evm::context::ExecutionContext;
-use evm::context::ExecutionContextTrait;
+use evm::context::{ExecutionContext, ExecutionContextTrait, NullableExecutionContextDestruct};
 use evm::stack::StackTrait;
 use evm::errors::STACK_UNDERFLOW;
 use option::{OptionTrait};

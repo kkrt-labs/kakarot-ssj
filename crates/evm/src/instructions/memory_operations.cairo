@@ -1,7 +1,8 @@
 //! Stack Memory Storage and Flow Operations.
 
 use evm::context::{
-    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
+    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct,
+    NullableExecutionContextDestruct
 };
 use evm::errors::EVMError;
 use evm::stack::StackTrait;
@@ -38,7 +39,7 @@ impl MemoryOperation of MemoryOperationTrait {
     }
 
     /// 0x56 - JUMP operation
-    /// The JUMP instruction changes the pc counter. 
+    /// The JUMP instruction changes the pc counter.
     /// The new pc target has to be a JUMPDEST opcode.
     /// # Specification: https://www.evm.codes/#56?fork=shanghai
     fn exec_jump(ref self: ExecutionContext) -> Result<(), EVMError> {
