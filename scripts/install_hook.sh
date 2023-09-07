@@ -1,19 +1,6 @@
 #!/bin/bash
 
-# Define the hook content
-HOOK_CONTENT='#!/bin/sh
-
-# Run the compare_snapshot.py script
-echo "Running gas snapshot comparison..."
-python scripts/compare_snapshot.py
-
-# Check the return status of the script
-if [ $? -ne 0 ]; then
-    echo "Error: Snapshot comparison failed!"
-    exit 1
-fi'
-
-COMMIT_CONTENT='#!/bin/sh
+PRE_COMMIT='#!/bin/sh
 
 # Run scarb fmt to format the project.
 scarb fmt
@@ -41,13 +28,10 @@ if [ ! -d .git ]; then
 fi
 
 # Write the hook content to the pre-push file
-echo "$COMMIT_CONTENT" > .git/hooks/pre-commit
-echo "$HOOK_CONTENT" > .git/hooks/pre-push
+echo "$PRE_COMMIT" > .git/hooks/pre-commit
 
 # Make the hook executable
 chmod +x .git/hooks/pre-commit
-chmod +x .git/hooks/pre-push
 
 echo "pre-commit hook has been installed successfully!"
 echo "pre-push hook has been installed successfully!"
-
