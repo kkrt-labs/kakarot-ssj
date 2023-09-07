@@ -72,7 +72,7 @@ fn test_exec_pop_should_stack_underflow() {
     let result = ctx.exec_pop();
 
     // Then
-    assert(result.is_err(), 'should return Err ');
+    assert(result.is_err(), 'should return Err');
     assert(
         result.unwrap_err() == EVMError::StackError(STACK_UNDERFLOW), 'should return StackUnderflow'
     );
