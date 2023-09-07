@@ -113,7 +113,7 @@ impl MemoryImpl of MemoryTrait {
             let aligned_bytes = elements
                 .slice(
                     16 - offset_in_chunk_i,
-                    elements.len() - 16 - offset_in_chunk_i - offset_in_chunk_f,
+                    elements.len() - (16 - offset_in_chunk_i) - offset_in_chunk_f,
                 );
             self.store_aligned_words(initial_chunk + 1, aligned_bytes);
         }
@@ -413,11 +413,16 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     ///
     /// The cost of the expansion.
     fn expand(ref self: Memory, length: usize) -> usize {
+        if (length == 0) {
+            return 0;
+        }
+
         let last_memory_size_word = (self.bytes_len + 31) / 32;
         let mut last_memory_cost = (last_memory_size_word * last_memory_size_word) / 512;
         last_memory_cost += (3 * last_memory_size_word);
 
-        let new_bytes_len = self.bytes_len + length;
+        let adjusted_length = (((length + 31) / 32) * 32);
+        let new_bytes_len = self.bytes_len + adjusted_length;
         let new_memory_size_word = (new_bytes_len + 31) / 32;
         let new_memory_cost = (new_memory_size_word * new_memory_size_word) / 512;
         let new_memory_cost = new_memory_cost + (3 * new_memory_size_word);
