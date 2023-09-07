@@ -77,3 +77,86 @@ fn test_exec_pop_should_stack_underflow() {
         result.unwrap_err() == EVMError::StackError(STACK_UNDERFLOW), 'should return StackUnderflow'
     );
 }
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('MSTORE8 not implement yet',))]
+fn test_exec_mstore8_should_store_uint8_offset_31() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(0xAB);
+    ctx.stack.push(31);
+
+    // When
+    let result = ctx.exec_mstore8();
+
+    // Then
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.memory.bytes_len == 32, 'memory should be 32 bytes long');
+    let (stored, _) = ctx.memory.load(0);
+    assert(stored == 0xAB, 'mstore8 failed');
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('MSTORE8 not implement yet',))]
+fn test_exec_mstore_should_store_uint8_offset_30() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(0xAB);
+    ctx.stack.push(30);
+
+    // When
+    let result = ctx.exec_mstore8();
+
+    // Then
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.memory.bytes_len == 32, 'memory should be 32 bytes long');
+    let (stored, _) = ctx.memory.load(0);
+    assert(stored == 0xAB00, 'mstore8 failed');
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('MSTORE8 not implement yet',))]
+fn test_exec_mstore_should_store_uint8_offset_31_then_uint8_offset_30() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(0xAB);
+    ctx.stack.push(30);
+    ctx.stack.push(0xCD);
+    ctx.stack.push(31);
+
+    // When
+    let result1 = ctx.exec_mstore8();
+    let result2 = ctx.exec_mstore8();
+
+    // Then
+    assert(result1.is_ok() && result2.is_ok(), 'should have succeeded');
+    assert(ctx.memory.bytes_len == 32, 'memory should be 32 bytes long');
+    let (stored, _) = ctx.memory.load(0);
+    assert(stored == 0xABCD, 'mstore8 failed');
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('MSTORE8 not implement yet',))]
+fn test_exec_mstore8_should_store_last_uint8_offset_31() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(0x123456789ABCDEF);
+    ctx.stack.push(31);
+
+    // When
+    let result = ctx.exec_mstore8();
+
+    // Then
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.memory.bytes_len == 32, 'memory should be 32 bytes long');
+    let (stored, _) = ctx.memory.load(0);
+    assert(stored == 0xEF, 'mstore8 failed');
+}

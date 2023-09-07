@@ -73,7 +73,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save single byte to memory
     /// # Specification: https://www.evm.codes/#53?fork=shanghai
     fn exec_mstore8(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        panic_with_felt252('MSTORE8 not implement yet')
     }
 
     /// 0x55 - SSTORE operation
