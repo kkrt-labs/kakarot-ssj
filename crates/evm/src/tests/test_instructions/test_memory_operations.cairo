@@ -80,7 +80,6 @@ fn test_exec_pop_should_stack_underflow() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('MSTORE8 not implement yet',))]
 fn test_exec_mstore8_should_store_uint8_offset_31() {
     // Given
     let mut ctx = setup_execution_context();
@@ -100,7 +99,6 @@ fn test_exec_mstore8_should_store_uint8_offset_31() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('MSTORE8 not implement yet',))]
 fn test_exec_mstore_should_store_uint8_offset_30() {
     // Given
     let mut ctx = setup_execution_context();
@@ -120,7 +118,6 @@ fn test_exec_mstore_should_store_uint8_offset_30() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('MSTORE8 not implement yet',))]
 fn test_exec_mstore_should_store_uint8_offset_31_then_uint8_offset_30() {
     // Given
     let mut ctx = setup_execution_context();
@@ -143,7 +140,6 @@ fn test_exec_mstore_should_store_uint8_offset_31_then_uint8_offset_30() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('MSTORE8 not implement yet',))]
 fn test_exec_mstore8_should_store_last_uint8_offset_31() {
     // Given
     let mut ctx = setup_execution_context();
