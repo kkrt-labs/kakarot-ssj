@@ -13,9 +13,10 @@ use utils::{helpers::u256_to_bytes_array};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
     duplication_operations, environmental_information, exchange_operations, logging_operations,
-    memory_operations, sha3, StopAndArithmeticOperationsTrait, ComparisonAndBitwiseOperationsTrait,
-    system_operations, BlockInformationTrait, DuplicationOperationsTrait,
-    EnvironmentInformationTrait, PushOperationsTrait, MemoryOperationTrait
+    LoggingOperationsTrait, memory_operations, sha3, StopAndArithmeticOperationsTrait,
+    ComparisonAndBitwiseOperationsTrait, system_operations, BlockInformationTrait,
+    DuplicationOperationsTrait, EnvironmentInformationTrait, PushOperationsTrait,
+    MemoryOperationTrait
 };
 use result::ResultTrait;
 
@@ -603,23 +604,23 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 160 {
             // LOG0
-            logging_operations::exec_log0(ref context);
+            return context.exec_log0();
         }
         if opcode == 161 {
             // LOG1
-            logging_operations::exec_log1(ref context);
+            return context.exec_log1();
         }
         if opcode == 162 {
             // LOG2
-            logging_operations::exec_log2(ref context);
+            return context.exec_log2();
         }
         if opcode == 163 {
             // LOG3
-            logging_operations::exec_log3(ref context);
+            return context.exec_log3();
         }
         if opcode == 164 {
             // LOG4
-            logging_operations::exec_log4(ref context);
+            return context.exec_log4();
         }
         if opcode == 240 {
             // CREATE

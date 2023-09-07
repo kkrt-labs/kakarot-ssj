@@ -14,6 +14,7 @@ use environmental_information::EnvironmentInformationTrait;
 mod exchange_operations;
 
 mod logging_operations;
+use logging_operations::LoggingOperationsTrait;
 
 mod memory_operations;
 use memory_operations::MemoryOperationTrait;
