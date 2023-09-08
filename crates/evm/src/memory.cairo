@@ -77,13 +77,13 @@ impl MemoryImpl of MemoryTrait {
     }
 
 
-    /// Stores a single bytes into memory at a specified offset.
+    /// Stores a single byte into memory at a specified offset.
     ///
     /// # Arguments
     ///
-    /// * `self` - A mutable reference to the `Memory` instance to store the bytes in.
+    /// * `self` - A mutable reference to the `Memory` instance to store the byte in.
     /// * `value` - The byte value to store in memory.
-    /// * `offset` - The offset within memory to store the bytes at.
+    /// * `offset` - The offset within memory to store the byte at.
     #[inline(always)]
     fn store_byte(ref self: Memory, value: u8, offset: usize) {
         let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(offset + 1);
@@ -92,12 +92,12 @@ impl MemoryImpl of MemoryTrait {
         // Get offset's memory word index and left-based offset of byte in word.
         let (index, left_offset) = u32_safe_divmod(offset, u32_as_non_zero(16));
 
-        // As the memory words are in big-endian order, the internal word offset `o`
-        // is the offset of the byte in the word, starting from the right.
+        // As the memory words are in big-endian order, we need to convert our left-based offset
+        // to a right-based one.
         let right_offset = 15 - left_offset;
         let mask: u128 = 0xFF_u128.shl(right_offset.into() * 8);
 
-        // First erase byte value at offset_in_word, then set the new value using bitwise ops
+        // First erase byte value at leff, then set the new value using bitwise ops
         let word: u128 = self.items.get(index.into());
         let new_word = (word & ~mask) | (value.into().shl(right_offset.into() * 8));
         self.items.insert(index.into(), new_word);
