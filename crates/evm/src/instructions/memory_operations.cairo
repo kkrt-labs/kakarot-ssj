@@ -7,7 +7,7 @@ use evm::errors::EVMError;
 use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
 use result::ResultTrait;
-use evm::helpers::{U256IntoResultU32, U256IntoResultU8};
+use evm::helpers::{U256IntoResultU32};
 use utils::{helpers::u256_to_bytes_array};
 
 #[generate_trait]
@@ -78,7 +78,7 @@ impl MemoryOperation of MemoryOperationTrait {
     fn exec_mstore8(ref self: ExecutionContext) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
         let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[0]))?;
-        let value: u8 = Into::<u256, Result<u8, EVMError>>::into((*popped[1] & 0xFF))?;
+        let value: u8 = (*popped.at(1).low & 0xFF).try_into().unwrap();
         let values = array![value].span();
         self.memory.store_n(values, offset);
 
