@@ -1,6 +1,6 @@
 use integer::{
     u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_div_rem,
-    u256_as_non_zero, BoundedInt
+    u256_as_non_zero
 };
 use utils::constants::{
     POW_256_0_U128, POW_256_1_U128, POW_256_2_U128, POW_256_3_U128, POW_256_4_U128, POW_256_5_U128,

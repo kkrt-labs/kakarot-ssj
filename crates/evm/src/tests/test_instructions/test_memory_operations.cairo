@@ -170,7 +170,6 @@ fn test_exec_mstore8_should_store_uint8_offset_31() {
     assert(result.is_ok(), 'should have succeeded');
     assert(ctx.memory.bytes_len == 32, 'memory should be 32 bytes long');
     let stored = ctx.memory.load(0);
-    stored.print();
     assert(stored == 0xAB, 'mstore8 failed');
 }
 

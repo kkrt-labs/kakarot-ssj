@@ -520,8 +520,8 @@ fn test_store_byte_should_store_byte_at_offset() {
     memory.store_byte(0x01, 15);
 
     // Then
-    assert(memory.items[0] == 0x01, 'Byte not stored at offset 0');
-    assert(memory.items[1] == 0x00, 'Second word should be 0');
+    assert(memory.items[0] == 0x01, 'Wrong value for word 0');
+    assert(memory.items[1] == 0x00, 'Wrong value for word 1');
     assert(memory.bytes_len == 32, 'Wrong memory length');
 }
 #[test]
@@ -534,9 +534,8 @@ fn test_store_byte_should_store_byte_at_offset_2() {
     memory.store_byte(0x01, 14);
 
     // Then
-    assert(memory.items[0] == 0x0100, 'Byte not stored at offset 1');
-    assert(memory.items[1] == 0x00, 'Second word should be 0');
-
+    assert(memory.items[0] == 0x0100, 'Wrong value for word 0');
+    assert(memory.items[1] == 0x00, 'Wrong value for word 1');
     assert(memory.bytes_len == 32, 'Wrong memory length');
 }
 
@@ -552,8 +551,8 @@ fn test_store_byte_should_store_byte_at_offset_in_existing_word() {
     memory.store_byte(0x01, 30);
 
     // Then
-    assert(memory.items[0] == 0xFFFF, 'Invalid stored byte value');
-    assert(memory.items[1] == 0x01FF, 'Invalid stored byte value');
+    assert(memory.items[0] == 0xFFFF, 'Wrong value for word 0');
+    assert(memory.items[1] == 0x01FF, 'Wrong value for word 1');
     assert(memory.bytes_len == 32, 'Wrong memory length');
 }
 
