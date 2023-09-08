@@ -164,6 +164,26 @@ fn test_store_n_2_aligned_words() {
     assert(stored_bytes.span() == bytes_arr, 'stored bytes not == expected');
 }
 
+#[test]
+#[available_gas(2000000000)]
+fn test_load_n_internal_same_word() {
+    let mut memory = MemoryTrait::new();
+    memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
+
+    let mut results: Array<u8> = ArrayTrait::new();
+    memory.load_n_internal(16, ref results, 0);
+
+    assert(results.len() == 16, 'error');
+    let mut i = 0;
+    loop {
+        if i == results.len() {
+            break;
+        }
+        assert(*results[i] == 0xFF, 'byte value loaded not correct');
+        i += 1;
+    }
+}
+
 
 #[test]
 #[available_gas(20000000)]
@@ -383,3 +403,4 @@ fn test__expand_and_load__should_return_expanded_memory_and_element_and_cost() {
     let value = memory.load_internal(32);
     assert(value == 0, 'value should be 0');
 }
+
