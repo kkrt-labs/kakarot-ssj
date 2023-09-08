@@ -12,3 +12,13 @@ impl U256IntoResultU32 of Into<u256, Result<u32, EVMError>> {
         }
     }
 }
+
+// Try converting u256 to u8
+impl U256IntoResultU8 of Into<u256, Result<u8, EVMError>> {
+    fn into(self: u256) -> Result<u8, EVMError> {
+        match self.try_into() {
+            Option::Some(value) => Result::Ok(value),
+            Option::None(_) => Result::Err(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
+        }
+    }
+}
