@@ -102,20 +102,6 @@ fn split_word_128(value: u256, ref dst: Array<u8>) {
     split_word(value, 16, ref dst)
 }
 
-/// Try to convert u128 to u64,
-fn u128_to_u64(input: u128) -> u64 {
-    input.try_into().unwrap()
-}
-
-/// Splits a u128 into two u64.
-fn u128_split(input: u128) -> (u64, u64) {
-    let (high, low) = integer::u128_safe_divmod(
-        input, 0x10000000000000000_u128.try_into().unwrap()
-    );
-
-    (u128_to_u64(high), u128_to_u64(low))
-}
-
 
 /// Loads a sequence of bytes into a single u256 in big-endian
 ///
