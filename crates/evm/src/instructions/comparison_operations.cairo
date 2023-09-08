@@ -48,8 +48,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         } else {
             0
         };
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x15 - ISZERO
