@@ -15,8 +15,6 @@ mod internal {
     use evm::helpers::U256IntoResultU32;
     use utils::helpers::u256_to_bytes_array;
 
-    use debug::PrintTrait;
-
     /// Generic logging operation.
     /// Append log record with n topics.
     fn exec_log_i(ref self: ExecutionContext, topics_len: u8) -> Result<(), EVMError> {
@@ -28,7 +26,7 @@ mod internal {
         let offset: u32 = Into::<u256, Result<u32, EVMError>>::into(*popped[0])?;
         let size: u32 = Into::<u256, Result<u32, EVMError>>::into(*popped[1])?;
 
-        let mut topics: Array<u256> = ArrayTrait::new();
+        let mut topics: Array<u256> = Default::default();
         let mut i = 0;
         loop {
             if i == topics_len {
@@ -39,7 +37,7 @@ mod internal {
             i += 1;
         };
 
-        let mut datas: Array<felt252> = ArrayTrait::new();
+        let mut datas: Array<felt252> = Default::default();
 
         let mut i = 0;
         loop {

@@ -13,8 +13,6 @@ use evm::context::{
 };
 use integer::BoundedInt;
 
-use debug::PrintTrait;
-
 #[test]
 #[available_gas(20000000)]
 fn test_exec_log0() {
@@ -166,6 +164,5 @@ fn test_exec_log3_and_log4() {
     assert(*event2.keys[3] == BoundedInt::<u256>::max(), 'event2 key is not correct');
 
     assert(event2.data.len() == 1, 'event2 should have one data');
-    (*event2.data[0]).print();
     assert(*event2.data[0] == 0x0123456789ABCDEF0000, 'event2 data is not correct');
 }
