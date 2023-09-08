@@ -1664,6 +1664,7 @@ fn test__exec_or__should_pop_0_and_1_and_push_0xCD__when_0_is_0x89_and_1_is_0xC5
 
     //When
     ctx.exec_or();
+
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.peek().unwrap() == 0xCD, 'stack top should be 0xCD');
