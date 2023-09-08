@@ -1656,6 +1656,55 @@ fn assert_sar(a: u256, b: u256, expected: u256) {
 
 #[test]
 #[available_gas(20000000)]
+fn test__exec_or__should_pop_0_and_1_and_push_0xCD__when_0_is_0x89_and_1_is_0xC5() {
+    //Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0x89);
+    ctx.stack.push(0xC5);
+
+    //When
+    ctx.exec_or();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0xCD, 'stack top should be 0xCD');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_or_true() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0x01).unwrap();
+    ctx.stack.push(0x00).unwrap();
+
+    // When
+    ctx.exec_or();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x01, 'stack top should be 0x01');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_or_false() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0x00).unwrap();
+    ctx.stack.push(0x00).unwrap();
+
+    // When
+    ctx.exec_or();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
+}
+
+
+#[test]
+#[available_gas(20000000)]
 fn test_exec_lt_true() {
     // Given
     let mut ctx = setup_execution_context();
