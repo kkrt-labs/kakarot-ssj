@@ -1,16 +1,11 @@
-use evm::instructions::LoggingOperationsTrait;
-use evm::tests::test_utils::{
-    setup_execution_context, setup_execution_context_with_bytecode, evm_address, callvalue
-};
-use evm::stack::StackTrait;
-use evm::memory::{InternalMemoryTrait, MemoryTrait};
-use option::OptionTrait;
-use starknet::EthAddressIntoFelt252;
-use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array};
-use evm::errors::{EVMError, STACK_UNDERFLOW};
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait,
 };
+use evm::stack::StackTrait;
+use evm::memory::MemoryTrait;
+use evm::tests::test_utils::{setup_execution_context, setup_read_only_execution_context};
+use evm::errors::{EVMError, STATE_MODIFICATION_ERROR};
+use evm::instructions::LoggingOperationsTrait;
 use integer::BoundedInt;
 
 #[test]
@@ -81,6 +76,32 @@ fn test_exec_log1() {
 
 #[test]
 #[available_gas(20000000)]
+fn test_exec_log1_read_only_context() {
+    // Given
+    let mut ctx = setup_read_only_execution_context();
+
+    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+
+    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(0x00);
+    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(0x0123456789ABCDEF);
+    ctx.stack.push(0x20);
+    ctx.stack.push(0x00);
+
+    // When
+    let result = ctx.exec_log1();
+
+    // Then
+    assert(result.is_err(), 'should have returned an error');
+    assert(
+        result.unwrap_err() == EVMError::StateModificationError(STATE_MODIFICATION_ERROR),
+        'err != StateModificationError'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test_exec_log2() {
     // Given
     let mut ctx = setup_execution_context();
@@ -109,7 +130,6 @@ fn test_exec_log2() {
     assert(event.data.len() == 1, 'event should have one data');
     assert(*event.data[0] == 0xFFFFFFFFFF, 'event data is not correct');
 }
-
 
 #[test]
 #[available_gas(20000000)]

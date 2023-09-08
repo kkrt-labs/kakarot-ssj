@@ -10,14 +10,13 @@ mod internal {
     use evm::memory::MemoryTrait;
     use evm::model::Event;
     use evm::errors::{EVMError, STATE_MODIFICATION_ERROR};
-    use core::array::ArrayTrait;
-    use box::BoxTrait;
     use evm::helpers::U256IntoResultU32;
     use utils::helpers::u256_to_bytes_array;
 
     /// Generic logging operation.
     /// Append log record with n topics.
     fn exec_log_i(ref self: ExecutionContext, topics_len: u8) -> Result<(), EVMError> {
+        // Revert if the transaction is in a read only context
         if self.read_only() {
             return Result::Err(EVMError::StateModificationError(STATE_MODIFICATION_ERROR));
         }
@@ -26,6 +25,7 @@ mod internal {
         let offset: u32 = Into::<u256, Result<u32, EVMError>>::into(*popped[0])?;
         let size: u32 = Into::<u256, Result<u32, EVMError>>::into(*popped[1])?;
 
+        // Feed topics array for the new event
         let mut topics: Array<u256> = Default::default();
         let mut i = 0;
         loop {
@@ -37,8 +37,8 @@ mod internal {
             i += 1;
         };
 
+        // Feed data array for the new event
         let mut datas: Array<felt252> = Default::default();
-
         let mut i = 0;
         loop {
             if 31 + i > size {
@@ -65,6 +65,7 @@ mod internal {
             i += 31;
         };
 
+        // Create and store the new event in the dynamic context
         let event: Event = Event { keys: topics, data: datas };
 
         let mut dyn_ctx = self.dynamic_context.unbox();
