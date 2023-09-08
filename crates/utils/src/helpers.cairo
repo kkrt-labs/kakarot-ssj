@@ -206,6 +206,44 @@ impl ArrayExtension of ArrayExtensionTrait {
     }
 }
 
+#[generate_trait]
+impl SpanExtension of SpanExtensionTrait {
+    /// Pads a span of bytes with zeroes on the right.
+    ///
+    /// It creates a new `Array<u8>` instance and clones each element of the input span to it,
+    /// and then adds the required amount of zeroes.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The `Span<u8>` instance to pad with zeroes.
+    /// * `n_zeroes` - The number of zeroes to add to the right of the span.
+    ///
+    /// # Returns
+    ///
+    /// A new `Span<u8>` instance which has a length equal to the length of the input
+    /// span plus the number of zeroes specified.
+    fn pad_right(self: Span<u8>, n_zeroes: usize) -> Span<u8> {
+        let mut res: Array<u8> = array![];
+        let mut i = 0;
+        loop {
+            if i == self.len() {
+                break;
+            }
+            res.append(*self[i]);
+            i += 1;
+        };
+        let mut i = 0;
+        loop {
+            if i == n_zeroes {
+                break ();
+            }
+            res.append(0);
+            i += 1;
+        };
+        res.span()
+    }
+}
+
 // Raise a number to a power.
 fn pow(base: felt252, exp: felt252) -> felt252 {
     if exp == 0 {
