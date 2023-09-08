@@ -196,7 +196,7 @@ fn test_calldata_size() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_calldata_copy_type_conversion_error() {
+fn test_calldatacopy_type_conversion_error() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -217,30 +217,30 @@ fn test_calldata_copy_type_conversion_error() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_calldata_copy_basic() {
-    test_calldata_copy(32, 0, 0);
+fn test_calldatacopy_basic() {
+    test_calldatacopy(32, 0, 0);
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_calldata_copy_with_offset() {
-    test_calldata_copy(32, 2, 0);
+fn test_calldatacopy_with_offset() {
+    test_calldatacopy(32, 2, 0);
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_calldata_copy_with_out_of_bound_bytes() {
-    test_calldata_copy(32, 0, 8);
+fn test_calldatacopy_with_out_of_bound_bytes() {
+    test_calldatacopy(32, 0, 8);
 }
 
 #[test]
 #[available_gas(20000000)]
 // This test will failed due to bug #275, waiting for resolution
-fn test_calldata_copy_with_out_of_bound_bytes_multiple_words() {
-    test_calldata_copy(32, 0, 34);
+fn test_calldatacopy_with_out_of_bound_bytes_multiple_words() {
+    test_calldatacopy(32, 0, 34);
 }
 
-fn test_calldata_copy(dest_offset: u32, offset: u32, mut size: u32) {
+fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
     let mut ctx = setup_execution_context();
     let calldata: Span<u8> = ctx.call_context().calldata();
@@ -253,6 +253,8 @@ fn test_calldata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     ctx.stack.push(offset.into());
     ctx.stack.push(dest_offset.into());
 
+    // Memory initialization with a value to verify that if the offset + size is out of the bound bytes, 0's have been copied.
+    // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
     let mut i = 0;
     loop {
         if i == (size / 32) + 1 {
@@ -282,6 +284,7 @@ fn test_calldata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Then
     assert(ctx.stack.is_empty(), 'stack should be empty');
 
+    // Check memory word by word
     let mut i = 0;
     loop {
         if i == (size / 32) + 1 {
