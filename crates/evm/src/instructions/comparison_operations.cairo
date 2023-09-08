@@ -87,7 +87,11 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x17 - OR
     /// # Specification: https://www.evm.codes/#17?fork=shanghai
     fn exec_or(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(2)?;
+        let a = *popped[0];
+        let b = *popped[1];
+        let result = a | b;
+        self.stack.push(result)
     }
 
     /// 0x18 - XOR operation
