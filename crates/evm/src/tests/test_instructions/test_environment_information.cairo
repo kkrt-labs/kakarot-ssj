@@ -200,35 +200,33 @@ fn test_calldatacopy_type_conversion_error() {
 #[test]
 #[available_gas(20000000)]
 fn test_calldatacopy_basic() {
-    test_calldatacopy(32, 0, 0);
+    test_calldatacopy(32, 0, 3, array![4, 5, 6].span());
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_calldatacopy_with_offset() {
-    test_calldatacopy(32, 2, 0);
+    test_calldatacopy(32, 2, 1, array![6].span());
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_calldatacopy_with_out_of_bound_bytes() {
-    test_calldatacopy(32, 0, 8);
+    // For out of bound bytes, 0s will be copied.
+    test_calldatacopy(32, 0, 8, array![4, 5, 6].span().pad_right(5));
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_calldatacopy_with_out_of_bound_bytes_multiple_words() {
-    test_calldatacopy(32, 0, 34);
+    // For out of bound bytes, 0s will be copied.
+    test_calldatacopy(32, 0, 34, array![4, 5, 6].span().pad_right(31));
 }
 
-fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32) {
+fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Span<u8>) {
     // Given
     let mut ctx = setup_execution_context();
     let calldata: Span<u8> = ctx.call_context().calldata();
-
-    if (size == 0) {
-        size = calldata.len() - offset;
-    }
 
     ctx.stack.push(size.into());
     ctx.stack.push(offset.into());
@@ -267,13 +265,6 @@ fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32) {
 
     let mut results: Array<u8> = ArrayTrait::new();
     ctx.memory.load_n_internal(size, ref results, dest_offset);
-
-    // For out of bound bytes, 0s will be copied.
-    let expected = if (offset + size <= calldata.len()) {
-        calldata.slice(offset, size)
-    } else {
-        calldata.slice(offset, calldata.len() - offset).pad_right(size - calldata.len() - offset)
-    };
 
     assert(results.span() == expected, 'wrong data value');
 }
