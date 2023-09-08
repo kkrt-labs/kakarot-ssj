@@ -8,7 +8,7 @@ use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use starknet::EthAddressIntoFelt252;
 use utils::helpers::{u256_to_bytes_array};
 use utils::traits::{EthAddressIntoU256};
-use evm::errors::{EVMError, STACK_UNDERFLOW};
+use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION};
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait,
 };
@@ -253,7 +253,6 @@ fn test_exec_mstore8_should_store_last_uint8_offset_63() {
     assert(stored == 0xEF, 'mstore8 failed');
 }
 
-
 #[test]
 #[available_gas(20000000)]
 fn test_msize_initial() {
@@ -299,4 +298,81 @@ fn test_exec_msize_store_max_offset_1() {
     assert(result.is_ok(), 'should have succeeded');
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.pop().unwrap() == 64, 'should 64 bytes after MSTORE');
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('JUMP not implement yet',))]
+fn test_exec_jump_valid() {
+    // Given
+    let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let counter = 0x03;
+    ctx.stack.push(counter);
+
+    // When
+    ctx.exec_jump();
+
+    // Then
+    let pc = ctx.program_counter;
+    assert(pc == 0x03, 'PC should be JUMPDEST');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('JUMP not implement yet',))]
+fn test_exec_jump_invalid() {
+    // Given
+    let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let counter = 0x02;
+    ctx.stack.push(counter);
+
+    // When
+    let result = ctx.exec_jump();
+
+    // Then
+    assert(result.is_err(), 'invalid jump dest');
+    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('JUMP not implement yet',))]
+fn test_exec_jump_out_of_bounds() {
+    // Given
+    let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let counter = 0xFF;
+    ctx.stack.push(counter);
+
+    // When
+    let result = ctx.exec_jump();
+
+    // Then
+    assert(result.is_err(), 'invalid jump dest');
+    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+}
+
+// TODO: This is third edge case in which `0x5B` is part of PUSHN instruction and hence
+// not a valid opcode to jump to
+//
+// Remove ignore once its handled
+#[test]
+#[available_gas(20000000)]
+#[ignore]
+fn test_exec_jump_inside_pushn() {
+    // Given
+    let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
+    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let counter = 0x01;
+    ctx.stack.push(counter);
+
+    // When
+    let result = ctx.exec_jump();
+
+    // Then
+    assert(result.is_err(), 'invalid jump dest');
+    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
 }
