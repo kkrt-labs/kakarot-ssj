@@ -219,7 +219,6 @@ fn test_calldatacopy_with_out_of_bound_bytes() {
 
 #[test]
 #[available_gas(20000000)]
-// This test will failed due to bug #275, waiting for resolution
 fn test_calldatacopy_with_out_of_bound_bytes_multiple_words() {
     test_calldatacopy(32, 0, 34);
 }
@@ -278,6 +277,7 @@ fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32) {
         let result: u256 = ctx.memory.load_internal(dest_offset + (i * 32)).into();
         let mut results: Array<u8> = u256_to_bytes_array(result);
 
+        // For each bytes of current word, if we are out of bounds, we expect 0, otherwise we expect calldata value
         let mut x = 0;
         loop {
             if (x == 32 || x + (i * 32) == size) {
