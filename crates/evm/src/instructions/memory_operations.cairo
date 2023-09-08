@@ -8,7 +8,6 @@ use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
 use result::ResultTrait;
 use evm::helpers::{U256IntoResultU32};
-use utils::{helpers::u256_to_bytes_array};
 
 #[generate_trait]
 impl MemoryOperation of MemoryOperationTrait {

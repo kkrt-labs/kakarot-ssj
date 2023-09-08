@@ -156,3 +156,23 @@ fn test_exec_mstore8_should_store_last_uint8_offset_31() {
     let (stored, _) = ctx.memory.load(0);
     assert(stored == 0xEF, 'mstore8 failed');
 }
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_mstore8_should_store_last_uint8_offset_63() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(0x123456789ABCDEF);
+    ctx.stack.push(63);
+
+    // When
+    let result = ctx.exec_mstore8();
+
+    // Then
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.memory.bytes_len == 64, 'memory should be 64 bytes long');
+    let (stored, _) = ctx.memory.load(32);
+    assert(stored == 0xEF, 'mstore8 failed');
+}
