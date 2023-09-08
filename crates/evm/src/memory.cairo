@@ -1,6 +1,6 @@
 use integer::{
     u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_div_rem,
-    u256_as_non_zero
+    u256_as_non_zero, BoundedInt
 };
 use utils::constants::{
     POW_256_0_U128, POW_256_1_U128, POW_256_2_U128, POW_256_3_U128, POW_256_4_U128, POW_256_5_U128,
@@ -26,6 +26,7 @@ trait MemoryTrait {
     fn new() -> Memory;
     fn size(ref self: Memory) -> usize;
     fn store(ref self: Memory, element: u256, offset: usize);
+    fn store_byte(ref self: Memory, value: u8, offset: usize);
     fn store_n(ref self: Memory, elements: Span<u8>, offset: usize);
     fn store_padded_segment(ref self: Memory, offset: usize, length: usize, source: Span<u8>);
     fn ensure_length(ref self: Memory, length: usize);
@@ -74,6 +75,34 @@ impl MemoryImpl of MemoryTrait {
 
         self.store_element(element, chunk_index, offset_in_chunk);
     }
+
+
+    /// Stores a single bytes into memory at a specified offset.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `Memory` instance to store the bytes in.
+    /// * `value` - The byte value to store in memory.
+    /// * `offset` - The offset within memory to store the bytes at.
+    #[inline(always)]
+    fn store_byte(ref self: Memory, value: u8, offset: usize) {
+        let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(offset + 1);
+        self.bytes_len = cmp::max(new_min_bytes_len, self.bytes_len);
+
+        // Get offset's memory word index and left-based offset of byte in word.
+        let (index, left_offset) = u32_safe_divmod(offset, u32_as_non_zero(16));
+
+        // As the memory words are in big-endian order, the internal word offset `o`
+        // is the offset of the byte in the word, starting from the right.
+        let right_offset = 15 - left_offset;
+        let mask: u128 = 0xFF_u128.shl(right_offset.into() * 8);
+
+        // First erase byte value at offset_in_word, then set the new value using bitwise ops
+        let word: u128 = self.items.get(index.into());
+        let new_word = (word & ~mask) | (value.into().shl(right_offset.into() * 8));
+        self.items.insert(index.into(), new_word);
+    }
+
 
     /// Stores a span of N bytes into memory at a specified offset.
     ///

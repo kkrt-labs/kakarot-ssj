@@ -1,4 +1,6 @@
-use integer::{u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt};
+use integer::{
+    u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt, u128_overflowing_mul
+};
 
 trait Exponentiation<T> {
     /// Raise a number to a power.
@@ -39,6 +41,37 @@ impl U256WrappingExponentiationImpl of WrappingExponentiation<u256> {
                 break;
             }
             let (new_result, _) = u256_overflow_mul(result, self);
+            result = new_result;
+            exponent -= 1;
+        };
+        result
+    }
+}
+
+impl U128ExpImpl of Exponentiation<u128> {
+    fn pow(self: u128, mut exponent: u128) -> u128 {
+        if self == 0 {
+            return 0;
+        }
+        if exponent == 0 {
+            return 1;
+        } else {
+            return self * Exponentiation::pow(self, exponent - 1);
+        }
+    }
+}
+
+impl U128WrappingExponentiationImpl of WrappingExponentiation<u128> {
+    fn wrapping_pow(self: u128, mut exponent: u128) -> u128 {
+        if self == 0 {
+            return 0;
+        }
+        let mut result = 1;
+        loop {
+            if exponent == 0 {
+                break;
+            }
+            let (new_result, _) = u128_overflowing_mul(result, self);
             result = new_result;
             exponent -= 1;
         };
@@ -163,3 +196,37 @@ impl U256WrappingBitshiftImpl of WrappingBitshift<u256> {
         self / 2.pow(shift)
     }
 }
+
+impl U128BitshiftImpl of Bitshift<u128> {
+    fn shl(self: u128, shift: u128) -> u128 {
+        if shift > 127 {
+            // 2.pow(shift) for shift > 255 will panic with 'u128_mul Overflow'
+            panic_with_felt252('u128_mul Overflow');
+        }
+        self * 2.pow(shift)
+    }
+
+    fn shr(self: u128, shift: u128) -> u128 {
+        if shift > 127 {
+            // 2.pow(shift) for shift > 255 will panic with 'u128_mul Overflow'
+            panic_with_felt252('u128_mul Overflow');
+        }
+        self / 2.pow(shift)
+    }
+
+    fn wrapping_shl(self: u128, shift: u128) -> u128 {
+        let (result, _) = u128_overflowing_mul(self, 2.wrapping_pow(shift));
+        result
+    }
+
+    fn wrapping_shr(self: u128, shift: u128) -> u128 {
+        // if we shift by more than 255 bits, the result is 0 (the type is 256 bits wide)
+        // we early return to save gas
+        // and prevent unexpected behavior, e.g. 2.pow(256) == 0 mod 2^256, given we can't divide by zero
+        if shift > 255 {
+            return 0;
+        }
+        self / 2.pow(shift)
+    }
+}
+

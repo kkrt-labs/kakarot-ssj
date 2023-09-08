@@ -510,3 +510,84 @@ fn test_store_padded_segment_should_add_n_elements_padded_with_offset_between_tw
         'Wrong memory value'
     );
 }
+#[test]
+#[available_gas(20000000)]
+fn test_store_byte_should_store_byte_at_offset() {
+    // Given
+    let mut memory = MemoryTrait::new();
+
+    // When
+    memory.store_byte(0x01, 15);
+
+    // Then
+    assert(memory.items[0] == 0x01, 'Byte not stored at offset 0');
+    assert(memory.items[1] == 0x00, 'Second word should be 0');
+    assert(memory.bytes_len == 32, 'Wrong memory length');
+}
+#[test]
+#[available_gas(20000000)]
+fn test_store_byte_should_store_byte_at_offset_2() {
+    // Given
+    let mut memory = MemoryTrait::new();
+
+    // When
+    memory.store_byte(0x01, 14);
+
+    // Then
+    assert(memory.items[0] == 0x0100, 'Byte not stored at offset 1');
+    assert(memory.items[1] == 0x00, 'Second word should be 0');
+
+    assert(memory.bytes_len == 32, 'Wrong memory length');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_store_byte_should_store_byte_at_offset_in_existing_word() {
+    // Given
+    let mut memory = MemoryTrait::new();
+    memory.items.insert(0, 0xFFFF); // Set the first word in memory to 0xFFFF;
+    memory.items.insert(1, 0xFFFF);
+
+    // When
+    memory.store_byte(0x01, 30);
+
+    // Then
+    assert(memory.items[0] == 0xFFFF, 'Invalid stored byte value');
+    assert(memory.items[1] == 0x01FF, 'Invalid stored byte value');
+    assert(memory.bytes_len == 32, 'Wrong memory length');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_store_byte_should_store_byte_at_offset_in_new_word() {
+    // Given
+    let mut memory = MemoryTrait::new();
+
+    // When
+    memory.store_byte(0x01, 32);
+
+    memory.items[2].print();
+    // Then
+    assert(memory.items[0] == 0x0, 'Wrong value for word 0');
+    assert(memory.items[1] == 0x0, 'Wrong value for word 1');
+    assert(memory.items[2] == 0x01000000000000000000000000000000, 'Wrong value for word 2');
+    assert(memory.bytes_len == 64, 'Wrong memory length');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_store_byte_should_store_byte_at_offset_in_new_word_with_existing_value_in_previous_word() {
+    // Given
+    let mut memory = MemoryTrait::new();
+    memory.items.insert(0, 0x0100);
+    memory.items.insert(1, 0xffffffffffffffffffffffffffffffff);
+
+    // When
+    memory.store_byte(0xAB, 17);
+
+    // Then
+    assert(memory.items[0] == 0x0100, 'Wrong value in word 0');
+    assert(memory.items[1] == 0xffABffffffffffffffffffffffffffff, 'Wrong value in word 1');
+    assert(memory.bytes_len == 32, 'Wrong memory length');
+}
+

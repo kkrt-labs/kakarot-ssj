@@ -153,9 +153,14 @@ def print_colored_output(improvements, worsened, gas_changes):
 
 
 def total_gas_used(current, previous):
-    """Return the total gas used in the current and previous snapshot."""
-    return sum(current.values()), sum(previous.values())
-
+    """Return the total gas used in the current and previous snapshot, not taking into account added tests."""
+    cur_gas = 0
+    prev_gas = 0
+    for key, value in current.items():
+        if key in previous:
+            cur_gas += value
+            prev_gas+= previous[key]
+    return cur_gas, prev_gas
 
 def main():
     """Main function to execute the snapshot test framework."""

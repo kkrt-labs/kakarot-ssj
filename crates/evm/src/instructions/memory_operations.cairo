@@ -112,8 +112,7 @@ impl MemoryOperation of MemoryOperationTrait {
         let offset = self.stack.pop_usize()?;
         let value = self.stack.pop()?;
         let value: u8 = (value.low & 0xFF).try_into().unwrap();
-        let values = array![value].span();
-        self.memory.store_n(values, offset);
+        self.memory.store_byte(value, offset);
 
         Result::Ok(())
     }
