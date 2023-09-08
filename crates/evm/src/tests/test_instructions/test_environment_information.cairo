@@ -8,17 +8,15 @@ use evm::tests::test_utils::{
 use evm::stack::StackTrait;
 use option::OptionTrait;
 use starknet::EthAddressIntoFelt252;
-use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array, load_word};
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
 };
-use utils::helpers::{ArrayExtension, ArrayExtensionTrait};
+use utils::helpers::{
+    EthAddressIntoU256, u256_to_bytes_array, load_word, ArrayExtension, ArrayExtensionTrait,
+    SpanExtension, SpanExtensionTrait
+};
 use integer::u32_overflowing_add;
-
-// *************************************************************************
-// 0x30: ADDRESS
-// *************************************************************************
 
 // *************************************************************************
 // 0x30: ADDRESS
@@ -267,35 +265,17 @@ fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32) {
     // Then
     assert(ctx.stack.is_empty(), 'stack should be empty');
 
-    // Check memory word by word
-    let mut i = 0;
-    loop {
-        if i == (size / 32) + 1 {
-            break;
-        }
+    let mut results: Array<u8> = ArrayTrait::new();
+    ctx.memory.load_n_internal(size, ref results, dest_offset);
 
-        let result: u256 = ctx.memory.load_internal(dest_offset + (i * 32)).into();
-        let mut results: Array<u8> = u256_to_bytes_array(result);
-
-        // For each bytes of current word, if we are out of bounds, we expect 0, otherwise we expect calldata value
-        let mut x = 0;
-        loop {
-            if (x == 32 || x + (i * 32) == size) {
-                break;
-            }
-
-            // For out of bound bytes, 0s will be copied.
-            if (x + (i * 32) + offset >= calldata.len()) {
-                assert(*results[x] == 0, 'wrong data value');
-            } else {
-                assert(*results[x] == *calldata[x + (i * 32) + offset], 'wrong data value');
-            }
-
-            x += 1;
-        };
-
-        i += 1;
+    // For out of bound bytes, 0s will be copied.
+    let expected = if (offset + size <= calldata.len()) {
+        calldata.slice(offset, size)
+    } else {
+        calldata.slice(offset, calldata.len() - offset).pad_right(size - calldata.len() - offset)
     };
+
+    assert(results.span() == expected, 'wrong data value');
 }
 
 // *************************************************************************
