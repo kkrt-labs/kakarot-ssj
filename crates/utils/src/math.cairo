@@ -1,4 +1,7 @@
-use integer::{u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt};
+use integer::{
+    u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt, u128_overflowing_mul
+};
+use math::Oneable;
 
 trait Exponentiation<T> {
     /// Raise a number to a power.
@@ -15,18 +18,83 @@ trait WrappingExponentiation<T> {
     fn wrapping_pow(self: T, exponent: T) -> T;
 }
 
-impl U256ExpImpl of Exponentiation<u256> {
-    fn pow(self: u256, mut exponent: u256) -> u256 {
-        if self == 0 {
-            return 0;
+impl TExpImpl<
+    T,
+    impl TDrop: Drop<T>,
+    impl TCopy: Copy<T>,
+    impl TZeroable: Zeroable<T>,
+    impl TOneable: Oneable<T>,
+    impl TPartialEq: PartialEq<T>,
+    impl TSub: Sub<T>,
+    impl TMul: Mul<T>,
+> of Exponentiation<T> {
+    fn pow(self: T, mut exponent: T) -> T {
+        if self == Zeroable::zero() {
+            return Zeroable::zero();
         }
-        if exponent == 0 {
-            return 1;
+        if exponent == Zeroable::zero() {
+            return Oneable::one();
         } else {
-            return self * Exponentiation::pow(self, exponent - 1);
+            return self * Exponentiation::pow(self, exponent - Oneable::one());
         }
     }
 }
+
+impl TWrappingExpImpl<
+    T,
+    impl TDrop: Drop<T>,
+    impl TCopy: Copy<T>,
+    impl TZeroable: Zeroable<T>,
+    impl TOneable: Oneable<T>,
+    impl TPartialEq: PartialEq<T>,
+    impl TSub: Sub<T>,
+    impl TMul: Mul<T>,
+    impl TSubEq: SubEq<T>,
+    impl TIntoFelt: Into<T, felt252>,
+    impl FeltTryIntoT: TryInto<felt252, T>
+> of WrappingExponentiation<T> {
+    fn wrapping_pow(self: T, mut exponent: T) -> T {
+        let self: felt252 = self.into();
+        if self == Zeroable::zero() {
+            return Zeroable::zero();
+        }
+        let mut result = Oneable::one();
+        loop {
+            if exponent == Zeroable::zero() {
+                break;
+            }
+            let new_result = self * result;
+            result = new_result;
+            exponent -= Oneable::one();
+        };
+        result.try_into().unwrap()
+    }
+}
+
+//TODO remove this impl if merged in corelib
+impl Felt252Oneable of Oneable<felt252> {
+    fn one() -> felt252 {
+        1
+    }
+    #[inline(always)]
+    fn is_one(self: felt252) -> bool {
+        self == Felt252Oneable::one()
+    }
+    #[inline(always)]
+    fn is_non_one(self: felt252) -> bool {
+        self != Felt252Oneable::one()
+    }
+}
+
+// Required for generic WrappingExponentiation
+// TODO remove this impl if merged in corelib
+impl Felt252TryInto of TryInto<felt252, felt252> {
+    #[inline(always)]
+    fn try_into(self: felt252) -> Option<felt252> {
+        Option::Some(self)
+    }
+}
+
 
 impl U256WrappingExponentiationImpl of WrappingExponentiation<u256> {
     fn wrapping_pow(self: u256, mut exponent: u256) -> u256 {
@@ -45,22 +113,6 @@ impl U256WrappingExponentiationImpl of WrappingExponentiation<u256> {
         result
     }
 }
-
-
-impl Felt252WrappingExpImpl of WrappingExponentiation<felt252> {
-    fn wrapping_pow(self: felt252, mut exponent: felt252) -> felt252 {
-        if self == 0 {
-            return 0;
-        }
-        if exponent == 0 {
-            return 1;
-        } else {
-            // Mul<felt252> wraps around, so we don't need to worry about overflows.
-            return self * WrappingExponentiation::wrapping_pow(self, exponent - 1);
-        }
-    }
-}
-
 
 /// Adds two 256-bit unsigned integers, returning a 512-bit unsigned integer result.
 ///
@@ -158,3 +210,37 @@ impl U256BitshiftImpl of Bitshift<u256> {
         self / 2.pow(shift)
     }
 }
+
+impl U128BitshiftImpl of Bitshift<u128> {
+    fn shl(self: u128, shift: u128) -> u128 {
+        if shift > 127 {
+            // 2.pow(shift) for shift > 255 will panic with 'u128_mul Overflow'
+            panic_with_felt252('u128_mul Overflow');
+        }
+        self * 2.pow(shift)
+    }
+
+    fn shr(self: u128, shift: u128) -> u128 {
+        if shift > 127 {
+            // 2.pow(shift) for shift > 255 will panic with 'u128_mul Overflow'
+            panic_with_felt252('u128_mul Overflow');
+        }
+        self / 2.pow(shift)
+    }
+
+    fn wrapping_shl(self: u128, shift: u128) -> u128 {
+        let (result, _) = u128_overflowing_mul(self, 2.wrapping_pow(shift));
+        result
+    }
+
+    fn wrapping_shr(self: u128, shift: u128) -> u128 {
+        // if we shift by more than 255 bits, the result is 0 (the type is 256 bits wide)
+        // we early return to save gas
+        // and prevent unexpected behavior, e.g. 2.pow(256) == 0 mod 2^256, given we can't divide by zero
+        if shift > 255 {
+            return 0;
+        }
+        self / 2.pow(shift)
+    }
+}
+
