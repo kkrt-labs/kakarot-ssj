@@ -1,11 +1,11 @@
 //! Stack Memory Storage and Flow Operations.
-
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
 };
 use evm::errors::EVMError;
 use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
+use result::ResultTrait;
 use evm::helpers::U256IntoResultU32;
 
 #[generate_trait]
@@ -13,7 +13,10 @@ impl MemoryOperation of MemoryOperationTrait {
     /// MLOAD operation.
     /// Load word from memory and push to stack.
     fn exec_mload(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop()?;
+        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into(popped)?;
+        let (result, _) = self.memory.load(offset);
+        self.stack.push(result)
     }
 
     /// 0x52 - MSTORE operation.
@@ -78,6 +81,12 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save single byte to memory
     /// # Specification: https://www.evm.codes/#53?fork=shanghai
     fn exec_mstore8(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = self.stack.pop_n(2)?;
+        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[0]))?;
+        let value: u8 = (*popped.at(1).low & 0xFF).try_into().unwrap();
+        let values = array![value].span();
+        self.memory.store_n(values, offset);
+
         Result::Ok(())
     }
 
