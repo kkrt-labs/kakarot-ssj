@@ -81,6 +81,12 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save single byte to memory
     /// # Specification: https://www.evm.codes/#53?fork=shanghai
     fn exec_mstore8(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let popped = self.stack.pop_n(2)?;
+        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[0]))?;
+        let value: u8 = (*popped.at(1).low & 0xFF).try_into().unwrap();
+        let values = array![value].span();
+        self.memory.store_n(values, offset);
+
         Result::Ok(())
     }
 
