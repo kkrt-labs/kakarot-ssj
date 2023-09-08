@@ -75,12 +75,8 @@ fn test_calldataload() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let calldata_len = calldata.len();
-
     let mut ctx = setup_execution_context_with_calldata(calldata.span());
-
     let offset: u32 = 0;
-
     ctx.stack.push(offset.into());
 
     // When
@@ -101,12 +97,8 @@ fn test_calldataload_with_offset() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let calldata_len = calldata.len();
-
     let mut ctx = setup_execution_context_with_calldata(calldata.span());
-
     let offset: u32 = 31;
-
     ctx.stack.push(offset.into());
 
     // When
@@ -128,12 +120,8 @@ fn test_calldataload_with_offset_beyond_calldata() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let calldata_len = calldata.len();
-
     let mut ctx = setup_execution_context_with_calldata(calldata.span());
-
-    let offset: u32 = calldata_len + 1;
-
+    let offset: u32 = calldata.len() + 1;
     ctx.stack.push(offset.into());
 
     // When
@@ -152,12 +140,8 @@ fn test_calldataload_with_offset_conversion_error() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let calldata_len = calldata.len();
-
     let mut ctx = setup_execution_context_with_calldata(calldata.span());
-
     let offset: u256 = 5000000000;
-
     ctx.stack.push(offset);
 
     // When
