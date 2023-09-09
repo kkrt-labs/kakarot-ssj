@@ -17,7 +17,7 @@ fn test_exec_return() {
 
     ctx.stack.push(32);
     ctx.stack.push(0);
-    ctx.exec_return();
+    assert(ctx.exec_return().is_ok(), 'Exec return failed');
 
     // Then
     assert(1000 == load_word(32, ctx.return_data()), 'Wrong return_data');

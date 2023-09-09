@@ -36,15 +36,15 @@ impl SystemOperations of SystemOperationsTrait {
     fn exec_return(ref self: ExecutionContext) -> Result<(), EVMError> {
         let offset = self.stack.pop()?;
         let size = self.stack.pop()?;
-        let mut dynamic_context = self.dynamic_context.unbox();
+        let mut return_data = array![];
         self
             .memory
             .load_n(
                 size.low.try_into().expect('Too much return data'),
-                ref dynamic_context.return_data,
+                ref return_data,
                 offset.low.try_into().expect('Return data offset > u32')
             );
-        self.dynamic_context = BoxTrait::new(dynamic_context);
+        self.set_return_data(return_data);
         self.stop();
         Result::Ok(())
     }
