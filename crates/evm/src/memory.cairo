@@ -388,7 +388,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
             let w: u128 = self.items.get(initial_chunk.into());
             let w_l = w.into() % mask_i;
             let w_lh = w_l / mask_f;
-            helpers::split_word(w_lh, elements_len, ref elements)
+            helpers::split_word(w_lh, elements_len, ref elements);
+            return;
         }
 
         // Otherwise.
