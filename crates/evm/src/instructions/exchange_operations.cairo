@@ -19,7 +19,7 @@ mod internal {
 
     /// Generic SWAP operation
     /// Exchange 1st and i-th stack items
-    fn exec_swap_i(ref context: ExecutionContext, i: u8) -> Result<(), EVMError>  {
+    fn exec_swap_i(ref context: ExecutionContext, i: u8) -> Result<(), EVMError> {
         let i = i.into();
         context.stack.swap_i(i)
     }

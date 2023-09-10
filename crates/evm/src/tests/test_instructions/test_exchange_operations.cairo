@@ -7,7 +7,6 @@ use evm::instructions::exchange_operations::ExchangeOperationsTrait;
 use core::result::ResultTrait;
 
 
-
 #[test]
 #[available_gas(20000000)]
 fn test_swap1() {
@@ -83,7 +82,6 @@ fn test_swap6() {
     ctx.exec_swap6();
     assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [6]');
 }
-
 
 
 #[test]
