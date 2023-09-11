@@ -20,6 +20,8 @@ use utils::constants;
 use debug::PrintTrait;
 use nullable::{nullable_from_box, NullableTrait};
 use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW};
+use evm::helpers::U256IntoResultU32;
+use starknet::EthAddress;
 
 
 #[derive(Destruct, Default)]
@@ -32,6 +34,8 @@ trait StackTrait {
     fn new() -> Stack;
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError>;
     fn pop(ref self: Stack) -> Result<u256, EVMError>;
+    fn pop_usize(ref self: Stack) -> Result<usize, EVMError>;
+    fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError>;
     fn pop_n(ref self: Stack, n: usize) -> Result<Array<u256>, EVMError>;
     fn peek(ref self: Stack) -> Option<u256>;
     fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError>;
@@ -70,6 +74,29 @@ impl StackImpl of StackTrait {
         self.len -= 1;
         let item = self.items.get(last_index.into());
         Result::Ok(item.deref())
+    }
+
+    /// Calls `Stack::pop` and tries to convert it to usize
+    /// Returns `EVMError::StackError` with appropriate message
+    /// In case:
+    ///     - Stack is empty
+    ///     - Type conversion failed
+    #[inline(always)]
+    fn pop_usize(ref self: Stack) -> Result<usize, EVMError> {
+        let item: u256 = self.pop()?;
+        let item: u32 = Into::<u256, Result<u32, EVMError>>::into(item)?;
+        Result::Ok(item)
+    }
+
+    /// Calls `Stack::pop` and converts it to usize
+    /// Returns `EVMError::StackError` with appropriate message
+    /// In case:
+    ///     - Stack is empty
+    #[inline(always)]
+    fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError> {
+        let item: u256 = self.pop()?;
+        let item: EthAddress = item.into();
+        Result::Ok(item)
     }
 
     /// Pops N elements from the stack.
