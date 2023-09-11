@@ -9,7 +9,7 @@ use evm::context::{
 use utils::{helpers::u256_to_bytes_array};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
-    duplication_operations, environmental_information, exchange_operations, logging_operations,
+    duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
     memory_operations, sha3, StopAndArithmeticOperationsTrait, ComparisonAndBitwiseOperationsTrait,
     system_operations, BlockInformationTrait, DuplicationOperationsTrait,
     EnvironmentInformationTrait, PushOperationsTrait, MemoryOperationTrait
@@ -535,67 +535,67 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 144 {
             // SWAP1
-            exchange_operations::exec_swap1(ref context);
+            context.exec_swap1();
         }
         if opcode == 145 {
             // SWAP2
-            exchange_operations::exec_swap2(ref context);
+            context.exec_swap2();
         }
         if opcode == 146 {
             // SWAP3
-            exchange_operations::exec_swap3(ref context);
+            context.exec_swap3();
         }
         if opcode == 147 {
             // SWAP4
-            exchange_operations::exec_swap4(ref context);
+            context.exec_swap4();
         }
         if opcode == 148 {
             // SWAP5
-            exchange_operations::exec_swap5(ref context);
+            context.exec_swap5();
         }
         if opcode == 149 {
             // SWAP6
-            exchange_operations::exec_swap6(ref context);
+            context.exec_swap6();
         }
         if opcode == 150 {
             // SWAP7
-            exchange_operations::exec_swap7(ref context);
+            context.exec_swap7();
         }
         if opcode == 151 {
             // SWAP8
-            exchange_operations::exec_swap8(ref context);
+            context.exec_swap8();
         }
         if opcode == 152 {
             // SWAP9
-            exchange_operations::exec_swap9(ref context);
+            context.exec_swap9();
         }
         if opcode == 153 {
             // SWAP10
-            exchange_operations::exec_swap10(ref context);
+            context.exec_swap10();
         }
         if opcode == 154 {
             // SWAP11
-            exchange_operations::exec_swap11(ref context);
+            context.exec_swap11();
         }
         if opcode == 155 {
             // SWAP12
-            exchange_operations::exec_swap12(ref context);
+            context.exec_swap12();
         }
         if opcode == 156 {
             // SWAP13
-            exchange_operations::exec_swap13(ref context);
+            context.exec_swap13();
         }
         if opcode == 157 {
             // SWAP14
-            exchange_operations::exec_swap14(ref context);
+            context.exec_swap14();
         }
         if opcode == 158 {
             // SWAP15
-            exchange_operations::exec_swap15(ref context);
+            context.exec_swap15();
         }
         if opcode == 159 {
             // SWAP16
-            exchange_operations::exec_swap16(ref context);
+            context.exec_swap16();
         }
         if opcode == 160 {
             // LOG0
