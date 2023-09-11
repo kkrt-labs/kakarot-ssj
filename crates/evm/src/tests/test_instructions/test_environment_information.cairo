@@ -14,8 +14,8 @@ use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
 };
 use utils::helpers::{
-    u256_to_bytes_array, load_word, ArrayExtension, ArrayExtensionTrait,
-    SpanExtension, SpanExtensionTrait
+    u256_to_bytes_array, load_word, ArrayExtension, ArrayExtensionTrait, SpanExtension,
+    SpanExtensionTrait
 };
 use integer::u32_overflowing_add;
 
