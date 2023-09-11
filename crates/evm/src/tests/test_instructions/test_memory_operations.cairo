@@ -11,6 +11,7 @@ use evm::errors::{EVMError, STACK_UNDERFLOW};
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait,
 };
+use evm::helpers::U256IntoResultU32;
 use integer::BoundedInt;
 
 
@@ -274,9 +275,12 @@ fn test_exec_msize_store_max_offset_0() {
     let mut ctx = setup_execution_context();
     ctx.stack.push(BoundedInt::<u256>::max());
     ctx.stack.push(0x00);
+    let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((ctx.stack.pop().unwrap()))
+        .unwrap();
+    let value: u256 = ctx.stack.pop().unwrap();
+    ctx.memory.store(value, offset);
 
     // When
-    ctx.exec_mstore();
     let result = ctx.exec_msize();
 
     // Then
@@ -292,6 +296,10 @@ fn test_exec_msize_store_max_offset_1() {
     let mut ctx = setup_execution_context();
     ctx.stack.push(BoundedInt::<u256>::max());
     ctx.stack.push(0x01);
+    let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((ctx.stack.pop().unwrap()))
+        .unwrap();
+    let value: u256 = ctx.stack.pop().unwrap();
+    ctx.memory.store(value, offset);
 
     // When
     ctx.exec_mstore();
@@ -300,5 +308,5 @@ fn test_exec_msize_store_max_offset_1() {
     // Then
     assert(result.is_ok(), 'should have succeeded');
     assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.pop().unwrap() == 64, 'should 32 bytes after MSTORE');
+    assert(ctx.stack.pop().unwrap() == 64, 'should 64 bytes after MSTORE');
 }
