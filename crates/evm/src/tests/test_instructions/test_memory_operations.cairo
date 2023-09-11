@@ -4,9 +4,10 @@ use evm::tests::test_utils::{
 };
 use evm::stack::StackTrait;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
-use option::OptionTrait;
+
 use starknet::EthAddressIntoFelt252;
-use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array};
+use utils::helpers::{u256_to_bytes_array};
+use utils::traits::{EthAddressIntoU256};
 use evm::errors::{EVMError, STACK_UNDERFLOW};
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait,

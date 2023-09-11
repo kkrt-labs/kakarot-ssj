@@ -1,7 +1,4 @@
 /// System imports.
-use array::ArrayTrait;
-use array::SpanTrait;
-use traits::Into;
 
 /// Internal imports.
 // TODO remove destruct imports when no longer required
@@ -17,7 +14,6 @@ use evm::instructions::{
     system_operations, BlockInformationTrait, DuplicationOperationsTrait,
     EnvironmentInformationTrait, PushOperationsTrait, MemoryOperationTrait
 };
-use result::ResultTrait;
 
 
 /// EVM instructions as defined in the Yellow Paper and the EIPs.
@@ -62,7 +58,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
             },
             Result::Err(error) => {
                 // If an error occurred, revert execution context.
-                // Currently, revert reason is a Span<u8>. 
+                // Currently, revert reason is a Span<u8>.
                 context.revert(u256_to_bytes_array(error.into()).span());
             // TODO: Revert logic
             }

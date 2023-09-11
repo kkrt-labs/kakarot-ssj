@@ -1,7 +1,3 @@
-use array::ArrayTrait;
-use array::SpanTrait;
-use traits::{Into, TryInto};
-use option::OptionTrait;
 use debug::PrintTrait;
 use starknet::{EthAddress, EthAddressIntoFelt252};
 use cmp::min;
@@ -244,18 +240,3 @@ impl SpanExtension of SpanExtensionTrait {
     }
 }
 
-// Raise a number to a power.
-fn pow(base: felt252, exp: felt252) -> felt252 {
-    if exp == 0 {
-        return 1;
-    } else {
-        return base * pow(base, exp - 1);
-    }
-}
-
-impl EthAddressIntoU256 of Into<EthAddress, u256> {
-    fn into(self: EthAddress) -> u256 {
-        let intermediate: felt252 = self.into();
-        intermediate.into()
-    }
-}

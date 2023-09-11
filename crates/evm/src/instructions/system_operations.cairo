@@ -1,8 +1,7 @@
 //! System operations.
 
 // Internal imports
-use evm::context::ExecutionContext;
-use evm::context::ExecutionContextTrait;
+use evm::context::{ExecutionContext, ExecutionContextTrait};
 
 /// CREATE
 /// # Specification: https://www.evm.codes/#f0?fork=shanghai

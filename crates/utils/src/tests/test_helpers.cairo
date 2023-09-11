@@ -1,6 +1,5 @@
 use utils::helpers;
 use utils::helpers::{SpanExtension, SpanExtensionTrait};
-use array::{ArrayTrait, SpanTrait};
 use debug::PrintTrait;
 
 #[test]
@@ -30,7 +29,7 @@ fn test_load_word() {
     let res2 = helpers::load_word(1, arr2.span());
     assert(255 == res2, 'res2: wrong load');
 
-    // Two byte values    
+    // Two byte values
     let mut arr3 = ArrayTrait::new();
     arr3.append(0x01);
     arr3.append(0x00);

@@ -2,14 +2,9 @@ use evm::stack::{Stack, StackTrait};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::Event;
 use debug::PrintTrait;
-use array::{ArrayTrait, SpanTrait};
 use utils::helpers::{ArrayExtension, ArrayExtensionTrait};
 use utils::traits::{SpanDefault, EthAddressDefault, ContractAddressDefault};
 use starknet::{EthAddress, ContractAddress};
-use box::BoxTrait;
-use nullable::NullableTrait;
-use traits::{Into, TryInto, Destruct};
-use option::OptionTrait;
 use starknet::get_caller_address;
 
 /// The call context.
@@ -29,7 +24,7 @@ struct CallContext {
 // *************************************************************************
 
 // We should not directly access the fields of the call context;
-// instead we should use the methods defined in the trait. 
+// instead we should use the methods defined in the trait.
 // This is not enforced until there are `pub` and `priv` visibility on struct fields.
 trait CallContextTrait {
     fn new(bytecode: Span<u8>, calldata: Span<u8>, value: u256) -> CallContext;
@@ -243,9 +238,9 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     /// Revert the current execution context.
-    /// 
-    /// When the execution context is reverted, no more instructions can be executed 
-    /// (it is stopped) and contract creation and contract storage writes are 
+    ///
+    /// When the execution context is reverted, no more instructions can be executed
+    /// (it is stopped) and contract creation and contract storage writes are
     /// reverted on its finalization.
     #[inline(always)]
     fn revert(ref self: ExecutionContext, revert_reason: Span<u8>) {
@@ -290,9 +285,9 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     /// Reads and return data from bytecode.
     /// The program counter is incremented accordingly.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `self` - The `ExecutionContext` instance to read the data from.
     /// * `len` - The length of the data to read from the bytecode.
     #[inline(always)]
