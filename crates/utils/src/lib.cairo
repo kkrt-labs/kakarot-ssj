@@ -10,4 +10,8 @@ mod traits;
 
 
 #[cfg(test)]
-mod tests;
+mod tests {
+    mod test_helpers;
+    mod test_math;
+    mod test_u256_signed_math;
+}
