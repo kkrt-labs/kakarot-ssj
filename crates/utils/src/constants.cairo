@@ -30,6 +30,3 @@ const POW_256_16: u256 = 0x100000000000000000000000000000000;
 
 const POW_2_128: u256 = 0x100000000000000000000000000000000;
 const POW_2_127: u128 = 0x80000000000000000000000000000000;
-
-const MAX_U128: u128 = 0xffffffffffffffffffffffffffffffff;
-const MAX_U256: u256 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;

@@ -5,10 +5,11 @@ use evm::stack::StackTrait;
 use evm::errors::STACK_UNDERFLOW;
 use evm::errors::EVMError;
 use utils::math::{Exponentiation, Bitshift};
-use utils::constants::{POW_2_127, MAX_U256};
+use utils::constants::{POW_2_127};
 use evm::context::BoxDynamicExecutionContextDestruct;
 use utils::u256_signed_math::SignedPartialOrd;
 use utils::traits::BoolIntoNumeric;
+use integer::BoundedInt;
 
 #[generate_trait]
 impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
@@ -166,7 +167,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
             0
         } else {
             // If sign is negative, set the number to -1.
-            MAX_U256
+            BoundedInt::<u256>::max()
         };
 
         if (shift > 256) {

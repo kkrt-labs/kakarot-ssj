@@ -1,4 +1,5 @@
-use integer::u256_safe_div_rem;
+use integer::{u256_safe_div_rem, BoundedInt};
+use utils::constants::POW_2_127;
 
 // Returns the negation of an integer.
 // Note that the negation of -2**255 is -2**255.
@@ -19,7 +20,7 @@ fn u256_signed_div_rem(a: u256, div: NonZero<u256>) -> (u256, u256) {
     let mut div: u256 = div.into();
 
     // When div=-1, simply return -a.
-    if div == MAX_U256 {
+    if div == BoundedInt::<u256>::max() {
         return (u256_neg(a), 0);
     }
 
