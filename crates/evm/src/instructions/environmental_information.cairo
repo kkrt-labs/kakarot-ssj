@@ -51,7 +51,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Push a word from the calldata onto the stack.
     /// # Specification: https://www.evm.codes/#35?fork=shanghai
     fn exec_calldataload(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let offset: usize = self.stack.pop_usize()?;
+        let offset: usize = self.stack.pop_u32()?;
 
         let calldata = self.call_context().calldata();
         let calldata_len = calldata.len();
@@ -94,9 +94,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#37?fork=shanghai
     fn exec_calldatacopy(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let dest_offset = self.stack.pop_usize()?;
-        let offset = self.stack.pop_usize()?;
-        let size = self.stack.pop_usize()?;
+        let dest_offset = self.stack.pop_u32()?;
+        let offset = self.stack.pop_u32()?;
+        let size = self.stack.pop_u32()?;
 
         let calldata: Span<u8> = self.call_context().calldata();
 
@@ -138,9 +138,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Copies slice of bytecode to memory.
     /// # Specification: https://www.evm.codes/#39?fork=shanghai
     fn exec_codecopy(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let dest_offset = self.stack.pop_usize()?;
-        let offset = self.stack.pop_usize()?;
-        let size = self.stack.pop_usize()?;
+        let dest_offset = self.stack.pop_u32()?;
+        let offset = self.stack.pop_u32()?;
+        let size = self.stack.pop_u32()?;
 
         let bytecode: Span<u8> = self.call_context().bytecode();
 
@@ -205,9 +205,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#3e?fork=shanghai
     fn exec_returndatacopy(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let dest_offset = self.stack.pop_usize()?;
-        let offset = self.stack.pop_usize()?;
-        let size = self.stack.pop_usize()?;
+        let dest_offset = self.stack.pop_u32()?;
+        let offset = self.stack.pop_u32()?;
+        let size = self.stack.pop_u32()?;
 
         let return_data: Span<u8> = self.return_data();
 

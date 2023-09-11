@@ -22,7 +22,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#52?fork=shanghai
     fn exec_mstore(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let offset: u32 = self.stack.pop_usize()?;
+        let offset: u32 = self.stack.pop_u32()?;
         let value: u256 = self.stack.pop()?;
 
         self.memory.store(value, offset);
@@ -81,7 +81,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save single byte to memory
     /// # Specification: https://www.evm.codes/#53?fork=shanghai
     fn exec_mstore8(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let offset = self.stack.pop_usize()?;
+        let offset = self.stack.pop_u32()?;
         let popped = self.stack.pop()?;
         let value: u8 = (popped.low & 0xFF).try_into().unwrap();
         let values = array![value].span();
