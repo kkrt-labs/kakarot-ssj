@@ -273,12 +273,7 @@ fn test_msize_initial() {
 fn test_exec_msize_store_max_offset_0() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x00);
-    let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((ctx.stack.pop().unwrap()))
-        .unwrap();
-    let value: u256 = ctx.stack.pop().unwrap();
-    ctx.memory.store(value, offset);
+    ctx.memory.store(BoundedInt::<u256>::max(), 0x00);
 
     // When
     let result = ctx.exec_msize();
@@ -294,15 +289,9 @@ fn test_exec_msize_store_max_offset_0() {
 fn test_exec_msize_store_max_offset_1() {
     // Given
     let mut ctx = setup_execution_context();
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x01);
-    let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((ctx.stack.pop().unwrap()))
-        .unwrap();
-    let value: u256 = ctx.stack.pop().unwrap();
-    ctx.memory.store(value, offset);
+    ctx.memory.store(BoundedInt::<u256>::max(), 0x01);
 
     // When
-    ctx.exec_mstore();
     let result = ctx.exec_msize();
 
     // Then
