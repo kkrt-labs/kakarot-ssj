@@ -1,7 +1,7 @@
 use core::dict::Felt252DictTrait;
 use evm::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
 use utils::{math::Exponentiation, math::WrappingExponentiation, helpers};
-use utils::constants::{POW_256_1, POW_256_7, POW_256_8, POW_256_15,};
+use utils::constants::{POW_256_1_U128, POW_256_7_U128, POW_256_8_U128, POW_256_15_U128};
 
 mod internal {
     use evm::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
@@ -219,21 +219,21 @@ fn test__load__should_load_an_element_from_the_memory() {
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_1() {
     internal::load_should_load_an_element_from_the_memory_with_offset(
-        8, 2 * POW_256_8.try_into().unwrap(), POW_256_8.try_into().unwrap()
+        8, 2 * POW_256_8_U128, POW_256_8_U128
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_2() {
     internal::load_should_load_an_element_from_the_memory_with_offset(
-        7, 2 * POW_256_7.try_into().unwrap(), POW_256_7.try_into().unwrap()
+        7, 2 * POW_256_7_U128, POW_256_7_U128
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_3() {
     internal::load_should_load_an_element_from_the_memory_with_offset(
-        23, 3 * POW_256_7.try_into().unwrap(), 2 * POW_256_7.try_into().unwrap()
+        23, 3 * POW_256_7_U128, 2 * POW_256_7_U128
     );
 }
 
@@ -241,15 +241,13 @@ fn test__load__should_load_an_element_from_the_memory_with_offset_3() {
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_4() {
     internal::load_should_load_an_element_from_the_memory_with_offset(
-        33, 4 * POW_256_1.try_into().unwrap(), 3 * POW_256_1.try_into().unwrap()
+        33, 4 * POW_256_1_U128, 3 * POW_256_1_U128
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test__load__should_load_an_element_from_the_memory_with_offset_5() {
-    internal::load_should_load_an_element_from_the_memory_with_offset(
-        63, 0, 4 * POW_256_15.try_into().unwrap()
-    );
+    internal::load_should_load_an_element_from_the_memory_with_offset(63, 0, 4 * POW_256_15_U128);
 }
 
 #[test]
