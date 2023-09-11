@@ -64,11 +64,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// # Specification: https://www.evm.codes/#15?fork=shanghai
     fn exec_iszero(ref self: ExecutionContext) -> Result<(), EVMError> {
         let popped = self.stack.pop()?;
-        let result = if popped == 0 {
-            1
-        } else {
-            0
-        };
+        let result: u256 = (popped == 0).into();
         self.stack.push(result)
     }
 
@@ -124,7 +120,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
             return self.stack.push(0);
         }
 
-        // Right shift value by offset bits and then take the least significant byte by applying modulo 256.
+        // Right shift value by offset bits and then take the least significant byte.
         let result = x.shr((31 - i) * 8) & 0xFF;
         self.stack.push(result)
     }

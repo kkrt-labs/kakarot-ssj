@@ -5,7 +5,8 @@ use evm::helpers::U256IntoResultU32;
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
 };
-use utils::helpers::{EthAddressIntoU256, load_word};
+use utils::helpers::{load_word};
+use utils::traits::{EthAddressIntoU256};
 use evm::memory::MemoryTrait;
 use integer::u32_overflowing_add;
 
@@ -85,8 +86,8 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get the size of return data.
     /// # Specification: https://www.evm.codes/#36?fork=shanghai
     fn exec_calldatasize(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let result: u256 = self.call_context().calldata().len().into();
-        self.stack.push(result)
+        let size: u256 = self.call_context().calldata().len().into();
+        self.stack.push(size)
     }
 
     /// 0x37 - CALLDATACOPY operation
@@ -130,8 +131,8 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get size of bytecode running in current environment.
     /// # Specification: https://www.evm.codes/#38?fork=shanghai
     fn exec_codesize(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let size: u32 = self.call_context().bytecode().len();
-        self.stack.push(size.into())
+        let size: u256 = self.call_context().bytecode().len().into();
+        self.stack.push(size)
     }
 
     /// 0x39 - CODECOPY

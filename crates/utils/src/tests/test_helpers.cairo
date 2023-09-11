@@ -1,6 +1,5 @@
 use utils::helpers;
 use utils::helpers::{SpanExtension, SpanExtensionTrait};
-
 use debug::PrintTrait;
 
 #[test]

@@ -33,3 +33,10 @@ impl BoolIntoNumeric<T, impl TZeroable: Zeroable<T>, impl TOneable: Oneable<T>> 
         }
     }
 }
+
+impl EthAddressIntoU256 of Into<EthAddress, u256> {
+    fn into(self: EthAddress) -> u256 {
+        let intermediate: felt252 = self.into();
+        intermediate.into()
+    }
+}
