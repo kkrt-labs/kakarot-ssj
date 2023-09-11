@@ -8,7 +8,6 @@ trait IExternallyOwnedAccount<TContractState> {
 
 #[starknet::contract]
 mod ExternallyOwnedAccount {
-    use array::{ArrayTrait, SpanTrait};
     use starknet::ContractAddress;
 
     #[storage]

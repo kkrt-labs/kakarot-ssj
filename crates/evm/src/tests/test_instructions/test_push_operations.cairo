@@ -2,7 +2,7 @@ use evm::instructions::PushOperationsTrait;
 use evm::context::BoxDynamicExecutionContextDestruct;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::setup_execution_context_with_bytecode;
-use array::ArrayTrait;
+
 use evm::context::ExecutionContextTrait;
 
 fn get_n_0xFF(mut n: u8) -> Span<u8> {

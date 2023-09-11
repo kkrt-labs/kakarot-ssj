@@ -6,7 +6,7 @@ use evm::tests::test_utils::{
     setup_execution_context_with_calldata, evm_address, callvalue
 };
 use evm::stack::StackTrait;
-use option::OptionTrait;
+
 use starknet::EthAddressIntoFelt252;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::context::{

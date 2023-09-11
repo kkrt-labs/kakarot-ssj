@@ -4,7 +4,7 @@ use evm::tests::test_utils::{
 };
 use evm::stack::StackTrait;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
-use option::OptionTrait;
+
 use starknet::EthAddressIntoFelt252;
 use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array};
 use evm::errors::{EVMError, STACK_UNDERFLOW};

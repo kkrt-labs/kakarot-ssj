@@ -4,10 +4,10 @@ use evm::tests::test_utils::setup_execution_context;
 use evm::stack::StackTrait;
 use evm::context::BoxDynamicExecutionContextDestruct;
 
-use option::OptionTrait;
+
 use debug::PrintTrait;
 use integer::BoundedInt;
-use result::ResultTrait;
+
 
 // ensures all values start from index `from` upto index `to` of stack are `0x0`
 fn ensures_zeros(ref stack: Stack, from: u32, to: u32) {

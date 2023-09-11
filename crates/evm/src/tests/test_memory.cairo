@@ -1,15 +1,13 @@
 use core::dict::Felt252DictTrait;
-use core::debug::PrintTrait;
+use debug::PrintTrait;
 use evm::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
 use utils::{math::Exponentiation, math::WrappingExponentiation, helpers};
-use array::{ArrayTrait, SpanTrait};
-use traits::{Into, TryInto};
-use option::OptionTrait;
+
 
 mod internal {
     use evm::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
     use utils::{math::Exponentiation, helpers};
-    use array::{ArrayTrait, SpanTrait};
+
     fn load_should_load_an_element_from_the_memory_with_offset(
         offset: usize, low: u128, high: u128
     ) {

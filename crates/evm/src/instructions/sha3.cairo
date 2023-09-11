@@ -1,8 +1,7 @@
 //! SHA3.
 
 // Internal imports
-use evm::context::ExecutionContext;
-use evm::context::ExecutionContextTrait;
+use evm::context::{ExecutionContextTrait, ExecutionContext};
 
 /// SHA3 operation.
 /// Hashes n bytes in memory at a given offset in memory.

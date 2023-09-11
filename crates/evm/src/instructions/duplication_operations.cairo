@@ -4,9 +4,6 @@
 use evm::context::ExecutionContext;
 use evm::context::ExecutionContextTrait;
 use evm::context::BoxDynamicExecutionContextDestruct;
-use core::TryInto;
-use core::option::OptionTrait;
-use result::ResultTrait;
 use evm::errors::EVMError;
 
 mod internal {
@@ -14,8 +11,6 @@ mod internal {
     use evm::context::ExecutionContextTrait;
     use evm::context::BoxDynamicExecutionContextDestruct;
     use evm::stack::StackTrait;
-    use traits::Into;
-    use result::ResultTrait;
     use evm::errors::EVMError;
 
     /// Generic DUP operation
