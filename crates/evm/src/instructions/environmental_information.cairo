@@ -101,28 +101,13 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
         let calldata: Span<u8> = self.call_context().calldata();
 
-        let slice_size = if (offset + size > calldata.len()) {
-            calldata.len() - offset
+        let copied: Span<u8> = if (offset + size > calldata.len()) {
+            calldata.slice(offset, calldata.len() - offset)
         } else {
-            size
+            calldata.slice(offset, size)
         };
 
-        let data_to_copy: Span<u8> = calldata.slice(offset, slice_size);
-        self.memory.store_n(data_to_copy, dest_offset);
-
-        // For out of bound bytes, 0s will be copied.
-        if (slice_size < size) {
-            let mut out_of_bounds_bytes: Array<u8> = ArrayTrait::new();
-            loop {
-                if (out_of_bounds_bytes.len() + slice_size == size) {
-                    break;
-                }
-
-                out_of_bounds_bytes.append(0);
-            };
-
-            self.memory.store_n(out_of_bounds_bytes.span(), dest_offset + slice_size);
-        }
+        self.memory.store_padded_segment(dest_offset, size, copied);
 
         Result::Ok(())
     }
@@ -154,22 +139,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
             bytecode.slice(offset, size)
         };
 
-        self.memory.store_n(copied, dest_offset);
-
-        // For out of bound bytes, 0s will be copied.
-        let slice_size = copied.len();
-        if (slice_size < size) {
-            let mut out_of_bounds_bytes: Array<u8> = ArrayTrait::new();
-            loop {
-                if (out_of_bounds_bytes.len() + slice_size == size) {
-                    break;
-                }
-
-                out_of_bounds_bytes.append(0);
-            };
-
-            self.memory.store_n(out_of_bounds_bytes.span(), dest_offset + slice_size);
-        }
+        self.memory.store_padded_segment(dest_offset, size, copied);
 
         Result::Ok(())
     }

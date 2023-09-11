@@ -3,7 +3,9 @@ use integer::{
     u256_as_non_zero
 };
 use cmp::{max};
-use utils::{helpers, math::Exponentiation, math::WrappingExponentiation};
+use utils::{
+    helpers, helpers::SpanExtensionTrait, math::Exponentiation, math::WrappingExponentiation
+};
 use debug::PrintTrait;
 
 
@@ -18,6 +20,7 @@ trait MemoryTrait {
     fn size(ref self: Memory) -> usize;
     fn store(ref self: Memory, element: u256, offset: usize);
     fn store_n(ref self: Memory, elements: Span<u8>, offset: usize);
+    fn store_padded_segment(ref self: Memory, offset: usize, length: usize, source: Span<u8>);
     fn ensure_length(ref self: Memory, length: usize) -> usize;
     fn load(ref self: Memory, offset: usize) -> (u256, usize);
     fn load_n(
@@ -124,6 +127,32 @@ impl MemoryImpl of MemoryTrait {
         self.store_last_word(final_chunk, offset_in_chunk_f, mask_f, final_bytes);
     }
 
+    /// Stores a span of N bytes into memory at a specified offset with padded out of bounds with 0s.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `Memory` instance to store the bytes in.
+    /// * `offset` - The offset within memory to store the bytes at.
+    /// * `length` - The length of bytes to store in memory.
+    /// * `source` - A span of bytes to store in memory.
+    #[inline(always)]
+    fn store_padded_segment(ref self: Memory, offset: usize, length: usize, source: Span<u8>) {
+        if length == 0 {
+            return;
+        }
+
+        // Expand memory if needed
+        self.ensure_length(offset + length);
+
+        // Get elements to store
+        let elements = if (source.len() < length) {
+            source.pad_right(length - source.len())
+        } else {
+            source.slice(0, length)
+        };
+
+        self.store_n(elements, offset);
+    }
 
     /// Ensures that the memory is at least `length` bytes long. Expands if necessary.
     /// # Returns
