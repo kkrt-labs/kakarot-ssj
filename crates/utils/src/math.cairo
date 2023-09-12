@@ -97,20 +97,6 @@ trait Bitshift<T> {
 
 }
 
-impl Felt252BitshiftImpl of Bitshift<felt252> {
-    // felt252 should normally not be used for a such operation.
-    // However, taking optimisation into account, there are cases that arise
-    // where using them is safe when values are bounded, and it is less expensive than their u256 counterparty.
-    fn shl(self: felt252, shift: felt252) -> felt252 {
-        panic_with_felt252('felt252 shl not implemented')
-    }
-
-    fn shr(self: felt252, shift: felt252) -> felt252 {
-        panic_with_felt252('felt252 shr not implemented')
-    }
-
-}
-
 impl U256BitshiftImpl of Bitshift<u256> {
     fn shl(self: u256, shift: u256) -> u256 {
         if shift > 255 {
