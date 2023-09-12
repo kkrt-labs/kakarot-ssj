@@ -12,7 +12,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// MLOAD operation.
     /// Load word from memory and push to stack.
     fn exec_mload(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let offset: u32 = self.stack.pop_usize()?;
+        let offset: usize = self.stack.pop_usize()?;
         let (result, _) = self.memory.load(offset);
         self.stack.push(result)
     }
@@ -21,7 +21,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#52?fork=shanghai
     fn exec_mstore(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let offset: u32 = self.stack.pop_usize()?;
+        let offset: usize = self.stack.pop_usize()?;
         let value: u256 = self.stack.pop()?;
 
         self.memory.store(value, offset);
