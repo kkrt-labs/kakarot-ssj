@@ -86,8 +86,8 @@ impl InternalSha3Methods of InternalSha3Trait {
     /// # Arguments
     ///
     /// * `to_hash` - A reference to the array containing previous bytes
-    /// * `value` - The `u256` element to get the last u64 input from
-    /// * `size` - The amonut of bytes to append to to_hash
+    /// * `value` - The `u256` element to get the last input from
+    /// * `size` - The amount of bytes to append to to_hash
     #[inline(always)]
     fn get_last_input(ref to_hash: Array<u64>, value: u256, size: u32) -> u64 {
         let ((high_h, low_h), (high_l, low_l)) = split_u256_into_u64_little(value);
