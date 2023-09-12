@@ -12,7 +12,7 @@ use evm::instructions::{
     duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
     memory_operations, sha3, StopAndArithmeticOperationsTrait, ComparisonAndBitwiseOperationsTrait,
     system_operations, BlockInformationTrait, DuplicationOperationsTrait,
-    EnvironmentInformationTrait, PushOperationsTrait, MemoryOperationTrait, exchange_operations
+    EnvironmentInformationTrait, PushOperationsTrait, MemoryOperationTrait
 };
 
 

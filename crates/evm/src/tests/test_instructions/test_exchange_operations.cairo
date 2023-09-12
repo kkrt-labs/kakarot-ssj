@@ -16,7 +16,7 @@ fn test_exec_swap1() {
     ctx.stack.push(1).unwrap();
     ctx.exec_swap1();
 
-    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be now 1');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be now 0xf');
 }
 
 
@@ -29,7 +29,7 @@ fn test_exec_swap2() {
     ctx.stack.push(0).unwrap();
     ctx.stack.push(1).unwrap();
     ctx.exec_swap2();
-    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be now[0xf]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be now 0xf');
 }
 
 #[test]
@@ -42,7 +42,7 @@ fn test_exec_swap3() {
     ctx.stack.push(0).unwrap();
     ctx.stack.push(1).unwrap();
     ctx.exec_swap3();
-    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be now 0xf]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be now 0xf');
 }
 
 #[test]
@@ -56,7 +56,7 @@ fn test_exec_swap4() {
     ctx.stack.push(0).unwrap();
     ctx.stack.push(1).unwrap();
     ctx.exec_swap4();
-    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf');
 }
 
 
@@ -72,7 +72,7 @@ fn test_exec_swap5() {
     ctx.stack.push(0).unwrap();
     ctx.stack.push(1).unwrap();
     ctx.exec_swap5();
-    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf');
 }
 
 #[test]
@@ -88,7 +88,7 @@ fn test_exec_swap6() {
     ctx.stack.push(0).unwrap();
     ctx.stack.push(1).unwrap();
     ctx.exec_swap6();
-    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf');
 }
 
 
@@ -106,7 +106,7 @@ fn test_exec_swap7() {
     ctx.stack.push(0).unwrap();
     ctx.stack.push(1).unwrap();
     ctx.exec_swap7();
-    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf');
 }
 
 #[test]
