@@ -7,7 +7,7 @@ use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::errors::EVMError;
 use evm::helpers::U256IntoResultU32;
 use keccak::{cairo_keccak, u128_split};
-use utils::helpers::{u256_to_bytes_array};
+use utils::helpers::{split_u256_into_u64_little, u256_bytes_reverse};
 
 use array::ArrayTrait;
 
@@ -35,28 +35,20 @@ impl Sha3Impl of Sha3Trait {
             if size < 32 {
                 break;
             }
-            // Pad left the hash input with zeroes for out-of-bound bytes
-            if slot_to_read > self.memory.bytes_len {
-                to_hash.append(0);
-                to_hash.append(0);
-                to_hash.append(0);
-                to_hash.append(0);
-                slot_to_read += 32;
-                size -= 32;
-                continue;
+            let mut loaded = 0;
+
+            if slot_to_read <= self.memory.bytes_len {
+                loaded = self.memory.load_internal(slot_to_read);
             }
+
             // Load the 32 words and reverse the bytes order,
-            let mut loaded = self.memory.load_internal(slot_to_read);
-            loaded.low = integer::u128_byte_reverse(loaded.low);
-            loaded.high = integer::u128_byte_reverse(loaded.high);
+            let ((high_h, low_h), (high_l, low_l)) = split_u256_into_u64_little(loaded);
 
             // Split the loaded word into u64 to feed cairo_keccak
-            let (high_l, low_l) = u128_split(loaded.high);
-            let (high_h, low_h) = u128_split(loaded.low);
-            to_hash.append(low_l);
-            to_hash.append(high_l);
             to_hash.append(low_h);
             to_hash.append(high_h);
+            to_hash.append(low_l);
+            to_hash.append(high_l);
 
             slot_to_read += 32;
             size -= 32;
@@ -70,41 +62,33 @@ impl Sha3Impl of Sha3Trait {
                 self.memory.load_internal(slot_to_read)
             };
 
-            loaded.low = integer::u128_byte_reverse(loaded.low);
-            loaded.high = integer::u128_byte_reverse(loaded.high);
-            let (high_l, low_l) = u128_split(loaded.high);
-            let (high_h, low_h) = u128_split(loaded.low);
+            let ((high_h, low_h), (high_l, low_l)) = split_u256_into_u64_little(loaded);
 
             // Assign the last input accordingly to required bytes amount
             if size < 8 {
-                last_input = low_l;
+                last_input = low_h;
             } else if size < 16 {
                 size -= 8;
-                to_hash.append(low_l);
-                last_input = high_l;
+                to_hash.append(low_h);
+                last_input = high_h;
             } else if size < 24 {
                 size -= 16;
-                to_hash.append(low_l);
-                to_hash.append(high_l);
+                to_hash.append(low_h);
+                to_hash.append(high_h);
                 last_input = low_h;
             } else {
                 size -= 24;
-                to_hash.append(low_l);
-                to_hash.append(high_l);
                 to_hash.append(low_h);
-                last_input = high_h;
+                to_hash.append(high_h);
+                to_hash.append(low_l);
+                last_input = high_l;
             }
         }
 
-        self.memory.ensure_length(offset + init_size);
+        self.memory.load(offset + init_size);
 
         let mut hash = cairo_keccak(ref to_hash, last_input, size);
-        hash.low = integer::u128_byte_reverse(hash.low);
-        hash.high = integer::u128_byte_reverse(hash.high);
-        let tmp = hash.low;
-        hash.low = hash.high;
-        hash.high = tmp;
 
-        self.stack.push(hash)
+        self.stack.push(u256_bytes_reverse(hash))
     }
 }
