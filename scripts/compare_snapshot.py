@@ -119,7 +119,7 @@ def compare_snapshots(current, previous):
             )
         elif prev > cur:
             improvements.append(
-                f"{key} {prev} --> {cur} | {format(percentage_change, '.2f')} %"
+                f"{key} {prev} --> {cur} {format(percentage_change, '.2f')} %"
             )
 
     return improvements, worsened
@@ -169,6 +169,8 @@ def main():
     improvements, worsened = compare_snapshots(current_snapshots, previous_snapshot)
     cur_gas, prev_gas = total_gas_used(current_snapshots, previous_snapshot)
     print_colored_output(improvements, worsened, (cur_gas - prev_gas) * 100 / prev_gas)
+    if worsened:
+        raise ValueError("Gas usage increased")
 
 
 if __name__ == "__main__":
