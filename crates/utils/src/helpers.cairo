@@ -1,7 +1,12 @@
 use debug::PrintTrait;
 use starknet::{EthAddress, EthAddressIntoFelt252};
 use cmp::min;
-use utils::constants;
+use utils::constants::{
+    POW_256_0_U256, POW_256_1_U256, POW_256_2_U256, POW_256_3_U256, POW_256_4_U256, POW_256_5_U256,
+    POW_256_6_U256, POW_256_7_U256, POW_256_8_U256, POW_256_9_U256, POW_256_10_U256,
+    POW_256_11_U256, POW_256_12_U256, POW_256_13_U256, POW_256_14_U256, POW_256_15_U256,
+    POW_256_16_U256,
+};
 
 
 /// Ceils a number of bits to the next word (32 bytes)
@@ -27,39 +32,39 @@ fn pow256_rev(i: usize) -> u256 {
     }
 
     if i == 0 {
-        return 340282366920938463463374607431768211456;
+        return POW_256_16_U256;
     } else if i == 1 {
-        return 1329227995784915872903807060280344576;
+        return POW_256_15_U256;
     } else if i == 2 {
-        return 5192296858534827628530496329220096;
+        return POW_256_14_U256;
     } else if i == 3 {
-        return 20282409603651670423947251286016;
+        return POW_256_13_U256;
     } else if i == 4 {
-        return 79228162514264337593543950336;
+        return POW_256_12_U256;
     } else if i == 5 {
-        return 309485009821345068724781056;
+        return POW_256_11_U256;
     } else if i == 6 {
-        return 1208925819614629174706176;
+        return POW_256_10_U256;
     } else if i == 7 {
-        return 4722366482869645213696;
+        return POW_256_9_U256;
     } else if i == 8 {
-        return 18446744073709551616;
+        return POW_256_8_U256;
     } else if i == 9 {
-        return 72057594037927936;
+        return POW_256_7_U256;
     } else if i == 10 {
-        return 281474976710656;
+        return POW_256_6_U256;
     } else if i == 11 {
-        return 1099511627776;
+        return POW_256_5_U256;
     } else if i == 12 {
-        return 4294967296;
+        return POW_256_4_U256;
     } else if i == 13 {
-        return 16777216;
+        return POW_256_3_U256;
     } else if i == 14 {
-        return 65536;
+        return POW_256_2_U256;
     } else if i == 15 {
-        return 256;
+        return POW_256_1_U256;
     } else {
-        return 1;
+        return POW_256_0_U256;
     }
 }
 
