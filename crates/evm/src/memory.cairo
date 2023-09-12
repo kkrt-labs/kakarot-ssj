@@ -15,6 +15,7 @@ struct Memory {
 
 trait MemoryTrait {
     fn new() -> Memory;
+    fn size(ref self: Memory) -> usize;
     fn store(ref self: Memory, element: u256, offset: usize);
     fn store_n(ref self: Memory, elements: Span<u8>, offset: usize);
     fn ensure_length(ref self: Memory, length: usize) -> usize;
@@ -29,6 +30,12 @@ impl MemoryImpl of MemoryTrait {
     #[inline(always)]
     fn new() -> Memory {
         Memory { items: Default::default(), bytes_len: 0, }
+    }
+
+    /// Return size of the memory.
+    #[inline(always)]
+    fn size(ref self: Memory) -> usize {
+        self.bytes_len
     }
 
     /// Stores a 32-bytes element into the memory.
