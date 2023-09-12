@@ -5,10 +5,11 @@ use evm::stack::StackTrait;
 use evm::errors::STACK_UNDERFLOW;
 use evm::errors::EVMError;
 use utils::math::{Exponentiation, Bitshift};
-use utils::u256_signed_math::{TWO_POW_127, MAX_U256};
+use utils::constants::{POW_2_127};
 use evm::context::BoxDynamicExecutionContextDestruct;
 use utils::u256_signed_math::SignedPartialOrd;
 use utils::traits::BoolIntoNumeric;
+use integer::BoundedInt;
 
 #[generate_trait]
 impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
@@ -160,13 +161,13 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         let value: u256 = *popped[1];
 
         // Checks the MSB bit sign for a 256-bit integer
-        let positive = value.high < TWO_POW_127;
+        let positive = value.high < POW_2_127;
         let sign = if positive {
             // If sign is positive, set it to 0.
             0
         } else {
             // If sign is negative, set the number to -1.
-            MAX_U256
+            BoundedInt::<u256>::max()
         };
 
         if (shift > 256) {
