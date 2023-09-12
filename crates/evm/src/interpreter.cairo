@@ -12,7 +12,7 @@ use evm::instructions::{
     duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
     memory_operations, sha3, StopAndArithmeticOperationsTrait, ComparisonAndBitwiseOperationsTrait,
     system_operations, BlockInformationTrait, DuplicationOperationsTrait,
-    EnvironmentInformationTrait, PushOperationsTrait, MemoryOperationTrait
+    EnvironmentInformationTrait, PushOperationsTrait, MemoryOperationTrait, exchange_operations
 };
 
 
@@ -535,67 +535,67 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 144 {
             // SWAP1
-            context.exec_swap1();
+            return context.exec_swap1();
         }
         if opcode == 145 {
             // SWAP2
-            context.exec_swap2();
+            return context.exec_swap2();
         }
         if opcode == 146 {
             // SWAP3
-            context.exec_swap3();
+            return context.exec_swap3();
         }
         if opcode == 147 {
             // SWAP4
-            context.exec_swap4();
+            return context.exec_swap4();
         }
         if opcode == 148 {
             // SWAP5
-            context.exec_swap5();
+            return context.exec_swap5();
         }
         if opcode == 149 {
             // SWAP6
-            context.exec_swap6();
+            return context.exec_swap6();
         }
         if opcode == 150 {
             // SWAP7
-            context.exec_swap7();
+            return context.exec_swap7();
         }
         if opcode == 151 {
             // SWAP8
-            context.exec_swap8();
+            return context.exec_swap8();
         }
         if opcode == 152 {
             // SWAP9
-            context.exec_swap9();
+            return context.exec_swap9();
         }
         if opcode == 153 {
             // SWAP10
-            context.exec_swap10();
+            return context.exec_swap10();
         }
         if opcode == 154 {
             // SWAP11
-            context.exec_swap11();
+            return context.exec_swap11();
         }
         if opcode == 155 {
             // SWAP12
-            context.exec_swap12();
+            return context.exec_swap12();
         }
         if opcode == 156 {
             // SWAP13
-            context.exec_swap13();
+            return context.exec_swap13();
         }
         if opcode == 157 {
             // SWAP14
-            context.exec_swap14();
+            return context.exec_swap14();
         }
         if opcode == 158 {
             // SWAP15
-            context.exec_swap15();
+            return context.exec_swap15();
         }
         if opcode == 159 {
             // SWAP16
-            context.exec_swap16();
+            return context.exec_swap16();
         }
         if opcode == 160 {
             // LOG0

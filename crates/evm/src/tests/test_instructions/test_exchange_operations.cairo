@@ -9,283 +9,301 @@ use core::result::ResultTrait;
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap1() {
+fn test_exec_swap1() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap1();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be now [1]');
+
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be now 1');
 }
+
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap2() {
+fn test_exec_swap2() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap2();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be now[2]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be now[0xf]');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap3() {
+fn test_exec_swap3() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap3();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be now [3]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be now 0xf]');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap4() {
+fn test_exec_swap4() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap4();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [4]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf]');
 }
 
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap5() {
+fn test_exec_swap5() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap5();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [5]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf]');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap6() {
+fn test_exec_swap6() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap6();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [6]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf]');
 }
 
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap7() {
+fn test_exec_swap7() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap7();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [7]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf]');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap8() {
+fn test_exec_swap8() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap8();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [8]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf');
 }
 
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap9() {
+fn test_exec_swap9() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap9();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [9]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap10() {
+fn test_exec_swap10() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap10();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [10]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap11() {
+fn test_exec_swap11() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap11();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [11]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap12() {
+fn test_exec_swap12() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap12();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [12]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap13() {
+fn test_exec_swap13() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap13();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [13]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap14() {
+fn test_exec_swap14() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap14();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [14]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap15() {
+fn test_exec_swap15() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap15();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [15]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_swap16() {
+fn test_exec_swap16() {
     let mut ctx = setup_execution_context();
-    ctx.stack.push(2).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
-    ctx.stack.push(3).unwrap();
+    // given
+    ctx.stack.push(0xf).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(0).unwrap();
+    ctx.stack.push(1).unwrap();
     ctx.exec_swap16();
-    assert(ctx.stack.peek().unwrap() == 2, 'Top should be  now [16]');
+    assert(ctx.stack.peek().unwrap() == 0xf, 'Top should be  now 0xf');
 }
