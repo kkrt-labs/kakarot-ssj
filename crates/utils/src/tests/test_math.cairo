@@ -219,3 +219,36 @@ fn test_wrapping_shr_to_zero() {
     assert(result == expected, 'wrong result');
 }
 
+#[test]
+#[available_gas(20000000)]
+fn test_felt252_wrapping_shr() {
+    // Given
+    let a = 0x0091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade6263a_felt252;
+    // 1-byte shift is an 8-bit shift
+    let shift = 2 * 8;
+
+    // When
+    let result = a.wrapping_shr(shift);
+
+    // Then
+    let expected = 0x00000091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade6_felt252;
+    assert(result == expected, 'wrong result');
+}
+
+
+#[test]
+#[available_gas(20000000000)]
+fn test_felt252_wrapping_shr_to_zero() {
+    // Given
+    let a = 0x0091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade6263a_felt252;
+    // 1-byte shift is an 8-bit shift
+    let shift = 32 * 8;
+
+    // When
+    let result = a.wrapping_shr(shift);
+
+    // Then
+    let expected = 0_felt252;
+    assert(result == expected, 'wrong result');
+}
+

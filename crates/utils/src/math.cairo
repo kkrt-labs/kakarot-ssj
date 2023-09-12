@@ -135,7 +135,22 @@ impl Felt252WrappingBitshiftImpl of WrappingBitshift<felt252> {
     }
 
     fn wrapping_shr(self: felt252, shift: felt252) -> felt252 {
-        panic_with_felt252('felt252 shl not implemented')
+        
+        // converting to u256
+        let val: u256 = self.into();
+        let shift_u256: u256 = shift.into();
+
+        // early return to save gas if shift > 255 
+        if shift_u256 > 255 {
+            return 0;
+        }
+
+        let shifted_u256 = val / 2_u256.wrapping_pow(shift_u256);
+
+        // convert back to felt252
+        let result: felt252 = shifted_u256.try_into().unwrap();
+
+        result 
     }
 }
 
