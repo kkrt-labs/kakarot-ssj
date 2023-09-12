@@ -99,7 +99,7 @@ fn split_word_128(value: u256, ref dst: Array<u8>) {
     split_word(value, 16, ref dst)
 }
 
-/// Splits a u256 into 4 u64 in little-endian.
+/// Splits a u256 into 4 little endian u64.
 /// Returns §(high_high, high_low),(low_high, low_low))
 fn split_u256_into_u64_little(value: u256) -> ((u64, u64), (u64, u64)) {
     let mut to_split = value;
@@ -109,7 +109,7 @@ fn split_u256_into_u64_little(value: u256) -> ((u64, u64), (u64, u64)) {
     (u128_split(to_split.high), u128_split(to_split.low))
 }
 
-/// Splits a u256 into 4 u64 in little-endian.
+/// Reverse the bytes of an u256
 fn u256_bytes_reverse(value: u256) -> u256 {
     let mut reversed: u256 = 0;
     reversed.high = integer::u128_byte_reverse(value.low);

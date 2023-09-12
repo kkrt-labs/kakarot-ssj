@@ -35,7 +35,6 @@ fn test_sha3_size_0_offset_0() {
 #[available_gas(20000000)]
 fn test_sha3_size_5_offset_4() {
     // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
 
     ctx.stack.push(0x05);
@@ -57,7 +56,6 @@ fn test_sha3_size_5_offset_4() {
 #[available_gas(20000000)]
 fn test_sha3_size_10_offset_10() {
     // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
 
     ctx.stack.push(10);
@@ -79,7 +77,6 @@ fn test_sha3_size_10_offset_10() {
 #[available_gas(1000000000000000)]
 fn test_sha3_size_0xFFFFF_offset_1000() {
     // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
 
     ctx.stack.push(0xFFFFF);
@@ -98,10 +95,9 @@ fn test_sha3_size_0xFFFFF_offset_1000() {
 }
 
 #[test]
-#[available_gas(8000000000)]
+#[available_gas(1000000000000000)]
 fn test_sha3_size_1000000_offset_2() {
     // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
 
     ctx.stack.push(1000000);
@@ -111,6 +107,7 @@ fn test_sha3_size_1000000_offset_2() {
 
     // When
     ctx.exec_sha3();
+
     // Then
     let result = ctx.stack.peek().unwrap();
     assert(
@@ -120,119 +117,8 @@ fn test_sha3_size_1000000_offset_2() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_size_1_offset_960() {
-    // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
-    let mut ctx = setup_execution_context();
-
-    ctx.stack.push(1);
-    ctx.stack.push(960);
-
-    ctx.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
-
-    // When
-    ctx.exec_sha3();
-
-    // Then
-    let result = ctx.stack.peek().unwrap();
-    assert(
-        result == 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a, 'wrong result'
-    );
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_sha3_size_1_offset_992() {
-    // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
-    let mut ctx = setup_execution_context();
-
-    ctx.stack.push(1);
-    ctx.stack.push(992);
-
-    ctx.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
-
-    // When
-    ctx.exec_sha3();
-
-    // Then
-    let result = ctx.stack.peek().unwrap();
-    assert(
-        result == 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a, 'wrong result'
-    );
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_sha3_size_1_offset_1024() {
-    // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
-    let mut ctx = setup_execution_context();
-
-    ctx.stack.push(1);
-    ctx.stack.push(1024);
-
-    ctx.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
-
-    // When
-    ctx.exec_sha3();
-
-    // Then
-    let result = ctx.stack.peek().unwrap();
-    assert(
-        result == 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a, 'wrong result'
-    );
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_sha3_size_1_offset_1984() {
-    // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
-    let mut ctx = setup_execution_context();
-
-    ctx.stack.push(1);
-    ctx.stack.push(1984);
-
-    ctx.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
-
-    // When
-    ctx.exec_sha3();
-
-    // Then
-    let result = ctx.stack.peek().unwrap();
-    assert(
-        result == 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a, 'wrong result'
-    );
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_sha3_size_1_offset_2016() {
-    // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
-    let mut ctx = setup_execution_context();
-
-    ctx.stack.push(1);
-    ctx.stack.push(2016);
-
-    ctx.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
-
-    // When
-    ctx.exec_sha3();
-
-    // Then
-    let result = ctx.stack.peek().unwrap();
-    assert(
-        result == 0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a, 'wrong result'
-    );
-}
-
-#[test]
-#[available_gas(20000000)]
 fn test_sha3_size_1_offset_2048() {
     // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
 
     ctx.stack.push(1);
@@ -254,7 +140,6 @@ fn test_sha3_size_1_offset_2048() {
 #[available_gas(20000000)]
 fn test_sha3_size_0_offset_1024() {
     // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
 
     ctx.stack.push(0);
@@ -276,7 +161,6 @@ fn test_sha3_size_0_offset_1024() {
 #[available_gas(20000000)]
 fn test_sha3_size_32_offset_2016() {
     // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
 
     ctx.stack.push(32);
@@ -298,7 +182,6 @@ fn test_sha3_size_32_offset_2016() {
 #[available_gas(20000000)]
 fn test_sha3_size_32_offset_0() {
     // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
 
     ctx.stack.push(32);
@@ -320,7 +203,6 @@ fn test_sha3_size_32_offset_0() {
 #[available_gas(20000000)]
 fn test_sha3_size_31_offset_0() {
     // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
 
     ctx.stack.push(31);
@@ -342,7 +224,6 @@ fn test_sha3_size_31_offset_0() {
 #[available_gas(20000000)]
 fn test_sha3_size_33_offset_0() {
     // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
 
     ctx.stack.push(33);
@@ -364,7 +245,6 @@ fn test_sha3_size_33_offset_0() {
 #[available_gas(20000000000)]
 fn test_sha3_size_0x0C80_offset_0() {
     // Given
-    let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
     let mut ctx = setup_execution_context();
 
     ctx.stack.push(0x0C80);

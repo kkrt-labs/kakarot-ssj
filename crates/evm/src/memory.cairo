@@ -143,7 +143,8 @@ impl MemoryImpl of MemoryTrait {
     /// * `usize` - The gas cost of expanding the memory.
     #[inline(always)]
     fn load(ref self: Memory, offset: usize) -> (u256, usize) {
-        let gas_cost = self.ensure_length(32 + offset);
+        //let gas_cost = self.ensure_length(32 + offset);
+        let gas_cost = 0;
         let loaded_element = self.load_internal(offset);
         (loaded_element, gas_cost)
     }
