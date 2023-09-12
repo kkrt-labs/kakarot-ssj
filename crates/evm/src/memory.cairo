@@ -127,11 +127,11 @@ impl MemoryImpl of MemoryTrait {
         self.store_last_word(final_chunk, offset_in_chunk_f, mask_f, final_bytes);
     }
 
-    /// Stores a span of N bytes into memory at a specified offset with padded out of bounds with 0s.
+    /// Stores a span of N bytes into memory at a specified offset with padded with 0s to match the size parameter.
     ///
     /// # Arguments
     ///
-    /// * `self` - A mutable reference to the `Memory` instance to store the bytes in.
+    /// * `self` - The `Memory` instance to store the bytes in.
     /// * `offset` - The offset within memory to store the bytes at.
     /// * `length` - The length of bytes to store in memory.
     /// * `source` - A span of bytes to store in memory.
@@ -141,17 +141,26 @@ impl MemoryImpl of MemoryTrait {
             return;
         }
 
-        // Expand memory if needed
-        self.ensure_length(offset + length);
-
-        // Get elements to store
-        let elements = if (source.len() < length) {
-            source.pad_right(length - source.len())
+        // For performance reasons, we don't add the zeros directly to the source, which would generate an implicit copy, which might be expensive if the source is big.
+        // Instead, we'll copy the source into memory, then create a new span containing the zeros.
+        // TODO: optimize this with a specific function
+        let slice_size = if (length > source.len()) {
+            source.len()
         } else {
-            source.slice(0, length)
+            length
         };
 
-        self.store_n(elements, offset);
+        let data_to_copy: Span<u8> = source.slice(0, slice_size);
+        self.store_n(data_to_copy, offset);
+
+        // For out of bound bytes, 0s will be copied.
+        if (slice_size < length) {
+            let out_of_bounds_bytes: Span<u8> = ArrayTrait::new()
+                .span()
+                .clone_pad_right(length - source.len());
+
+            self.store_n(out_of_bounds_bytes, offset + slice_size);
+        }
     }
 
     /// Ensures that the memory is at least `length` bytes long. Expands if necessary.

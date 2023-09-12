@@ -218,7 +218,7 @@ impl SpanExtension of SpanExtensionTrait {
     ///
     /// A new `Span<u8>` instance which has a length equal to the length of the input
     /// span plus the number of zeroes specified.
-    fn pad_right(self: Span<u8>, n_zeroes: usize) -> Span<u8> {
+    fn clone_pad_right(self: Span<u8>, n_zeroes: usize) -> Span<u8> {
         let mut res: Array<u8> = array![];
         let mut i = 0;
         loop {

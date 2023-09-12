@@ -159,6 +159,6 @@ fn test_split_word() {
 #[available_gas(2000000000)]
 fn test_clone_pad_zeroes() {
     let mut original: Span<u8> = array![1, 2, 3, 4].span();
-    let res = original.pad_right(3);
+    let res = original.clone_pad_right(3);
     assert(res == array![1, 2, 3, 4, 0, 0, 0].span(), 'padding mismatch');
 }
