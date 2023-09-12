@@ -34,7 +34,7 @@ trait StackTrait {
     fn new() -> Stack;
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError>;
     fn pop(ref self: Stack) -> Result<u256, EVMError>;
-    fn pop_u32(ref self: Stack) -> Result<usize, EVMError>;
+    fn pop_usize(ref self: Stack) -> Result<usize, EVMError>;
     fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError>;
     fn pop_n(ref self: Stack, n: usize) -> Result<Array<u256>, EVMError>;
     fn peek(ref self: Stack) -> Option<u256>;
@@ -82,7 +82,7 @@ impl StackImpl of StackTrait {
     ///     - Stack is empty
     ///     - Type conversion failed
     #[inline(always)]
-    fn pop_u32(ref self: Stack) -> Result<usize, EVMError> {
+    fn pop_usize(ref self: Stack) -> Result<usize, EVMError> {
         let item: u256 = self.pop()?;
         let item: u32 = Into::<u256, Result<u32, EVMError>>::into(item)?;
         Result::Ok(item)
