@@ -4,7 +4,7 @@ use evm::context::ExecutionContextTrait;
 use evm::stack::StackTrait;
 use evm::errors::STACK_UNDERFLOW;
 use evm::errors::EVMError;
-use utils::math::{Exponentiation, Bitshift};
+use utils::math::{Exponentiation, Bitshift, WrappingBitshift};
 use utils::constants::{POW_2_127};
 use evm::context::BoxDynamicExecutionContextDestruct;
 use utils::u256_signed_math::SignedPartialOrd;
