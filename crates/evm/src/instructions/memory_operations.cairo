@@ -12,8 +12,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// MLOAD operation.
     /// Load word from memory and push to stack.
     fn exec_mload(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop()?;
-        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into(popped)?;
+        let offset: u32 = self.stack.pop_usize()?;
         let (result, _) = self.memory.load(offset);
         self.stack.push(result)
     }
