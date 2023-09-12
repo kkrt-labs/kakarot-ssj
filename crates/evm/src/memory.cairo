@@ -1,17 +1,9 @@
-use traits::Index;
-use array::SpanTrait;
-use array::ArrayTrait;
-use clone::Clone;
-use dict::Felt252Dict;
-use dict::Felt252DictTrait;
 use integer::{
     u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_div_rem,
     u256_as_non_zero
 };
 use cmp::{max};
-use traits::{TryInto, Into};
 use utils::{helpers, math::Exponentiation, math::WrappingExponentiation};
-use option::OptionTrait;
 use debug::PrintTrait;
 
 
@@ -23,6 +15,7 @@ struct Memory {
 
 trait MemoryTrait {
     fn new() -> Memory;
+    fn size(ref self: Memory) -> usize;
     fn store(ref self: Memory, element: u256, offset: usize);
     fn store_n(ref self: Memory, elements: Span<u8>, offset: usize);
     fn ensure_length(ref self: Memory, length: usize) -> usize;
@@ -37,6 +30,12 @@ impl MemoryImpl of MemoryTrait {
     #[inline(always)]
     fn new() -> Memory {
         Memory { items: Default::default(), bytes_len: 0, }
+    }
+
+    /// Return size of the memory.
+    #[inline(always)]
+    fn size(ref self: Memory) -> usize {
+        self.bytes_len
     }
 
     /// Stores a 32-bytes element into the memory.
@@ -388,7 +387,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
             let w: u128 = self.items.get(initial_chunk.into());
             let w_l = w.into() % mask_i;
             let w_lh = w_l / mask_f;
-            helpers::split_word(w_lh, elements_len, ref elements)
+            helpers::split_word(w_lh, elements_len, ref elements);
+            return;
         }
 
         // Otherwise.

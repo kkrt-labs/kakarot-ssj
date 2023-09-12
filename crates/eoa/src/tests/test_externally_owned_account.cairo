@@ -6,11 +6,6 @@ mod test_external_owned_account {
     };
     use starknet::class_hash::Felt252TryIntoClassHash;
     use starknet::{deploy_syscall, ContractAddress, get_contract_address, contract_address_const};
-    use array::{ArrayTrait};
-    use traits::{Into, TryInto};
-    use result::ResultTrait;
-    use option::OptionTrait;
-
     use starknet::testing::{set_caller_address, set_contract_address};
 
     fn deploy_eoa() -> IExternallyOwnedAccountDispatcher {

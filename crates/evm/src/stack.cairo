@@ -15,30 +15,12 @@
 //! ```
 
 // Core lib imports
-use dict::Felt252DictTrait;
-use option::OptionTrait;
-use array::ArrayTrait;
-use traits::Into;
-use result::{ResultTrait, Result};
+
 use utils::constants;
 use debug::PrintTrait;
-use box::BoxTrait;
 use nullable::{nullable_from_box, NullableTrait};
 use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW};
 
-
-// TODO remove this trait once merged in corelib
-trait NullableTraitExt<T> {
-    fn new(value: T) -> Nullable<T>;
-}
-
-impl NullableTraitExtImpl of NullableTraitExt<u256> {
-    #[inline(always)]
-    fn new(value: u256) -> Nullable<u256> {
-        let nullable = nullable_from_box(BoxTrait::new(value));
-        nullable
-    }
-}
 
 #[derive(Destruct, Default)]
 struct Stack {
@@ -64,7 +46,7 @@ impl StackImpl of StackTrait {
         Default::default()
     }
 
-    /// Pushes a new bytes32 word onto the stack. 
+    /// Pushes a new bytes32 word onto the stack.
     /// If the stack is full, returns with a StackOverflow error.
     #[inline(always)]
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError> {
@@ -72,7 +54,7 @@ impl StackImpl of StackTrait {
         if self.len() == constants::STACK_MAX_DEPTH {
             return Result::Err(EVMError::StackError(STACK_OVERFLOW));
         }
-        self.items.insert(self.len.into(), NullableTraitExt::new(item));
+        self.items.insert(self.len.into(), NullableTrait::new(item));
         self.len += 1;
         Result::Ok(())
     }

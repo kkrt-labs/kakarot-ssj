@@ -1,18 +1,15 @@
-use result::{ResultTrait, Result};
-use core::Into;
-
 // STACK
-const STACK_OVERFLOW: felt252 = 'Kakarot: StackOverflow';
-const STACK_UNDERFLOW: felt252 = 'Kakarot: StackUnderflow';
+const STACK_OVERFLOW: felt252 = 'KKT: StackOverflow';
+const STACK_UNDERFLOW: felt252 = 'KKT: StackUnderflow';
 
 // INSTRUCTIONS
-const PC_OUT_OF_BOUNDS: felt252 = 'Kakarot: pc >= bytecode length';
+const PC_OUT_OF_BOUNDS: felt252 = 'KKT: pc >= bytecode length';
 
 // TYPE CONVERSION
-const TYPE_CONVERSION_ERROR: felt252 = 'Kakarot: type conversion error';
+const TYPE_CONVERSION_ERROR: felt252 = 'KKT: type conversion error';
 
 // RETURNDATA
-const RETURNDATA_OUT_OF_BOUNDS_ERROR: felt252 = 'Kakarot: ReturnDataOutOfBounds';
+const RETURNDATA_OUT_OF_BOUNDS_ERROR: felt252 = 'KKT: ReturnDataOutOfBounds';
 
 #[derive(Drop, Copy, PartialEq)]
 enum EVMError {

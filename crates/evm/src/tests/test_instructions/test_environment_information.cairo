@@ -1,3 +1,4 @@
+use array::{ArrayTrait};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::tests::test_utils::{
@@ -5,14 +6,17 @@ use evm::tests::test_utils::{
     setup_execution_context_with_calldata, evm_address, callvalue
 };
 use evm::stack::StackTrait;
-use option::OptionTrait;
+
 use starknet::EthAddressIntoFelt252;
-use utils::helpers::{EthAddressIntoU256, u256_to_bytes_array, load_word};
+use utils::traits::{EthAddressIntoU256};
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
 };
-use utils::helpers::{ArrayExtension, ArrayExtensionTrait};
+use utils::helpers::{
+    u256_to_bytes_array, load_word, ArrayExtension, ArrayExtensionTrait, SpanExtension,
+    SpanExtensionTrait
+};
 use integer::u32_overflowing_add;
 
 // *************************************************************************
@@ -60,6 +64,97 @@ fn test__exec_callvalue() {
 }
 
 // *************************************************************************
+// 0x35: CALLDATALOAD
+// *************************************************************************
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldataload() {
+    // Given
+    let calldata = u256_to_bytes_array(
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    );
+    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+    let offset: u32 = 0;
+    ctx.stack.push(offset.into());
+
+    // When
+    ctx.exec_calldataload();
+
+    // Then
+    let result: u256 = ctx.stack.pop().unwrap();
+    assert(
+        result == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+        'wrong data value'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldataload_with_offset() {
+    // Given
+    let calldata = u256_to_bytes_array(
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    );
+    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+    let offset: u32 = 31;
+    ctx.stack.push(offset.into());
+
+    // When
+    ctx.exec_calldataload();
+
+    // Then
+    let result: u256 = ctx.stack.pop().unwrap();
+
+    assert(
+        result == 0xFF00000000000000000000000000000000000000000000000000000000000000,
+        'wrong results'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldataload_with_offset_beyond_calldata() {
+    // Given
+    let calldata = u256_to_bytes_array(
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    );
+    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+    let offset: u32 = calldata.len() + 1;
+    ctx.stack.push(offset.into());
+
+    // When
+    ctx.exec_calldataload();
+
+    // Then
+    let result: u256 = ctx.stack.pop().unwrap();
+    assert(result == 0, 'result should be 0');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldataload_with_offset_conversion_error() {
+    // Given
+    let calldata = u256_to_bytes_array(
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    );
+    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+    let offset: u256 = 5000000000;
+    ctx.stack.push(offset);
+
+    // When
+    let result = ctx.exec_calldataload();
+
+    // Then
+    assert(result.is_err(), 'should return error');
+    assert(
+        result.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
+        'should return ConversionError'
+    );
+}
+
+// *************************************************************************
 // 0x36: CALLDATASIZE
 // *************************************************************************
 
@@ -76,6 +171,103 @@ fn test_calldata_size() {
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
     assert(ctx.stack.peek().unwrap() == calldata.len().into(), 'stack top is not calldatasize');
+}
+
+// *************************************************************************
+// 0x37: CALLDATACOPY
+// *************************************************************************
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldatacopy_type_conversion_error() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+
+    // When
+    let res = ctx.exec_calldatacopy();
+
+    // Then
+    assert(res.is_err(), 'should return error');
+    assert(
+        res.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
+        'should return ConversionError'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldatacopy_basic() {
+    test_calldatacopy(32, 0, 3, array![4, 5, 6].span());
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldatacopy_with_offset() {
+    test_calldatacopy(32, 2, 1, array![6].span());
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldatacopy_with_out_of_bound_bytes() {
+    // For out of bound bytes, 0s will be copied.
+    test_calldatacopy(32, 0, 8, array![4, 5, 6].span().pad_right(5));
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldatacopy_with_out_of_bound_bytes_multiple_words() {
+    // For out of bound bytes, 0s will be copied.
+    test_calldatacopy(32, 0, 34, array![4, 5, 6].span().pad_right(31));
+}
+
+fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Span<u8>) {
+    // Given
+    let mut ctx = setup_execution_context();
+    let calldata: Span<u8> = ctx.call_context().calldata();
+
+    ctx.stack.push(size.into());
+    ctx.stack.push(offset.into());
+    ctx.stack.push(dest_offset.into());
+
+    // Memory initialization with a value to verify that if the offset + size is out of the bound bytes, 0's have been copied.
+    // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
+    let mut i = 0;
+    loop {
+        if i == (size / 32) + 1 {
+            break;
+        }
+
+        ctx
+            .memory
+            .store(
+                0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+                dest_offset + (i * 32)
+            );
+
+        let initial: u256 = ctx.memory.load_internal(dest_offset + (i * 32)).into();
+
+        assert(
+            initial == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+            'memory has not been initialized'
+        );
+
+        i += 1;
+    };
+
+    // When
+    ctx.exec_calldatacopy();
+
+    // Then
+    assert(ctx.stack.is_empty(), 'stack should be empty');
+
+    let mut results: Array<u8> = ArrayTrait::new();
+    ctx.memory.load_n_internal(size, ref results, dest_offset);
+
+    assert(results.span() == expected, 'wrong data value');
 }
 
 // *************************************************************************
@@ -226,7 +418,6 @@ fn test_returndatasize() {
     let mut ctx = setup_execution_context();
     ctx.set_return_data(return_data);
 
-    // When
     ctx.exec_returndatasize();
 
     // Then
@@ -389,107 +580,4 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         i += 1;
     };
     assert(results.span() == return_data.slice(offset, size), 'wrong data value');
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_calldataload() {
-    // Given
-    let calldata = u256_to_bytes_array(
-        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-    );
-    let calldata_len = calldata.len();
-
-    let mut ctx = setup_execution_context_with_calldata(calldata.span());
-
-    let offset: u32 = 0;
-
-    ctx.stack.push(offset.into());
-
-    // When
-    ctx.exec_calldataload();
-
-    // Then
-    let result: u256 = ctx.stack.pop().unwrap();
-    assert(
-        result == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-        'wrong data value'
-    );
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_calldataload_with_offset() {
-    // Given
-    let calldata = u256_to_bytes_array(
-        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-    );
-    let calldata_len = calldata.len();
-
-    let mut ctx = setup_execution_context_with_calldata(calldata.span());
-
-    let offset: u32 = 31;
-
-    ctx.stack.push(offset.into());
-
-    // When
-    ctx.exec_calldataload();
-
-    // Then
-    let result: u256 = ctx.stack.pop().unwrap();
-
-    assert(
-        result == 0xFF00000000000000000000000000000000000000000000000000000000000000,
-        'wrong results'
-    );
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_calldataload_with_offset_beyond_calldata() {
-    // Given
-    let calldata = u256_to_bytes_array(
-        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-    );
-    let calldata_len = calldata.len();
-
-    let mut ctx = setup_execution_context_with_calldata(calldata.span());
-
-    let offset: u32 = calldata_len + 1;
-
-    ctx.stack.push(offset.into());
-
-    // When
-    ctx.exec_calldataload();
-
-    // Then
-    let result: u256 = ctx.stack.pop().unwrap();
-    assert(result == 0, 'result should be 0');
-}
-
-
-#[test]
-#[available_gas(20000000)]
-fn test_calldataload_with_offset_conversion_error() {
-    // Given
-    let calldata = u256_to_bytes_array(
-        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-    );
-    let calldata_len = calldata.len();
-
-    let mut ctx = setup_execution_context_with_calldata(calldata.span());
-
-    let offset: u256 = 5000000000;
-
-    ctx.stack.push(offset);
-
-    // When
-    let result = ctx.exec_calldataload();
-
-    // Then
-    assert(result.is_err(), 'should return error');
-    assert(
-        result.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
-        'should return ConversionError'
-    );
 }

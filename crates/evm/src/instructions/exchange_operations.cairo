@@ -1,12 +1,10 @@
 //! Exchange Operations.
 
 // Internal imports
-use evm::context::ExecutionContext;
-use evm::context::ExecutionContextTrait;
+use evm::context::{ExecutionContext, ExecutionContextTrait};
 
 mod internal {
-    use evm::context::ExecutionContext;
-    use evm::context::ExecutionContextTrait;
+    use evm::context::{ExecutionContext, ExecutionContextTrait};
 
     /// Generic SWAP operation
     /// Exchange 1st and i-th stack items

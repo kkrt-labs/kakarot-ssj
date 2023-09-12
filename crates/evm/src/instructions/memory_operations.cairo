@@ -5,7 +5,6 @@ use evm::context::{
 use evm::errors::EVMError;
 use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
-use result::ResultTrait;
 use evm::helpers::U256IntoResultU32;
 
 #[generate_trait]
@@ -42,11 +41,12 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Get the value of memory size.
     /// # Specification: https://www.evm.codes/#59?fork=shanghai
     fn exec_msize(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let msize: u256 = self.memory.size().into();
+        self.stack.push(msize)
     }
 
     /// 0x56 - JUMP operation
-    /// The JUMP instruction changes the pc counter. 
+    /// The JUMP instruction changes the pc counter.
     /// The new pc target has to be a JUMPDEST opcode.
     /// # Specification: https://www.evm.codes/#56?fork=shanghai
     fn exec_jump(ref self: ExecutionContext) -> Result<(), EVMError> {

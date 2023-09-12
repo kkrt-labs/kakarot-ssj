@@ -1,10 +1,4 @@
 // Core lib imports
-use array::ArrayTrait;
-use traits::Into;
-use traits::TryInto;
-use option::OptionTrait;
-use dict::Felt252DictTrait;
-use result::ResultTrait;
 
 // Internal imports
 use evm::stack::StackTrait;
@@ -53,9 +47,9 @@ fn test__len__should_return_the_length_of_the_stack() {
 #[cfg(test)]
 mod push {
     use super::StackTrait;
-    use option::OptionTrait;
+
     use super::constants;
-    use result::ResultTrait;
+
     use evm::errors::{EVMError, STACK_OVERFLOW};
 
     #[test]
@@ -105,9 +99,8 @@ mod push {
 #[cfg(test)]
 mod pop {
     use super::StackTrait;
-    use array::ArrayTrait;
-    use option::OptionTrait;
-    use result::ResultTrait;
+
+
     use evm::errors::{EVMError, STACK_UNDERFLOW};
 
     #[test]
@@ -182,8 +175,8 @@ mod pop {
 #[cfg(test)]
 mod peek {
     use super::StackTrait;
-    use option::OptionTrait;
-    use result::ResultTrait;
+
+
     use evm::errors::{EVMError, STACK_UNDERFLOW};
 
     #[test]
@@ -253,7 +246,7 @@ mod peek {
 #[cfg(test)]
 mod swap {
     use super::StackTrait;
-    use result::ResultTrait;
+
     use evm::errors::{EVMError, STACK_UNDERFLOW};
 
     #[test]

@@ -1,7 +1,4 @@
 use starknet::{ContractAddress, EthAddress};
-use array::ArrayTrait;
-use traits::Default;
-
 use evm::context::{CallContext, ExecutionContext, ExecutionSummary, ExecutionContextTrait};
 use evm::interpreter::EVMInterpreterTrait;
 
@@ -13,7 +10,7 @@ fn execute(
     gas_limit: u64,
     gas_price: u64,
 ) {
-    /// TODO: implement the execute function. 
+    /// TODO: implement the execute function.
     /// TODO: This function should run the given bytecode with the given calldata and parameters.
     let mut return_data = Default::default();
     // Create new execution context.
