@@ -1,5 +1,7 @@
 use integer::{u256_overflowing_add, BoundedInt, u512};
-use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift};
+use utils::math::{
+    Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift
+};
 
 #[test]
 #[available_gas(20000000)]
