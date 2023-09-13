@@ -1,8 +1,8 @@
-use utils::u256_signed_math::{u256_neg, u256_signed_div_rem, ALL_ONES, MAX_U256};
-use integer::u256_safe_div_rem;
+use utils::u256_signed_math::{u256_neg, u256_signed_div_rem, SignedPartialOrd};
+use utils::constants;
+use integer::{u256_safe_div_rem, BoundedInt};
 use debug::PrintTrait;
-use traits::{Into, TryInto};
-use option::OptionTrait;
+
 
 const MAX_SIGNED_VALUE: u256 = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
 const MIN_SIGNED_VALUE: u256 = 0x8000000000000000000000000000000000000000000000000000000000000000;
@@ -11,34 +11,36 @@ const MIN_SIGNED_VALUE: u256 = 0x80000000000000000000000000000000000000000000000
 #[test]
 #[available_gas(20000000)]
 fn test_u256_neg() {
+    let max_u256 = BoundedInt::<u256>::max();
     let x = u256_neg(1);
     // 0000_0001 turns into 1111_1110 + 1 = 1111_1111
-    assert(x.low == MAX_U256.low && x.high == MAX_U256.high, 'u256_neg failed.');
+    assert(x.low == max_u256.low && x.high == max_u256.high, 'u256_neg failed.');
 
     let x = u256_neg(0);
     // 0000_0000 turns into 1111_1111 + 1 = 0000_0000
     assert(x == 0, 'u256_neg with zero failed.');
 
-    let x = MAX_U256;
+    let x = max_u256;
     // 1111_1111 turns into 0000_0000 + 1 = 0000_0001
-    assert(u256_neg(x) == 1, 'u256_neg with MAX_U256 failed.');
+    assert(u256_neg(x) == 1, 'u256_neg with max_u256 failed.');
 }
 
 
 #[test]
 #[available_gas(20000000)]
 fn test_signed_div_rem() {
+    let max_u256 = BoundedInt::<u256>::max();
     // Division by -1
     assert(
-        u256_signed_div_rem(1, MAX_U256.try_into().unwrap()) == (MAX_U256, 0),
+        u256_signed_div_rem(1, max_u256.try_into().unwrap()) == (max_u256, 0),
         'Division by -1 failed - 1.'
     ); // 1 / -1 == -1
     assert(
-        u256_signed_div_rem(MAX_U256, MAX_U256.try_into().unwrap()) == (1, 0),
+        u256_signed_div_rem(max_u256, max_u256.try_into().unwrap()) == (1, 0),
         'Division by -1 failed - 2.'
     ); // -1 / -1 == 1
     assert(
-        u256_signed_div_rem(0, MAX_U256.try_into().unwrap()) == (0, 0), 'Division by -1 failed - 3.'
+        u256_signed_div_rem(0, max_u256.try_into().unwrap()) == (0, 0), 'Division by -1 failed - 3.'
     ); // 0 / -1 == 0
 
     // Simple Division
@@ -51,14 +53,14 @@ fn test_signed_div_rem() {
 
     // Dividing a Negative Number
     assert(
-        u256_signed_div_rem(MAX_U256, 1_u256.try_into().unwrap()) == (MAX_U256, 0),
+        u256_signed_div_rem(max_u256, 1_u256.try_into().unwrap()) == (max_u256, 0),
         'Dividing a neg num failed - 1.'
     ); // -1 / 1 == -1
     assert(
         u256_signed_div_rem(
             0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE,
             0x2_u256.try_into().unwrap()
-        ) == (MAX_U256, 0),
+        ) == (max_u256, 0),
         'Dividing a neg num failed - 2.'
     ); // -2 / 2 == -1
     // - 2**255 / 2 == - 2**254
@@ -158,4 +160,420 @@ fn test_signed_div_rem_by_zero() {
     assert(
         u256_signed_div_rem(0, 0_u256.try_into().unwrap()) == (0, 0), 'Zero Division failed - 1.'
     );
+}
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_slt() {
+    // https://github.com/ethereum/go-ethereum/blob/master/core/vm/testdata/testcases_slt.json
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        true
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        true
+    );
+    assert_slt(
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        true
+    );
+    assert_slt(
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        true
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        true
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        false
+    );
+    assert_slt(
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        false
+    );
+    assert_slt(
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        false
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        true
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        true
+    );
+    assert_slt(
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        true
+    );
+    assert_slt(
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        true
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        true
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        true
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        false
+    );
+    assert_slt(
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        false
+    );
+    assert_slt(
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        false
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        true
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        true
+    );
+    assert_slt(
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        true
+    );
+    assert_slt(
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        true
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        true
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        true
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        true
+    );
+    assert_slt(
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        false
+    );
+    assert_slt(
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        false
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        true
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        true
+    );
+    assert_slt(
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        true
+    );
+    assert_slt(
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        true
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        true
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        true
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        true
+    );
+    assert_slt(
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        true
+    );
+    assert_slt(
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        false
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        true
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        true
+    );
+    assert_slt(
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        true
+    );
+    assert_slt(
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        true
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        false
+    );
+    assert_slt(
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        false
+    );
+    assert_slt(
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        false
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        true
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        false
+    );
+    assert_slt(
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        false
+    );
+    assert_slt(
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        false
+    );
+    assert_slt(
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        false
+    );
+    assert_slt(
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        false
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        true
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        true
+    );
+    assert_slt(
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        false
+    );
+    assert_slt(
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000001,
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        false
+    );
+    assert_slt(
+        0x0000000000000000000000000000000000000000000000000000000000000005,
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        false
+    );
+    assert_slt(
+        0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe,
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        false
+    );
+    assert_slt(
+        0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        false
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000000,
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        true
+    );
+    assert_slt(
+        0x8000000000000000000000000000000000000000000000000000000000000001,
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        true
+    );
+    assert_slt(
+        0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb,
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        true
+    );
+    assert_slt(
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        false
+    );
+}
+
+fn assert_slt(a: u256, b: u256, expected: bool) {
+    assert(a.slt(b) == expected, 'slt failed');
 }

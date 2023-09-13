@@ -1,10 +1,8 @@
 // Imports, may need adjustments based on actual dependencies and modules
-use traits::Into;
-use traits::TryInto;
-use option::OptionTrait;
+
 use debug::PrintTrait;
 use traits::PartialEq;
-use array::{ArrayTrait, SpanTrait};
+
 use starknet::{EthAddress, ContractAddress};
 use starknet::testing::{set_contract_address, set_caller_address};
 
@@ -29,16 +27,16 @@ fn no_op() {}
 fn test_call_context_new() {
     // When
     let bytecode: Span<u8> = array![1, 2, 3].span();
-    let call_data: Span<u8> = array![4, 5, 6].span();
+    let calldata: Span<u8> = array![4, 5, 6].span();
     let value: u256 = callvalue();
 
-    let call_ctx = CallContextTrait::new(bytecode, call_data, value);
+    let call_ctx = CallContextTrait::new(bytecode, calldata, value);
     // TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)
     no_op();
 
     // Then
     assert(call_ctx.bytecode() == bytecode, 'wrong bytecode');
-    assert(call_ctx.call_data() == call_data, 'wrong call_data');
+    assert(call_ctx.calldata() == calldata, 'wrong calldata');
     assert(call_ctx.value() == callvalue(), 'wrong value');
 }
 

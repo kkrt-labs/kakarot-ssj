@@ -1,11 +1,10 @@
-use core::result::ResultTrait;
 use evm::tests::test_utils::setup_execution_context;
 use evm::instructions::StopAndArithmeticOperationsTrait;
 use evm::stack::StackTrait;
 use evm::context::ExecutionContextTrait;
-use option::OptionTrait;
+
 use integer::BoundedInt;
-use traits::{TryInto, Into};
+
 use evm::context::BoxDynamicExecutionContextDestruct;
 
 #[test]

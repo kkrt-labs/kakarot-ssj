@@ -4,3 +4,5 @@ mod test_duplication_operations;
 mod test_block_information;
 mod test_environment_information;
 mod test_push_operations;
+mod test_memory_operations;
+mod test_system_operations;

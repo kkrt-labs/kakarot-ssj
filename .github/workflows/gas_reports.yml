@@ -2,8 +2,12 @@ name: Compare Snapshot
 
 on: pull_request
 
+permissions:
+  pull-requests: write
+
 jobs:
   compare-snapshot:
+    permissions: write-all
     runs-on: ubuntu-latest
 
     steps:
@@ -31,11 +35,3 @@ jobs:
           result="${result//$'\n'/'%0A'}"
           result="${result//$'\r'/'%0D'}"
           echo "::set-output name=result::${result}"
-
-      - name: Comment on PR
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          message: "Snapshot Comparison Report:\n\n${{
-            steps.run-script.outputs.result }}" # Access the result output variable
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          comment_tag: gas-report

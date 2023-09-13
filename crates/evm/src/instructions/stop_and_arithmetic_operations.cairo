@@ -4,18 +4,13 @@ use integer::{
     u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod,
     u512_safe_div_rem_by_u256, u256_try_as_non_zero
 };
-use traits::{TryInto};
-use option::OptionTrait;
 
 
-use evm::context::ExecutionContext;
-use evm::context::ExecutionContextTrait;
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::{ExecutionContextTrait, ExecutionContext, BoxDynamicExecutionContextDestruct};
 use evm::stack::StackTrait;
 use utils::u256_signed_math::u256_signed_div_rem;
-use utils::math::{Exponentiation, ExponentiationModulo, u256_wide_add};
+use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
 use evm::errors::EVMError;
-use result::ResultTrait;
 
 #[generate_trait]
 impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
@@ -28,7 +23,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     }
 
     /// 0x01 - ADD
-    /// Addition operation 
+    /// Addition operation
     /// a + b: integer result of the addition modulo 2^256.
     /// # Specification: https://www.evm.codes/#01?fork=shanghai
     fn exec_add(ref self: ExecutionContext) -> Result<(), EVMError> {
@@ -37,8 +32,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         // Compute the addition
         let (result, _) = u256_overflowing_add(*popped[0], *popped[1]);
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x02 - MUL
@@ -51,8 +45,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         // Compute the multiplication
         let (result, _) = u256_overflow_mul(*popped[0], *popped[1]);
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x03 - SUB
@@ -65,13 +58,12 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         // Compute the substraction
         let (result, _) = u256_overflow_sub(*popped[0], *popped[1]);
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x04 - DIV
     /// If the denominator is 0, the result will be 0.
-    /// a / b: integer result of the integer division. 
+    /// a / b: integer result of the integer division.
     /// # Specification: https://www.evm.codes/#04?fork=shanghai
     fn exec_div(ref self: ExecutionContext) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
@@ -87,13 +79,12 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x05 - SDIV
     /// Signed division operation
-    /// a / b: integer result of the signed integer division. 
+    /// a / b: integer result of the signed integer division.
     /// If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#05?fork=shanghai
     fn exec_sdiv(ref self: ExecutionContext) -> Result<(), EVMError> {
@@ -109,8 +100,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x06 - MOD
@@ -131,8 +121,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x07 - SMOD
@@ -153,8 +142,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             },
             Option::None => 0,
         };
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x08 - ADDMOD
@@ -179,8 +167,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x09 - MULMOD operation.
@@ -205,8 +192,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             Option::None => 0,
         };
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x0A - EXP
@@ -218,10 +204,9 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let a = *popped[0];
         let b = *popped[1];
 
-        let result = a.pow_mod(b);
+        let result = a.wrapping_pow(b);
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 
     /// 0x0B - SIGNEXTEND
@@ -235,7 +220,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// To efficiently implement this algorithm we can implement it using a mask, which is all zeroes until the t-th bit included,
     /// and all ones afterwards. The index of `t` when numbered from the RIGHT is s = `255 - t` = `8b + 7`; so the integer value
     /// of the mask used is 2^s - 1.
-    /// Let v be the t-th bit of x. If v == 1, then the output should be all 1s until the t-th bit included, 
+    /// Let v be the t-th bit of x. If v == 1, then the output should be all 1s until the t-th bit included,
     /// followed by the remaining bits of x; which is corresponds to (x | !mask).
     /// If v == 0, then the output should be all 0s until the t-th bit included, followed by the remaining bits of x;
     /// which corresponds to (x & mask).
@@ -262,7 +247,6 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
             x
         };
 
-        self.stack.push(result)?;
-        Result::Ok(())
+        self.stack.push(result)
     }
 }

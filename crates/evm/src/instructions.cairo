@@ -16,6 +16,7 @@ mod exchange_operations;
 mod logging_operations;
 
 mod memory_operations;
+use memory_operations::MemoryOperationTrait;
 
 mod push_operations;
 use push_operations::PushOperationsTrait;
@@ -26,3 +27,4 @@ mod stop_and_arithmetic_operations;
 use stop_and_arithmetic_operations::StopAndArithmeticOperationsTrait;
 
 mod system_operations;
+use system_operations::SystemOperationsTrait;

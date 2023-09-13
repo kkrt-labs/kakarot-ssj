@@ -1,12 +1,13 @@
-use array::ArrayTrait;
-use array::SpanTrait;
-use traits::{Into, TryInto};
-use option::OptionTrait;
 use debug::PrintTrait;
 use starknet::{EthAddress, EthAddressIntoFelt252};
 use cmp::min;
+use utils::constants::{
+    POW_256_0_U256, POW_256_1_U256, POW_256_2_U256, POW_256_3_U256, POW_256_4_U256, POW_256_5_U256,
+    POW_256_6_U256, POW_256_7_U256, POW_256_8_U256, POW_256_9_U256, POW_256_10_U256,
+    POW_256_11_U256, POW_256_12_U256, POW_256_13_U256, POW_256_14_U256, POW_256_15_U256,
+    POW_256_16_U256,
+};
 
-use utils::constants;
 
 /// Ceils a number of bits to the next word (32 bytes)
 ///
@@ -31,39 +32,39 @@ fn pow256_rev(i: usize) -> u256 {
     }
 
     if i == 0 {
-        return 340282366920938463463374607431768211456;
+        return POW_256_16_U256;
     } else if i == 1 {
-        return 1329227995784915872903807060280344576;
+        return POW_256_15_U256;
     } else if i == 2 {
-        return 5192296858534827628530496329220096;
+        return POW_256_14_U256;
     } else if i == 3 {
-        return 20282409603651670423947251286016;
+        return POW_256_13_U256;
     } else if i == 4 {
-        return 79228162514264337593543950336;
+        return POW_256_12_U256;
     } else if i == 5 {
-        return 309485009821345068724781056;
+        return POW_256_11_U256;
     } else if i == 6 {
-        return 1208925819614629174706176;
+        return POW_256_10_U256;
     } else if i == 7 {
-        return 4722366482869645213696;
+        return POW_256_9_U256;
     } else if i == 8 {
-        return 18446744073709551616;
+        return POW_256_8_U256;
     } else if i == 9 {
-        return 72057594037927936;
+        return POW_256_7_U256;
     } else if i == 10 {
-        return 281474976710656;
+        return POW_256_6_U256;
     } else if i == 11 {
-        return 1099511627776;
+        return POW_256_5_U256;
     } else if i == 12 {
-        return 4294967296;
+        return POW_256_4_U256;
     } else if i == 13 {
-        return 16777216;
+        return POW_256_3_U256;
     } else if i == 14 {
-        return 65536;
+        return POW_256_2_U256;
     } else if i == 15 {
-        return 256;
+        return POW_256_1_U256;
     } else {
-        return 1;
+        return POW_256_0_U256;
     }
 }
 
@@ -103,7 +104,7 @@ fn split_word_128(value: u256, ref dst: Array<u8>) {
 }
 
 
-/// Loads a sequence of bytes into a single u128 in big-endian
+/// Loads a sequence of bytes into a single u256 in big-endian
 ///
 /// # Arguments
 /// * `len` - The number of bytes to load
@@ -148,7 +149,7 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
         if counter == 16 {
             break ();
         }
-        bytes_arr.append((value.low % 256).try_into().unwrap());
+        bytes_arr.append((value.low & 0xFF).try_into().unwrap());
         value.low /= 256;
         counter += 1;
     };
@@ -159,7 +160,7 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
         if counter == 16 {
             break ();
         }
-        bytes_arr.append((value.high % 256).try_into().unwrap());
+        bytes_arr.append((value.high & 0xFF).try_into().unwrap());
         value.high /= 256;
         counter += 1;
     };
@@ -206,18 +207,41 @@ impl ArrayExtension of ArrayExtensionTrait {
     }
 }
 
-// Raise a number to a power.
-fn pow(base: felt252, exp: felt252) -> felt252 {
-    if exp == 0 {
-        return 1;
-    } else {
-        return base * pow(base, exp - 1);
+#[generate_trait]
+impl SpanExtension of SpanExtensionTrait {
+    /// Pads a span of bytes with zeroes on the right.
+    ///
+    /// It creates a new `Array<u8>` instance and clones each element of the input span to it,
+    /// and then adds the required amount of zeroes.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The `Span<u8>` instance to pad with zeroes.
+    /// * `n_zeroes` - The number of zeroes to add to the right of the span.
+    ///
+    /// # Returns
+    ///
+    /// A new `Span<u8>` instance which has a length equal to the length of the input
+    /// span plus the number of zeroes specified.
+    fn pad_right(self: Span<u8>, n_zeroes: usize) -> Span<u8> {
+        let mut res: Array<u8> = array![];
+        let mut i = 0;
+        loop {
+            if i == self.len() {
+                break;
+            }
+            res.append(*self[i]);
+            i += 1;
+        };
+        let mut i = 0;
+        loop {
+            if i == n_zeroes {
+                break ();
+            }
+            res.append(0);
+            i += 1;
+        };
+        res.span()
     }
 }
 
-impl EthAddressIntoU256 of Into<EthAddress, u256> {
-    fn into(self: EthAddress) -> u256 {
-        let intermediate: felt252 = self.into();
-        intermediate.into()
-    }
-}

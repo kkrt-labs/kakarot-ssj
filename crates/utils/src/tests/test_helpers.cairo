@@ -1,5 +1,5 @@
 use utils::helpers;
-use array::{ArrayTrait, SpanTrait};
+use utils::helpers::{SpanExtension, SpanExtensionTrait};
 use debug::PrintTrait;
 
 #[test]
@@ -29,7 +29,7 @@ fn test_load_word() {
     let res2 = helpers::load_word(1, arr2.span());
     assert(255 == res2, 'res2: wrong load');
 
-    // Two byte values    
+    // Two byte values
     let mut arr3 = ArrayTrait::new();
     arr3.append(0x01);
     arr3.append(0x00);
@@ -155,3 +155,10 @@ fn test_split_word() {
     };
 }
 
+#[test]
+#[available_gas(2000000000)]
+fn test_clone_pad_zeroes() {
+    let mut original: Span<u8> = array![1, 2, 3, 4].span();
+    let res = original.pad_right(3);
+    assert(res == array![1, 2, 3, 4, 0, 0, 0].span(), 'padding mismatch');
+}
