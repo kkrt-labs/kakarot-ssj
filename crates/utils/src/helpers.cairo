@@ -207,7 +207,9 @@ impl ArrayExtension of ArrayExtensionTrait {
     }
 
     // Appends n time value to the Array
-    fn append_n<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(ref self: Array<T>, value: T, mut n: usize) {
+    fn append_n<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(
+        ref self: Array<T>, value: T, mut n: usize
+    ) {
         loop {
             if n == 0 {
                 break;
@@ -215,7 +217,7 @@ impl ArrayExtension of ArrayExtensionTrait {
 
             self.append(value);
 
-            n -=1;
+            n -= 1;
         };
     }
 }
