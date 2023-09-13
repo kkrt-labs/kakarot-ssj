@@ -7,8 +7,8 @@ use evm::errors::EVMError;
 use utils::math::{Exponentiation, Bitshift};
 use utils::constants::{POW_2_127};
 use evm::context::BoxDynamicExecutionContextDestruct;
-use utils::u256_signed_math::SignedPartialOrd;
 use utils::traits::BoolIntoNumeric;
+use utils::i256::i256;
 use integer::BoundedInt;
 
 #[generate_trait]
@@ -38,9 +38,9 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// # Specification: https://www.evm.codes/#12?fork=shanghai
     fn exec_slt(ref self: ExecutionContext) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
-        let a = *popped[0];
-        let b = *popped[1];
-        let result = a.slt(b).into();
+        let a: i256 = Into::<u256, i256>::into(*popped[0]);
+        let b: i256 = Into::<u256, i256>::into(*popped[1]);
+        let result: u256 = (a < b).into();
         self.stack.push(result)
     }
 
@@ -48,9 +48,9 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// # Specification: https://www.evm.codes/#13?fork=shanghai
     fn exec_sgt(ref self: ExecutionContext) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
-        let a = *popped[0];
-        let b = *popped[1];
-        let result = a.sgt(b).into();
+        let a: i256 = Into::<u256, i256>::into(*popped[0]);
+        let b: i256 = Into::<u256, i256>::into(*popped[1]);
+        let result: u256 = (a > b).into();
         self.stack.push(result)
     }
 
