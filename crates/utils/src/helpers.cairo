@@ -179,9 +179,9 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
 }
 
 #[generate_trait]
-impl ArrayExtension of ArrayExtensionTrait {
+impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtensionTrait<T> {
     // Concatenates two arrays by adding the elements of arr2 to arr1.
-    fn concat<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(ref self: Array<T>, mut arr2: Span<T>) {
+    fn concat(ref self: Array<T>, mut arr2: Span<T>) {
         loop {
             match arr2.pop_front() {
                 Option::Some(elem) => self.append(*elem),
@@ -193,7 +193,7 @@ impl ArrayExtension of ArrayExtensionTrait {
     }
 
     /// Reverses an array
-    fn reverse<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(self: Span<T>) -> Array<T> {
+    fn reverse(self: Span<T>) -> Array<T> {
         let mut counter = self.len();
         let mut dst: Array<T> = ArrayTrait::new();
         loop {
@@ -207,9 +207,7 @@ impl ArrayExtension of ArrayExtensionTrait {
     }
 
     // Appends n time value to the Array
-    fn append_n<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(
-        ref self: Array<T>, value: T, mut n: usize
-    ) {
+    fn append_n(ref self: Array<T>, value: T, mut n: usize) {
         loop {
             if n == 0 {
                 break;

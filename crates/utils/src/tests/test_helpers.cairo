@@ -175,7 +175,7 @@ fn test_append_n() {
     let mut original: Array<u8> = array![1, 2, 3, 4];
 
     // When
-    ArrayExtensionTrait::append_n(ref original, 9, 3);
+    original.append_n(9, 3);
 
     // Then
     assert(original == array![1, 2, 3, 4, 9, 9, 9], 'append_n failed');
