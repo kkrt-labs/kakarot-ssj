@@ -50,7 +50,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// The new pc target has to be a JUMPDEST opcode.
     /// # Specification: https://www.evm.codes/#56?fork=shanghai
     fn exec_jump(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        panic_with_felt252('JUMP not implement yet')
     }
 
     /// 0x57 - JUMPI operation.
