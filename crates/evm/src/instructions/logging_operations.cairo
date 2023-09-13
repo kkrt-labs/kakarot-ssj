@@ -39,6 +39,23 @@ mod internal {
 
         // Feed data array for the new event
         let mut datas: Array<felt252> = Default::default();
+        get_datas(ref self, ref datas, size, offset);
+
+        // Create and store the new event in the dynamic context
+        let event: Event = Event { keys: topics, data: datas };
+
+        let mut dyn_ctx = self.dynamic_context.unbox();
+        dyn_ctx.events.append(event);
+        self.dynamic_context = BoxTrait::new(dyn_ctx);
+
+        Result::Ok(())
+    }
+
+    /// Generic logging operation.
+    /// Append log record with n topics.
+    fn get_datas(
+        ref self: ExecutionContext, ref datas_array: Array<felt252>, size: u32, offset: u32
+    ) -> Result<(), EVMError> {
         let mut i = 0;
         loop {
             if 31 + i > size {
@@ -55,23 +72,15 @@ mod internal {
                         last_elem += (*chunk[j]).into();
                         j += 1;
                     };
-                    datas.append(last_elem);
+                    datas_array.append(last_elem);
                 }
                 break;
             };
             let (mut loaded, _) = self.memory.load(offset + i);
             loaded /= 256;
-            datas.append(loaded.try_into().unwrap());
+            datas_array.append(loaded.try_into().unwrap());
             i += 31;
         };
-
-        // Create and store the new event in the dynamic context
-        let event: Event = Event { keys: topics, data: datas };
-
-        let mut dyn_ctx = self.dynamic_context.unbox();
-        dyn_ctx.events.append(event);
-        self.dynamic_context = BoxTrait::new(dyn_ctx);
-
         Result::Ok(())
     }
 }
