@@ -61,11 +61,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         let popped = self.stack.pop_n(2)?;
         let a = *popped[0];
         let b = *popped[1];
-        let result = if a == b {
-            1
-        } else {
-            0
-        };
+        let result = (a == b).into();
         self.stack.push(result)
     }
 
