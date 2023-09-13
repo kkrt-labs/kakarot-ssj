@@ -1,5 +1,5 @@
 use evm::instructions::Sha3Trait;
-use evm::instructions::sha3::InternalSha3Trait;
+use evm::instructions::sha3::internal;
 use evm::tests::test_utils::setup_execution_context;
 use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
@@ -277,11 +277,11 @@ fn test_sha3_size_0x0C80_offset_0() {
 fn test_sha3_internal_get_last_input_size_5() {
     // Given
     let mut to_hash: Array<u64> = Default::default();
-    let value = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
+    let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
     let size = 5;
 
     // When
-    let result = InternalSha3Trait::get_last_input(ref to_hash, value, size);
+    let result = internal::get_last_input(ref to_hash, value, size);
 
     // Then
     assert(result == 0xE5000000FFFFFFFA, 'wrong result');
@@ -293,11 +293,11 @@ fn test_sha3_internal_get_last_input_size_5() {
 fn test_sha3_internal_get_last_input_size_20() {
     // Given
     let mut to_hash: Array<u64> = Default::default();
-    let value = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
+    let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
     let size = 20;
 
     // When
-    let result = InternalSha3Trait::get_last_input(ref to_hash, value, size);
+    let result = internal::get_last_input(ref to_hash, value, size);
 
     // Then
     assert(result == 0x00200400000000AD, 'wrong result');
@@ -309,11 +309,11 @@ fn test_sha3_internal_get_last_input_size_20() {
 fn test_sha3_internal_get_last_input_size_50() {
     // Given
     let mut to_hash: Array<u64> = Default::default();
-    let value = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
+    let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
     let size = 50;
 
     // When
-    let result = InternalSha3Trait::get_last_input(ref to_hash, value, size);
+    let result = internal::get_last_input(ref to_hash, value, size);
 
     // Then
     assert(result == 0x0000450000DEFA00, 'wrong result');

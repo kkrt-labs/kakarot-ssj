@@ -63,7 +63,7 @@ impl Sha3Impl of Sha3Trait {
         // Fill last_input with last bytes to hash
         if size > 0 {
             let (loaded, _) = self.memory.load(offset);
-            last_input = InternalSha3Trait::get_last_input(ref to_hash, loaded, size);
+            last_input = internal::get_last_input(ref to_hash, loaded, size);
             size %= 8;
         }
 
@@ -74,8 +74,8 @@ impl Sha3Impl of Sha3Trait {
 }
 
 
-#[generate_trait]
-impl InternalSha3Methods of InternalSha3Trait {
+mod internal {
+    use utils::helpers::split_u256_into_u64_little;
     /// Return the last u64 chunk to hash, given a size, from an u256.
     /// This function is used to prepare inputs for keccak::cairo_keccak.
     ///
@@ -89,7 +89,6 @@ impl InternalSha3Methods of InternalSha3Trait {
     /// * `value` - The `u256` element to get the last input from
     /// * `size` - The amount of bytes to append to to_hash
     /// Returns the last_input.
-    #[inline(always)]
     fn get_last_input(ref to_hash: Array<u64>, value: u256, size: u32) -> u64 {
         let ((high_h, low_h), (high_l, low_l)) = split_u256_into_u64_little(value);
         if size < 8 {
