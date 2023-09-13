@@ -10,7 +10,7 @@ use utils::constants::{
 };
 use cmp::{max};
 use utils::{
-    helpers, helpers::SpanExtensionTrait, math::Exponentiation, math::WrappingExponentiation
+    helpers, helpers::SpanExtensionTrait, helpers::ArrayExtensionTrait, math::Exponentiation, math::WrappingExponentiation
 };
 use debug::PrintTrait;
 
@@ -161,11 +161,10 @@ impl MemoryImpl of MemoryTrait {
 
         // For out of bound bytes, 0s will be copied.
         if (slice_size < length) {
-            let out_of_bounds_bytes: Span<u8> = ArrayTrait::new()
-                .span()
-                .clone_pad_right(length - source.len());
-
-            self.store_n(out_of_bounds_bytes, offset + slice_size);
+            let mut out_of_bounds_bytes: Array<u8> = ArrayTrait::new();
+            ArrayExtensionTrait::append_n(ref out_of_bounds_bytes, 0, length - source.len());
+            
+            self.store_n(out_of_bounds_bytes.span(), offset + slice_size);
         }
     }
 
