@@ -11,12 +11,16 @@ const TYPE_CONVERSION_ERROR: felt252 = 'KKT: type conversion error';
 // RETURNDATA
 const RETURNDATA_OUT_OF_BOUNDS_ERROR: felt252 = 'KKT: ReturnDataOutOfBounds';
 
+// JUMP
+const INVALID_DESTINATION: felt252 = 'KKT: invalid JUMP destination';
+
 #[derive(Drop, Copy, PartialEq)]
 enum EVMError {
     StackError: felt252,
     InvalidProgramCounter: felt252,
     TypeConversionError: felt252,
-    ReturnDataError: felt252
+    ReturnDataError: felt252,
+    JumpError: felt252,
 }
 
 
@@ -27,6 +31,7 @@ impl EVMErrorIntoU256 of Into<EVMError, u256> {
             EVMError::InvalidProgramCounter(error_message) => error_message.into(),
             EVMError::TypeConversionError(error_message) => error_message.into(),
             EVMError::ReturnDataError(error_message) => error_message.into(),
+            EVMError::JumpError(error_message) => error_message.into(),
         }
     }
 }
