@@ -9,6 +9,7 @@ use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionC
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use evm::errors::EVMError;
+use evm::helpers::U256IntoResultU32;
 
 #[generate_trait]
 impl SystemOperations of SystemOperationsTrait {
@@ -34,16 +35,11 @@ impl SystemOperations of SystemOperationsTrait {
     /// RETURN
     /// # Specification: https://www.evm.codes/#f3?fork=shanghai
     fn exec_return(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let offset = self.stack.pop()?;
-        let size = self.stack.pop()?;
+        let popped = self.stack.pop_n(2)?;
+        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into(*popped[0])?;
+        let size: u32 = Into::<u256, Result<u32, EVMError>>::into(*popped[1])?;
         let mut return_data = array![];
-        self
-            .memory
-            .load_n(
-                size.low.try_into().expect('Too much return data'),
-                ref return_data,
-                offset.low.try_into().expect('Return data offset > u32')
-            );
+        self.memory.load_n(size, ref return_data, offset);
         self.set_return_data(return_data);
         self.stop();
         Result::Ok(())
