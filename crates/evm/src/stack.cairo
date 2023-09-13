@@ -84,7 +84,7 @@ impl StackImpl of StackTrait {
     #[inline(always)]
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError> {
         let item: u256 = self.pop()?;
-        let item: u32 = Into::<u256, Result<u32, EVMError>>::into(item)?;
+        let item: usize = Into::<u256, Result<usize, EVMError>>::into(item)?;
         Result::Ok(item)
     }
 
