@@ -1,6 +1,8 @@
 use core::dict::Felt252DictTrait;
 use evm::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
-use utils::{math::Exponentiation, math::WrappingExponentiation, helpers};
+use utils::{
+    math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtensionTrait
+};
 use utils::constants::{POW_256_1_U128, POW_256_7_U128, POW_256_8_U128, POW_256_15_U128};
 
 mod internal {
@@ -266,10 +268,9 @@ fn test__expand__should_return_the_same_memory_and_no_cost() {
     memory.store_n(bytes_array.span(), 0);
 
     // When
-    let cost = memory.expand(0);
+    memory.expand(0);
 
     // Then
-    assert(cost == 0, 'cost should be 0');
     assert(memory.bytes_len == 32, 'memory should be 32bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'value should be 1');
@@ -286,10 +287,9 @@ fn test__expand__should_return_expanded_memory_and_cost() {
     memory.store_n(bytes_array.span(), 0);
 
     // When
-    let cost = memory.expand(1);
+    memory.expand(1);
 
     // Then
-    assert(cost >= 0, 'cost should be positive');
     assert(memory.bytes_len == 64, 'memory should be 64bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'value should be 1');
@@ -302,10 +302,9 @@ fn test__expand__should_return_expanded_memory_by_one_word_and_cost() {
     let mut memory = MemoryTrait::new();
 
     // When
-    let cost = memory.expand(1);
+    memory.expand(1);
 
     // Then
-    assert(cost >= 0, 'cost should be positive');
     assert(memory.bytes_len == 32, 'memory should be 32bytes');
 }
 
@@ -316,10 +315,9 @@ fn test__expand__should_return_expanded_memory_by_exactly_one_word_and_cost() {
     let mut memory = MemoryTrait::new();
 
     // When
-    let cost = memory.expand(32);
+    memory.expand(32);
 
     // Then
-    assert(cost >= 0, 'cost should be positive');
     assert(memory.bytes_len == 32, 'memory should be 32bytes');
 }
 
@@ -330,10 +328,9 @@ fn test__expand__should_return_expanded_memory_by_two_words_and_cost() {
     let mut memory = MemoryTrait::new();
 
     // When
-    let cost = memory.expand(33);
+    memory.expand(33);
 
     // Then
-    assert(cost >= 0, 'cost should be positive');
     assert(memory.bytes_len == 64, 'memory should be 96bytes');
 }
 
@@ -348,10 +345,9 @@ fn test__ensure_length__should_return_the_same_memory_and_no_cost() {
     memory.store_n(bytes_array.span(), 0);
 
     // When
-    let cost = memory.ensure_length(1);
+    memory.ensure_length(1);
 
     // Then
-    assert(cost == 0, 'cost should be 0');
     assert(memory.bytes_len == 32, 'memory should be 32bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'value should be 1');
@@ -368,10 +364,9 @@ fn test__ensure_length__should_return_expanded_memory_and_cost() {
     memory.store_n(bytes_array.span(), 0);
 
     // When
-    let cost = memory.ensure_length(33);
+    memory.ensure_length(33);
 
     // Then
-    assert(cost >= 0, 'cost should be positive');
     assert(memory.bytes_len == 64, 'memory should be 64bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'value should be 1');
@@ -387,10 +382,9 @@ fn test__expand_and_load__should_return_expanded_memory_and_element_and_cost() {
     memory.store_n(bytes_array.span(), 0);
 
     // When
-    let (loaded_element, cost) = memory.load(32);
+    let loaded_element = memory.load(32);
 
     // Then
-    assert(cost >= 0, 'cost should be positive');
     assert(memory.bytes_len == 64, 'memory should be 64 bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'loaded_element should be 1');
@@ -399,3 +393,120 @@ fn test__expand_and_load__should_return_expanded_memory_and_element_and_cost() {
     assert(value == 0, 'value should be 0');
 }
 
+#[test]
+#[available_gas(20000000)]
+fn test_store_padded_segment_should_not_change_the_memory() {
+    // Given
+    let mut memory = MemoryTrait::new();
+
+    // When
+    let bytes = array![1, 2, 3, 4, 5].span();
+    memory.store_padded_segment(0, 0, bytes);
+
+    // Then
+    let len = memory.bytes_len;
+    assert(len == 0, 'memory should be 0bytes');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_store_padded_segment_should_add_n_elements_to_the_memory() {
+    // Given
+    let mut memory = MemoryTrait::new();
+
+    // When
+    let bytes = array![1, 2, 3, 4, 5].span();
+    memory.store_padded_segment(0, 5, bytes);
+
+    // Then
+    let len = memory.bytes_len;
+    assert(len == 32, 'memory should be 32bytes');
+
+    let first_word = memory.load_internal(0);
+    assert(
+        first_word == 0x0102030405000000000000000000000000000000000000000000000000000000,
+        'Wrong memory value'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_store_padded_segment_should_add_n_elements_padded_to_the_memory() {
+    // Given
+    let mut memory = MemoryTrait::new();
+
+    // Memory initialization with a value to verify that if the size is out of the bound bytes, 0's have been copied.
+    // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
+    memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
+
+    // When
+    let bytes = array![1, 2, 3, 4, 5].span();
+    memory.store_padded_segment(0, 10, bytes);
+
+    // Then
+    let len = memory.bytes_len;
+    assert(len == 32, 'memory should be 32bytes');
+
+    let first_word = memory.load_internal(0);
+    assert(
+        first_word == 0x01020304050000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+        'Wrong memory value'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_store_padded_segment_should_add_n_elements_padded_with_offset_to_the_memory() {
+    // Given
+    let mut memory = MemoryTrait::new();
+
+    // Memory initialization with a value to verify that if the size is out of the bound bytes, 0's have been copied.
+    // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
+    memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
+
+    // When
+    let bytes = array![1, 2, 3, 4, 5].span();
+    memory.store_padded_segment(5, 10, bytes);
+
+    // Then
+    let len = memory.bytes_len;
+    assert(len == 32, 'memory should be 32bytes');
+
+    let first_word = memory.load_internal(0);
+    assert(
+        first_word == 0xFFFFFFFFFF01020304050000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+        'Wrong memory value'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_store_padded_segment_should_add_n_elements_padded_with_offset_between_two_words_to_the_memory() {
+    // Given
+    let mut memory = MemoryTrait::new();
+
+    // Memory initialization with a value to verify that if the size is out of the bound bytes, 0's have been copied.
+    // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
+    memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
+    memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 32);
+
+    // When
+    let bytes = array![1, 2, 3, 4, 5].span();
+    memory.store_padded_segment(30, 10, bytes);
+
+    // Then
+    let len = memory.bytes_len;
+    assert(len == 64, 'memory should be 64bytes');
+
+    let first_word = memory.load_internal(0);
+    assert(
+        first_word == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0102,
+        'Wrong memory value'
+    );
+
+    let second_word = memory.load_internal(32);
+    assert(
+        second_word == 0x0304050000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+        'Wrong memory value'
+    );
+}

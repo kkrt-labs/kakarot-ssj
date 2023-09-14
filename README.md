@@ -67,6 +67,7 @@ This repository is a rewrite of
 
 - Run `make install` to install the git hooks.
 - Add your environment variables to `.env` (see `.env.example` for an example).
+  - Get your Github token [here](https://github.com/settings/tokens?type=beta)
 
 ## Usage
 
