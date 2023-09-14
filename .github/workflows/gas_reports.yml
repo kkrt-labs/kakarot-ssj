@@ -35,3 +35,4 @@ jobs:
           result="${result//$'\n'/'%0A'}"
           result="${result//$'\r'/'%0D'}"
           echo "::set-output name=result::${result}"
+          echo "${result}" >> $GITHUB_STEP_SUMMARY
