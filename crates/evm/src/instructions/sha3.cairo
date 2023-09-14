@@ -35,7 +35,7 @@ impl Sha3Impl of Sha3Trait {
 
         // Fill last_input with last bytes to hash
         let last_input: u64 = if (size % 32 != 0) {
-            let (loaded, _) = self.memory.load(offset);
+            let loaded = self.memory.load(offset);
             internal::fill_array_with_last_inputs(ref to_hash, loaded, size % 32)
         } else {
             0
@@ -91,7 +91,7 @@ mod internal {
             if amount == 0 {
                 break;
             }
-            let (loaded, _) = self.memory.load(offset);
+            let loaded = self.memory.load(offset);
             let ((high_h, low_h), (high_l, low_l)) = split_u256_into_u64_little(loaded);
             to_hash.append(low_h);
             to_hash.append(high_h);
