@@ -131,7 +131,7 @@ fn test_exec_mstore_should_store_max_uint256_offset_0() {
     // Then
     assert(result.is_ok(), 'should have succeeded');
     assert(ctx.memory.bytes_len == 32, 'memory should be 32 bytes long');
-    let (stored, _) = ctx.memory.load(0);
+    let stored = ctx.memory.load(0);
     assert(stored == BoundedInt::<u256>::max(), 'should have stored max_uint256');
 }
 
@@ -150,7 +150,7 @@ fn test_exec_mstore_should_store_max_uint256_offset_1() {
     // Then
     assert(result.is_ok(), 'should have succeeded');
     assert(ctx.memory.bytes_len == 64, 'memory should be 64 bytes long');
-    let (stored, _) = ctx.memory.load(1);
+    let stored = ctx.memory.load(1);
     assert(stored == BoundedInt::<u256>::max(), 'should have stored max_uint256');
 }
 
@@ -169,7 +169,7 @@ fn test_exec_mstore8_should_store_uint8_offset_31() {
     // Then
     assert(result.is_ok(), 'should have succeeded');
     assert(ctx.memory.bytes_len == 32, 'memory should be 32 bytes long');
-    let (stored, _) = ctx.memory.load(0);
+    let stored = ctx.memory.load(0);
     assert(stored == 0xAB, 'mstore8 failed');
 }
 
@@ -188,7 +188,7 @@ fn test_exec_mstore8_should_store_uint8_offset_30() {
     // Then
     assert(result.is_ok(), 'should have succeeded');
     assert(ctx.memory.bytes_len == 32, 'memory should be 32 bytes long');
-    let (stored, _) = ctx.memory.load(0);
+    let stored = ctx.memory.load(0);
     assert(stored == 0xAB00, 'mstore8 failed');
 }
 
@@ -210,7 +210,7 @@ fn test_exec_mstore8_should_store_uint8_offset_31_then_uint8_offset_30() {
     // Then
     assert(result1.is_ok() && result2.is_ok(), 'should have succeeded');
     assert(ctx.memory.bytes_len == 32, 'memory should be 32 bytes long');
-    let (stored, _) = ctx.memory.load(0);
+    let stored = ctx.memory.load(0);
     assert(stored == 0xABCD, 'mstore8 failed');
 }
 
@@ -229,7 +229,7 @@ fn test_exec_mstore8_should_store_last_uint8_offset_31() {
     // Then
     assert(result.is_ok(), 'should have succeeded');
     assert(ctx.memory.bytes_len == 32, 'memory should be 32 bytes long');
-    let (stored, _) = ctx.memory.load(0);
+    let stored = ctx.memory.load(0);
     assert(stored == 0xEF, 'mstore8 failed');
 }
 
@@ -249,7 +249,7 @@ fn test_exec_mstore8_should_store_last_uint8_offset_63() {
     // Then
     assert(result.is_ok(), 'should have succeeded');
     assert(ctx.memory.bytes_len == 64, 'memory should be 64 bytes long');
-    let (stored, _) = ctx.memory.load(32);
+    let stored = ctx.memory.load(32);
     assert(stored == 0xEF, 'mstore8 failed');
 }
 

@@ -12,9 +12,8 @@ impl MemoryOperation of MemoryOperationTrait {
     /// MLOAD operation.
     /// Load word from memory and push to stack.
     fn exec_mload(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop()?;
-        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into(popped)?;
-        let (result, _) = self.memory.load(offset);
+        let offset: usize = self.stack.pop_usize()?;
+        let result = self.memory.load(offset);
         self.stack.push(result)
     }
 
@@ -22,7 +21,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#52?fork=shanghai
     fn exec_mstore(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((self.stack.pop()?))?;
+        let offset: usize = self.stack.pop_usize()?;
         let value: u256 = self.stack.pop()?;
 
         self.memory.store(value, offset);
@@ -81,9 +80,9 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save single byte to memory
     /// # Specification: https://www.evm.codes/#53?fork=shanghai
     fn exec_mstore8(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
-        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[0]))?;
-        let value: u8 = (*popped.at(1).low & 0xFF).try_into().unwrap();
+        let offset = self.stack.pop_usize()?;
+        let value = self.stack.pop()?;
+        let value: u8 = (value.low & 0xFF).try_into().unwrap();
         let values = array![value].span();
         self.memory.store_n(values, offset);
 

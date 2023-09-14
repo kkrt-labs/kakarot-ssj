@@ -8,6 +8,38 @@ use evm::context::BoxDynamicExecutionContextDestruct;
 
 #[test]
 #[available_gas(20000000)]
+fn test_eq_same_pair() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
+    ctx.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
+
+    // When
+    ctx.exec_eq();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x01, 'stack top should be 0x01');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_eq_different_pair() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0xAB8765432DCBA98765410F149E87610FDCBA98765432543217654DCBA93210F8).unwrap();
+    ctx.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
+
+    // When
+    ctx.exec_eq();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test_and_zero_and_max() {
     // Given
     let mut ctx = setup_execution_context();
