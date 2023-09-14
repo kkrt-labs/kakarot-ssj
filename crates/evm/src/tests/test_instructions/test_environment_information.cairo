@@ -34,7 +34,7 @@ fn test_address_basic() {
 
     // Then
     assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.pop().unwrap() == evm_address().into(), 'should be `evm_address`');
+    assert(ctx.stack.pop_eth_address().unwrap() == evm_address(), 'should be `evm_address`');
 }
 
 #[test]
