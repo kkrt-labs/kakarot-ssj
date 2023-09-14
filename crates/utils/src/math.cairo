@@ -144,7 +144,6 @@ impl Felt252WrappingBitshiftImpl of WrappingBitshift<felt252> {
 
         // convert back to felt252
         shifted_u256.try_into().unwrap()
-
     }
 }
 
