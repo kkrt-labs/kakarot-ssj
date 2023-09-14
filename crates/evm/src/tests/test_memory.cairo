@@ -268,10 +268,9 @@ fn test__expand__should_return_the_same_memory_and_no_cost() {
     memory.store_n(bytes_array.span(), 0);
 
     // When
-    let cost = memory.expand(0);
+    memory.expand(0);
 
     // Then
-    assert(cost == 0, 'cost should be 0');
     assert(memory.bytes_len == 32, 'memory should be 32bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'value should be 1');
@@ -288,10 +287,9 @@ fn test__expand__should_return_expanded_memory_and_cost() {
     memory.store_n(bytes_array.span(), 0);
 
     // When
-    let cost = memory.expand(1);
+    memory.expand(1);
 
     // Then
-    assert(cost >= 0, 'cost should be positive');
     assert(memory.bytes_len == 64, 'memory should be 64bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'value should be 1');
@@ -304,10 +302,9 @@ fn test__expand__should_return_expanded_memory_by_one_word_and_cost() {
     let mut memory = MemoryTrait::new();
 
     // When
-    let cost = memory.expand(1);
+    memory.expand(1);
 
     // Then
-    assert(cost >= 0, 'cost should be positive');
     assert(memory.bytes_len == 32, 'memory should be 32bytes');
 }
 
@@ -318,10 +315,9 @@ fn test__expand__should_return_expanded_memory_by_exactly_one_word_and_cost() {
     let mut memory = MemoryTrait::new();
 
     // When
-    let cost = memory.expand(32);
+    memory.expand(32);
 
     // Then
-    assert(cost >= 0, 'cost should be positive');
     assert(memory.bytes_len == 32, 'memory should be 32bytes');
 }
 
@@ -332,10 +328,9 @@ fn test__expand__should_return_expanded_memory_by_two_words_and_cost() {
     let mut memory = MemoryTrait::new();
 
     // When
-    let cost = memory.expand(33);
+    memory.expand(33);
 
     // Then
-    assert(cost >= 0, 'cost should be positive');
     assert(memory.bytes_len == 64, 'memory should be 96bytes');
 }
 
@@ -350,10 +345,9 @@ fn test__ensure_length__should_return_the_same_memory_and_no_cost() {
     memory.store_n(bytes_array.span(), 0);
 
     // When
-    let cost = memory.ensure_length(1);
+    memory.ensure_length(1);
 
     // Then
-    assert(cost == 0, 'cost should be 0');
     assert(memory.bytes_len == 32, 'memory should be 32bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'value should be 1');
@@ -370,10 +364,9 @@ fn test__ensure_length__should_return_expanded_memory_and_cost() {
     memory.store_n(bytes_array.span(), 0);
 
     // When
-    let cost = memory.ensure_length(33);
+    memory.ensure_length(33);
 
     // Then
-    assert(cost >= 0, 'cost should be positive');
     assert(memory.bytes_len == 64, 'memory should be 64bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'value should be 1');
@@ -389,10 +382,9 @@ fn test__expand_and_load__should_return_expanded_memory_and_element_and_cost() {
     memory.store_n(bytes_array.span(), 0);
 
     // When
-    let (loaded_element, cost) = memory.load(32);
+    let loaded_element = memory.load(32);
 
     // Then
-    assert(cost >= 0, 'cost should be positive');
     assert(memory.bytes_len == 64, 'memory should be 64 bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'loaded_element should be 1');
