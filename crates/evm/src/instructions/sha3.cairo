@@ -68,8 +68,7 @@ mod internal {
             return (0, size / 32);
         }
         if (mem_len - offset < 32) && (size > 32) {
-            let chunk_from_mem = (mem_len - offset) / 32;
-            return (chunk_from_mem + 1, (size / 32) - chunk_from_mem - 1);
+            return (1, (size / 32) - 1);
         }
         let chunk_from_mem = (cmp::min(mem_len - offset, size)) / 32;
         (chunk_from_mem, (size / 32) - chunk_from_mem)
