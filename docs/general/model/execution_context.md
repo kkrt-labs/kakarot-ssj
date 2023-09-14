@@ -26,9 +26,11 @@ classDiagram
     stopped: bool,
     +gas_limit: u64
     +gas_price:u64
-    +memory Memory
-    +stack Stack
-    +u32 program_counter
+    +memory: Memory
+    +stack: Stack
+    +program_counter: u32
+    + calling_context: Nullable<ExecutionContext>
+    + sub_context: Nullable<ExecutionContext>
     }
 
     class CallContext{
