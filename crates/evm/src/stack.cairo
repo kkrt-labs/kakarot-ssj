@@ -22,7 +22,7 @@ use nullable::{nullable_from_box, NullableTrait};
 use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW};
 use evm::helpers::U256IntoResultU32;
 use starknet::EthAddress;
-
+use utils::i256::i256;
 
 #[derive(Destruct, Default)]
 struct Stack {
@@ -35,6 +35,7 @@ trait StackTrait {
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError>;
     fn pop(ref self: Stack) -> Result<u256, EVMError>;
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError>;
+    fn pop_i256(ref self: Stack) -> Result<i256, EVMError>;
     fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError>;
     fn pop_n(ref self: Stack, n: usize) -> Result<Array<u256>, EVMError>;
     fn peek(ref self: Stack) -> Option<u256>;
@@ -85,6 +86,17 @@ impl StackImpl of StackTrait {
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError> {
         let item: u256 = self.pop()?;
         let item: usize = Into::<u256, Result<usize, EVMError>>::into(item)?;
+        Result::Ok(item)
+    }
+
+    /// Calls `Stack::pop` and convert it to i256
+    /// Returns `EVMError::StackError` with appropriate message
+    /// In case:
+    ///     - Stack is empty
+    #[inline(always)]
+    fn pop_i256(ref self: Stack) -> Result<i256, EVMError> {
+        let item: u256 = self.pop()?;
+        let item: i256 = item.into();
         Result::Ok(item)
     }
 

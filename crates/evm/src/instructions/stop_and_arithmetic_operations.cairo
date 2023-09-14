@@ -86,9 +86,8 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#05?fork=shanghai
     fn exec_sdiv(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
-        let a: i256 = Into::<u256, i256>::into(*popped[0]);
-        let b: i256 = Into::<u256, i256>::into(*popped[1]);
+        let a: i256 = self.stack.pop_i256()?;
+        let b: i256 = self.stack.pop_i256()?;
 
         let result: u256 = (a / b).into();
         self.stack.push(result)
@@ -121,9 +120,8 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// All values are treated as two’s complement signed 256-bit integers. Note the overflow semantic when −2^255 is negated.
     /// # Specification: https://www.evm.codes/#07?fork=shanghai
     fn exec_smod(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
-        let a: i256 = Into::<u256, i256>::into(*popped[0]);
-        let b: i256 = Into::<u256, i256>::into(*popped[1]);
+        let a: i256 = self.stack.pop_i256()?;
+        let b: i256 = self.stack.pop_i256()?;
 
         let result: u256 = (a % b).into();
         self.stack.push(result)

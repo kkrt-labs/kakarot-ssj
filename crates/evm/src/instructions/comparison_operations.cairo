@@ -37,9 +37,8 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x12 - SLT
     /// # Specification: https://www.evm.codes/#12?fork=shanghai
     fn exec_slt(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
-        let a: i256 = Into::<u256, i256>::into(*popped[0]);
-        let b: i256 = Into::<u256, i256>::into(*popped[1]);
+        let a: i256 = self.stack.pop_i256()?;
+        let b: i256 = self.stack.pop_i256()?;
         let result: u256 = (a < b).into();
         self.stack.push(result)
     }
@@ -47,9 +46,8 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x13 - SGT
     /// # Specification: https://www.evm.codes/#13?fork=shanghai
     fn exec_sgt(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
-        let a: i256 = Into::<u256, i256>::into(*popped[0]);
-        let b: i256 = Into::<u256, i256>::into(*popped[1]);
+        let a: i256 = self.stack.pop_i256()?;
+        let b: i256 = self.stack.pop_i256()?;
         let result: u256 = (a > b).into();
         self.stack.push(result)
     }
@@ -160,26 +158,10 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x1D - SAR
     /// # Specification: https://www.evm.codes/#1d?fork=shanghai
     fn exec_sar(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
-        let shift = *popped[0];
-        let value: u256 = *popped[1];
+        let shift: i256 = self.stack.pop_i256()?;
+        let value: i256 = self.stack.pop_i256()?;
 
-        // Checks the MSB bit sign for a 256-bit integer
-        let positive = value.high < POW_2_127;
-        let sign = if positive {
-            // If sign is positive, set it to 0.
-            0
-        } else {
-            // If sign is negative, set the number to -1.
-            BoundedInt::<u256>::max()
-        };
-
-        if (shift > 256) {
-            self.stack.push(sign)
-        } else {
-            // XORing with sign before and after the shift propagates the sign bit of the operation
-            let result = (sign ^ value).shr(shift) ^ sign;
-            self.stack.push(result)
-        }
+        let result: u256 = value.shr(shift).into();
+        self.stack.push(result)
     }
 }
