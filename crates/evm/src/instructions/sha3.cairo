@@ -7,7 +7,7 @@ use evm::memory::MemoryTrait;
 use evm::errors::EVMError;
 use evm::helpers::U256IntoResultU32;
 use keccak::{cairo_keccak, u128_split};
-use utils::helpers::{split_u256_into_u64_little, reverse_endianness};
+use utils::helpers::{ArrayExtensionTrait, reverse_endianness};
 
 use array::ArrayTrait;
 
@@ -27,16 +27,16 @@ impl Sha3Impl of Sha3Trait {
 
         let mut to_hash: Array<u64> = Default::default();
 
-        let (chunks_from_mem, chunks_of_zeroes) = internal::compute_data_origin(
+        let (nb_chunks, nb_zeroes) = internal::compute_memory_chunks_amount(
             size, offset, self.memory.bytes_len
         );
-        internal::fill_array_with_memory_chunks(ref self, ref to_hash, ref offset, chunks_from_mem);
-        internal::fill_array_with_zeroes(ref self, ref to_hash, chunks_of_zeroes);
+        offset = internal::fill_array_with_memory_chunks(ref self, ref to_hash, offset, nb_chunks);
+        to_hash.append_n(0, 4 * nb_zeroes);
 
         // Fill last_input with last bytes to hash
         let last_input: u64 = if (size % 32 != 0) {
             let loaded = self.memory.load(offset);
-            internal::fill_array_with_last_inputs(ref to_hash, loaded, size % 32)
+            internal::prepare_last_input(ref to_hash, loaded, size % 32)
         } else {
             0
         };
@@ -62,20 +62,21 @@ mod internal {
     /// * `size` - The amount of bytes to hash
     /// * `offset` - Offset in memory
     /// * `mem_len` - Size of the memory
-    /// Returns : (chunk_from_mem, chunks_of_zeroes)
-    fn compute_data_origin(size: u32, offset: u32, mem_len: u32) -> (u32, u32) {
+    /// Returns : (nb_chunks, nb_zeroes)
+    fn compute_memory_chunks_amount(size: u32, offset: u32, mem_len: u32) -> (u32, u32) {
         if offset > mem_len {
             return (0, size / 32);
         }
         if (mem_len - offset < 32) && (size > 32) {
             return (1, (size / 32) - 1);
         }
-        let chunk_from_mem = (cmp::min(mem_len - offset, size)) / 32;
-        (chunk_from_mem, (size / 32) - chunk_from_mem)
+        let nb_chunks = (cmp::min(mem_len - offset, size)) / 32;
+        (nb_chunks, (size / 32) - nb_chunks)
     }
 
     /// This function will fill an array with little endian u64
-    /// by splitting 32 Bytes chunk read from the memory.
+    /// by splitting 32 Bytes chunk read from the memory and
+    /// returns the new offset.
     ///
     /// # Arguments
     ///
@@ -83,9 +84,10 @@ mod internal {
     /// * `to_hash` - A reference to the array to fill
     /// * `offset` - Offset in memory
     /// * `amount` - The amount of 32 Bytes chunks to read from memory
+    /// Return the new offset
     fn fill_array_with_memory_chunks(
-        ref self: ExecutionContext, ref to_hash: Array<u64>, ref offset: u32, mut amount: u32
-    ) {
+        ref self: ExecutionContext, ref to_hash: Array<u64>, mut offset: u32, mut amount: u32
+    ) -> u32 {
         loop {
             if amount == 0 {
                 break;
@@ -100,30 +102,7 @@ mod internal {
             offset += 32;
             amount -= 1;
         };
-    }
-
-    /// This function will fill an u64 array with a given amount of 
-    /// 32 Bytes chunks of zeroes.
-    ///
-    /// # Arguments
-    ///
-    /// * `self` - The context in which the memory is read
-    /// * `to_hash` - A reference to the array to fill
-    /// * `amount` - The amount of 32 Bytes chunks of zeroes to append to to hash
-    fn fill_array_with_zeroes(
-        ref self: ExecutionContext, ref to_hash: Array<u64>, mut amount: u32
-    ) {
-        loop {
-            if amount == 0 {
-                break;
-            }
-            to_hash.append(0);
-            to_hash.append(0);
-            to_hash.append(0);
-            to_hash.append(0);
-
-            amount -= 1;
-        };
+        offset
     }
 
     /// This function will fill an array with the remaining little endian u64 
@@ -136,7 +115,7 @@ mod internal {
     /// * `value` - The 32 Bytes chunk to split and get the bytes from
     /// * `size` - The amount of bytes still required to hash
     /// Returns the last u64 chunk that isn't 8 Bytes long.
-    fn fill_array_with_last_inputs(ref to_hash: Array<u64>, value: u256, size: u32) -> u64 {
+    fn prepare_last_input(ref to_hash: Array<u64>, value: u256, size: u32) -> u64 {
         let ((high_h, low_h), (high_l, low_l)) = split_u256_into_u64_little(value);
         if size < 8 {
             return low_h;
