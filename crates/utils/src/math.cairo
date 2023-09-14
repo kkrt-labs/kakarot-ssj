@@ -94,36 +94,6 @@ trait Bitshift<T> {
     // # Panics
     // Panics if the shift is greater than 255.
     fn shr(self: T, shift: T) -> T;
-
-    // Shift a number left by a given number of bits.
-    // If the shift is greater than 255, the result is 0.
-    // The bits moved after the 256th one are discarded, the new bits are set to 0.
-    fn wrapping_shl(self: T, shift: T) -> T;
-
-    // Shift a number right by a given number of bits.
-    // If the shift is greater than 255, the result is 0.
-    fn wrapping_shr(self: T, shift: T) -> T;
-}
-
-impl Felt252BitshiftImpl of Bitshift<felt252> {
-    // felt252 should normally not be used for a such operation.
-    // However, taking optimisation into account, there are cases that arise
-    // where using them is safe when values are bounded, and it is less expensive than their u256 counterparty.
-    fn shl(self: felt252, shift: felt252) -> felt252 {
-        panic_with_felt252('felt252 shl not implemented')
-    }
-
-    fn shr(self: felt252, shift: felt252) -> felt252 {
-        panic_with_felt252('felt252 shr not implemented')
-    }
-
-    fn wrapping_shl(self: felt252, shift: felt252) -> felt252 {
-        self * 2.wrapping_pow(shift)
-    }
-
-    fn wrapping_shr(self: felt252, shift: felt252) -> felt252 {
-        panic_with_felt252('felt252 shl not implemented')
-    }
 }
 
 impl U256BitshiftImpl of Bitshift<u256> {
@@ -142,7 +112,42 @@ impl U256BitshiftImpl of Bitshift<u256> {
         }
         self / 2.pow(shift)
     }
+}
 
+trait WrappingBitshift<T> {
+    // Shift a number left by a given number of bits.
+    // If the shift is greater than 255, the result is 0.
+    // The bits moved after the 256th one are discarded, the new bits are set to 0.
+    fn wrapping_shl(self: T, shift: T) -> T;
+
+    // Shift a number right by a given number of bits.
+    // If the shift is greater than 255, the result is 0.
+    fn wrapping_shr(self: T, shift: T) -> T;
+}
+
+impl Felt252WrappingBitshiftImpl of WrappingBitshift<felt252> {
+    fn wrapping_shl(self: felt252, shift: felt252) -> felt252 {
+        self * 2.wrapping_pow(shift)
+    }
+
+    fn wrapping_shr(self: felt252, shift: felt252) -> felt252 {
+        // converting to u256
+        let val: u256 = self.into();
+        let shift: u256 = shift.into();
+
+        // early return to save gas if shift > 255 
+        if shift > 255 {
+            return 0;
+        }
+
+        let shifted_u256 = val / 2_u256.wrapping_pow(shift);
+
+        // convert back to felt252
+        shifted_u256.try_into().unwrap()
+    }
+}
+
+impl U256WrappingBitshiftImpl of WrappingBitshift<u256> {
     fn wrapping_shl(self: u256, shift: u256) -> u256 {
         let (result, _) = u256_overflow_mul(self, 2.wrapping_pow(shift));
         result

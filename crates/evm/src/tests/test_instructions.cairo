@@ -6,3 +6,4 @@ mod test_environment_information;
 mod test_push_operations;
 mod test_memory_operations;
 mod test_exchange_operations;
+mod test_system_operations;

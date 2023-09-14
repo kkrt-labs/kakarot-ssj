@@ -4,7 +4,7 @@ use evm::context::ExecutionContextTrait;
 use evm::stack::StackTrait;
 use evm::errors::STACK_UNDERFLOW;
 use evm::errors::EVMError;
-use utils::math::{Exponentiation, Bitshift};
+use utils::math::{Exponentiation, Bitshift, WrappingBitshift};
 use utils::constants::{POW_2_127};
 use evm::context::BoxDynamicExecutionContextDestruct;
 use utils::u256_signed_math::SignedPartialOrd;
@@ -58,7 +58,11 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x14 - EQ
     /// # Specification: https://www.evm.codes/#14?fork=shanghai
     fn exec_eq(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(2)?;
+        let a = *popped[0];
+        let b = *popped[1];
+        let result = (a == b).into();
+        self.stack.push(result)
     }
 
     /// 0x15 - ISZERO

@@ -11,7 +11,7 @@ use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
     duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
     memory_operations, sha3, StopAndArithmeticOperationsTrait, ComparisonAndBitwiseOperationsTrait,
-    system_operations, BlockInformationTrait, DuplicationOperationsTrait,
+    SystemOperationsTrait, BlockInformationTrait, DuplicationOperationsTrait,
     EnvironmentInformationTrait, PushOperationsTrait, MemoryOperationTrait
 };
 
@@ -619,43 +619,43 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 240 {
             // CREATE
-            system_operations::exec_create(ref context);
+            context.exec_create();
         }
         if opcode == 241 {
             // CALL
-            system_operations::exec_call(ref context);
+            context.exec_call();
         }
         if opcode == 242 {
             // CALLCODE
-            system_operations::exec_callcode(ref context);
+            context.exec_callcode();
         }
         if opcode == 243 {
             // RETURN
-            system_operations::exec_return(ref context);
+            context.exec_return();
         }
         if opcode == 244 {
             // DELEGATECALL
-            system_operations::exec_delegatecall(ref context);
+            context.exec_delegatecall();
         }
         if opcode == 245 {
             // CREATE2
-            system_operations::exec_create2(ref context);
+            context.exec_create2();
         }
         if opcode == 250 {
             // STATICCALL
-            system_operations::exec_staticcall(ref context);
+            context.exec_staticcall();
         }
         if opcode == 253 {
             // REVERT
-            system_operations::exec_revert(ref context);
+            context.exec_revert();
         }
         if opcode == 254 {
             // INVALID
-            system_operations::exec_invalid(ref context);
+            context.exec_invalid();
         }
         if opcode == 255 {
             // SELFDESTRUCT
-            system_operations::exec_selfdestruct(ref context);
+            context.exec_selfdestruct();
         }
         // Unknown opcode
         unknown_opcode(opcode);

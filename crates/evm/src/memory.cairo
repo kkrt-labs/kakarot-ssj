@@ -9,7 +9,10 @@ use utils::constants::{
     POW_256_16_U256
 };
 use cmp::{max};
-use utils::{helpers, math::Exponentiation, math::WrappingExponentiation};
+use utils::{
+    helpers, helpers::SpanExtensionTrait, helpers::ArrayExtensionTrait, math::Exponentiation,
+    math::WrappingExponentiation
+};
 use debug::PrintTrait;
 
 
@@ -24,11 +27,10 @@ trait MemoryTrait {
     fn size(ref self: Memory) -> usize;
     fn store(ref self: Memory, element: u256, offset: usize);
     fn store_n(ref self: Memory, elements: Span<u8>, offset: usize);
-    fn ensure_length(ref self: Memory, length: usize) -> usize;
-    fn load(ref self: Memory, offset: usize) -> (u256, usize);
-    fn load_n(
-        ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize
-    ) -> usize;
+    fn store_padded_segment(ref self: Memory, offset: usize, length: usize, source: Span<u8>);
+    fn ensure_length(ref self: Memory, length: usize);
+    fn load(ref self: Memory, offset: usize) -> u256;
+    fn load_n(ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize);
 }
 
 impl MemoryImpl of MemoryTrait {
@@ -130,40 +132,65 @@ impl MemoryImpl of MemoryTrait {
         self.store_last_word(final_chunk, offset_in_chunk_f, mask_f, final_bytes);
     }
 
+    /// Stores a span of N bytes into memory at a specified offset with padded with 0s to match the size parameter.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The `Memory` instance to store the bytes in.
+    /// * `offset` - The offset within memory to store the bytes at.
+    /// * `length` - The length of bytes to store in memory.
+    /// * `source` - A span of bytes to store in memory.
+    #[inline(always)]
+    fn store_padded_segment(ref self: Memory, offset: usize, length: usize, source: Span<u8>) {
+        if length == 0 {
+            return;
+        }
+
+        // For performance reasons, we don't add the zeros directly to the source, which would generate an implicit copy, which might be expensive if the source is big.
+        // Instead, we'll copy the source into memory, then create a new span containing the zeros.
+        // TODO: optimize this with a specific function
+        let slice_size = if (length > source.len()) {
+            source.len()
+        } else {
+            length
+        };
+
+        let data_to_copy: Span<u8> = source.slice(0, slice_size);
+        self.store_n(data_to_copy, offset);
+
+        // For out of bound bytes, 0s will be copied.
+        if (slice_size < length) {
+            let mut out_of_bounds_bytes: Array<u8> = ArrayTrait::new();
+            out_of_bounds_bytes.append_n(0, length - source.len());
+
+            self.store_n(out_of_bounds_bytes.span(), offset + slice_size);
+        }
+    }
 
     /// Ensures that the memory is at least `length` bytes long. Expands if necessary.
-    /// # Returns
-    /// The gas cost of expanding the memory.
     #[inline(always)]
-    fn ensure_length(ref self: Memory, length: usize) -> usize {
+    fn ensure_length(ref self: Memory, length: usize) {
         if self.bytes_len < length {
             self.expand(length - self.bytes_len)
         } else {
-            return 0;
+            return;
         }
     }
 
     /// Expands memory if necessary, then load 32 bytes from it at the given offset.
     /// # Returns
     /// * `u256` - The loaded value.
-    /// * `usize` - The gas cost of expanding the memory.
     #[inline(always)]
-    fn load(ref self: Memory, offset: usize) -> (u256, usize) {
-        let gas_cost = self.ensure_length(32 + offset);
-        let loaded_element = self.load_internal(offset);
-        (loaded_element, gas_cost)
+    fn load(ref self: Memory, offset: usize) -> u256 {
+        self.ensure_length(32 + offset);
+        self.load_internal(offset)
     }
 
     /// Expands memory if necessary, then load elements_len bytes from the memory at given offset inside elements.
-    /// # Returns
-    /// * `usize` - The gas cost of expanding the memory.
     #[inline(always)]
-    fn load_n(
-        ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize
-    ) -> usize {
-        let gas_cost = self.ensure_length(elements_len + offset);
+    fn load_n(ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize) {
+        self.ensure_length(elements_len + offset);
         self.load_n_internal(elements_len, ref elements, offset);
-        gas_cost
     }
 }
 
@@ -422,32 +449,17 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     ///
     /// * `self` - A reference to the `Memory` instance to expand.
     /// * `length` - The length to expand the memory chunk by.
-    ///
-    /// # Returns
-    ///
-    /// The cost of the expansion.
     #[inline(always)]
-    fn expand(ref self: Memory, length: usize) -> usize {
+    fn expand(ref self: Memory, length: usize) {
         if (length == 0) {
-            return 0;
+            return;
         }
-
-        let last_memory_size_word = (self.bytes_len + 31) / 32;
-        let mut last_memory_cost = (last_memory_size_word * last_memory_size_word) / 512;
-        last_memory_cost += (3 * last_memory_size_word);
 
         let adjusted_length = (((length + 31) / 32) * 32);
         let new_bytes_len = self.bytes_len + adjusted_length;
-        let new_memory_size_word = (new_bytes_len + 31) / 32;
-        let new_memory_cost = (new_memory_size_word * new_memory_size_word) / 512;
-        let new_memory_cost = new_memory_cost + (3 * new_memory_size_word);
-
-        let cost = new_memory_cost - last_memory_cost;
 
         // Update memory size.
         self.bytes_len = new_bytes_len;
-
-        cost
     }
 
 
