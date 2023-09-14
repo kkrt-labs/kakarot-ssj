@@ -2,7 +2,7 @@
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
 };
-use evm::errors::EVMError;
+use evm::errors::{EVMError, INVALID_DESTINATION};
 use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
 use evm::helpers::U256IntoResultU32;
@@ -49,7 +49,28 @@ impl MemoryOperation of MemoryOperationTrait {
     /// The new pc target has to be a JUMPDEST opcode.
     /// # Specification: https://www.evm.codes/#56?fork=shanghai
     fn exec_jump(ref self: ExecutionContext) -> Result<(), EVMError> {
-        panic_with_felt252('JUMP not implement yet')
+        let idx = self.stack.pop_usize()?;
+
+        // TODO: Currently this doesn't check that byte is actually `JUMPDEST`
+        // and not `0x5B` that is a part of PUSHN instruction
+        // 
+        // That can be done by storing all valid jump locations during contract deployment
+        // which would also simplify the logic because we would be just checking if idx is
+        // present in that list
+        //
+        // Check if idx in bytecode points to `JUMPDEST` opcode
+        match self.call_context().bytecode.get(idx) {
+            Option::Some(op) => {
+                if *op.unbox() != 0x5B {
+                    return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
+                }
+            },
+            Option::None => {
+                return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
+            }
+        }
+        self.program_counter = idx;
+        Result::Ok(())
     }
 
     /// 0x57 - JUMPI operation.
