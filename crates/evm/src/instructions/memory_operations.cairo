@@ -13,7 +13,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Load word from memory and push to stack.
     fn exec_mload(ref self: ExecutionContext) -> Result<(), EVMError> {
         let offset: usize = self.stack.pop_usize()?;
-        let (result, _) = self.memory.load(offset);
+        let result = self.memory.load(offset);
         self.stack.push(result)
     }
 
