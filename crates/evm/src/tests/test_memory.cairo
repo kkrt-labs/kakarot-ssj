@@ -565,7 +565,6 @@ fn test_store_byte_should_store_byte_at_offset_in_new_word() {
     // When
     memory.store_byte(0x01, 32);
 
-    memory.items[2].print();
     // Then
     assert(memory.items[0] == 0x0, 'Wrong value for word 0');
     assert(memory.items[1] == 0x0, 'Wrong value for word 1');

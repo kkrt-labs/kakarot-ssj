@@ -106,10 +106,9 @@ def compare_snapshots(current, previous):
     """Compare current and previous snapshots and return differences."""
     worsened = []
     improvements = []
+    common_keys = set(current.keys()) & set(previous.keys())
 
-    for key in previous:
-        if key not in current:
-            continue
+    for key in common_keys:
         prev = previous[key]
         cur = current[key]
         percentage_change = (cur - prev) * 100 / prev
@@ -154,13 +153,13 @@ def print_colored_output(improvements, worsened, gas_changes):
 
 def total_gas_used(current, previous):
     """Return the total gas used in the current and previous snapshot, not taking into account added tests."""
-    cur_gas = 0
-    prev_gas = 0
-    for key, value in current.items():
-        if key in previous:
-            cur_gas += value
-            prev_gas+= previous[key]
+    common_keys = set(current.keys()) & set(previous.keys())
+
+    cur_gas = sum(current[key] for key in common_keys)
+    prev_gas = sum(previous[key] for key in common_keys)
+
     return cur_gas, prev_gas
+
 
 def main():
     """Main function to execute the snapshot test framework."""

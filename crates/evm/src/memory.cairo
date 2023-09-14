@@ -11,7 +11,7 @@ use utils::constants::{
 use cmp::{max};
 use utils::{
     helpers, helpers::SpanExtensionTrait, helpers::ArrayExtensionTrait, math::Exponentiation,
-    math::WrappingExponentiation
+    math::WrappingExponentiation, math::Bitshift
 };
 use debug::PrintTrait;
 
@@ -95,9 +95,9 @@ impl MemoryImpl of MemoryTrait {
         // As the memory words are in big-endian order, we need to convert our left-based offset
         // to a right-based one.
         let right_offset = 15 - left_offset;
-        let mask: u128 = 0xFF_u128.shl(right_offset.into() * 8);
+        let mask: u128 = 0xFF * helpers::pow2(right_offset.into() * 8);
 
-        // First erase byte value at leff, then set the new value using bitwise ops
+        // First erase byte value at offset, then set the new value using bitwise ops
         let word: u128 = self.items.get(index.into());
         let new_word = (word & ~mask) | (value.into().shl(right_offset.into() * 8));
         self.items.insert(index.into(), new_word);
