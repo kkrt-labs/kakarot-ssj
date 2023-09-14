@@ -274,14 +274,83 @@ fn test_sha3_size_0x0C80_offset_0() {
 
 #[test]
 #[available_gas(20000000000)]
-fn test_sha3_internal_get_last_input_size_5() {
+fn test_sha3_internal_fill_array_with_memory_chunks() {
+    // Given
+    let mut ctx = setup_execution_context();
+    let mut to_hash: Array<u64> = Default::default();
+
+    ctx.memory.store(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
+    let mut size = 32;
+    let mut offset = 0;
+
+    // When
+    let (chunks_from_mem, _) = internal::compute_data_origin(size, offset, ctx.memory.bytes_len);
+    internal::fill_array_with_memory_chunks(ref ctx, ref to_hash, ref offset, chunks_from_mem);
+
+    // Then
+    assert(to_hash.len() == 4, 'wrong array length');
+    assert((*to_hash[0]) == 0xE5000000FFFFFFFA, 'wrong array value');
+    assert((*to_hash[1]) == 0xDE00000077000000, 'wrong array value');
+    assert((*to_hash[2]) == 0x00200400000000AD, 'wrong array value');
+    assert((*to_hash[3]) == 0x0000450000DEFA00, 'wrong array value');
+}
+
+#[test]
+#[available_gas(20000000000)]
+fn test_sha3_internal_fill_array_with_memory_chunks_size_33() {
+    // Given
+    let mut ctx = setup_execution_context();
+    let mut to_hash: Array<u64> = Default::default();
+
+    ctx.memory.store(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
+    let mut size = 33;
+    let mut offset = 0;
+
+    // When
+    let (chunks_from_mem, _) = internal::compute_data_origin(size, offset, ctx.memory.bytes_len);
+    internal::fill_array_with_memory_chunks(ref ctx, ref to_hash, ref offset, chunks_from_mem);
+
+    // Then
+    assert(to_hash.len() == 4, 'wrong array length');
+    assert((*to_hash[0]) == 0xE5000000FFFFFFFA, 'wrong array value');
+    assert((*to_hash[1]) == 0xDE00000077000000, 'wrong array value');
+    assert((*to_hash[2]) == 0x00200400000000AD, 'wrong array value');
+    assert((*to_hash[3]) == 0x0000450000DEFA00, 'wrong array value');
+}
+
+#[test]
+#[available_gas(20000000000)]
+fn test_sha3_internal_fill_array_with_zeroes() {
+    // Given
+    let mut ctx = setup_execution_context();
+    let mut to_hash: Array<u64> = Default::default();
+
+    ctx.memory.store(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
+    let mut size = 33;
+    let mut offset = 50;
+
+    // When
+    let (_, chunks_of_zeroes) = internal::compute_data_origin(size, offset, ctx.memory.bytes_len);
+    internal::fill_array_with_zeroes(ref ctx, ref to_hash, chunks_of_zeroes);
+
+    // Then
+    assert(to_hash.len() == 4, 'wrong array length');
+    assert((*to_hash[0]) == 0x0, 'wrong array value');
+    assert((*to_hash[1]) == 0x0, 'wrong array value');
+    assert((*to_hash[2]) == 0x0, 'wrong array value');
+    assert((*to_hash[3]) == 0x0, 'wrong array value');
+}
+
+#[test]
+#[available_gas(20000000000)]
+fn test_sha3_internal_fill_array_with_last_inputs_size_5() {
     // Given
     let mut to_hash: Array<u64> = Default::default();
     let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
     let size = 5;
 
     // When
-    let result = internal::get_last_input(ref to_hash, value, size);
+    let result = internal::fill_array_with_last_inputs(ref to_hash, value, size);
 
     // Then
     assert(result == 0xE5000000FFFFFFFA, 'wrong result');
@@ -290,32 +359,37 @@ fn test_sha3_internal_get_last_input_size_5() {
 
 #[test]
 #[available_gas(20000000000)]
-fn test_sha3_internal_get_last_input_size_20() {
+fn test_sha3_internal_fill_array_with_last_inputs_size_20() {
     // Given
     let mut to_hash: Array<u64> = Default::default();
     let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
     let size = 20;
 
     // When
-    let result = internal::get_last_input(ref to_hash, value, size);
+    let result = internal::fill_array_with_last_inputs(ref to_hash, value, size);
 
     // Then
     assert(result == 0x00200400000000AD, 'wrong result');
     assert(to_hash.len() == 2, 'wrong result');
+    assert((*to_hash[0]) == 0xE5000000FFFFFFFA, 'wrong array value');
+    assert((*to_hash[1]) == 0xDE00000077000000, 'wrong array value');
 }
 
 #[test]
 #[available_gas(20000000000)]
-fn test_sha3_internal_get_last_input_size_50() {
+fn test_sha3_internal_fill_array_with_last_inputs_size_50() {
     // Given
     let mut to_hash: Array<u64> = Default::default();
     let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
     let size = 50;
 
     // When
-    let result = internal::get_last_input(ref to_hash, value, size);
+    let result = internal::fill_array_with_last_inputs(ref to_hash, value, size);
 
     // Then
     assert(result == 0x0000450000DEFA00, 'wrong result');
     assert(to_hash.len() == 3, 'wrong result');
+    assert((*to_hash[0]) == 0xE5000000FFFFFFFA, 'wrong array value');
+    assert((*to_hash[1]) == 0xDE00000077000000, 'wrong array value');
+    assert((*to_hash[2]) == 0x00200400000000AD, 'wrong array value');
 }

@@ -7,20 +7,18 @@ use evm::memory::MemoryTrait;
 use evm::errors::EVMError;
 use evm::helpers::U256IntoResultU32;
 use keccak::{cairo_keccak, u128_split};
-use utils::helpers::{split_u256_into_u64_little, u256_bytes_reverse};
+use utils::helpers::{split_u256_into_u64_little, reverse_endianness};
 
 use array::ArrayTrait;
 
 #[generate_trait]
 impl Sha3Impl of Sha3Trait {
-    /// SHA3 operation : Hashes n bytes in memory at a given offset in memory.
-    ///
-    /// # Arguments
+    /// SHA3 operation : Hashes n bytes in memory at a given offset in memory
+    /// and push the hash result to the stack.
+    /// 
+    /// # Inputs
     /// * `offset` - The offset in memory where to read the datas
     /// * `size` - The amount of bytes to read
-    /// 
-    /// Format 32 bytes chunk of data read from memory into 64 bits chunk in little endian
-    /// to be able to call cairro_keccak.
     /// 
     /// # Specification: https://www.evm.codes/#20?fork=shanghai
     fn exec_sha3(ref self: ExecutionContext) -> Result<(), EVMError> {
@@ -28,11 +26,69 @@ impl Sha3Impl of Sha3Trait {
         let mut size: u32 = Into::<u256, Result<u32, EVMError>>::into((self.stack.pop()?))?;
 
         let mut to_hash: Array<u64> = Default::default();
-        let mut last_input: u64 = 0;
 
-        // Fill to_hash with bytes from memory
+        let (chunks_from_mem, chunks_of_zeroes) = internal::compute_data_origin(
+            size, offset, self.memory.bytes_len
+        );
+        internal::fill_array_with_memory_chunks(ref self, ref to_hash, ref offset, chunks_from_mem);
+        internal::fill_array_with_zeroes(ref self, ref to_hash, chunks_of_zeroes);
+
+        // Fill last_input with last bytes to hash
+        let last_input: u64 = if (size % 32 != 0) {
+            let (loaded, _) = self.memory.load(offset);
+            internal::fill_array_with_last_inputs(ref to_hash, loaded, size % 32)
+        } else {
+            0
+        };
+
+        let mut hash = cairo_keccak(ref to_hash, last_input, size % 8);
+        self.stack.push(reverse_endianness(hash))
+    }
+}
+
+
+mod internal {
+    use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
+    use evm::stack::StackTrait;
+    use evm::memory::MemoryTrait;
+    use utils::helpers::split_u256_into_u64_little;
+
+    /// This function will compute how many chunks of 32 Bytes data are read
+    /// from the memory and how many chunks of 32 Bytes data must be filled
+    /// with zeroes.
+    ///
+    /// # Arguments
+    ///
+    /// * `size` - The amount of bytes to hash
+    /// * `offset` - Offset in memory
+    /// * `mem_len` - Size of the memory
+    /// Returns : (chunk_from_mem, chunks_of_zeroes)
+    fn compute_data_origin(size: u32, offset: u32, mem_len: u32) -> (u32, u32) {
+        if offset > mem_len {
+            return (0, size / 32);
+        }
+        if (mem_len - offset < 32) && (size > 32) {
+            let chunk_from_mem = (mem_len - offset) / 32;
+            return (chunk_from_mem + 1, (size / 32) - chunk_from_mem - 1);
+        }
+        let chunk_from_mem = (cmp::min(mem_len - offset, size)) / 32;
+        (chunk_from_mem, (size / 32) - chunk_from_mem)
+    }
+
+    /// This function will fill an array with little endian u64
+    /// by splitting 32 Bytes chunk read from the memory.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The context in which the memory is read
+    /// * `to_hash` - A reference to the array to fill
+    /// * `offset` - Offset in memory
+    /// * `amount` - The amount of 32 Bytes chunks to read from memory
+    fn fill_array_with_memory_chunks(
+        ref self: ExecutionContext, ref to_hash: Array<u64>, ref offset: u32, mut amount: u32
+    ) {
         loop {
-            if (size < 32) | (offset > self.memory.bytes_len) {
+            if amount == 0 {
                 break;
             }
             let (loaded, _) = self.memory.load(offset);
@@ -43,12 +99,23 @@ impl Sha3Impl of Sha3Trait {
             to_hash.append(high_l);
 
             offset += 32;
-            size -= 32;
+            amount -= 1;
         };
+    }
 
-        // Bytes from unallocated memory are set to 0
+    /// This function will fill an u64 array with a given amount of 
+    /// 32 Bytes chunks of zeroes.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The context in which the memory is read
+    /// * `to_hash` - A reference to the array to fill
+    /// * `amount` - The amount of 32 Bytes chunks of zeroes to append to to hash
+    fn fill_array_with_zeroes(
+        ref self: ExecutionContext, ref to_hash: Array<u64>, mut amount: u32
+    ) {
         loop {
-            if size < 32 {
+            if amount == 0 {
                 break;
             }
             to_hash.append(0);
@@ -56,40 +123,21 @@ impl Sha3Impl of Sha3Trait {
             to_hash.append(0);
             to_hash.append(0);
 
-            offset += 32;
-            size -= 32;
+            amount -= 1;
         };
-
-        // Fill last_input with last bytes to hash
-        if size > 0 {
-            let (loaded, _) = self.memory.load(offset);
-            last_input = internal::get_last_input(ref to_hash, loaded, size);
-            size %= 8;
-        }
-
-        let mut hash = cairo_keccak(ref to_hash, last_input, size);
-
-        self.stack.push(u256_bytes_reverse(hash))
     }
-}
 
-
-mod internal {
-    use utils::helpers::split_u256_into_u64_little;
-    /// Return the last u64 chunk to hash, given a size, from an u256.
-    /// This function is used to prepare inputs for keccak::cairo_keccak.
-    ///
-    /// This function will split a given u256 into little endian u64 and
-    /// return the chunk containing the last bytes to hash while
-    /// appending the chunks prior to this one.
+    /// This function will fill an array with the remaining little endian u64 
+    /// depending on size from a 32 Bytes chunk of data and return
+    /// the u64 chunk containing the last bytes that aren't 8 Bytes long.
     ///
     /// # Arguments
     ///
-    /// * `to_hash` - A reference to the array containing previous bytes
-    /// * `value` - The `u256` element to get the last input from
-    /// * `size` - The amount of bytes to append to to_hash
-    /// Returns the last_input.
-    fn get_last_input(ref to_hash: Array<u64>, value: u256, size: u32) -> u64 {
+    /// * `to_hash` - A reference to the array to fill
+    /// * `value` - The 32 Bytes chunk to split and get the bytes from
+    /// * `size` - The amount of bytes still required to hash
+    /// Returns the last u64 chunk that isn't 8 Bytes long.
+    fn fill_array_with_last_inputs(ref to_hash: Array<u64>, value: u256, size: u32) -> u64 {
         let ((high_h, low_h), (high_l, low_l)) = split_u256_into_u64_little(value);
         if size < 8 {
             return low_h;

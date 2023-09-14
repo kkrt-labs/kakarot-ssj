@@ -167,7 +167,7 @@ fn test_clone_pad_zeroes() {
 #[available_gas(2000000000)]
 fn test_reverse_bytes_u256() {
     let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
-    let res = helpers::u256_bytes_reverse(value);
+    let res = helpers::reverse_endianness(value);
     assert(
         res == 0x0000450000DEFA0000200400000000ADDE00000077000000E5000000FFFFFFFA,
         'reverse mismatch'
