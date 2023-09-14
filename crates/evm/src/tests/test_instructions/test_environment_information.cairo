@@ -214,14 +214,20 @@ fn test_calldatacopy_with_offset() {
 #[available_gas(20000000)]
 fn test_calldatacopy_with_out_of_bound_bytes() {
     // For out of bound bytes, 0s will be copied.
-    test_calldatacopy(32, 0, 8, array![4, 5, 6].span().pad_right(5));
+    let mut expected = array![4, 5, 6];
+    expected.append_n(0, 5);
+
+    test_calldatacopy(32, 0, 8, expected.span());
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_calldatacopy_with_out_of_bound_bytes_multiple_words() {
     // For out of bound bytes, 0s will be copied.
-    test_calldatacopy(32, 0, 34, array![4, 5, 6].span().pad_right(31));
+    let mut expected = array![4, 5, 6];
+    expected.append_n(0, 31);
+
+    test_calldatacopy(32, 0, 34, expected.span());
 }
 
 fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Span<u8>) {
