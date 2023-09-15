@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: "3.x" # Specify the Python version required
 
@@ -34,5 +34,4 @@ jobs:
           result="${result//'%'/'%25'}"
           result="${result//$'\n'/'%0A'}"
           result="${result//$'\r'/'%0D'}"
-          echo "::set-output name=result::${result}"
           echo "${result}" >> $GITHUB_STEP_SUMMARY
