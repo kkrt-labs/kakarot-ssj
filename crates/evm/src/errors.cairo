@@ -23,7 +23,7 @@ enum EVMError {
     InvalidProgramCounter: felt252,
     TypeConversionError: felt252,
     ReturnDataError: felt252,
-    JumpError: felt252,,
+    JumpError: felt252,
     StateModificationError: felt252
 }
 
