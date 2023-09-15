@@ -302,7 +302,6 @@ fn test_exec_msize_store_max_offset_1() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('JUMP not implement yet',))]
 fn test_exec_jump_valid() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
@@ -321,7 +320,6 @@ fn test_exec_jump_valid() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('JUMP not implement yet',))]
 fn test_exec_jump_invalid() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
@@ -339,7 +337,6 @@ fn test_exec_jump_invalid() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('JUMP not implement yet',))]
 fn test_exec_jump_out_of_bounds() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();

@@ -12,6 +12,7 @@ mod environmental_information;
 use environmental_information::EnvironmentInformationTrait;
 
 mod exchange_operations;
+use exchange_operations::ExchangeOperationsTrait;
 
 mod logging_operations;
 
