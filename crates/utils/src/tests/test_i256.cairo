@@ -353,5 +353,4 @@ fn test_shl_negative_out_of_bounds_should_panic() {
     let shift: i256 = 2_u256.into();
 
     let result = value.shl(shift);
-    result.value.print();
 }
