@@ -11,7 +11,7 @@ use debug::PrintTrait;
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_size_0_offset_0() {
+fn test_exec_sha3_size_0_offset_0() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -34,7 +34,7 @@ fn test_sha3_size_0_offset_0() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_size_5_offset_4() {
+fn test_exec_sha3_size_5_offset_4() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -55,7 +55,7 @@ fn test_sha3_size_5_offset_4() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_size_10_offset_10() {
+fn test_exec_sha3_size_10_offset_10() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -76,7 +76,7 @@ fn test_sha3_size_10_offset_10() {
 
 #[test]
 #[available_gas(1000000000000000)]
-fn test_sha3_size_0xFFFFF_offset_1000() {
+fn test_exec_sha3_size_0xFFFFF_offset_1000() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -97,7 +97,7 @@ fn test_sha3_size_0xFFFFF_offset_1000() {
 
 #[test]
 #[available_gas(1000000000000000)]
-fn test_sha3_size_1000000_offset_2() {
+fn test_exec_sha3_size_1000000_offset_2() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -118,7 +118,7 @@ fn test_sha3_size_1000000_offset_2() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_size_1_offset_2048() {
+fn test_exec_sha3_size_1_offset_2048() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -139,7 +139,7 @@ fn test_sha3_size_1_offset_2048() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_size_0_offset_1024() {
+fn test_exec_sha3_size_0_offset_1024() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -160,7 +160,7 @@ fn test_sha3_size_0_offset_1024() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_size_32_offset_2016() {
+fn test_exec_sha3_size_32_offset_2016() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -181,7 +181,7 @@ fn test_sha3_size_32_offset_2016() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_size_32_offset_0() {
+fn test_exec_sha3_size_32_offset_0() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -202,7 +202,7 @@ fn test_sha3_size_32_offset_0() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_size_31_offset_0() {
+fn test_exec_sha3_size_31_offset_0() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -223,7 +223,7 @@ fn test_sha3_size_31_offset_0() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_sha3_size_33_offset_0() {
+fn test_exec_sha3_size_33_offset_0() {
     // Given
     let mut ctx = setup_execution_context();
 
@@ -244,22 +244,22 @@ fn test_sha3_size_33_offset_0() {
 
 #[test]
 #[available_gas(20000000000)]
-fn test_sha3_size_0x0C80_offset_0() {
+fn test_exec_sha3_size_0x0C80_offset_0() {
     // Given
     let mut ctx = setup_execution_context();
 
     ctx.stack.push(0x0C80);
     ctx.stack.push(0x00);
 
-    let mut memDst: u32 = 0;
+    let mut mem_dst: u32 = 0;
     loop {
-        if memDst > 0x0C80 {
+        if mem_dst > 0x0C80 {
             break;
         }
         ctx
             .memory
-            .store(0xFAFAFAFA00000000000000000000000000000000000000000000000000000000, memDst);
-        memDst += 0x20;
+            .store(0xFAFAFAFA00000000000000000000000000000000000000000000000000000000, mem_dst);
+        mem_dst += 0x20;
     };
 
     // When
@@ -274,7 +274,7 @@ fn test_sha3_size_0x0C80_offset_0() {
 
 #[test]
 #[available_gas(20000000000)]
-fn test_sha3_internal_fill_array_with_memory_chunks() {
+fn test_internal_fill_array_with_memory_chunks() {
     // Given
     let mut ctx = setup_execution_context();
     let mut to_hash: Array<u64> = Default::default();
@@ -299,7 +299,7 @@ fn test_sha3_internal_fill_array_with_memory_chunks() {
 
 #[test]
 #[available_gas(20000000000)]
-fn test_sha3_internal_fill_array_with_memory_chunks_size_33() {
+fn test_internal_fill_array_with_memory_chunks_size_33() {
     // Given
     let mut ctx = setup_execution_context();
     let mut to_hash: Array<u64> = Default::default();
@@ -324,7 +324,7 @@ fn test_sha3_internal_fill_array_with_memory_chunks_size_33() {
 
 #[test]
 #[available_gas(20000000000)]
-fn test_sha3_internal_fill_array_with_last_inputs_size_5() {
+fn test_internal_fill_array_with_last_inputs_size_5() {
     // Given
     let mut to_hash: Array<u64> = Default::default();
     let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
@@ -340,7 +340,7 @@ fn test_sha3_internal_fill_array_with_last_inputs_size_5() {
 
 #[test]
 #[available_gas(20000000000)]
-fn test_sha3_internal_fill_array_with_last_inputs_size_20() {
+fn test_internal_fill_array_with_last_inputs_size_20() {
     // Given
     let mut to_hash: Array<u64> = Default::default();
     let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
@@ -358,7 +358,7 @@ fn test_sha3_internal_fill_array_with_last_inputs_size_20() {
 
 #[test]
 #[available_gas(20000000000)]
-fn test_sha3_internal_fill_array_with_last_inputs_size_50() {
+fn test_internal_fill_array_with_last_inputs_size_50() {
     // Given
     let mut to_hash: Array<u64> = Default::default();
     let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
