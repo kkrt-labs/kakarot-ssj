@@ -89,7 +89,11 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let a: i256 = self.stack.pop_i256()?;
         let b: i256 = self.stack.pop_i256()?;
 
-        let result: u256 = (a / b).into();
+        let result: u256 = if b == 0_u256.into() {
+            0
+        } else {
+            (a / b).into()
+        };
         self.stack.push(result)
     }
 
@@ -123,7 +127,11 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let a: i256 = self.stack.pop_i256()?;
         let b: i256 = self.stack.pop_i256()?;
 
-        let result: u256 = (a % b).into();
+        let result: u256 = if b == 0_u256.into() {
+            0
+        } else {
+            (a % b).into()
+        };
         self.stack.push(result)
     }
 
