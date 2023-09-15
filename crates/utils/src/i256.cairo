@@ -74,19 +74,7 @@ impl I256Rem of Rem<i256> {
 
 impl I256BitshiftImpl of Bitshift<i256> {
     fn shl(self: i256, shift: i256) -> i256 {
-        // Checks the MSB bit sign for a 256-bit integer
-        let positive = self.value.high < POW_2_127;
-        let sign = if positive {
-            // If sign is positive, set it to 0.
-            0
-        } else {
-            // If sign is negative, set the MSB bit to 1 and others to 0.
-            0x8000000000000000000000000000000000000000000000000000000000000000
-        };
-
-        // XORing with sign before and ORing the shift propagates the sign bit of the operation
-        let result = (sign ^ self.value).shl(shift.value) | sign;
-        return result.into();
+        panic_with_felt252('Unimplemented')
     }
 
     fn shr(self: i256, shift: i256) -> i256 {
