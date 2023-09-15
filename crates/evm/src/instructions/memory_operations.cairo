@@ -57,7 +57,7 @@ impl MemoryOperation of MemoryOperationTrait {
     ///
     /// Note: Jump destinations are 0-indexed.
     fn exec_jump(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let idx = self.stack.pop_usize()?;
+        let index = self.stack.pop_usize()?;
 
         // TODO: Currently this doesn't check that byte is actually `JUMPDEST`
         // and not `0x5B` that is a part of PUSHN instruction
@@ -67,9 +67,9 @@ impl MemoryOperation of MemoryOperationTrait {
         // present in that list
         //
         // Check if idx in bytecode points to `JUMPDEST` opcode
-        match self.call_context().bytecode.get(idx) {
-            Option::Some(op) => {
-                if *op.unbox() != 0x5B {
+        match self.call_context().bytecode.get(index) {
+            Option::Some(opcode) => {
+                if *opcode.unbox() != 0x5B {
                     return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
                 }
             },
@@ -77,7 +77,7 @@ impl MemoryOperation of MemoryOperationTrait {
                 return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
             }
         }
-        self.program_counter = idx;
+        self.program_counter = index;
         Result::Ok(())
     }
 
