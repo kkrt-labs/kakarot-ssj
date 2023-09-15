@@ -1,10 +1,42 @@
 use evm::instructions::ComparisonAndBitwiseOperationsTrait;
 use evm::tests::test_utils::setup_execution_context;
 use evm::stack::StackTrait;
-use option::OptionTrait;
+
 use debug::PrintTrait;
 use integer::BoundedInt;
 use evm::context::BoxDynamicExecutionContextDestruct;
+
+#[test]
+#[available_gas(20000000)]
+fn test_eq_same_pair() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
+    ctx.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
+
+    // When
+    ctx.exec_eq();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x01, 'stack top should be 0x01');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_eq_different_pair() {
+    // Given
+    let mut ctx = setup_execution_context();
+    ctx.stack.push(0xAB8765432DCBA98765410F149E87610FDCBA98765432543217654DCBA93210F8).unwrap();
+    ctx.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
+
+    // When
+    ctx.exec_eq();
+
+    // Then
+    assert(ctx.stack.len() == 1, 'stack should have one element');
+    assert(ctx.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
+}
 
 #[test]
 #[available_gas(20000000)]
@@ -115,7 +147,7 @@ fn test_xor_half_same_pair() {
 #[test]
 #[available_gas(20000000)]
 fn test_not_zero() {
-    // Given 
+    // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(0x00).unwrap();
 
@@ -132,7 +164,7 @@ fn test_not_zero() {
 #[test]
 #[available_gas(20000000)]
 fn test_not_max_uint() {
-    // Given 
+    // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(BoundedInt::<u256>::max()).unwrap();
 
@@ -246,12 +278,12 @@ fn test_exec_gt_true() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_shl() {
-    // Given 
+    // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(0xff00000000000000000000000000000000000000000000000000000000000000).unwrap();
     ctx.stack.push(4_u256).unwrap();
 
-    // When 
+    // When
     ctx.exec_shl();
 
     // Then
@@ -268,12 +300,12 @@ fn test_exec_shl() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_shl_wrapping() {
-    // Given 
+    // Given
     let mut ctx = setup_execution_context();
     ctx.stack.push(0xff00000000000000000000000000000000000000000000000000000000000000).unwrap();
     ctx.stack.push(256_u256).unwrap();
 
-    // When 
+    // When
     ctx.exec_shl();
 
     // Then

@@ -103,8 +103,16 @@ mod internal {
         self.dynamic_context = BoxTrait::new(dyn_ctx);
     }
 
-    /// Generic logging operation.
-    /// Append log record with n topics.
+
+    /// This function will load data from the memory by 32Bytes
+    /// using given topics and data.
+    /// The dynamic context has to be recreated to be modified.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The context to which the event will be added
+    /// * `topics` - Topics of the event
+    /// * `data` - Data of the event
     fn load_data_from_memory(
         ref self: ExecutionContext, ref data_array: Array<felt252>, size: u32, offset: u32
     ) -> Result<(), EVMError> {
@@ -112,7 +120,7 @@ mod internal {
         loop {
             if 31 + i > size {
                 if i != size {
-                    let (mut loaded, _) = self.memory.load(offset + i);
+                    let loaded = self.memory.load(offset + i);
                     let mut chunk: Array<u8> = u256_to_bytes_array(loaded);
                     let mut last_elem = 0;
                     let mut j = 0;
@@ -128,7 +136,7 @@ mod internal {
                 }
                 break;
             };
-            let (mut loaded, _) = self.memory.load(offset + i);
+            let mut loaded = self.memory.load(offset + i);
             loaded /= 256;
             data_array.append(loaded.try_into().unwrap());
             i += 31;

@@ -15,30 +15,14 @@
 //! ```
 
 // Core lib imports
-use dict::Felt252DictTrait;
-use option::OptionTrait;
-use array::ArrayTrait;
-use traits::Into;
-use result::{ResultTrait, Result};
+
 use utils::constants;
 use debug::PrintTrait;
-use box::BoxTrait;
 use nullable::{nullable_from_box, NullableTrait};
 use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW};
+use evm::helpers::U256IntoResultU32;
+use starknet::EthAddress;
 
-
-// TODO remove this trait once merged in corelib
-trait NullableTraitExt<T> {
-    fn new(value: T) -> Nullable<T>;
-}
-
-impl NullableTraitExtImpl of NullableTraitExt<u256> {
-    #[inline(always)]
-    fn new(value: u256) -> Nullable<u256> {
-        let nullable = nullable_from_box(BoxTrait::new(value));
-        nullable
-    }
-}
 
 #[derive(Destruct, Default)]
 struct Stack {
@@ -50,6 +34,8 @@ trait StackTrait {
     fn new() -> Stack;
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError>;
     fn pop(ref self: Stack) -> Result<u256, EVMError>;
+    fn pop_usize(ref self: Stack) -> Result<usize, EVMError>;
+    fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError>;
     fn pop_n(ref self: Stack, n: usize) -> Result<Array<u256>, EVMError>;
     fn peek(ref self: Stack) -> Option<u256>;
     fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError>;
@@ -64,7 +50,7 @@ impl StackImpl of StackTrait {
         Default::default()
     }
 
-    /// Pushes a new bytes32 word onto the stack. 
+    /// Pushes a new bytes32 word onto the stack.
     /// If the stack is full, returns with a StackOverflow error.
     #[inline(always)]
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError> {
@@ -72,7 +58,7 @@ impl StackImpl of StackTrait {
         if self.len() == constants::STACK_MAX_DEPTH {
             return Result::Err(EVMError::StackError(STACK_OVERFLOW));
         }
-        self.items.insert(self.len.into(), NullableTraitExt::new(item));
+        self.items.insert(self.len.into(), NullableTrait::new(item));
         self.len += 1;
         Result::Ok(())
     }
@@ -88,6 +74,29 @@ impl StackImpl of StackTrait {
         self.len -= 1;
         let item = self.items.get(last_index.into());
         Result::Ok(item.deref())
+    }
+
+    /// Calls `Stack::pop` and tries to convert it to usize
+    /// Returns `EVMError::StackError` with appropriate message
+    /// In case:
+    ///     - Stack is empty
+    ///     - Type conversion failed
+    #[inline(always)]
+    fn pop_usize(ref self: Stack) -> Result<usize, EVMError> {
+        let item: u256 = self.pop()?;
+        let item: usize = Into::<u256, Result<usize, EVMError>>::into(item)?;
+        Result::Ok(item)
+    }
+
+    /// Calls `Stack::pop` and converts it to usize
+    /// Returns `EVMError::StackError` with appropriate message
+    /// In case:
+    ///     - Stack is empty
+    #[inline(always)]
+    fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError> {
+        let item: u256 = self.pop()?;
+        let item: EthAddress = item.into();
+        Result::Ok(item)
     }
 
     /// Pops N elements from the stack.

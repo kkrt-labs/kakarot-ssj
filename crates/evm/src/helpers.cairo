@@ -1,6 +1,3 @@
-use traits::{Into, TryInto};
-use option::OptionTrait;
-use result::ResultTrait;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 
 // Try converting u256 to u32

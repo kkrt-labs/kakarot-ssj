@@ -2,10 +2,9 @@
 use evm::context::{
     ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
 };
-use evm::errors::EVMError;
+use evm::errors::{EVMError, INVALID_DESTINATION};
 use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
-use result::ResultTrait;
 use evm::helpers::U256IntoResultU32;
 
 #[generate_trait]
@@ -13,9 +12,8 @@ impl MemoryOperation of MemoryOperationTrait {
     /// MLOAD operation.
     /// Load word from memory and push to stack.
     fn exec_mload(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop()?;
-        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into(popped)?;
-        let (result, _) = self.memory.load(offset);
+        let offset: usize = self.stack.pop_usize()?;
+        let result = self.memory.load(offset);
         self.stack.push(result)
     }
 
@@ -23,7 +21,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#52?fork=shanghai
     fn exec_mstore(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((self.stack.pop()?))?;
+        let offset: usize = self.stack.pop_usize()?;
         let value: u256 = self.stack.pop()?;
 
         self.memory.store(value, offset);
@@ -42,14 +40,44 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Get the value of memory size.
     /// # Specification: https://www.evm.codes/#59?fork=shanghai
     fn exec_msize(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let msize: u256 = self.memory.size().into();
+        self.stack.push(msize)
     }
 
     /// 0x56 - JUMP operation
-    /// The JUMP instruction changes the pc counter. 
+    /// The JUMP instruction changes the pc counter.
     /// The new pc target has to be a JUMPDEST opcode.
     /// # Specification: https://www.evm.codes/#56?fork=shanghai
+    ///
+    ///  Valid jump destinations are defined as follows:
+    ///     * The jump destination is less than the length of the code.
+    ///     * The jump destination should have the `JUMPDEST` opcode (0x5B).
+    ///     * The jump destination shouldn't be part of the data corresponding to
+    ///       `PUSH-N` opcodes.
+    ///
+    /// Note: Jump destinations are 0-indexed.
     fn exec_jump(ref self: ExecutionContext) -> Result<(), EVMError> {
+        let index = self.stack.pop_usize()?;
+
+        // TODO: Currently this doesn't check that byte is actually `JUMPDEST`
+        // and not `0x5B` that is a part of PUSHN instruction
+        // 
+        // That can be done by storing all valid jump locations during contract deployment
+        // which would also simplify the logic because we would be just checking if idx is
+        // present in that list
+        //
+        // Check if idx in bytecode points to `JUMPDEST` opcode
+        match self.call_context().bytecode.get(index) {
+            Option::Some(opcode) => {
+                if *opcode.unbox() != 0x5B {
+                    return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
+                }
+            },
+            Option::None => {
+                return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
+            }
+        }
+        self.program_counter = index;
         Result::Ok(())
     }
 
@@ -81,9 +109,9 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save single byte to memory
     /// # Specification: https://www.evm.codes/#53?fork=shanghai
     fn exec_mstore8(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
-        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into((*popped[0]))?;
-        let value: u8 = (*popped.at(1).low & 0xFF).try_into().unwrap();
+        let offset = self.stack.pop_usize()?;
+        let value = self.stack.pop()?;
+        let value: u8 = (value.low & 0xFF).try_into().unwrap();
         let values = array![value].span();
         self.memory.store_n(values, offset);
 

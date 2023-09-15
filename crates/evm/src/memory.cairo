@@ -1,17 +1,18 @@
-use traits::Index;
-use array::SpanTrait;
-use array::ArrayTrait;
-use clone::Clone;
-use dict::Felt252Dict;
-use dict::Felt252DictTrait;
 use integer::{
     u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_div_rem,
     u256_as_non_zero
 };
+use utils::constants::{
+    POW_256_0_U128, POW_256_1_U128, POW_256_2_U128, POW_256_3_U128, POW_256_4_U128, POW_256_5_U128,
+    POW_256_6_U128, POW_256_7_U128, POW_256_8_U128, POW_256_9_U128, POW_256_10_U128,
+    POW_256_11_U128, POW_256_12_U128, POW_256_13_U128, POW_256_14_U128, POW_256_15_U128,
+    POW_256_16_U256
+};
 use cmp::{max};
-use traits::{TryInto, Into};
-use utils::{helpers, math::Exponentiation, math::WrappingExponentiation};
-use option::OptionTrait;
+use utils::{
+    helpers, helpers::SpanExtensionTrait, helpers::ArrayExtensionTrait, math::Exponentiation,
+    math::WrappingExponentiation
+};
 use debug::PrintTrait;
 
 
@@ -23,13 +24,13 @@ struct Memory {
 
 trait MemoryTrait {
     fn new() -> Memory;
+    fn size(ref self: Memory) -> usize;
     fn store(ref self: Memory, element: u256, offset: usize);
     fn store_n(ref self: Memory, elements: Span<u8>, offset: usize);
-    fn ensure_length(ref self: Memory, length: usize) -> usize;
-    fn load(ref self: Memory, offset: usize) -> (u256, usize);
-    fn load_n(
-        ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize
-    ) -> usize;
+    fn store_padded_segment(ref self: Memory, offset: usize, length: usize, source: Span<u8>);
+    fn ensure_length(ref self: Memory, length: usize);
+    fn load(ref self: Memory, offset: usize) -> u256;
+    fn load_n(ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize);
 }
 
 impl MemoryImpl of MemoryTrait {
@@ -37,6 +38,12 @@ impl MemoryImpl of MemoryTrait {
     #[inline(always)]
     fn new() -> Memory {
         Memory { items: Default::default(), bytes_len: 0, }
+    }
+
+    /// Return size of the memory.
+    #[inline(always)]
+    fn size(ref self: Memory) -> usize {
+        self.bytes_len
     }
 
     /// Stores a 32-bytes element into the memory.
@@ -125,40 +132,65 @@ impl MemoryImpl of MemoryTrait {
         self.store_last_word(final_chunk, offset_in_chunk_f, mask_f, final_bytes);
     }
 
+    /// Stores a span of N bytes into memory at a specified offset with padded with 0s to match the size parameter.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The `Memory` instance to store the bytes in.
+    /// * `offset` - The offset within memory to store the bytes at.
+    /// * `length` - The length of bytes to store in memory.
+    /// * `source` - A span of bytes to store in memory.
+    #[inline(always)]
+    fn store_padded_segment(ref self: Memory, offset: usize, length: usize, source: Span<u8>) {
+        if length == 0 {
+            return;
+        }
+
+        // For performance reasons, we don't add the zeros directly to the source, which would generate an implicit copy, which might be expensive if the source is big.
+        // Instead, we'll copy the source into memory, then create a new span containing the zeros.
+        // TODO: optimize this with a specific function
+        let slice_size = if (length > source.len()) {
+            source.len()
+        } else {
+            length
+        };
+
+        let data_to_copy: Span<u8> = source.slice(0, slice_size);
+        self.store_n(data_to_copy, offset);
+
+        // For out of bound bytes, 0s will be copied.
+        if (slice_size < length) {
+            let mut out_of_bounds_bytes: Array<u8> = ArrayTrait::new();
+            out_of_bounds_bytes.append_n(0, length - source.len());
+
+            self.store_n(out_of_bounds_bytes.span(), offset + slice_size);
+        }
+    }
 
     /// Ensures that the memory is at least `length` bytes long. Expands if necessary.
-    /// # Returns
-    /// The gas cost of expanding the memory.
     #[inline(always)]
-    fn ensure_length(ref self: Memory, length: usize) -> usize {
+    fn ensure_length(ref self: Memory, length: usize) {
         if self.bytes_len < length {
             self.expand(length - self.bytes_len)
         } else {
-            return 0;
+            return;
         }
     }
 
     /// Expands memory if necessary, then load 32 bytes from it at the given offset.
     /// # Returns
     /// * `u256` - The loaded value.
-    /// * `usize` - The gas cost of expanding the memory.
     #[inline(always)]
-    fn load(ref self: Memory, offset: usize) -> (u256, usize) {
-        let gas_cost = self.ensure_length(32 + offset);
-        let loaded_element = self.load_internal(offset);
-        (loaded_element, gas_cost)
+    fn load(ref self: Memory, offset: usize) -> u256 {
+        self.ensure_length(32 + offset);
+        self.load_internal(offset)
     }
 
     /// Expands memory if necessary, then load elements_len bytes from the memory at given offset inside elements.
-    /// # Returns
-    /// * `usize` - The gas cost of expanding the memory.
     #[inline(always)]
-    fn load_n(
-        ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize
-    ) -> usize {
-        let gas_cost = self.ensure_length(elements_len + offset);
+    fn load_n(ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize) {
+        self.ensure_length(elements_len + offset);
         self.load_n_internal(elements_len, ref elements, offset);
-        gas_cost
     }
 }
 
@@ -180,9 +212,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     #[inline(always)]
     fn store_element(ref self: Memory, element: u256, chunk_index: usize, offset_in_chunk: u32) {
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
-        // explicit conversion to felt252 to compute the mask is way cheaper
-        // than running exponentiation on u256
-        let mask_c: u256 = 256_felt252.wrapping_pow(16).into() / mask;
+        let mask_c: u256 = POW_256_16_U256 / mask;
 
         // Split the 2 input bytes16 chunks at offset_in_chunk.
         let (el_hh, el_hl) = u256_safe_div_rem(element.high.into(), u256_as_non_zero(mask_c));
@@ -251,24 +281,24 @@ impl InternalMemoryMethods of InternalMemoryTrait {
                 break;
             }
 
-            let current: felt252 = ((*elements[0]).into() * 256.wrapping_pow(15)
-                + (*elements[1]).into() * 256.wrapping_pow(14)
-                + (*elements[2]).into() * 256.wrapping_pow(13)
-                + (*elements[3]).into() * 256.wrapping_pow(12)
-                + (*elements[4]).into() * 256.wrapping_pow(11)
-                + (*elements[5]).into() * 256.wrapping_pow(10)
-                + (*elements[6]).into() * 256.wrapping_pow(9)
-                + (*elements[7]).into() * 256.wrapping_pow(8)
-                + (*elements[8]).into() * 256.wrapping_pow(7)
-                + (*elements[9]).into() * 256.wrapping_pow(6)
-                + (*elements[10]).into() * 256.wrapping_pow(5)
-                + (*elements[11]).into() * 256.wrapping_pow(4)
-                + (*elements[12]).into() * 256.wrapping_pow(3)
-                + (*elements[13]).into() * 256.wrapping_pow(2)
-                + (*elements[14]).into() * 256.wrapping_pow(1)
-                + (*elements[15]).into() * 256.wrapping_pow(0));
+            let current: u128 = ((*elements[0]).into() * POW_256_15_U128
+                + (*elements[1]).into() * POW_256_14_U128
+                + (*elements[2]).into() * POW_256_13_U128
+                + (*elements[3]).into() * POW_256_12_U128
+                + (*elements[4]).into() * POW_256_11_U128
+                + (*elements[5]).into() * POW_256_10_U128
+                + (*elements[6]).into() * POW_256_9_U128
+                + (*elements[7]).into() * POW_256_8_U128
+                + (*elements[8]).into() * POW_256_7_U128
+                + (*elements[9]).into() * POW_256_6_U128
+                + (*elements[10]).into() * POW_256_5_U128
+                + (*elements[11]).into() * POW_256_4_U128
+                + (*elements[12]).into() * POW_256_3_U128
+                + (*elements[13]).into() * POW_256_2_U128
+                + (*elements[14]).into() * POW_256_1_U128
+                + (*elements[15]).into() * POW_256_0_U128);
 
-            self.items.insert(chunk_index.into(), current.try_into().unwrap());
+            self.items.insert(chunk_index.into(), current);
             chunk_index += 1;
             elements = elements.slice(16, elements.len() - 16);
         }
@@ -337,7 +367,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         // Compute mask.
 
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
-        let mask_c: u256 = 2_felt252.wrapping_pow(128).into() / mask;
+        let mask_c: u256 = POW_256_16_U256 / mask;
 
         // Read the words at chunk_index, +1, +2.
         let w0: u128 = self.items.get(chunk_index.into());
@@ -388,7 +418,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
             let w: u128 = self.items.get(initial_chunk.into());
             let w_l = w.into() % mask_i;
             let w_lh = w_l / mask_f;
-            helpers::split_word(w_lh, elements_len, ref elements)
+            helpers::split_word(w_lh, elements_len, ref elements);
+            return;
         }
 
         // Otherwise.
@@ -418,32 +449,17 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     ///
     /// * `self` - A reference to the `Memory` instance to expand.
     /// * `length` - The length to expand the memory chunk by.
-    ///
-    /// # Returns
-    ///
-    /// The cost of the expansion.
     #[inline(always)]
-    fn expand(ref self: Memory, length: usize) -> usize {
+    fn expand(ref self: Memory, length: usize) {
         if (length == 0) {
-            return 0;
+            return;
         }
-
-        let last_memory_size_word = (self.bytes_len + 31) / 32;
-        let mut last_memory_cost = (last_memory_size_word * last_memory_size_word) / 512;
-        last_memory_cost += (3 * last_memory_size_word);
 
         let adjusted_length = (((length + 31) / 32) * 32);
         let new_bytes_len = self.bytes_len + adjusted_length;
-        let new_memory_size_word = (new_bytes_len + 31) / 32;
-        let new_memory_cost = (new_memory_size_word * new_memory_size_word) / 512;
-        let new_memory_cost = new_memory_cost + (3 * new_memory_size_word);
-
-        let cost = new_memory_cost - last_memory_cost;
 
         // Update memory size.
         self.bytes_len = new_bytes_len;
-
-        cost
     }
 
 

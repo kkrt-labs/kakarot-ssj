@@ -1,11 +1,12 @@
-use array::ArrayTrait;
-use array::SpanTrait;
-use traits::{Into, TryInto};
-use option::OptionTrait;
 use debug::PrintTrait;
 use starknet::{EthAddress, EthAddressIntoFelt252};
 use cmp::min;
-use utils::constants;
+use utils::constants::{
+    POW_256_0_U256, POW_256_1_U256, POW_256_2_U256, POW_256_3_U256, POW_256_4_U256, POW_256_5_U256,
+    POW_256_6_U256, POW_256_7_U256, POW_256_8_U256, POW_256_9_U256, POW_256_10_U256,
+    POW_256_11_U256, POW_256_12_U256, POW_256_13_U256, POW_256_14_U256, POW_256_15_U256,
+    POW_256_16_U256,
+};
 
 
 /// Ceils a number of bits to the next word (32 bytes)
@@ -31,39 +32,39 @@ fn pow256_rev(i: usize) -> u256 {
     }
 
     if i == 0 {
-        return 340282366920938463463374607431768211456;
+        return POW_256_16_U256;
     } else if i == 1 {
-        return 1329227995784915872903807060280344576;
+        return POW_256_15_U256;
     } else if i == 2 {
-        return 5192296858534827628530496329220096;
+        return POW_256_14_U256;
     } else if i == 3 {
-        return 20282409603651670423947251286016;
+        return POW_256_13_U256;
     } else if i == 4 {
-        return 79228162514264337593543950336;
+        return POW_256_12_U256;
     } else if i == 5 {
-        return 309485009821345068724781056;
+        return POW_256_11_U256;
     } else if i == 6 {
-        return 1208925819614629174706176;
+        return POW_256_10_U256;
     } else if i == 7 {
-        return 4722366482869645213696;
+        return POW_256_9_U256;
     } else if i == 8 {
-        return 18446744073709551616;
+        return POW_256_8_U256;
     } else if i == 9 {
-        return 72057594037927936;
+        return POW_256_7_U256;
     } else if i == 10 {
-        return 281474976710656;
+        return POW_256_6_U256;
     } else if i == 11 {
-        return 1099511627776;
+        return POW_256_5_U256;
     } else if i == 12 {
-        return 4294967296;
+        return POW_256_4_U256;
     } else if i == 13 {
-        return 16777216;
+        return POW_256_3_U256;
     } else if i == 14 {
-        return 65536;
+        return POW_256_2_U256;
     } else if i == 15 {
-        return 256;
+        return POW_256_1_U256;
     } else {
-        return 1;
+        return POW_256_0_U256;
     }
 }
 
@@ -178,9 +179,9 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
 }
 
 #[generate_trait]
-impl ArrayExtension of ArrayExtensionTrait {
+impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtensionTrait<T> {
     // Concatenates two arrays by adding the elements of arr2 to arr1.
-    fn concat<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(ref self: Array<T>, mut arr2: Span<T>) {
+    fn concat(ref self: Array<T>, mut arr2: Span<T>) {
         loop {
             match arr2.pop_front() {
                 Option::Some(elem) => self.append(*elem),
@@ -192,7 +193,7 @@ impl ArrayExtension of ArrayExtensionTrait {
     }
 
     /// Reverses an array
-    fn reverse<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(self: Span<T>) -> Array<T> {
+    fn reverse(self: Span<T>) -> Array<T> {
         let mut counter = self.len();
         let mut dst: Array<T> = ArrayTrait::new();
         loop {
@@ -203,6 +204,19 @@ impl ArrayExtension of ArrayExtensionTrait {
             counter -= 1;
         };
         dst
+    }
+
+    // Appends n time value to the Array
+    fn append_n(ref self: Array<T>, value: T, mut n: usize) {
+        loop {
+            if n == 0 {
+                break;
+            }
+
+            self.append(value);
+
+            n -= 1;
+        };
     }
 }
 
@@ -222,7 +236,7 @@ impl SpanExtension of SpanExtensionTrait {
     ///
     /// A new `Span<u8>` instance which has a length equal to the length of the input
     /// span plus the number of zeroes specified.
-    fn pad_right(self: Span<u8>, n_zeroes: usize) -> Span<u8> {
+    fn clone_pad_right(self: Span<u8>, n_zeroes: usize) -> Span<u8> {
         let mut res: Array<u8> = array![];
         let mut i = 0;
         loop {
@@ -244,18 +258,3 @@ impl SpanExtension of SpanExtensionTrait {
     }
 }
 
-// Raise a number to a power.
-fn pow(base: felt252, exp: felt252) -> felt252 {
-    if exp == 0 {
-        return 1;
-    } else {
-        return base * pow(base, exp - 1);
-    }
-}
-
-impl EthAddressIntoU256 of Into<EthAddress, u256> {
-    fn into(self: EthAddress) -> u256 {
-        let intermediate: felt252 = self.into();
-        intermediate.into()
-    }
-}

@@ -3,14 +3,13 @@ use evm::context::ExecutionContext;
 use evm::context::ExecutionContextTrait;
 use evm::stack::StackTrait;
 use evm::errors::STACK_UNDERFLOW;
-use option::{OptionTrait};
 use evm::errors::EVMError;
-use result::ResultTrait;
-use utils::math::{Exponentiation, Bitshift};
-use utils::u256_signed_math::{TWO_POW_127, MAX_U256};
+use utils::math::{Exponentiation, Bitshift, WrappingBitshift};
+use utils::constants::{POW_2_127};
 use evm::context::BoxDynamicExecutionContextDestruct;
 use utils::u256_signed_math::SignedPartialOrd;
 use utils::traits::BoolIntoNumeric;
+use integer::BoundedInt;
 
 #[generate_trait]
 impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
@@ -59,18 +58,18 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x14 - EQ
     /// # Specification: https://www.evm.codes/#14?fork=shanghai
     fn exec_eq(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+        let popped = self.stack.pop_n(2)?;
+        let a = *popped[0];
+        let b = *popped[1];
+        let result = (a == b).into();
+        self.stack.push(result)
     }
 
     /// 0x15 - ISZERO
     /// # Specification: https://www.evm.codes/#15?fork=shanghai
     fn exec_iszero(ref self: ExecutionContext) -> Result<(), EVMError> {
         let popped = self.stack.pop()?;
-        let result = if popped == 0 {
-            1
-        } else {
-            0
-        };
+        let result: u256 = (popped == 0).into();
         self.stack.push(result)
     }
 
@@ -126,7 +125,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
             return self.stack.push(0);
         }
 
-        // Right shift value by offset bits and then take the least significant byte by applying modulo 256.
+        // Right shift value by offset bits and then take the least significant byte.
         let result = x.shr((31 - i) * 8) & 0xFF;
         self.stack.push(result)
     }
@@ -166,13 +165,13 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         let value: u256 = *popped[1];
 
         // Checks the MSB bit sign for a 256-bit integer
-        let positive = value.high < TWO_POW_127;
+        let positive = value.high < POW_2_127;
         let sign = if positive {
             // If sign is positive, set it to 0.
             0
         } else {
             // If sign is negative, set the number to -1.
-            MAX_U256
+            BoundedInt::<u256>::max()
         };
 
         if (shift > 256) {

@@ -1,11 +1,5 @@
-use integer::u256_safe_div_rem;
-use traits::{Into, TryInto};
-use option::OptionTrait;
-
-const ALL_ONES: u128 = 0xffffffffffffffffffffffffffffffff;
-const TWO_POW_127: u128 = 0x80000000000000000000000000000000;
-const MAX_U256: u256 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
-
+use integer::{u256_safe_div_rem, BoundedInt};
+use utils::constants::POW_2_127;
 
 // Returns the negation of an integer.
 // Note that the negation of -2**255 is -2**255.
@@ -26,20 +20,20 @@ fn u256_signed_div_rem(a: u256, div: NonZero<u256>) -> (u256, u256) {
     let mut div: u256 = div.into();
 
     // When div=-1, simply return -a.
-    if div == MAX_U256 {
+    if div == BoundedInt::<u256>::max() {
         return (u256_neg(a), 0);
     }
 
     // Take the absolute value of a and div.
     // Checks the MSB bit sign for a 256-bit integer
-    let a_positive = a.high < TWO_POW_127;
+    let a_positive = a.high < POW_2_127;
     let a = if a_positive {
         a
     } else {
         u256_neg(a)
     };
 
-    let div_positive = div.high < TWO_POW_127;
+    let div_positive = div.high < POW_2_127;
     div = if div_positive {
         div
     } else {
@@ -76,8 +70,8 @@ trait SignedPartialOrd<T> {
 impl U256SignedPartialOrd of SignedPartialOrd<u256> {
     #[inline(always)]
     fn slt(self: u256, other: u256) -> bool {
-        let self_positive = self.high < TWO_POW_127;
-        let other_positive = other.high < TWO_POW_127;
+        let self_positive = self.high < POW_2_127;
+        let other_positive = other.high < POW_2_127;
 
         // First, check if signs are different
         if (self_positive != other_positive) {

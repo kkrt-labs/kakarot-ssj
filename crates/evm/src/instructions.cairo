@@ -12,6 +12,7 @@ mod environmental_information;
 use environmental_information::EnvironmentInformationTrait;
 
 mod exchange_operations;
+use exchange_operations::ExchangeOperationsTrait;
 
 mod logging_operations;
 use logging_operations::LoggingOperationsTrait;
@@ -28,3 +29,4 @@ mod stop_and_arithmetic_operations;
 use stop_and_arithmetic_operations::StopAndArithmeticOperationsTrait;
 
 mod system_operations;
+use system_operations::SystemOperationsTrait;

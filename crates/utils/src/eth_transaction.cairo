@@ -1,4 +1,3 @@
-use array::ArrayTrait;
 use starknet::EthAddress;
 
 struct EthereumTransaction {
@@ -36,7 +35,7 @@ trait EthTransaction {
     /// Check if a raw transaction is a legacy Ethereum transaction
     /// This function checks if a raw transaction is a legacy Ethereum transaction by checking the transaction type
     /// according to EIP-2718. If the transaction type is less than or equal to 0xc0, it's a legacy transaction.
-    /// # Arguments 
+    /// # Arguments
     /// - `tx_data` The raw transaction data
     fn is_legacy_tx(tx_data: Span<u8>) -> bool;
 
