@@ -63,6 +63,9 @@ impl MemoryOperation of MemoryOperationTrait {
     /// 0x5b - JUMPDEST operation
     /// Serves as a check that JUMP or JUMPI was executed correctly.
     /// # Specification: https://www.evm.codes/#5b?fork=shanghai
+    /// 
+    /// This doesn't have any affect on execution state, so we don't have
+    /// to do anything here. Its a NO-OP
     fn exec_jumpdest(ref self: ExecutionContext) -> Result<(), EVMError> {
         Result::Ok(())
     }
