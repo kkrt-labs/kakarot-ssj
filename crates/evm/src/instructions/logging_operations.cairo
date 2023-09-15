@@ -52,7 +52,6 @@ mod internal {
     use evm::helpers::U256IntoResultU32;
     use utils::helpers::u256_to_bytes_array;
     use utils::helpers::ArrayExtensionTrait;
-    use array::ArrayTrait;
 
     /// This generic function will store a new event in the dynamic context
     /// using topics popped from the stack and data from the memory.
@@ -67,45 +66,20 @@ mod internal {
             return Result::Err(EVMError::StateModificationError(STATE_MODIFICATION_ERROR));
         }
 
-        let popped = self.stack.pop_n(2 + topics_len.into())?;
-        let offset: u32 = Into::<u256, Result<u32, EVMError>>::into(*popped[0])?;
-        let size: u32 = Into::<u256, Result<u32, EVMError>>::into(*popped[1])?;
+        let offset = (self.stack.pop_usize())?;
+        let size = (self.stack.pop_usize())?;
+        let topics: Array<u256> = self.stack.pop_n(topics_len.into())?;
 
-        // Feed topics array for the new event
-        let mut topics: Array<u256> = Default::default();
-        ArrayExtensionTrait::concat(ref topics, popped.span().slice(2, popped.len() - 2));
-
-        // Feed data array for the new event
         let mut data: Array<felt252> = Default::default();
         load_data_from_memory(ref self, ref data, size, offset);
 
-        // Create and store the new event in the dynamic context
-        store_event_in_dyn_context(ref self, topics, data);
+        self.set_events(topics, data);
 
         Result::Ok(())
     }
 
-    /// This function will store a new event in the dynamic context
-    /// using given topics and data.
-    /// The dynamic context has to be recreated to be modified.
-    ///
-    /// # Arguments
-    ///
-    /// * `self` - The context to which the event will be added
-    /// * `topics` - Topics of the event
-    /// * `data` - Data of the event
-    fn store_event_in_dyn_context(
-        ref self: ExecutionContext, topics: Array<u256>, data: Array<felt252>
-    ) {
-        let event: Event = Event { keys: topics, data };
-        let mut dyn_ctx = self.dynamic_context.unbox();
-        dyn_ctx.events.append(event);
-        self.dynamic_context = BoxTrait::new(dyn_ctx);
-    }
-
-
-    /// This function will load data from the memory by 32Bytes
-    /// using given topics and data.
+    /// This function will load data from the memory by 32 Bytes
+    /// chunk and fill .
     /// The dynamic context has to be recreated to be modified.
     ///
     /// # Arguments
@@ -115,7 +89,7 @@ mod internal {
     /// * `data` - Data of the event
     fn load_data_from_memory(
         ref self: ExecutionContext, ref data_array: Array<felt252>, size: u32, offset: u32
-    ) -> Result<(), EVMError> {
+    ) {
         let mut i = 0;
         loop {
             if 31 + i > size {
@@ -141,6 +115,30 @@ mod internal {
             data_array.append(loaded.try_into().unwrap());
             i += 31;
         };
-        Result::Ok(())
+    }
+
+    fn loadn_data_from_memory(
+        ref self: ExecutionContext, ref data_array: Array<felt252>, size: u32, offset: u32
+    ) {
+        let mut loaded: Array<u8> = Default::default();
+        self.memory.load_n(size, ref loaded, offset);
+        let loaded_len = loaded.len();
+        let mut i = 0;
+        let mut element: felt252 = 0;
+        loop {
+            if i == loaded_len {
+                break;
+            }
+            element *= 256;
+            element += (*loaded[i]).into();
+            i += 1;
+            if i % 31 == 0 {
+                data_array.append(element);
+                element = 0;
+            };
+        };
+        if element != 0 {
+            data_array.append(element);
+        }
     }
 }

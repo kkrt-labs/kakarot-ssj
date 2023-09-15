@@ -343,6 +343,22 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     fn set_pc(ref self: ExecutionContext, value: u32) {
         self.program_counter = value;
     }
+
+    /// This function will store a new event in the dynamic context
+    /// using given topics and data.
+    /// The dynamic context has to be recreated to be modified.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The context to which the event will be added
+    /// * `topics` - Topics of the event
+    /// * `data` - Data of the event
+    fn set_events(ref self: ExecutionContext, topics: Array<u256>, data: Array<felt252>) {
+        let event: Event = Event { keys: topics, data };
+        let mut dyn_ctx = self.dynamic_context.unbox();
+        dyn_ctx.events.append(event);
+        self.dynamic_context = BoxTrait::new(dyn_ctx);
+    }
 }
 
 impl DefaultExecutionContext of Default<ExecutionContext> {
