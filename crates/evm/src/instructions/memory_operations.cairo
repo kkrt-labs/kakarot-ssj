@@ -48,6 +48,14 @@ impl MemoryOperation of MemoryOperationTrait {
     /// The JUMP instruction changes the pc counter.
     /// The new pc target has to be a JUMPDEST opcode.
     /// # Specification: https://www.evm.codes/#56?fork=shanghai
+    ///
+    ///  Valid jump destinations are defined as follows:
+    ///     * The jump destination is less than the length of the code.
+    ///     * The jump destination should have the `JUMPDEST` opcode (0x5B).
+    ///     * The jump destination shouldn't be part of the data corresponding to
+    ///       `PUSH-N` opcodes.
+    ///
+    /// Note: Jump destinations are 0-indexed.
     fn exec_jump(ref self: ExecutionContext) -> Result<(), EVMError> {
         let idx = self.stack.pop_usize()?;
 
