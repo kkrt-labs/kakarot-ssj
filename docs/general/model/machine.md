@@ -1,4 +1,4 @@
-# Kakarot's EVM-Computer Design
+# Kakarot's EVM - Internal Design
 
 The EVM is a stack-based computer responsible for the execution of EVM bytecode.
 It has two context-bound data structures: the stack and the memory. The stack is
@@ -47,7 +47,8 @@ classDiagram
         ctx_count: usize,
         root_ctx: ExecutionContext,
         stack: Stack,
-        memory: Memory
+        memory: Memory,
+        storage_updates: StorageUpdates,
     }
 
     class Memory{
@@ -64,17 +65,41 @@ classDiagram
 
     class ExecutionContext{
         ctx_id: usize,
-        program_counter: u32,
+        origin: EthAddress,
+        call_ctx: CallContext,
+        gas_price: u32,
+        gas_limit: u32,
+        pc: u32,
+        read_only: bool,
+        destroyed_contracts: Array~EthAddress~,
+        events: Array~Event~,
+        create_addresses: Array~EthAddress~,
+        reverted: bool,
+        stopped:bool,
+        return_data: Array~u32~,
         parent_context: Nullable~ExecutionContext~,
         child_context: Nullable~ExecutionContext~,
-        return_data: Array~u32~,
-        /// etc.
     }
+
+    class CallContext{
+        caller: EthAddress,
+        value: u256,
+        bytecode: Span~u8~,
+        calldata: Span~u8~,
+    }
+
+    class StorageUpdates{
+        prev_values: Felt252Dict~felt252~,
+        keys: Array~felt252~,
+    }
+
 
     Machine *-- Memory
     Machine *-- Stack
     Machine *-- ExecutionContext
+    Machine *-- StorageUpdates
     ExecutionContext *-- ExecutionContext
+    ExecutionContext *-- CallContext
 ```
 
 ### The Stack
@@ -136,6 +161,33 @@ where $i$ is the id of the active execution context.
 If we want to store an item at offset 10 of the memory relative to the execution
 context of id 1, the internal index will be
 $index = 10 + 1 \cdot 125000 = 125010$.
+
+### Tracking storage changes
+
+The EVM has a persistent storage, which is a key-value store. The storage
+changes are tracked in the `storage_updates` field of the Machine. This field is
+a dictionary mapping storage slots modified by the current execution context to
+their previous value, so that if an execution context reverts, we can restore
+the previous values of the storage slots modified by that execution of a
+contract.
+
+We encounter the same constraints as for the Stack and the Memory, as the
+storage_changes are tracked using a dictionary; meaning that it can't be a part
+of the ExecutionContext struct. Therefore, we will track the storage changes in
+the Machine struct. Unlike previous cases, we cannot estimate an upper limit on
+the amount of maximum storage changes performed per transaction, as the gas cost
+associated with storage changes is not fixed, and can even lead to a refund.
+
+Therefore, instead of calculating an index and offsetting it by the id of the
+current execution context, we will hash the storage slot and the id of the
+current execution context to obtain a unique key for each storage change. To
+keep track of these keys, we will store them in the `keys` field of the
+StorageUpdates struct. The `prev_values` field is a dictionary mapping the keys
+to their previous values.
+
+TODO: Estimate if a hash-based index is a good solution, and if too expansive,
+set a hard limit to the amount of storage modifications in a single context
+(e.g. 100k or 1M)
 
 # Conclusion
 
