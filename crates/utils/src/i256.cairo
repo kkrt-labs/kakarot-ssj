@@ -1,5 +1,4 @@
 use utils::constants::POW_2_127;
-use utils::u256_signed_math::u256_neg;
 use utils::math::{Bitshift, Exponentiation};
 use integer::{u256_try_as_non_zero, u256_safe_div_rem, BoundedInt};
 
@@ -87,7 +86,7 @@ fn i256_signed_div_rem(a: i256, div: NonZero<u256>) -> (i256, i256) {
 
     // When div=-1, simply return -a.
     if div.value == BoundedInt::<u256>::max() {
-        return (u256_neg(a.value).into(), 0_u256.into());
+        return (i256_neg(a).into(), 0_u256.into());
     }
 
     // Take the absolute value of a and div.
@@ -96,14 +95,14 @@ fn i256_signed_div_rem(a: i256, div: NonZero<u256>) -> (i256, i256) {
     let a = if a_positive {
         a
     } else {
-        u256_neg(a.value).into()
+        i256_neg(a).into()
     };
 
     let div_positive = div.value.high < POW_2_127;
     div = if div_positive {
         div
     } else {
-        u256_neg(div.value).into()
+        i256_neg(div).into()
     };
 
     // Compute the quotient and remainder.
@@ -112,9 +111,9 @@ fn i256_signed_div_rem(a: i256, div: NonZero<u256>) -> (i256, i256) {
 
     // Restore remainder sign.
     let rem = if a_positive {
-        rem
+        rem.into()
     } else {
-        u256_neg(rem)
+        i256_neg(rem.into())
     };
 
     // If the signs of a and div are the same, return the quotient and remainder.
@@ -123,5 +122,15 @@ fn i256_signed_div_rem(a: i256, div: NonZero<u256>) -> (i256, i256) {
     }
 
     // Otherwise, return the negation of the quotient and the remainder.
-    (u256_neg(quot).into(), rem.into())
+    (i256_neg(quot.into()), rem.into())
+}
+
+// Returns the negation of an integer.
+// Note that the negation of -2**255 is -2**255.
+fn i256_neg(a: i256) -> i256 {
+    // If a is 0, adding one to its bitwise NOT will overflow and return 0.
+    if a.value == 0 {
+        return 0_u256.into();
+    }
+    (~a.value + 1).into()
 }
