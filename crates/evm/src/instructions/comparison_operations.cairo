@@ -158,10 +158,25 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x1D - SAR
     /// # Specification: https://www.evm.codes/#1d?fork=shanghai
     fn exec_sar(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let shift: i256 = self.stack.pop_i256()?;
+        let shift: u256 = self.stack.pop()?;
         let value: i256 = self.stack.pop_i256()?;
 
-        let result: u256 = value.shr(shift).into();
-        self.stack.push(result)
+        // Checks the MSB bit sign for a 256-bit integer
+        let positive = value.value.high < POW_2_127;
+        let sign = if positive {
+            // If sign is positive, set it to 0.
+            0
+        } else {
+            // If sign is negative, set the number to -1.
+            BoundedInt::<u256>::max()
+        };
+
+        if (shift > 256) {
+            self.stack.push(sign)
+        } else {
+            // XORing with sign before and after the shift propagates the sign bit of the operation
+            let result = (sign ^ value.value).shr(shift) ^ sign;
+            self.stack.push(result)
+        }
     }
 }

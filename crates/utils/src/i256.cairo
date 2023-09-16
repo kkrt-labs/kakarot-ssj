@@ -72,37 +72,16 @@ impl I256Rem of Rem<i256> {
     }
 }
 
-impl I256BitshiftImpl of Bitshift<i256> {
-    fn shl(self: i256, shift: i256) -> i256 {
-        panic_with_felt252('Unimplemented')
-    }
-
-    fn shr(self: i256, shift: i256) -> i256 {
-        // Checks the MSB bit sign for a 256-bit integer
-        let positive = self.value.high < POW_2_127;
-        let sign = if positive {
-            // If sign is positive, set it to 0.
-            0
-        } else {
-            // If sign is negative, set the number to -1.
-            BoundedInt::<u256>::max()
-        };
-
-        if (shift.value > 255) {
-            return sign.into();
-        } else {
-            // XORing with sign before and after the shift propagates the sign bit of the operation
-            let result = (sign ^ self.value).shr(shift.value) ^ sign;
-            return result.into();
-        }
-    }
-}
-
 /// Signed integer division between two integers. Returns the quotient and the remainder.
 /// Conforms to EVM specifications - except that the type system enforces div != zero.
 /// See ethereum yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf, page 29).
 /// Note that the remainder may be negative if one of the inputs is negative and that
 /// (-2**255) / (-1) = -2**255 because 2*255 is out of range.
+/// # Arguments
+/// * `a` - The dividend.
+/// * `div` - The divisor, passed as a signed NonZero<u256>.
+/// # Returns
+/// * (quotient, reminder) of the signed division of `a` by `div`
 fn i256_signed_div_rem(a: i256, div: NonZero<u256>) -> (i256, i256) {
     let mut div = i256 { value: div.into() };
 
