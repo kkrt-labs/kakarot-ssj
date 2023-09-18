@@ -168,7 +168,7 @@ impl Felt252WrappingBitshiftImpl of WrappingBitshift<felt252> {
         let val: u256 = self.into();
         let shift: u256 = shift.into();
 
-        // early return to save gas if shift > 255 
+        // early return to save gas if shift > 255
         if shift > 255 {
             return 0;
         }
@@ -212,17 +212,19 @@ impl U128BitshiftImpl of Bitshift<u128> {
         }
         self / 2.pow(shift)
     }
+}
 
+impl U128WrappingBitshiftImpl of WrappingBitshift<u128> {
     fn wrapping_shl(self: u128, shift: u128) -> u128 {
         let (result, _) = u128_overflowing_mul(self, 2.wrapping_pow(shift));
         result
     }
 
     fn wrapping_shr(self: u128, shift: u128) -> u128 {
-        // if we shift by more than 255 bits, the result is 0 (the type is 256 bits wide)
+        // if we shift by more than 255 bits, the result is 0 (the type is 128 bits wide)
         // we early return to save gas
-        // and prevent unexpected behavior, e.g. 2.pow(256) == 0 mod 2^256, given we can't divide by zero
-        if shift > 255 {
+        // and prevent unexpected behavior, e.g. 2.pow(128) == 0 mod 2^128, given we can't divide by zero
+        if shift > 127 {
             return 0;
         }
         self / 2.pow(shift)
