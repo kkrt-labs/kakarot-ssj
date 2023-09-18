@@ -531,10 +531,10 @@ fn test_store_byte_should_store_byte_at_offset_2() {
     let mut memory = MemoryTrait::new();
 
     // When
-    memory.store_byte(0x01, 14);
+    memory.store_byte(0xff, 14);
 
     // Then
-    assert(memory.items[0] == 0x0100, 'Wrong value for word 0');
+    assert(memory.items[0] == 0xff00, 'Wrong value for word 0');
     assert(memory.items[1] == 0x00, 'Wrong value for word 1');
     assert(memory.bytes_len == 32, 'Wrong memory length');
 }

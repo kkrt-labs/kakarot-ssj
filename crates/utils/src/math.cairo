@@ -208,8 +208,7 @@ impl U128BitshiftImpl of Bitshift<u128> {
 
     fn shr(self: u128, shift: u128) -> u128 {
         if shift > 127 {
-            // 2.pow(shift) for shift > 255 will panic with 'u128_mul Overflow'
-            panic_with_felt252('u128_mul Overflow');
+            return 0;
         }
         self / 2.pow(shift)
     }

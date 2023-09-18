@@ -68,7 +68,7 @@ fn pow256_rev(i: usize) -> u256 {
     }
 }
 
-// COmputes 2**pow for 0 <= pow < 128.
+// Computes 2**pow for 0 <= pow < 128.
 fn pow2(pow: usize) -> u128 {
     if pow == 0 {
         return 0x1;
