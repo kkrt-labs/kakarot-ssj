@@ -65,7 +65,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// # Specification: https://www.evm.codes/#5b?fork=shanghai
     /// 
     /// This doesn't have any affect on execution state, so we don't have
-    /// to do anything here. Its a NO-OP
+    /// to do anything here. It's a NO-OP.
     fn exec_jumpdest(ref self: ExecutionContext) -> Result<(), EVMError> {
         Result::Ok(())
     }
