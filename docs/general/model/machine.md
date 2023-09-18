@@ -89,6 +89,7 @@ classDiagram
     }
 
     class StorageUpdates{
+        active_segment: felt252,
         prev_values: Felt252Dict~felt252~,
         keys: Array~felt252~,
     }
@@ -174,25 +175,27 @@ contract.
 We encounter the same constraints as for the Stack and the Memory, as the
 storage_changes are tracked using a dictionary; meaning that it can't be a part
 of the ExecutionContext struct. Therefore, we will track the storage changes in
-the Machine struct. Unlike previous cases, we cannot estimate an upper limit on
-the amount of maximum storage changes performed per transaction, as the gas cost
-associated with storage changes is not fixed, and can even lead to a refund.
+the Machine struct. Unlike previous cases, there is no limit on the amount of
+storage writes that can be performed in a transaction, and we cannot estimate an
+upper limit based on gas consumption, as the gas cost associated with storage
+changes is not fixed, and can even lead to a refund.
 
-Therefore, instead of calculating an index and offsetting it by the id of the
-current execution context, we will hash the storage slot and the id of the
-current execution context to obtain a unique key for each storage change. To
-keep track of these keys, we will store them in the `keys` field of the
-StorageUpdates struct. The `prev_values` field is a dictionary mapping the keys
-to their previous values.
+One solution could be to hash the storage address and the id of the current
+execution context to obtain a unique key for each storage change. To keep track
+of these keys, we will store them in the `keys` field of the StorageUpdates
+struct. The `prev_values` field is a dictionary mapping the keys to their
+previous values. However, this solution is not ideal, as it would require one
+hash operation per storage change and to keep track of the keys in memory.
 
-TODO: Estimate if a hash-based index is a good solution, and if too expansive,
-set a hard limit to the amount of storage modifications in a single context
-(e.g. 100k or 1M)
+Instead, we will limit the amount of storage updates performed per call to a
+number that is high enough (e.g. 100k) which is empirically enough to avoid any
+issues and remains efficient, and implement it similarly to the Stack and the
+Memory using internal offsets.
 
 # Conclusion
 
 With its shared stack and memory accessed via calculated internal indexes
 relative to the current execution context, this EVM design remains compatible
 with the original EVM design, easily refactorable if we implement all
-interactions with the machine through methods, and compatible with Cairo's
+interactions with the machine through type methods, and compatible with Cairo's
 limitations.
