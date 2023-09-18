@@ -373,3 +373,137 @@ fn test_exec_jump_inside_pushn() {
     assert(result.is_err(), 'invalid jump dest');
     assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
 }
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('JUMPI not implemented yet',))]
+fn test_exec_jumpi_valid_non_zero_1() {
+    // Given
+    let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let b = 0x1;
+    ctx.stack.push(b);
+    let counter = 0x03;
+    ctx.stack.push(counter);
+    let old_pc = ctx.program_counter;
+
+    // When
+    ctx.exec_jumpi();
+
+    // Then
+    let pc = ctx.program_counter;
+    assert(pc == 0x03, 'PC should be JUMPDEST');
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('JUMPI not implemented yet',))]
+fn test_exec_jumpi_valid_non_zero_2() {
+    // Given
+    let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let b = 0x69;
+    ctx.stack.push(b);
+    let counter = 0x03;
+    ctx.stack.push(counter);
+    let old_pc = ctx.program_counter;
+
+    // When
+    ctx.exec_jumpi();
+
+    // Then
+    let pc = ctx.program_counter;
+    assert(pc == 0x03, 'PC should be JUMPDEST');
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('JUMPI not implemented yet',))]
+fn test_exec_jumpi_valid_zero() {
+    // Given
+    let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let b = 0x0;
+    ctx.stack.push(b);
+    let counter = 0x03;
+    ctx.stack.push(counter);
+    let old_pc = ctx.program_counter;
+
+    // When
+    ctx.exec_jumpi();
+
+    // Then
+    let pc = ctx.program_counter;
+    // ideally we should assert that it incremented, but incrementing is done by `decode_and_execute`
+    // so we can assume that will be done
+    assert(pc == old_pc, 'PC should be same');
+}
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('JUMPI not implemented yet',))]
+fn test_exec_jumpi_invalid_non_zero() {
+    // Given
+    let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
+    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let b = 0x69;
+    ctx.stack.push(b);
+    let counter = 0x69;
+    ctx.stack.push(counter);
+
+    // When
+    let result = ctx.exec_jumpi();
+
+    // Then
+    assert(result.is_err(), 'invalid jump dest');
+    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('JUMPI not implemented yet',))]
+fn test_exec_jumpi_invalid_zero() {
+    // Given
+    let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let b = 0x0;
+    ctx.stack.push(b);
+    let counter = 0x69;
+    ctx.stack.push(counter);
+    let old_pc = ctx.program_counter;
+
+    // When
+    ctx.exec_jumpi();
+
+    // Then
+    let pc = ctx.program_counter;
+    // ideally we should assert that it incremented, but incrementing is done by `decode_and_execut`
+    // so we can assume that will be done
+    assert(pc == old_pc, 'PC should be same');
+}
+
+// TODO: This is third edge case in which `0x5B` is part of PUSHN instruction and hence
+// not a valid opcode to jump to
+//
+// Remove ignore once its handled
+#[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('JUMPI not implemented yet',))]
+#[ignore]
+fn test_exec_jumpi_inside_pushn() {
+    // Given
+    let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
+    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let b = 0x00;
+    ctx.stack.push(b);
+    let counter = 0x01;
+    ctx.stack.push(counter);
+
+    // When
+    let result = ctx.exec_jumpi();
+
+    // Then
+    assert(result.is_err(), 'invalid jump dest');
+    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+}
