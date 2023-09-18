@@ -15,9 +15,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.x" # Specify the Python version required
+          python-version: "3.9" # Specify the Python version required
 
       - name: Set up Scarb
         uses: software-mansion/setup-scarb@v1
