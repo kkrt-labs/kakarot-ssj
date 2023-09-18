@@ -434,7 +434,7 @@ fn test_exec_jumpi_valid_zero() {
 
     // Then
     let pc = ctx.program_counter;
-    // ideally we should assert that it incremented, but incrementing is done by `decode_and_execut`
+    // ideally we should assert that it incremented, but incrementing is done by `decode_and_execute`
     // so we can assume that will be done
     assert(pc == old_pc, 'PC should be same');
 }
