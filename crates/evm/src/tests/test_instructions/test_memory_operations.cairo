@@ -376,7 +376,6 @@ fn test_exec_jump_inside_pushn() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('JUMPI not implemented yet',))]
 fn test_exec_jumpi_valid_non_zero_1() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
@@ -397,7 +396,6 @@ fn test_exec_jumpi_valid_non_zero_1() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('JUMPI not implemented yet',))]
 fn test_exec_jumpi_valid_non_zero_2() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
@@ -418,7 +416,6 @@ fn test_exec_jumpi_valid_non_zero_2() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('JUMPI not implemented yet',))]
 fn test_exec_jumpi_valid_zero() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
@@ -441,7 +438,6 @@ fn test_exec_jumpi_valid_zero() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('JUMPI not implemented yet',))]
 fn test_exec_jumpi_invalid_non_zero() {
     // Given
     let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
@@ -462,7 +458,6 @@ fn test_exec_jumpi_invalid_non_zero() {
 
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('JUMPI not implemented yet',))]
 fn test_exec_jumpi_invalid_zero() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
@@ -489,7 +484,6 @@ fn test_exec_jumpi_invalid_zero() {
 // Remove ignore once its handled
 #[test]
 #[available_gas(20000000)]
-#[should_panic(expected: ('JUMPI not implemented yet',))]
 #[ignore]
 fn test_exec_jumpi_inside_pushn() {
     // Given

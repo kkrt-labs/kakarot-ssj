@@ -86,7 +86,21 @@ impl MemoryOperation of MemoryOperationTrait {
     /// The new pc target has to be a JUMPDEST opcode.
     /// # Specification: https://www.evm.codes/#57?fork=shanghai
     fn exec_jumpi(ref self: ExecutionContext) -> Result<(), EVMError> {
-        panic_with_felt252('JUMPI not implemented yet')
+        // Peek the value so we don't need to push it back again incase we want to call `exec_jump`
+        let b = self.stack.peek_at(1)?;
+
+        if b != 0x0 {
+            self.exec_jump()?;
+            // counter would have been already popped by `exec_jump`
+            // so we just remove `b`
+            self.stack.pop()?;
+        } else {
+            // remove both `value` and `b`
+            self.stack.pop()?;
+            self.stack.pop()?;
+        }
+
+        Result::Ok(())
     }
 
     /// 0x5b - JUMPDEST operation

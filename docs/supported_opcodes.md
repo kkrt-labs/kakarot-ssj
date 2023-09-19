@@ -26,10 +26,10 @@ This document describes the opcodes supported by Kakarot.
 | 0x11         | GT          | Greater-than comparison        | ✅          |
 | 0x12         | SLT         | Signed less-than comparison    | ✅          |
 | 0x13         | SGT         | Signed greater-than comparison | ✅          |
-| 0x14         | EQ          | Equality comparison            |             |
+| 0x14         | EQ          | Equality comparison            | ✅          |
 | 0x15         | ISZERO      | Simple not operator            | ✅          |
 | 0x16         | AND         | Bitwise AND operation          | ✅          |
-| 0x17         | OR          | Bitwise OR operation           |             |
+| 0x17         | OR          | Bitwise OR operation           | ✅          |
 | 0x18         | XOR         | Bitwise XOR operation          | ✅          |
 | 0x19         | NOT         | Bitwise NOT operation          | ✅          |
 | 0x1a         | BYTE        | Retrieve single byte from word | ✅          |
@@ -54,7 +54,7 @@ This document describes the opcodes supported by Kakarot.
 | 0x34         | CALLVALUE      | Get deposited value by the instruction/transaction responsible for this execution | ✅          |
 | 0x35         | CALLDATALOAD   | Get input data of current environment                                             | ✅          |
 | 0x36         | CALLDATASIZE   | Get size of input data in current environment                                     | ✅          |
-| 0x37         | CALLDATACOPY   | Copy input data in current environment to memory                                  |             |
+| 0x37         | CALLDATACOPY   | Copy input data in current environment to memory                                  | ✅          |
 | 0x38         | CODESIZE       | Get size of code running in current environment                                   | ✅          |
 | 0x39         | CODECOPY       | Copy code running in current environment to memory                                | ✅          |
 | 0x3a         | GASPRICE       | Get price of gas in current environment                                           | ✅          |
@@ -82,18 +82,18 @@ This document describes the opcodes supported by Kakarot.
 
 | Opcode Value | Opcode Name | Description                                                                                        | Implemented |
 | ------------ | ----------- | -------------------------------------------------------------------------------------------------- | ----------- |
-| 0x50         | POP         | Remove item from stack                                                                             |             |
-| 0x51         | MLOAD       | Load word from memory                                                                              |             |
-| 0x52         | MSTORE      | Save word to memory                                                                                |             |
-| 0x53         | MSTORE8     | Save byte to memory                                                                                |             |
+| 0x50         | POP         | Remove item from stack                                                                             | ✅          |
+| 0x51         | MLOAD       | Load word from memory                                                                              | ✅          |
+| 0x52         | MSTORE      | Save word to memory                                                                                | ✅          |
+| 0x53         | MSTORE8     | Save byte to memory                                                                                | ✅          |
 | 0x54         | SLOAD       | Load word from storage                                                                             |             |
 | 0x55         | SSTORE      | Save word to storage                                                                               |             |
-| 0x56         | JUMP        | Alter the program counter                                                                          |             |
-| 0x57         | JUMPI       | Conditionally alter the program counter                                                            |             |
+| 0x56         | JUMP        | Alter the program counter                                                                          | ✅          |
+| 0x57         | JUMPI       | Conditionally alter the program counter                                                            | ✅          |
 | 0x58         | PC          | Get the value of the program counter prior to the increment                                        | ✅          |
-| 0x59         | MSIZE       | Get the size of active memory in bytes                                                             |             |
+| 0x59         | MSIZE       | Get the size of active memory in bytes                                                             | ✅          |
 | 0x5a         | GAS         | Get the amount of available gas, including the corresponding reduction the amount of available gas |             |
-| 0x5b         | JUMPDEST    | Mark a valid destination for jumps                                                                 |             |
+| 0x5b         | JUMPDEST    | Mark a valid destination for jumps                                                                 | ✅          |
 
 ## Push Operations
 
@@ -157,22 +157,22 @@ This document describes the opcodes supported by Kakarot.
 
 | Opcode Value | Opcode Name | Description                       | Implemented |
 | ------------ | ----------- | --------------------------------- | ----------- |
-| 0x90         | SWAP1       | Exchange 1st and 2nd stack items  |             |
-| 0x91         | SWAP2       | Exchange 1st and 3rd stack items  |             |
-| 0x92         | SWAP3       | Exchange 1st and 4th stack items  |             |
-| 0x93         | SWAP4       | Exchange 1st and 5th stack items  |             |
-| 0x94         | SWAP5       | Exchange 1st and 6th stack items  |             |
-| 0x95         | SWAP6       | Exchange 1st and 7th stack items  |             |
-| 0x96         | SWAP7       | Exchange 1st and 8th stack items  |             |
-| 0x97         | SWAP8       | Exchange 1st and 9th stack items  |             |
-| 0x98         | SWAP9       | Exchange 1st and 10th stack items |             |
-| 0x99         | SWAP10      | Exchange 1st and 11th stack items |             |
-| 0x9a         | SWAP11      | Exchange 1st and 12th stack items |             |
-| 0x9b         | SWAP12      | Exchange 1st and 13th stack items |             |
-| 0x9c         | SWAP13      | Exchange 1st and 14th stack items |             |
-| 0x9d         | SWAP14      | Exchange 1st and 15th stack items |             |
-| 0x9e         | SWAP15      | Exchange 1st and 16th stack items |             |
-| 0x9f         | SWAP16      | Exchange 1st and 17th stack items |             |
+| 0x90         | SWAP1       | Exchange 1st and 2nd stack items  | ✅          |
+| 0x91         | SWAP2       | Exchange 1st and 3rd stack items  | ✅          |
+| 0x92         | SWAP3       | Exchange 1st and 4th stack items  | ✅          |
+| 0x93         | SWAP4       | Exchange 1st and 5th stack items  | ✅          |
+| 0x94         | SWAP5       | Exchange 1st and 6th stack items  | ✅          |
+| 0x95         | SWAP6       | Exchange 1st and 7th stack items  | ✅          |
+| 0x96         | SWAP7       | Exchange 1st and 8th stack items  | ✅          |
+| 0x97         | SWAP8       | Exchange 1st and 9th stack items  | ✅          |
+| 0x98         | SWAP9       | Exchange 1st and 10th stack items | ✅          |
+| 0x99         | SWAP10      | Exchange 1st and 11th stack items | ✅          |
+| 0x9a         | SWAP11      | Exchange 1st and 12th stack items | ✅          |
+| 0x9b         | SWAP12      | Exchange 1st and 13th stack items | ✅          |
+| 0x9c         | SWAP13      | Exchange 1st and 14th stack items | ✅          |
+| 0x9d         | SWAP14      | Exchange 1st and 15th stack items | ✅          |
+| 0x9e         | SWAP15      | Exchange 1st and 16th stack items | ✅          |
+| 0x9f         | SWAP16      | Exchange 1st and 17th stack items | ✅          |
 
 ## Logging Operations
 
@@ -191,7 +191,7 @@ This document describes the opcodes supported by Kakarot.
 | 0xf0         | CREATE       | Create a new account with associated code                         |             |
 | 0xf1         | CALL         | Message-call into an account                                      |             |
 | 0xf2         | CALLCODE     | Message-call into this account with alternative account's code    |             |
-| 0xf3         | RETURN       | Halt execution returning output data                              |             |
+| 0xf3         | RETURN       | Halt execution returning output data                              | ✅          |
 | 0xf4         | DELEGATECALL | Message-call into this account with an alternative account’s code |             |
 | 0xf5         | CREATE2      | Create a new account with associated code                         |             |
 | 0xfa         | STATICCALL   | Static message-call into an account                               |             |
