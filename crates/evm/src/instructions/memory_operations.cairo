@@ -96,7 +96,8 @@ impl MemoryOperation of MemoryOperationTrait {
             self.stack.pop()?;
         } else {
             // remove both `value` and `b`
-            self.stack.pop_n(2)?;
+            self.stack.pop()?;
+            self.stack.pop()?;
         }
 
         Result::Ok(())
