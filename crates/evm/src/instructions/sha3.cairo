@@ -27,11 +27,11 @@ impl Sha3Impl of Sha3Trait {
 
         let mut to_hash: Array<u64> = Default::default();
 
-        let (nb_chunks, nb_zeroes) = internal::compute_memory_chunks_amount(
+        let (nb_words, nb_zeroes) = internal::compute_memory_words_amount(
             size, offset, self.memory.bytes_len
         );
-        let mut last_input_offset = internal::fill_array_with_memory_chunks(
-            ref self, ref to_hash, offset, nb_chunks
+        let mut last_input_offset = internal::fill_array_with_memory_words(
+            ref self, ref to_hash, offset, nb_words
         );
         to_hash.append_n(0, 4 * nb_zeroes);
 
@@ -55,29 +55,37 @@ mod internal {
     use evm::memory::MemoryTrait;
     use utils::helpers::split_u256_into_u64_little;
 
-    /// Computes how many chunks of 32 bytes data are read
-    /// from the memory and how many chunks of 32 bytes data must be filled
-    /// with zeroes given a target size, an memory offset and the length of the memory.
+    /// Computes how many words are read from the memory
+    /// and how many words must be filled with zeroes
+    /// given a target size, a memory offset and the length of the memory.
     ///
     /// # Arguments
     ///
     /// * `size` - The amount of bytes to hash
     /// * `offset` - Offset in memory
     /// * `mem_len` - Size of the memory
-    /// Returns : (nb_chunks, nb_zeroes)
-    fn compute_memory_chunks_amount(size: u32, offset: u32, mem_len: u32) -> (u32, u32) {
+    /// Returns : (nb_words, nb_zeroes)
+    fn compute_memory_words_amount(size: u32, offset: u32, mem_len: u32) -> (u32, u32) {
+        // Bytes to hash are less than a word size
+        if size < 32 {
+            return (0, 0);
+        }
+        // Bytes out of memory bound are zeroes
         if offset > mem_len {
             return (0, size / 32);
         }
-        if (mem_len - offset < 32) && (size > 32) {
+        // The only word to read from memory is less than 32 bytes
+        if mem_len - offset < 32 {
             return (1, (size / 32) - 1);
         }
-        let nb_chunks = cmp::min(mem_len - offset, size) / 32;
-        (nb_chunks, (size / 32) - nb_chunks)
+
+        let bytes_to_read = cmp::min(mem_len - offset, size);
+        let nb_words = bytes_to_read / 32;
+        (nb_words, (size / 32) - nb_words)
     }
 
     /// Fills the `to_hash` array with little endian u64s
-    /// by splitting 32 bytes chunk read from the memory and
+    /// by splitting words read from the memory and
     /// returns the next offset to read from.
     ///
     /// # Arguments
@@ -85,9 +93,9 @@ mod internal {
     /// * `self` - The context in which the memory is read
     /// * `to_hash` - A reference to the array to fill
     /// * `offset` - Offset in memory to start reading from
-    /// * `amount` - The amount of 32 bytes chunks to read from memory
+    /// * `amount` - The amount of words to read from memory
     /// Return the new offset
-    fn fill_array_with_memory_chunks(
+    fn fill_array_with_memory_words(
         ref self: ExecutionContext, ref to_hash: Array<u64>, mut offset: u32, mut amount: u32
     ) -> u32 {
         loop {
@@ -108,15 +116,15 @@ mod internal {
     }
 
     /// Fills the `to_hash` array with the n-1 remaining little endian u64
-    /// depending on size from a 32 bytes chunk of data and returns
-    /// the u64 chunk containing the last 64 bytes word to hash.
+    /// depending on size from a word and returns
+    /// the u64 containing the last 8 bytes word to hash.
     ///
     /// # Arguments
     ///
     /// * `to_hash` - A reference to the array to fill
-    /// * `value` - The 32 bytes chunk to split in u64 words
+    /// * `value` - The word to split in u64 words
     /// * `size` - The amount of bytes still required to hash
-    /// Returns the last u64 chunk that isn't 8 Bytes long.
+    /// Returns the last u64 word that isn't 8 Bytes long.
     fn prepare_last_input(ref to_hash: Array<u64>, value: u256, size: u32) -> u64 {
         let ((high_h, low_h), (high_l, low_l)) = split_u256_into_u64_little(value);
         if size < 8 {

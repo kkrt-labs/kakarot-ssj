@@ -117,6 +117,28 @@ fn test_exec_sha3_size_1000000_offset_2() {
 }
 
 #[test]
+#[available_gas(1000000000000000)]
+fn test_exec_sha3_size_1000000_offset_23() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.stack.push(1000000);
+    ctx.stack.push(2);
+
+    ctx.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
+    ctx.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
+
+    // When
+    ctx.exec_sha3();
+
+    // Then
+    let result = ctx.stack.peek().unwrap();
+    assert(
+        result == 0x4aa461ae9513f3b03ae397740ade979809dd02ae2c14e101b32842fbee21f0a, 'wrong result'
+    );
+}
+
+#[test]
 #[available_gas(20000000)]
 fn test_exec_sha3_size_1_offset_2048() {
     // Given
@@ -274,7 +296,7 @@ fn test_exec_sha3_size_0x0C80_offset_0() {
 
 #[test]
 #[available_gas(20000000000)]
-fn test_internal_fill_array_with_memory_chunks() {
+fn test_internal_fill_array_with_memory_words() {
     // Given
     let mut ctx = setup_execution_context();
     let mut to_hash: Array<u64> = Default::default();
@@ -284,10 +306,10 @@ fn test_internal_fill_array_with_memory_chunks() {
     let mut offset = 0;
 
     // When
-    let (chunks_from_mem, _) = internal::compute_memory_chunks_amount(
+    let (words_from_mem, _) = internal::compute_memory_words_amount(
         size, offset, ctx.memory.bytes_len
     );
-    internal::fill_array_with_memory_chunks(ref ctx, ref to_hash, offset, chunks_from_mem);
+    internal::fill_array_with_memory_words(ref ctx, ref to_hash, offset, words_from_mem);
 
     // Then
     assert(to_hash.len() == 4, 'wrong array length');
@@ -299,7 +321,7 @@ fn test_internal_fill_array_with_memory_chunks() {
 
 #[test]
 #[available_gas(20000000000)]
-fn test_internal_fill_array_with_memory_chunks_size_33() {
+fn test_internal_fill_array_with_memory_words_size_33() {
     // Given
     let mut ctx = setup_execution_context();
     let mut to_hash: Array<u64> = Default::default();
@@ -309,10 +331,10 @@ fn test_internal_fill_array_with_memory_chunks_size_33() {
     let mut offset = 0;
 
     // When
-    let (chunks_from_mem, _) = internal::compute_memory_chunks_amount(
+    let (words_from_mem, _) = internal::compute_memory_words_amount(
         size, offset, ctx.memory.bytes_len
     );
-    internal::fill_array_with_memory_chunks(ref ctx, ref to_hash, offset, chunks_from_mem);
+    internal::fill_array_with_memory_words(ref ctx, ref to_hash, offset, words_from_mem);
 
     // Then
     assert(to_hash.len() == 4, 'wrong array length');
