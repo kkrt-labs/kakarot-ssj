@@ -26,10 +26,10 @@ To overcome the problem stated above, we have come up with the following design:
   between the different execution contexts.
 - Each execution context has its own identifier `id`, which uniquely identifies
   it.
-- Each execution context has a `parent_context` field, which is the numerical
-  identifier of its optional parent execution context.
-- Each execution context has a `child_context` field, which is the numerical
-  identifier of its optional subcontext.
+- Each execution context has a `parent_context` field, whose value is either the
+  identifier of its parent execution context or `null`.
+- Each execution context has a `child_context` field, whose value is either the
+  identifier of its child context or `null`.
 - The execution context tree is a directed acyclic graph, where each execution
   context has at most one parent, and at most one child.
 - A specific execution context is accessible by traversing the execution context
