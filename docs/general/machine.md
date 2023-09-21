@@ -74,8 +74,7 @@ classDiagram
         destroyed_contracts: Array~EthAddress~,
         events: Array~Event~,
         create_addresses: Array~EthAddress~,
-        reverted: bool,
-        stopped:bool,
+        status: Status,
         return_data: Array~u32~,
         parent_context: Nullable~ExecutionContext~,
         child_context: Nullable~ExecutionContext~,
@@ -95,6 +94,13 @@ classDiagram
         global_keys: Array~felt252~,
     }
 
+    class Status{
+    <<enumeration>>
+      Active,
+      Stopped,
+      Reverted
+    }
+
 
     Machine *-- Memory
     Machine *-- Stack
@@ -102,6 +108,7 @@ classDiagram
     Machine *-- Journal
     ExecutionContext *-- ExecutionContext
     ExecutionContext *-- CallContext
+    ExecutionContext *-- Status
 ```
 
 ### The Stack
@@ -192,10 +199,10 @@ Journal will have the following fields:
 
 ```rust
   struct Journal {
-      local_changes: Felt252Dict<felt252>,
-      local_keys: Array<felt252>,
-      global_changes: Felt252Dict<felt252>,
-      global_keys: Array<felt252>,
+      local_changes: Felt252Dict<u256>,
+      local_keys: Array<u256>,
+      global_changes: Felt252Dict<u256>,
+      global_keys: Array<u256>,
   }
 ```
 

@@ -26,8 +26,7 @@ classDiagram
         destroyed_contracts: Array~EthAddress~,
         events: Array~Event~,
         create_addresses: Array~EthAddress~,
-        reverted: bool,
-        stopped:bool,
+        status: Status,
         return_data: Array~u32~,
         parent_context: Nullable~ExecutionContext~,
         child_context: Nullable~ExecutionContext~,
@@ -43,8 +42,17 @@ classDiagram
         keys: Array~u256~,
         data: Array~u8~
     }
+
+    class Status{
+    <<enumeration>>
+      Active,
+      Stopped,
+      Reverted
+    }
+
     ExecutionContext *-- CallContext
     ExecutionContext *-- Event
+    ExecutionContext *-- Status
 ```
 
 When submitting a transaction to the EVM, the `call_context` field of the
