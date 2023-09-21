@@ -33,9 +33,13 @@ impl Sha3Impl of Sha3Trait {
         let mut last_input_offset = internal::fill_array_with_memory_words(
             ref self, ref to_hash, offset, nb_words
         );
+        // Fill array to hash with zeroes for bytes out of memory bound
+        // which is faster than reading them from memory
         to_hash.append_n(0, 4 * nb_zeroes);
 
-        // Fill last_input with last bytes to hash
+        // For cases where the size of bytes to hash isn't a multiple of 8,
+        // prepare the last bytes to hash into last_input instead of appending
+        // it to to_hash.
         let last_input: u64 = if (size % 32 != 0) {
             let loaded = self.memory.load(last_input_offset);
             internal::prepare_last_input(ref to_hash, loaded, size % 32)
