@@ -1,8 +1,11 @@
 # Kakarot's Execution Context
 
 The execution context is the environment in which the EVM bytecode code is
-executed. It is modeled through the ExecutionContext struct, which contains the
-following fields
+executed. It contains information such as the bytecode being currently executed,
+the value of the program counter, the gas limit, etc.
+
+It is modeled through the ExecutionContext struct, which contains the following
+fields
 
 > Note: the
 > [actual implementation of the execution context](https://github.com/kkrt-labs/kakarot-ssj/blob/main/crates/evm/src/context.cairo#L163)
@@ -13,24 +16,21 @@ following fields
 ```mermaid
 classDiagram
     class ExecutionContext{
-    +call_context: CallContext
-    +starknet_address: ContractAddress
-    +evm_address: EthAddress
-    +read_only: bool
-    destroyed_contracts: Array~EthAddress~,
-    events: Array~Event~,
-    create_addresses: Array~EthAddress~,
-    revert_contract_state: Felt252Dict~felt252~,
-    return_data: Array~u8~,
-    reverted: bool,
-    stopped: bool,
-    +gas_limit: u64
-    +gas_price:u64
-    +memory: Memory
-    +stack: Stack
-    +program_counter: u32
-    + calling_context: Nullable<ExecutionContext>
-    + sub_context: Nullable<ExecutionContext>
+        ctx_id: usize,
+        origin: EthAddress,
+        call_ctx: CallContext,
+        gas_price: u32,
+        gas_limit: u32,
+        pc: u32,
+        read_only: bool,
+        destroyed_contracts: Array~EthAddress~,
+        events: Array~Event~,
+        create_addresses: Array~EthAddress~,
+        reverted: bool,
+        stopped:bool,
+        return_data: Array~u32~,
+        parent_context: Nullable~ExecutionContext~,
+        child_context: Nullable~ExecutionContext~,
     }
 
     class CallContext{
@@ -38,27 +38,37 @@ classDiagram
         calldata: Span~u8~,
         value: u256,
     }
+
+    class Event{
+        keys: Array~u256~,
+        data: Array~u8~
+    }
     ExecutionContext *-- CallContext
+    ExecutionContext *-- Event
 ```
 
 When submitting a transaction to the EVM, the `call_context` field of the
 `ExecutionContext` is initialized with the bytecode of the contract to execute,
 the call data sent in the transaction, and the value of the transaction. The
-stack and memory are initialized empty.
+`ExecutionContext` could also hold the `Stack` and `Memory` data structures
+relative to the current code execution. However, due to Cairo's limitations,
+these data structures have been moved to the `Machine` struct - which is
+explained in detail in the [Machine](./machine.md) docs.
 
-Executing opcodes mutates the execution context. For example, executing the ADD
-opcode removes the top two elements from the stack and pushes back their sum.
+Executing opcodes mutates both the execution context and the state of the
+Machine in general. For example, executing the ADD opcode removes the top two
+elements from the stack, pushes back their sum, updates the value of `pc`.
 
 ## Run execution flow
 
 The following diagram describe the flow of the execution context when executing
-the `run` function given an instance of the `ExecutionContext` struct.
+the `run` function given an instance of the `Machine` struct.
 
 The run function is responsible for executing EVM bytecode. The flow of
 execution involves decoding and executing the current opcode, handling the
 execution, and continue executing the next opcode if the execution of the
 previous one succeeded. If the execution of an opcode fails, the execution
-context reverts and all the changes made to the blockchain state are reverted.
+context reverts and changes made to the blockchain state are not finalized.
 
 ```mermaid
 flowchart TD
@@ -70,7 +80,8 @@ D -->|No => pc+=1| A
 D -->|Yes| F{Reverted?}
 C -->|No| RA
 F --> |No| J["emit pending events"]
-J --> END["return"]
+J --> K["finalize local storage updates"]
+K --> END["return"]
 F -->|Yes| RA[Erase contracts created]
 
 subgraph revert context changes

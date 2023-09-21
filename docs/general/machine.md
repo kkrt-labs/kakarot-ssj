@@ -48,7 +48,7 @@ classDiagram
         root_ctx: ExecutionContext,
         stack: Stack,
         memory: Memory,
-        storage_updates: StorageUpdates,
+        storage_journal: Journal,
     }
 
     class Memory{
@@ -88,17 +88,18 @@ classDiagram
         calldata: Span~u8~,
     }
 
-    class StorageUpdates{
-        active_segment: felt252,
-        prev_values: Felt252Dict~felt252~,
-        keys: Array~felt252~,
+    class Journal{
+        local_changes: Felt252Dict~felt252~,
+        local_keys: Array~felt252~,
+        global_changes: Felt252Dict~felt252~,
+        global_keys: Array~felt252~,
     }
 
 
     Machine *-- Memory
     Machine *-- Stack
     Machine *-- ExecutionContext
-    Machine *-- StorageUpdates
+    Machine *-- Journal
     ExecutionContext *-- ExecutionContext
     ExecutionContext *-- CallContext
 ```
@@ -166,31 +167,51 @@ $index = 10 + 1 \cdot 125000 = 125010$.
 ### Tracking storage changes
 
 The EVM has a persistent storage, which is a key-value store. The storage
-changes are tracked in the `storage_updates` field of the Machine. This field is
-a dictionary mapping storage slots modified by the current execution context to
-their previous value, so that if an execution context reverts, we can restore
-the previous values of the storage slots modified by that execution of a
-contract.
+changes are tracked in the `journal` field of the Machine. This field is a
+dictionary mapping storage slots addresses modified by the current execution
+context to their most recent value. For more information on how storage is
+managed in Kakarot, read [contract_storage](./contract_storage.md).
 
 We encounter the same constraints as for the Stack and the Memory, as the
-storage_changes are tracked using a dictionary; meaning that it can't be a part
+storage changes are tracked using a dictionary; meaning that it can't be a part
 of the ExecutionContext struct. Therefore, we will track the storage changes in
-the Machine struct. Unlike previous cases, there is no limit on the amount of
-storage writes that can be performed in a transaction, and we cannot estimate an
-upper limit based on gas consumption, as the gas cost associated with storage
-changes is not fixed, and can even lead to a refund.
+the Machine struct. What we want to achieve is the following:
 
-One solution could be to hash the storage address and the id of the current
-execution context to obtain a unique key for each storage change. To keep track
-of these keys, we will store them in the `keys` field of the StorageUpdates
-struct. The `prev_values` field is a dictionary mapping the keys to their
-previous values. However, this solution is not ideal, as it would require one
-hash operation per storage change and to keep track of the keys in memory.
+- Track the storage changes performed in the transaction as a whole.
+- Track the storage changes performed in the current execution context.
+- Rollback the storage changes performed in the current execution context when
+  the execution context is reverted.
+- Finalize the storage changes performed in the transaction when the transaction
+  is finalized.
 
-Instead, we will limit the amount of storage updates performed per call to a
-number that is high enough (e.g. 100k) which is empirically enough to avoid any
-issues and remains efficient, and implement it similarly to the Stack and the
-Memory using internal offsets.
+Considering Cairo's limitations raised previously, we will use a single data
+structure to track local and global storage changes. We will use a `Journal`
+data structure, that will track two things: the changes performed in the current
+execution context, and the changes performed in the transaction as a whole. The
+Journal will have the following fields:
+
+```rust
+  struct Journal {
+      local_changes: Felt252Dict<felt252>,
+      local_keys: Array<felt252>,
+      global_changes: Felt252Dict<felt252>,
+      global_keys: Array<felt252>,
+  }
+```
+
+The `local_changes` field is a dictionary mapping storage slots addresses to the
+most recent changes, performed in the local execution context. The `local_keys`
+field is used to track the indexes of the storage slots addresses in the
+dictionary in order to be able to iterate over the dictionary. Similarly, the
+`global_changes` field is a dictionary mapping storage slots addresses to the
+changes performed in the transaction as a whole. The `global_keys` tracks the
+indexes of these storage slots addresses in the dictionary.
+
+When an execution contexts stops, we will commit the local changes to the global
+changes by inserting the local changes in the `global_changes` dictionary, and
+updating the `global_keys` array. When the transaction is finalized, we will
+iterate over the `global_changes` dictionary, and perform the required storage
+updates, as mentioned in [Contract Storage](./contract_storage.md).
 
 # Conclusion
 
