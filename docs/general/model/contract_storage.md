@@ -9,6 +9,11 @@ account composed by a _nonce_, an _ether balance_, a _storage_, and a _code_. We
 make the distinction between EOA (Externally Owned Accounts) that have no code
 and an empty storage, and contracts that can have code and storage.
 
+![Account state](account_state.png)
+
+_Account state associated to an Ethereum address. Source:
+[EVM Illustrated](https://takenobu-hs.github.io/downloads/ethereum_evm_illustrated.pdf)_
+
 In traditional EVM clients, like Geth, the _world state_ is stored as a _trie_,
 and informations about account are stored in the world state trie and can be
 retrieved through queries. Each account in the world state trie is associated
@@ -37,6 +42,32 @@ When Geth executes the SLOAD opcode, it does the following:
 Since one transaction can access a storage slot multiple times, we must ensure
 that the result returned is the most recent value. This is why Geth first checks
 `dirtyStorage`, which is the most up-to-date state of the storage.
+
+```mermaid
+flowchart TD;
+    A[Start: Run Bytecode] -->|SSTORE| B[Update value in dirtyStorage]
+    B --> C[Track modifications in journal]
+    C --> D[End of current execution]
+    D -->|Execution reverted| M[Clear dirtyStorage from entries in journal]
+    D -->|Execution successful| E[ ]
+    A -->|SLOAD| H[Check dirtyStorage for queried key]
+    H -->|Key found| I[Return value from dirtyStorage]
+    H -->|Key not found| J[Retrieve value from committed account storage trie]
+    J --> K[Return retrieved value]
+    style A fill:#DB5729,stroke:#333,stroke-width:2px;
+    style B fill:#296FDB,stroke:#333,stroke-width:2px;
+    style C fill:#296FDB,stroke:#333,stroke-width:2px;
+    style D fill:#296FDB,stroke:#333,stroke-width:2px;
+    style E fill:#296FDB,stroke:#333,stroke-width:2px;
+    style H fill:#136727,stroke:#333,stroke-width:2px;
+    style I fill:#136727,stroke:#333,stroke-width:2px;
+    style J fill:#136727,stroke:#333,stroke-width:2px;
+    style K fill:#136727,stroke:#333,stroke-width:2px;
+    style M fill:#DB2929,stroke:#333,stroke-width:2px;
+```
+
+_Simplified process representation of SSTORE and SLOAD Opcodes in the Geth EVM
+Client_
 
 ## Storage in Kakarot
 
@@ -108,7 +139,8 @@ through executing SLOAD / SSTORE internally to KakarotCore.
 sequenceDiagram
     participant C as Caller
     participant K as KakarotCore
-    participant M as Interpreter
+    participant M as Machine
+    participant J as Journal
     participant S as ContractState
 
     C->>K: Executes Kakarot contract
@@ -118,17 +150,28 @@ sequenceDiagram
     Note over K,M: If it's an SLOAD operation, it reads from Storage.
 
     alt SSTORE
-        M->>S: hash(starknet_address, storage_slot)
-        S-->>M: Unique storage address
-        M->>S: Write value at storage address
+        M-->>M: key = hash(evm_address, storage_slot)
+        M->>J: journal.insert(key,value)
     else SLOAD
-        M->>S: hash(starknet_address, storage_slot)
-        S-->>M: Read value from storage address
+        M-->>M: key = hash(evm_address, storage_slot)
+        M->>J: journal.get(key)
+        J -->> M: Nullable<value>
+        alt Journal returns value
+
+        else Journal returns nothing
+            M->>S: storage_read(key)
+            S-->>M: value
+        end
+    end
+    Note over K,M: Committing journal entries to storage
+    K->>M: Commit
+    M->>J: Get all journal entries
+    J -->>M: entries
+    loop for each journal entry
+        M->>S: storage_write(key,value)
     end
 
-    Note over K: Each storage change is stored in accumulator for potential revert.
-    Note over K: If revert happens, the accumulator from ExecutionContext is read to revert changes.
-
+    Note over S: Storage is now updated with the final state of all changes made during the transaction.
 ```
 
 ### Eventual security risks
@@ -197,4 +240,4 @@ to simply implement the SSTORE and SLOAD opcodes as follows:
   }
 ```
 
-> Note: these codesnippets are pseudocode, not valid Cairo code.
+> Note: these code snippets are in pseudocode, not valid Cairo code.
