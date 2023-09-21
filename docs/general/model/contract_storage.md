@@ -87,7 +87,7 @@ design presented thereafter.
 
 ### A shared storage space for all Kakarot Contracts
 
-The second approach is to have a single storage space for all Kakarot contracts.
+The second approach is to have a unified storage space for all contract accounts in the main Kakarot smart contract.
 While Kakarot is not a traditional Ethereum Client, we can still use a design
 that is similar. Traditional clients hold a state database in which the account
 states are stored. We can do the same, but instead of storing the account states
