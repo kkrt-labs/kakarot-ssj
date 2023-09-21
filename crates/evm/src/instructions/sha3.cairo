@@ -7,7 +7,7 @@ use evm::memory::MemoryTrait;
 use evm::errors::EVMError;
 use evm::helpers::U256IntoResultU32;
 use keccak::{cairo_keccak, u128_split};
-use utils::helpers::{ArrayExtensionTrait, reverse_endianness};
+use utils::helpers::{ArrayExtensionTrait, U256Trait};
 
 use array::ArrayTrait;
 
@@ -44,7 +44,7 @@ impl Sha3Impl of Sha3Trait {
         };
 
         let mut hash = cairo_keccak(ref to_hash, last_input, size % 8);
-        self.stack.push(reverse_endianness(hash))
+        self.stack.push(hash.reverse_endianness())
     }
 }
 
@@ -53,7 +53,7 @@ mod internal {
     use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
     use evm::stack::StackTrait;
     use evm::memory::MemoryTrait;
-    use utils::helpers::split_u256_into_u64_little;
+    use utils::helpers::U256Trait;
 
     /// Computes how many words are read from the memory
     /// and how many words must be filled with zeroes
@@ -103,7 +103,7 @@ mod internal {
                 break;
             }
             let loaded = self.memory.load(offset);
-            let ((high_h, low_h), (high_l, low_l)) = split_u256_into_u64_little(loaded);
+            let ((high_h, low_h), (high_l, low_l)) = loaded.split_into_u64_le();
             to_hash.append(low_h);
             to_hash.append(high_h);
             to_hash.append(low_l);
@@ -126,7 +126,7 @@ mod internal {
     /// * `size` - The amount of bytes still required to hash
     /// Returns the last u64 word that isn't 8 Bytes long.
     fn prepare_last_input(ref to_hash: Array<u64>, value: u256, size: u32) -> u64 {
-        let ((high_h, low_h), (high_l, low_l)) = split_u256_into_u64_little(value);
+        let ((high_h, low_h), (high_l, low_l)) = value.split_into_u64_le();
         if size < 8 {
             return low_h;
         } else if size < 16 {
