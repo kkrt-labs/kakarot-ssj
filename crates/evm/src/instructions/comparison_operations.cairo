@@ -7,8 +7,8 @@ use evm::errors::EVMError;
 use utils::math::{Exponentiation, Bitshift, WrappingBitshift};
 use utils::constants::{POW_2_127};
 use evm::context::BoxDynamicExecutionContextDestruct;
-use utils::u256_signed_math::SignedPartialOrd;
 use utils::traits::BoolIntoNumeric;
+use utils::i256::i256;
 use integer::BoundedInt;
 
 #[generate_trait]
@@ -37,20 +37,18 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x12 - SLT
     /// # Specification: https://www.evm.codes/#12?fork=shanghai
     fn exec_slt(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
-        let a = *popped[0];
-        let b = *popped[1];
-        let result = a.slt(b).into();
+        let a: i256 = self.stack.pop_i256()?;
+        let b: i256 = self.stack.pop_i256()?;
+        let result: u256 = (a < b).into();
         self.stack.push(result)
     }
 
     /// 0x13 - SGT
     /// # Specification: https://www.evm.codes/#13?fork=shanghai
     fn exec_sgt(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
-        let a = *popped[0];
-        let b = *popped[1];
-        let result = a.sgt(b).into();
+        let a: i256 = self.stack.pop_i256()?;
+        let b: i256 = self.stack.pop_i256()?;
+        let result: u256 = (a > b).into();
         self.stack.push(result)
     }
 
@@ -160,12 +158,11 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x1D - SAR
     /// # Specification: https://www.evm.codes/#1d?fork=shanghai
     fn exec_sar(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
-        let shift = *popped[0];
-        let value: u256 = *popped[1];
+        let shift: u256 = self.stack.pop()?;
+        let value: i256 = self.stack.pop_i256()?;
 
         // Checks the MSB bit sign for a 256-bit integer
-        let positive = value.high < POW_2_127;
+        let positive = value.value.high < POW_2_127;
         let sign = if positive {
             // If sign is positive, set it to 0.
             0
@@ -178,7 +175,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
             self.stack.push(sign)
         } else {
             // XORing with sign before and after the shift propagates the sign bit of the operation
-            let result = (sign ^ value).shr(shift) ^ sign;
+            let result = (sign ^ value.value).shr(shift) ^ sign;
             self.stack.push(result)
         }
     }

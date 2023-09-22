@@ -180,7 +180,7 @@ fn test__exec_sdiv_neg() {
 
     // Then
     assert(ctx.stack.len() == 1, 'stack len should be 1');
-    assert(ctx.stack.peek().unwrap() == BoundedInt::max() - 1, 'ctx not stopped');
+    assert(ctx.stack.peek().unwrap() == BoundedInt::max() - 1, 'sdiv_neg failed');
 }
 
 #[test]

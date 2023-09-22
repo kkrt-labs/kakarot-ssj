@@ -22,7 +22,7 @@ use nullable::{nullable_from_box, NullableTrait};
 use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW};
 use evm::helpers::U256IntoResultU32;
 use starknet::EthAddress;
-
+use utils::i256::i256;
 
 #[derive(Destruct, Default)]
 struct Stack {
@@ -35,6 +35,7 @@ trait StackTrait {
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError>;
     fn pop(ref self: Stack) -> Result<u256, EVMError>;
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError>;
+    fn pop_i256(ref self: Stack) -> Result<i256, EVMError>;
     fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError>;
     fn pop_n(ref self: Stack, n: usize) -> Result<Array<u256>, EVMError>;
     fn peek(ref self: Stack) -> Option<u256>;
@@ -51,6 +52,9 @@ impl StackImpl of StackTrait {
     }
 
     /// Pushes a new bytes32 word onto the stack.
+    ///
+    /// # Errors
+    ///
     /// If the stack is full, returns with a StackOverflow error.
     #[inline(always)]
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError> {
@@ -63,8 +67,11 @@ impl StackImpl of StackTrait {
         Result::Ok(())
     }
 
-    /// Pops the top item off the stack. If the stack is empty,
-    /// returns with a StackOverflow error.
+    /// Pops the top item off the stack. 
+    ///
+    /// # Errors
+    ///
+    /// If the stack is empty, returns with a StackOverflow error.
     #[inline(always)]
     fn pop(ref self: Stack) -> Result<u256, EVMError> {
         if self.len() == 0 {
@@ -77,6 +84,9 @@ impl StackImpl of StackTrait {
     }
 
     /// Calls `Stack::pop` and tries to convert it to usize
+    ///
+    /// # Errors
+    ///
     /// Returns `EVMError::StackError` with appropriate message
     /// In case:
     ///     - Stack is empty
@@ -88,7 +98,24 @@ impl StackImpl of StackTrait {
         Result::Ok(item)
     }
 
+    /// Calls `Stack::pop` and convert it to i256
+    ///
+    /// # Errors
+    ///
+    /// Returns `EVMError::StackError` with appropriate message
+    /// In case:
+    ///     - Stack is empty
+    #[inline(always)]
+    fn pop_i256(ref self: Stack) -> Result<i256, EVMError> {
+        let item: u256 = self.pop()?;
+        let item: i256 = item.into();
+        Result::Ok(item)
+    }
+
     /// Calls `Stack::pop` and converts it to usize
+    ///
+    /// # Errors
+    ///
     /// Returns `EVMError::StackError` with appropriate message
     /// In case:
     ///     - Stack is empty
@@ -100,6 +127,9 @@ impl StackImpl of StackTrait {
     }
 
     /// Pops N elements from the stack.
+    ///
+    /// # Errors
+    ///
     /// If the stack length is less than than N, returns with a StackUnderflow error.
     fn pop_n(ref self: Stack, mut n: usize) -> Result<Array<u256>, EVMError> {
         if n > self.len() {
@@ -117,6 +147,9 @@ impl StackImpl of StackTrait {
     }
 
     /// Peeks at the top item on the stack.
+    ///
+    /// # Errors
+    ///
     /// If the stack is empty, returns None.
     #[inline(always)]
     fn peek(ref self: Stack) -> Option<u256> {
@@ -131,6 +164,9 @@ impl StackImpl of StackTrait {
 
     /// Peeks at the item at the given index on the stack.
     /// index is 0-based, 0 being the top of the stack.
+    ///
+    /// # Errors
+    ///
     /// If the index is greather than the stack length, returns with a StackUnderflow error.
     #[inline(always)]
     fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError> {
