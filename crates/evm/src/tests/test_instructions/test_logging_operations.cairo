@@ -3,10 +3,12 @@ use evm::context::{
 };
 use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
-use evm::tests::test_utils::{setup_execution_context, setup_read_only_execution_context};
+use evm::tests::test_utils::setup_execution_context;
 use evm::errors::{EVMError, STATE_MODIFICATION_ERROR};
 use evm::instructions::LoggingOperationsTrait;
 use integer::BoundedInt;
+use utils::helpers::u256_to_bytes_array;
+use debug::PrintTrait;
 
 #[test]
 #[available_gas(20000000)]
@@ -33,11 +35,10 @@ fn test_exec_log0() {
     assert(events.len() == 1, 'context should have one event');
     let event = events.pop_front().unwrap();
     assert(event.keys.len() == 0, 'event should not have keys');
-    assert(event.data.len() == 1, 'event should have one data');
-    assert(
-        *event.data[0] == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        'event data should be max_u248'
-    );
+    assert(event.data.len() == 31, 'event should have 31 data');
+    assert(*event.data[0] == 0xff, 'event data should be max_u8');
+    assert(*event.data[15] == 0xff, 'event data should be max_u8');
+    assert(*event.data[30] == 0xff, 'event data should be max_u8');
 }
 
 #[test]
@@ -66,19 +67,18 @@ fn test_exec_log1() {
     let event = events.pop_front().unwrap();
     assert(event.keys.len() == 1, 'event should have one key');
     assert(*event.keys[0] == 0x0123456789ABCDEF, 'event key is not correct');
-    assert(event.data.len() == 2, 'event should have one data');
-    assert(
-        *event.data[0] == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        'event data0 should be max_u248'
-    );
-    assert(*event.data[1] == 0xff, 'event data1 should be 0xFF');
+    assert(event.data.len() == 32, 'event should have one data');
+    assert(*event.data[0] == 0xff, 'event data should be max_u8');
+    assert(*event.data[15] == 0xff, 'event data should be max_u8');
+    assert(*event.data[31] == 0xff, 'event data should be max_u8');
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_exec_log1_read_only_context() {
     // Given
-    let mut ctx = setup_read_only_execution_context();
+    let mut ctx = setup_execution_context();
+    ctx.set_read_only(true);
 
     ctx.memory.store(BoundedInt::<u256>::max(), 0);
 
@@ -127,8 +127,9 @@ fn test_exec_log2() {
     assert(event.keys.len() == 2, 'event should have two keys');
     assert(*event.keys[0] == 0x0123456789ABCDEF, 'event key is not correct');
     assert(*event.keys[1] == BoundedInt::<u256>::max(), 'event key is not correct');
-    assert(event.data.len() == 1, 'event should have one data');
-    assert(*event.data[0] == 0xFFFFFFFFFF, 'event data is not correct');
+    assert(event.data.len() == 5, 'event should have one data');
+    assert(*event.data[0] == 0xff, 'event data should be max_u8');
+    assert(*event.data[4] == 0xff, 'event data should be max_u8');
 }
 
 #[test]
@@ -169,12 +170,10 @@ fn test_exec_log3_and_log4() {
     assert(*event1.keys[1] == BoundedInt::<u256>::max(), 'event1 key is not correct');
     assert(*event1.keys[2] == 0x00, 'event1 key is not correct');
 
-    assert(event1.data.len() == 2, 'event1 should have 2 datas');
-    assert(
-        *event1.data[0] == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        'event1 data is not correct'
-    );
-    assert(*event1.data[1] == 0xff0123456789ABCDEF, 'event1 data is not correct');
+    assert(event1.data.len() == 40, 'event1 should have 38 data');
+    assert(*event1.data[0] == 0xff, 'event data should be max_u8');
+    assert(*event1.data[4] == 0xff, 'event data should be max_u8');
+    assert(*event1.data[39] == 0xef, 'event data should be 0xEF');
 
     let event2 = events.pop_front().unwrap();
     assert(event2.keys.len() == 4, 'event2 should have 4 keys');
@@ -183,6 +182,8 @@ fn test_exec_log3_and_log4() {
     assert(*event2.keys[2] == 0x00, 'event2 key is not correct');
     assert(*event2.keys[3] == BoundedInt::<u256>::max(), 'event2 key is not correct');
 
-    assert(event2.data.len() == 1, 'event2 should have one data');
-    assert(*event2.data[0] == 0x0123456789ABCDEF0000, 'event2 data is not correct');
+    assert(event2.data.len() == 10, 'event2 should have 10 bytes');
+    assert(*event2.data[0] == 0x01, 'event data should be 0x01');
+    assert(*event2.data[5] == 0xAB, 'event data should be 0xAB');
+    assert(*event2.data[9] == 0x00, 'event data should be 0x00');
 }
