@@ -5,7 +5,7 @@ use evm::stack::StackTrait;
 use evm::errors::STACK_UNDERFLOW;
 use evm::errors::EVMError;
 use utils::math::{Exponentiation, Bitshift, WrappingBitshift};
-use utils::constants::{POW_2_127};
+use utils::constants::{POW_2_127_U128};
 use evm::context::BoxDynamicExecutionContextDestruct;
 use utils::traits::BoolIntoNumeric;
 use utils::i256::i256;
@@ -162,7 +162,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         let value: i256 = self.stack.pop_i256()?;
 
         // Checks the MSB bit sign for a 256-bit integer
-        let positive = value.value.high < POW_2_127;
+        let positive = value.value.high < POW_2_127_U128;
         let sign = if positive {
             // If sign is positive, set it to 0.
             0

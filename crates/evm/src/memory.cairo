@@ -3,10 +3,9 @@ use integer::{
     u256_as_non_zero
 };
 use utils::constants::{
-    POW_256_0_U128, POW_256_1_U128, POW_256_2_U128, POW_256_3_U128, POW_256_4_U128, POW_256_5_U128,
-    POW_256_6_U128, POW_256_7_U128, POW_256_8_U128, POW_256_9_U128, POW_256_10_U128,
-    POW_256_11_U128, POW_256_12_U128, POW_256_13_U128, POW_256_14_U128, POW_256_15_U128,
-    POW_256_16_U256
+    POW_2_0_U128, POW_2_8_U128, POW_2_16_U128, POW_2_24_U128, POW_2_32_U128, POW_2_40_U128,
+    POW_2_48_U128, POW_2_56_U128, POW_2_64_U128, POW_2_72_U128, POW_2_80_U128, POW_2_88_U128,
+    POW_2_96_U128, POW_2_104_U128, POW_2_112_U128, POW_2_120_U128, POW_256_16_U256
 };
 use cmp::{max};
 use utils::{
@@ -281,22 +280,22 @@ impl InternalMemoryMethods of InternalMemoryTrait {
                 break;
             }
 
-            let current: u128 = ((*elements[0]).into() * POW_256_15_U128
-                + (*elements[1]).into() * POW_256_14_U128
-                + (*elements[2]).into() * POW_256_13_U128
-                + (*elements[3]).into() * POW_256_12_U128
-                + (*elements[4]).into() * POW_256_11_U128
-                + (*elements[5]).into() * POW_256_10_U128
-                + (*elements[6]).into() * POW_256_9_U128
-                + (*elements[7]).into() * POW_256_8_U128
-                + (*elements[8]).into() * POW_256_7_U128
-                + (*elements[9]).into() * POW_256_6_U128
-                + (*elements[10]).into() * POW_256_5_U128
-                + (*elements[11]).into() * POW_256_4_U128
-                + (*elements[12]).into() * POW_256_3_U128
-                + (*elements[13]).into() * POW_256_2_U128
-                + (*elements[14]).into() * POW_256_1_U128
-                + (*elements[15]).into() * POW_256_0_U128);
+            let current: u128 = ((*elements[0]).into() * POW_2_120_U128
+                + (*elements[1]).into() * POW_2_112_U128
+                + (*elements[2]).into() * POW_2_104_U128
+                + (*elements[3]).into() * POW_2_96_U128
+                + (*elements[4]).into() * POW_2_88_U128
+                + (*elements[5]).into() * POW_2_80_U128
+                + (*elements[6]).into() * POW_2_72_U128
+                + (*elements[7]).into() * POW_2_64_U128
+                + (*elements[8]).into() * POW_2_56_U128
+                + (*elements[9]).into() * POW_2_48_U128
+                + (*elements[10]).into() * POW_2_40_U128
+                + (*elements[11]).into() * POW_2_32_U128
+                + (*elements[12]).into() * POW_2_24_U128
+                + (*elements[13]).into() * POW_2_16_U128
+                + (*elements[14]).into() * POW_2_8_U128
+                + (*elements[15]).into() * POW_2_0_U128);
 
             self.items.insert(chunk_index.into(), current);
             chunk_index += 1;
