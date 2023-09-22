@@ -71,24 +71,24 @@ fn test_load_word() {
 
 #[test]
 #[available_gas(2000000000)]
-fn test_split_word_little() {
+fn test_split_word_le() {
     // Test with 0 value and 0 len
-    let res0 = helpers::split_word_little(0, 0);
+    let res0 = helpers::split_word_le(0, 0);
     assert(res0.len() == 0, 'res0: wrong length');
 
     // Test with single byte value
-    let res1 = helpers::split_word_little(1, 1);
+    let res1 = helpers::split_word_le(1, 1);
     assert(res1.len() == 1, 'res1: wrong length');
     assert(*res1[0] == 1, 'res1: wrong value');
 
     // Test with two byte value
-    let res2 = helpers::split_word_little(257, 2); // 257 = 0x0101
+    let res2 = helpers::split_word_le(257, 2); // 257 = 0x0101
     assert(res2.len() == 2, 'res2: wrong length');
     assert(*res2[0] == 1, 'res2: wrong value at index 0');
     assert(*res2[1] == 1, 'res2: wrong value at index 1');
 
     // Test with four byte value
-    let res3 = helpers::split_word_little(67305985, 4); // 67305985 = 0x04030201
+    let res3 = helpers::split_word_le(67305985, 4); // 67305985 = 0x04030201
     assert(res3.len() == 4, 'res3: wrong length');
     assert(*res3[0] == 1, 'res3: wrong value at index 0');
     assert(*res3[1] == 2, 'res3: wrong value at index 1');
@@ -97,7 +97,7 @@ fn test_split_word_little() {
 
     // Test with 16 byte value (u128 max value)
     let max_u128: u256 = 340282366920938463463374607431768211454; // u128 max value - 1
-    let res4 = helpers::split_word_little(max_u128, 16);
+    let res4 = helpers::split_word_le(max_u128, 16);
     assert(res4.len() == 16, 'res4: wrong length');
     assert(*res4[0] == 0xfe, 'res4: wrong MSB value');
 

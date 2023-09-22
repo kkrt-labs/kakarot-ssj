@@ -4,13 +4,11 @@ use integer::{
     u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod,
     u512_safe_div_rem_by_u256, u256_try_as_non_zero
 };
-
-
 use evm::context::{ExecutionContextTrait, ExecutionContext, BoxDynamicExecutionContextDestruct};
 use evm::stack::StackTrait;
-use utils::u256_signed_math::u256_signed_div_rem;
 use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
 use evm::errors::EVMError;
+use utils::i256::i256;
 
 #[generate_trait]
 impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
@@ -88,18 +86,14 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#05?fork=shanghai
     fn exec_sdiv(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
-        let a = *popped[0];
-        let b = *popped[1];
+        let a: i256 = self.stack.pop_i256()?;
+        let b: i256 = self.stack.pop_i256()?;
 
-        let result: u256 = match u256_try_as_non_zero(b) {
-            Option::Some(nonzero_b) => {
-                let (q, _) = u256_signed_div_rem(a, nonzero_b);
-                q
-            },
-            Option::None => 0,
+        let result: u256 = if b == 0_u256.into() {
+            0
+        } else {
+            (a / b).into()
         };
-
         self.stack.push(result)
     }
 
@@ -130,17 +124,13 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// All values are treated as two’s complement signed 256-bit integers. Note the overflow semantic when −2^255 is negated.
     /// # Specification: https://www.evm.codes/#07?fork=shanghai
     fn exec_smod(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
+        let a: i256 = self.stack.pop_i256()?;
+        let b: i256 = self.stack.pop_i256()?;
 
-        let a: u256 = *popped[0];
-        let b: u256 = *popped[1];
-
-        let result: u256 = match u256_try_as_non_zero(b) {
-            Option::Some(nonzero_b) => {
-                let (_, r) = u256_signed_div_rem(a, nonzero_b);
-                r
-            },
-            Option::None => 0,
+        let result: u256 = if b == 0_u256.into() {
+            0
+        } else {
+            (a % b).into()
         };
         self.stack.push(result)
     }
