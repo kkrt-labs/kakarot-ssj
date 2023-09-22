@@ -44,10 +44,10 @@ impl Sha3Impl of Sha3Trait {
             let loaded = self.memory.load(last_input_offset);
             internal::prepare_last_input(ref to_hash, loaded, size % 32)
         } else {
-            // Properly set the memory length in case we skipped reading zeroes
-            self.memory.ensure_length(size);
             0
         };
+        // Properly set the memory length in case we skipped reading zeroes
+        self.memory.ensure_length(size + offset);
 
         let mut hash = cairo_keccak(ref to_hash, last_input, size % 8);
         self.stack.push(hash.reverse_endianness())
