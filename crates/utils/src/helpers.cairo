@@ -71,12 +71,12 @@ fn pow256_rev(i: usize) -> u256 {
 
 /// Splits a u256 into `len` bytes, big-endian, and appends the result to `dst`.
 fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
-    let little_endian = split_word_little(value, len);
-    let big_endian = ArrayExtensionTrait::reverse(little_endian.span());
-    ArrayExtensionTrait::concat(ref dst, big_endian.span());
+    let word_le = split_word_le(value, len);
+    let word_be = ArrayExtensionTrait::reverse(word_le.span());
+    ArrayExtensionTrait::concat(ref dst, word_be.span());
 }
 
-fn split_u128_little(ref dest: Array<u8>, mut value: u128, mut len: usize) {
+fn split_u128_le(ref dest: Array<u8>, mut value: u128, mut len: usize) {
     loop {
         if len == 0 {
             assert(value == 0, 'split_words:value not 0');
@@ -89,12 +89,12 @@ fn split_u128_little(ref dest: Array<u8>, mut value: u128, mut len: usize) {
 }
 
 /// Splits a u256 into `len` bytes, little-endian, and returns the bytes array.
-fn split_word_little(mut value: u256, mut len: usize) -> Array<u8> {
+fn split_word_le(mut value: u256, mut len: usize) -> Array<u8> {
     let mut dst: Array<u8> = ArrayTrait::new();
     let low_len = min(len, 16);
-    split_u128_little(ref dst, value.low, low_len);
+    split_u128_le(ref dst, value.low, low_len);
     let high_len = min(len - low_len, 16);
-    split_u128_little(ref dst, value.high, high_len);
+    split_u128_le(ref dst, value.high, high_len);
     dst
 }
 
