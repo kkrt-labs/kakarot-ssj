@@ -73,51 +73,8 @@ mod internal {
         let mut data: Array<u8> = Default::default();
         self.memory.load_n(size, ref data, offset);
 
-        //let mut data: Array<u8> = Default::default();
-        //load_data_from_memory(ref self, ref data, size, offset);
-
         self.set_events(topics, data);
 
         Result::Ok(())
     }
-/// Load data from the memory by extracting 32 bytes words 
-/// and put the 31 most significant bytes in a felt.
-/// The dynamic context has to be recreated to be modified.
-///
-/// # Arguments
-///
-/// * `self` - The context to which the event will be added
-/// * `data_array` - Array containing the data
-/// * `size` - Amount of bytes to load
-/// * `offset` - Offset in the memory
-// fn load_data_from_memory(
-//     ref self: ExecutionContext, ref data_array: Array<u8>, mut size: u32, mut offset: u32
-// ) {
-//     let mut i = 0;
-//     loop {
-
-//         if size < 31 + i {
-//             if i != size {
-//                 let loaded = self.memory.load(offset + i);
-//                 let mut chunk: Array<u8> = u256_to_bytes_array(loaded);
-//                 let mut last_elem = 0;
-//                 let mut j = 0;
-//                 loop {
-//                     if j + i == size {
-//                         break;
-//                     }
-//                     last_elem *= 256;
-//                     last_elem += (*chunk[j]).into();
-//                     j += 1;
-//                 };
-//                 data_array.append(last_elem);
-//             }
-//             break;
-//         };
-//         let mut loaded = self.memory.load(offset + i);
-//         loaded /= 256;
-//         data_array.append(loaded.try_into().unwrap());
-//         i += 31;
-//     };
-// }
 }
