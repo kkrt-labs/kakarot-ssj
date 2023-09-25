@@ -28,9 +28,6 @@ if [[ ! -d .git ]]; then
 	exit 1
 fi
 
-# Write the hook content to the pre-push file
-echo "${PRE_COMMIT}" >.git/hooks/pre-commit
-
 # Make the hook executable
 chmod +x .git/hooks/pre-commit
 
