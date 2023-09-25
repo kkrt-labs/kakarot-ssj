@@ -134,7 +134,7 @@ fn test_exec_log3() {
     assert(*event.keys[2] == 0x00, 'event key is not correct');
 
     assert(event.data.len() == 40, 'event should have 40 bytes');
-    let data_expected = u256_to_bytes_array(BoundedInt::<u256>::max()).span().slice(0, 32);
+    let data_expected = u256_to_bytes_array(BoundedInt::<u256>::max()).span();
     assert(event.data.span().slice(0, 32) == data_expected, 'event data are incorrect');
     let data_expected = u256_to_bytes_array(
         0x0123456789ABCDEF000000000000000000000000000000000000000000000000
@@ -249,7 +249,7 @@ fn test_exec_log_multiple_events() {
     assert(*event1.keys[2] == 0x00, 'event1 key is not correct');
 
     assert(event1.data.len() == 40, 'event1 should have 40 bytes');
-    let data_expected = u256_to_bytes_array(BoundedInt::<u256>::max()).span().slice(0, 32);
+    let data_expected = u256_to_bytes_array(BoundedInt::<u256>::max()).span();
     assert(event1.data.span().slice(0, 32) == data_expected, 'event1 data are incorrect');
     let data_expected = u256_to_bytes_array(
         0x0123456789ABCDEF000000000000000000000000000000000000000000000000
