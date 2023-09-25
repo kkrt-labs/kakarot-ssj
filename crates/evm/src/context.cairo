@@ -351,17 +351,14 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         self.static_context = BoxTrait::new(static_ctx);
     }
 
-    /// Store a new event in the dynamic context using given
-    /// topics and data.
+    /// Store a new event in the dynamic context.
     /// The dynamic context has to be recreated to be modified.
     ///
     /// # Arguments
     ///
     /// * `self` - The context to which the event will be added
-    /// * `topics` - Topics of the event
-    /// * `data` - Data of the event
-    fn set_events(ref self: ExecutionContext, topics: Array<u256>, data: Array<u8>) {
-        let event: Event = Event { keys: topics, data };
+    /// * `event` - Event to append
+    fn append_event(ref self: ExecutionContext, event: Event) {
         let mut dyn_ctx = self.dynamic_context.unbox();
         dyn_ctx.events.append(event);
         self.dynamic_context = BoxTrait::new(dyn_ctx);

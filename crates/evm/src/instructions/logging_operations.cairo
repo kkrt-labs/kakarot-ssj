@@ -66,14 +66,15 @@ mod internal {
             return Result::Err(EVMError::StateModificationError(STATE_MODIFICATION_ERROR));
         }
 
-        let offset = (self.stack.pop_usize())?;
-        let size = (self.stack.pop_usize())?;
+        let offset = self.stack.pop_usize()?;
+        let size = self.stack.pop_usize()?;
         let topics: Array<u256> = self.stack.pop_n(topics_len.into())?;
 
         let mut data: Array<u8> = Default::default();
         self.memory.load_n(size, ref data, offset);
 
-        self.set_events(topics, data);
+        let event: Event = Event { keys: topics, data };
+        self.append_event(event);
 
         Result::Ok(())
     }

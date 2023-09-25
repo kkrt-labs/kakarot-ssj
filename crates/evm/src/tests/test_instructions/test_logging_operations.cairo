@@ -16,10 +16,6 @@ fn test_exec_log0() {
 
     ctx.memory.store(BoundedInt::<u256>::max(), 0);
 
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x00);
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x0123456789ABCDEF);
     ctx.stack.push(0x1F);
     ctx.stack.push(0x00);
 
@@ -28,9 +24,11 @@ fn test_exec_log0() {
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(ctx.stack.len() == 4, 'stack size should be 4');
+    assert(ctx.stack.len() == 0, 'stack should be empty');
+
     let mut events = ctx.events();
     assert(events.len() == 1, 'context should have one event');
+
     let event = events.pop_front().unwrap();
     assert(event.keys.len() == 0, 'event should not have keys');
     assert(event.data.len() == 31, 'event should have 31 bytes');
@@ -47,9 +45,6 @@ fn test_exec_log1() {
 
     ctx.memory.store(BoundedInt::<u256>::max(), 0);
 
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x00);
-    ctx.stack.push(BoundedInt::<u256>::max());
     ctx.stack.push(0x0123456789ABCDEF);
     ctx.stack.push(0x20);
     ctx.stack.push(0x00);
@@ -59,9 +54,11 @@ fn test_exec_log1() {
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(ctx.stack.len() == 3, 'stack size should be 3');
+    assert(ctx.stack.len() == 0, 'stack should be empty');
+
     let mut events = ctx.events();
     assert(events.len() == 1, 'context should have one event');
+
     let event = events.pop_front().unwrap();
     assert(event.keys.len() == 1, 'event should have one key');
     assert(*event.keys[0] == 0x0123456789ABCDEF, 'event key is not correct');
@@ -73,6 +70,114 @@ fn test_exec_log1() {
 
 #[test]
 #[available_gas(20000000)]
+fn test_exec_log2() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+
+    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(0x0123456789ABCDEF);
+    ctx.stack.push(0x05);
+    ctx.stack.push(0x05);
+
+    // When
+    let result = ctx.exec_log2();
+
+    // Then
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.stack.len() == 0, 'stack should be empty');
+
+    let mut events = ctx.events();
+    assert(events.len() == 1, 'context should have one event');
+
+    let event = events.pop_front().unwrap();
+    assert(event.keys.len() == 2, 'event should have two keys');
+    assert(*event.keys[0] == 0x0123456789ABCDEF, 'event key is not correct');
+    assert(*event.keys[1] == BoundedInt::<u256>::max(), 'event key is not correct');
+    assert(event.data.len() == 5, 'event should have 5 bytes');
+    assert(*event.data[0] == 0xff, 'event byte should be max_u8');
+    assert(*event.data[4] == 0xff, 'event byte should be max_u8');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_log3() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+    ctx.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
+
+    ctx.stack.push(0x00);
+    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(0x0123456789ABCDEF);
+    ctx.stack.push(0x28);
+    ctx.stack.push(0x00);
+
+    // When
+    let result = ctx.exec_log3();
+
+    // Then
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.stack.len() == 0, 'stack should be empty');
+
+    let mut events = ctx.events();
+    assert(events.len() == 1, 'context should have one event');
+
+    let event = events.pop_front().unwrap();
+    assert(event.keys.len() == 3, 'event should have 3 keys');
+    assert(*event.keys[0] == 0x0123456789ABCDEF, 'event key is not correct');
+    assert(*event.keys[1] == BoundedInt::<u256>::max(), 'event key is not correct');
+    assert(*event.keys[2] == 0x00, 'event key is not correct');
+
+    assert(event.data.len() == 40, 'event should have 40 bytes');
+    assert(*event.data[0] == 0xff, 'event byte should be max_u8');
+    assert(*event.data[4] == 0xff, 'event byte should be max_u8');
+    assert(*event.data[39] == 0xef, 'event byte should be 0xEF');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_log4() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+    ctx.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
+
+    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(0x00);
+    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(0x0123456789ABCDEF);
+    ctx.stack.push(0x0A);
+    ctx.stack.push(0x20);
+
+    // When
+    let result = ctx.exec_log4();
+
+    // Then
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.stack.len() == 0, 'stack should be empty');
+
+    let mut events = ctx.events();
+    assert(events.len() == 1, 'context should have one event');
+
+    let event = events.pop_front().unwrap();
+    assert(event.keys.len() == 4, 'event2 should have 4 keys');
+    assert(*event.keys[0] == 0x0123456789ABCDEF, 'event2 key is not correct');
+    assert(*event.keys[1] == BoundedInt::<u256>::max(), 'event2 key is not correct');
+    assert(*event.keys[2] == 0x00, 'event2 key is not correct');
+    assert(*event.keys[3] == BoundedInt::<u256>::max(), 'event2 key is not correct');
+
+    assert(event.data.len() == 10, 'event2 should have 10 bytes');
+    assert(*event.data[0] == 0x01, 'event2 byte should be 0x01');
+    assert(*event.data[5] == 0xAB, 'event2 byte should be 0xAB');
+    assert(*event.data[9] == 0x00, 'event2 byte should be 0x00');
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test_exec_log1_read_only_context() {
     // Given
     let mut ctx = setup_execution_context();
@@ -80,9 +185,6 @@ fn test_exec_log1_read_only_context() {
 
     ctx.memory.store(BoundedInt::<u256>::max(), 0);
 
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x00);
-    ctx.stack.push(BoundedInt::<u256>::max());
     ctx.stack.push(0x0123456789ABCDEF);
     ctx.stack.push(0x20);
     ctx.stack.push(0x00);
@@ -100,39 +202,7 @@ fn test_exec_log1_read_only_context() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_exec_log2() {
-    // Given
-    let mut ctx = setup_execution_context();
-
-    ctx.memory.store(BoundedInt::<u256>::max(), 0);
-
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x00);
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x0123456789ABCDEF);
-    ctx.stack.push(0x05);
-    ctx.stack.push(0x05);
-
-    // When
-    let result = ctx.exec_log2();
-
-    // Then
-    assert(result.is_ok(), 'should have succeeded');
-    assert(ctx.stack.len() == 2, 'stack size should be 2');
-    let mut events = ctx.events();
-    assert(events.len() == 1, 'context should have one event');
-    let event = events.pop_front().unwrap();
-    assert(event.keys.len() == 2, 'event should have two keys');
-    assert(*event.keys[0] == 0x0123456789ABCDEF, 'event key is not correct');
-    assert(*event.keys[1] == BoundedInt::<u256>::max(), 'event key is not correct');
-    assert(event.data.len() == 5, 'event should have 5 bytes');
-    assert(*event.data[0] == 0xff, 'event byte should be max_u8');
-    assert(*event.data[4] == 0xff, 'event byte should be max_u8');
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_exec_log3_and_log4() {
+fn test_exec_log_multiple_events() {
     // Given
     let mut ctx = setup_execution_context();
 
