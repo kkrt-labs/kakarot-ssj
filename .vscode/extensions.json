@@ -1,3 +1,7 @@
 {
-  "recommendations": ["starkware.cairo1", "trunk.io"]
+  "recommendations": [
+    "starkware.cairo1",
+    "trunk.io",
+    "streetsidesoftware.code-spell-checker"
+  ]
 }
