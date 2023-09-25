@@ -358,6 +358,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     ///
     /// * `self` - The context to which the event will be added
     /// * `event` - Event to append
+    #[inline(always)]
     fn append_event(ref self: ExecutionContext, event: Event) {
         let mut dyn_ctx = self.dynamic_context.unbox();
         dyn_ctx.events.append(event);
