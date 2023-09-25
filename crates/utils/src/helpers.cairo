@@ -7,6 +7,7 @@ use utils::constants::{
     POW_256_11_U256, POW_256_12_U256, POW_256_13_U256, POW_256_14_U256, POW_256_15_U256,
     POW_256_16_U256,
 };
+use keccak::u128_split;
 
 
 /// Ceils a number of bits to the next word (32 bytes)
@@ -258,3 +259,21 @@ impl SpanExtension of SpanExtensionTrait {
     }
 }
 
+
+#[generate_trait]
+impl U256Impl of U256Trait {
+    /// Splits an u256 into 4 little endian u64.
+    /// Returns ((high_high, high_low),(low_high, low_low))
+    fn split_into_u64_le(self: u256) -> ((u64, u64), (u64, u64)) {
+        let low_le = integer::u128_byte_reverse(self.low);
+        let high_le = integer::u128_byte_reverse(self.high);
+        (u128_split(high_le), u128_split(low_le))
+    }
+
+    /// Reverse the endianness of an u256
+    fn reverse_endianness(self: u256) -> u256 {
+        let new_low = integer::u128_byte_reverse(self.high);
+        let new_high = integer::u128_byte_reverse(self.low);
+        u256 { low: new_low, high: new_high }
+    }
+}

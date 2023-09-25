@@ -1,5 +1,7 @@
 use utils::helpers;
-use utils::helpers::{SpanExtension, SpanExtensionTrait, ArrayExtension, ArrayExtensionTrait};
+use utils::helpers::{
+    SpanExtension, SpanExtensionTrait, ArrayExtension, ArrayExtensionTrait, U256Trait
+};
 use debug::PrintTrait;
 
 #[test]
@@ -179,4 +181,26 @@ fn test_append_n() {
 
     // Then
     assert(original == array![1, 2, 3, 4, 9, 9, 9], 'append_n failed');
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test_reverse_bytes_u256() {
+    let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
+    let res = value.reverse_endianness();
+    assert(
+        res == 0x0000450000DEFA0000200400000000ADDE00000077000000E5000000FFFFFFFA,
+        'reverse mismatch'
+    );
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test_split_u256_into_u64_little() {
+    let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
+    let ((high_h, low_h), (high_l, low_l)) = value.split_into_u64_le();
+    assert(high_h == 0xDE00000077000000, 'split mismatch');
+    assert(low_h == 0xE5000000FFFFFFFA, 'split mismatch');
+    assert(high_l == 0x0000450000DEFA00, 'split mismatch');
+    assert(low_l == 0x00200400000000AD, 'split mismatch');
 }
