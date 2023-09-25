@@ -4,7 +4,7 @@ use evm::context::{
 use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
 use evm::tests::test_utils::setup_execution_context;
-use evm::errors::{EVMError, STATE_MODIFICATION_ERROR};
+use evm::errors::{EVMError, STATE_MODIFICATION_ERROR, TYPE_CONVERSION_ERROR};
 use evm::instructions::LoggingOperationsTrait;
 use integer::BoundedInt;
 use utils::helpers::u256_to_bytes_array;
@@ -207,6 +207,81 @@ fn test_exec_log1_read_only_context() {
     assert(
         result.unwrap_err() == EVMError::StateModificationError(STATE_MODIFICATION_ERROR),
         'err != StateModificationError'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_log1_size_0_offset_0() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+
+    ctx.stack.push(0x0123456789ABCDEF);
+    ctx.stack.push(0x00);
+    ctx.stack.push(0x00);
+
+    // When
+    let result = ctx.exec_log1();
+
+    // Then
+    assert(result.is_ok(), 'should have succeeded');
+    assert(ctx.stack.len() == 0, 'stack should be empty');
+
+    let mut events = ctx.events();
+    assert(events.len() == 1, 'context should have one event');
+
+    let event = events.pop_front().unwrap();
+    assert(event.keys.len() == 1, 'event should have one key');
+    assert(*event.keys[0] == 0x0123456789ABCDEF, 'event key is not correct');
+
+    assert(event.data.len() == 0, 'event data should be empty');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_log1_size_too_big() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+
+    ctx.stack.push(0x0123456789ABCDEF);
+    ctx.stack.push(BoundedInt::<u256>::max());
+    ctx.stack.push(0x00);
+
+    // When
+    let result = ctx.exec_log1();
+
+    // Then
+    assert(result.is_err(), 'should return an error');
+    assert(
+        result.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
+        'err != TypeConversionError'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_log1_offset_too_big() {
+    // Given
+    let mut ctx = setup_execution_context();
+
+    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+
+    ctx.stack.push(0x0123456789ABCDEF);
+    ctx.stack.push(0x20);
+    ctx.stack.push(BoundedInt::<u256>::max());
+
+    // When
+    let result = ctx.exec_log1();
+
+    // Then
+    assert(result.is_err(), 'should return an error');
+    assert(
+        result.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
+        'err != TypeConversionError'
     );
 }
 
