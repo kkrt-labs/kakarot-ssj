@@ -3,11 +3,6 @@ import os
 import re
 import subprocess
 
-# ANSI escape codes for coloring text
-GREEN = "\033[92m"
-RED = "\033[91m"
-ENDC = "\033[0m"
-
 
 def get_github_token_from_env(file_path=".env"):
     """Read the .env file and extract the GITHUB_TOKEN value."""
@@ -106,10 +101,9 @@ def compare_snapshots(current, previous):
     """Compare current and previous snapshots and return differences."""
     worsened = []
     improvements = []
+    common_keys = set(current.keys()) & set(previous.keys())
 
-    for key in previous:
-        if key not in current:
-            continue
+    for key in common_keys:
         prev = previous[key]
         cur = current[key]
         percentage_change = (cur - prev) * 100 / prev
@@ -125,36 +119,36 @@ def compare_snapshots(current, previous):
     return improvements, worsened
 
 
-def print_colored_output(improvements, worsened, gas_changes):
-    """Print results in a colored format."""
+def print_formatted_output(improvements, worsened, gas_changes):
+    """Print results formatted."""
     if improvements or worsened:
-        print(GREEN + "****IMPROVEMENTS****" + ENDC)
+        print("****IMPROVEMENTS****")
         for elem in improvements:
-            print(GREEN + elem + ENDC)
+            print(elem)
 
         print("\n")
-        print(RED + "****WORSENED****" + ENDC)
+        print("****WORSENED****")
         for elem in worsened:
-            print(RED + elem + ENDC)
+            print(elem)
 
-        color = RED if gas_changes > 0 else GREEN
         gas_statement = (
             "performance degradation, gas consumption +"
             if gas_changes > 0
             else "performance improvement, gas consumption"
         )
-        print(
-            color
-            + f"Overall gas change: {gas_statement}{format(gas_changes, '.2f')} %"
-            + ENDC
-        )
+        print(f"Overall gas change: {gas_statement}{format(gas_changes, '.2f')} %")
     else:
         print("No changes in gas consumption.")
 
 
 def total_gas_used(current, previous):
-    """Return the total gas used in the current and previous snapshot."""
-    return sum(current.values()), sum(previous.values())
+    """Return the total gas used in the current and previous snapshot, not taking into account added tests."""
+    common_keys = set(current.keys()) & set(previous.keys())
+
+    cur_gas = sum(current[key] for key in common_keys)
+    prev_gas = sum(previous[key] for key in common_keys)
+
+    return cur_gas, prev_gas
 
 
 def main():
@@ -168,7 +162,9 @@ def main():
     current_snapshots = get_current_gas_snapshot()
     improvements, worsened = compare_snapshots(current_snapshots, previous_snapshot)
     cur_gas, prev_gas = total_gas_used(current_snapshots, previous_snapshot)
-    print_colored_output(improvements, worsened, (cur_gas - prev_gas) * 100 / prev_gas)
+    print_formatted_output(
+        improvements, worsened, (cur_gas - prev_gas) * 100 / prev_gas
+    )
     if worsened:
         raise ValueError("Gas usage increased")
 
