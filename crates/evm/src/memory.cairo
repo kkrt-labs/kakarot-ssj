@@ -15,7 +15,6 @@ use utils::{
 };
 use debug::PrintTrait;
 
-
 #[derive(Destruct, Default)]
 struct Memory {
     items: Felt252Dict<u128>,
@@ -90,17 +89,17 @@ impl MemoryImpl of MemoryTrait {
         self.bytes_len = cmp::max(new_min_bytes_len, self.bytes_len);
 
         // Get offset's memory word index and left-based offset of byte in word.
-        let (index, left_offset) = u32_safe_divmod(offset, u32_as_non_zero(16));
+        let (chunk_index, left_offset) = u32_safe_divmod(offset, u32_as_non_zero(16));
 
         // As the memory words are in big-endian order, we need to convert our left-based offset
-        // to a right-based one.
+        // to a right-based one.a
         let right_offset = 15 - left_offset;
         let mask: u128 = 0xFF * helpers::pow2(right_offset.into() * 8);
 
         // First erase byte value at offset, then set the new value using bitwise ops
-        let word: u128 = self.items.get(index.into());
+        let word: u128 = self.items.get(chunk_index.into());
         let new_word = (word & ~mask) | (value.into().shl(right_offset.into() * 8));
-        self.items.insert(index.into(), new_word);
+        self.items.insert(chunk_index.into(), new_word);
     }
 
 
