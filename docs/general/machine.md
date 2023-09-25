@@ -220,7 +220,7 @@ updating the `global_keys` array. When the transaction is finalized, we will
 iterate over the `global_changes` dictionary, and perform the required storage
 updates, as mentioned in [Contract Storage](./contract_storage.md).
 
-# Conclusion
+## Conclusion
 
 With its shared stack and memory accessed via calculated internal indexes
 relative to the current execution context, this EVM design remains compatible
