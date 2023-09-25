@@ -1,7 +1,12 @@
 import json
 import os
 import re
+
+# trunk-ignore(bandit/B404)
 import subprocess
+import tempfile
+import zipfile
+from pathlib import Path
 
 
 def get_github_token_from_env(file_path=".env"):
@@ -29,69 +34,65 @@ def get_previous_snapshot():
             "GITHUB_TOKEN doesn't exist in current shell nor is defined .env"
         )
 
-    try:
-        # Fetch the list of workflow runs
-        cmd = f"curl -s -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' 'https://api.github.com/repos/{REPO}/actions/runs?branch=main&per_page=100'"
-        result = subprocess.check_output(cmd, shell=True)
-        runs = json.loads(result)
+    # Fetch the list of workflow runs
+    cmd = f"curl -s -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' 'https://api.github.com/repos/{REPO}/actions/runs?branch=main&per_page=100'"
+    # trunk-ignore(bandit/B602)
+    result = subprocess.check_output(cmd, shell=True)
+    runs = json.loads(result)
 
-        # Find the latest successful run
-        latest_successful_run = next(
-            (
-                run
-                for run in runs["workflow_runs"]
-                if run["conclusion"] == "success"
-                and run["name"] == "Generate and Upload Gas Snapshot"
-            ),
-            None,
-        )
+    # Find the latest successful run
+    latest_successful_run = next(
+        (
+            run
+            for run in runs["workflow_runs"]
+            if run["conclusion"] == "success"
+            and run["name"] == "Generate and Upload Gas Snapshot"
+        ),
+        None,
+    )
 
-        # Fetch the artifacts for that run
-        run_id = latest_successful_run["id"]
-        cmd = f"curl -s -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' 'https://api.github.com/repos/{REPO}/actions/runs/{run_id}/artifacts'"
-        result = subprocess.check_output(cmd, shell=True)
-        artifacts = json.loads(result)
+    if latest_successful_run is None:
+        return
 
-        # Find the gas_snapshot.json artifact
-        snapshot_artifact = next(
+    # Fetch the artifacts for that run
+    run_id = latest_successful_run["id"]
+    cmd = f"curl -s -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' 'https://api.github.com/repos/{REPO}/actions/runs/{run_id}/artifacts'"
+    # trunk-ignore(bandit/B602)
+    result = subprocess.check_output(cmd, shell=True)
+    artifacts = json.loads(result)
+
+    # Find the gas_snapshot.json artifact
+    snapshot_artifact = next(
+        (
             artifact
             for artifact in artifacts["artifacts"]
             if artifact["name"] == "gas-snapshot"
-        )
+        ),
+        None,
+    )
 
-        # Download the gas_snapshots.json archive
-        archive_name = "gas_snapshot.zip"
-        json_name = "gas_snapshot.json"
-        cmd = f"curl -s -L -o {archive_name} -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' '{snapshot_artifact['archive_download_url']}'"
-        subprocess.check_call(cmd, shell=True)
+    if snapshot_artifact is None:
+        return
 
-        # Extract the archive to get gas_snapshots.json using the unzip command
-        cmd = f"unzip -o {archive_name}"  # -o option is to overwrite files without prompting
-        subprocess.check_call(cmd, shell=True)
+    # Download the gas_snapshots.json archive
+    temp_dir = Path(tempfile.mkdtemp())
 
-        with open(json_name, "r") as f:
-            # Load and return the snapshot data
-            text = f.read()
+    archive_name = temp_dir / "gas_snapshot.zip"
+    cmd = f"curl -s -L -o {archive_name} -H 'Authorization: token {GITHUB_TOKEN}' -H 'Accept: application/vnd.github.v3+json' '{snapshot_artifact['archive_download_url']}'"
+    # trunk-ignore(bandit/B602)
+    subprocess.check_call(cmd, shell=True)
+    with zipfile.ZipFile(archive_name, "r") as archive:
+        archive.extractall(temp_dir)
 
-        os.remove(json_name)
-        os.remove(archive_name)
-        return json.loads(text)
-    except subprocess.CalledProcessError:
-        print("Error: Failed to execute a subprocess command.")
-    except StopIteration:
-        print("Error: Couldn't find the desired workflow run or artifact.")
-    except FileNotFoundError:
-        print("Error: Couldn't find the gas_snapshot.json file after download.")
-    except json.JSONDecodeError:
-        print("Error: Failed to parse JSON data.")
-
-    return {}
+    return json.loads(archive_name.with_suffix(".json").read_text())
 
 
 def get_current_gas_snapshot():
     """Execute command and return current gas snapshots."""
+    # trunk-ignore(bandit/B602)
+    # trunk-ignore(bandit/B607)
     output = subprocess.check_output("scarb cairo-test", shell=True).decode("utf-8")
-    pattern = r"test (.+?) \.\.\. ok \(gas usage est.: (\d+)\)"
+    pattern = r"test ([\w\:]+).*gas usage est\.\: (\d+)"
     matches = re.findall(pattern, output)
     matches.sort()
     return {match[0]: int(match[1]) for match in matches}
@@ -101,20 +102,18 @@ def compare_snapshots(current, previous):
     """Compare current and previous snapshots and return differences."""
     worsened = []
     improvements = []
-    common_keys = set(current.keys()) & set(previous.keys())
-
+    common_keys = list(set(current.keys()) & set(previous.keys()))
+    common_keys.sort()
+    max_key_len = max(len(key) for key in common_keys)
     for key in common_keys:
         prev = previous[key]
         cur = current[key]
         percentage_change = (cur - prev) * 100 / prev
+        log = f"{key:<{max_key_len + 5}} {prev:>10} {cur:>10} {percentage_change:>6.2%}"
         if prev < cur:
-            worsened.append(
-                f"{key} {prev} --> {cur} {format(percentage_change, '.2f')} %"
-            )
+            worsened.append(log)
         elif prev > cur:
-            improvements.append(
-                f"{key} {prev} --> {cur} {format(percentage_change, '.2f')} %"
-            )
+            improvements.append(log)
 
     return improvements, worsened
 
@@ -122,12 +121,12 @@ def compare_snapshots(current, previous):
 def print_formatted_output(improvements, worsened, gas_changes):
     """Print results formatted."""
     if improvements or worsened:
-        print("****IMPROVEMENTS****")
+        print("****BETTER****")
         for elem in improvements:
             print(elem)
 
         print("\n")
-        print("****WORSENED****")
+        print("****WORST****")
         for elem in worsened:
             print(elem)
 
@@ -152,10 +151,9 @@ def total_gas_used(current, previous):
 
 
 def main():
-    """Main function to execute the snapshot test framework."""
     # Load previous snapshot
     previous_snapshot = get_previous_snapshot()
-    if previous_snapshot == {}:
+    if previous_snapshot is None:
         print("Error: Failed to load previous snapshot.")
         return
 

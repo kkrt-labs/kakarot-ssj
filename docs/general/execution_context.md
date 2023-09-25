@@ -101,6 +101,5 @@ RC --> END
 
 <!-- TODO -->
 
-> Note: The revert context changes subgraph is not implemented yet.
-
-> Note: The event emission is not implemented yet.
+> Note: The revert context changes subgraph is not implemented yet. Note: The
+> event emission is not implemented yet.

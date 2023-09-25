@@ -2,6 +2,10 @@ name: Compare Snapshot
 
 on: pull_request
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   pull-requests: write
 
@@ -17,12 +21,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9" # Specify the Python version required
+          python-version: 3.9
 
       - name: Set up Scarb
         uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "0.7.0"
+          scarb-version: 0.7.0
 
       - name: Run compare_snapshot script
         id: run-script
