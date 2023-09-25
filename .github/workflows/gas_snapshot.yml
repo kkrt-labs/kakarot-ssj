@@ -1,5 +1,7 @@
 name: Generate and Upload Gas Snapshot
 
+permissions: read-all
+
 on:
   push:
     branches:
@@ -20,7 +22,7 @@ jobs:
       - name: Set up Scarb
         uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "0.7.0"
+          scarb-version: 0.7.0
 
       - name: Generate gas snapshot
         run: python scripts/gen_snapshot.py
