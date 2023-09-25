@@ -106,10 +106,9 @@ def compare_snapshots(current, previous):
     """Compare current and previous snapshots and return differences."""
     worsened = []
     improvements = []
+    common_keys = set(current.keys()) & set(previous.keys())
 
-    for key in previous:
-        if key not in current:
-            continue
+    for key in common_keys:
         prev = previous[key]
         cur = current[key]
         percentage_change = (cur - prev) * 100 / prev
@@ -153,8 +152,13 @@ def print_colored_output(improvements, worsened, gas_changes):
 
 
 def total_gas_used(current, previous):
-    """Return the total gas used in the current and previous snapshot."""
-    return sum(current.values()), sum(previous.values())
+    """Return the total gas used in the current and previous snapshot, not taking into account added tests."""
+    common_keys = set(current.keys()) & set(previous.keys())
+
+    cur_gas = sum(current[key] for key in common_keys)
+    prev_gas = sum(previous[key] for key in common_keys)
+
+    return cur_gas, prev_gas
 
 
 def main():

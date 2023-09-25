@@ -69,6 +69,269 @@ fn pow256_rev(i: usize) -> u256 {
     }
 }
 
+// Computes 2**pow for 0 <= pow < 128.
+fn pow2(pow: usize) -> u128 {
+    if pow == 0 {
+        return 0x1;
+    } else if pow == 1 {
+        return 0x2;
+    } else if pow == 2 {
+        return 0x4;
+    } else if pow == 3 {
+        return 0x8;
+    } else if pow == 4 {
+        return 0x10;
+    } else if pow == 5 {
+        return 0x20;
+    } else if pow == 6 {
+        return 0x40;
+    } else if pow == 7 {
+        return 0x80;
+    } else if pow == 8 {
+        return 0x100;
+    } else if pow == 9 {
+        return 0x200;
+    } else if pow == 10 {
+        return 0x400;
+    } else if pow == 11 {
+        return 0x800;
+    } else if pow == 12 {
+        return 0x1000;
+    } else if pow == 13 {
+        return 0x2000;
+    } else if pow == 14 {
+        return 0x4000;
+    } else if pow == 15 {
+        return 0x8000;
+    } else if pow == 16 {
+        return 0x10000;
+    } else if pow == 17 {
+        return 0x20000;
+    } else if pow == 18 {
+        return 0x40000;
+    } else if pow == 19 {
+        return 0x80000;
+    } else if pow == 20 {
+        return 0x100000;
+    } else if pow == 21 {
+        return 0x200000;
+    } else if pow == 22 {
+        return 0x400000;
+    } else if pow == 23 {
+        return 0x800000;
+    } else if pow == 24 {
+        return 0x1000000;
+    } else if pow == 25 {
+        return 0x2000000;
+    } else if pow == 26 {
+        return 0x4000000;
+    } else if pow == 27 {
+        return 0x8000000;
+    } else if pow == 28 {
+        return 0x10000000;
+    } else if pow == 29 {
+        return 0x20000000;
+    } else if pow == 30 {
+        return 0x40000000;
+    } else if pow == 31 {
+        return 0x80000000;
+    } else if pow == 32 {
+        return 0x100000000;
+    } else if pow == 33 {
+        return 0x200000000;
+    } else if pow == 34 {
+        return 0x400000000;
+    } else if pow == 35 {
+        return 0x800000000;
+    } else if pow == 36 {
+        return 0x1000000000;
+    } else if pow == 37 {
+        return 0x2000000000;
+    } else if pow == 38 {
+        return 0x4000000000;
+    } else if pow == 39 {
+        return 0x8000000000;
+    } else if pow == 40 {
+        return 0x10000000000;
+    } else if pow == 41 {
+        return 0x20000000000;
+    } else if pow == 42 {
+        return 0x40000000000;
+    } else if pow == 43 {
+        return 0x80000000000;
+    } else if pow == 44 {
+        return 0x100000000000;
+    } else if pow == 45 {
+        return 0x200000000000;
+    } else if pow == 46 {
+        return 0x400000000000;
+    } else if pow == 47 {
+        return 0x800000000000;
+    } else if pow == 48 {
+        return 0x1000000000000;
+    } else if pow == 49 {
+        return 0x2000000000000;
+    } else if pow == 50 {
+        return 0x4000000000000;
+    } else if pow == 51 {
+        return 0x8000000000000;
+    } else if pow == 52 {
+        return 0x10000000000000;
+    } else if pow == 53 {
+        return 0x20000000000000;
+    } else if pow == 54 {
+        return 0x40000000000000;
+    } else if pow == 55 {
+        return 0x80000000000000;
+    } else if pow == 56 {
+        return 0x100000000000000;
+    } else if pow == 57 {
+        return 0x200000000000000;
+    } else if pow == 58 {
+        return 0x400000000000000;
+    } else if pow == 59 {
+        return 0x800000000000000;
+    } else if pow == 60 {
+        return 0x1000000000000000;
+    } else if pow == 61 {
+        return 0x2000000000000000;
+    } else if pow == 62 {
+        return 0x4000000000000000;
+    } else if pow == 63 {
+        return 0x8000000000000000;
+    } else if pow == 64 {
+        return 0x10000000000000000;
+    } else if pow == 65 {
+        return 0x20000000000000000;
+    } else if pow == 66 {
+        return 0x40000000000000000;
+    } else if pow == 67 {
+        return 0x80000000000000000;
+    } else if pow == 68 {
+        return 0x100000000000000000;
+    } else if pow == 69 {
+        return 0x200000000000000000;
+    } else if pow == 70 {
+        return 0x400000000000000000;
+    } else if pow == 71 {
+        return 0x800000000000000000;
+    } else if pow == 72 {
+        return 0x1000000000000000000;
+    } else if pow == 73 {
+        return 0x2000000000000000000;
+    } else if pow == 74 {
+        return 0x4000000000000000000;
+    } else if pow == 75 {
+        return 0x8000000000000000000;
+    } else if pow == 76 {
+        return 0x10000000000000000000;
+    } else if pow == 77 {
+        return 0x20000000000000000000;
+    } else if pow == 78 {
+        return 0x40000000000000000000;
+    } else if pow == 79 {
+        return 0x80000000000000000000;
+    } else if pow == 80 {
+        return 0x100000000000000000000;
+    } else if pow == 81 {
+        return 0x200000000000000000000;
+    } else if pow == 82 {
+        return 0x400000000000000000000;
+    } else if pow == 83 {
+        return 0x800000000000000000000;
+    } else if pow == 84 {
+        return 0x1000000000000000000000;
+    } else if pow == 85 {
+        return 0x2000000000000000000000;
+    } else if pow == 86 {
+        return 0x4000000000000000000000;
+    } else if pow == 87 {
+        return 0x8000000000000000000000;
+    } else if pow == 88 {
+        return 0x10000000000000000000000;
+    } else if pow == 89 {
+        return 0x20000000000000000000000;
+    } else if pow == 90 {
+        return 0x40000000000000000000000;
+    } else if pow == 91 {
+        return 0x80000000000000000000000;
+    } else if pow == 92 {
+        return 0x100000000000000000000000;
+    } else if pow == 93 {
+        return 0x200000000000000000000000;
+    } else if pow == 94 {
+        return 0x400000000000000000000000;
+    } else if pow == 95 {
+        return 0x800000000000000000000000;
+    } else if pow == 96 {
+        return 0x1000000000000000000000000;
+    } else if pow == 97 {
+        return 0x2000000000000000000000000;
+    } else if pow == 98 {
+        return 0x4000000000000000000000000;
+    } else if pow == 99 {
+        return 0x8000000000000000000000000;
+    } else if pow == 100 {
+        return 0x10000000000000000000000000;
+    } else if pow == 101 {
+        return 0x20000000000000000000000000;
+    } else if pow == 102 {
+        return 0x40000000000000000000000000;
+    } else if pow == 103 {
+        return 0x80000000000000000000000000;
+    } else if pow == 104 {
+        return 0x100000000000000000000000000;
+    } else if pow == 105 {
+        return 0x200000000000000000000000000;
+    } else if pow == 106 {
+        return 0x400000000000000000000000000;
+    } else if pow == 107 {
+        return 0x800000000000000000000000000;
+    } else if pow == 108 {
+        return 0x1000000000000000000000000000;
+    } else if pow == 109 {
+        return 0x2000000000000000000000000000;
+    } else if pow == 110 {
+        return 0x4000000000000000000000000000;
+    } else if pow == 111 {
+        return 0x8000000000000000000000000000;
+    } else if pow == 112 {
+        return 0x10000000000000000000000000000;
+    } else if pow == 113 {
+        return 0x20000000000000000000000000000;
+    } else if pow == 114 {
+        return 0x40000000000000000000000000000;
+    } else if pow == 115 {
+        return 0x80000000000000000000000000000;
+    } else if pow == 116 {
+        return 0x100000000000000000000000000000;
+    } else if pow == 117 {
+        return 0x200000000000000000000000000000;
+    } else if pow == 118 {
+        return 0x400000000000000000000000000000;
+    } else if pow == 119 {
+        return 0x800000000000000000000000000000;
+    } else if pow == 120 {
+        return 0x1000000000000000000000000000000;
+    } else if pow == 121 {
+        return 0x2000000000000000000000000000000;
+    } else if pow == 122 {
+        return 0x4000000000000000000000000000000;
+    } else if pow == 123 {
+        return 0x8000000000000000000000000000000;
+    } else if pow == 124 {
+        return 0x10000000000000000000000000000000;
+    } else if pow == 125 {
+        return 0x20000000000000000000000000000000;
+    } else if pow == 126 {
+        return 0x40000000000000000000000000000000;
+    } else if pow == 127 {
+        return 0x80000000000000000000000000000000;
+    } else {
+        return panic_with_felt252('pow2: pow >= 128');
+    }
+}
+
 
 /// Splits a u256 into `len` bytes, big-endian, and appends the result to `dst`.
 fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
