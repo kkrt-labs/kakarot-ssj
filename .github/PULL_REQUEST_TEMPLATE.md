@@ -2,7 +2,8 @@
 
 ## Pull Request type
 
-<!-- Please try to limit your pull request to one type; submit multiple pull requests if needed. -->
+<!-- Please try to limit your pull request to one type; submit multiple
+pull requests if needed. -->
 
 Please check the type of change your PR introduces:
 
@@ -16,7 +17,8 @@ Please check the type of change your PR introduces:
 
 ## What is the current behavior?
 
-<!-- Please describe the current behavior that you are modifying, or link to a relevant issue. -->
+<!-- Please describe the current behavior that you are modifying,
+or link to a relevant issue. -->
 
 Resolves: #
 
@@ -33,4 +35,5 @@ Resolves: #
 - [ ] Yes
 - [ ] No
 
-<!-- If this does introduce a breaking change, please describe the impact and migration path for existing applications below. -->
+<!-- If this does introduce a breaking change, please describe the impact and
+migration path for existing applications below. -->
