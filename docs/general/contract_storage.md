@@ -118,14 +118,13 @@ design presented thereafter.
 
 ### A shared storage space for all Kakarot Contracts
 
-The second approach is to have a unified storage space for all contract accounts
-in the main Kakarot smart contract. While Kakarot is not a traditional Ethereum
-Client, we can still use a design that is similar. Traditional clients hold a
-state database in which the account states are stored. We can do the same, but
-instead of storing the account states in a database, we store them in the
-KakarotCore contract storage. Therefore, we do not need to deploy a Starknet
-contract for each Kakarot account contract, which saves users costs related to
-deploying contracts.
+The second approach is to have a unified storage space for all contract accounts in the main Kakarot smart contract.
+While Kakarot is not a traditional Ethereum Client, we can still use a design
+that is similar. Traditional clients hold a state database in which the account
+states are stored. We can do the same, but instead of storing the account states
+in a database, we store them in the KakarotCore contract storage. Therefore, we
+do not need to deploy a Starknet contract for each Kakarot account contract,
+which saves users costs related to deploying contracts.
 
 A contract’s storage on Starknet is a persistent storage space where you can
 read, write, modify, and persist data. The storage is a map with $2^{251}$
