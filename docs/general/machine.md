@@ -157,19 +157,20 @@ where $G_{memory} = 3$ and $a$ is the number of 32-byte words allocated.
 
 Following this formula, the gas costs required to have a memory containing
 125000 words is above the 30M gas limit. We will use this heuristic to bound the
-maximum size of the memory to 125000 256-bits words. Therefore, we will bound
-the maximum size of the memory to 125000 256-bits words.
+maximum size of the memory to the closest power of two to 125000: $2^17$.
+Therefore, we will bound the maximum size of the memory to 131072 256-bits
+words.
 
 The internal index at which an item will be inserted in the memory, given a
 specific offset, is computed as:
 
-$$index = offset + i \cdot 125000$$
+$$index = offset + i \cdot 131072$$
 
 where $i$ is the id of the active execution context.
 
 If we want to store an item at offset 10 of the memory relative to the execution
 context of id 1, the internal index will be
-$index = 10 + 1 \cdot 125000 = 125010$.
+$index = 10 + 1 \cdot 131072 = 131082$.
 
 ### Tracking storage changes
 
