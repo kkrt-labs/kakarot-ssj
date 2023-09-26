@@ -74,7 +74,7 @@ fn test_execution_context_new() {
     assert(execution_context.stack.is_empty(), 'wrong stack');
     assert(execution_context.stopped() == stopped, 'wrong stopped');
     assert(execution_context.return_data() == Default::default().span(), 'wrong return_data');
-    assert(execution_context.memory.bytes_len == 0, 'wrong memory');
+    assert(execution_context.memory.size() == 0, 'wrong memory');
     assert(execution_context.starknet_address() == starknet_address, 'wrong starknet_address');
     assert(execution_context.evm_address() == evm_address, 'wrong evm_address');
     assert(
