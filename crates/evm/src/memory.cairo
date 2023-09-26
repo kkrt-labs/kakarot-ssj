@@ -76,7 +76,7 @@ impl MemoryImpl of MemoryTrait {
 
         self.bytes_len.insert(self.active_segment(), cmp::max(new_min_bytes_len, self.size()));
 
-        // Compute actual offset in Memory, given active_segment of Memory (current Execution Context id) 
+        // Compute actual offset in the dict, given active_segment of Memory (current Execution Context id) 
         // And Memory Segment Size
         let offset = self.compute_active_segment_offset(offset);
 
