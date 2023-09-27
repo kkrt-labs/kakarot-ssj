@@ -81,7 +81,7 @@ keys, where $m = (B / 31) + 2$ with $B$ the size of the bytecode to store (see
 Considering a gas price of 34 gwei (average gas price in 2023, according to
 [Etherscan](https://etherscan.io/chart/gasprice)), and a calldata cost of 16 per
 byte and the size of a typical ERC20 contract being 2174 bytes, we would have
-have $m = 136$. The associated storage update fee would be:
+have $m = 72$. The associated storage update fee would be:
 
 $$ fee = 34 \cdot (16 \cdot 32) \cdot (2 + 144) = 2,541,468 \text{ gwei}$$
 
