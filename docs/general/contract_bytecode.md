@@ -42,7 +42,9 @@ if the Starknet sequencer ever stops functioning, they can prove custody of
 their funds using the data posted on the DA Layer. If that DA Layer is Ethereum
 itself, then they inherit from Ethereum's security guarantees.
 
-## Using Ethereum as a DA Layer
+## Different approaches to storing contract bytecode
+
+### Using Ethereum as a DA Layer
 
 Starknet currently uses Ethereum as its DA Layer. Each state update verified
 on-chain is accompanied by the state diff between the previous and new state,
@@ -74,7 +76,8 @@ $$ gas\ price \cdot c_w \cdot (2n + 2m) $$
 where $c_w$ is the calldata cost (in gas) per 32-byte word.
 
 In our case, we would update one single contract (KakarotCore), and update $m$
-keys, where $m = B / 16$ with $B$ the size of the bytecode to store.
+keys, where $m = (B / 31) + 2$ with $B$ the size of the bytecode to store (see
+[implementation details](./contract_bytecode.md#implementation-details)).
 
 <!-- TODO: verify if we can pack bytecode 31bytes by 31bytes instead of 16 by 16, to save 15 bytes per storage variable, and thus reduce the number of keys stored -->
 
@@ -85,7 +88,10 @@ have $m = 136$. The associated storage update fee would be:
 
 $$ fee = 34 \cdot (16 \cdot 32) \cdot (2 + 272) = 4,769,792 \text{ gwei}$$
 
-## Using Starknet's volition mechanism
+This solution is the one that Kakarot currently uses, and the implementation
+details are detailed in the next section.
+
+### Using Starknet's volition mechanism
 
 Volition is a hybrid data availability solution, providing the ability to choose
 the data availability layer used for contracts data. It allows users to choose
@@ -115,7 +121,7 @@ settled on the L2DA instead of the L1DA. This would make contract deployment
 extremely cheap on Kakarot, as we will save the cost of posting the state diff
 associated to the update of our stored bytecode on Ethereum.
 
-### Associated Risks
+#### Associated Risks
 
 There are some risks that must be considered when using Volition. Consider the
 case of an attack by a majority of malicious sequencers colluding who decide to
@@ -135,10 +141,10 @@ contract would not be executable anymore.
 > the future, this is not possible at the moment, as Volition is not yet
 > implemented on Starknet.
 
-## Storing the EVM bytecode in the Cairo contract code
+### Storing the EVM bytecode in the Cairo contract code
 
 The last option is to store the EVM bytecode directly in the Cairo contract
-code. This has the advantage of also being cheap, as this data is not posted on
+code. This has the advantage of also being cheap, as this data is not stored on
 L1.
 
 On Starknet, there is a distinction between classes which is the definition of a
@@ -149,6 +155,8 @@ the
 which encodes informations about the existing classes in the state of Starknet
 by mapping class hashes to their. This class tree is itself a part of the
 Starknet State Commitment, which is verified on Ethereum during state updates.
+The class itself is stored in the nodes (both sequencers and full nodes) of
+Starknet.
 
 Implementing this solution would require us to declare a new class everytime a
 contract is deployed using Kakarot. This new class would contain the EVM
@@ -156,3 +164,72 @@ bytecode of the contract, exposed inside a view function that would return the
 entire bytecode when queried. To achieve that, we would need to have the RPC
 craft a custom Starknet contract that would contain this EVM bytecode, and
 declare it on Starknet - which is not ideal from security perspectives.
+
+## Implementation details
+
+Kakarot uses the first solution, storing the bytecode inside a storage variable
+that is commited to Ethereum. This solution is the most secure one, as it relies
+on Ethereum as a DA Layer, and thus inherits from Ethereum's security
+guarantees, ensuring that the bytecode of the deployed contract is always
+available.
+
+A `deploy` transaction is identified by the `to` address being set to zero. The
+data sent to the KakarotCore contract when deploying a new contract wil be
+formatted by the RPC to pack the bytecode into 31-bytes values, and passed as a
+`Array<felt252>` to the entrypoint `eth_call` of the KakarotCore contract. This
+allows us to save on computation costs required to pack all byte values into the
+31-bytes values that we will store in the contract storage.
+
+The contract storage related to the deployed contract will be organized as such:
+
+```rust
+struct Storage {
+    bytecode: LegacyMap<EthAddress, List<bytes31>>,
+    pending_word: LegacyMap<EthAddress, felt252>,
+    pending_word_len: LegacyMap<EthAddress, usize>,
+}
+```
+
+Each deployed contract has it's own EVM address, that we use as a key to a
+`LegacyMap` type when computing the address of each storage variable. We use the
+`List` type from Alexandria to store the bytecode, as it allows us to store up
+to 255 31-bytes values, per `StorageBaseAddress`. For bytecode containing more
+than 255 31-bytes values, the `List` type abstracts the calculations of the next
+storage address used, which is calculated by using poseidon hashes applied on
+`previous_address+1`.
+
+The logic behind this storage design is to make it very easy to load the
+bytecode in the EVM when we want to execute a program. We will rely on the
+ByteArray type, which is a type from the core library that we can use to access
+individual byte indexes in an array of packed bytes31 values. This type is
+defined as:
+
+```rust
+struct ByteArray {
+    // Full "words" of 31 bytes each. The first byte of each word in the byte array
+    // is the most significant byte in the word.
+    data: Array<bytes31>,
+    // This felt252 actually represents a bytes31, with < 31 bytes.
+    // It is represented as a felt252 to improve performance of building the byte array.
+    // The number of bytes in here is specified in `pending_word_len`.
+    // The first byte is the most significant byte among the `pending_word_len` bytes in the word.
+    pending_word: felt252,
+    // Should be in range [0, 30].
+    pending_word_len: usize,
+}
+```
+
+The underlying is explained in the code snippet - but you can notice that our
+stored variables reflect the fields the ByteArray type. Once our bytecode is
+written in storage, we can simply load it by doing so:
+
+```rust
+ let bytecode = ByteArray {
+    data: self.bytecode.read(address).array(),
+    pending_word: self.pending_word.read(address),
+    pending_word_len: self.pending_word_len.read(address)
+};
+```
+
+After which the value of the bytecode at offset `i` can be accessed by simply
+doing `bytecode[i]` when executing the bytecode instructions in the EVM.
