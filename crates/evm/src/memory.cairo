@@ -62,6 +62,7 @@ impl MemoryImpl of MemoryTrait {
         self.bytes_len.get(self.active_segment.into())
     }
 
+    /// Returns the Memory's active segment
     #[inline(always)]
     fn active_segment(ref self: Memory) -> felt252 {
         self.active_segment.into()
@@ -71,6 +72,10 @@ impl MemoryImpl of MemoryTrait {
     ///
     /// If the offset is aligned with the 16-bytes words in memory, the element is stored directly.
     /// Otherwise, the element is split and stored in multiple words.
+    ///
+    /// If we want to store an item at offset Y of the memory relative to the execution context of id i
+    /// the internal index will be:
+    /// index = Y + i * MEMORY_SEGMENT_SIZE
     #[inline(always)]
     fn store(ref self: Memory, element: u256, offset: usize) {
         let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(offset + 32);
@@ -102,6 +107,9 @@ impl MemoryImpl of MemoryTrait {
 
 
     /// Stores a single byte into memory at a specified offset.
+    /// If we want to store a byte at offset Y of the memory relative to the execution context of id i
+    /// the internal index will be:
+    /// index = Y + i * MEMORY_SEGMENT_SIZE
     ///
     /// # Arguments
     ///
@@ -138,6 +146,10 @@ impl MemoryImpl of MemoryTrait {
     /// stored are within the same word in memory using the `store_bytes_in_single_chunk` function. If the bytes
     /// span multiple words, the function stores the first word using the `store_first_word` function, the aligned
     /// words using the `store_aligned_words` function, and the last word using the `store_last_word` function.
+    ///
+    /// If we want to store n bytes at offset Y of the memory relative to the execution context of id i
+    /// the internal index will be:
+    /// index = Y + i * MEMORY_SEGMENT_SIZE
     ///
     /// # Arguments
     ///

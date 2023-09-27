@@ -52,13 +52,13 @@ classDiagram
     }
 
     class Memory{
-        active_segment: felt252,
+        active_segment: usize,
         items: Felt252Dict~u128~,
         bytes_len: Felt252Dict~usize~,
     }
 
     class Stack{
-        +active_segment: felt252,
+        +active_segment: usize,
         +items: Felt252Dict~Nullable~u256~~,
         +len: Felt252Dict~usize~
     }
