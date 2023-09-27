@@ -258,7 +258,7 @@ impl MemoryImpl of MemoryTrait {
         self.load_n_internal(elements_len, ref elements, offset);
     }
 
-    /// Computes the offset in Memory to write data given the active segment (active ExecutionContext) and offset
+    /// Computes the offset in dict to write data given the active segment (active ExecutionContext) and offset
     #[inline(always)]
     fn compute_active_segment_offset(ref self: Memory, offset: usize) -> usize {
         offset + self.active_segment * MEMORY_SEGMENT_SIZE
