@@ -85,6 +85,24 @@ scarb test
 
 ### Format
 
+The project uses [trunk](trunk.io) for everything apart cairo files. If you
+don't have it installed already, you can do:
+
+```bash
+curl https://get.trunk.io -fsSL | bash
+```
+
+then
+
+```bash
+trunk check --fix
+```
+
+VS Code users, don't miss the
+[VS Code trunk plugin](https://marketplace.visualstudio.com/items?itemName=Trunk.io).
+
+For cairo files, run:
+
 ```bash
 scarb fmt
 ```

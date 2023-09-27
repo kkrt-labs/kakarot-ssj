@@ -4,6 +4,8 @@ This document describes the opcodes supported by Kakarot.
 
 ## Arithmetic operations
 
+<!-- markdownlint-disable MD013 -->
+
 | Opcode Value | Opcode Name | Description                                      | Implemented |
 | ------------ | ----------- | ------------------------------------------------ | ----------- |
 | 0x01         | ADD         | Addition operation                               | ✅          |
@@ -17,6 +19,8 @@ This document describes the opcodes supported by Kakarot.
 | 0x09         | MULMOD      | Modulo multiplication operation                  | ✅          |
 | 0x0a         | EXP         | Exponential operation                            | ✅          |
 | 0x0b         | SIGNEXTEND  | Extend length of two's complement signed integer | ✅          |
+
+<!-- markdownlint-restore -->
 
 ## Comparison & bitwise logic operations
 
@@ -45,6 +49,8 @@ This document describes the opcodes supported by Kakarot.
 
 ## Environmental Information
 
+<!-- markdownlint-disable MD013 -->
+
 | Opcode Value | Opcode Name    | Description                                                                       | Implemented |
 | ------------ | -------------- | --------------------------------------------------------------------------------- | ----------- |
 | 0x30         | ADDRESS        | Get address of currently executing account                                        | ✅          |
@@ -64,7 +70,11 @@ This document describes the opcodes supported by Kakarot.
 | 0x3e         | RETURNDATACOPY | Copy output data from the previous call to memory                                 | ✅          |
 | 0x3f         | EXTCODEHASH    | Get the code hash of an account                                                   |             |
 
+<!-- markdownlint-restore -->
+
 ## Block Information
+
+<!-- markdownlint-disable MD013 -->
 
 | Opcode Value | Opcode Name | Description                                                | Implemented |
 | ------------ | ----------- | ---------------------------------------------------------- | ----------- |
@@ -78,7 +88,11 @@ This document describes the opcodes supported by Kakarot.
 | 0x47         | SELFBALANCE | Get the balance of the current contract                    |             |
 | 0x48         | BASEFEE     | Get the base fee of the current block                      | ✅          |
 
+<!-- markdownlint-restore -->
+
 ## Stack, Memory, Storage and Flow Operations
+
+<!-- markdownlint-disable MD013 -->
 
 | Opcode Value | Opcode Name | Description                                                                                        | Implemented |
 | ------------ | ----------- | -------------------------------------------------------------------------------------------------- | ----------- |
@@ -95,7 +109,11 @@ This document describes the opcodes supported by Kakarot.
 | 0x5a         | GAS         | Get the amount of available gas, including the corresponding reduction the amount of available gas |             |
 | 0x5b         | JUMPDEST    | Mark a valid destination for jumps                                                                 | ✅          |
 
+<!-- markdownlint-restore -->
+
 ## Push Operations
+
+<!-- markdownlint-disable MD013 -->
 
 | Opcode Value | Opcode Name | Description                             | Implemented |
 | ------------ | ----------- | --------------------------------------- | ----------- |
@@ -131,6 +149,8 @@ This document describes the opcodes supported by Kakarot.
 | 0x7d         | PUSH30      | Place 30-byte item on stack             | ✅          |
 | 0x7e         | PUSH31      | Place 31-byte item on stack             | ✅          |
 | 0x7f         | PUSH32      | Place 32-byte (full word) item on stack | ✅          |
+
+<!-- markdownlint-restore -->
 
 ## Duplication Operations
 
@@ -176,6 +196,8 @@ This document describes the opcodes supported by Kakarot.
 
 ## Logging Operations
 
+<!-- markdownlint-disable MD013 -->
+
 | Opcode Value | Opcode Name | Description                         | Implemented |
 | ------------ | ----------- | ----------------------------------- | ----------- |
 | 0xa0         | LOG0        | Append log record with no topics    |             |
@@ -184,7 +206,11 @@ This document describes the opcodes supported by Kakarot.
 | 0xa3         | LOG3        | Append log record with three topics |             |
 | 0xa4         | LOG4        | Append log record with four topics  |             |
 
+<!-- markdownlint-restore -->
+
 ## System Operations
+
+<!-- markdownlint-disable MD013 -->
 
 | Opcode Value | Opcode Name  | Description                                                       | Implemented |
 | ------------ | ------------ | ----------------------------------------------------------------- | ----------- |
@@ -198,3 +224,5 @@ This document describes the opcodes supported by Kakarot.
 | 0xfd         | REVERT       | Halt execution reverting state changes                            |             |
 | 0xfe         | INVALID      | Designated invalid instruction                                    |             |
 | 0xff         | SELFDESTRUCT | Halt execution and register account for later deletion            |             |
+
+<!-- markdownlint-restore -->
