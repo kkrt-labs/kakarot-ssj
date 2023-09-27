@@ -40,4 +40,5 @@ jobs:
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
 
       - name: Exit step based on exit_code
+        if: steps.run-script.outputs.exit_code != '0'
         run: exit ${{ steps.run-script.outputs.exit_code }}
