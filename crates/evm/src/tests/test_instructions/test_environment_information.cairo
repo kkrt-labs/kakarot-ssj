@@ -50,7 +50,7 @@ fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls
 // *************************************************************************
 
 #[test]
-#[available_gas(120000)]
+#[available_gas(1200000)]
 fn test__exec_callvalue() {
     // Given
     let mut ctx = setup_execution_context();

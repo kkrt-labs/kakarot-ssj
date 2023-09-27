@@ -33,7 +33,7 @@ fn test_exec_add() {
     ctx.exec_add();
 
     // Then
-    assert(ctx.stack.len == 2, 'stack should have two elems');
+    assert(ctx.stack.len() == 2, 'stack should have two elems');
     assert(ctx.stack.peek().unwrap() == 5, 'stack top should be 3+2');
     assert(ctx.stack.peek_at(1).unwrap() == 1, 'stack[1] should be 1');
 }

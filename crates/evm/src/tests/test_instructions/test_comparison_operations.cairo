@@ -346,7 +346,7 @@ fn test_exec_gt_false_equal() {
 }
 
 #[test]
-#[available_gas(22000000)]
+#[available_gas(220000000)]
 fn test_exec_slt() {
     // https://github.com/ethereum/go-ethereum/blob/master/core/vm/testdata/testcases_slt.json
     assert_slt(0x0, 0x0, 0);
@@ -591,7 +591,7 @@ fn assert_slt(b: u256, a: u256, expected: u256) {
 }
 
 #[test]
-#[available_gas(22000000)]
+#[available_gas(220000000)]
 fn test_exec_sgt() {
     // https://github.com/ethereum/go-ethereum/blob/master/core/vm/testdata/testcases_sgt.json
     assert_sgt(0x0, 0x0, 0);
