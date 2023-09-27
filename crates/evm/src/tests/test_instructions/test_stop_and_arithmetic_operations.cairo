@@ -5,7 +5,7 @@ use evm::context::ExecutionContextTrait;
 
 use integer::BoundedInt;
 
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::;
 
 #[test]
 #[available_gas(20000000)]

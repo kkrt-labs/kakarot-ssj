@@ -2,7 +2,7 @@
 
 // Internal imports
 use evm::context::{ExecutionContext, ExecutionContextTrait};
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::;
 use evm::stack::StackTrait;
 use evm::errors::EVMError;
 use utils::helpers::load_word;

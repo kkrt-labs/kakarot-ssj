@@ -13,7 +13,7 @@ use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionCon
 //TODO remove import once merged in corelib
 use evm::tests::test_utils::{setup_call_context, setup_execution_context, CallContextPartialEq};
 use evm::tests::test_utils;
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::;
 
 use test_utils::callvalue;
 

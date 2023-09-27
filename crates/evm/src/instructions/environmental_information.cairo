@@ -3,7 +3,7 @@ use evm::stack::StackTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::helpers::U256IntoResultU32;
 use evm::context::{
-    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
+    ExecutionContext, ExecutionContextTrait, , CallContextTrait
 };
 use utils::helpers::{load_word};
 use utils::traits::{EthAddressIntoU256};

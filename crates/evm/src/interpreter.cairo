@@ -2,10 +2,7 @@
 
 /// Internal imports.
 // TODO remove destruct imports when no longer required
-use evm::context::{
-    ExecutionSummary, ExecutionContext, ExecutionContextTrait, CallContextTrait,
-    BoxDynamicExecutionContextDestruct
-};
+use evm::context::{ExecutionSummary, ExecutionContext, ExecutionContextTrait, CallContextTrait,};
 use utils::{helpers::u256_to_bytes_array};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{

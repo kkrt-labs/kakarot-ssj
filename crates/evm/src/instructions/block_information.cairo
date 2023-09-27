@@ -4,7 +4,7 @@
 use starknet::info::{get_block_number, get_block_timestamp};
 
 // Internal imports
-use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
+use evm::context::{ExecutionContext, ExecutionContextTrait};
 use evm::stack::StackTrait;
 use evm::errors::EVMError;
 use utils::constants::CHAIN_ID;

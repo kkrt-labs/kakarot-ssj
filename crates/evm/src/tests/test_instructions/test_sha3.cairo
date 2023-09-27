@@ -1,7 +1,7 @@
 use evm::instructions::Sha3Trait;
 use evm::instructions::sha3::internal;
 use evm::tests::test_utils::setup_execution_context;
-use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
+use evm::context::{ExecutionContext, ExecutionContextTrait,};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::stack::StackTrait;
 use option::OptionTrait;

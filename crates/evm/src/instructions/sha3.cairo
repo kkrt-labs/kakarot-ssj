@@ -1,7 +1,7 @@
 //! SHA3.
 
 // Internal imports
-use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
+use evm::context::{ExecutionContext, ExecutionContextTrait,};
 use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
 use evm::errors::EVMError;
@@ -56,7 +56,7 @@ impl Sha3Impl of Sha3Trait {
 
 
 mod internal {
-    use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
+    use evm::context::{ExecutionContext, ExecutionContextTrait,};
     use evm::stack::StackTrait;
     use evm::memory::MemoryTrait;
     use utils::helpers::U256Trait;

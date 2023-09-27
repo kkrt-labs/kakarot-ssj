@@ -25,6 +25,9 @@ mod errors;
 // Helpers module
 mod helpers;
 
+// Machine module
+mod machine;
+
 // tests
 #[cfg(test)]
 mod tests;

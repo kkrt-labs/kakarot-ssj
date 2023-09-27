@@ -1,11 +1,11 @@
 //! Duplication Operations.
 
 // Internal imports
-use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
+use evm::context::{ExecutionContext, ExecutionContextTrait,};
 use evm::errors::EVMError;
 
 mod internal {
-    use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
+    use evm::context::{ExecutionContext, ExecutionContextTrait,};
     use evm::stack::StackTrait;
     use evm::errors::EVMError;
 

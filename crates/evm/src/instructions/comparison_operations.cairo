@@ -6,7 +6,7 @@ use evm::errors::STACK_UNDERFLOW;
 use evm::errors::EVMError;
 use utils::math::{Exponentiation, Bitshift, WrappingBitshift};
 use utils::constants::{POW_2_127};
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::;
 use utils::traits::BoolIntoNumeric;
 use utils::i256::i256;
 use integer::BoundedInt;

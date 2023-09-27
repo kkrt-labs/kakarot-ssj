@@ -2,7 +2,7 @@ use evm::instructions::SystemOperationsTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::setup_execution_context;
 use evm::instructions::MemoryOperationTrait;
-use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
+use evm::context::{ExecutionContext, ExecutionContextTrait,};
 use utils::helpers::load_word;
 use traits::Into;
 

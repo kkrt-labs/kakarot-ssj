@@ -65,19 +65,21 @@ classDiagram
 
     class ExecutionContext{
         ctx_id: usize,
-        origin: EthAddress,
-        call_ctx: CallContext,
-        gas_price: u32,
-        gas_limit: u32,
+        evm_address: EthAddress,
+        starknet_address: ContractAddress,
         pc: u32,
-        read_only: bool,
+        status: Status,
+        call_context: CallContext,
+        dynamic_context: DynamicContext,
+        parent_context: Nullable~ExecutionContext~,
+        child_context: Nullable~ExecutionContext~,
+    }
+
+    class DynamicContext {
         destroyed_contracts: Array~EthAddress~,
         events: Array~Event~,
         create_addresses: Array~EthAddress~,
-        status: Status,
-        return_data: Array~u32~,
-        parent_context: Nullable~ExecutionContext~,
-        child_context: Nullable~ExecutionContext~,
+        return_data: Array~u8~,
     }
 
     class CallContext{
@@ -85,6 +87,9 @@ classDiagram
         value: u256,
         bytecode: Span~u8~,
         calldata: Span~u8~,
+        gas_price: u32,
+        gas_limit: u32,
+        read_only: bool,
     }
 
     class Journal{

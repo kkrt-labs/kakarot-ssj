@@ -11,7 +11,7 @@ use starknet::EthAddressIntoFelt252;
 use utils::traits::{EthAddressIntoU256};
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::context::{
-    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
+    ExecutionContext, ExecutionContextTrait, , CallContextTrait
 };
 use utils::helpers::{
     u256_to_bytes_array, load_word, ArrayExtension, ArrayExtensionTrait, SpanExtension,

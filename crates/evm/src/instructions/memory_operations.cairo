@@ -1,6 +1,6 @@
 //! Stack Memory Storage and Flow Operations.
 use evm::context::{
-    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait
+    ExecutionContext, ExecutionContextTrait, , CallContextTrait
 };
 use evm::errors::{EVMError, INVALID_DESTINATION};
 use evm::stack::StackTrait;

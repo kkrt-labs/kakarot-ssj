@@ -10,7 +10,7 @@ use utils::helpers::{u256_to_bytes_array};
 use utils::traits::{EthAddressIntoU256};
 use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION};
 use evm::context::{
-    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait,
+    ExecutionContext, ExecutionContextTrait, , CallContextTrait,
 };
 use evm::helpers::U256IntoResultU32;
 use integer::BoundedInt;

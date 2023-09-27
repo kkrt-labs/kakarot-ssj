@@ -2,7 +2,7 @@ use evm::instructions::DuplicationOperationsTrait;
 use evm::stack::Stack;
 use evm::tests::test_utils::setup_execution_context;
 use evm::stack::StackTrait;
-use evm::context::BoxDynamicExecutionContextDestruct;
+use evm::context::;
 
 
 use debug::PrintTrait;

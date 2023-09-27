@@ -5,7 +5,7 @@ use traits::TryInto;
 use box::BoxTrait;
 
 // Internal imports
-use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
+use evm::context::{ExecutionContext, ExecutionContextTrait,};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use evm::errors::EVMError;
