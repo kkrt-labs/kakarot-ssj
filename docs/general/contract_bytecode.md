@@ -1,7 +1,7 @@
-# Storing Contract Bytecode
+# Bytecode Storage Methods for Kakarot on Starknet
 
 The bytecode is the compiled version of your contract, and it is what the
-Kakarot EVM will execute when you call the contract. As Kakarot is developped on
+Kakarot EVM will execute when you call the contract. As Kakarot is developed on
 top of Starknet, you cannot really "deploy" an EVM contract on Kakarot: what
 actually happens is that the EVM bytecode of your contract is stored on the
 blockchain, and the Kakarot EVM will be able to load it when you want to execute
@@ -32,9 +32,9 @@ However, in order to allow the independent verification of the L2 chain's state
 and prevent malicious operators from censoring or freezing the chain, some
 amount of data is still required to be posted on a Data Availability (DA) layer
 to make the Starknet state available, even in the case where the operator
-suddenly ceases operations. Data availability refers to the fact that a user can
-always reconstruct the state of the rollup by deriving its current state from
-the data posted by the rollup operator.
+suddenly ceases operations. Data availability ensures that users can always
+reconstruct the state of the rollup by deriving its current state from the data
+posted by the rollup operator.
 
 Without this, users would not be able to query an L2 contract's state in case
 the operator becomes unavailable. It provides users the security of knowing that
@@ -55,11 +55,10 @@ significant price, as the publication of state diffs on Ethereum accounted for
 
 The first choice when it comes to storing contract bytecode is to store it as a
 regular storage variable, whose state diff is posted on Ethereum acting as the
-DA Layer. Following the design choices made in
-[Contract Storage](./contract_storage.md), deploying a new contract on Kakarot
-would not result in the deployment of a contract on Starknet, but rather in the
-storage of the contract bytecode in a storage variable of the KakarotCore
-contract.
+DA Layer. As outlined in our [Contract Storage](./contract_storage.md) design,
+deploying a new contract on Kakarot would not result in the deployment of a
+contract on Starknet, but rather in the storage of the contract bytecode in a
+storage variable of the KakarotCore contract.
 
 In this situation the following data would reach L1:
 
@@ -79,17 +78,14 @@ In our case, we would update one single contract (KakarotCore), and update $m$
 keys, where $m = (B / 31) + 2$ with $B$ the size of the bytecode to store (see
 [implementation details](./contract_bytecode.md#implementation-details)).
 
-<!-- TODO: verify if we can pack bytecode 31bytes by 31bytes instead of 16 by 16, to save 15 bytes per storage variable, and thus reduce the number of keys stored -->
-
 Considering a gas price of 34 gwei (average gas price in 2023, according to
 [Etherscan](https://etherscan.io/chart/gasprice)), and a calldata cost of 16 per
 byte and the size of a typical ERC20 contract being 2174 bytes, we would have
 have $m = 136$. The associated storage update fee would be:
 
-$$ fee = 34 \cdot (16 \cdot 32) \cdot (2 + 272) = 4,769,792 \text{ gwei}$$
+$$ fee = 34 \cdot (16 \cdot 32) \cdot (2 + 144) = 2,541,468 \text{ gwei}$$
 
-This solution is the one that Kakarot currently uses, and the implementation
-details are detailed in the next section.
+The implementation details are detailed in the next section.
 
 ### Using Starknet's volition mechanism
 
@@ -101,8 +97,7 @@ same in both L2 and L1 data availability modes - the difference lies in the data
 availability guarantees. When a state transition is verified on L1, we are
 ensured that the state update is correct - however, we don't know on L1 what the
 actual state of the L2 is. By posting state diffs on L1, we can reconstruct the
-current state of Starknet from the ground up, but this comes has a significant
-cost.
+current state of Starknet from the ground up, but this has a significant cost.
 
 ![Volition](volition.png)
 
@@ -111,7 +106,7 @@ or L2DA mode, making it possible to store data on L2, which is a lot less
 expensive than storing it on L1. Depending on the data stored, it can be
 interesting if the cost associated to storing the data on L1 is higher than the
 intrinsic value of the data itself. For examples, an Volition-ERC20 token
-standard would have two different balances stored, one on L1DA for maxmial
+standard would have two different balances stored, one on L1DA for maximal
 security (e.g. you would keep most of your assets in this balance), and one on
 L2DA for lower security, which would be used to reduce the fees associated to
 small transactions.
@@ -152,24 +147,23 @@ contract containing the Cairo bytecode, and contracts which are instances of
 classes. When you declare a contract on Starknet, its information is added to
 the
 [Classes Tree](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#classes_tree),
-which encodes informations about the existing classes in the state of Starknet
-by mapping class hashes to their. This class tree is itself a part of the
-Starknet State Commitment, which is verified on Ethereum during state updates.
-The class itself is stored in the nodes (both sequencers and full nodes) of
-Starknet.
+which encodes information about the existing classes in the state of Starknet by
+mapping class hashes to their. This class tree is itself a part of the Starknet
+State Commitment, which is verified on Ethereum during state updates. The class
+itself is stored in the nodes (both sequencers and full nodes) of Starknet.
 
-Implementing this solution would require us to declare a new class everytime a
-contract is deployed using Kakarot. This new class would contain the EVM
-bytecode of the contract, exposed inside a view function that would return the
-entire bytecode when queried. To achieve that, we would need to have the RPC
-craft a custom Starknet contract that would contain this EVM bytecode, and
-declare it on Starknet - which is not ideal from security perspectives.
+To implement this solution, we must declare a new class each time a contract is
+deployed via Kakarot. This new class would contain the EVM bytecode of the
+contract, exposed inside a view function that would return the entire bytecode
+when queried. To achieve that, we would need to have the RPC craft a custom
+Starknet contract that would contain this EVM bytecode, and declare it on
+Starknet - which is not ideal from security perspectives.
 
 ## Implementation details
 
 Kakarot uses the first solution, storing the bytecode inside a storage variable
-that is commited to Ethereum. This solution is the most secure one, as it relies
-on Ethereum as a DA Layer, and thus inherits from Ethereum's security
+that is committed to Ethereum. This solution is the most secure one, as it
+relies on Ethereum as a DA Layer, and thus inherits from Ethereum's security
 guarantees, ensuring that the bytecode of the deployed contract is always
 available.
 
@@ -219,9 +213,9 @@ struct ByteArray {
 }
 ```
 
-The underlying is explained in the code snippet - but you can notice that our
-stored variables reflect the fields the ByteArray type. Once our bytecode is
-written in storage, we can simply load it by doing so:
+The rationale behind this structure is detailed in the code snippet above - but
+you can notice that our stored variables reflect the fields the ByteArray type.
+Once our bytecode is written in storage, we can simply load it by doing so:
 
 ```rust
  let bytecode = ByteArray {
