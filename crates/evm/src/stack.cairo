@@ -48,7 +48,7 @@ trait StackTrait {
     fn len(ref self: Stack) -> usize;
     fn is_empty(ref self: Stack) -> bool;
     fn active_segment(self: @Stack) -> usize;
-    fn compute_active_segment_index(ref self: Stack, index: usize) -> felt252;
+    fn compute_active_segment_index(self: @Stack, index: usize) -> felt252;
 }
 
 impl StackImpl of StackTrait {
@@ -236,7 +236,7 @@ impl StackImpl of StackTrait {
 
     /// Computes the internal index to access the Stack of the current execution context
     #[inline(always)]
-    fn compute_active_segment_index(ref self: Stack, index: usize) -> felt252 {
+    fn compute_active_segment_index(self: @Stack, index: usize) -> felt252 {
         let internal_index = index + self.active_segment() * STACK_SEGMENT_SIZE;
         internal_index.into()
     }
