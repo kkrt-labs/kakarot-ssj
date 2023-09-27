@@ -143,13 +143,10 @@ def main():
     current_snapshots = get_current_gas_snapshot()
     improvements, worsened = compare_snapshots(current_snapshots, previous_snapshot)
     cur_gas, prev_gas = total_gas_used(current_snapshots, previous_snapshot)
-    logger.info("****BETTER****")
-    for elem in improvements:
-        logger.info(elem)
-
-    logger.info("****WORST****")
-    for elem in worsened:
-        logger.info(elem)
+    if improvements:
+        logger.info("\n".join(["****BETTER****"] + improvements))
+    if worsened:
+        logger.info("\n".join(["****WORST****"] + worsened))
 
     logger.info(f"Overall gas change: {(cur_gas - prev_gas) * 100 / prev_gas:.2%}")
     if worsened:

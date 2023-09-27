@@ -34,7 +34,7 @@ jobs:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         continue-on-error: true
         run: |
-          result=$(python tmp.py 2>&1)
+          result=$(python scripts/compare_snapshot.py 2>&1)
           status=$(echo "$result" | tail -n 1 | awk -F ':' '{print $1}')
           echo "$result" >> "$GITHUB_STEP_SUMMARY"
           echo "status=$status" >> "$GITHUB_OUTPUT"
