@@ -23,10 +23,11 @@ mod internal {
         memory.store_n(bytes_array.span(), offset);
 
         // When
-        let result: u256 = memory.load_internal(offset);
+        let mut elements: Array<u8> = array![];
+        memory.load_n_internal(32, ref elements, offset);
 
         // Then
-        assert(result == value, 'result not matching expected');
+        assert(elements == bytes_array, 'result not matching expected');
     }
 
     fn load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
