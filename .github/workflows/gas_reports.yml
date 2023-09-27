@@ -32,6 +32,7 @@ jobs:
         id: run-script
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        continue-on-error: true
         run: |
           result=$(python tmp.py 2>&1)
           exit_code=$?
