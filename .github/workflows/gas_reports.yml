@@ -36,4 +36,7 @@ jobs:
           result=$(python scripts/compare_snapshot.py 2>&1)
           exit_code=$?
           echo "$result" >> "$GITHUB_STEP_SUMMARY"
-          exit $exit_code
+          echo "{exit_code}=$exit_code" >> $GITHUB_OUTPUT
+
+      - name: Exit step based on exit_code
+        run: exit ${{ steps.run-script.outputs.exit_code }}
