@@ -1,6 +1,5 @@
 use integer::{
-    u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_safe_div_rem,
-    u256_as_non_zero
+    u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_as_non_zero
 };
 use utils::constants::{
     POW_256_0_U128, POW_256_1_U128, POW_256_2_U128, POW_256_3_U128, POW_256_4_U128, POW_256_5_U128,
@@ -243,8 +242,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         let mask_c: u256 = POW_256_16_U256 / mask;
 
         // Split the 2 input bytes16 chunks at offset_in_chunk.
-        let (el_hh, el_hl) = u256_safe_div_rem(element.high.into(), u256_as_non_zero(mask_c));
-        let (el_lh, el_ll) = u256_safe_div_rem(element.low.into(), u256_as_non_zero(mask_c));
+        let (el_hh, el_hl) = DivRem::div_rem(element.high.into(), u256_as_non_zero(mask_c));
+        let (el_lh, el_ll) = DivRem::div_rem(element.low.into(), u256_as_non_zero(mask_c));
 
         // Read the words at chunk_index, chunk_index + 2.
         let w0: u128 = self.items.get(chunk_index.into());
@@ -283,8 +282,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         ref self: Memory, initial_chunk: usize, mask_i: u256, mask_f: u256, elements: Span<u8>
     ) {
         let word: u128 = self.items.get(initial_chunk.into());
-        let (word_high, word_low) = u256_safe_div_rem(word.into(), u256_as_non_zero(mask_i));
-        let (_, word_low_l) = u256_safe_div_rem(word_low, u256_as_non_zero(mask_f));
+        let (word_high, word_low) = DivRem::div_rem(word.into(), u256_as_non_zero(mask_i));
+        let (_, word_low_l) = DivRem::div_rem(word_low, u256_as_non_zero(mask_f));
         let bytes_as_word = helpers::load_word(elements.len(), elements);
         let new_w: u128 = (word_high * mask_i + bytes_as_word.into() * mask_f + word_low_l)
             .try_into()
@@ -404,7 +403,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
 
         // Compute element words
         let w0_l: u256 = w0.into() % mask;
-        let (w1_h, w1_l): (u256, u256) = u256_safe_div_rem(w1.into(), u256_as_non_zero(mask));
+        let (w1_h, w1_l): (u256, u256) = DivRem::div_rem(w1.into(), u256_as_non_zero(mask));
         let w2_h: u256 = w2.into() / mask;
         let el_h: u128 = (w0_l * mask_c + w1_h).try_into().unwrap();
         let el_l: u128 = (w1_l * mask_c + w2_h).try_into().unwrap();
