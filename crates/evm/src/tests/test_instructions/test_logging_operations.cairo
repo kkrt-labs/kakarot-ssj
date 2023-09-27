@@ -136,11 +136,7 @@ fn test_exec_log3() {
     assert(event.data.len() == 40, 'event should have 40 bytes');
     let data_expected = u256_to_bytes_array(BoundedInt::<u256>::max()).span();
     assert(event.data.span().slice(0, 32) == data_expected, 'event data are incorrect');
-    let data_expected = u256_to_bytes_array(
-        0x0123456789ABCDEF000000000000000000000000000000000000000000000000
-    )
-        .span()
-        .slice(0, 8);
+    let data_expected = array![0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF].span();
     assert(event.data.span().slice(32, 8) == data_expected, 'event data are incorrect');
 }
 
@@ -178,11 +174,7 @@ fn test_exec_log4() {
     assert(*event.keys[3] == BoundedInt::<u256>::max(), 'event key is not correct');
 
     assert(event.data.len() == 10, 'event should have 10 bytes');
-    let data_expected = u256_to_bytes_array(
-        0x0123456789ABCDEF000000000000000000000000000000000000000000000000
-    )
-        .span()
-        .slice(0, 10);
+    let data_expected = array![0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x00, 0x00].span();
     assert(event.data.span() == data_expected, 'event data are incorrect');
 }
 
@@ -326,11 +318,7 @@ fn test_exec_log_multiple_events() {
     assert(event1.data.len() == 40, 'event1 should have 40 bytes');
     let data_expected = u256_to_bytes_array(BoundedInt::<u256>::max()).span();
     assert(event1.data.span().slice(0, 32) == data_expected, 'event1 data are incorrect');
-    let data_expected = u256_to_bytes_array(
-        0x0123456789ABCDEF000000000000000000000000000000000000000000000000
-    )
-        .span()
-        .slice(0, 8);
+    let data_expected = array![0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF].span();
     assert(event1.data.span().slice(32, 8) == data_expected, 'event1 data are incorrect');
 
     let event2 = events.pop_front().unwrap();
@@ -341,10 +329,6 @@ fn test_exec_log_multiple_events() {
     assert(*event2.keys[3] == BoundedInt::<u256>::max(), 'event2 key is not correct');
 
     assert(event2.data.len() == 10, 'event2 should have 10 bytes');
-    let data_expected = u256_to_bytes_array(
-        0x0123456789ABCDEF000000000000000000000000000000000000000000000000
-    )
-        .span()
-        .slice(0, 10);
+    let data_expected = array![0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x00, 0x00].span();
     assert(event2.data.span() == data_expected, 'event2 data are incorrect');
 }
