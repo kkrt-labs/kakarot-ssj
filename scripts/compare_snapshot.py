@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 
@@ -7,6 +8,9 @@ import subprocess
 import tempfile
 import zipfile
 from pathlib import Path
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def get_github_token_from_env(file_path=".env"):
@@ -22,7 +26,9 @@ def get_github_token_from_env(file_path=".env"):
     except FileNotFoundError:
         return None
     except ValueError:
-        print(f"Error: Invalid format in {file_path}. Expected 'KEY=VALUE' format.")
+        logger.error(
+            f"Error: Invalid format in {file_path}. Expected 'KEY=VALUE' format."
+        )
     return None
 
 
@@ -118,28 +124,6 @@ def compare_snapshots(current, previous):
     return improvements, worsened
 
 
-def print_formatted_output(improvements, worsened, gas_changes):
-    """Print results formatted."""
-    if improvements or worsened:
-        print("****BETTER****")
-        for elem in improvements:
-            print(elem)
-
-        print("\n")
-        print("****WORST****")
-        for elem in worsened:
-            print(elem)
-
-        gas_statement = (
-            "performance degradation, gas consumption +"
-            if gas_changes > 0
-            else "performance improvement, gas consumption"
-        )
-        print(f"Overall gas change: {gas_statement}{format(gas_changes, '.2f')} %")
-    else:
-        print("No changes in gas consumption.")
-
-
 def total_gas_used(current, previous):
     """Return the total gas used in the current and previous snapshot, not taking into account added tests."""
     common_keys = set(current.keys()) & set(previous.keys())
@@ -151,18 +135,23 @@ def total_gas_used(current, previous):
 
 
 def main():
-    # Load previous snapshot
     previous_snapshot = get_previous_snapshot()
     if previous_snapshot is None:
-        print("Error: Failed to load previous snapshot.")
+        logger.error("Error: Failed to load previous snapshot.")
         return
 
     current_snapshots = get_current_gas_snapshot()
     improvements, worsened = compare_snapshots(current_snapshots, previous_snapshot)
     cur_gas, prev_gas = total_gas_used(current_snapshots, previous_snapshot)
-    print_formatted_output(
-        improvements, worsened, (cur_gas - prev_gas) * 100 / prev_gas
-    )
+    logger.info("****BETTER****")
+    for elem in improvements:
+        logger.info(elem)
+
+    logger.info("****WORST****")
+    for elem in worsened:
+        logger.info(elem)
+
+    logger.info(f"Overall gas change: {(cur_gas - prev_gas) * 100 / prev_gas:.2%}")
     if worsened:
         raise ValueError("Gas usage increased")
 
