@@ -114,8 +114,7 @@ def compare_snapshots(current, previous):
     for key in common_keys:
         prev = previous[key]
         cur = current[key]
-        percentage_change = (cur - prev) * 100 / prev
-        log = f"{key:<{max_key_len + 5}} {prev:>10} {cur:>10} {percentage_change:>6.2%}"
+        log = f"{key:<{max_key_len + 5}} {prev:>10} {cur:>10} {cur / prev:>6.2%}"
         if prev < cur:
             worsened.append(log)
         elif prev > cur:
