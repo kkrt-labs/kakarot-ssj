@@ -28,7 +28,7 @@ struct Memory {
 
 trait MemoryTrait {
     fn new() -> Memory;
-    fn with_active_segment(active_segment: usize) -> Memory;
+    fn set_active_segment(ref self: Memory, active_segment: usize);
     fn size(ref self: Memory) -> usize;
     fn active_segment(ref self: Memory) -> felt252;
     fn store(ref self: Memory, element: u256, offset: usize);
@@ -50,10 +50,8 @@ impl MemoryImpl of MemoryTrait {
 
     /// Initializes a new `Memory` instance with a specific active segment
     #[inline(always)]
-    fn with_active_segment(active_segment: usize) -> Memory {
-        Memory {
-            active_segment: active_segment, items: Default::default(), bytes_len: Default::default()
-        }
+    fn set_active_segment(ref self: Memory, active_segment: usize) {
+        self.active_segment = active_segment;
     }
 
     /// Return size of the memory.

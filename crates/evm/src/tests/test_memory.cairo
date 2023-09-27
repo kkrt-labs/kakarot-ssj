@@ -14,7 +14,8 @@ mod internal {
         offset: usize, low: u128, high: u128, active_segment: usize,
     ) {
         // Given
-        let mut memory = MemoryTrait::with_active_segment(active_segment);
+        let mut memory = MemoryTrait::new();
+        memory.set_active_segment(active_segment);
 
         let value: u256 = u256 { low: low, high: high };
 
@@ -34,7 +35,8 @@ mod internal {
         offset: usize, low: u128, high: u128, active_segment: usize,
     ) {
         // Given
-        let mut memory = MemoryTrait::with_active_segment(active_segment);
+        let mut memory = MemoryTrait::new();
+        memory.set_active_segment(active_segment);
 
         let value: u256 = u256 { low: low, high: high };
 
@@ -708,9 +710,10 @@ fn test_store_byte_should_store_byte_at_offset_in_new_word_with_existing_value_i
 
 #[test]
 #[available_gas(20000)]
-fn test_with_active_segment() {
+fn test_set_active_segment() {
     // Given
-    let mut memory = MemoryTrait::with_active_segment(5);
+    let mut memory = MemoryTrait::new();
+    memory.set_active_segment(5);
 
     // When
     let active_segment = memory.active_segment();
@@ -723,7 +726,8 @@ fn test_with_active_segment() {
 #[available_gas(2000000)]
 fn test_memory_store_byte_with_active_segment() {
     // Given
-    let mut memory = MemoryTrait::with_active_segment(5);
+    let mut memory = MemoryTrait::new();
+    memory.set_active_segment(5);
 
     // When
     memory.store_byte(0x01, 32);
@@ -732,6 +736,7 @@ fn test_memory_store_byte_with_active_segment() {
     let start_index = 40962;
 
     // Then
+    assert(memory.active_segment() == 5, 'wrong active segment');
     assert(memory.items[start_index + 1] == 0x0, 'Wrong value for word 0');
     assert(memory.items[start_index - 1] == 0x0, 'Wrong value for word 1');
     assert(
