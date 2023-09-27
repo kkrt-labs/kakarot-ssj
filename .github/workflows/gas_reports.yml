@@ -35,10 +35,10 @@ jobs:
         continue-on-error: true
         run: |
           result=$(python tmp.py 2>&1)
-          exit_code=$?
+          status=$(echo "$result" | tail -n 1 | awk -F ':' '{print $1}')
           echo "$result" >> "$GITHUB_STEP_SUMMARY"
-          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+          echo "status=$status" >> "$GITHUB_OUTPUT"
 
-      - name: Exit step based on exit_code
-        if: steps.run-script.outputs.exit_code != '0'
-        run: exit ${{ steps.run-script.outputs.exit_code }}
+      - name: Exit step based on status
+        if: steps.run-script.outputs.status == 'ERROR'
+        run: exit 1

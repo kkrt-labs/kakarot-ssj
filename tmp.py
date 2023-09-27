@@ -1,2 +1,7 @@
-print("before error")
-raise ValueError("error here")
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+logger.info("before error")
+logger.error("error here")

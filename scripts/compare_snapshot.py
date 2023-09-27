@@ -153,7 +153,9 @@ def main():
 
     logger.info(f"Overall gas change: {(cur_gas - prev_gas) * 100 / prev_gas:.2%}")
     if worsened:
-        raise ValueError("Gas usage increased")
+        logger.error("Gas usage increased")
+    else:
+        logger.info("Gas change ✅")
 
 
 if __name__ == "__main__":
