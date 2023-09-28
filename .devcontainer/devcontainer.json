@@ -1,5 +1,6 @@
 {
   "name": "Kakarot SSJ",
+  "image": "mcr.microsoft.com/devcontainers/base:jammy",
   "customizations": {
     "vscode": {
       "extensions": ["starkware.cairo1"]
