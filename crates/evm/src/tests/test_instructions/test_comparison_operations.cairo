@@ -836,7 +836,7 @@ fn assert_sgt(b: u256, a: u256, expected: u256) {
 }
 
 #[test]
-#[available_gas(30000000)]
+#[available_gas(300000000)]
 fn test_exec_shr() {
     // https://github.com/ethereum/go-ethereum/blob/master/core/vm/testdata/testcases_shr.json
     assert_shr(

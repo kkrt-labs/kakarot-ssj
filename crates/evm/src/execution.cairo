@@ -5,7 +5,7 @@ use evm::machine::Machine;
 
 
 /// Execute EVM bytecode.
-fn execute(call_context: CallContext, parent_context: Nullable<ExecutionContext>,) {
+fn execute() {
     /// TODO: implement the execute function.
     // Create new execution context.
     let mut machine: Machine = Default::default();

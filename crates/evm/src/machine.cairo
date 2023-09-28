@@ -181,7 +181,7 @@ impl MachineCurrentContextImpl of MachineCurrentContext {
     #[inline(always)]
     fn current_ctx_gas_price(ref self: Machine) -> u64 {
         let current_call_ctx = self.current_ctx_call_context();
-        current_call_ctx.gas_limit()
+        current_call_ctx.gas_price()
     }
 
     #[inline(always)]

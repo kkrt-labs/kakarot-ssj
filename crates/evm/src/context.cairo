@@ -245,6 +245,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn revert(ref self: ExecutionContext, revert_reason: Span<u8>) {
         self.status = Status::Reverted;
+        ArrayExtensionTrait::concat(ref self.return_data, revert_reason);
     }
 
     // *************************************************************************
@@ -261,25 +262,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         *self.starknet_address
     }
 
-    #[inline(always)]
-    fn caller(self: @ExecutionContext) -> EthAddress {
-        (*self.call_context).unbox().caller()
-    }
-
-    #[inline(always)]
-    fn read_only(self: @ExecutionContext) -> bool {
-        (*self.call_context).unbox().read_only()
-    }
-
-    #[inline(always)]
-    fn gas_limit(self: @ExecutionContext) -> u64 {
-        (*self.call_context).unbox().gas_limit()
-    }
-
-    #[inline(always)]
-    fn gas_price(self: @ExecutionContext) -> u64 {
-        (*self.call_context).unbox().gas_price()
-    }
 
     // *************************************************************************
     //                          ExecutionContext methods

@@ -405,7 +405,7 @@ fn test_gasprice() {
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 10, 'stack top should be 10');
+    assert(machine.stack.peek().unwrap() == 0xaaaaaa, 'stack top should be 0xaaaaaa');
 }
 
 // *************************************************************************

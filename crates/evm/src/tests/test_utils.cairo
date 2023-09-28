@@ -25,10 +25,10 @@ fn setup_call_context() -> CallContext {
     let value: u256 = callvalue();
     let address = evm_address();
     let read_only = false;
-    let gas_price = 0xffffff;
+    let gas_price = 0xaaaaaa;
     let gas_limit = 0xffffff;
 
-    CallContextTrait::new(address, bytecode, calldata, value, read_only, gas_price, gas_limit)
+    CallContextTrait::new(address, bytecode, calldata, value, read_only, gas_limit, gas_price)
 }
 
 fn setup_execution_context() -> ExecutionContext {
@@ -100,7 +100,13 @@ impl CallContextPartialEq of PartialEq<CallContext> {
 }
 
 fn setup_machine() -> Machine {
-    Default::default()
+    Machine {
+        current_context: BoxTrait::new(setup_execution_context()),
+        ctx_count: 1,
+        stack: Default::default(),
+        memory: Default::default(),
+        storage_journal: Default::default(),
+    }
 }
 
 fn setup_machine_with_bytecode(bytecode: Span<u8>) -> Machine {

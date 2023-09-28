@@ -46,7 +46,7 @@ fn test_gaslimit() {
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     // This value is set in [setup_execution_context].
-    assert(machine.stack.peek().unwrap() == 1000, 'stack top should be 1000');
+    assert(machine.stack.peek().unwrap() == 0xffffff, 'stack top should be 0xffffff');
 }
 
 #[test]
@@ -59,7 +59,7 @@ fn test_basefee() {
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 10, 'stack top should be 0');
+    assert(machine.stack.peek().unwrap() == 0xaaaaaa, 'stack top should be 0xaaaaaa');
 }
 
 #[test]

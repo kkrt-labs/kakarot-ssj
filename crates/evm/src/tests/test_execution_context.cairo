@@ -86,7 +86,6 @@ fn test_execution_context_new() {
         execution_context.create_addresses() == create_addresses.span(), 'wrong create_addresses'
     );
     assert(execution_context.reverted() == reverted, 'wrong reverted');
-    assert(execution_context.read_only() == read_only, 'wrong read_only');
 }
 
 #[test]
