@@ -28,8 +28,6 @@ To overcome the problem stated above, we have come up with the following design:
   it.
 - Each execution context has a `parent_context` field, whose value is either the
   identifier of its parent execution context or `null`.
-- Each execution context has a `child_context` field, whose value is either the
-  identifier of its child context or `null`.
 - The execution context tree is a directed acyclic graph, where each execution
   context has at most one parent, and at most one child.
 - A specific execution context is accessible by traversing the execution context
@@ -43,9 +41,8 @@ The following diagram describes the model of the Kakarot Machine.
 ```mermaid
 classDiagram
     class Machine{
-        current_ctx: usize,
+        current_ctx: Box<ExecutionContext>,
         ctx_count: usize,
-        root_ctx: ExecutionContext,
         stack: Stack,
         memory: Memory,
         storage_journal: Journal,
@@ -70,17 +67,13 @@ classDiagram
         pc: u32,
         status: Status,
         call_context: CallContext,
-        dynamic_context: DynamicContext,
-        parent_context: Nullable~ExecutionContext~,
-        child_context: Nullable~ExecutionContext~,
-    }
-
-    class DynamicContext {
         destroyed_contracts: Array~EthAddress~,
         events: Array~Event~,
         create_addresses: Array~EthAddress~,
         return_data: Array~u8~,
+        parent_context: Nullable~ExecutionContext~,
     }
+
 
     class CallContext{
         caller: EthAddress,

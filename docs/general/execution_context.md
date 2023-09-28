@@ -29,7 +29,6 @@ classDiagram
         status: Status,
         return_data: Array~u32~,
         parent_context: Nullable~ExecutionContext~,
-        child_context: Nullable~ExecutionContext~,
     }
 
     class CallContext{

@@ -2,17 +2,14 @@ use array::{ArrayTrait};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::tests::test_utils::{
-    setup_execution_context, setup_execution_context_with_bytecode,
-    setup_execution_context_with_calldata, evm_address, callvalue
+    setup_machine, setup_machine_with_calldata, setup_machine_with_bytecode, evm_address, callvalue
 };
 use evm::stack::StackTrait;
 
 use starknet::EthAddressIntoFelt252;
 use utils::traits::{EthAddressIntoU256};
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
-use evm::context::{
-    ExecutionContext, ExecutionContextTrait, , CallContextTrait
-};
+use evm::machine::{Machine, MachineCurrentContext};
 use utils::helpers::{
     u256_to_bytes_array, load_word, ArrayExtension, ArrayExtensionTrait, SpanExtension,
     SpanExtensionTrait
@@ -27,14 +24,14 @@ use integer::u32_overflowing_add;
 #[available_gas(20000000)]
 fn test_address_basic() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
     // When
-    ctx.exec_address();
+    machine.exec_address();
 
     // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.pop_eth_address().unwrap() == evm_address(), 'should be `evm_address`');
+    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(machine.stack.pop_eth_address().unwrap() == evm_address(), 'should be `evm_address`');
 }
 
 #[test]
@@ -53,14 +50,14 @@ fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls
 #[available_gas(1200000)]
 fn test__exec_callvalue() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
     // When
-    ctx.exec_callvalue();
+    machine.exec_callvalue();
 
     // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.pop().unwrap() == callvalue(), 'should be `123456789');
+    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(machine.stack.pop().unwrap() == callvalue(), 'should be `123456789');
 }
 
 // *************************************************************************
@@ -74,15 +71,15 @@ fn test_calldataload() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+    let mut machine = setup_machine_with_calldata(calldata.span());
     let offset: u32 = 0;
-    ctx.stack.push(offset.into());
+    machine.stack.push(offset.into());
 
     // When
-    ctx.exec_calldataload();
+    machine.exec_calldataload();
 
     // Then
-    let result: u256 = ctx.stack.pop().unwrap();
+    let result: u256 = machine.stack.pop().unwrap();
     assert(
         result == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
         'wrong data value'
@@ -96,15 +93,15 @@ fn test_calldataload_with_offset() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+    let mut machine = setup_machine_with_calldata(calldata.span());
     let offset: u32 = 31;
-    ctx.stack.push(offset.into());
+    machine.stack.push(offset.into());
 
     // When
-    ctx.exec_calldataload();
+    machine.exec_calldataload();
 
     // Then
-    let result: u256 = ctx.stack.pop().unwrap();
+    let result: u256 = machine.stack.pop().unwrap();
 
     assert(
         result == 0xFF00000000000000000000000000000000000000000000000000000000000000,
@@ -119,15 +116,15 @@ fn test_calldataload_with_offset_beyond_calldata() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+    let mut machine = setup_machine_with_calldata(calldata.span());
     let offset: u32 = calldata.len() + 1;
-    ctx.stack.push(offset.into());
+    machine.stack.push(offset.into());
 
     // When
-    ctx.exec_calldataload();
+    machine.exec_calldataload();
 
     // Then
-    let result: u256 = ctx.stack.pop().unwrap();
+    let result: u256 = machine.stack.pop().unwrap();
     assert(result == 0, 'result should be 0');
 }
 
@@ -139,12 +136,12 @@ fn test_calldataload_with_offset_conversion_error() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut ctx = setup_execution_context_with_calldata(calldata.span());
+    let mut machine = setup_machine_with_calldata(calldata.span());
     let offset: u256 = 5000000000;
-    ctx.stack.push(offset);
+    machine.stack.push(offset);
 
     // When
-    let result = ctx.exec_calldataload();
+    let result = machine.exec_calldataload();
 
     // Then
     assert(result.is_err(), 'should return error');
@@ -162,15 +159,15 @@ fn test_calldataload_with_offset_conversion_error() {
 #[available_gas(20000000)]
 fn test_calldata_size() {
     // Given
-    let mut ctx = setup_execution_context();
-    let calldata: Span<u8> = ctx.call_context().calldata();
+    let mut machine = setup_machine();
+    let calldata: Span<u8> = machine.current_ctx_calldata();
 
     // When
-    ctx.exec_calldatasize();
+    machine.exec_calldatasize();
 
     // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == calldata.len().into(), 'stack top is not calldatasize');
+    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(machine.stack.peek().unwrap() == calldata.len().into(), 'stack top is not calldatasize');
 }
 
 // *************************************************************************
@@ -181,14 +178,14 @@ fn test_calldata_size() {
 #[available_gas(20000000)]
 fn test_calldatacopy_type_conversion_error() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+    machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+    machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+    machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
 
     // When
-    let res = ctx.exec_calldatacopy();
+    let res = machine.exec_calldatacopy();
 
     // Then
     assert(res.is_err(), 'should return error');
@@ -232,12 +229,12 @@ fn test_calldatacopy_with_out_of_bound_bytes_multiple_words() {
 
 fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Span<u8>) {
     // Given
-    let mut ctx = setup_execution_context();
-    let calldata: Span<u8> = ctx.call_context().calldata();
+    let mut machine = setup_machine();
+    let calldata: Span<u8> = machine.current_ctx_calldata();
 
-    ctx.stack.push(size.into());
-    ctx.stack.push(offset.into());
-    ctx.stack.push(dest_offset.into());
+    machine.stack.push(size.into());
+    machine.stack.push(offset.into());
+    machine.stack.push(dest_offset.into());
 
     // Memory initialization with a value to verify that if the offset + size is out of the bound bytes, 0's have been copied.
     // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
@@ -247,14 +244,14 @@ fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Spa
             break;
         }
 
-        ctx
+        machine
             .memory
             .store(
                 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
                 dest_offset + (i * 32)
             );
 
-        let initial: u256 = ctx.memory.load_internal(dest_offset + (i * 32)).into();
+        let initial: u256 = machine.memory.load_internal(dest_offset + (i * 32)).into();
 
         assert(
             initial == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
@@ -265,13 +262,13 @@ fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Spa
     };
 
     // When
-    ctx.exec_calldatacopy();
+    machine.exec_calldatacopy();
 
     // Then
-    assert(ctx.stack.is_empty(), 'stack should be empty');
+    assert(machine.stack.is_empty(), 'stack should be empty');
 
     let mut results: Array<u8> = ArrayTrait::new();
-    ctx.memory.load_n_internal(size, ref results, dest_offset);
+    machine.memory.load_n_internal(size, ref results, dest_offset);
 
     assert(results.span() == expected, 'wrong data value');
 }
@@ -285,14 +282,14 @@ fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Spa
 fn test_codesize() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
-    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let mut machine = setup_machine_with_bytecode(bytecode);
 
     // When
-    ctx.exec_codesize();
+    machine.exec_codesize();
 
     // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.pop().unwrap() == bytecode.len().into(), 'wrong codesize');
+    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(machine.stack.pop().unwrap() == bytecode.len().into(), 'wrong codesize');
 }
 
 // *************************************************************************
@@ -304,14 +301,14 @@ fn test_codesize() {
 fn test_codecopy_type_conversion_error() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
-    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let mut machine = setup_machine_with_bytecode(bytecode);
 
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+    machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+    machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+    machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
 
     // When
-    let res = ctx.exec_codecopy();
+    let res = machine.exec_codecopy();
 
     // Then
     assert(res.is_err(), 'should return error');
@@ -348,32 +345,32 @@ fn test_codecopy_with_out_of_bound_offset() {
 fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
-    let mut ctx = setup_execution_context_with_bytecode(bytecode);
+    let mut machine = setup_machine_with_bytecode(bytecode);
 
     if (size == 0) {
         size = bytecode.len() - offset;
     }
 
-    ctx.stack.push(size.into());
-    ctx.stack.push(offset.into());
-    ctx.stack.push(dest_offset.into());
+    machine.stack.push(size.into());
+    machine.stack.push(offset.into());
+    machine.stack.push(dest_offset.into());
 
-    ctx
+    machine
         .memory
         .store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, dest_offset);
-    let initial: u256 = ctx.memory.load_internal(dest_offset).into();
+    let initial: u256 = machine.memory.load_internal(dest_offset).into();
     assert(
         initial == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
         'memory has not been initialized'
     );
 
     // When
-    ctx.exec_codecopy();
+    machine.exec_codecopy();
 
     // Then
-    assert(ctx.stack.is_empty(), 'stack should be empty');
+    assert(machine.stack.is_empty(), 'stack should be empty');
 
-    let result: u256 = ctx.memory.load_internal(dest_offset).into();
+    let result: u256 = machine.memory.load_internal(dest_offset).into();
     let mut results: Array<u8> = u256_to_bytes_array(result);
 
     let mut i = 0;
@@ -401,14 +398,14 @@ fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
 #[available_gas(20000000)]
 fn test_gasprice() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
     // When
-    ctx.exec_gasprice();
+    machine.exec_gasprice();
 
     // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.peek().unwrap() == 10, 'stack top should be 10');
+    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(machine.stack.peek().unwrap() == 10, 'stack top should be 10');
 }
 
 // *************************************************************************
@@ -421,14 +418,14 @@ fn test_returndatasize() {
     // Given
     let return_data: Array<u8> = array![1, 2, 3, 4, 5];
     let size = return_data.len();
-    let mut ctx = setup_execution_context();
-    ctx.set_return_data(return_data);
+    let mut machine = setup_machine();
+    machine.set_return_data_current_ctx(return_data);
 
-    ctx.exec_returndatasize();
+    machine.exec_returndatasize();
 
     // Then
-    assert(ctx.stack.len() == 1, 'stack should have one element');
-    assert(ctx.stack.pop().unwrap() == size.into(), 'wrong returndatasize');
+    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(machine.stack.pop().unwrap() == size.into(), 'wrong returndatasize');
 }
 
 // *************************************************************************
@@ -439,14 +436,14 @@ fn test_returndatasize() {
 #[available_gas(20000000)]
 fn test_returndata_copy_type_conversion_error() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
-    ctx.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+    machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+    machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+    machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
 
     // When
-    let res = ctx.exec_returndatacopy();
+    let res = machine.exec_returndatacopy();
 
     // Then
     assert(
@@ -487,9 +484,9 @@ fn test_returndata_copy_with_multiple_words() {
 
 fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
-    let mut ctx = setup_execution_context();
-    ctx
-        .set_return_data(
+    let mut machine = setup_machine();
+    machine
+        .set_return_data_current_ctx(
             array![
                 1,
                 2,
@@ -530,21 +527,21 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
             ]
         );
 
-    let return_data: Span<u8> = ctx.return_data();
+    let return_data: Span<u8> = machine.current_ctx_return_data();
 
     if (size == 0) {
         size = return_data.len() - offset;
     }
 
-    ctx.stack.push(size.into());
-    ctx.stack.push(offset.into());
-    ctx.stack.push(dest_offset.into());
+    machine.stack.push(size.into());
+    machine.stack.push(offset.into());
+    machine.stack.push(dest_offset.into());
 
     // When
-    let res = ctx.exec_returndatacopy();
+    let res = machine.exec_returndatacopy();
 
     // Then
-    assert(ctx.stack.is_empty(), 'stack should be empty');
+    assert(machine.stack.is_empty(), 'stack should be empty');
 
     match u32_overflowing_add(offset, size) {
         Result::Ok(x) => {
@@ -565,7 +562,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         }
     }
 
-    let result: u256 = ctx.memory.load_internal(dest_offset).into();
+    let result: u256 = machine.memory.load_internal(dest_offset).into();
     let mut results: Array<u8> = ArrayTrait::new();
 
     let mut i = 0;
@@ -574,7 +571,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
             break;
         }
 
-        let result: u256 = ctx.memory.load_internal(dest_offset + (i * 32)).into();
+        let result: u256 = machine.memory.load_internal(dest_offset + (i * 32)).into();
         let result_span = u256_to_bytes_array(result).span();
 
         if ((i + 1) * 32 > size) {

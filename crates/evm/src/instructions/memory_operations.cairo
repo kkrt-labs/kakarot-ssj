@@ -1,7 +1,5 @@
 //! Stack Memory Storage and Flow Operations.
-use evm::context::{
-    ExecutionContext, ExecutionContextTrait, , CallContextTrait
-};
+use evm::machine::{Machine, MachineCurrentContext};
 use evm::errors::{EVMError, INVALID_DESTINATION};
 use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
@@ -11,7 +9,7 @@ use evm::helpers::U256IntoResultU32;
 impl MemoryOperation of MemoryOperationTrait {
     /// MLOAD operation.
     /// Load word from memory and push to stack.
-    fn exec_mload(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_mload(ref self: Machine) -> Result<(), EVMError> {
         let offset: usize = self.stack.pop_usize()?;
         let result = self.memory.load(offset);
         self.stack.push(result)
@@ -20,7 +18,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// 0x52 - MSTORE operation.
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#52?fork=shanghai
-    fn exec_mstore(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_mstore(ref self: Machine) -> Result<(), EVMError> {
         let offset: usize = self.stack.pop_usize()?;
         let value: u256 = self.stack.pop()?;
 
@@ -31,15 +29,15 @@ impl MemoryOperation of MemoryOperationTrait {
     /// 0x58 - PC operation
     /// Get the value of the program counter prior to the increment.
     /// # Specification: https://www.evm.codes/#58?fork=shanghai
-    fn exec_pc(ref self: ExecutionContext) -> Result<(), EVMError> {
-        let pc = self.program_counter.into();
+    fn exec_pc(ref self: Machine) -> Result<(), EVMError> {
+        let pc = self.current_ctx_pc().into();
         self.stack.push(pc)
     }
 
     /// 0x59 - MSIZE operation.
     /// Get the value of memory size.
     /// # Specification: https://www.evm.codes/#59?fork=shanghai
-    fn exec_msize(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_msize(ref self: Machine) -> Result<(), EVMError> {
         let msize: u256 = self.memory.size().into();
         self.stack.push(msize)
     }
@@ -56,7 +54,7 @@ impl MemoryOperation of MemoryOperationTrait {
     ///       `PUSH-N` opcodes.
     ///
     /// Note: Jump destinations are 0-indexed.
-    fn exec_jump(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_jump(ref self: Machine) -> Result<(), EVMError> {
         let index = self.stack.pop_usize()?;
 
         // TODO: Currently this doesn't check that byte is actually `JUMPDEST`
@@ -67,7 +65,7 @@ impl MemoryOperation of MemoryOperationTrait {
         // present in that list
         //
         // Check if idx in bytecode points to `JUMPDEST` opcode
-        match self.call_context().bytecode.get(index) {
+        match self.current_ctx_bytecode().get(index) {
             Option::Some(opcode) => {
                 if *opcode.unbox() != 0x5B {
                     return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
@@ -77,7 +75,7 @@ impl MemoryOperation of MemoryOperationTrait {
                 return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
             }
         }
-        self.program_counter = index;
+        self.set_pc_current_ctx(index);
         Result::Ok(())
     }
 
@@ -85,7 +83,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Change the pc counter under a provided certain condition.
     /// The new pc target has to be a JUMPDEST opcode.
     /// # Specification: https://www.evm.codes/#57?fork=shanghai
-    fn exec_jumpi(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_jumpi(ref self: Machine) -> Result<(), EVMError> {
         // Peek the value so we don't need to push it back again incase we want to call `exec_jump`
         let b = self.stack.peek_at(1)?;
 
@@ -109,23 +107,23 @@ impl MemoryOperation of MemoryOperationTrait {
     /// 
     /// This doesn't have any affect on execution state, so we don't have
     /// to do anything here. It's a NO-OP.
-    fn exec_jumpdest(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+    fn exec_jumpdest(ref self: Machine) -> Result<(), EVMError> {
+        Result::Err(EVMError::NotImplemented)
     }
 
     /// 0x50 - POP operation.
     /// Pops the first item on the stack (top of the stack).
     /// # Specification: https://www.evm.codes/#50?fork=shanghai
-    fn exec_pop(ref self: ExecutionContext) -> Result<(), EVMError> {
-        self.stack.pop()?;
+    fn exec_pop(ref self: Machine) -> Result<(), EVMError> {
         // self.stack.pop() returns a Result<u256, EVMError> so we cannot simply return its result
+        self.stack.pop()?;
         Result::Ok(())
     }
 
     /// 0x53 - MSTORE8 operation.
     /// Save single byte to memory
     /// # Specification: https://www.evm.codes/#53?fork=shanghai
-    fn exec_mstore8(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_mstore8(ref self: Machine) -> Result<(), EVMError> {
         let offset = self.stack.pop_usize()?;
         let value = self.stack.pop()?;
         let value: u8 = (value.low & 0xFF).try_into().unwrap();
@@ -137,21 +135,21 @@ impl MemoryOperation of MemoryOperationTrait {
     /// 0x55 - SSTORE operation
     /// Save 32-byte word to storage.
     /// # Specification: https://www.evm.codes/#55?fork=shanghai
-    fn exec_sstore(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+    fn exec_sstore(ref self: Machine) -> Result<(), EVMError> {
+        Result::Err(EVMError::NotImplemented)
     }
 
     /// 0x54 - SLOAD operation
     /// Load from storage.
     /// # Specification: https://www.evm.codes/#54?fork=shanghai
-    fn exec_sload(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+    fn exec_sload(ref self: Machine) -> Result<(), EVMError> {
+        Result::Err(EVMError::NotImplemented)
     }
 
     /// 0x5A - GAS operation
     /// Get the amount of available gas, including the corresponding reduction for the cost of this instruction.
     /// # Specification: https://www.evm.codes/#5a?fork=shanghai
-    fn exec_gas(ref self: ExecutionContext) -> Result<(), EVMError> {
-        Result::Ok(())
+    fn exec_gas(ref self: Machine) -> Result<(), EVMError> {
+        Result::Err(EVMError::NotImplemented)
     }
 }

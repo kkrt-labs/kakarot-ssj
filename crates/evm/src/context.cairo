@@ -15,7 +15,6 @@ enum Status {
     Reverted
 }
 
-
 // *************************************************************************
 //                              CallContext
 // *************************************************************************
@@ -117,37 +116,6 @@ impl DefaultBoxCallContext of Default<Box<CallContext>> {
     }
 }
 
-// *************************************************************************
-//                              DynamicContext
-// *************************************************************************
-
-#[derive(Drop, Default)]
-struct DynamicContext {
-    destroyed_contracts: Array<EthAddress>,
-    events: Array<Event>,
-    create_addresses: Array<EthAddress>,
-    return_data: Array<u8>,
-}
-
-impl DefaultBoxDynamicContext of Default<Box<DynamicContext>> {
-    fn default() -> Box<DynamicContext> {
-        let dynamic_context: DynamicContext = Default::default();
-        BoxTrait::new(dynamic_context)
-    }
-}
-
-#[generate_trait]
-impl DynamicContextImpl of DynamicContextTrait {
-    #[inline(always)]
-    fn new(return_data: Array<u8>) -> DynamicContext {
-        DynamicContext {
-            destroyed_contracts: Default::default(),
-            events: Default::default(),
-            create_addresses: Default::default(),
-            return_data,
-        }
-    }
-}
 
 // *************************************************************************
 //                              ExecutionContext
@@ -163,9 +131,18 @@ struct ExecutionContext {
     program_counter: u32,
     status: Status,
     call_context: Box<CallContext>,
-    dynamic_context: Box<DynamicContext>,
+    destroyed_contracts: Array<EthAddress>,
+    events: Array<Event>,
+    create_addresses: Array<EthAddress>,
+    return_data: Array<u8>,
     parent_context: Nullable<ExecutionContext>,
-    child_context: Nullable<ExecutionContext>,
+}
+
+impl DefaultBoxExecutionContext of Default<Box<ExecutionContext>> {
+    fn default() -> Box<ExecutionContext> {
+        let context: ExecutionContext = Default::default();
+        BoxTrait::new(context)
+    }
 }
 
 
@@ -199,9 +176,11 @@ impl ExecutionContextImpl of ExecutionContextTrait {
                     call_context.gas_price,
                 )
             ),
-            dynamic_context: BoxTrait::new(DynamicContextTrait::new(return_data)),
+            destroyed_contracts: Default::default(),
+            events: Default::default(),
+            create_addresses: Default::default(),
+            return_data,
             parent_context,
-            child_context: Default::default(),
         }
     }
 
@@ -210,7 +189,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     // *************************************************************************
 
     #[inline(always)]
-    fn reverted(ref self: ExecutionContext) -> bool {
+    fn reverted(self: @ExecutionContext) -> bool {
         match self.status {
             Status::Active => false,
             Status::Stopped => false,
@@ -219,7 +198,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     #[inline(always)]
-    fn stopped(ref self: ExecutionContext) -> bool {
+    fn stopped(self: @ExecutionContext) -> bool {
         match self.status {
             Status::Active => false,
             Status::Stopped => true,
@@ -233,35 +212,23 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     #[inline(always)]
-    fn destroyed_contracts(ref self: ExecutionContext) -> Span<EthAddress> {
-        let dyn_ctx = self.dynamic_context.unbox();
-        let destroyed_contracts = dyn_ctx.destroyed_contracts.span();
-        self.dynamic_context = BoxTrait::new(dyn_ctx);
-        destroyed_contracts
+    fn destroyed_contracts(self: @ExecutionContext) -> Span<EthAddress> {
+        self.destroyed_contracts.span()
     }
 
     #[inline(always)]
-    fn events(ref self: ExecutionContext) -> Span<Event> {
-        let dyn_ctx = self.dynamic_context.unbox();
-        let events = dyn_ctx.events.span();
-        self.dynamic_context = BoxTrait::new(dyn_ctx);
-        events
+    fn events(self: @ExecutionContext) -> Span<Event> {
+        self.events.span()
     }
 
     #[inline(always)]
-    fn create_addresses(ref self: ExecutionContext) -> Span<EthAddress> {
-        let dyn_ctx = self.dynamic_context.unbox();
-        let create_addresses = dyn_ctx.create_addresses.span();
-        self.dynamic_context = BoxTrait::new(dyn_ctx);
-        create_addresses
+    fn create_addresses(self: @ExecutionContext) -> Span<EthAddress> {
+        self.create_addresses.span()
     }
 
     #[inline(always)]
-    fn return_data(ref self: ExecutionContext) -> Span<u8> {
-        let dyn_ctx = self.dynamic_context.unbox();
-        let return_data = dyn_ctx.return_data.span();
-        self.dynamic_context = BoxTrait::new(dyn_ctx);
-        return_data
+    fn return_data(self: @ExecutionContext) -> Span<u8> {
+        self.return_data.span()
     }
 
     /// Stops the current execution context.
@@ -283,6 +250,11 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     // *************************************************************************
     //                        StaticExecutionContext getters
     // *************************************************************************
+
+    #[inline(always)]
+    fn evm_address(self: @ExecutionContext) -> EthAddress {
+        *self.evm_address
+    }
 
     #[inline(always)]
     fn starknet_address(self: @ExecutionContext) -> ContractAddress {
@@ -331,13 +303,8 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
 
     #[inline(always)]
-    fn is_root(self: @ExecutionContext) { //TODO: implement this (returns a bool)
-    // self.calling_context.is_null()
-    // true
-    }
-    #[inline(always)]
-    fn is_leaf(self: @ExecutionContext) { //TODO implement this(returns a bool)
-    // self.sub_context.is_null()
+    fn is_root(self: @ExecutionContext) -> bool {
+        *self.context_id == 0
     }
 
     // TODO: Implement print_debug
@@ -351,9 +318,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     #[inline(always)]
     fn set_return_data(ref self: ExecutionContext, value: Array<u8>) {
-        let mut dyn_ctx = self.dynamic_context.unbox();
-        dyn_ctx.return_data = value;
-        self.dynamic_context = BoxTrait::new(dyn_ctx);
+        self.return_data = value;
     }
 
     #[inline(always)]
