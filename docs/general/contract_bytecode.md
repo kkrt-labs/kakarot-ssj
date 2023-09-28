@@ -1,11 +1,13 @@
 # Bytecode Storage Methods for Kakarot on Starknet
 
 The bytecode is the compiled version of your contract, and it is what the
-Kakarot EVM will execute when you call the contract. As Kakarot is developed on
-top of Starknet, you cannot really "deploy" an EVM contract on Kakarot: what
-actually happens is that the EVM bytecode of your contract is stored on the
-blockchain, and the Kakarot EVM will be able to load it when you want to execute
-it.
+Kakarot EVM will execute when you call the contract. As Kakarot's state is
+embedded into the Starknet chain it is deployed on, you do not really "deploy"
+an EVM contract on Kakarot: what actually happens is that the EVM bytecode of
+the deployed contract if first ran, and the returned data is then stored
+on-chain at a particular storage address in the KakarotCore contract storage.
+The Kakarot EVM will be able to load this bytecode by querying it's own storage
+when a user interacts with this contract.
 
 There are several different ways to store the bytecode of a contract, and this
 document will provide a quick overview of the different options, to choose the
@@ -85,7 +87,7 @@ have $m = 72$. The associated storage update fee would be:
 
 $$ fee = 34 \cdot (16 \cdot 32) \cdot (2 + 144) = 2,541,468 \text{ gwei}$$
 
-The implementation details are detailed in the next section.
+This is the solution that we will use for Kakarot.
 
 ### Using Starknet's volition mechanism
 
@@ -148,9 +150,10 @@ classes. When you declare a contract on Starknet, its information is added to
 the
 [Classes Tree](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/starknet-state/#classes_tree),
 which encodes information about the existing classes in the state of Starknet by
-mapping class hashes to their. This class tree is itself a part of the Starknet
-State Commitment, which is verified on Ethereum during state updates. The class
-itself is stored in the nodes (both sequencers and full nodes) of Starknet.
+mapping class hashes to their compiled class hash. This class tree is itself a
+part of the Starknet State Commitment, which is verified on Ethereum during
+state updates. The class itself is stored in the nodes (both sequencers and full
+nodes) of Starknet.
 
 To implement this solution, we must declare a new class each time a contract is
 deployed via Kakarot. This new class would contain the EVM bytecode of the
@@ -167,9 +170,9 @@ relies on Ethereum as a DA Layer, and thus inherits from Ethereum's security
 guarantees, ensuring that the bytecode of the deployed contract is always
 available.
 
-A `deploy` transaction is identified by the `to` address being set to zero. The
-data sent to the KakarotCore contract when deploying a new contract wil be
-formatted by the RPC to pack the bytecode into 31-bytes values, and passed as a
+A `deploy` transaction is identified by the `to` address being empty. The data
+sent to the KakarotCore contract when deploying a new contract wil be formatted
+by the RPC to pack the bytecode into 31-bytes values, and passed as a
 `Array<felt252>` to the entrypoint `eth_call` of the KakarotCore contract. This
 allows us to save on computation costs required to pack all byte values into the
 31-bytes values that we will store in the contract storage.
