@@ -26,15 +26,19 @@ To overcome the problem stated above, we have come up with the following design:
   between the different execution contexts.
 - Each execution context has its own identifier `id`, which uniquely identifies
   it.
-- Each execution context has a `parent_context` field, whose value is either the
-  identifier of its parent execution context or `null`.
+- Each execution context has a `parent_context` field, which value is either a
+  pointer to its parent execution context or `null`.
+  - Each execution context has a `child_context` field, which value is either a
+    pointer to its child execution context or `null`.
 - The execution context tree is a directed acyclic graph, where each execution
   context has at most one parent, and at most one child.
 - A specific execution context is accessible by traversing the execution context
   tree, starting from the root execution context, and following the execution
-  context tree until the desired execution context is reached.
+  context tree until the desired execution context is reached. The machine also
+  stores a pointer to the current execution context.
 - The execution context tree is initialized with a single root execution
-  context, which has no parent and no child.
+  context, which has no parent and no child. It has `context_id` field equal
+  to 0.
 
 The following diagram describes the model of the Kakarot Machine.
 
@@ -61,10 +65,10 @@ classDiagram
     }
 
     class ExecutionContext{
-        ctx_id: usize,
+        context_id: usize,
         evm_address: EthAddress,
         starknet_address: ContractAddress,
-        pc: u32,
+        program_counter: u32,
         status: Status,
         call_context: CallContext,
         destroyed_contracts: Array~EthAddress~,
@@ -72,6 +76,7 @@ classDiagram
         create_addresses: Array~EthAddress~,
         return_data: Array~u8~,
         parent_context: Nullable~ExecutionContext~,
+        child_context: Nullable~ExecutionContext~,
     }
 
 
