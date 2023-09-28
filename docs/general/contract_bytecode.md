@@ -173,9 +173,9 @@ available.
 A `deploy` transaction is identified by the `to` address being empty. The data
 sent to the KakarotCore contract when deploying a new contract will be formatted
 by the RPC to pack the bytecode into 31-bytes values, and passed as a
-`Array<felt252>` to the entrypoint `eth_send_transaction` of the KakarotCore contract. This
-allows us to save on computation costs required to pack all byte values into the
-31-bytes values that we will store in the contract storage.
+`Array<felt252>` to the entrypoint `eth_send_transaction` of the KakarotCore
+contract. This allows us to save on computation costs required to pack all byte
+values into the 31-bytes values that we will store in the contract storage.
 
 The contract storage related to the deployed contract will be organized as such:
 
@@ -189,11 +189,12 @@ struct Storage {
 
 Each deployed contract has it's own EVM address, that we use as a key to a
 `LegacyMap` type when computing the address of each storage variable. We use the
-`List` type from [Alexandria](https://github.com/keep-starknet-strange/alexandria/blob/main/src/storage/src/list.cairo) to store the bytecode, as it allows us to store up
-to 255 31-bytes values, per `StorageBaseAddress`. For bytecode containing more
-than 255 31-bytes values, the `List` type abstracts the calculations of the next
-storage address used, which is calculated by using poseidon hashes applied on
-`previous_address+1`.
+`List` type from
+[Alexandria](https://github.com/keep-starknet-strange/alexandria/blob/main/src/storage/src/list.cairo)
+to store the bytecode, as it allows us to store up to 255 31-bytes values, per
+`StorageBaseAddress`. For bytecode containing more than 255 31-bytes values, the
+`List` type abstracts the calculations of the next storage address used, which
+is calculated by using poseidon hashes applied on `previous_address+1`.
 
 The logic behind this storage design is to make it very easy to load the
 bytecode in the EVM when we want to execute a program. We will rely on the
