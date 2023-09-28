@@ -225,7 +225,7 @@ impl MachineCurrentContextImpl of MachineCurrentContext {
 
 
     #[inline(always)]
-    fn is_current_ctx_root(ref self: Machine) -> bool {
+    fn current_ctx_is_root(ref self: Machine) -> bool {
         let current_execution_ctx = self.current_context.unbox();
         let is_root = current_execution_ctx.context_id == 0;
         self.current_context = BoxTrait::new(current_execution_ctx);

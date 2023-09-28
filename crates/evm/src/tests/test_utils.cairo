@@ -39,7 +39,13 @@ fn setup_execution_context() -> ExecutionContext {
     let return_data = Default::default();
 
     ExecutionContextTrait::new(
-        context_id, evm_address, starknet_address, call_context, Default::default(), return_data,
+        context_id,
+        evm_address,
+        starknet_address,
+        call_context,
+        Default::default(),
+        Default::default(),
+        return_data,
     )
 }
 
@@ -48,10 +54,10 @@ fn setup_call_context_with_bytecode(bytecode: Span<u8>) -> CallContext {
     let value: u256 = callvalue();
     let address = evm_address();
     let read_only = false;
-    let gas_price = 0xffffff;
+    let gas_price = 0xaaaaaa;
     let gas_limit = 0xffffff;
 
-    CallContextTrait::new(address, bytecode, calldata, value, read_only, gas_price, gas_limit)
+    CallContextTrait::new(address, bytecode, calldata, value, read_only, gas_limit, gas_price)
 }
 
 fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext {
@@ -62,7 +68,13 @@ fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext
     let return_data = Default::default();
 
     ExecutionContextTrait::new(
-        context_id, evm_address, starknet_address, call_context, Default::default(), return_data,
+        context_id,
+        evm_address,
+        starknet_address,
+        call_context,
+        Default::default(),
+        Default::default(),
+        return_data,
     )
 }
 
@@ -86,7 +98,13 @@ fn setup_execution_context_with_calldata(calldata: Span<u8>) -> ExecutionContext
     let return_data = Default::default();
 
     ExecutionContextTrait::new(
-        context_id, evm_address, starknet_address, call_context, Default::default(), return_data,
+        context_id,
+        evm_address,
+        starknet_address,
+        call_context,
+        Default::default(),
+        Default::default(),
+        return_data,
     )
 }
 

@@ -31,15 +31,21 @@ fn test_call_context_new() {
     let calldata: Span<u8> = array![4, 5, 6].span();
     let value: u256 = callvalue();
     let address = evm_address();
+    let gas_price = 0xabde1;
+    let gas_limit = 0xe11a5;
+    let read_only = false;
 
-    let call_ctx = CallContextTrait::new(address, bytecode, calldata, value, false, 0, 0);
-    // TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)
-    no_op();
+    let call_ctx = CallContextTrait::new(
+        address, bytecode, calldata, value, read_only, gas_limit, gas_price
+    );
 
     // Then
     assert(call_ctx.bytecode() == bytecode, 'wrong bytecode');
     assert(call_ctx.calldata() == calldata, 'wrong calldata');
     assert(call_ctx.value() == callvalue(), 'wrong value');
+    assert(call_ctx.gas_limit() == gas_limit, 'wrong gas_limit');
+    assert(call_ctx.gas_price() == gas_price, 'wrong gas_price');
+    assert(call_ctx.read_only() == read_only, 'wrong read_only');
 }
 
 #[test]
@@ -63,10 +69,17 @@ fn test_execution_context_new() {
     let read_only: bool = false;
 
     let parent_context: Nullable<ExecutionContext> = null();
+    let child_context: Nullable<ExecutionContext> = null();
 
     // When
     let mut execution_context = ExecutionContextTrait::new(
-        context_id, evm_address, starknet_address, call_context, parent_context, return_data
+        context_id,
+        evm_address,
+        starknet_address,
+        call_context,
+        parent_context,
+        child_context,
+        return_data
     );
 
     // Then

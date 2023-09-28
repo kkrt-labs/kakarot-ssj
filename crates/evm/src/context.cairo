@@ -136,6 +136,7 @@ struct ExecutionContext {
     create_addresses: Array<EthAddress>,
     return_data: Array<u8>,
     parent_context: Nullable<ExecutionContext>,
+    child_context: Nullable<ExecutionContext>,
 }
 
 impl DefaultBoxExecutionContext of Default<Box<ExecutionContext>> {
@@ -157,6 +158,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         starknet_address: ContractAddress,
         call_context: CallContext,
         parent_context: Nullable<ExecutionContext>,
+        child_context: Nullable<ExecutionContext>,
         return_data: Array<u8>,
     ) -> ExecutionContext {
         ExecutionContext {
@@ -181,6 +183,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             create_addresses: Default::default(),
             return_data,
             parent_context,
+            child_context,
         }
     }
 
