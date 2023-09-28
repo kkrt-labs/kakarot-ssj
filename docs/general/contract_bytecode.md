@@ -4,9 +4,9 @@ The bytecode is the compiled version of your contract, and it is what the
 Kakarot EVM will execute when you call the contract. As Kakarot's state is
 embedded into the Starknet chain it is deployed on, you do not really "deploy"
 an EVM contract on Kakarot: what actually happens is that the EVM bytecode of
-the deployed contract if first ran, and the returned data is then stored
+the deployed contract is first ran, and the returned data is then stored
 on-chain at a particular storage address in the KakarotCore contract storage.
-The Kakarot EVM will be able to load this bytecode by querying it's own storage
+The Kakarot EVM will be able to load this bytecode by querying its own storage
 when a user interacts with this contract.
 
 There are several different ways to store the bytecode of a contract, and this
