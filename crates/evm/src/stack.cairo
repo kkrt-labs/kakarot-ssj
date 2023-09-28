@@ -24,7 +24,6 @@ use evm::helpers::U256IntoResultU32;
 use starknet::EthAddress;
 use utils::i256::i256;
 
-const STACK_SEGMENT_SIZE: usize = 1024;
 
 #[derive(Destruct, Default)]
 struct Stack {
@@ -80,7 +79,7 @@ impl StackImpl of StackTrait {
         if length == constants::STACK_MAX_DEPTH {
             return Result::Err(EVMError::StackError(STACK_OVERFLOW));
         }
-        let index = self.compute_active_segment_index(self.len());
+        let index = self.compute_active_segment_index(length);
         self.items.insert(index, NullableTrait::new(item));
         self.len.insert(self.active_segment().into(), length + 1);
         Result::Ok(())
@@ -237,7 +236,7 @@ impl StackImpl of StackTrait {
     /// Computes the internal index to access the Stack of the current execution context
     #[inline(always)]
     fn compute_active_segment_index(self: @Stack, index: usize) -> felt252 {
-        let internal_index = index + self.active_segment() * STACK_SEGMENT_SIZE;
+        let internal_index = index + self.active_segment() * constants::STACK_MAX_DEPTH;
         internal_index.into()
     }
 }
