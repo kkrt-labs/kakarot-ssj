@@ -28,7 +28,7 @@ impl Sha3Impl of Sha3Trait {
         let mut to_hash: Array<u64> = Default::default();
 
         let (nb_words, nb_zeroes) = internal::compute_memory_words_amount(
-            size, offset, self.memory.bytes_len
+            size, offset, self.memory.size()
         );
         let mut last_input_offset = internal::fill_array_with_memory_words(
             ref self, ref to_hash, offset, nb_words
