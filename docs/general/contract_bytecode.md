@@ -9,6 +9,17 @@ on-chain at a particular storage address in the KakarotCore contract storage.
 The Kakarot EVM will be able to load this bytecode by querying its own storage
 when a user interacts with this contract.
 
+```mermaid
+flowchart TD
+    A[RPC call] --> |"eth_sendTransaction (contract deployment)"| B(KakarotCore)
+    B --> C[Execute initialization code]
+    C -->|Set account code to return data| D[Store account code in KakarotCore storage]
+
+    X[RPC call] --> |"eth_sendTransaction (contract interaction)"| Y(KakarotCore)
+    Y --> Z[Load account code from KakarotCore storage]
+    Z --> ZZ[Execute bytecode]
+```
+
 There are several different ways to store the bytecode of a contract, and this
 document will provide a quick overview of the different options, to choose the
 most optimized one for our use case. The three main ways of handling contract
