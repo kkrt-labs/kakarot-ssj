@@ -171,7 +171,7 @@ guarantees, ensuring that the bytecode of the deployed contract is always
 available.
 
 A `deploy` transaction is identified by the `to` address being empty. The data
-sent to the KakarotCore contract when deploying a new contract wil be formatted
+sent to the KakarotCore contract when deploying a new contract will be formatted
 by the RPC to pack the bytecode into 31-bytes values, and passed as a
 `Array<felt252>` to the entrypoint `eth_send_transaction` of the KakarotCore contract. This
 allows us to save on computation costs required to pack all byte values into the
