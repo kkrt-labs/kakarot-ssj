@@ -24,14 +24,17 @@ use evm::helpers::U256IntoResultU32;
 use starknet::EthAddress;
 use utils::i256::i256;
 
+
 #[derive(Destruct, Default)]
 struct Stack {
+    active_segment: usize,
     items: Felt252Dict<Nullable<u256>>,
-    len: usize,
+    len: Felt252Dict<usize>,
 }
 
 trait StackTrait {
     fn new() -> Stack;
+    fn set_active_segment(ref self: Stack, active_segment: usize);
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError>;
     fn pop(ref self: Stack) -> Result<u256, EVMError>;
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError>;
@@ -41,8 +44,10 @@ trait StackTrait {
     fn peek(ref self: Stack) -> Option<u256>;
     fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError>;
     fn swap_i(ref self: Stack, index: usize) -> Result<(), EVMError>;
-    fn len(self: @Stack) -> usize;
-    fn is_empty(self: @Stack) -> bool;
+    fn len(ref self: Stack) -> usize;
+    fn is_empty(ref self: Stack) -> bool;
+    fn active_segment(self: @Stack) -> usize;
+    fn compute_active_segment_index(self: @Stack, index: usize) -> felt252;
 }
 
 impl StackImpl of StackTrait {
@@ -51,19 +56,32 @@ impl StackImpl of StackTrait {
         Default::default()
     }
 
+    #[inline(always)]
+    fn set_active_segment(ref self: Stack, active_segment: usize) {
+        self.active_segment = active_segment;
+    }
+
     /// Pushes a new bytes32 word onto the stack.
+    ///
+    /// When pushing an item to the stack, we will compute
+    /// an index which corresponds to the index in the dict the item will be stored at.
+    /// The internal index is computed as follows:
+    ///
+    /// index = len(Stack_i) + i * STACK_SEGMENT_SIZE
     ///
     /// # Errors
     ///
     /// If the stack is full, returns with a StackOverflow error.
     #[inline(always)]
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError> {
+        let length = self.len();
         // we can store at most 1024 256-bits words
-        if self.len() == constants::STACK_MAX_DEPTH {
+        if length == constants::STACK_MAX_DEPTH {
             return Result::Err(EVMError::StackError(STACK_OVERFLOW));
         }
-        self.items.insert(self.len.into(), NullableTrait::new(item));
-        self.len += 1;
+        let index = self.compute_active_segment_index(length);
+        self.items.insert(index, NullableTrait::new(item));
+        self.len.insert(self.active_segment().into(), length + 1);
         Result::Ok(())
     }
 
@@ -74,12 +92,13 @@ impl StackImpl of StackTrait {
     /// If the stack is empty, returns with a StackOverflow error.
     #[inline(always)]
     fn pop(ref self: Stack) -> Result<u256, EVMError> {
-        if self.len() == 0 {
+        let length = self.len();
+        if length == 0 {
             return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
         }
-        let last_index = self.len() - 1;
-        self.len -= 1;
-        let item = self.items.get(last_index.into());
+        self.len.insert(self.active_segment().into(), length - 1);
+        let internal_index = self.compute_active_segment_index(self.len());
+        let item = self.items.get(internal_index);
         Result::Ok(item.deref())
     }
 
@@ -156,7 +175,7 @@ impl StackImpl of StackTrait {
         if self.len() == 0 {
             Option::None(())
         } else {
-            let last_index = self.len() - 1;
+            let last_index = self.compute_active_segment_index(self.len() - 1);
             let item = self.items.get(last_index.into());
             Option::Some(item.deref())
         }
@@ -174,7 +193,7 @@ impl StackImpl of StackTrait {
             return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
         }
 
-        let position = self.len() - 1 - index;
+        let position = self.compute_active_segment_index(self.len() - 1 - index);
         let item = self.items.get(position.into());
 
         Result::Ok(item.deref())
@@ -187,7 +206,7 @@ impl StackImpl of StackTrait {
         if index >= self.len() {
             return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
         }
-        let position_0: felt252 = (self.len() - 1).into();
+        let position_0: felt252 = self.compute_active_segment_index(self.len() - 1);
         let position_item: felt252 = position_0 - index.into();
         let top_item = self.items.get(position_0);
         let swapped_item = self.items.get(position_item);
@@ -198,13 +217,26 @@ impl StackImpl of StackTrait {
 
     /// Returns the length of the stack.
     #[inline(always)]
-    fn len(self: @Stack) -> usize {
-        *self.len
+    fn len(ref self: Stack) -> usize {
+        self.len.get(self.active_segment.into())
     }
 
     /// Returns true if the stack is empty.
     #[inline(always)]
-    fn is_empty(self: @Stack) -> bool {
-        *self.len == 0
+    fn is_empty(ref self: Stack) -> bool {
+        self.len() == 0
+    }
+
+    /// Returns the current active segment, i.e. the current active execution context's id
+    #[inline(always)]
+    fn active_segment(self: @Stack) -> usize {
+        *self.active_segment
+    }
+
+    /// Computes the internal index to access the Stack of the current execution context
+    #[inline(always)]
+    fn compute_active_segment_index(self: @Stack, index: usize) -> felt252 {
+        let internal_index = index + self.active_segment() * constants::STACK_MAX_DEPTH;
+        internal_index.into()
     }
 }

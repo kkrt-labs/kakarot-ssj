@@ -114,7 +114,9 @@ def compare_snapshots(current, previous):
     for key in common_keys:
         prev = previous[key]
         cur = current[key]
-        log = f"{key:<{max_key_len + 5}} {prev:>10} {cur:>10} {cur / prev:>6.2%}"
+        log = (
+            f"|{key:<{max_key_len + 5}} | {prev:>10} | {cur:>10} | {cur / prev:>6.2%}|"
+        )
         if prev < cur:
             worsened.append(log)
         elif prev > cur:
@@ -142,12 +144,18 @@ def main():
     current_snapshots = get_current_gas_snapshot()
     improvements, worsened = compare_snapshots(current_snapshots, previous_snapshot)
     cur_gas, prev_gas = total_gas_used(current_snapshots, previous_snapshot)
+    header = [
+        "| Test | Prev | Cur | Ratio |",
+        "| ---- | ---- | --- | ----- |",
+    ]
     if improvements:
-        logger.info("\n".join(["****BETTER****"] + improvements))
+        logger.info("\n".join(["****BETTER****"] + header + improvements))
     if worsened:
-        logger.info("\n".join(["****WORST****"] + worsened))
+        logger.info("\n".join(["****WORST****"] + header + worsened))
 
-    logger.info(f"Overall gas change: {(cur_gas - prev_gas) * 100 / prev_gas:.2%}")
+    logger.info(
+        f"\nTotal gas change: {prev_gas} -> {cur_gas} ({cur_gas / prev_gas:.2%})"
+    )
     if worsened:
         logger.error("Gas usage increased")
     else:
