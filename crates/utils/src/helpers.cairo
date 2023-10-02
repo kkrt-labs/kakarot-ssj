@@ -2,10 +2,9 @@ use debug::PrintTrait;
 use starknet::{EthAddress, EthAddressIntoFelt252};
 use cmp::min;
 use utils::constants::{
-    POW_256_0_U256, POW_256_1_U256, POW_256_2_U256, POW_256_3_U256, POW_256_4_U256, POW_256_5_U256,
-    POW_256_6_U256, POW_256_7_U256, POW_256_8_U256, POW_256_9_U256, POW_256_10_U256,
-    POW_256_11_U256, POW_256_12_U256, POW_256_13_U256, POW_256_14_U256, POW_256_15_U256,
-    POW_256_16_U256,
+    POW_256_0, POW_256_1, POW_256_2, POW_256_3, POW_256_4, POW_256_5, POW_256_6, POW_256_7,
+    POW_256_8, POW_256_9, POW_256_10, POW_256_11, POW_256_12, POW_256_13, POW_256_14, POW_256_15,
+    POW_256_16,
 };
 
 
@@ -32,39 +31,39 @@ fn pow256_rev(i: usize) -> u256 {
     }
 
     if i == 0 {
-        return POW_256_16_U256;
+        return POW_256_16;
     } else if i == 1 {
-        return POW_256_15_U256;
+        return POW_256_15.into();
     } else if i == 2 {
-        return POW_256_14_U256;
+        return POW_256_14.into();
     } else if i == 3 {
-        return POW_256_13_U256;
+        return POW_256_13.into();
     } else if i == 4 {
-        return POW_256_12_U256;
+        return POW_256_12.into();
     } else if i == 5 {
-        return POW_256_11_U256;
+        return POW_256_11.into();
     } else if i == 6 {
-        return POW_256_10_U256;
+        return POW_256_10.into();
     } else if i == 7 {
-        return POW_256_9_U256;
+        return POW_256_9.into();
     } else if i == 8 {
-        return POW_256_8_U256;
+        return POW_256_8.into();
     } else if i == 9 {
-        return POW_256_7_U256;
+        return POW_256_7.into();
     } else if i == 10 {
-        return POW_256_6_U256;
+        return POW_256_6.into();
     } else if i == 11 {
-        return POW_256_5_U256;
+        return POW_256_5.into();
     } else if i == 12 {
-        return POW_256_4_U256;
+        return POW_256_4.into();
     } else if i == 13 {
-        return POW_256_3_U256;
+        return POW_256_3.into();
     } else if i == 14 {
-        return POW_256_2_U256;
+        return POW_256_2.into();
     } else if i == 15 {
-        return POW_256_1_U256;
+        return POW_256_1.into();
     } else {
-        return POW_256_0_U256;
+        return POW_256_0.into();
     }
 }
 

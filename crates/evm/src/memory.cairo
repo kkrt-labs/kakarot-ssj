@@ -5,7 +5,7 @@ use integer::{
 use utils::constants::{
     POW_2_0_U128, POW_2_8_U128, POW_2_16_U128, POW_2_24_U128, POW_2_32_U128, POW_2_40_U128,
     POW_2_48_U128, POW_2_56_U128, POW_2_64_U128, POW_2_72_U128, POW_2_80_U128, POW_2_88_U128,
-    POW_2_96_U128, POW_2_104_U128, POW_2_112_U128, POW_2_120_U128, POW_256_16_U256
+    POW_2_96_U128, POW_2_104_U128, POW_2_112_U128, POW_2_120_U128, POW_256_16
 };
 use cmp::{max};
 use utils::{
@@ -211,7 +211,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     #[inline(always)]
     fn store_element(ref self: Memory, element: u256, chunk_index: usize, offset_in_chunk: u32) {
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
-        let mask_c: u256 = POW_256_16_U256 / mask;
+        let mask_c: u256 = POW_256_16 / mask;
 
         // Split the 2 input bytes16 chunks at offset_in_chunk.
         let (el_hh, el_hl) = u256_safe_div_rem(element.high.into(), u256_as_non_zero(mask_c));
@@ -366,7 +366,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         // Compute mask.
 
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
-        let mask_c: u256 = POW_256_16_U256 / mask;
+        let mask_c: u256 = POW_256_16 / mask;
 
         // Read the words at chunk_index, +1, +2.
         let w0: u128 = self.items.get(chunk_index.into());
