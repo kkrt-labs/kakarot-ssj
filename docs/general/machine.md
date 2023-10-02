@@ -26,26 +26,27 @@ To overcome the problem stated above, we have come up with the following design:
   between the different execution contexts.
 - Each execution context has its own identifier `id`, which uniquely identifies
   it.
-- Each execution context has a `parent_context` field, whose value is either the
-  identifier of its parent execution context or `null`.
-- Each execution context has a `child_context` field, whose value is either the
-  identifier of its child context or `null`.
+- Each execution context has a `parent_context` field, which value is either a
+  pointer to its parent execution context or `null`.
+  - Each execution context has a `child_context` field, which value is either a
+    pointer to its child execution context or `null`.
 - The execution context tree is a directed acyclic graph, where each execution
   context has at most one parent, and at most one child.
 - A specific execution context is accessible by traversing the execution context
   tree, starting from the root execution context, and following the execution
-  context tree until the desired execution context is reached.
+  context tree until the desired execution context is reached. The machine also
+  stores a pointer to the current execution context.
 - The execution context tree is initialized with a single root execution
-  context, which has no parent and no child.
+  context, which has no parent and no child. It has `context_id` field equal
+  to 0.
 
 The following diagram describes the model of the Kakarot Machine.
 
 ```mermaid
 classDiagram
     class Machine{
-        current_ctx: usize,
+        current_ctx: Box<ExecutionContext>,
         ctx_count: usize,
-        root_ctx: ExecutionContext,
         stack: Stack,
         memory: Memory,
         storage_journal: Journal,
@@ -64,27 +65,29 @@ classDiagram
     }
 
     class ExecutionContext{
-        ctx_id: usize,
-        origin: EthAddress,
-        call_ctx: CallContext,
-        gas_price: u32,
-        gas_limit: u32,
-        pc: u32,
-        read_only: bool,
+        context_id: usize,
+        evm_address: EthAddress,
+        starknet_address: ContractAddress,
+        program_counter: u32,
+        status: Status,
+        call_context: CallContext,
         destroyed_contracts: Array~EthAddress~,
         events: Array~Event~,
         create_addresses: Array~EthAddress~,
-        status: Status,
-        return_data: Array~u32~,
+        return_data: Array~u8~,
         parent_context: Nullable~ExecutionContext~,
         child_context: Nullable~ExecutionContext~,
     }
+
 
     class CallContext{
         caller: EthAddress,
         value: u256,
         bytecode: Span~u8~,
         calldata: Span~u8~,
+        gas_price: u32,
+        gas_limit: u32,
+        read_only: bool,
     }
 
     class Journal{
