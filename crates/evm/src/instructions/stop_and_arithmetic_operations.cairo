@@ -4,7 +4,7 @@ use integer::{
     u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod,
     u512_safe_div_rem_by_u256, u256_try_as_non_zero
 };
-use evm::context::{ExecutionContextTrait, ExecutionContext, BoxDynamicExecutionContextDestruct};
+use evm::machine::{Machine, MachineCurrentContext};
 use evm::stack::StackTrait;
 use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
 use evm::errors::EVMError;
@@ -15,7 +15,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// 0x00 - STOP
     /// Halts the execution of the current program.
     /// # Specification: https://www.evm.codes/#00?fork=shanghai
-    fn exec_stop(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_stop(ref self: Machine) -> Result<(), EVMError> {
         self.stop();
         Result::Ok(())
     }
@@ -24,7 +24,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// Addition operation
     /// a + b: integer result of the addition modulo 2^256.
     /// # Specification: https://www.evm.codes/#01?fork=shanghai
-    fn exec_add(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_add(ref self: Machine) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
 
         // Compute the addition
@@ -37,7 +37,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// Multiplication
     /// a * b: integer result of the multiplication modulo 2^256.
     /// # Specification: https://www.evm.codes/#02?fork=shanghai
-    fn exec_mul(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_mul(ref self: Machine) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
 
         // Compute the multiplication
@@ -50,7 +50,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// Subtraction operation
     /// a - b: integer result of the subtraction modulo 2^256.
     /// # Specification: https://www.evm.codes/#03?fork=shanghai
-    fn exec_sub(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_sub(ref self: Machine) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
 
         // Compute the substraction
@@ -63,7 +63,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// If the denominator is 0, the result will be 0.
     /// a / b: integer result of the integer division.
     /// # Specification: https://www.evm.codes/#04?fork=shanghai
-    fn exec_div(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_div(ref self: Machine) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
 
         let a: u256 = *popped[0];
@@ -85,7 +85,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a / b: integer result of the signed integer division.
     /// If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#05?fork=shanghai
-    fn exec_sdiv(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_sdiv(ref self: Machine) -> Result<(), EVMError> {
         let a: i256 = self.stack.pop_i256()?;
         let b: i256 = self.stack.pop_i256()?;
 
@@ -101,7 +101,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// Modulo operation
     /// a % b: integer result of the integer modulo. If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#06?fork=shanghai
-    fn exec_mod(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_mod(ref self: Machine) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
 
         let a: u256 = *popped[0];
@@ -123,7 +123,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a % b: integer result of the signed integer modulo. If the denominator is 0, the result will be 0.
     /// All values are treated as two’s complement signed 256-bit integers. Note the overflow semantic when −2^255 is negated.
     /// # Specification: https://www.evm.codes/#07?fork=shanghai
-    fn exec_smod(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_smod(ref self: Machine) -> Result<(), EVMError> {
         let a: i256 = self.stack.pop_i256()?;
         let b: i256 = self.stack.pop_i256()?;
 
@@ -140,7 +140,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// (a + b) % N: integer result of the addition followed by a modulo. If the denominator is 0, the result will be 0.
     /// All intermediate calculations of this operation are not subject to the 2256 modulo.
     /// # Specification: https://www.evm.codes/#08?fork=shanghai
-    fn exec_addmod(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_addmod(ref self: Machine) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(3)?;
 
         let a: u256 = *popped[0];
@@ -165,7 +165,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// All intermediate calculations of this operation are not subject to the 2^256 modulo.
     /// If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#09?fork=shanghai
-    fn exec_mulmod(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_mulmod(ref self: Machine) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(3)?;
 
         let a: u256 = *popped[0];
@@ -189,7 +189,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// Exponential operation
     /// a ** b: integer result of raising a to the bth power modulo 2^256.
     /// # Specification: https://www.evm.codes/#0a?fork=shanghai
-    fn exec_exp(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_exp(ref self: Machine) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
         let a = *popped[0];
         let b = *popped[1];
@@ -216,7 +216,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// which corresponds to (x & mask).
     /// # Specification: https://www.evm.codes/#0b?fork=shanghai
     /// Complex opcode, check: https://ethereum.github.io/yellowpaper/paper.pdf
-    fn exec_signextend(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_signextend(ref self: Machine) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
         let b = *popped[0];
         let x = *popped[1];

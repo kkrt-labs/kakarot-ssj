@@ -2,6 +2,10 @@ name: Compare Snapshot
 
 on: pull_request
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   pull-requests: write
 
@@ -12,26 +16,29 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.x" # Specify the Python version required
+          python-version: 3.9
 
       - name: Set up Scarb
         uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "0.7.0"
+          scarb-version: 0.7.0
 
       - name: Run compare_snapshot script
         id: run-script
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        continue-on-error: true
         run: |
-          result=$(python scripts/compare_snapshot.py)
-          result=$(echo "$result" | tail -n +3) # Strip the first two lines
-          result="${result//'%'/'%25'}"
-          result="${result//$'\n'/'%0A'}"
-          result="${result//$'\r'/'%0D'}"
-          echo "::set-output name=result::${result}"
+          result=$(python scripts/compare_snapshot.py 2>&1)
+          status=$(echo "$result" | tail -n 1 | awk -F ':' '{print $1}')
+          echo "$result" >> "$GITHUB_STEP_SUMMARY"
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+
+      - name: Exit step based on status
+        if: steps.run-script.outputs.status == 'ERROR'
+        run: exit 1

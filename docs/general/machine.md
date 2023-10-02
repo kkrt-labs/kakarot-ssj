@@ -26,65 +26,68 @@ To overcome the problem stated above, we have come up with the following design:
   between the different execution contexts.
 - Each execution context has its own identifier `id`, which uniquely identifies
   it.
-- Each execution context has a `parent_context` field, whose value is either the
-  identifier of its parent execution context or `null`.
-- Each execution context has a `child_context` field, whose value is either the
-  identifier of its child context or `null`.
+- Each execution context has a `parent_context` field, which value is either a
+  pointer to its parent execution context or `null`.
+  - Each execution context has a `child_context` field, which value is either a
+    pointer to its child execution context or `null`.
 - The execution context tree is a directed acyclic graph, where each execution
   context has at most one parent, and at most one child.
 - A specific execution context is accessible by traversing the execution context
   tree, starting from the root execution context, and following the execution
-  context tree until the desired execution context is reached.
+  context tree until the desired execution context is reached. The machine also
+  stores a pointer to the current execution context.
 - The execution context tree is initialized with a single root execution
-  context, which has no parent and no child.
+  context, which has no parent and no child. It has `context_id` field equal
+  to 0.
 
 The following diagram describes the model of the Kakarot Machine.
 
 ```mermaid
 classDiagram
     class Machine{
-        current_ctx: usize,
+        current_ctx: Box<ExecutionContext>,
         ctx_count: usize,
-        root_ctx: ExecutionContext,
         stack: Stack,
         memory: Memory,
         storage_journal: Journal,
     }
 
     class Memory{
-        active_segment: felt252,
+        active_segment: usize,
         items: Felt252Dict~u128~,
         bytes_len: Felt252Dict~usize~,
     }
 
     class Stack{
-        +active_segment: felt252,
+        +active_segment: usize,
         +items: Felt252Dict~Nullable~u256~~,
         +len: Felt252Dict~usize~
     }
 
     class ExecutionContext{
-        ctx_id: usize,
-        origin: EthAddress,
-        call_ctx: CallContext,
-        gas_price: u32,
-        gas_limit: u32,
-        pc: u32,
-        read_only: bool,
+        context_id: usize,
+        evm_address: EthAddress,
+        starknet_address: ContractAddress,
+        program_counter: u32,
+        status: Status,
+        call_context: CallContext,
         destroyed_contracts: Array~EthAddress~,
         events: Array~Event~,
         create_addresses: Array~EthAddress~,
-        status: Status,
-        return_data: Array~u32~,
+        return_data: Array~u8~,
         parent_context: Nullable~ExecutionContext~,
         child_context: Nullable~ExecutionContext~,
     }
+
 
     class CallContext{
         caller: EthAddress,
         value: u256,
         bytecode: Span~u8~,
         calldata: Span~u8~,
+        gas_price: u32,
+        gas_limit: u32,
+        read_only: bool,
     }
 
     class Journal{
@@ -157,19 +160,20 @@ where $G_{memory} = 3$ and $a$ is the number of 32-byte words allocated.
 
 Following this formula, the gas costs required to have a memory containing
 125000 words is above the 30M gas limit. We will use this heuristic to bound the
-maximum size of the memory to 125000 256-bits words. Therefore, we will bound
-the maximum size of the memory to 125000 256-bits words.
+maximum size of the memory to the closest power of two to 125000: $2^17$.
+Therefore, we will bound the maximum size of the memory to 131072 256-bits
+words.
 
 The internal index at which an item will be inserted in the memory, given a
 specific offset, is computed as:
 
-$$index = offset + i \cdot 125000$$
+$$index = offset + i \cdot 131072$$
 
 where $i$ is the id of the active execution context.
 
 If we want to store an item at offset 10 of the memory relative to the execution
 context of id 1, the internal index will be
-$index = 10 + 1 \cdot 125000 = 125010$.
+$index = 10 + 1 \cdot 131072 = 131082$.
 
 ### Tracking storage changes
 
@@ -220,7 +224,7 @@ updating the `global_keys` array. When the transaction is finalized, we will
 iterate over the `global_changes` dictionary, and perform the required storage
 updates, as mentioned in [Contract Storage](./contract_storage.md).
 
-# Conclusion
+## Conclusion
 
 With its shared stack and memory accessed via calculated internal indexes
 relative to the current execution context, this EVM design remains compatible

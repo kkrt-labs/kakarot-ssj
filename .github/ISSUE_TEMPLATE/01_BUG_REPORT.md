@@ -6,7 +6,7 @@ labels: "bug"
 assignees: ""
 ---
 
-# Bug Report
+## Bug Report
 
 **Kakarot version:**
 
@@ -22,16 +22,19 @@ assignees: ""
 
 **Steps to reproduce:**
 
-<!-- Explain the steps required to duplicate the issue, especially if you are able to provide a sample application. -->
+<!-- Explain the steps required to duplicate the issue, especially
+if you are able to provide a sample application. -->
 
 **Related code:**
 
-<!-- If you are able to illustrate the bug or feature request with an example, please provide it here. -->
+<!-- If you are able to illustrate the bug or feature request with an example,
+please provide it here. -->
 
-```
+```bash
 insert short code snippets here
 ```
 
 **Other information:**
 
-<!-- List any other information that is relevant to your issue. Related issues, suggestions on how to fix, Stack Overflow links, forum links, etc. -->
+<!-- List any other information that is relevant to your issue. Related issues,
+suggestions on how to fix, Stack Overflow links, forum links, etc. -->
