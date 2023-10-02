@@ -1,10 +1,9 @@
-use evm::stack::StackTrait;
-use evm::tests::test_utils::setup_machine;
 use array::ArrayTrait;
 use evm::context::ExecutionContextTrait;
 use evm::instructions::exchange_operations::ExchangeOperationsTrait;
-use core::result::ResultTrait;
 use evm::machine::Machine;
+use evm::stack::StackTrait;
+use evm::tests::test_utils::setup_machine;
 
 
 #[test]

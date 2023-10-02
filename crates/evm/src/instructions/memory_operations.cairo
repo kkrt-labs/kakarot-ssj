@@ -1,8 +1,8 @@
 //! Stack Memory Storage and Flow Operations.
-use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::errors::{EVMError, INVALID_DESTINATION};
-use evm::stack::StackTrait;
+use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
+use evm::stack::StackTrait;
 
 #[generate_trait]
 impl MemoryOperation of MemoryOperationTrait {

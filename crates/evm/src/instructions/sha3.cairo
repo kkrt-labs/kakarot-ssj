@@ -1,14 +1,12 @@
 //! SHA3.
 
+use evm::errors::EVMError;
 // Internal imports
 use evm::machine::Machine;
-use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
-use evm::errors::EVMError;
+use evm::stack::StackTrait;
 use keccak::{cairo_keccak, u128_split};
 use utils::helpers::{ArrayExtensionTrait, U256Trait};
-
-use array::ArrayTrait;
 
 #[generate_trait]
 impl Sha3Impl of Sha3Trait {
@@ -55,10 +53,10 @@ impl Sha3Impl of Sha3Trait {
 
 
 mod internal {
-    use evm::stack::StackTrait;
-    use evm::memory::MemoryTrait;
-    use utils::helpers::U256Trait;
     use evm::machine::Machine;
+    use evm::memory::MemoryTrait;
+    use evm::stack::StackTrait;
+    use utils::helpers::U256Trait;
 
     /// Computes how many words are read from the memory
     /// and how many words must be filled with zeroes

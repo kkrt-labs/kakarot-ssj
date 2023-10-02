@@ -6,9 +6,9 @@ use evm::machine::Machine;
 
 mod internal {
     use evm::context::{ExecutionContext, ExecutionContextTrait,};
-    use evm::stack::StackTrait;
     use evm::errors::EVMError;
     use evm::machine::Machine;
+    use evm::stack::StackTrait;
 
     /// Generic DUP operation
     #[inline(always)]

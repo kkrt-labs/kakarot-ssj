@@ -13,15 +13,13 @@
 
 //! let value = stack.pop()?;
 //! ```
-
-// Core lib imports
-
-use utils::constants;
 use debug::PrintTrait;
-use nullable::{nullable_from_box, NullableTrait};
 use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW};
 use evm::helpers::U256TryIntoResultU32;
+use nullable::{nullable_from_box, NullableTrait};
 use starknet::EthAddress;
+
+use utils::constants;
 use utils::i256::i256;
 
 

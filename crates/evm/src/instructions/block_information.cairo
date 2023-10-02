@@ -1,13 +1,12 @@
 //! Block Information.
 
+use evm::errors::EVMError;
+use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::stack::StackTrait;
+
 // Corelib imports
 use starknet::info::{get_block_number, get_block_timestamp};
-
-// Internal imports
-use evm::stack::StackTrait;
-use evm::errors::EVMError;
 use utils::constants::CHAIN_ID;
-use evm::machine::{Machine, MachineCurrentContextTrait};
 
 #[generate_trait]
 impl BlockInformation of BlockInformationTrait {

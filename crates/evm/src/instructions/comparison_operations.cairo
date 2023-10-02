@@ -1,13 +1,13 @@
+use evm::errors::EVMError;
+use evm::errors::STACK_UNDERFLOW;
 // Internal imports
 use evm::machine::Machine;
 use evm::stack::StackTrait;
-use evm::errors::STACK_UNDERFLOW;
-use evm::errors::EVMError;
-use utils::math::{Exponentiation, Bitshift, WrappingBitshift};
-use utils::constants::{POW_2_127};
-use utils::traits::BoolIntoNumeric;
-use utils::i256::i256;
 use integer::BoundedInt;
+use utils::constants::{POW_2_127};
+use utils::i256::i256;
+use utils::math::{Exponentiation, Bitshift, WrappingBitshift};
+use utils::traits::BoolIntoNumeric;
 
 #[generate_trait]
 impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {

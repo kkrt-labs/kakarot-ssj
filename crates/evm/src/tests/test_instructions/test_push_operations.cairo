@@ -1,8 +1,7 @@
+use evm::context::ExecutionContextTrait;
 use evm::instructions::PushOperationsTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::setup_machine_with_bytecode;
-
-use evm::context::ExecutionContextTrait;
 
 fn get_n_0xFF(mut n: u8) -> Span<u8> {
     let mut array: Array<u8> = ArrayTrait::new();

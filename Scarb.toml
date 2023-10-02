@@ -14,3 +14,6 @@ license-file = "LICENSE"
 starknet = "2.3.0-rc0"
 
 [[workspace.tool.starknet-contract]]
+
+[workspace.tool.fmt]
+sort-module-level-items = true

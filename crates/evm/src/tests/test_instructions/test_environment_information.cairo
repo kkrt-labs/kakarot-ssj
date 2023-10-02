@@ -1,20 +1,20 @@
 use array::{ArrayTrait};
+use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
+use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
+use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_calldata, setup_machine_with_bytecode, evm_address, callvalue
 };
-use evm::stack::StackTrait;
+use integer::u32_overflowing_add;
 
 use starknet::EthAddressIntoFelt252;
-use utils::traits::{EthAddressIntoU256};
-use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
-use evm::machine::{Machine, MachineCurrentContextTrait};
 use utils::helpers::{
     u256_to_bytes_array, load_word, ArrayExtension, ArrayExtensionTrait, SpanExtension,
     SpanExtensionTrait
 };
-use integer::u32_overflowing_add;
+use utils::traits::{EthAddressIntoU256};
 
 // *************************************************************************
 // 0x30: ADDRESS

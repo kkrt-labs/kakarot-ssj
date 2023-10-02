@@ -1,11 +1,11 @@
-use evm::stack::{Stack, StackTrait};
+use debug::PrintTrait;
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::Event;
-use debug::PrintTrait;
+use evm::stack::{Stack, StackTrait};
+use starknet::get_caller_address;
+use starknet::{EthAddress, ContractAddress};
 use utils::helpers::{ArrayExtension, ArrayExtensionTrait};
 use utils::traits::{SpanDefault, EthAddressDefault, ContractAddressDefault};
-use starknet::{EthAddress, ContractAddress};
-use starknet::get_caller_address;
 
 #[derive(Drop, Default, Copy, PartialEq)]
 enum Status {

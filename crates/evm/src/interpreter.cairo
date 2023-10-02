@@ -2,7 +2,6 @@
 
 /// Internal imports.
 use evm::context::{CallContextTrait,};
-use utils::{helpers::u256_to_bytes_array};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
     ExchangeOperationsTrait, StopAndArithmeticOperationsTrait, ComparisonAndBitwiseOperationsTrait,
@@ -10,6 +9,7 @@ use evm::instructions::{
     EnvironmentInformationTrait, PushOperationsTrait, MemoryOperationTrait, logging_operations
 };
 use evm::machine::{Machine, MachineCurrentContextTrait};
+use utils::{helpers::u256_to_bytes_array};
 
 #[derive(Drop, Copy)]
 struct EVMInterpreter {}

@@ -1,14 +1,15 @@
 //! Stop and Arithmetic Operations.
 
+use evm::errors::EVMError;
+use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::stack::StackTrait;
+
 use integer::{
     u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod,
     u512_safe_div_rem_by_u256, u256_try_as_non_zero
 };
-use evm::machine::{Machine, MachineCurrentContextTrait};
-use evm::stack::StackTrait;
-use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
-use evm::errors::EVMError;
 use utils::i256::i256;
+use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
 
 #[generate_trait]
 impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {

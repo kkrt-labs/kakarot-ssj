@@ -1,12 +1,12 @@
 //! Environmental Information.
-use evm::stack::StackTrait;
 use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::memory::MemoryTrait;
+use evm::stack::StackTrait;
+use integer::u32_overflowing_add;
 use utils::helpers::{load_word};
 use utils::traits::{EthAddressIntoU256};
-use evm::memory::MemoryTrait;
-use integer::u32_overflowing_add;
 
 #[generate_trait]
 impl EnvironmentInformationImpl of EnvironmentInformationTrait {
