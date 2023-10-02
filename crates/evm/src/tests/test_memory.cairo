@@ -4,31 +4,49 @@ use utils::{
     math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtensionTrait
 };
 use utils::constants::{POW_256_1_U128, POW_256_7_U128, POW_256_8_U128, POW_256_15_U128};
+use integer::BoundedInt;
 
 mod internal {
     use evm::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
     use utils::{math::Exponentiation, helpers};
 
-    fn load_should_load_an_element_from_the_memory_with_offset(
-        offset: usize, low: u128, high: u128
+    fn load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        offset: usize, low: u128, high: u128, active_segment: usize,
     ) {
         // Given
         let mut memory = MemoryTrait::new();
-        // In the memory, the following values are stored in the order 1, 2, 3, 4 (Big Endian)
-        let first_value: u256 = u256 { low: 2, high: 1 };
-        let second_value = u256 { low: 4, high: 3 };
+        memory.set_active_segment(active_segment);
 
-        let first_bytes_array = helpers::u256_to_bytes_array(first_value);
-        let second_bytes_array = helpers::u256_to_bytes_array(second_value);
+        let value: u256 = u256 { low: low, high: high };
 
-        memory.store_n(first_bytes_array.span(), 0);
-        memory.store_n(second_bytes_array.span(), 32);
+        let bytes_array = helpers::u256_to_bytes_array(value);
+
+        memory.store_n(bytes_array.span(), offset);
+
+        // When
+        let mut elements: Array<u8> = array![];
+        memory.load_n_internal(32, ref elements, offset);
+
+        // Then
+        assert(elements == bytes_array, 'result not matching expected');
+    }
+
+    fn load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
+        offset: usize, low: u128, high: u128, active_segment: usize,
+    ) {
+        // Given
+        let mut memory = MemoryTrait::new();
+        memory.set_active_segment(active_segment);
+
+        let value: u256 = u256 { low: low, high: high };
+
+        memory.store(value, offset);
 
         // When
         let result: u256 = memory.load_internal(offset);
 
         // Then
-        assert(result == u256 { low: low, high: high }, 'result not matching expected');
+        assert(result == value, 'result not matching expected');
     }
 }
 
@@ -37,20 +55,20 @@ mod internal {
 #[available_gas(2000000)]
 fn test_init_should_return_an_empty_memory() {
     // When
-    let result = MemoryTrait::new();
+    let mut result = MemoryTrait::new();
 
     // Then
-    assert(result.bytes_len == 0, 'memory not empty');
+    assert(result.size() == 0, 'memory not empty');
 }
 
 #[test]
 #[available_gas(2000000)]
 fn test_len_should_return_the_length_of_the_memory() {
     // Given
-    let memory = MemoryTrait::new();
+    let mut memory = MemoryTrait::new();
 
     // When
-    let result = memory.bytes_len;
+    let result = memory.size();
 
     // Then
     assert(result == 0, 'memory not empty');
@@ -67,7 +85,7 @@ fn test_store_should_add_an_element_to_the_memory() {
     let result = memory.store(value, 0);
 
     // Then
-    let len = memory.bytes_len;
+    let len = memory.size();
     assert(len == 32, 'memory should be 32bytes');
 }
 
@@ -82,7 +100,7 @@ fn test_store_should_add_an_element_with_offset_to_the_memory() {
     let result = memory.store(value, 1);
 
     // Then
-    let len = memory.bytes_len;
+    let len = memory.size();
     assert(len == 64, 'memory should be 64bytes');
 }
 
@@ -98,7 +116,7 @@ fn test_store_should_add_n_elements_to_the_memory() {
     let result = memory.store_n(bytes_array.span(), 0);
 
     // Then
-    let len = memory.bytes_len;
+    let len = memory.size();
     assert(len == 32, 'memory should be 32bytes');
 }
 
@@ -108,7 +126,7 @@ fn test_store_should_add_n_elements_to_the_memory() {
 fn test_store_n_no_aligned_words() {
     let mut memory = MemoryTrait::new();
     memory.store_n(array![1, 2].span(), 15);
-    assert(memory.bytes_len == 32, 'memory should be 32 bytes');
+    assert(memory.size() == 32, 'memory should be 32 bytes');
 }
 
 #[test]
@@ -156,7 +174,7 @@ fn test_store_n_2_aligned_words() {
     memory.store_n(bytes_arr, 15);
     // value [1], will be stored in first word, values [2:34] will be stored in aligned words,
     // value [35] will be stored in final word
-    assert(memory.bytes_len == 64, 'memory should be 64 bytes');
+    assert(memory.size() == 64, 'memory should be 64 bytes');
 
     let mut stored_bytes = array![];
     memory.load_n_internal(35, ref stored_bytes, 15);
@@ -186,7 +204,7 @@ fn test_load_n_internal_same_word() {
 
 #[test]
 #[available_gas(20000000)]
-fn test__load__should_load_an_element_from_the_memory() {
+fn test_load_should_load_an_element_from_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();
     // In the memory, the following values are stored in the order 1, 2, 3, 4 (Big Endian)
@@ -219,48 +237,147 @@ fn test__load__should_load_an_element_from_the_memory() {
 
 #[test]
 #[available_gas(200000000)]
-fn test__load__should_load_an_element_from_the_memory_with_offset_1() {
-    internal::load_should_load_an_element_from_the_memory_with_offset(
-        8, 2 * POW_256_8_U128, POW_256_8_U128
+fn test_load_should_load_an_element_from_the_memory_with_offset_8() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        8, 2 * POW_256_8_U128, POW_256_8_U128, 0
     );
 }
 #[test]
 #[available_gas(200000000)]
-fn test__load__should_load_an_element_from_the_memory_with_offset_2() {
-    internal::load_should_load_an_element_from_the_memory_with_offset(
-        7, 2 * POW_256_7_U128, POW_256_7_U128
+fn test_load_should_load_an_element_from_the_memory_with_offset_7() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        7, 2 * POW_256_7_U128, POW_256_7_U128, 0
     );
 }
 #[test]
 #[available_gas(200000000)]
-fn test__load__should_load_an_element_from_the_memory_with_offset_3() {
-    internal::load_should_load_an_element_from_the_memory_with_offset(
-        23, 3 * POW_256_7_U128, 2 * POW_256_7_U128
+fn test_load_should_load_an_element_from_the_memory_with_offset_23() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        23, 3 * POW_256_7_U128, 2 * POW_256_7_U128, 0
     );
 }
 
 #[test]
 #[available_gas(200000000)]
-fn test__load__should_load_an_element_from_the_memory_with_offset_4() {
-    internal::load_should_load_an_element_from_the_memory_with_offset(
-        33, 4 * POW_256_1_U128, 3 * POW_256_1_U128
+fn test_load_should_load_an_element_from_the_memory_with_offset_33() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        33, 4 * POW_256_1_U128, 3 * POW_256_1_U128, 0
     );
 }
 #[test]
 #[available_gas(200000000)]
-fn test__load__should_load_an_element_from_the_memory_with_offset_5() {
-    internal::load_should_load_an_element_from_the_memory_with_offset(63, 0, 4 * POW_256_15_U128);
+fn test_load_should_load_an_element_from_the_memory_with_offset_63() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        63, 0, 4 * POW_256_15_U128, 0
+    );
 }
 
 #[test]
 #[available_gas(200000000)]
-fn test__load__should_load_an_element_from_the_memory_with_offset_6() {
-    internal::load_should_load_an_element_from_the_memory_with_offset(500, 0, 0);
+fn test_load_should_load_an_element_from_the_memory_with_offset_500() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        500, 0, 0, 0
+    );
+}
+
+
+#[test]
+#[available_gas(200000000)]
+fn test_load_should_load_an_element_from_the_memory_with_offset_8_and_active_segment_1() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        8, 2 * POW_256_8_U128, POW_256_8_U128, 1
+    );
+}
+#[test]
+#[available_gas(200000000)]
+fn test_load_should_load_an_element_from_the_memory_with_offset_7_and_active_segment_2() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        7, 2 * POW_256_7_U128, POW_256_7_U128, 2
+    );
+}
+#[test]
+#[available_gas(200000000)]
+fn test_load_should_load_an_element_from_the_memory_with_offset_23_and_active_segment_3() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        23, 3 * POW_256_7_U128, 2 * POW_256_7_U128, 3
+    );
 }
 
 #[test]
 #[available_gas(200000000)]
-fn test__expand__should_return_the_same_memory_and_no_cost() {
+fn test_load_should_load_an_element_from_the_memory_with_offset_33_and_active_segment_4() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        33, 4 * POW_256_1_U128, 3 * POW_256_1_U128, 4
+    );
+}
+#[test]
+#[should_panic(expected: ('u32_mul Overflow',))]
+#[available_gas(200000000)]
+fn test_load_should_load_an_element_from_the_memory_with_offset_63_and_active_segment_usize_max() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        63, 0, 4 * POW_256_15_U128, BoundedInt::<usize>::max()
+    );
+}
+
+#[test]
+#[available_gas(200000000)]
+fn test_load_should_load_an_element_from_the_memory_with_offset_500_and_active_segment_1() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        500, 0, 0, 1
+    );
+}
+
+
+#[test]
+#[available_gas(200000000)]
+fn test_load_should_load_an_element_from_the_memory_with_offset_8_and_active_segment_1_with_store() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
+        8, 2 * POW_256_8_U128, POW_256_8_U128, 1
+    );
+}
+#[test]
+#[available_gas(200000000)]
+fn test_load_should_load_an_element_from_the_memory_with_offset_7_and_active_segment_2_with_store() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
+        7, 2 * POW_256_7_U128, POW_256_7_U128, 2
+    );
+}
+#[test]
+#[available_gas(200000000)]
+fn test_load_should_load_an_element_from_the_memory_with_offset_23_and_active_segment_3_with_store() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
+        23, 3 * POW_256_7_U128, 2 * POW_256_7_U128, 3
+    );
+}
+
+#[test]
+#[available_gas(200000000)]
+fn test_load_should_load_an_element_from_the_memory_with_offset_33_and_active_segment_4_with_store() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
+        33, 4 * POW_256_1_U128, 3 * POW_256_1_U128, 4
+    );
+}
+#[test]
+#[should_panic(expected: ('u32_mul Overflow',))]
+#[available_gas(200000000)]
+fn test_load_should_load_an_element_from_the_memory_with_offset_63_and_active_segment_usize_max_with_store() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
+        63, 0, 4 * POW_256_15_U128, BoundedInt::<usize>::max()
+    );
+}
+
+#[test]
+#[available_gas(200000000)]
+fn test_load_should_load_an_element_from_the_memory_with_offset_500_and_active_segment_1_with_store() {
+    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
+        500, 0, 0, 1
+    );
+}
+
+
+#[test]
+#[available_gas(200000000)]
+fn test_expand__should_return_the_same_memory_and_no_cost() {
     // Given
     let mut memory = MemoryTrait::new();
     let value: u256 = 1;
@@ -271,14 +388,14 @@ fn test__expand__should_return_the_same_memory_and_no_cost() {
     memory.expand(0);
 
     // Then
-    assert(memory.bytes_len == 32, 'memory should be 32bytes');
+    assert(memory.size() == 32, 'memory should be 32bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'value should be 1');
 }
 
 #[test]
 #[available_gas(2000000000)]
-fn test__expand__should_return_expanded_memory_and_cost() {
+fn test_expand__should_return_expanded_memory_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
     let value: u256 = 1;
@@ -290,14 +407,14 @@ fn test__expand__should_return_expanded_memory_and_cost() {
     memory.expand(1);
 
     // Then
-    assert(memory.bytes_len == 64, 'memory should be 64bytes');
+    assert(memory.size() == 64, 'memory should be 64bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'value should be 1');
 }
 
 #[test]
 #[available_gas(2000000000)]
-fn test__expand__should_return_expanded_memory_by_one_word_and_cost() {
+fn test_expand__should_return_expanded_memory_by_one_word_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
 
@@ -305,12 +422,12 @@ fn test__expand__should_return_expanded_memory_by_one_word_and_cost() {
     memory.expand(1);
 
     // Then
-    assert(memory.bytes_len == 32, 'memory should be 32bytes');
+    assert(memory.size() == 32, 'memory should be 32bytes');
 }
 
 #[test]
 #[available_gas(2000000000)]
-fn test__expand__should_return_expanded_memory_by_exactly_one_word_and_cost() {
+fn test_expand__should_return_expanded_memory_by_exactly_one_word_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
 
@@ -318,12 +435,12 @@ fn test__expand__should_return_expanded_memory_by_exactly_one_word_and_cost() {
     memory.expand(32);
 
     // Then
-    assert(memory.bytes_len == 32, 'memory should be 32bytes');
+    assert(memory.size() == 32, 'memory should be 32bytes');
 }
 
 #[test]
 #[available_gas(2000000000)]
-fn test__expand__should_return_expanded_memory_by_two_words_and_cost() {
+fn test_expand__should_return_expanded_memory_by_two_words_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
 
@@ -331,12 +448,12 @@ fn test__expand__should_return_expanded_memory_by_two_words_and_cost() {
     memory.expand(33);
 
     // Then
-    assert(memory.bytes_len == 64, 'memory should be 96bytes');
+    assert(memory.size() == 64, 'memory should be 96bytes');
 }
 
 #[test]
 #[available_gas(2000000000)]
-fn test__ensure_length__should_return_the_same_memory_and_no_cost() {
+fn test_ensure_length__should_return_the_same_memory_and_no_cost() {
     // Given
     let mut memory = MemoryTrait::new();
     let value: u256 = 1;
@@ -348,14 +465,14 @@ fn test__ensure_length__should_return_the_same_memory_and_no_cost() {
     memory.ensure_length(1);
 
     // Then
-    assert(memory.bytes_len == 32, 'memory should be 32bytes');
+    assert(memory.size() == 32, 'memory should be 32bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'value should be 1');
 }
 
 #[test]
 #[available_gas(20000000000)]
-fn test__ensure_length__should_return_expanded_memory_and_cost() {
+fn test_ensure_length__should_return_expanded_memory_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
     let value: u256 = 1;
@@ -367,14 +484,14 @@ fn test__ensure_length__should_return_expanded_memory_and_cost() {
     memory.ensure_length(33);
 
     // Then
-    assert(memory.bytes_len == 64, 'memory should be 64bytes');
+    assert(memory.size() == 64, 'memory should be 64bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'value should be 1');
 }
 
 #[test]
 #[available_gas(20000000000)]
-fn test__expand_and_load__should_return_expanded_memory_and_element_and_cost() {
+fn test_expand_and_load_should_return_expanded_memory_and_element_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
     let value: u256 = 1;
@@ -385,7 +502,7 @@ fn test__expand_and_load__should_return_expanded_memory_and_element_and_cost() {
     let loaded_element = memory.load(32);
 
     // Then
-    assert(memory.bytes_len == 64, 'memory should be 64 bytes');
+    assert(memory.size() == 64, 'memory should be 64 bytes');
     let value = memory.load_internal(0);
     assert(value == 1, 'loaded_element should be 1');
 
@@ -404,7 +521,7 @@ fn test_store_padded_segment_should_not_change_the_memory() {
     memory.store_padded_segment(0, 0, bytes);
 
     // Then
-    let len = memory.bytes_len;
+    let len = memory.size();
     assert(len == 0, 'memory should be 0bytes');
 }
 
@@ -419,7 +536,7 @@ fn test_store_padded_segment_should_add_n_elements_to_the_memory() {
     memory.store_padded_segment(0, 5, bytes);
 
     // Then
-    let len = memory.bytes_len;
+    let len = memory.size();
     assert(len == 32, 'memory should be 32bytes');
 
     let first_word = memory.load_internal(0);
@@ -444,7 +561,7 @@ fn test_store_padded_segment_should_add_n_elements_padded_to_the_memory() {
     memory.store_padded_segment(0, 10, bytes);
 
     // Then
-    let len = memory.bytes_len;
+    let len = memory.size();
     assert(len == 32, 'memory should be 32bytes');
 
     let first_word = memory.load_internal(0);
@@ -469,7 +586,7 @@ fn test_store_padded_segment_should_add_n_elements_padded_with_offset_to_the_mem
     memory.store_padded_segment(5, 10, bytes);
 
     // Then
-    let len = memory.bytes_len;
+    let len = memory.size();
     assert(len == 32, 'memory should be 32bytes');
 
     let first_word = memory.load_internal(0);
@@ -495,7 +612,7 @@ fn test_store_padded_segment_should_add_n_elements_padded_with_offset_between_tw
     memory.store_padded_segment(30, 10, bytes);
 
     // Then
-    let len = memory.bytes_len;
+    let len = memory.size();
     assert(len == 64, 'memory should be 64bytes');
 
     let first_word = memory.load_internal(0);
@@ -510,6 +627,8 @@ fn test_store_padded_segment_should_add_n_elements_padded_with_offset_between_tw
         'Wrong memory value'
     );
 }
+
+
 #[test]
 #[available_gas(20000000)]
 fn test_store_byte_should_store_byte_at_offset() {
@@ -522,7 +641,7 @@ fn test_store_byte_should_store_byte_at_offset() {
     // Then
     assert(memory.items[0] == 0x01, 'Wrong value for word 0');
     assert(memory.items[1] == 0x00, 'Wrong value for word 1');
-    assert(memory.bytes_len == 32, 'Wrong memory length');
+    assert(memory.size() == 32, 'Wrong memory length');
 }
 #[test]
 #[available_gas(20000000)]
@@ -536,7 +655,7 @@ fn test_store_byte_should_store_byte_at_offset_2() {
     // Then
     assert(memory.items[0] == 0xff00, 'Wrong value for word 0');
     assert(memory.items[1] == 0x00, 'Wrong value for word 1');
-    assert(memory.bytes_len == 32, 'Wrong memory length');
+    assert(memory.size() == 32, 'Wrong memory length');
 }
 
 #[test]
@@ -553,7 +672,7 @@ fn test_store_byte_should_store_byte_at_offset_in_existing_word() {
     // Then
     assert(memory.items[0] == 0xFFFF, 'Wrong value for word 0');
     assert(memory.items[1] == 0x01FF, 'Wrong value for word 1');
-    assert(memory.bytes_len == 32, 'Wrong memory length');
+    assert(memory.size() == 32, 'Wrong memory length');
 }
 
 #[test]
@@ -569,7 +688,7 @@ fn test_store_byte_should_store_byte_at_offset_in_new_word() {
     assert(memory.items[0] == 0x0, 'Wrong value for word 0');
     assert(memory.items[1] == 0x0, 'Wrong value for word 1');
     assert(memory.items[2] == 0x01000000000000000000000000000000, 'Wrong value for word 2');
-    assert(memory.bytes_len == 64, 'Wrong memory length');
+    assert(memory.size() == 64, 'Wrong memory length');
 }
 
 #[test]
@@ -586,6 +705,42 @@ fn test_store_byte_should_store_byte_at_offset_in_new_word_with_existing_value_i
     // Then
     assert(memory.items[0] == 0x0100, 'Wrong value in word 0');
     assert(memory.items[1] == 0xffABffffffffffffffffffffffffffff, 'Wrong value in word 1');
-    assert(memory.bytes_len == 32, 'Wrong memory length');
+    assert(memory.size() == 32, 'Wrong memory length');
 }
 
+#[test]
+#[available_gas(20000)]
+fn test_set_active_segment() {
+    // Given
+    let mut memory = MemoryTrait::new();
+    memory.set_active_segment(5);
+
+    // When
+    let active_segment = memory.active_segment();
+
+    // Then
+    assert(active_segment == 5, 'Wrong active segment');
+}
+
+#[test]
+#[available_gas(2000000)]
+fn test_memory_store_byte_with_active_segment() {
+    // Given
+    let mut memory = MemoryTrait::new();
+    memory.set_active_segment(5);
+
+    // When
+    memory.store_byte(0x01, 32);
+
+    // Start index: divmod(32 + 5 * 131072, 16)
+    let start_index = 40962;
+
+    // Then
+    assert(memory.active_segment() == 5, 'wrong active segment');
+    assert(memory.items[start_index + 1] == 0x0, 'Wrong value for word 0');
+    assert(memory.items[start_index - 1] == 0x0, 'Wrong value for word 1');
+    assert(
+        memory.items[start_index] == 0x01000000000000000000000000000000, 'Wrong value for word 2'
+    );
+    assert(memory.size() == 64, 'Wrong memory length');
+}

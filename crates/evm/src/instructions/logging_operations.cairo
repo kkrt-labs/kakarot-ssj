@@ -13,7 +13,6 @@ impl LoggingOperations of LoggingOperationsTrait {
         internal::exec_log_i(ref self, 0)
     }
 
-
     /// 0xA1 - LOG1 
     /// Append log record with one topic.
     /// # Specification: https://www.evm.codes/#a1?fork=shanghai

@@ -16,26 +16,28 @@ fields
 ```mermaid
 classDiagram
     class ExecutionContext{
-        ctx_id: usize,
-        origin: EthAddress,
-        call_ctx: CallContext,
-        gas_price: u32,
-        gas_limit: u32,
-        pc: u32,
-        read_only: bool,
+        context_id: usize,
+        evm_address: EthAddress,
+        starknet_address: ContractAddress,
+        program_counter: u32,
+        status: Status,
+        call_context: CallContext,
         destroyed_contracts: Array~EthAddress~,
         events: Array~Event~,
         create_addresses: Array~EthAddress~,
-        status: Status,
         return_data: Array~u32~,
         parent_context: Nullable~ExecutionContext~,
         child_context: Nullable~ExecutionContext~,
     }
 
     class CallContext{
+        caller: EthAddress,
         bytecode: Span~u8~,
         calldata: Span~u8~,
         value: u256,
+        gas_price: u32,
+        gas_limit: u32,
+        read_only: bool,
     }
 
     class Event{

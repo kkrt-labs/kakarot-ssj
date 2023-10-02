@@ -24,6 +24,7 @@ enum EVMError {
     TypeConversionError: felt252,
     ReturnDataError: felt252,
     JumpError: felt252,
+    NotImplemented,
     StateModificationError: felt252
 }
 
@@ -36,6 +37,7 @@ impl EVMErrorIntoU256 of Into<EVMError, u256> {
             EVMError::TypeConversionError(error_message) => error_message.into(),
             EVMError::ReturnDataError(error_message) => error_message.into(),
             EVMError::JumpError(error_message) => error_message.into(),
+            EVMError::NotImplemented => 'NotImplemented'.into(),
             EVMError::StateModificationError(error_message) => error_message.into(),
         }
     }

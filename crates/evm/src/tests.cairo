@@ -15,3 +15,6 @@ mod test_execution_context;
 
 #[cfg(test)]
 mod test_instructions;
+
+#[cfg(test)]
+mod test_machine;

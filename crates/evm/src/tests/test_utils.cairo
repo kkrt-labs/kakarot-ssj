@@ -1,6 +1,6 @@
 use starknet::{contract_address_try_from_felt252, ContractAddress, EthAddress};
 
-
+use evm::machine::Machine;
 use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait,};
 
 fn starknet_address() -> ContractAddress {
@@ -23,63 +23,88 @@ fn setup_call_context() -> CallContext {
     let bytecode: Span<u8> = array![1, 2, 3].span();
     let calldata: Span<u8> = array![4, 5, 6].span();
     let value: u256 = callvalue();
+    let address = evm_address();
+    let read_only = false;
+    let gas_price = 0xaaaaaa;
+    let gas_limit = 0xffffff;
 
-    CallContextTrait::new(bytecode, calldata, value)
+    CallContextTrait::new(address, bytecode, calldata, value, read_only, gas_limit, gas_price)
 }
 
 fn setup_execution_context() -> ExecutionContext {
+    let context_id = 0;
     let call_context = setup_call_context();
     let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
-    let gas_limit: u64 = 1000;
-    let gas_price: u64 = 10;
-    let read_only: bool = false;
     let return_data = Default::default();
 
     ExecutionContextTrait::new(
-        call_context, starknet_address, evm_address, gas_limit, gas_price, return_data, read_only
+        context_id,
+        evm_address,
+        starknet_address,
+        call_context,
+        Default::default(),
+        Default::default(),
+        return_data,
     )
 }
 
 fn setup_call_context_with_bytecode(bytecode: Span<u8>) -> CallContext {
     let calldata: Span<u8> = array![4, 5, 6].span();
-    let value: u256 = 100;
+    let value: u256 = callvalue();
+    let address = evm_address();
+    let read_only = false;
+    let gas_price = 0xaaaaaa;
+    let gas_limit = 0xffffff;
 
-    CallContextTrait::new(bytecode, calldata, value)
+    CallContextTrait::new(address, bytecode, calldata, value, read_only, gas_limit, gas_price)
 }
 
 fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext {
+    let context_id = 0;
     let call_context = setup_call_context_with_bytecode(bytecode);
     let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
-    let gas_limit: u64 = 1000;
-    let gas_price: u64 = 10;
-    let read_only: bool = false;
     let return_data = Default::default();
 
     ExecutionContextTrait::new(
-        call_context, starknet_address, evm_address, gas_limit, gas_price, return_data, read_only
+        context_id,
+        evm_address,
+        starknet_address,
+        call_context,
+        Default::default(),
+        Default::default(),
+        return_data,
     )
 }
 
+
 fn setup_call_context_with_calldata(calldata: Span<u8>) -> CallContext {
     let bytecode: Span<u8> = array![1, 2, 3].span();
-    let value: u256 = 100;
+    let value: u256 = callvalue();
+    let address = evm_address();
+    let read_only = false;
+    let gas_price = 0xffffff;
+    let gas_limit = 0xffffff;
 
-    CallContextTrait::new(bytecode, calldata, value)
+    CallContextTrait::new(address, bytecode, calldata, value, read_only, gas_price, gas_limit)
 }
 
 fn setup_execution_context_with_calldata(calldata: Span<u8>) -> ExecutionContext {
+    let context_id = 0;
     let call_context = setup_call_context_with_calldata(calldata);
     let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
-    let gas_limit: u64 = 1000;
-    let gas_price: u64 = 10;
-    let read_only: bool = false;
-    let returned_data = Default::default();
+    let return_data = Default::default();
 
     ExecutionContextTrait::new(
-        call_context, starknet_address, evm_address, gas_limit, gas_price, returned_data, read_only
+        context_id,
+        evm_address,
+        starknet_address,
+        call_context,
+        Default::default(),
+        Default::default(),
+        return_data,
     )
 }
 
@@ -89,5 +114,37 @@ impl CallContextPartialEq of PartialEq<CallContext> {
     }
     fn ne(lhs: @CallContext, rhs: @CallContext) -> bool {
         !(lhs == rhs)
+    }
+}
+
+fn setup_machine() -> Machine {
+    Machine {
+        current_context: BoxTrait::new(setup_execution_context()),
+        ctx_count: 1,
+        stack: Default::default(),
+        memory: Default::default(),
+        storage_journal: Default::default(),
+    }
+}
+
+fn setup_machine_with_bytecode(bytecode: Span<u8>) -> Machine {
+    let current_context = BoxTrait::new(setup_execution_context_with_bytecode(bytecode));
+    Machine {
+        current_context,
+        ctx_count: 1,
+        stack: Default::default(),
+        memory: Default::default(),
+        storage_journal: Default::default(),
+    }
+}
+
+fn setup_machine_with_calldata(calldata: Span<u8>) -> Machine {
+    let current_context = BoxTrait::new(setup_execution_context_with_calldata(calldata));
+    Machine {
+        current_context,
+        ctx_count: 1,
+        stack: Default::default(),
+        memory: Default::default(),
+        storage_journal: Default::default(),
     }
 }
