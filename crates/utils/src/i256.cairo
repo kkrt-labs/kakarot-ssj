@@ -1,6 +1,6 @@
 use utils::constants::POW_2_127;
 use utils::math::{Bitshift, Exponentiation};
-use integer::{u256_try_as_non_zero, u256_safe_div_rem, BoundedInt};
+use integer::{u256_try_as_non_zero, BoundedInt};
 
 #[derive(Copy, Drop, PartialEq)]
 struct i256 {
@@ -107,7 +107,7 @@ fn i256_signed_div_rem(a: i256, div: NonZero<u256>) -> (i256, i256) {
 
     // Compute the quotient and remainder.
     // Can't panic as zero case is handled in the first instruction
-    let (quot, rem) = u256_safe_div_rem(a.value, div.value.try_into().unwrap());
+    let (quot, rem) = DivRem::div_rem(a.value, div.value.try_into().unwrap());
 
     // Restore remainder sign.
     let rem = if a_positive {
