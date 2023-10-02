@@ -59,7 +59,7 @@ impl MachineCurrentContextImpl of MachineCurrentContext {
     #[inline(always)]
     fn current_ctx_pc(ref self: Machine) -> usize {
         let current_execution_ctx = self.current_context.unbox();
-        let pc = current_execution_ctx.program_counter;
+        let pc = current_execution_ctx.pc();
         self.current_context = BoxTrait::new(current_execution_ctx);
         pc
     }
@@ -217,9 +217,8 @@ impl MachineCurrentContextImpl of MachineCurrentContext {
     fn read_code_current_ctx(ref self: Machine, len: usize) -> Span<u8> {
         // Copy code slice from [pc, pc+len]
         let pc = self.current_ctx_pc();
-        let code = self.current_ctx_call_context().bytecode().slice(pc, len);
+        let code = self.current_ctx_bytecode().slice(pc, len);
 
-        self.set_pc_current_ctx(pc + len);
         code
     }
 

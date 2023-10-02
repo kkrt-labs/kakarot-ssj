@@ -35,7 +35,7 @@ fn test_revert_current_ctx() {
     machine.revert_current_ctx(array![0xde, 0xbf].span());
 
     assert(machine.current_ctx_reverted(), 'ctx should be reverted');
-    assert(!machine.current_ctx_stopped(), 'ctx should not be stopped');
+    assert(machine.current_ctx_stopped(), 'ctx should be stopped');
 }
 
 #[test]
@@ -62,7 +62,8 @@ fn test_read_code_current_ctx() {
 
     // Then the read code should be the expected slice and the PC should be updated
     assert(read_code == array![0x01, 0x02, 0x03].span(), 'wrong bytecode read');
-    assert(machine.current_ctx_pc() == 3, 'wrong pc');
+    // Read Code should not modify PC
+    assert(machine.current_ctx_pc() == 0, 'wrong pc');
 }
 
 #[test]

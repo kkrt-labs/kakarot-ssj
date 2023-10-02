@@ -16,6 +16,9 @@ mod internal {
     fn exec_push_i(ref machine: Machine, i: u8) -> Result<(), EVMError> {
         let i = i.into();
         let data = machine.read_code_current_ctx(i);
+
+        machine.set_pc_current_ctx(machine.current_ctx_pc() + i);
+
         machine.stack.push(load_word(i, data))
     }
 }

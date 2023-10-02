@@ -141,7 +141,6 @@ fn test_execution_context_read_code() {
 
     // Then
     assert(code == array![1, 2].span(), 'wrong code read'); // Compare with expected slice
-    assert(execution_context.program_counter == len, 'wrong program counter');
 }
 
 

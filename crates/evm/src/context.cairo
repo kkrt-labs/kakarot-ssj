@@ -7,7 +7,7 @@ use utils::traits::{SpanDefault, EthAddressDefault, ContractAddressDefault};
 use starknet::{EthAddress, ContractAddress};
 use starknet::get_caller_address;
 
-#[derive(Drop, Default, Copy)]
+#[derive(Drop, Default, Copy, PartialEq)]
 enum Status {
     #[default]
     Active,
@@ -193,20 +193,19 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     #[inline(always)]
     fn reverted(self: @ExecutionContext) -> bool {
-        match self.status {
-            Status::Active => false,
-            Status::Stopped => false,
-            Status::Reverted => true,
+        if (*self.status == Status::Reverted) {
+            return true;
         }
+        false
     }
 
     #[inline(always)]
     fn stopped(self: @ExecutionContext) -> bool {
-        match self.status {
-            Status::Active => false,
-            Status::Stopped => true,
-            Status::Reverted => false,
+        // A context is considered stopped if it has status Stopped or Reverted
+        if (*self.status == Status::Active) {
+            return false;
         }
+        true
     }
 
     #[inline(always)]
@@ -278,11 +277,10 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     /// * `self` - The `ExecutionContext` instance to read the data from.
     /// * `len` - The length of the data to read from the bytecode.
     #[inline(always)]
-    fn read_code(ref self: ExecutionContext, len: usize) -> Span<u8> {
+    fn read_code(self: @ExecutionContext, len: usize) -> Span<u8> {
         // Copy code slice from [pc, pc+len]
-        let code = self.call_context.unbox().bytecode().slice(self.program_counter, len);
+        let code = (*self.call_context).unbox().bytecode().slice(self.pc(), len);
 
-        self.program_counter += len;
         code
     }
 
@@ -309,6 +307,11 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn set_pc(ref self: ExecutionContext, value: u32) {
         self.program_counter = value;
+    }
+
+    #[inline(always)]
+    fn pc(self: @ExecutionContext) -> u32 {
+        *self.program_counter
     }
 }
 
