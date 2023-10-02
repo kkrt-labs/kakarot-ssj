@@ -5,7 +5,7 @@ use evm::instructions::MemoryOperationTrait;
 use evm::context::{ExecutionContext, ExecutionContextTrait,};
 use utils::helpers::load_word;
 use traits::Into;
-use evm::machine::{Machine, MachineCurrentContext};
+use evm::machine::{Machine, MachineCurrentContextTrait};
 
 #[test]
 #[available_gas(20000000)]

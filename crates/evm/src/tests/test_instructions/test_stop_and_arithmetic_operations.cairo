@@ -4,7 +4,7 @@ use evm::stack::StackTrait;
 use evm::context::ExecutionContextTrait;
 
 use integer::BoundedInt;
-use evm::machine::{Machine, MachineCurrentContext};
+use evm::machine::{Machine, MachineCurrentContextTrait};
 
 
 #[test]

@@ -5,11 +5,10 @@ use traits::TryInto;
 use box::BoxTrait;
 
 // Internal imports
-use evm::machine::{Machine, MachineCurrentContext};
+use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use evm::errors::EVMError;
-use evm::helpers::U256IntoResultU32;
 
 #[generate_trait]
 impl SystemOperations of SystemOperationsTrait {

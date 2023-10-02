@@ -7,7 +7,7 @@ use starknet::info::{get_block_number, get_block_timestamp};
 use evm::stack::StackTrait;
 use evm::errors::EVMError;
 use utils::constants::CHAIN_ID;
-use evm::machine::{Machine, MachineCurrentContext};
+use evm::machine::{Machine, MachineCurrentContextTrait};
 
 #[generate_trait]
 impl BlockInformation of BlockInformationTrait {

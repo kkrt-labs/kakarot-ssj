@@ -2,8 +2,7 @@
 use evm::stack::StackTrait;
 use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR};
-use evm::helpers::U256IntoResultU32;
-use evm::machine::{Machine, MachineCurrentContext};
+use evm::machine::{Machine, MachineCurrentContextTrait};
 use utils::helpers::{load_word};
 use utils::traits::{EthAddressIntoU256};
 use evm::memory::MemoryTrait;

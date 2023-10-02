@@ -9,7 +9,7 @@ use evm::stack::StackTrait;
 use starknet::EthAddressIntoFelt252;
 use utils::traits::{EthAddressIntoU256};
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
-use evm::machine::{Machine, MachineCurrentContext};
+use evm::machine::{Machine, MachineCurrentContextTrait};
 use utils::helpers::{
     u256_to_bytes_array, load_word, ArrayExtension, ArrayExtensionTrait, SpanExtension,
     SpanExtensionTrait

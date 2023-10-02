@@ -9,9 +9,8 @@ use starknet::EthAddressIntoFelt252;
 use utils::helpers::{u256_to_bytes_array};
 use utils::traits::{EthAddressIntoU256};
 use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION};
-use evm::helpers::U256IntoResultU32;
 use integer::BoundedInt;
-use evm::machine::{Machine, MachineCurrentContext};
+use evm::machine::{Machine, MachineCurrentContextTrait};
 
 
 #[test]

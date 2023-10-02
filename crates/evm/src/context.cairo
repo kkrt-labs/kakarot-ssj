@@ -148,6 +148,7 @@ impl DefaultBoxExecutionContext of Default<Box<ExecutionContext>> {
 
 
 /// `ExecutionContext` implementation.
+
 #[generate_trait]
 impl ExecutionContextImpl of ExecutionContextTrait {
     /// Create a new execution context instance.
@@ -314,8 +315,3 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         *self.program_counter
     }
 }
-
-
-/// The execution summary.
-#[derive(Drop, Copy)]
-struct ExecutionSummary {}

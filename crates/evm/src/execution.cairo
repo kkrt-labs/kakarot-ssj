@@ -1,5 +1,4 @@
-use starknet::{ContractAddress, EthAddress};
-use evm::context::{CallContext, ExecutionContext, ExecutionSummary, ExecutionContextTrait};
+use evm::context::{CallContext, ExecutionContext};
 use evm::interpreter::EVMInterpreterTrait;
 use evm::machine::Machine;
 

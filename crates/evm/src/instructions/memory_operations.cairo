@@ -1,9 +1,8 @@
 //! Stack Memory Storage and Flow Operations.
-use evm::machine::{Machine, MachineCurrentContext};
+use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::errors::{EVMError, INVALID_DESTINATION};
 use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
-use evm::helpers::U256IntoResultU32;
 
 #[generate_trait]
 impl MemoryOperation of MemoryOperationTrait {
@@ -59,7 +58,7 @@ impl MemoryOperation of MemoryOperationTrait {
 
         // TODO: Currently this doesn't check that byte is actually `JUMPDEST`
         // and not `0x5B` that is a part of PUSHN instruction
-        // 
+        //
         // That can be done by storing all valid jump locations during contract deployment
         // which would also simplify the logic because we would be just checking if idx is
         // present in that list
@@ -71,9 +70,7 @@ impl MemoryOperation of MemoryOperationTrait {
                     return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
                 }
             },
-            Option::None => {
-                return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
-            }
+            Option::None => { return Result::Err(EVMError::JumpError(INVALID_DESTINATION)); }
         }
         self.set_pc(index);
         Result::Ok(())
@@ -104,7 +101,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// 0x5b - JUMPDEST operation
     /// Serves as a check that JUMP or JUMPI was executed correctly.
     /// # Specification: https://www.evm.codes/#5b?fork=shanghai
-    /// 
+    ///
     /// This doesn't have any affect on execution state, so we don't have
     /// to do anything here. It's a NO-OP.
     fn exec_jumpdest(ref self: Machine) -> Result<(), EVMError> {

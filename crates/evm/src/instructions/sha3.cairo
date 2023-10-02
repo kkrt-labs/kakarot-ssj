@@ -5,7 +5,6 @@ use evm::machine::Machine;
 use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
 use evm::errors::EVMError;
-use evm::helpers::U256IntoResultU32;
 use keccak::{cairo_keccak, u128_split};
 use utils::helpers::{ArrayExtensionTrait, U256Trait};
 
