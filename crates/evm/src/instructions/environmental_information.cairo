@@ -15,7 +15,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get address of currently executing account.
     /// # Specification: https://www.evm.codes/#30?fork=shanghai
     fn exec_address(ref self: Machine) -> Result<(), EVMError> {
-        self.stack.push(self.current_ctx_evm_address().into())
+        self.stack.push(self.evm_address().into())
     }
 
     /// 0x31 - BALANCE opcode.
@@ -43,7 +43,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get deposited value by the instruction/transaction responsible for this execution.
     /// # Specification: https://www.evm.codes/#34?fork=shanghai
     fn exec_callvalue(ref self: Machine) -> Result<(), EVMError> {
-        self.stack.push(self.current_ctx_value())
+        self.stack.push(self.value())
     }
 
     /// 0x35 - CALLDATALOAD
@@ -52,7 +52,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_calldataload(ref self: Machine) -> Result<(), EVMError> {
         let offset: usize = self.stack.pop_usize()?;
 
-        let calldata = self.current_ctx_calldata();
+        let calldata = self.calldata();
         let calldata_len = calldata.len();
 
         // All bytes after the end of the calldata are set to 0.
@@ -85,7 +85,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get the size of return data.
     /// # Specification: https://www.evm.codes/#36?fork=shanghai
     fn exec_calldatasize(ref self: Machine) -> Result<(), EVMError> {
-        let size: u256 = self.current_ctx_calldata().len().into();
+        let size: u256 = self.calldata().len().into();
         self.stack.push(size)
     }
 
@@ -97,7 +97,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
-        let calldata: Span<u8> = self.current_ctx_calldata();
+        let calldata: Span<u8> = self.calldata();
 
         let copied: Span<u8> = if (offset + size > calldata.len()) {
             calldata.slice(offset, calldata.len() - offset)
@@ -114,7 +114,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get size of bytecode running in current environment.
     /// # Specification: https://www.evm.codes/#38?fork=shanghai
     fn exec_codesize(ref self: Machine) -> Result<(), EVMError> {
-        let size: u256 = self.current_ctx_bytecode().len().into();
+        let size: u256 = self.bytecode().len().into();
         self.stack.push(size)
     }
 
@@ -126,7 +126,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
-        let bytecode: Span<u8> = self.current_ctx_bytecode();
+        let bytecode: Span<u8> = self.bytecode();
 
         let copied: Span<u8> = if offset > bytecode.len() {
             array![].span()
@@ -145,7 +145,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get price of gas in current environment.
     /// # Specification: https://www.evm.codes/#3a?fork=shanghai
     fn exec_gasprice(ref self: Machine) -> Result<(), EVMError> {
-        self.stack.push(self.current_ctx_gas_price().into())
+        self.stack.push(self.gas_price().into())
     }
 
     /// 0x3B - EXTCODESIZE
@@ -166,7 +166,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get the size of return data.
     /// # Specification: https://www.evm.codes/#3d?fork=shanghai
     fn exec_returndatasize(ref self: Machine) -> Result<(), EVMError> {
-        let size: u32 = self.current_ctx_return_data().len();
+        let size: u32 = self.return_data().len();
         self.stack.push(size.into())
     }
 
@@ -178,7 +178,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
-        let return_data: Span<u8> = self.current_ctx_return_data();
+        let return_data: Span<u8> = self.return_data();
 
         match u32_overflowing_add(offset, size) {
             Result::Ok(x) => {

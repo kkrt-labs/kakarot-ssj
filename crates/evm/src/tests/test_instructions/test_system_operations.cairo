@@ -22,7 +22,7 @@ fn test_exec_return() {
     assert(machine.exec_return().is_ok(), 'Exec return failed');
 
     // Then
-    assert(1000 == load_word(32, machine.current_ctx_return_data()), 'Wrong return_data');
+    assert(1000 == load_word(32, machine.return_data()), 'Wrong return_data');
 }
 
 #[test]
@@ -40,5 +40,5 @@ fn test_exec_return_with_offset() {
     assert(machine.exec_return().is_ok(), 'Exec return failed');
 
     // Then
-    assert(256 == load_word(32, machine.current_ctx_return_data()), 'Wrong return_data');
+    assert(256 == load_word(32, machine.return_data()), 'Wrong return_data');
 }

@@ -160,7 +160,7 @@ fn test_calldataload_with_offset_conversion_error() {
 fn test_calldata_size() {
     // Given
     let mut machine = setup_machine();
-    let calldata: Span<u8> = machine.current_ctx_calldata();
+    let calldata: Span<u8> = machine.calldata();
 
     // When
     machine.exec_calldatasize();
@@ -230,7 +230,7 @@ fn test_calldatacopy_with_out_of_bound_bytes_multiple_words() {
 fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Span<u8>) {
     // Given
     let mut machine = setup_machine();
-    let calldata: Span<u8> = machine.current_ctx_calldata();
+    let calldata: Span<u8> = machine.calldata();
 
     machine.stack.push(size.into());
     machine.stack.push(offset.into());
@@ -419,7 +419,7 @@ fn test_returndatasize() {
     let return_data: Array<u8> = array![1, 2, 3, 4, 5];
     let size = return_data.len();
     let mut machine = setup_machine();
-    machine.set_return_data_current_ctx(return_data);
+    machine.set_return_data(return_data);
 
     machine.exec_returndatasize();
 
@@ -486,7 +486,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
     let mut machine = setup_machine();
     machine
-        .set_return_data_current_ctx(
+        .set_return_data(
             array![
                 1,
                 2,
@@ -527,7 +527,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
             ]
         );
 
-    let return_data: Span<u8> = machine.current_ctx_return_data();
+    let return_data: Span<u8> = machine.return_data();
 
     if (size == 0) {
         size = return_data.len() - offset;

@@ -36,7 +36,7 @@ fn test_pc_gets_updated_properly_1() {
     let mut machine = setup_machine();
 
     // When
-    machine.set_pc_current_ctx(9000);
+    machine.set_pc(9000);
     machine.exec_pc();
 
     // Then
@@ -311,7 +311,7 @@ fn test_exec_jump_valid() {
     machine.exec_jump();
 
     // Then
-    let pc = machine.current_ctx_pc();
+    let pc = machine.pc();
     assert(pc == 0x03, 'PC should be JUMPDEST');
 }
 
@@ -382,13 +382,13 @@ fn test_exec_jumpi_valid_non_zero_1() {
     machine.stack.push(b);
     let counter = 0x03;
     machine.stack.push(counter);
-    let old_pc = machine.current_ctx_pc();
+    let old_pc = machine.pc();
 
     // When
     machine.exec_jumpi();
 
     // Then
-    let pc = machine.current_ctx_pc();
+    let pc = machine.pc();
     assert(pc == 0x03, 'PC should be JUMPDEST');
 }
 
@@ -402,13 +402,13 @@ fn test_exec_jumpi_valid_non_zero_2() {
     machine.stack.push(b);
     let counter = 0x03;
     machine.stack.push(counter);
-    let old_pc = machine.current_ctx_pc();
+    let old_pc = machine.pc();
 
     // When
     machine.exec_jumpi();
 
     // Then
-    let pc = machine.current_ctx_pc();
+    let pc = machine.pc();
     assert(pc == 0x03, 'PC should be JUMPDEST');
 }
 
@@ -422,13 +422,13 @@ fn test_exec_jumpi_valid_zero() {
     machine.stack.push(b);
     let counter = 0x03;
     machine.stack.push(counter);
-    let old_pc = machine.current_ctx_pc();
+    let old_pc = machine.pc();
 
     // When
     machine.exec_jumpi();
 
     // Then
-    let pc = machine.current_ctx_pc();
+    let pc = machine.pc();
     // ideally we should assert that it incremented, but incrementing is done by `decode_and_execute`
     // so we can assume that will be done
     assert(pc == old_pc, 'PC should be same');
@@ -464,13 +464,13 @@ fn test_exec_jumpi_invalid_zero() {
     machine.stack.push(b);
     let counter = 0x69;
     machine.stack.push(counter);
-    let old_pc = machine.current_ctx_pc();
+    let old_pc = machine.pc();
 
     // When
     machine.exec_jumpi();
 
     // Then
-    let pc = machine.current_ctx_pc();
+    let pc = machine.pc();
     // ideally we should assert that it incremented, but incrementing is done by `decode_and_execut`
     // so we can assume that will be done
     assert(pc == old_pc, 'PC should be same');

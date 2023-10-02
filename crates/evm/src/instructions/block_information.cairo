@@ -49,7 +49,7 @@ impl BlockInformation of BlockInformationTrait {
     /// Get gas limit
     /// # Specification: https://www.evm.codes/#45?fork=shanghai
     fn exec_gaslimit(ref self: Machine) -> Result<(), EVMError> {
-        self.stack.push(self.current_ctx_gas_limit().into())
+        self.stack.push(self.gas_limit().into())
     }
 
     /// 0x46 - CHAINID
@@ -75,6 +75,6 @@ impl BlockInformation of BlockInformationTrait {
     fn exec_basefee(ref self: Machine) -> Result<(), EVMError> {
         // Get the current base fee. (Kakarot doesn't use EIP 1559 so basefee
         //  doesn't really exists there so we just use the gas price)
-        self.stack.push(self.current_ctx_gas_price().into())
+        self.stack.push(self.gas_price().into())
     }
 }

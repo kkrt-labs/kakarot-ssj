@@ -43,19 +43,19 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         match result {
             Result::Ok(_) => {
                 // Check if the execution is complete.
-                if !(machine.current_ctx_stopped()) {
+                if !(machine.stopped()) {
                     // Execute the next opcode.
                     self.run(ref machine);
                 }
-                if machine.current_ctx_reverted() { // TODO: Revert logic
+                if machine.reverted() { // TODO: Revert logic
                 }
-                if machine.current_ctx_stopped() { // TODO: stopped logic
+                if machine.stopped() { // TODO: stopped logic
                 }
             },
             Result::Err(error) => {
                 // If an error occurred, revert execution machine.
                 // Currently, revert reason is a Span<u8>.
-                machine.revert_current_ctx(u256_to_bytes_array(error.into()).span());
+                machine.revert(u256_to_bytes_array(error.into()).span());
             // TODO: Revert logic
             }
         }
@@ -64,8 +64,8 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
     ///  Decode the current opcode and execute associated function.
     fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError> {
         // Retrieve the current program counter.
-        let pc = machine.current_ctx_pc();
-        let bytecode = machine.current_ctx_call_context().bytecode();
+        let pc = machine.pc();
+        let bytecode = machine.call_context().bytecode();
         let bytecode_len = bytecode.len();
 
         // Check if PC is not out of bounds.
@@ -76,7 +76,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         let opcode: u8 = *bytecode.at(pc);
 
         // Increment pc
-        machine.set_pc_current_ctx(pc + 1);
+        machine.set_pc(pc + 1);
 
         // Call the appropriate function based on the opcode.
         if opcode == 0 {

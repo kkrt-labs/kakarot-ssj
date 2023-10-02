@@ -39,8 +39,8 @@ impl SystemOperations of SystemOperationsTrait {
         let size = self.stack.pop_usize()?;
         let mut return_data = array![];
         self.memory.load_n(size, ref return_data, offset);
-        self.set_return_data_current_ctx(return_data);
-        self.stop_current_ctx();
+        self.set_return_data(return_data);
+        self.stop();
         Result::Ok(())
     }
 

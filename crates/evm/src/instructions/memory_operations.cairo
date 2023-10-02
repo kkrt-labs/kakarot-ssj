@@ -30,7 +30,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Get the value of the program counter prior to the increment.
     /// # Specification: https://www.evm.codes/#58?fork=shanghai
     fn exec_pc(ref self: Machine) -> Result<(), EVMError> {
-        let pc = self.current_ctx_pc().into();
+        let pc = self.pc().into();
         self.stack.push(pc)
     }
 
@@ -65,7 +65,7 @@ impl MemoryOperation of MemoryOperationTrait {
         // present in that list
         //
         // Check if idx in bytecode points to `JUMPDEST` opcode
-        match self.current_ctx_bytecode().get(index) {
+        match self.bytecode().get(index) {
             Option::Some(opcode) => {
                 if *opcode.unbox() != 0x5B {
                     return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
@@ -75,7 +75,7 @@ impl MemoryOperation of MemoryOperationTrait {
                 return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
             }
         }
-        self.set_pc_current_ctx(index);
+        self.set_pc(index);
         Result::Ok(())
     }
 
