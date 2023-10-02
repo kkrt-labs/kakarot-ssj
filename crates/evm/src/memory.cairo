@@ -2,9 +2,8 @@ use integer::{
     u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_as_non_zero
 };
 use utils::constants::{
-    POW_2_0_U128, POW_2_8_U128, POW_2_16_U128, POW_2_24_U128, POW_2_32_U128, POW_2_40_U128,
-    POW_2_48_U128, POW_2_56_U128, POW_2_64_U128, POW_2_72_U128, POW_2_80_U128, POW_2_88_U128,
-    POW_2_96_U128, POW_2_104_U128, POW_2_112_U128, POW_2_120_U128, POW_256_16
+    POW_2_0, POW_2_8, POW_2_16, POW_2_24, POW_2_32, POW_2_40, POW_2_48, POW_2_56, POW_2_64,
+    POW_2_72, POW_2_80, POW_2_88, POW_2_96, POW_2_104, POW_2_112, POW_2_120, POW_256_16
 };
 use cmp::{max};
 use utils::{
@@ -360,22 +359,22 @@ impl InternalMemoryMethods of InternalMemoryTrait {
                 break;
             }
 
-            let current: u128 = ((*elements[0]).into() * POW_2_120_U128
-                + (*elements[1]).into() * POW_2_112_U128
-                + (*elements[2]).into() * POW_2_104_U128
-                + (*elements[3]).into() * POW_2_96_U128
-                + (*elements[4]).into() * POW_2_88_U128
-                + (*elements[5]).into() * POW_2_80_U128
-                + (*elements[6]).into() * POW_2_72_U128
-                + (*elements[7]).into() * POW_2_64_U128
-                + (*elements[8]).into() * POW_2_56_U128
-                + (*elements[9]).into() * POW_2_48_U128
-                + (*elements[10]).into() * POW_2_40_U128
-                + (*elements[11]).into() * POW_2_32_U128
-                + (*elements[12]).into() * POW_2_24_U128
-                + (*elements[13]).into() * POW_2_16_U128
-                + (*elements[14]).into() * POW_2_8_U128
-                + (*elements[15]).into() * POW_2_0_U128);
+            let current: u128 = ((*elements[0]).into() * POW_2_120
+                + (*elements[1]).into() * POW_2_112
+                + (*elements[2]).into() * POW_2_104
+                + (*elements[3]).into() * POW_2_96
+                + (*elements[4]).into() * POW_2_88
+                + (*elements[5]).into() * POW_2_80
+                + (*elements[6]).into() * POW_2_72
+                + (*elements[7]).into() * POW_2_64
+                + (*elements[8]).into() * POW_2_56
+                + (*elements[9]).into() * POW_2_48
+                + (*elements[10]).into() * POW_2_40
+                + (*elements[11]).into() * POW_2_32
+                + (*elements[12]).into() * POW_2_24
+                + (*elements[13]).into() * POW_2_16
+                + (*elements[14]).into() * POW_2_8
+                + (*elements[15]).into() * POW_2_0);
 
             self.items.insert(chunk_index.into(), current);
             chunk_index += 1;

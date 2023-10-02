@@ -3,7 +3,7 @@ use evm::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
 use utils::{
     math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtensionTrait
 };
-use utils::constants::{POW_2_8_U128, POW_2_56_U128, POW_2_64_U128, POW_2_120_U128};
+use utils::constants::{POW_2_8, POW_2_56, POW_2_64, POW_2_120};
 use integer::BoundedInt;
 
 mod internal {
@@ -239,21 +239,21 @@ fn test_load_should_load_an_element_from_the_memory() {
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_8() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        8, 2 * POW_2_64_U128, POW_2_64_U128, 0
+        8, 2 * POW_2_64, POW_2_64, 0
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_7() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        7, 2 * POW_2_56_U128, POW_2_56_U128, 0
+        7, 2 * POW_2_56, POW_2_56, 0
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_23() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        23, 3 * POW_2_56_U128, 2 * POW_2_56_U128, 0
+        23, 3 * POW_2_56, 2 * POW_2_56, 0
     );
 }
 
@@ -261,14 +261,14 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_23() {
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_33() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        33, 4 * POW_2_8_U128, 3 * POW_2_8_U128, 0
+        33, 4 * POW_2_8, 3 * POW_2_8, 0
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_63() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        63, 0, 4 * POW_2_120_U128, 0
+        63, 0, 4 * POW_2_120, 0
     );
 }
 
@@ -285,21 +285,21 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_500() {
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_8_and_active_segment_1() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        8, 2 * POW_2_64_U128, POW_2_64_U128, 1
+        8, 2 * POW_2_64, POW_2_64, 1
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_7_and_active_segment_2() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        7, 2 * POW_2_56_U128, POW_2_56_U128, 2
+        7, 2 * POW_2_56, POW_2_56, 2
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_23_and_active_segment_3() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        23, 3 * POW_2_56_U128, 2 * POW_2_56_U128, 3
+        23, 3 * POW_2_56, 2 * POW_2_56, 3
     );
 }
 
@@ -307,7 +307,7 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_23_and_active_se
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_33_and_active_segment_4() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        33, 4 * POW_2_8_U128, 3 * POW_2_8_U128, 4
+        33, 4 * POW_2_8, 3 * POW_2_8, 2
     );
 }
 #[test]
@@ -315,7 +315,7 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_33_and_active_se
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_63_and_active_segment_usize_max() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        63, 0, 4 * POW_2_120_U128, BoundedInt::<usize>::max()
+        63, 0, 4 * POW_2_120, BoundedInt::<usize>::max()
     );
 }
 
@@ -332,21 +332,21 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_500_and_active_s
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_8_and_active_segment_1_with_store() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
-        8, 2 * POW_2_64_U128, POW_2_64_U128, 1
+        8, 2 * POW_2_64, POW_2_64, 1
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_7_and_active_segment_2_with_store() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
-        7, 2 * POW_2_56_U128, POW_2_56_U128, 2
+        7, 2 * POW_2_56, POW_2_56, 2
     );
 }
 #[test]
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_23_and_active_segment_3_with_store() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
-        23, 3 * POW_2_56_U128, 2 * POW_2_56_U128, 3
+        23, 3 * POW_2_56, 2 * POW_2_56, 3
     );
 }
 
@@ -354,7 +354,7 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_23_and_active_se
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_33_and_active_segment_4_with_store() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
-        33, 4 * POW_2_8_U128, 3 * POW_2_8_U128, 4
+        33, 4 * POW_2_8, 3 * POW_2_8, 4
     );
 }
 #[test]
@@ -362,7 +362,7 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_33_and_active_se
 #[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_63_and_active_segment_usize_max_with_store() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
-        63, 0, 4 * POW_2_120_U128, BoundedInt::<usize>::max()
+        63, 0, 4 * POW_2_120, BoundedInt::<usize>::max()
     );
 }
 
