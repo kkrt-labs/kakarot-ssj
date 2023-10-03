@@ -5,7 +5,6 @@ use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use integer::u32_overflowing_add;
-use starknet::EthAddress;
 use utils::helpers::{load_word};
 use utils::traits::{EthAddressIntoU256};
 

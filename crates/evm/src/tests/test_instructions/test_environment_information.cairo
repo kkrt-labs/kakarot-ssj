@@ -57,7 +57,7 @@ fn test_caller() {
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 'evm_address'.into(), 'should be evm_address');
+    assert(machine.stack.peek().unwrap() == evm_address().into(), 'should be evm_address');
 }
 
 
