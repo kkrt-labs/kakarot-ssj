@@ -1,8 +1,7 @@
-use evm::instructions::ComparisonAndBitwiseOperationsTrait;
-use evm::tests::test_utils::setup_machine;
-use evm::stack::StackTrait;
-
 use debug::PrintTrait;
+use evm::instructions::ComparisonAndBitwiseOperationsTrait;
+use evm::stack::StackTrait;
+use evm::tests::test_utils::setup_machine;
 use integer::BoundedInt;
 
 #[test]

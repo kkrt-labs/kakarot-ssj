@@ -1,3 +1,5 @@
+use cmp::{max};
+use debug::PrintTrait;
 use integer::{
     u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_as_non_zero
 };
@@ -5,12 +7,10 @@ use utils::constants::{
     POW_2_0, POW_2_8, POW_2_16, POW_2_24, POW_2_32, POW_2_40, POW_2_48, POW_2_56, POW_2_64,
     POW_2_72, POW_2_80, POW_2_88, POW_2_96, POW_2_104, POW_2_112, POW_2_120, POW_256_16
 };
-use cmp::{max};
 use utils::{
     helpers, helpers::SpanExtensionTrait, helpers::ArrayExtensionTrait, math::Exponentiation,
     math::WrappingExponentiation, math::Bitshift
 };
-use debug::PrintTrait;
 
 // 2**17
 const MEMORY_SEGMENT_SIZE: usize = 131072;
@@ -45,13 +45,15 @@ impl MemoryImpl of MemoryTrait {
         Memory { active_segment: 0, items: Default::default(), bytes_len: Default::default() }
     }
 
-    /// Initializes a new `Memory` instance with a specific active segment
+    /// Sets the current active segment for the `Memory` instance.
+    /// Active segment are implementation-specific concepts that reflect
+    /// the execution context being currently executed.
     #[inline(always)]
     fn set_active_segment(ref self: Memory, active_segment: usize) {
         self.active_segment = active_segment;
     }
 
-    /// Return size of the memory.
+    /// Returns the size of the memory.
     #[inline(always)]
     fn size(ref self: Memory) -> usize {
         self.bytes_len.get(self.active_segment.into())
@@ -77,7 +79,7 @@ impl MemoryImpl of MemoryTrait {
 
         self.bytes_len.insert(self.active_segment(), cmp::max(new_min_bytes_len, self.size()));
 
-        // Compute actual offset in the dict, given active_segment of Memory (current Execution Context id) 
+        // Compute actual offset in the dict, given active_segment of Memory (current Execution Context id)
         // And Memory Segment Size
         let internal_offset = self.compute_active_segment_offset(offset);
 
@@ -116,7 +118,7 @@ impl MemoryImpl of MemoryTrait {
         let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(offset + 1);
         self.bytes_len.insert(self.active_segment(), cmp::max(new_min_bytes_len, self.size()));
 
-        // Compute actual offset in Memory, given active_segment of Memory (current Execution Context id) 
+        // Compute actual offset in Memory, given active_segment of Memory (current Execution Context id)
         // And Memory Segment Size
         let internal_offset = self.compute_active_segment_offset(offset);
 

@@ -1,11 +1,10 @@
+use evm::context::{ExecutionContext, ExecutionContextTrait,};
+use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use evm::instructions::Sha3Trait;
 use evm::instructions::sha3::internal;
-use evm::tests::test_utils::setup_machine;
-use evm::context::{ExecutionContext, ExecutionContextTrait,};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::stack::StackTrait;
-use option::OptionTrait;
-use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
+use evm::tests::test_utils::setup_machine;
 
 #[test]
 #[available_gas(20000000)]

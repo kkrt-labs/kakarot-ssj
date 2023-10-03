@@ -1,10 +1,8 @@
+use debug::PrintTrait;
 use evm::instructions::DuplicationOperationsTrait;
 use evm::stack::Stack;
-use evm::tests::test_utils::setup_machine;
 use evm::stack::StackTrait;
-
-
-use debug::PrintTrait;
+use evm::tests::test_utils::setup_machine;
 use integer::BoundedInt;
 
 

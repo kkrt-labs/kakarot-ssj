@@ -1,10 +1,10 @@
-use evm::tests::test_utils::setup_machine;
-use evm::instructions::StopAndArithmeticOperationsTrait;
-use evm::stack::StackTrait;
 use evm::context::ExecutionContextTrait;
+use evm::instructions::StopAndArithmeticOperationsTrait;
+use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::stack::StackTrait;
+use evm::tests::test_utils::setup_machine;
 
 use integer::BoundedInt;
-use evm::machine::{Machine, MachineCurrentContext};
 
 
 #[test]

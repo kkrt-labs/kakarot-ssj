@@ -46,11 +46,10 @@ fn test__len__should_return_the_length_of_the_stack() {
 
 #[cfg(test)]
 mod push {
+    use evm::errors::{EVMError, STACK_OVERFLOW};
     use super::StackTrait;
 
     use super::constants;
-
-    use evm::errors::{EVMError, STACK_OVERFLOW};
 
     #[test]
     #[available_gas(600000)]
@@ -142,10 +141,8 @@ mod push {
 
 #[cfg(test)]
 mod pop {
-    use super::StackTrait;
-
-
     use evm::errors::{EVMError, STACK_UNDERFLOW};
+    use super::StackTrait;
 
     #[test]
     #[available_gas(950000)]
@@ -275,10 +272,8 @@ mod pop {
 
 #[cfg(test)]
 mod peek {
-    use super::StackTrait;
-
-
     use evm::errors::{EVMError, STACK_UNDERFLOW};
+    use super::StackTrait;
 
     #[test]
     #[available_gas(800000)]
@@ -401,9 +396,8 @@ mod peek {
 
 #[cfg(test)]
 mod swap {
-    use super::StackTrait;
-
     use evm::errors::{EVMError, STACK_UNDERFLOW};
+    use super::StackTrait;
 
     #[test]
     #[available_gas(4000000)]

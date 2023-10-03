@@ -1,11 +1,11 @@
-use evm::stack::{Stack, StackTrait};
+use debug::PrintTrait;
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::Event;
-use debug::PrintTrait;
+use evm::stack::{Stack, StackTrait};
+use starknet::get_caller_address;
+use starknet::{EthAddress, ContractAddress};
 use utils::helpers::{ArrayExtension, ArrayExtensionTrait};
 use utils::traits::{SpanDefault, EthAddressDefault, ContractAddressDefault};
-use starknet::{EthAddress, ContractAddress};
-use starknet::get_caller_address;
 
 #[derive(Drop, Default, Copy, PartialEq)]
 enum Status {
@@ -125,7 +125,7 @@ impl DefaultBoxCallContext of Default<Box<CallContext>> {
 /// Stores all data relevant to the current execution context.
 #[derive(Drop, Default)]
 struct ExecutionContext {
-    context_id: usize,
+    id: usize,
     evm_address: EthAddress,
     starknet_address: ContractAddress,
     program_counter: u32,
@@ -148,12 +148,13 @@ impl DefaultBoxExecutionContext of Default<Box<ExecutionContext>> {
 
 
 /// `ExecutionContext` implementation.
+
 #[generate_trait]
 impl ExecutionContextImpl of ExecutionContextTrait {
     /// Create a new execution context instance.
     #[inline(always)]
     fn new(
-        context_id: usize,
+        id: usize,
         evm_address: EthAddress,
         starknet_address: ContractAddress,
         call_context: CallContext,
@@ -162,7 +163,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         return_data: Array<u8>,
     ) -> ExecutionContext {
         ExecutionContext {
-            context_id,
+            id,
             evm_address,
             starknet_address,
             program_counter: Default::default(),
@@ -287,7 +288,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     #[inline(always)]
     fn is_root(self: @ExecutionContext) -> bool {
-        *self.context_id == 0
+        *self.id == 0
     }
 
     // TODO: Implement print_debug
@@ -314,8 +315,3 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         *self.program_counter
     }
 }
-
-
-/// The execution summary.
-#[derive(Drop, Copy)]
-struct ExecutionSummary {}

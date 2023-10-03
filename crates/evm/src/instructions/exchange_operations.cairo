@@ -1,9 +1,8 @@
 //! Exchange Operations.
 
-// Internal imports
+use evm::errors::EVMError;
 use evm::machine::Machine;
 use evm::stack::StackTrait;
-use evm::errors::EVMError;
 use utils::helpers::load_word;
 
 #[generate_trait]

@@ -7,3 +7,6 @@ version = "0.1.0"
 [dependencies]
 starknet.workspace = true
 utils = { path = "../utils" }
+
+[tool.fmt]
+sort-module-level-items = true

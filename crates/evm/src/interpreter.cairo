@@ -1,41 +1,35 @@
 /// System imports.
 
 /// Internal imports.
-// TODO remove destruct imports when no longer required
-use evm::context::{ExecutionSummary, ExecutionContext, ExecutionContextTrait, CallContextTrait,};
-use utils::{helpers::u256_to_bytes_array};
+use evm::context::{CallContextTrait,};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
-    duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
-    memory_operations, sha3, StopAndArithmeticOperationsTrait, ComparisonAndBitwiseOperationsTrait,
+    ExchangeOperationsTrait, StopAndArithmeticOperationsTrait, ComparisonAndBitwiseOperationsTrait,
     SystemOperationsTrait, BlockInformationTrait, DuplicationOperationsTrait,
-    EnvironmentInformationTrait, PushOperationsTrait, MemoryOperationTrait
+    EnvironmentInformationTrait, PushOperationsTrait, MemoryOperationTrait, logging_operations
 };
-use evm::machine::{Machine, MachineCurrentContext};
+use evm::machine::{Machine, MachineCurrentContextTrait};
+use utils::{helpers::u256_to_bytes_array};
 
-
-/// EVM instructions as defined in the Yellow Paper and the EIPs.
 #[derive(Drop, Copy)]
 struct EVMInterpreter {}
 
 trait EVMInterpreterTrait {
-    /// Create a new instance of the EVM instructions.
+    /// Create a new instance of the EVM Interpreter.
     fn new() -> EVMInterpreter;
     /// Execute the EVM bytecode.
     fn run(ref self: EVMInterpreter, ref machine: Machine);
-    /// Decode the current opcode and execute associated function.
+    /// Decodes the opcode at `pc` and executes the associated function.
     fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError>;
 }
 
 
 impl EVMInterpreterImpl of EVMInterpreterTrait {
-    /// Create a new instance of the EVM instructions.
     #[inline(always)]
     fn new() -> EVMInterpreter {
         EVMInterpreter {}
     }
 
-    /// Execute the EVM bytecode.
     fn run(ref self: EVMInterpreter, ref machine: Machine) {
         // Decode and execute the current opcode.
         let result = self.decode_and_execute(ref machine);
@@ -61,7 +55,6 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
     }
 
-    ///  Decode the current opcode and execute associated function.
     fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError> {
         // Retrieve the current program counter.
         let pc = machine.pc();
@@ -613,53 +606,45 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 240 {
             // CREATE
-            machine.exec_create();
+            return machine.exec_create();
         }
         if opcode == 241 {
             // CALL
-            machine.exec_call();
+            return machine.exec_call();
         }
         if opcode == 242 {
             // CALLCODE
-            machine.exec_callcode();
+            return machine.exec_callcode();
         }
         if opcode == 243 {
             // RETURN
-            machine.exec_return();
+            return machine.exec_return();
         }
         if opcode == 244 {
             // DELEGATECALL
-            machine.exec_delegatecall();
+            return machine.exec_delegatecall();
         }
         if opcode == 245 {
             // CREATE2
-            machine.exec_create2();
+            return machine.exec_create2();
         }
         if opcode == 250 {
             // STATICCALL
-            machine.exec_staticcall();
+            return machine.exec_staticcall();
         }
         if opcode == 253 {
             // REVERT
-            machine.exec_revert();
+            return machine.exec_revert();
         }
         if opcode == 254 {
             // INVALID
-            machine.exec_invalid();
+            return machine.exec_invalid();
         }
         if opcode == 255 {
             // SELFDESTRUCT
-            machine.exec_selfdestruct();
+            return machine.exec_selfdestruct();
         }
         // Unknown opcode
-        unknown_opcode(opcode);
-        Result::Ok(())
+        return Result::Err(EVMError::UnknownOpcode(opcode));
     }
 }
-
-/// This function is called when an unknown opcode is encountered.
-/// # Arguments
-/// * `opcode` - The unknown opcode
-/// # TODO
-/// * Implement this function and revert execution.
-fn unknown_opcode(opcode: u8) {}
