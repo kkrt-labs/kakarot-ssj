@@ -310,27 +310,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     #[inline(always)]
-    fn set_read_only(ref self: ExecutionContext, value: bool) {
-        let mut static_ctx = self.static_context.unbox();
-        static_ctx.read_only = value;
-        self.static_context = BoxTrait::new(static_ctx);
-    }
-
-    /// Store a new event in the dynamic context.
-    /// The dynamic context has to be recreated to be modified.
-    ///
-    /// # Arguments
-    ///
-    /// * `self` - The context to which the event will be added
-    /// * `event` - Event to append
-    #[inline(always)]
-    fn append_event(ref self: ExecutionContext, event: Event) {
-        let mut dyn_ctx = self.dynamic_context.unbox();
-        dyn_ctx.events.append(event);
-        self.dynamic_context = BoxTrait::new(dyn_ctx);
-    }
-
-    #[inline(always)]
     fn pc(self: @ExecutionContext) -> u32 {
         *self.program_counter
     }

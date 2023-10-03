@@ -173,6 +173,22 @@ impl MachineCurrentContextImpl of MachineCurrentContext {
     }
 
     #[inline(always)]
+    fn set_read_only(ref self: Machine, value: bool) {
+        let mut current_call_ctx = self.call_context();
+        let mut current_execution_ctx = self.current_context.unbox();
+        current_call_ctx.read_only = value;
+        current_execution_ctx.call_context = BoxTrait::new(current_call_ctx);
+        self.current_context = BoxTrait::new(current_execution_ctx);
+    }
+
+    #[inline(always)]
+    fn append_event(ref self: Machine, event: Event) {
+        let mut current_execution_ctx = self.current_context.unbox();
+        current_execution_ctx.events.append(event);
+        self.current_context = BoxTrait::new(current_execution_ctx);
+    }
+
+    #[inline(always)]
     fn gas_limit(ref self: Machine) -> u64 {
         let current_call_ctx = self.call_context();
         current_call_ctx.gas_limit()

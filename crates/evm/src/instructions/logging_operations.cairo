@@ -1,6 +1,7 @@
 //! Logging Operations.
 
 // Internal imports
+use evm::machine::{Machine, MachineCurrentContext};
 use evm::context::ExecutionContext;
 use evm::errors::EVMError;
 
@@ -9,41 +10,42 @@ impl LoggingOperations of LoggingOperationsTrait {
     /// 0xA0 - LOG0 operation
     /// Append log record with no topic.
     /// # Specification: https://www.evm.codes/#a0?fork=shanghai
-    fn exec_log0(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_log0(ref self: Machine) -> Result<(), EVMError> {
         internal::exec_log_i(ref self, 0)
     }
 
     /// 0xA1 - LOG1 
     /// Append log record with one topic.
     /// # Specification: https://www.evm.codes/#a1?fork=shanghai
-    fn exec_log1(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_log1(ref self: Machine) -> Result<(), EVMError> {
         internal::exec_log_i(ref self, 1)
     }
 
     /// 0xA2 - LOG2 
     /// Append log record with two topics.
     /// # Specification: https://www.evm.codes/#a2?fork=shanghai
-    fn exec_log2(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_log2(ref self: Machine) -> Result<(), EVMError> {
         internal::exec_log_i(ref self, 2)
     }
 
     /// 0xA3 - LOG3 
     /// Append log record with three topics.
     /// # Specification: https://www.evm.codes/#a3?fork=shanghai
-    fn exec_log3(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_log3(ref self: Machine) -> Result<(), EVMError> {
         internal::exec_log_i(ref self, 3)
     }
 
     /// 0xA4 - LOG4 
     /// Append log record with four topics.
     /// # Specification: https://www.evm.codes/#a4?fork=shanghai
-    fn exec_log4(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_log4(ref self: Machine) -> Result<(), EVMError> {
         internal::exec_log_i(ref self, 4)
     }
 }
 
 mod internal {
-    use evm::context::{ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct};
+    use evm::context::{ExecutionContext, ExecutionContextTrait};
+    use evm::machine::{Machine, MachineCurrentContext};
     use evm::stack::StackTrait;
     use evm::memory::MemoryTrait;
     use evm::model::Event;
@@ -59,7 +61,7 @@ mod internal {
     ///
     /// * `self` - The context to which the event will be added
     /// * `topics_len` - The amount of topics to pop from the stack
-    fn exec_log_i(ref self: ExecutionContext, topics_len: u8) -> Result<(), EVMError> {
+    fn exec_log_i(ref self: Machine, topics_len: u8) -> Result<(), EVMError> {
         // Revert if the transaction is in a read only context
         if self.read_only() {
             return Result::Err(EVMError::StateModificationError(STATE_MODIFICATION_ERROR));

@@ -1,9 +1,8 @@
-use evm::context::{
-    ExecutionContext, ExecutionContextTrait, BoxDynamicExecutionContextDestruct, CallContextTrait,
-};
+use evm::context::{ExecutionContext, ExecutionContextTrait, CallContextTrait,};
+use evm::machine::{Machine, MachineCurrentContext};
 use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
-use evm::tests::test_utils::setup_execution_context;
+use evm::tests::test_utils::setup_machine;
 use evm::errors::{EVMError, STATE_MODIFICATION_ERROR, TYPE_CONVERSION_ERROR};
 use evm::instructions::LoggingOperationsTrait;
 use integer::BoundedInt;
@@ -13,21 +12,21 @@ use utils::helpers::u256_to_bytes_array;
 #[available_gas(20000000)]
 fn test_exec_log0() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
-    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+    machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    ctx.stack.push(0x1F);
-    ctx.stack.push(0x00);
+    machine.stack.push(0x1F);
+    machine.stack.push(0x00);
 
     // When
-    let result = ctx.exec_log0();
+    let result = machine.exec_log0();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(ctx.stack.len() == 0, 'stack should be empty');
+    assert(machine.stack.len() == 0, 'stack should be empty');
 
-    let mut events = ctx.events();
+    let mut events = machine.events();
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -42,22 +41,22 @@ fn test_exec_log0() {
 #[available_gas(20000000)]
 fn test_exec_log1() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
-    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+    machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    ctx.stack.push(0x0123456789ABCDEF);
-    ctx.stack.push(0x20);
-    ctx.stack.push(0x00);
+    machine.stack.push(0x0123456789ABCDEF);
+    machine.stack.push(0x20);
+    machine.stack.push(0x00);
 
     // When
-    let result = ctx.exec_log1();
+    let result = machine.exec_log1();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(ctx.stack.len() == 0, 'stack should be empty');
+    assert(machine.stack.len() == 0, 'stack should be empty');
 
-    let mut events = ctx.events();
+    let mut events = machine.events();
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -73,23 +72,23 @@ fn test_exec_log1() {
 #[available_gas(20000000)]
 fn test_exec_log2() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
-    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+    machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x0123456789ABCDEF);
-    ctx.stack.push(0x05);
-    ctx.stack.push(0x05);
+    machine.stack.push(BoundedInt::<u256>::max());
+    machine.stack.push(0x0123456789ABCDEF);
+    machine.stack.push(0x05);
+    machine.stack.push(0x05);
 
     // When
-    let result = ctx.exec_log2();
+    let result = machine.exec_log2();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(ctx.stack.len() == 0, 'stack should be empty');
+    assert(machine.stack.len() == 0, 'stack should be empty');
 
-    let mut events = ctx.events();
+    let mut events = machine.events();
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -106,25 +105,25 @@ fn test_exec_log2() {
 #[available_gas(20000000)]
 fn test_exec_log3() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
-    ctx.memory.store(BoundedInt::<u256>::max(), 0);
-    ctx.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
+    machine.memory.store(BoundedInt::<u256>::max(), 0);
+    machine.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
 
-    ctx.stack.push(0x00);
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x0123456789ABCDEF);
-    ctx.stack.push(0x28);
-    ctx.stack.push(0x00);
+    machine.stack.push(0x00);
+    machine.stack.push(BoundedInt::<u256>::max());
+    machine.stack.push(0x0123456789ABCDEF);
+    machine.stack.push(0x28);
+    machine.stack.push(0x00);
 
     // When
-    let result = ctx.exec_log3();
+    let result = machine.exec_log3();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(ctx.stack.len() == 0, 'stack should be empty');
+    assert(machine.stack.len() == 0, 'stack should be empty');
 
-    let mut events = ctx.events();
+    let mut events = machine.events();
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -144,26 +143,26 @@ fn test_exec_log3() {
 #[available_gas(20000000)]
 fn test_exec_log4() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
-    ctx.memory.store(BoundedInt::<u256>::max(), 0);
-    ctx.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
+    machine.memory.store(BoundedInt::<u256>::max(), 0);
+    machine.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
 
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x00);
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x0123456789ABCDEF);
-    ctx.stack.push(0x0A);
-    ctx.stack.push(0x20);
+    machine.stack.push(BoundedInt::<u256>::max());
+    machine.stack.push(0x00);
+    machine.stack.push(BoundedInt::<u256>::max());
+    machine.stack.push(0x0123456789ABCDEF);
+    machine.stack.push(0x0A);
+    machine.stack.push(0x20);
 
     // When
-    let result = ctx.exec_log4();
+    let result = machine.exec_log4();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(ctx.stack.len() == 0, 'stack should be empty');
+    assert(machine.stack.len() == 0, 'stack should be empty');
 
-    let mut events = ctx.events();
+    let mut events = machine.events();
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -182,17 +181,17 @@ fn test_exec_log4() {
 #[available_gas(20000000)]
 fn test_exec_log1_read_only_context() {
     // Given
-    let mut ctx = setup_execution_context();
-    ctx.set_read_only(true);
+    let mut machine = setup_machine();
+    machine.set_read_only(true);
 
-    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+    machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    ctx.stack.push(0x0123456789ABCDEF);
-    ctx.stack.push(0x20);
-    ctx.stack.push(0x00);
+    machine.stack.push(0x0123456789ABCDEF);
+    machine.stack.push(0x20);
+    machine.stack.push(0x00);
 
     // When
-    let result = ctx.exec_log1();
+    let result = machine.exec_log1();
 
     // Then
     assert(result.is_err(), 'should have returned an error');
@@ -206,22 +205,22 @@ fn test_exec_log1_read_only_context() {
 #[available_gas(20000000)]
 fn test_exec_log1_size_0_offset_0() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
-    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+    machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    ctx.stack.push(0x0123456789ABCDEF);
-    ctx.stack.push(0x00);
-    ctx.stack.push(0x00);
+    machine.stack.push(0x0123456789ABCDEF);
+    machine.stack.push(0x00);
+    machine.stack.push(0x00);
 
     // When
-    let result = ctx.exec_log1();
+    let result = machine.exec_log1();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(ctx.stack.len() == 0, 'stack should be empty');
+    assert(machine.stack.len() == 0, 'stack should be empty');
 
-    let mut events = ctx.events();
+    let mut events = machine.events();
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -235,16 +234,16 @@ fn test_exec_log1_size_0_offset_0() {
 #[available_gas(20000000)]
 fn test_exec_log1_size_too_big() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
-    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+    machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    ctx.stack.push(0x0123456789ABCDEF);
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x00);
+    machine.stack.push(0x0123456789ABCDEF);
+    machine.stack.push(BoundedInt::<u256>::max());
+    machine.stack.push(0x00);
 
     // When
-    let result = ctx.exec_log1();
+    let result = machine.exec_log1();
 
     // Then
     assert(result.is_err(), 'should return an error');
@@ -258,16 +257,16 @@ fn test_exec_log1_size_too_big() {
 #[available_gas(20000000)]
 fn test_exec_log1_offset_too_big() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
-    ctx.memory.store(BoundedInt::<u256>::max(), 0);
+    machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    ctx.stack.push(0x0123456789ABCDEF);
-    ctx.stack.push(0x20);
-    ctx.stack.push(BoundedInt::<u256>::max());
+    machine.stack.push(0x0123456789ABCDEF);
+    machine.stack.push(0x20);
+    machine.stack.push(BoundedInt::<u256>::max());
 
     // When
-    let result = ctx.exec_log1();
+    let result = machine.exec_log1();
 
     // Then
     assert(result.is_err(), 'should return an error');
@@ -281,32 +280,32 @@ fn test_exec_log1_offset_too_big() {
 #[available_gas(20000000)]
 fn test_exec_log_multiple_events() {
     // Given
-    let mut ctx = setup_execution_context();
+    let mut machine = setup_machine();
 
-    ctx.memory.store(BoundedInt::<u256>::max(), 0);
-    ctx.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
+    machine.memory.store(BoundedInt::<u256>::max(), 0);
+    machine.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
 
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x00);
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x0123456789ABCDEF);
-    ctx.stack.push(0x0A);
-    ctx.stack.push(0x20);
-    ctx.stack.push(0x00);
-    ctx.stack.push(BoundedInt::<u256>::max());
-    ctx.stack.push(0x0123456789ABCDEF);
-    ctx.stack.push(0x28);
-    ctx.stack.push(0x00);
+    machine.stack.push(BoundedInt::<u256>::max());
+    machine.stack.push(0x00);
+    machine.stack.push(BoundedInt::<u256>::max());
+    machine.stack.push(0x0123456789ABCDEF);
+    machine.stack.push(0x0A);
+    machine.stack.push(0x20);
+    machine.stack.push(0x00);
+    machine.stack.push(BoundedInt::<u256>::max());
+    machine.stack.push(0x0123456789ABCDEF);
+    machine.stack.push(0x28);
+    machine.stack.push(0x00);
 
     // When
-    let result = ctx.exec_log3();
-    let result = ctx.exec_log4();
+    let result = machine.exec_log3();
+    let result = machine.exec_log4();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(ctx.stack.len() == 0, 'stack size should be 0');
+    assert(machine.stack.len() == 0, 'stack size should be 0');
 
-    let mut events = ctx.events();
+    let mut events = machine.events();
     assert(events.len() == 2, 'context should have 2 events');
 
     let event1 = events.pop_front().unwrap();
