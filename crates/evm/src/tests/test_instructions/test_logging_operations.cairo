@@ -1,8 +1,7 @@
-use evm::context::{ExecutionContext, ExecutionContextTrait, CallContextTrait,};
 use evm::machine::{Machine, MachineCurrentContext};
+use evm::tests::test_utils::setup_machine;
 use evm::stack::StackTrait;
 use evm::memory::MemoryTrait;
-use evm::tests::test_utils::setup_machine;
 use evm::errors::{EVMError, STATE_MODIFICATION_ERROR, TYPE_CONVERSION_ERROR};
 use evm::instructions::LoggingOperationsTrait;
 use integer::BoundedInt;
