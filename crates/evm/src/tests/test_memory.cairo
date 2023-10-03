@@ -1,10 +1,10 @@
 use core::dict::Felt252DictTrait;
 use evm::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
 use integer::BoundedInt;
+use utils::constants::{POW_2_8, POW_2_56, POW_2_64, POW_2_120};
 use utils::{
     math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtensionTrait
 };
-use utils::constants::{POW_2_8, POW_2_56, POW_2_64, POW_2_120};
 
 mod internal {
     use evm::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
