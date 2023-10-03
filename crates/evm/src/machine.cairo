@@ -67,7 +67,7 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     /// to divide a unique Stack/Memory simulated by a dict into
     /// multiple sub-structures relative to a single context.
     #[inline(always)]
-    fn set_active_execution_ctx(ref self: Machine, ctx: ExecutionContext) {
+    fn set_current_context(ref self: Machine, ctx: ExecutionContext) {
         self.memory.set_active_segment(ctx.id);
         self.stack.set_active_segment(ctx.id);
         self.current_context = BoxTrait::new(ctx);
