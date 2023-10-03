@@ -1,8 +1,8 @@
+use evm::errors::EVMError;
 //! Logging Operations.
 
 // Internal imports
 use evm::machine::Machine;
-use evm::errors::EVMError;
 
 #[generate_trait]
 impl LoggingOperations of LoggingOperationsTrait {
@@ -43,11 +43,11 @@ impl LoggingOperations of LoggingOperationsTrait {
 }
 
 mod internal {
-    use evm::machine::{Machine, MachineCurrentContext};
-    use evm::stack::StackTrait;
+    use evm::errors::{EVMError, STATE_MODIFICATION_ERROR};
+    use evm::machine::{Machine, MachineCurrentContextTrait};
     use evm::memory::MemoryTrait;
     use evm::model::Event;
-    use evm::errors::{EVMError, STATE_MODIFICATION_ERROR};
+    use evm::stack::StackTrait;
 
     /// Store a new event in the dynamic context using topics
     /// popped from the stack and data from the memory.

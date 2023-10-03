@@ -1,9 +1,9 @@
-use evm::machine::{Machine, MachineCurrentContext};
-use evm::tests::test_utils::setup_machine;
-use evm::stack::StackTrait;
-use evm::memory::MemoryTrait;
 use evm::errors::{EVMError, STATE_MODIFICATION_ERROR, TYPE_CONVERSION_ERROR};
 use evm::instructions::LoggingOperationsTrait;
+use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::memory::MemoryTrait;
+use evm::stack::StackTrait;
+use evm::tests::test_utils::setup_machine;
 use integer::BoundedInt;
 use utils::helpers::u256_to_bytes_array;
 

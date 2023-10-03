@@ -448,9 +448,7 @@ impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtensi
         loop {
             match arr2.pop_front() {
                 Option::Some(elem) => self.append(*elem),
-                Option::None => {
-                    break;
-                }
+                Option::None => { break; }
             };
         }
     }

@@ -70,9 +70,7 @@ impl MemoryOperation of MemoryOperationTrait {
                     return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
                 }
             },
-            Option::None => {
-                return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
-            }
+            Option::None => { return Result::Err(EVMError::JumpError(INVALID_DESTINATION)); }
         }
         self.set_pc(index);
         Result::Ok(())
