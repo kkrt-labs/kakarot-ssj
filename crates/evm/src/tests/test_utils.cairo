@@ -35,19 +35,19 @@ fn setup_call_context() -> CallContext {
 
 fn setup_execution_context() -> ExecutionContext {
     let context_id = 0;
-    let call_context = setup_call_context();
+    let call_ctx = setup_call_context();
     let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
     let return_data = Default::default();
-    let child_context_return_data = Option::Some(array![1, 2, 3].span());
+    let child_return_data = Option::Some(array![1, 2, 3].span());
 
     ExecutionContextTrait::new(
         context_id,
         evm_address,
         starknet_address,
-        call_context,
+        call_ctx,
         Default::default(),
-        child_context_return_data,
+        child_return_data,
         return_data,
     )
 }
@@ -65,7 +65,7 @@ fn setup_call_context_with_bytecode(bytecode: Span<u8>) -> CallContext {
 
 fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext {
     let context_id = 0;
-    let call_context = setup_call_context_with_bytecode(bytecode);
+    let call_ctx = setup_call_context_with_bytecode(bytecode);
     let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
     let return_data = Default::default();
@@ -74,7 +74,7 @@ fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext
         context_id,
         evm_address,
         starknet_address,
-        call_context,
+        call_ctx,
         Default::default(),
         Default::default(),
         return_data,
@@ -95,7 +95,7 @@ fn setup_call_context_with_calldata(calldata: Span<u8>) -> CallContext {
 
 fn setup_execution_context_with_calldata(calldata: Span<u8>) -> ExecutionContext {
     let context_id = 0;
-    let call_context = setup_call_context_with_calldata(calldata);
+    let call_ctx = setup_call_context_with_calldata(calldata);
     let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
     let return_data = Default::default();
@@ -104,7 +104,7 @@ fn setup_execution_context_with_calldata(calldata: Span<u8>) -> ExecutionContext
         context_id,
         evm_address,
         starknet_address,
-        call_context,
+        call_ctx,
         Default::default(),
         Default::default(),
         return_data,
@@ -122,7 +122,7 @@ impl CallContextPartialEq of PartialEq<CallContext> {
 
 fn setup_machine() -> Machine {
     Machine {
-        current_context: BoxTrait::new(setup_execution_context()),
+        current_ctx: BoxTrait::new(setup_execution_context()),
         ctx_count: 1,
         stack: Default::default(),
         memory: Default::default(),
@@ -131,9 +131,9 @@ fn setup_machine() -> Machine {
 }
 
 fn setup_machine_with_bytecode(bytecode: Span<u8>) -> Machine {
-    let current_context = BoxTrait::new(setup_execution_context_with_bytecode(bytecode));
+    let current_ctx = BoxTrait::new(setup_execution_context_with_bytecode(bytecode));
     Machine {
-        current_context,
+        current_ctx,
         ctx_count: 1,
         stack: Default::default(),
         memory: Default::default(),
@@ -142,9 +142,9 @@ fn setup_machine_with_bytecode(bytecode: Span<u8>) -> Machine {
 }
 
 fn setup_machine_with_calldata(calldata: Span<u8>) -> Machine {
-    let current_context = BoxTrait::new(setup_execution_context_with_calldata(calldata));
+    let current_ctx = BoxTrait::new(setup_execution_context_with_calldata(calldata));
     Machine {
-        current_context,
+        current_ctx,
         ctx_count: 1,
         stack: Default::default(),
         memory: Default::default(),

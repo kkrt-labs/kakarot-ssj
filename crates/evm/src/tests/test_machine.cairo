@@ -19,13 +19,13 @@ fn test_machine_default() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_set_current_context() {
+fn test_set_current_ctx() {
     let mut machine: Machine = Default::default();
 
-    let first_ctx = machine.current_context.unbox();
+    let first_ctx = machine.current_ctx.unbox();
     assert(first_ctx.id == 0, 'wrong first id');
     // We need to re-box the context into the machine, otherwise we have a "Variable Moved" error.
-    machine.current_context = BoxTrait::new(first_ctx);
+    machine.current_ctx = BoxTrait::new(first_ctx);
     assert(machine.stack.active_segment == 0, 'wrong initial stack segment');
     assert(machine.memory.active_segment == 0, 'wrong initial memory segment');
 
@@ -33,10 +33,10 @@ fn test_set_current_context() {
     let mut second_ctx = setup_execution_context();
     second_ctx.id = 1;
 
-    machine.set_current_context(second_ctx);
+    machine.set_current_ctx(second_ctx);
     assert(machine.stack.active_segment == 1, 'wrong updated stack segment');
     assert(machine.memory.active_segment == 1, 'wrong updated stack segment');
-    assert(machine.current_context.unbox().id == 1, 'wrong updated id');
+    assert(machine.current_ctx.unbox().id == 1, 'wrong updated id');
 }
 
 #[test]
@@ -104,13 +104,13 @@ fn test_call_context_properties() {
     let bytecode = array![0x01, 0x02, 0x03, 0x04, 0x05].span();
     let mut machine = setup_machine_with_bytecode(bytecode);
 
-    let call_context = machine.call_context();
-    assert(call_context.read_only() == false, 'wrong read_only');
-    assert(call_context.gas_limit() == 0xffffff, 'wrong gas_limit');
-    assert(call_context.gas_price() == 0xaaaaaa, 'wrong gas_price');
-    assert(call_context.value() == 123456789, 'wrong value');
-    assert(call_context.bytecode() == bytecode, 'wrong bytecode');
-    assert(call_context.calldata() == array![4, 5, 6].span(), 'wrong calldata');
+    let call_ctx = machine.call_ctx();
+    assert(call_ctx.read_only() == false, 'wrong read_only');
+    assert(call_ctx.gas_limit() == 0xffffff, 'wrong gas_limit');
+    assert(call_ctx.gas_price() == 0xaaaaaa, 'wrong gas_price');
+    assert(call_ctx.value() == 123456789, 'wrong value');
+    assert(call_ctx.bytecode() == bytecode, 'wrong bytecode');
+    assert(call_ctx.calldata() == array![4, 5, 6].span(), 'wrong calldata');
 }
 
 #[test]
@@ -165,9 +165,9 @@ fn test_return_data() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_child_context_return_data() {
+fn test_child_return_data() {
     let mut machine: Machine = setup_machine();
 
-    let return_data = machine.child_context_return_data().unwrap();
+    let return_data = machine.child_return_data().unwrap();
     assert(return_data == array![1, 2, 3].span(), 'wrong child return data');
 }

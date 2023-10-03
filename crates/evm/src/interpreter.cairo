@@ -58,7 +58,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
     fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError> {
         // Retrieve the current program counter.
         let pc = machine.pc();
-        let bytecode = machine.call_context().bytecode();
+        let bytecode = machine.call_ctx().bytecode();
         let bytecode_len = bytecode.len();
 
         // Check if PC is not out of bounds.

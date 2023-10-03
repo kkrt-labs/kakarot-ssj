@@ -26,7 +26,7 @@ To overcome the problem stated above, we have come up with the following design:
   between the different execution contexts.
 - Each execution context has its own identifier `id`, which uniquely identifies
   it.
-- Each execution context has a `parent_context` field, which value is either a
+- Each execution context has a `parent_ctx` field, which value is either a
   pointer to its parent execution context or `null`.
   - Each execution context has a `child_context` field, which value is either a
     pointer to its child execution context or `null`.
@@ -69,12 +69,12 @@ classDiagram
         starknet_address: ContractAddress,
         program_counter: u32,
         status: Status,
-        call_context: CallContext,
+        call_ctx: CallContext,
         destroyed_contracts: Array~EthAddress~,
         events: Array~Event~,
         create_addresses: Array~EthAddress~,
         return_data: Array~u8~,
-        parent_context: Nullable~ExecutionContext~,
+        parent_ctx: Nullable~ExecutionContext~,
         child_context: Nullable~ExecutionContext~,
     }
 

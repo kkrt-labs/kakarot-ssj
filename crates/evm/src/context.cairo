@@ -111,8 +111,8 @@ impl CallContextImpl of CallContextTrait {
 
 impl DefaultBoxCallContext of Default<Box<CallContext>> {
     fn default() -> Box<CallContext> {
-        let call_context: CallContext = Default::default();
-        BoxTrait::new(call_context)
+        let call_ctx: CallContext = Default::default();
+        BoxTrait::new(call_ctx)
     }
 }
 
@@ -136,13 +136,13 @@ struct ExecutionContext {
     starknet_address: ContractAddress,
     program_counter: u32,
     status: Status,
-    call_context: Box<CallContext>,
+    call_ctx: Box<CallContext>,
     destroyed_contracts: Array<EthAddress>,
     events: Array<Event>,
     create_addresses: Array<EthAddress>,
     return_data: Array<u8>,
-    parent_context: Nullable<ExecutionContext>,
-    child_context_return_data: Option<Span<u8>>,
+    parent_ctx: Nullable<ExecutionContext>,
+    child_return_data: Option<Span<u8>>,
 }
 
 impl DefaultBoxExecutionContext of Default<Box<ExecutionContext>> {
@@ -163,9 +163,9 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         id: usize,
         evm_address: EthAddress,
         starknet_address: ContractAddress,
-        call_context: CallContext,
-        parent_context: Nullable<ExecutionContext>,
-        child_context_return_data: Option<Span<u8>>,
+        call_ctx: CallContext,
+        parent_ctx: Nullable<ExecutionContext>,
+        child_return_data: Option<Span<u8>>,
         return_data: Array<u8>,
     ) -> ExecutionContext {
         ExecutionContext {
@@ -174,23 +174,13 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             starknet_address,
             program_counter: Default::default(),
             status: Status::Active,
-            call_context: BoxTrait::new(
-                CallContextTrait::new(
-                    call_context.caller,
-                    call_context.bytecode,
-                    call_context.calldata,
-                    call_context.value,
-                    call_context.read_only,
-                    call_context.gas_limit,
-                    call_context.gas_price,
-                )
-            ),
+            call_ctx: BoxTrait::new(call_ctx),
             destroyed_contracts: Default::default(),
             events: Default::default(),
             create_addresses: Default::default(),
             return_data,
-            parent_context,
-            child_context_return_data,
+            parent_ctx,
+            child_return_data,
         }
     }
 
@@ -216,8 +206,8 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     #[inline(always)]
-    fn call_context(self: @ExecutionContext) -> CallContext {
-        (*self.call_context).unbox()
+    fn call_ctx(self: @ExecutionContext) -> CallContext {
+        (*self.call_ctx).unbox()
     }
 
     #[inline(always)]
@@ -286,7 +276,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn read_code(self: @ExecutionContext, len: usize) -> Span<u8> {
         // Copy code slice from [pc, pc+len]
-        let code = (*self.call_context).unbox().bytecode().slice(self.pc(), len);
+        let code = (*self.call_ctx).unbox().bytecode().slice(self.pc(), len);
 
         code
     }
@@ -322,7 +312,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     #[inline(always)]
-    fn child_context_return_data(self: @ExecutionContext) -> Option<Span<u8>> {
-        *self.child_context_return_data
+    fn child_return_data(self: @ExecutionContext) -> Option<Span<u8>> {
+        *self.child_return_data
     }
 }
