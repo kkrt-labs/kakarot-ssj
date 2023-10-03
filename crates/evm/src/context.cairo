@@ -116,6 +116,12 @@ impl DefaultBoxCallContext of Default<Box<CallContext>> {
     }
 }
 
+impl DefaultOptionSpanU8 of Default<Option<Span<u8>>> {
+    fn default() -> Option<Span<u8>> {
+        Option::None
+    }
+}
+
 
 // *************************************************************************
 //                              ExecutionContext
@@ -136,7 +142,7 @@ struct ExecutionContext {
     create_addresses: Array<EthAddress>,
     return_data: Array<u8>,
     parent_context: Nullable<ExecutionContext>,
-    child_context: Nullable<ExecutionContext>,
+    child_context_return_data: Option<Span<u8>>,
 }
 
 impl DefaultBoxExecutionContext of Default<Box<ExecutionContext>> {
@@ -159,7 +165,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         starknet_address: ContractAddress,
         call_context: CallContext,
         parent_context: Nullable<ExecutionContext>,
-        child_context: Nullable<ExecutionContext>,
+        child_context_return_data: Option<Span<u8>>,
         return_data: Array<u8>,
     ) -> ExecutionContext {
         ExecutionContext {
@@ -184,7 +190,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             create_addresses: Default::default(),
             return_data,
             parent_context,
-            child_context,
+            child_context_return_data,
         }
     }
 
@@ -313,5 +319,10 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn pc(self: @ExecutionContext) -> u32 {
         *self.program_counter
+    }
+
+    #[inline(always)]
+    fn child_context_return_data(self: @ExecutionContext) -> Option<Span<u8>> {
+        *self.child_context_return_data
     }
 }

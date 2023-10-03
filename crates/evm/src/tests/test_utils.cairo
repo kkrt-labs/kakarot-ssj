@@ -1,4 +1,6 @@
-use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait,};
+use evm::context::{
+    CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, DefaultOptionSpanU8
+};
 
 use evm::machine::Machine;
 use starknet::{contract_address_try_from_felt252, ContractAddress, EthAddress};
@@ -37,6 +39,7 @@ fn setup_execution_context() -> ExecutionContext {
     let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
     let return_data = Default::default();
+    let child_context_return_data = Option::Some(array![1, 2, 3].span());
 
     ExecutionContextTrait::new(
         context_id,
@@ -44,7 +47,7 @@ fn setup_execution_context() -> ExecutionContext {
         starknet_address,
         call_context,
         Default::default(),
-        Default::default(),
+        child_context_return_data,
         return_data,
     )
 }

@@ -1,6 +1,8 @@
 use core::nullable::{NullableTrait, null};
 use debug::PrintTrait;
-use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait};
+use evm::context::{
+    CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, DefaultOptionSpanU8
+};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::Event;
 use evm::stack::{Stack, StackTrait};
@@ -64,7 +66,6 @@ fn test_execution_context_new() {
     let read_only: bool = false;
 
     let parent_context: Nullable<ExecutionContext> = null();
-    let child_context: Nullable<ExecutionContext> = null();
 
     // When
     let mut execution_context = ExecutionContextTrait::new(
@@ -73,7 +74,7 @@ fn test_execution_context_new() {
         starknet_address,
         call_context,
         parent_context,
-        child_context,
+        Default::default(),
         return_data
     );
 
@@ -143,12 +144,27 @@ fn test_execution_context_read_code() {
 #[available_gas(300000)]
 #[ignore]
 fn test_is_root() {
-    // TODO: finish this test once calling_contexts are implemented
     // Given
     let mut execution_context = setup_execution_context();
 
     // When
     let is_root = execution_context.is_root();
-// Then
-// assert(is_root == true, 'should not be a leaf');
+
+    // Then
+    assert(is_root, 'should not be a leaf');
+}
+
+
+#[test]
+#[available_gas(300000)]
+#[ignore]
+fn test_child_context_return_data() {
+    // Given
+    let mut execution_context = setup_execution_context();
+
+    // When
+    let child_return_data = execution_context.child_context_return_data().unwrap();
+
+    // Then
+    assert(child_return_data == array![1, 2, 3].span(), 'should not be a leaf');
 }

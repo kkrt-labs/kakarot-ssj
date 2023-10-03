@@ -161,3 +161,13 @@ fn test_return_data() {
     let return_data = machine.return_data();
     assert(return_data.len() == 0, 'wrong length');
 }
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_child_context_return_data() {
+    let mut machine: Machine = setup_machine();
+
+    let return_data = machine.child_context_return_data().unwrap();
+    assert(return_data == array![1, 2, 3].span(), 'wrong child return data');
+}

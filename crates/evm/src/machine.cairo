@@ -252,4 +252,14 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
         current_execution_ctx.return_data = value;
         self.current_context = BoxTrait::new(current_execution_ctx);
     }
+
+    /// Getter for the return data of a child context, accessed from its parent context
+    /// Enabler for RETURNDATASIZE and RETURNDATACOPY opcodes
+    #[inline(always)]
+    fn child_context_return_data(ref self: Machine) -> Option<Span<u8>> {
+        let mut current_execution_ctx = self.current_context.unbox();
+        let child_context_return_data = current_execution_ctx.child_context_return_data();
+        self.current_context = BoxTrait::new(current_execution_ctx);
+        child_context_return_data
+    }
 }
