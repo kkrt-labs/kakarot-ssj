@@ -148,3 +148,43 @@ fn setup_machine_with_calldata(calldata: Span<u8>) -> Machine {
         storage_journal: Default::default(),
     }
 }
+
+fn setup_machine_with_read_only() -> Machine {
+    Machine {
+        current_context: BoxTrait::new(setup_execution_context_with_read_only()),
+        ctx_count: 1,
+        stack: Default::default(),
+        memory: Default::default(),
+        storage_journal: Default::default(),
+    }
+}
+
+fn setup_execution_context_with_read_only() -> ExecutionContext {
+    let context_id = 0;
+    let call_context = setup_call_context_with_read_only();
+    let starknet_address: ContractAddress = starknet_address();
+    let evm_address: EthAddress = evm_address();
+    let return_data = Default::default();
+
+    ExecutionContextTrait::new(
+        context_id,
+        evm_address,
+        starknet_address,
+        call_context,
+        Default::default(),
+        Default::default(),
+        return_data,
+    )
+}
+
+fn setup_call_context_with_read_only() -> CallContext {
+    let bytecode: Span<u8> = array![1, 2, 3].span();
+    let calldata: Span<u8> = array![4, 5, 6].span();
+    let value: u256 = callvalue();
+    let address = evm_address();
+    let read_only = true;
+    let gas_price = 0xaaaaaa;
+    let gas_limit = 0xffffff;
+
+    CallContextTrait::new(address, bytecode, calldata, value, read_only, gas_limit, gas_price)
+}

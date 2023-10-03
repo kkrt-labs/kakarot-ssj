@@ -314,4 +314,9 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     fn pc(self: @ExecutionContext) -> u32 {
         *self.program_counter
     }
+
+    #[inline(always)]
+    fn append_event(ref self: ExecutionContext, event: Event) {
+        self.events.append(event);
+    }
 }

@@ -190,18 +190,9 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     }
 
     #[inline(always)]
-    fn set_read_only(ref self: Machine, value: bool) {
-        let mut current_call_ctx = self.call_context();
-        let mut current_execution_ctx = self.current_context.unbox();
-        current_call_ctx.read_only = value;
-        current_execution_ctx.call_context = BoxTrait::new(current_call_ctx);
-        self.current_context = BoxTrait::new(current_execution_ctx);
-    }
-
-    #[inline(always)]
     fn append_event(ref self: Machine, event: Event) {
         let mut current_execution_ctx = self.current_context.unbox();
-        current_execution_ctx.events.append(event);
+        current_execution_ctx.append_event(event);
         self.current_context = BoxTrait::new(current_execution_ctx);
     }
 
