@@ -16,7 +16,7 @@ fn test_stack_new_should_return_empty_stack() {
 
 #[test]
 #[available_gas(400000)]
-fn test_empty__should_return_if_stack_is_empty() {
+fn test_empty_should_return_if_stack_is_empty() {
     // Given
     let mut stack = StackTrait::new();
 
