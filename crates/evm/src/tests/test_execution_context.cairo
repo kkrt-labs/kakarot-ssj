@@ -142,7 +142,6 @@ fn test_execution_context_read_code() {
 
 #[test]
 #[available_gas(300000)]
-#[ignore]
 fn test_is_root() {
     // Given
     let mut execution_context = setup_execution_context();
@@ -157,7 +156,6 @@ fn test_is_root() {
 
 #[test]
 #[available_gas(300000)]
-#[ignore]
 fn test_child_return_data() {
     // Given
     let mut execution_context = setup_execution_context();
@@ -166,5 +164,5 @@ fn test_child_return_data() {
     let child_return_data = execution_context.child_return_data().unwrap();
 
     // Then
-    assert(child_return_data == array![1, 2, 3].span(), 'should not be a leaf');
+    assert(child_return_data == array![1, 2, 3].span(), 'wrong child_return_data');
 }
