@@ -16,7 +16,7 @@ fn test_stack_new_should_return_empty_stack() {
 
 #[test]
 #[available_gas(400000)]
-fn test__empty__should_return_if_stack_is_empty() {
+fn test_empty__should_return_if_stack_is_empty() {
     // Given
     let mut stack = StackTrait::new();
 
@@ -31,7 +31,7 @@ fn test__empty__should_return_if_stack_is_empty() {
 
 #[test]
 #[available_gas(350000)]
-fn test__len__should_return_the_length_of_the_stack() {
+fn test_len__should_return_the_length_of_the_stack() {
     // Given
     let mut stack = StackTrait::new();
 

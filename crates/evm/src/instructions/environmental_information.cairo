@@ -7,6 +7,7 @@ use evm::stack::StackTrait;
 use integer::u32_overflowing_add;
 use utils::helpers::{load_word};
 use utils::traits::{EthAddressIntoU256};
+use starknet::EthAddress;
 
 #[generate_trait]
 impl EnvironmentInformationImpl of EnvironmentInformationTrait {
@@ -35,7 +36,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get caller address.
     /// # Specification: https://www.evm.codes/#33?fork=shanghai
     fn exec_caller(ref self: Machine) -> Result<(), EVMError> {
-        Result::Ok(())
+        self.stack.push(self.caller().into())
     }
 
     /// 0x34 - CALLVALUE

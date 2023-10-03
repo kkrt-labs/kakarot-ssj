@@ -171,7 +171,7 @@ fn test_exec_sdiv_pos() {
 
 #[test]
 #[available_gas(20000000)]
-fn test__exec_sdiv_neg() {
+fn test_exec_sdiv_neg() {
     // Given
     let mut machine = setup_machine();
     machine.stack.push(BoundedInt::max()).unwrap();
