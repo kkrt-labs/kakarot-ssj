@@ -67,9 +67,10 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     /// to divide a unique Stack/Memory simulated by a dict into
     /// multiple sub-structures relative to a single context.
     #[inline(always)]
-    fn set_active_execution_ctx(ref self: Machine, id: usize) {
-        self.memory.set_active_segment(id);
-        self.stack.set_active_segment(id);
+    fn set_active_execution_ctx(ref self: Machine, ctx: ExecutionContext) {
+        self.memory.set_active_segment(ctx.id);
+        self.stack.set_active_segment(ctx.id);
+        self.current_context = BoxTrait::new(ctx);
     }
 
     #[inline(always)]
@@ -240,7 +241,7 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     #[inline(always)]
     fn is_root(ref self: Machine) -> bool {
         let current_execution_ctx = self.current_context.unbox();
-        let is_root = current_execution_ctx.context_id == 0;
+        let is_root = current_execution_ctx.id == 0;
         self.current_context = BoxTrait::new(current_execution_ctx);
         is_root
     }
