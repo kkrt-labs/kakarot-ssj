@@ -13,15 +13,13 @@
 
 //! let value = stack.pop()?;
 //! ```
-
-// Core lib imports
+use debug::PrintTrait;
+use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW};
+use evm::helpers::U256TryIntoResultU32;
+use nullable::{nullable_from_box, NullableTrait};
+use starknet::EthAddress;
 
 use utils::constants;
-use debug::PrintTrait;
-use nullable::{nullable_from_box, NullableTrait};
-use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW};
-use evm::helpers::U256IntoResultU32;
-use starknet::EthAddress;
 use utils::i256::i256;
 
 
@@ -57,6 +55,9 @@ impl StackImpl of StackTrait {
     }
 
     #[inline(always)]
+    /// Sets the current active segment for the `Stack` instance.
+    /// Active segment are implementation-specific concepts that reflect
+    /// the execution context being currently executed.
     fn set_active_segment(ref self: Stack, active_segment: usize) {
         self.active_segment = active_segment;
     }
@@ -85,7 +86,7 @@ impl StackImpl of StackTrait {
         Result::Ok(())
     }
 
-    /// Pops the top item off the stack. 
+    /// Pops the top item off the stack.
     ///
     /// # Errors
     ///
@@ -113,7 +114,7 @@ impl StackImpl of StackTrait {
     #[inline(always)]
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError> {
         let item: u256 = self.pop()?;
-        let item: usize = Into::<u256, Result<usize, EVMError>>::into(item)?;
+        let item: usize = item.try_into_result()?;
         Result::Ok(item)
     }
 

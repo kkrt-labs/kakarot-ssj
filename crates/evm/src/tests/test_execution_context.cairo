@@ -1,22 +1,17 @@
-// Imports, may need adjustments based on actual dependencies and modules
-
-use debug::PrintTrait;
-use traits::PartialEq;
-
-use starknet::{EthAddress, ContractAddress};
-use starknet::testing::{set_contract_address, set_caller_address};
 use core::nullable::{NullableTrait, null};
-
+use debug::PrintTrait;
+use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::Event;
 use evm::stack::{Stack, StackTrait};
-use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait};
-//TODO remove import once merged in corelib
 use evm::tests::test_utils::{setup_call_context, setup_execution_context, CallContextPartialEq};
 use evm::tests::test_utils;
+use starknet::testing::{set_contract_address, set_caller_address};
+use starknet::{EthAddress, ContractAddress};
 
 
 use test_utils::{callvalue, evm_address};
+use traits::PartialEq;
 
 // TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)
 #[inline(never)]

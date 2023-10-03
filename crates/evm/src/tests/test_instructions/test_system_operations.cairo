@@ -1,11 +1,10 @@
+use evm::context::{ExecutionContext, ExecutionContextTrait,};
+use evm::instructions::MemoryOperationTrait;
 use evm::instructions::SystemOperationsTrait;
+use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::stack::StackTrait;
 use evm::tests::test_utils::setup_machine;
-use evm::instructions::MemoryOperationTrait;
-use evm::context::{ExecutionContext, ExecutionContextTrait,};
 use utils::helpers::load_word;
-use traits::Into;
-use evm::machine::{Machine, MachineCurrentContext};
 
 #[test]
 #[available_gas(20000000)]

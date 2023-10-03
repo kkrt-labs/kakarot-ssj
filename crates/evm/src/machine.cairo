@@ -3,11 +3,16 @@ use evm::{
         ExecutionContext, ExecutionContextTrait, DefaultBoxExecutionContext, CallContext,
         CallContextTrait, Status, Event
     },
-    stack::Stack, memory::Memory
+    stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}
 };
 use starknet::{EthAddress, ContractAddress};
 
 
+/// The Journal tracks the changes applied to storage during the execution of a transaction.
+/// Local changes tracks the changes applied inside a single execution context.
+/// Global changes tracks the changes applied in the entire transaction.
+/// Upon exiting an execution context, local changes must be finalized into global changes
+/// Upon exiting the transaction, global changes must be finalized into storage updates.
 #[derive(Destruct, Default)]
 struct Journal {
     local_changes: Felt252Dict<felt252>,
@@ -54,8 +59,20 @@ impl DefaultMachine of Default<Machine> {
 /// 1. We're not able to use @Machine as an argument for getters, as the ExecutionContext struct does not derive the Copy trait.
 /// 2. We must use a box reference to the current context, as the changes made during execution must be applied
 /// to only one ExecutionContext struct instance. Using a pointer ensures we never duplicate structs and thus changes.
+
 #[generate_trait]
-impl MachineCurrentContextImpl of MachineCurrentContext {
+impl MachineCurrentContextImpl of MachineCurrentContextTrait {
+    /// Sets the current execution context being executed by the machine.
+    /// This is an implementation-specific concept that is used
+    /// to divide a unique Stack/Memory simulated by a dict into
+    /// multiple sub-structures relative to a single context.
+    #[inline(always)]
+    fn set_current_context(ref self: Machine, ctx: ExecutionContext) {
+        self.memory.set_active_segment(ctx.id);
+        self.stack.set_active_segment(ctx.id);
+        self.current_context = BoxTrait::new(ctx);
+    }
+
     #[inline(always)]
     fn pc(ref self: Machine) -> usize {
         let current_execution_ctx = self.current_context.unbox();
@@ -218,16 +235,12 @@ impl MachineCurrentContextImpl of MachineCurrentContext {
         current_call_ctx.calldata()
     }
 
-    // *************************************************************************
-    //                          ExecutionContext methods
-    // *************************************************************************
-
-    /// Reads and return data from bytecode.
-    /// The program counter is incremented accordingly.
-    ///
+    /// Reads and returns `size` elements from bytecode starting from the current value
+    /// `pc`.
     /// # Arguments
     ///
-    /// * `self` - The `ExecutionContext` instance to read the data from.
+    /// * `self` - The `Machine` instance to read the data from.
+    /// * The current execution context is handled implicitly by the Machine.
     /// * `len` - The length of the data to read from the bytecode.
     #[inline(always)]
     fn read_code(ref self: Machine, len: usize) -> Span<u8> {
@@ -239,18 +252,15 @@ impl MachineCurrentContextImpl of MachineCurrentContext {
     }
 
 
+    /// Returns whether the current execution context is the root context.
+    /// The root is always the first context to be executed, and thus has id 0.
     #[inline(always)]
     fn is_root(ref self: Machine) -> bool {
         let current_execution_ctx = self.current_context.unbox();
-        let is_root = current_execution_ctx.context_id == 0;
+        let is_root = current_execution_ctx.id == 0;
         self.current_context = BoxTrait::new(current_execution_ctx);
         is_root
     }
-
-    // TODO: Implement print_debug
-    /// Debug print the execution context.
-    #[inline(always)]
-    fn print_debug(ref self: Machine) {}
 
     #[inline(always)]
     fn set_return_data(ref self: Machine, value: Array<u8>) {

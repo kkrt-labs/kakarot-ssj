@@ -1,7 +1,7 @@
-use starknet::{contract_address_try_from_felt252, ContractAddress, EthAddress};
+use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait,};
 
 use evm::machine::Machine;
-use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait,};
+use starknet::{contract_address_try_from_felt252, ContractAddress, EthAddress};
 
 fn starknet_address() -> ContractAddress {
     'starknet_address'.try_into().unwrap()

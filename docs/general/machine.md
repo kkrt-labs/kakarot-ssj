@@ -37,8 +37,7 @@ To overcome the problem stated above, we have come up with the following design:
   context tree until the desired execution context is reached. The machine also
   stores a pointer to the current execution context.
 - The execution context tree is initialized with a single root execution
-  context, which has no parent and no child. It has `context_id` field equal
-  to 0.
+  context, which has no parent and no child. It has `id` field equal to 0.
 
 The following diagram describes the model of the Kakarot Machine.
 
@@ -65,7 +64,7 @@ classDiagram
     }
 
     class ExecutionContext{
-        context_id: usize,
+        id: usize,
         evm_address: EthAddress,
         starknet_address: ContractAddress,
         program_counter: u32,

@@ -1,17 +1,16 @@
+use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION};
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
+use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::memory::{InternalMemoryTrait, MemoryTrait};
+use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_bytecode, setup_machine_with_calldata, evm_address, callvalue
 };
-use evm::stack::StackTrait;
-use evm::memory::{InternalMemoryTrait, MemoryTrait};
+use integer::BoundedInt;
 
 use starknet::EthAddressIntoFelt252;
 use utils::helpers::{u256_to_bytes_array};
 use utils::traits::{EthAddressIntoU256};
-use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION};
-use evm::helpers::U256IntoResultU32;
-use integer::BoundedInt;
-use evm::machine::{Machine, MachineCurrentContext};
 
 
 #[test]

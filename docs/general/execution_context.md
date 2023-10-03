@@ -16,7 +16,7 @@ fields
 ```mermaid
 classDiagram
     class ExecutionContext{
-        context_id: usize,
+        id: usize,
         evm_address: EthAddress,
         starknet_address: ContractAddress,
         program_counter: u32,

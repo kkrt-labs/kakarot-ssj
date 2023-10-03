@@ -25,6 +25,7 @@ enum EVMError {
     ReturnDataError: felt252,
     JumpError: felt252,
     NotImplemented,
+    UnknownOpcode: u8,
     StateModificationError: felt252
 }
 
@@ -38,6 +39,8 @@ impl EVMErrorIntoU256 of Into<EVMError, u256> {
             EVMError::ReturnDataError(error_message) => error_message.into(),
             EVMError::JumpError(error_message) => error_message.into(),
             EVMError::NotImplemented => 'NotImplemented'.into(),
+            // TODO: refactor with dynamic strings once supported
+            EVMError::UnknownOpcode => 'UnknownOpcode'.into(),
             EVMError::StateModificationError(error_message) => error_message.into(),
         }
     }
