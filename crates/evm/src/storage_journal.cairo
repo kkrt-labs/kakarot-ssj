@@ -41,6 +41,10 @@ impl JournalImpl of JournalTrait {
 
     /// Finalizes the local changes in the journal by copying them to the global changes and keys.
     /// Local changes are relative to a specific execution context. `finalize_local` must be called upon returning from an execution context.
+    /// Dropping the tracking of local keys effectively "resets" the journal,
+    /// without modifying the underlying dict. Reading from the journal will still
+    /// return the local changes first, but they will never be out of sync with global
+    /// changes, unless there was a modification more recently.
     fn finalize_local(ref self: Journal) {
         let mut local_keys = self.local_keys.span();
         loop {
@@ -53,7 +57,8 @@ impl JournalImpl of JournalTrait {
                 },
                 Option::None => { break; }
             }
-        }
+        };
+        self.local_keys = Default::default();
     }
 
     /// Finalizes the global changes in the journal by writing them to the storage to be stored permanently onchain.
@@ -75,6 +80,7 @@ impl JournalImpl of JournalTrait {
                 },
                 Option::None => { break; }
             }
-        }
+        };
+        self.global_keys = Default::default();
     }
 }

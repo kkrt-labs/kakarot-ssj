@@ -172,6 +172,16 @@ fn test_append_n() {
 
 #[test]
 #[available_gas(2000000000)]
+fn test_append_unique() {
+    let mut arr = array![1, 2, 3];
+    arr.append_unique(4);
+    assert(arr == array![1, 2, 3, 4], 'should have appended');
+    arr.append_unique(2);
+    assert(arr == array![1, 2, 3, 4], 'shouldnt have appended');
+}
+
+#[test]
+#[available_gas(2000000000)]
 fn test_reverse_bytes_u256() {
     let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
     let res = value.reverse_endianness();

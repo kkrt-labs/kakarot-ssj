@@ -494,13 +494,11 @@ impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtensionTrait<T> {
     // Returns true if the array contains an item.
     fn contains<+PartialEq<T>>(mut self: Span<T>, value: T) -> bool {
         loop {
-            match self.pop_front(){
-                Option::Some(elem) => {
-                    if *elem == value {
-                        break true;
-                    }
-                },
-                Option::None => {}
+            match self.pop_front() {
+                Option::Some(elem) => { if *elem == value {
+                    break true;
+                } },
+                Option::None => { break false; }
             }
         }
     }

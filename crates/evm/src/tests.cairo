@@ -14,6 +14,9 @@ mod test_machine;
 mod test_memory;
 
 #[cfg(test)]
+mod test_storage_journal;
+
+#[cfg(test)]
 mod test_stack;
 
 #[cfg(test)]
