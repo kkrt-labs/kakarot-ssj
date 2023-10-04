@@ -315,4 +315,9 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     fn child_return_data(self: @ExecutionContext) -> Option<Span<u8>> {
         *self.child_return_data
     }
+
+    #[inline(always)]
+    fn append_event(ref self: ExecutionContext, event: Event) {
+        self.events.append(event);
+    }
 }

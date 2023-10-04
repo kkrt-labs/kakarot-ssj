@@ -17,6 +17,7 @@ use comparison_operations::ComparisonAndBitwiseOperationsTrait;
 use duplication_operations::DuplicationOperationsTrait;
 use environmental_information::EnvironmentInformationTrait;
 use exchange_operations::ExchangeOperationsTrait;
+use logging_operations::LoggingOperationsTrait;
 use memory_operations::MemoryOperationTrait;
 use push_operations::PushOperationsTrait;
 use sha3::Sha3Trait;

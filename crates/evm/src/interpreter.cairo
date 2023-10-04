@@ -4,9 +4,11 @@
 use evm::context::{CallContextTrait,};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
-    ExchangeOperationsTrait, StopAndArithmeticOperationsTrait, ComparisonAndBitwiseOperationsTrait,
-    SystemOperationsTrait, BlockInformationTrait, DuplicationOperationsTrait,
-    EnvironmentInformationTrait, PushOperationsTrait, MemoryOperationTrait, logging_operations
+    duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
+    LoggingOperationsTrait, memory_operations, sha3, StopAndArithmeticOperationsTrait,
+    ComparisonAndBitwiseOperationsTrait, SystemOperationsTrait, BlockInformationTrait,
+    DuplicationOperationsTrait, EnvironmentInformationTrait, PushOperationsTrait,
+    MemoryOperationTrait
 };
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use utils::{helpers::u256_to_bytes_array};
@@ -586,23 +588,23 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         if opcode == 160 {
             // LOG0
-            logging_operations::exec_log0(ref machine);
+            return machine.exec_log0();
         }
         if opcode == 161 {
             // LOG1
-            logging_operations::exec_log1(ref machine);
+            return machine.exec_log1();
         }
         if opcode == 162 {
             // LOG2
-            logging_operations::exec_log2(ref machine);
+            return machine.exec_log2();
         }
         if opcode == 163 {
             // LOG3
-            logging_operations::exec_log3(ref machine);
+            return machine.exec_log3();
         }
         if opcode == 164 {
             // LOG4
-            logging_operations::exec_log4(ref machine);
+            return machine.exec_log4();
         }
         if opcode == 240 {
             // CREATE

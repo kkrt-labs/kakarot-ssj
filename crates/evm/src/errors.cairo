@@ -14,6 +14,9 @@ const RETURNDATA_OUT_OF_BOUNDS_ERROR: felt252 = 'KKT: ReturnDataOutOfBounds';
 // JUMP
 const INVALID_DESTINATION: felt252 = 'KKT: invalid JUMP destination';
 
+// EVM STATE
+const WRITE_IN_STATIC_CONTEXT: felt252 = 'KKT: WriteInStaticContext';
+
 #[derive(Drop, Copy, PartialEq)]
 enum EVMError {
     StackError: felt252,
@@ -22,7 +25,8 @@ enum EVMError {
     ReturnDataError: felt252,
     JumpError: felt252,
     NotImplemented,
-    UnknownOpcode: u8
+    UnknownOpcode: u8,
+    WriteInStaticContext: felt252
 }
 
 
@@ -36,7 +40,8 @@ impl EVMErrorIntoU256 of Into<EVMError, u256> {
             EVMError::JumpError(error_message) => error_message.into(),
             EVMError::NotImplemented => 'NotImplemented'.into(),
             // TODO: refactor with dynamic strings once supported
-            EVMError::UnknownOpcode => 'UnknownOpcode'.into()
+            EVMError::UnknownOpcode => 'UnknownOpcode'.into(),
+            EVMError::WriteInStaticContext(error_message) => error_message.into(),
         }
     }
 }

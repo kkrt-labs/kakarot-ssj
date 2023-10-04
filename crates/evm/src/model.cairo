@@ -1,5 +1,5 @@
 #[derive(Drop)]
 struct Event {
     keys: Array<u256>,
-    data: Array<felt252>,
+    data: Array<u8>,
 }

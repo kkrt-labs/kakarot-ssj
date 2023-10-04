@@ -190,6 +190,13 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     }
 
     #[inline(always)]
+    fn append_event(ref self: Machine, event: Event) {
+        let mut current_execution_ctx = self.current_ctx.unbox();
+        current_execution_ctx.append_event(event);
+        self.current_ctx = BoxTrait::new(current_execution_ctx);
+    }
+
+    #[inline(always)]
     fn gas_limit(ref self: Machine) -> u64 {
         let current_call_ctx = self.call_ctx();
         current_call_ctx.gas_limit()
