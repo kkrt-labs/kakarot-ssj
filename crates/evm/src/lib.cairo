@@ -28,6 +28,9 @@ mod model;
 // Stack module
 mod stack;
 
+// Storage journal module
+mod storage_journal;
+
 // tests
 #[cfg(test)]
 mod tests;

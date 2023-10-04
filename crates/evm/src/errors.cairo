@@ -17,6 +17,9 @@ const INVALID_DESTINATION: felt252 = 'KKT: invalid JUMP destination';
 // EVM STATE
 const WRITE_IN_STATIC_CONTEXT: felt252 = 'KKT: WriteInStaticContext';
 
+// STARKNET_SYSCALLS
+const READ_SYSCALL_FAILED: felt252 = 'KKT: read syscall failed';
+
 #[derive(Drop, Copy, PartialEq)]
 enum EVMError {
     StackError: felt252,
@@ -26,6 +29,7 @@ enum EVMError {
     JumpError: felt252,
     NotImplemented,
     UnknownOpcode: u8,
+    SyscallFailed: felt252,
     WriteInStaticContext: felt252
 }
 
@@ -41,6 +45,7 @@ impl EVMErrorIntoU256 of Into<EVMError, u256> {
             EVMError::NotImplemented => 'NotImplemented'.into(),
             // TODO: refactor with dynamic strings once supported
             EVMError::UnknownOpcode => 'UnknownOpcode'.into(),
+            EVMError::SyscallFailed(error_message) => error_message.into(),
             EVMError::WriteInStaticContext(error_message) => error_message.into(),
         }
     }

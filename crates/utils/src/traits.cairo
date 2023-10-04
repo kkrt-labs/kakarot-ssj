@@ -1,5 +1,7 @@
-use starknet::EthAddress;
-use starknet::ContractAddress;
+use starknet::{
+    StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
+    ContractAddress
+};
 use math::{Zeroable, Oneable};
 
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
@@ -38,5 +40,43 @@ impl EthAddressIntoU256 of Into<EthAddress, u256> {
     fn into(self: EthAddress) -> u256 {
         let intermediate: felt252 = self.into();
         intermediate.into()
+    }
+}
+
+//TODO remove once merged in corelib
+impl StorageBaseAddressIntoFelt252 of Into<StorageBaseAddress, felt252> {
+    fn into(self: StorageBaseAddress) -> felt252 {
+        storage_address_from_base(self).into()
+    }
+}
+
+impl StorageBaseAddressIntoU256 of Into<StorageBaseAddress, u256> {
+    fn into(self: StorageBaseAddress) -> u256 {
+        let self: felt252 = storage_address_from_base(self).into();
+        self.into()
+    }
+}
+
+//TODO remove once merged in corelib
+impl StorageBaseAddressPartialEq of PartialEq<StorageBaseAddress> {
+    fn eq(lhs: @StorageBaseAddress, rhs: @StorageBaseAddress) -> bool {
+        let lhs: felt252 = (*lhs).into();
+        let rhs: felt252 = (*rhs).into();
+        lhs == rhs
+    }
+    fn ne(lhs: @StorageBaseAddress, rhs: @StorageBaseAddress) -> bool {
+        !(*lhs == *rhs)
+    }
+}
+
+impl Felt252TryIntoStorageBaseAddress of TryInto<felt252, StorageBaseAddress> {
+    fn try_into(self: felt252) -> Option<StorageBaseAddress> {
+        /// Maximum StorageBaseAddress value range is [0, 2 ** 251 - 256)
+        let MAX_STORAGE_BASE_ADDRESS: u256 =
+            0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeff; //2**251 - 257
+        if self.into() > MAX_STORAGE_BASE_ADDRESS {
+            return Option::None;
+        }
+        Option::Some(storage_base_address_from_felt252(self))
     }
 }
