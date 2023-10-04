@@ -1687,7 +1687,7 @@ fn assert_sar(a: u256, b: u256, expected: u256) {
 
 #[test]
 #[available_gas(20000000)]
-fn test__exec_or__should_pop_0_and_1_and_push_0xCD__when_0_is_0x89_and_1_is_0xC5() {
+fn test_exec_or_should_pop_0_and_1_and_push_0xCD_when_0_is_0x89_and_1_is_0xC5() {
     //Given
     let mut machine = setup_machine();
     machine.stack.push(0x89);
