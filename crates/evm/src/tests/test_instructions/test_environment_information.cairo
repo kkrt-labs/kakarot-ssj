@@ -42,13 +42,32 @@ fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls
 // ref: https://github.com/kkrt-labs/kakarot-ssj/issues/183
 }
 
+
+// *************************************************************************
+// 0x33: CALLER
+// *************************************************************************
+#[test]
+#[available_gas(5000000)]
+fn test_caller() {
+    // Given
+    let mut machine = setup_machine();
+
+    // When
+    machine.exec_caller();
+
+    // Then
+    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(machine.stack.peek().unwrap() == evm_address().into(), 'should be evm_address');
+}
+
+
 // *************************************************************************
 // 0x34: CALLVALUE
 // *************************************************************************
 
 #[test]
 #[available_gas(1200000)]
-fn test__exec_callvalue() {
+fn test_exec_callvalue() {
     // Given
     let mut machine = setup_machine();
 
