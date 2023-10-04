@@ -1,4 +1,4 @@
-use evm::errors::{EVMError, STATE_MODIFICATION_ERROR, TYPE_CONVERSION_ERROR};
+use evm::errors::{EVMError, WRITE_IN_STATIC_CONTEXT, TYPE_CONVERSION_ERROR};
 use evm::instructions::LoggingOperationsTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
@@ -194,8 +194,8 @@ fn test_exec_log1_read_only_context() {
     // Then
     assert(result.is_err(), 'should have returned an error');
     assert(
-        result.unwrap_err() == EVMError::StateModificationError(STATE_MODIFICATION_ERROR),
-        'err != StateModificationError'
+        result.unwrap_err() == EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT),
+        'err != WriteInStaticContext'
     );
 }
 

@@ -43,7 +43,7 @@ impl LoggingOperations of LoggingOperationsTrait {
 }
 
 mod internal {
-    use evm::errors::{EVMError, STATE_MODIFICATION_ERROR};
+    use evm::errors::{EVMError, WRITE_IN_STATIC_CONTEXT};
     use evm::machine::{Machine, MachineCurrentContextTrait};
     use evm::memory::MemoryTrait;
     use evm::model::Event;
@@ -59,7 +59,7 @@ mod internal {
     fn exec_log_i(ref self: Machine, topics_len: u8) -> Result<(), EVMError> {
         // Revert if the transaction is in a read only context
         if self.read_only() {
-            return Result::Err(EVMError::StateModificationError(STATE_MODIFICATION_ERROR));
+            return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
 
         let offset = self.stack.pop_usize()?;
