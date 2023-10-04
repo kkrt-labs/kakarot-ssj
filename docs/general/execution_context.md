@@ -21,13 +21,13 @@ classDiagram
         starknet_address: ContractAddress,
         program_counter: u32,
         status: Status,
-        call_context: CallContext,
+        call_ctx: CallContext,
         destroyed_contracts: Array~EthAddress~,
         events: Array~Event~,
         create_addresses: Array~EthAddress~,
         return_data: Array~u32~,
-        parent_context: Nullable~ExecutionContext~,
-        child_context: Nullable~ExecutionContext~,
+        parent_ctx: Nullable~ExecutionContext~,
+        child_return_data: Option~Span~u8~~
     }
 
     class CallContext{
@@ -57,7 +57,7 @@ classDiagram
     ExecutionContext *-- Status
 ```
 
-When submitting a transaction to the EVM, the `call_context` field of the
+When submitting a transaction to the EVM, the `call_ctx` field of the
 `ExecutionContext` is initialized with the bytecode of the contract to execute,
 the call data sent in the transaction, and the value of the transaction. The
 `ExecutionContext` could also hold the `Stack` and `Memory` data structures

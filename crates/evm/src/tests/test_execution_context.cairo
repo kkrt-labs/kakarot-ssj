@@ -1,6 +1,8 @@
 use core::nullable::{NullableTrait, null};
 use debug::PrintTrait;
-use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait};
+use evm::context::{
+    CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, DefaultOptionSpanU8
+};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::Event;
 use evm::stack::{Stack, StackTrait};
@@ -47,7 +49,7 @@ fn test_call_context_new() {
 #[available_gas(500000)]
 fn test_execution_context_new() {
     // Given
-    let call_context = setup_call_context();
+    let call_ctx = setup_call_context();
     let context_id = 0;
     let program_counter: u32 = 0;
 
@@ -63,23 +65,22 @@ fn test_execution_context_new() {
     let reverted: bool = false;
     let read_only: bool = false;
 
-    let parent_context: Nullable<ExecutionContext> = null();
-    let child_context: Nullable<ExecutionContext> = null();
+    let parent_ctx: Nullable<ExecutionContext> = null();
 
     // When
     let mut execution_context = ExecutionContextTrait::new(
         context_id,
         evm_address,
         starknet_address,
-        call_context,
-        parent_context,
-        child_context,
+        call_ctx,
+        parent_ctx,
+        Default::default(),
         return_data
     );
 
     // Then
-    let call_context = setup_call_context();
-    assert(execution_context.call_context() == call_context, 'wrong call_context');
+    let call_ctx = setup_call_context();
+    assert(execution_context.call_ctx() == call_ctx, 'wrong call_ctx');
     assert(execution_context.program_counter == program_counter, 'wrong program_counter');
     assert(execution_context.stopped() == stopped, 'wrong stopped');
     assert(execution_context.return_data() == Default::default().span(), 'wrong return_data');
@@ -141,14 +142,27 @@ fn test_execution_context_read_code() {
 
 #[test]
 #[available_gas(300000)]
-#[ignore]
 fn test_is_root() {
-    // TODO: finish this test once calling_contexts are implemented
     // Given
     let mut execution_context = setup_execution_context();
 
     // When
     let is_root = execution_context.is_root();
-// Then
-// assert(is_root == true, 'should not be a leaf');
+
+    // Then
+    assert(is_root, 'should not be a leaf');
+}
+
+
+#[test]
+#[available_gas(300000)]
+fn test_child_return_data() {
+    // Given
+    let mut execution_context = setup_execution_context();
+
+    // When
+    let child_return_data = execution_context.child_return_data().unwrap();
+
+    // Then
+    assert(child_return_data == array![1, 2, 3].span(), 'wrong child_return_data');
 }
