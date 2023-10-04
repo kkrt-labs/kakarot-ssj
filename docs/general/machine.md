@@ -28,8 +28,10 @@ To overcome the problem stated above, we have come up with the following design:
   it.
 - Each execution context has a `parent_ctx` field, which value is either a
   pointer to its parent execution context or `null`.
-  - Each execution context has a `child_context` field, which value is either a
-    pointer to its child execution context or `null`.
+- Each execution context has a `child_return_data` field, which value is either
+  nothing or the return data from the child context. This is meant to enable
+  opcodes `RETURNDATASIZE` and `RETURNDATACOPY`. These two opcodes are the only
+  ones enabling a current context to access its child context's return data.
 - The execution context tree is a directed acyclic graph, where each execution
   context has at most one parent, and at most one child.
 - A specific execution context is accessible by traversing the execution context
@@ -75,7 +77,7 @@ classDiagram
         create_addresses: Array~EthAddress~,
         return_data: Array~u8~,
         parent_ctx: Nullable~ExecutionContext~,
-        child_context: Nullable~ExecutionContext~,
+        child_return_data: Option~Span~u8~~
     }
 
 
