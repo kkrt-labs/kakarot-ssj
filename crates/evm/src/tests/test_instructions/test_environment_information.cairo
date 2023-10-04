@@ -5,7 +5,8 @@ use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{
-    setup_machine, setup_machine_with_calldata, setup_machine_with_bytecode, evm_address, callvalue
+    setup_machine, setup_machine_with_calldata, setup_machine_with_bytecode, evm_address, callvalue,
+    setup_machine_with_nested_execution_context, other_evm_address
 };
 use integer::u32_overflowing_add;
 
@@ -58,6 +59,41 @@ fn test_caller() {
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == evm_address().into(), 'should be evm_address');
+}
+
+
+// *************************************************************************
+// 0x32: ORIGIN
+// *************************************************************************
+#[test]
+#[available_gas(20000000)]
+fn test_origin() {
+    // Given
+    let mut machine = setup_machine_with_nested_execution_context();
+
+    // When
+    machine.exec_origin();
+
+    // Then
+    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(machine.stack.peek().unwrap() == evm_address().into(), 'should be `evm_address`');
+
+    // And
+    assert(machine.caller() == other_evm_address(), 'should be another_evm_address');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_origin_nested_ctx() {
+    // Given
+    let mut machine = setup_machine();
+
+    // When
+    machine.exec_origin();
+
+    // Then
+    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(machine.stack.peek().unwrap() == evm_address().into(), 'should be `evm_address`');
 }
 
 
