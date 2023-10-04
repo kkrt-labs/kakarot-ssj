@@ -191,9 +191,9 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
 
     #[inline(always)]
     fn append_event(ref self: Machine, event: Event) {
-        let mut current_execution_ctx = self.current_context.unbox();
+        let mut current_execution_ctx = self.current_ctx.unbox();
         current_execution_ctx.append_event(event);
-        self.current_context = BoxTrait::new(current_execution_ctx);
+        self.current_ctx = BoxTrait::new(current_execution_ctx);
     }
 
     #[inline(always)]

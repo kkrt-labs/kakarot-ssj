@@ -154,10 +154,10 @@ fn setup_machine_with_calldata(calldata: Span<u8>) -> Machine {
 
 fn setup_machine_with_read_only() -> Machine {
     let mut machine = setup_machine();
-    let mut current_ctx = machine.current_context.unbox();
-    let mut current_call_ctx = current_ctx.call_context.unbox();
+    let mut current_ctx = machine.current_ctx.unbox();
+    let mut current_call_ctx = current_ctx.call_ctx.unbox();
     current_call_ctx.read_only = true;
-    current_ctx.call_context = BoxTrait::new(current_call_ctx);
-    machine.current_context = BoxTrait::new(current_ctx);
+    current_ctx.call_ctx = BoxTrait::new(current_call_ctx);
+    machine.current_ctx = BoxTrait::new(current_ctx);
     machine
 }
