@@ -28,7 +28,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get execution origination address.
     /// # Specification: https://www.evm.codes/#32?fork=shanghai
     fn exec_origin(ref self: Machine) -> Result<(), EVMError> {
-        Result::Ok(())
+        self.stack.push(self.origin().into())
     }
 
     /// 0x33 - CALLER

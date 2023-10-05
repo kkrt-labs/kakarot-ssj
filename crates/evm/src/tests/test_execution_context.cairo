@@ -6,7 +6,10 @@ use evm::context::{
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::Event;
 use evm::stack::{Stack, StackTrait};
-use evm::tests::test_utils::{setup_call_context, setup_execution_context, CallContextPartialEq};
+use evm::tests::test_utils::{
+    setup_call_context, setup_execution_context, setup_nested_execution_context,
+    CallContextPartialEq
+};
 use evm::tests::test_utils;
 use starknet::testing::{set_contract_address, set_caller_address};
 use starknet::{EthAddress, ContractAddress};
@@ -165,4 +168,18 @@ fn test_child_return_data() {
 
     // Then
     assert(child_return_data == array![1, 2, 3].span(), 'wrong child_return_data');
+}
+
+
+#[test]
+#[available_gas(300000)]
+fn test_origin() {
+    // Given
+    let mut execution_context = setup_nested_execution_context();
+
+    // When
+    let origin = execution_context.origin();
+
+    // Then
+    assert(origin == evm_address(), 'wrong child_return_data');
 }

@@ -184,6 +184,14 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     }
 
     #[inline(always)]
+    fn origin(ref self: Machine) -> EthAddress {
+        let mut current_execution_ctx = self.current_ctx.unbox();
+        let origin = current_execution_ctx.origin();
+        self.current_ctx = BoxTrait::new(current_execution_ctx);
+        origin
+    }
+
+    #[inline(always)]
     fn read_only(ref self: Machine) -> bool {
         let current_call_ctx = self.call_ctx();
         current_call_ctx.read_only()
