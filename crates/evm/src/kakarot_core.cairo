@@ -40,7 +40,7 @@ enum ContractTypeStorage {
 /// Note: We might not want to implement Copy on the bytecode field, as it'll be an expensive List
 #[derive(Copy, Drop, Serde, starknet::Store)]
 struct ContractAccountStorage {
-    nonce: u128,
+    nonce: u64,
     balance: u256,
 // TODO: add bytecode as a field for ContractAccountStorage
 // bytecode: List
