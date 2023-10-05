@@ -16,6 +16,9 @@ mod instructions;
 // interpreter module
 mod interpreter;
 
+// Kakarot smart contract
+mod kakarot_core;
+
 // Machine module
 mod machine;
 
@@ -27,9 +30,6 @@ mod model;
 
 // Stack module
 mod stack;
-
-// Kakarot smart contract
-mod kakarot_core;
 
 // tests
 #[cfg(test)]
