@@ -1,8 +1,9 @@
 use starknet::EthAddress;
 use utils::traits::{SpanDefault, EthAddressDefault, ContractAddressDefault};
-use cairo_lib::encoding::rlp;
-use cairo_lib::utils::types::bytes::{Bytes, BytesTryIntoU256};
-use cairo_lib::utils::types::byte::Byte;
+use utils::rlp;
+use utils::types::bytes::{Bytes, BytesTryIntoU256};
+use utils::types::byte::Byte;
+use utils::helpers::SpanExtensionTrait;
 use traits::{Into, TryInto};
 use debug::PrintTrait;
 

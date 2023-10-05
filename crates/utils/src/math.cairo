@@ -1,6 +1,7 @@
 use integer::{
     u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt, u128_overflowing_mul
 };
+use math::Oneable;
 
 trait Exponentiation<T> {
     /// Raise a number to a power.
@@ -231,3 +232,28 @@ impl U128WrappingBitshiftImpl of WrappingBitshift<u128> {
     }
 }
 
+fn pow<
+    T,
+    impl TZeroable: Zeroable<T>,
+    impl TSub: Sub<T>,
+    impl TMul: Mul<T>,
+    impl TOneable: Oneable<T>,
+    impl TCopy: Copy<T>,
+    impl TDrop: Drop<T>
+>(
+    base: T, mut exp: T
+) -> T {
+    if exp.is_zero() {
+        TOneable::one()
+    } else {
+        base * pow(base, exp - TOneable::one())
+    }
+}
+
+fn pow_felt252(base: felt252, exp: felt252) -> felt252 {
+    if exp == 0 {
+        1
+    } else {
+        base * pow_felt252(base, exp - 1)
+    }
+}

@@ -1,6 +1,6 @@
 use integer::{u256_overflowing_add, BoundedInt, u512};
 use utils::math::{
-    Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift
+    Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift, pow
 };
 
 #[test]
