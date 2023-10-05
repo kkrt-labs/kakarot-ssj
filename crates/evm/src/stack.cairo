@@ -15,12 +15,12 @@
 //! ```
 use debug::PrintTrait;
 use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW};
-use utils::traits::{U256TryIntoResultU32, U256TryIntoResultStorageBaseAddress};
 use nullable::{nullable_from_box, NullableTrait};
 use starknet::{StorageBaseAddress, EthAddress};
 
 use utils::constants;
 use utils::i256::i256;
+use utils::traits::{U256TryIntoResultU32, U256TryIntoResultStorageBaseAddress};
 
 
 #[derive(Destruct, Default)]
