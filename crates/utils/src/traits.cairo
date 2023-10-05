@@ -3,6 +3,7 @@ use starknet::{
     ContractAddress
 };
 use math::{Zeroable, Oneable};
+use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
     #[inline(always)]
@@ -50,6 +51,7 @@ impl StorageBaseAddressIntoFelt252 of Into<StorageBaseAddress, felt252> {
     }
 }
 
+
 impl StorageBaseAddressIntoU256 of Into<StorageBaseAddress, u256> {
     fn into(self: StorageBaseAddress) -> u256 {
         let self: felt252 = storage_address_from_base(self).into();
@@ -78,5 +80,37 @@ impl Felt252TryIntoStorageBaseAddress of TryInto<felt252, StorageBaseAddress> {
             return Option::None;
         }
         Option::Some(storage_base_address_from_felt252(self))
+    }
+}
+
+
+trait TryIntoResult<T, U, E> {
+    fn try_into_result(self: T) -> Result<U, E>;
+}
+
+impl U256TryIntoResultU32 of TryIntoResult<u256, usize, EVMError> {
+    /// Converts a u256 into a Result<u32, EVMError>
+    /// If the u256 is larger than MAX_U32, it returns an error.
+    /// Otherwise, it returns the casted value.
+    fn try_into_result(self: u256) -> Result<usize, EVMError> {
+        match self.try_into() {
+            Option::Some(value) => Result::Ok(value),
+            Option::None => Result::Err(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
+        }
+    }
+}
+
+impl U256TryIntoResultStorageBaseAddress of TryIntoResult<u256, StorageBaseAddress, EVMError> {
+    /// Converts a u256 into a Result<u32, EVMError>
+    /// If the u256 is larger than MAX_U32, it returns an error.
+    /// Otherwise, it returns the casted value.
+    fn try_into_result(self: u256) -> Result<StorageBaseAddress, EVMError> {
+        let res_felt: felt252 = self
+            .try_into()
+            .ok_or(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))?;
+        let res_sba: StorageBaseAddress = res_felt
+            .try_into()
+            .ok_or(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))?;
+        Result::Ok(res_sba)
     }
 }

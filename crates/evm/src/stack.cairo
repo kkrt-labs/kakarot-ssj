@@ -15,7 +15,7 @@
 //! ```
 use debug::PrintTrait;
 use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW};
-use evm::helpers::{U256TryIntoResultU32, U256TryIntoResultStorageBaseAddress};
+use utils::traits::{U256TryIntoResultU32, U256TryIntoResultStorageBaseAddress};
 use nullable::{nullable_from_box, NullableTrait};
 use starknet::{StorageBaseAddress, EthAddress};
 
@@ -115,8 +115,7 @@ impl StackImpl of StackTrait {
     #[inline(always)]
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError> {
         let item: u256 = self.pop()?;
-        let item: usize = item.try_into_result()?;
-        Result::Ok(item)
+        item.try_into_result()
     }
 
     /// Calls `Stack::pop` and convert it to i256
@@ -144,8 +143,7 @@ impl StackImpl of StackTrait {
     #[inline(always)]
     fn pop_sba(ref self: Stack) -> Result<StorageBaseAddress, EVMError> {
         let item: u256 = self.pop()?;
-        let item: StorageBaseAddress = item.try_into_result()?;
-        Result::Ok(item)
+        item.try_into_result()
     }
 
     /// Calls `Stack::pop` and converts it to usize

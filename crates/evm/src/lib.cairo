@@ -7,9 +7,6 @@ mod errors;
 // Kakarot main module
 mod execution;
 
-// Helpers module
-mod helpers;
-
 // instructions module
 mod instructions;
 
