@@ -28,6 +28,9 @@ mod model;
 // Stack module
 mod stack;
 
+// Kakarot smart contract
+mod kakarot_core;
+
 // tests
 #[cfg(test)]
 mod tests;
