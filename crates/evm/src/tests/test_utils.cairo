@@ -13,6 +13,10 @@ fn evm_address() -> EthAddress {
     'evm_address'.try_into().unwrap()
 }
 
+fn other_evm_address() -> EthAddress {
+    0xabde1.try_into().unwrap()
+}
+
 fn zero_address() -> ContractAddress {
     0.try_into().unwrap()
 }
@@ -50,6 +54,21 @@ fn setup_execution_context() -> ExecutionContext {
         child_return_data,
         return_data,
     )
+}
+
+fn setup_nested_execution_context() -> ExecutionContext {
+    let mut parent_context = setup_execution_context();
+
+    // Second Execution Context
+    let context_id = 1;
+    let mut child_context = setup_execution_context();
+    child_context.id = context_id;
+    child_context.parent_ctx = NullableTrait::new(parent_context);
+    let mut call_ctx = child_context.call_ctx.unbox();
+    call_ctx.caller = other_evm_address();
+    child_context.call_ctx = BoxTrait::new(call_ctx);
+
+    return child_context;
 }
 
 fn setup_call_context_with_bytecode(bytecode: Span<u8>) -> CallContext {
@@ -160,4 +179,15 @@ fn setup_machine_with_read_only() -> Machine {
     current_ctx.call_ctx = BoxTrait::new(current_call_ctx);
     machine.current_ctx = BoxTrait::new(current_ctx);
     machine
+}
+
+fn setup_machine_with_nested_execution_context() -> Machine {
+    let current_ctx = BoxTrait::new(setup_nested_execution_context());
+    Machine {
+        current_ctx,
+        ctx_count: 1,
+        stack: Default::default(),
+        memory: Default::default(),
+        storage_journal: Default::default(),
+    }
 }

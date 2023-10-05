@@ -320,4 +320,22 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     fn append_event(ref self: ExecutionContext, event: Event) {
         self.events.append(event);
     }
+
+    fn origin(ref self: ExecutionContext) -> EthAddress {
+        if (self.is_root()) {
+            return self.call_ctx().caller();
+        }
+        // If the current execution context is not root, then it MUST have a parent_context
+        // We're able to deref the nullable pointer without risk of panic
+        let mut parent_context = self.parent_ctx.deref();
+
+        // Entering a recursion
+        let origin = parent_context.origin();
+
+        // Recursively reboxing parent contexts
+        self.parent_ctx = NullableTrait::new(parent_context);
+
+        // Return self.call_context().caller() where self is the root context
+        origin
+    }
 }
