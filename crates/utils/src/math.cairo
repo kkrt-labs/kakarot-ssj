@@ -14,6 +14,7 @@ impl ExponentiationImpl<
     T,
     impl TZeroable: Zeroable<T>,
     impl TOneable: Oneable<T>,
+    impl TAdd: Add<T>,
     impl TSub: Sub<T>,
     impl TMul: Mul<T>,
     impl TCopy: Copy<T>,
@@ -124,21 +125,25 @@ trait Bitshift<T> {
     fn shr(self: T, shift: T) -> T;
 }
 
-impl U256BitshiftImpl of Bitshift<u256> {
-    fn shl(self: u256, shift: u256) -> u256 {
-        if shift > 255 {
-            // 2.pow(shift) for shift > 255 will panic with 'u256_mul Overflow'
-            panic_with_felt252('u256_mul Overflow');
-        }
-        self * 2.pow(shift)
+impl BitshiftImpl<
+    T,
+    impl TZeroable: Zeroable<T>,
+    impl TOneable: Oneable<T>,
+    impl TAdd: Add<T>,
+    impl TSub: Sub<T>,
+    impl TDiv: Div<T>,
+    impl TMul: Mul<T>,
+    impl TCopy: Copy<T>,
+    impl TDrop: Drop<T>
+> of Bitshift<T> {
+    fn shl(self: T, shift: T) -> T {
+        let two = TOneable::one() + TOneable::one();
+        self * two.pow(shift)
     }
 
-    fn shr(self: u256, shift: u256) -> u256 {
-        if shift > 255 {
-            // 2.pow(shift) for shift > 255 will panic with 'u256_mul Overflow'
-            panic_with_felt252('u256_mul Overflow');
-        }
-        self / 2.pow(shift)
+    fn shr(self: T, shift: T) -> T {
+        let two = TOneable::one() + TOneable::one();
+        self / two.pow(shift)
     }
 }
 
@@ -186,23 +191,6 @@ impl U256WrappingBitshiftImpl of WrappingBitshift<u256> {
         // we early return to save gas
         // and prevent unexpected behavior, e.g. 2.pow(256) == 0 mod 2^256, given we can't divide by zero
         if shift > 255 {
-            return 0;
-        }
-        self / 2.pow(shift)
-    }
-}
-
-impl U128BitshiftImpl of Bitshift<u128> {
-    fn shl(self: u128, shift: u128) -> u128 {
-        if shift > 127 {
-            // 2.pow(shift) for shift > 255 will panic with 'u128_mul Overflow'
-            panic_with_felt252('u128_mul Overflow');
-        }
-        self * 2.pow(shift)
-    }
-
-    fn shr(self: u128, shift: u128) -> u128 {
-        if shift > 127 {
             return 0;
         }
         self / 2.pow(shift)
