@@ -84,11 +84,11 @@ impl Felt252TryIntoStorageBaseAddress of TryInto<felt252, StorageBaseAddress> {
 }
 
 
-trait TryIntoResult<T, U, E> {
-    fn try_into_result(self: T) -> Result<U, E>;
+trait TryIntoResult<T, U> {
+    fn try_into_result(self: T) -> Result<U, EVMError>;
 }
 
-impl U256TryIntoResultU32 of TryIntoResult<u256, usize, EVMError> {
+impl U256TryIntoResultU32 of TryIntoResult<u256, usize> {
     /// Converts a u256 into a Result<u32, EVMError>
     /// If the u256 is larger than MAX_U32, it returns an error.
     /// Otherwise, it returns the casted value.
@@ -100,7 +100,7 @@ impl U256TryIntoResultU32 of TryIntoResult<u256, usize, EVMError> {
     }
 }
 
-impl U256TryIntoResultStorageBaseAddress of TryIntoResult<u256, StorageBaseAddress, EVMError> {
+impl U256TryIntoResultStorageBaseAddress of TryIntoResult<u256, StorageBaseAddress> {
     /// Converts a u256 into a Result<u32, EVMError>
     /// If the u256 is larger than MAX_U32, it returns an error.
     /// Otherwise, it returns the casted value.
