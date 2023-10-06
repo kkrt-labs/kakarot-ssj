@@ -71,7 +71,7 @@ mod KakarotCore {
         deploy_fee: u128,
         externally_owned_account_class_hash: ClassHash,
         /// Storage of CAs in EVM is defined as a mapping of key (bytes32) - value (bytes32) pairs
-        contract_account_storage: LegacyMap::<(EthAddress, u256), u256>,
+        contract_account_storage: LegacyMap<(EthAddress, u256), u256>,
     // TODO: add ownable as component
     }
 
