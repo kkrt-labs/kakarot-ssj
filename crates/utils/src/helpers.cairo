@@ -479,43 +479,28 @@ impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtensi
             n -= 1;
         };
     }
+
+    // Appends an item only if it is not already in the array.
+    fn append_unique<+PartialEq<T>>(ref self: Array<T>, value: T) {
+        if self.span().contains(value) {
+            return ();
+        }
+        self.append(value);
+    }
 }
 
 #[generate_trait]
-impl SpanExtension of SpanExtensionTrait {
-    /// Pads a span of bytes with zeroes on the right.
-    ///
-    /// It creates a new `Array<u8>` instance and clones each element of the input span to it,
-    /// and then adds the required amount of zeroes.
-    ///
-    /// # Arguments
-    ///
-    /// * `self` - The `Span<u8>` instance to pad with zeroes.
-    /// * `n_zeroes` - The number of zeroes to add to the right of the span.
-    ///
-    /// # Returns
-    ///
-    /// A new `Span<u8>` instance which has a length equal to the length of the input
-    /// span plus the number of zeroes specified.
-    fn clone_pad_right(self: Span<u8>, n_zeroes: usize) -> Span<u8> {
-        let mut res: Array<u8> = array![];
-        let mut i = 0;
+impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtensionTrait<T> {
+    // Returns true if the array contains an item.
+    fn contains<+PartialEq<T>>(mut self: Span<T>, value: T) -> bool {
         loop {
-            if i == self.len() {
-                break;
+            match self.pop_front() {
+                Option::Some(elem) => { if *elem == value {
+                    break true;
+                } },
+                Option::None => { break false; }
             }
-            res.append(*self[i]);
-            i += 1;
-        };
-        let mut i = 0;
-        loop {
-            if i == n_zeroes {
-                break ();
-            }
-            res.append(0);
-            i += 1;
-        };
-        res.span()
+        }
     }
 }
 

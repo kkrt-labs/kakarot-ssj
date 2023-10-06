@@ -7,9 +7,6 @@ mod errors;
 // Kakarot main module
 mod execution;
 
-// Helpers module
-mod helpers;
-
 // instructions module
 mod instructions;
 
@@ -27,6 +24,9 @@ mod model;
 
 // Stack module
 mod stack;
+
+// Storage journal module
+mod storage_journal;
 
 // tests
 #[cfg(test)]

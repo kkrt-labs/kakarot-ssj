@@ -14,13 +14,13 @@
 //! let value = stack.pop()?;
 //! ```
 use debug::PrintTrait;
-use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW};
-use evm::helpers::U256TryIntoResultU32;
+use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW, TYPE_CONVERSION_ERROR};
 use nullable::{nullable_from_box, NullableTrait};
-use starknet::EthAddress;
+use starknet::{StorageBaseAddress, EthAddress};
 
 use utils::constants;
 use utils::i256::i256;
+use utils::traits::{Felt252TryIntoStorageBaseAddress, TryIntoResult};
 
 
 #[derive(Destruct, Default)]
@@ -38,6 +38,7 @@ trait StackTrait {
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError>;
     fn pop_i256(ref self: Stack) -> Result<i256, EVMError>;
     fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError>;
+    fn pop_sba(ref self: Stack) -> Result<StorageBaseAddress, EVMError>;
     fn pop_n(ref self: Stack, n: usize) -> Result<Array<u256>, EVMError>;
     fn peek(ref self: Stack) -> Option<u256>;
     fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError>;
@@ -54,10 +55,10 @@ impl StackImpl of StackTrait {
         Default::default()
     }
 
-    #[inline(always)]
     /// Sets the current active segment for the `Stack` instance.
     /// Active segment are implementation-specific concepts that reflect
     /// the execution context being currently executed.
+    #[inline(always)]
     fn set_active_segment(ref self: Stack, active_segment: usize) {
         self.active_segment = active_segment;
     }
@@ -114,6 +115,7 @@ impl StackImpl of StackTrait {
     #[inline(always)]
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError> {
         let item: u256 = self.pop()?;
+        // item.try_into().ok_or(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
         let item: usize = item.try_into_result()?;
         Result::Ok(item)
     }
@@ -129,6 +131,21 @@ impl StackImpl of StackTrait {
     fn pop_i256(ref self: Stack) -> Result<i256, EVMError> {
         let item: u256 = self.pop()?;
         let item: i256 = item.into();
+        Result::Ok(item)
+    }
+
+    /// Calls `Stack::pop` and converts it to a StorageBaseAddress
+    ///
+    /// # Errors
+    ///
+    /// Returns `EVMError::StackError` with appropriate message
+    /// In case:
+    ///     - Stack is empty
+    ///     - Type conversion failed
+    #[inline(always)]
+    fn pop_sba(ref self: Stack) -> Result<StorageBaseAddress, EVMError> {
+        let item: u256 = self.pop()?;
+        let item: StorageBaseAddress = item.try_into_result()?;
         Result::Ok(item)
     }
 

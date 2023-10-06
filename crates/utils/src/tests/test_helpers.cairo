@@ -159,19 +159,6 @@ fn test_split_word() {
 
 #[test]
 #[available_gas(2000000000)]
-fn test_clone_pad_zeroes() {
-    // Given
-    let mut original: Span<u8> = array![1, 2, 3, 4].span();
-
-    // When
-    let res = original.clone_pad_right(3);
-
-    // Then
-    assert(res == array![1, 2, 3, 4, 0, 0, 0].span(), 'padding mismatch');
-}
-
-#[test]
-#[available_gas(2000000000)]
 fn test_append_n() {
     // Given
     let mut original: Array<u8> = array![1, 2, 3, 4];
@@ -181,6 +168,16 @@ fn test_append_n() {
 
     // Then
     assert(original == array![1, 2, 3, 4, 9, 9, 9], 'append_n failed');
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test_append_unique() {
+    let mut arr = array![1, 2, 3];
+    arr.append_unique(4);
+    assert(arr == array![1, 2, 3, 4], 'should have appended');
+    arr.append_unique(2);
+    assert(arr == array![1, 2, 3, 4], 'shouldnt have appended');
 }
 
 #[test]
