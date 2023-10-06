@@ -1,6 +1,7 @@
 use integer::{
     u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt, u128_overflowing_mul
 };
+use math::{Zeroable, Oneable};
 
 trait Exponentiation<T> {
     /// Raise a number to a power.
@@ -9,25 +10,32 @@ trait Exponentiation<T> {
     fn pow(self: T, exponent: T) -> T;
 }
 
+impl ExponentiationImpl<
+    T,
+    impl TZeroable: Zeroable<T>,
+    impl TOneable: Oneable<T>,
+    impl TSub: Sub<T>,
+    impl TMul: Mul<T>,
+    impl TCopy: Copy<T>,
+    impl TDrop: Drop<T>
+> of Exponentiation<T> {
+    fn pow(self: T, mut exponent: T) -> T {
+        if self.is_zero() {
+            return TZeroable::zero();
+        }
+        if exponent.is_zero() {
+            return TOneable::one();
+        }
+        self * self.pow(exponent - TOneable::one())
+    }
+}
+
 trait WrappingExponentiation<T> {
     /// Raise a number to a power modulo MAX<T> (max value of type T).
     /// Instead of explicitly providing a modulo, we use overflowing functions
     /// from the core library, which wrap around when overflowing.
     /// * `T` - The result of base raised to the power of exp modulo MAX<T>.
     fn wrapping_pow(self: T, exponent: T) -> T;
-}
-
-impl U256ExpImpl of Exponentiation<u256> {
-    fn pow(self: u256, mut exponent: u256) -> u256 {
-        if self == 0 {
-            return 0;
-        }
-        if exponent == 0 {
-            return 1;
-        } else {
-            return self * Exponentiation::pow(self, exponent - 1);
-        }
-    }
 }
 
 impl U256WrappingExponentiationImpl of WrappingExponentiation<u256> {
@@ -45,19 +53,6 @@ impl U256WrappingExponentiationImpl of WrappingExponentiation<u256> {
             exponent -= 1;
         };
         result
-    }
-}
-
-impl U128ExpImpl of Exponentiation<u128> {
-    fn pow(self: u128, mut exponent: u128) -> u128 {
-        if self == 0 {
-            return 0;
-        }
-        if exponent == 0 {
-            return 1;
-        } else {
-            return self * Exponentiation::pow(self, exponent - 1);
-        }
     }
 }
 
