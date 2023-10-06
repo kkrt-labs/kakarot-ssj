@@ -7,6 +7,7 @@ use utils::constants::{
     POW_256_16,
 };
 use keccak::u128_split;
+use utils::math::Bitshift;
 
 
 /// Ceils a number of bits to the next word (32 bytes)
@@ -516,6 +517,34 @@ impl SpanExtension of SpanExtensionTrait {
             i += 1;
         };
         res.span()
+    }
+}
+
+impl SpanU8TryIntoU256 of TryInto<Span<u8>, u256> {
+    fn try_into(self: Span<u8>) -> Option<u256> {
+        let len = self.len();
+        if len > 32 {
+            return Option::None(());
+        }
+
+        if self.is_empty() {
+            return Option::Some(0);
+        }
+
+        let offset = len.into() - 1;
+        let mut result: u256 = 0;
+        let mut i: usize = 0;
+        loop {
+            if i >= len {
+                break ();
+            }
+            let byte: u256 = (*self.at(i)).into();
+            result += Bitshift::shl(byte, 8 * (offset - i.into()));
+
+            i += 1;
+        };
+
+        Option::Some(result)
     }
 }
 

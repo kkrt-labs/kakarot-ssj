@@ -3,8 +3,7 @@ use option::OptionTrait;
 use array::{Array, ArrayTrait, Span, SpanTrait};
 use clone::Clone;
 use traits::{Into, TryInto};
-use utils::types::bytes::{Bytes, BytesTryIntoU256};
-use utils::types::byte::Byte;
+use utils::helpers::SpanU8TryIntoU256;
 
 // @notice Enum with all possible RLP types
 #[derive(Drop, PartialEq)]
@@ -21,7 +20,7 @@ impl RLPTypeImpl of RLPTypeTrait {
     // @notice Returns RLPType from the leading byte
     // @param byte Leading byte
     // @return Result with RLPType
-    fn from_byte(byte: Byte) -> Result<RLPType, felt252> {
+    fn from_byte(byte: u8) -> Result<RLPType, felt252> {
         if byte <= 0x7f {
             Result::Ok(RLPType::String(()))
         } else if byte <= 0xb7 {
@@ -41,15 +40,15 @@ impl RLPTypeImpl of RLPTypeTrait {
 // @notice Represent a RLP item
 #[derive(Drop)]
 enum RLPItem {
-    Bytes: Bytes,
+    Bytes: Span<u8>,
     // Should be Span<RLPItem> to allow for any depth/recursion, not yet supported by the compiler
-    List: Span<Bytes>
+    List: Span<Span<u8>>
 }
 
 // @notice RLP decodes a rlp encoded byte array
 // @param input RLP encoded bytes
 // @return Result with RLPItem and size of the decoded item
-fn rlp_decode(input: Bytes) -> Result<(RLPItem, usize), felt252> {
+fn rlp_decode(input: Span<u8>) -> Result<(RLPItem, usize), felt252> {
     let prefix = *input.at(0);
 
     // Unwrap is impossible to panic here
@@ -96,7 +95,7 @@ fn rlp_decode(input: Bytes) -> Result<(RLPItem, usize), felt252> {
     }
 }
 
-fn rlp_decode_list(ref input: Bytes) -> Span<Bytes> {
+fn rlp_decode_list(ref input: Span<u8>) -> Span<Span<u8>> {
     let mut i = 0;
     let len = input.len();
     let mut output = ArrayTrait::new();

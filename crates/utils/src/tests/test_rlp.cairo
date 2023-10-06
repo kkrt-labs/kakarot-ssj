@@ -1,5 +1,4 @@
 use utils::rlp::{rlp_decode, RLPType, RLPTypeTrait, RLPItem};
-use utils::types::bytes::Bytes;
 use array::{ArrayTrait, SpanTrait};
 use result::ResultTrait;
 
