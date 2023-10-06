@@ -17,4 +17,7 @@ mod test_memory;
 mod test_stack;
 
 #[cfg(test)]
+mod test_storage_journal;
+
+#[cfg(test)]
 mod test_utils;

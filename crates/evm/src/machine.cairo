@@ -1,3 +1,4 @@
+use evm::storage_journal::Journal;
 use evm::{
     context::{
         ExecutionContext, ExecutionContextTrait, DefaultBoxExecutionContext, CallContext,
@@ -5,21 +6,8 @@ use evm::{
     },
     stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}
 };
+
 use starknet::{EthAddress, ContractAddress};
-
-
-/// The Journal tracks the changes applied to storage during the execution of a transaction.
-/// Local changes tracks the changes applied inside a single execution context.
-/// Global changes tracks the changes applied in the entire transaction.
-/// Upon exiting an execution context, local changes must be finalized into global changes
-/// Upon exiting the transaction, global changes must be finalized into storage updates.
-#[derive(Destruct, Default)]
-struct Journal {
-    local_changes: Felt252Dict<felt252>,
-    local_keys: Array<felt252>,
-    global_changes: Felt252Dict<felt252>,
-    global_keys: Array<felt252>
-}
 
 #[derive(Destruct)]
 struct Machine {

@@ -3,14 +3,15 @@ use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::stack::StackTrait;
+use evm::storage_journal::{JournalTrait};
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_bytecode, setup_machine_with_calldata, evm_address, callvalue
 };
 use integer::BoundedInt;
 
-use starknet::EthAddressIntoFelt252;
+use starknet::{EthAddressIntoFelt252, storage_base_address_const, Store};
 use utils::helpers::{u256_to_bytes_array};
-use utils::traits::{EthAddressIntoU256};
+use utils::traits::{EthAddressIntoU256, StorageBaseAddressIntoU256};
 
 
 #[test]
@@ -497,4 +498,44 @@ fn test_exec_jumpi_inside_pushn() {
     // Then
     assert(result.is_err(), 'invalid jump dest');
     assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_sload_from_journal() {
+    // Given
+    let mut machine = setup_machine();
+    let key = storage_base_address_const::<0x10>();
+    let value = 0x02;
+    machine.storage_journal.write(key, value);
+
+    machine.stack.push(key.into());
+
+    // When
+    let result = machine.exec_sload();
+
+    // Then
+    assert(result.is_ok(), 'should have succeeded');
+    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(machine.stack.pop().unwrap() == value, 'sload failed');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_sload_from_storage() {
+    // Given
+    let mut machine = setup_machine();
+    let key = storage_base_address_const::<0x10>();
+    let value = 0x02;
+    Store::<u256>::write(0, key, value);
+
+    machine.stack.push(key.into());
+
+    // When
+    let result = machine.exec_sload();
+
+    // Then
+    assert(result.is_ok(), 'should have succeeded');
+    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(machine.stack.pop().unwrap() == value, 'sload failed');
 }

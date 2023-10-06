@@ -1,8 +1,10 @@
 //! Stack Memory Storage and Flow Operations.
-use evm::errors::{EVMError, INVALID_DESTINATION};
+use evm::errors::{EVMError, INVALID_DESTINATION, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
+use evm::storage_journal::JournalTrait;
+use starknet::Store;
 
 #[generate_trait]
 impl MemoryOperation of MemoryOperationTrait {
@@ -140,7 +142,24 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Load from storage.
     /// # Specification: https://www.evm.codes/#54?fork=shanghai
     fn exec_sload(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        let key = self.stack.pop_sba()?;
+        match self.storage_journal.read(key) {
+            Option::Some(value) => {
+                self.stack.push(value)?;
+                return Result::Ok(());
+            },
+            Option::None => {
+                match Store::<u256>::read(0, key) {
+                    Result::Ok(value) => {
+                        self.stack.push(value)?;
+                        return Result::Ok(());
+                    },
+                    Result::Err(_) => {
+                        return Result::Err(EVMError::SyscallFailed(READ_SYSCALL_FAILED));
+                    },
+                }
+            }
+        }
     }
 
     /// 0x5A - GAS operation

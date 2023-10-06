@@ -3,7 +3,10 @@ use evm::context::{
 };
 
 use evm::machine::Machine;
-use starknet::{contract_address_try_from_felt252, ContractAddress, EthAddress};
+use starknet::{
+    StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
+    ContractAddress, EthAddress
+};
 
 fn starknet_address() -> ContractAddress {
     'starknet_address'.try_into().unwrap()
@@ -15,6 +18,10 @@ fn evm_address() -> EthAddress {
 
 fn other_evm_address() -> EthAddress {
     0xabde1.try_into().unwrap()
+}
+
+fn storage_base_address() -> StorageBaseAddress {
+    storage_base_address_from_felt252('storage_base_address')
 }
 
 fn zero_address() -> ContractAddress {
