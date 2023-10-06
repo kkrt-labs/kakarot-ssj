@@ -39,7 +39,7 @@ mod test_external_owned_account {
 
         let eoa_contract = deploy_eoa();
 
-        assert(eoa_contract.kakarot_address() == expected_address, 'wrong kakarot_address');
+        assert(eoa_contract.kakarot_core_address() == expected_address, 'wrong kakarot_address');
     }
 
     #[test]

@@ -4,7 +4,7 @@ use starknet::account::{Call, AccountContract};
 
 #[starknet::interface]
 trait IExternallyOwnedAccount<TContractState> {
-    fn kakarot_address(self: @TContractState) -> ContractAddress;
+    fn kakarot_core_address(self: @TContractState) -> ContractAddress;
     fn evm_address(self: @TContractState) -> EthAddress;
 }
 
@@ -16,21 +16,21 @@ mod ExternallyOwnedAccount {
     #[storage]
     struct Storage {
         evm_address: EthAddress,
-        kakarot_address: ContractAddress,
+        kakarot_core_address: ContractAddress,
     }
 
     #[constructor]
     fn constructor(
         ref self: ContractState, kakarot_address: ContractAddress, evm_address: EthAddress
     ) {
-        self.kakarot_address.write(kakarot_address);
+        self.kakarot_core_address.write(kakarot_address);
         self.evm_address.write(evm_address);
     }
 
     #[external(v0)]
     impl ExternallyOwnedAccount of super::IExternallyOwnedAccount<ContractState> {
-        fn kakarot_address(self: @ContractState) -> ContractAddress {
-            self.kakarot_address.read()
+        fn kakarot_core_address(self: @ContractState) -> ContractAddress {
+            self.kakarot_core_address.read()
         }
         fn evm_address(self: @ContractState) -> EthAddress {
             self.evm_address.read()
@@ -40,7 +40,7 @@ mod ExternallyOwnedAccount {
     #[external(v0)]
     impl AccountContractImpl of AccountContract<ContractState> {
         fn __validate__(ref self: ContractState, calls: Array<Call>) -> felt252 {
-            assert(get_caller_address().is_zero(), 'Non Null Caller');
+            assert(get_caller_address().is_zero(), 'Caller not zero');
             // TODO
             // Steps:
             // Receive a payload formed as:
