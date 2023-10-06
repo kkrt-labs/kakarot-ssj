@@ -17,7 +17,6 @@ trait IOwnable<TContractState> {
 
 #[starknet::component]
 mod ownable_component {
-    use debug::PrintTrait;
     use starknet::ContractAddress;
     use starknet::get_caller_address;
     use super::Errors;
@@ -81,7 +80,6 @@ mod ownable_component {
             ref self: ComponentState<TContractState>, new_owner: ContractAddress
         ) {
             let previous_owner: ContractAddress = self.owner.read();
-            previous_owner.print();
             self.owner.write(new_owner);
             self
                 .emit(
