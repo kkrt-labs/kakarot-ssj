@@ -71,19 +71,6 @@ impl StorageBaseAddressPartialEq of PartialEq<StorageBaseAddress> {
     }
 }
 
-impl Felt252TryIntoStorageBaseAddress of TryInto<felt252, StorageBaseAddress> {
-    fn try_into(self: felt252) -> Option<StorageBaseAddress> {
-        /// Maximum StorageBaseAddress value range is [0, 2 ** 251 - 256)
-        let MAX_STORAGE_BASE_ADDRESS: u256 =
-            0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeff; //2**251 - 257
-        if self.into() > MAX_STORAGE_BASE_ADDRESS {
-            return Option::None;
-        }
-        Option::Some(storage_base_address_from_felt252(self))
-    }
-}
-
-
 trait TryIntoResult<T, U> {
     fn try_into_result(self: T) -> Result<U, EVMError>;
 }

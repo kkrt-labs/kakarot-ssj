@@ -3,8 +3,11 @@ use evm::errors::{EVMError, INVALID_DESTINATION, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
+use evm::storage::compute_storage_address;
 use evm::storage_journal::JournalTrait;
-use starknet::Store;
+use hash::{HashStateTrait, HashStateExTrait};
+use poseidon::PoseidonTrait;
+use starknet::{storage_base_address_from_felt252, Store};
 
 #[generate_trait]
 impl MemoryOperation of MemoryOperationTrait {
@@ -135,21 +138,29 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save 32-byte word to storage.
     /// # Specification: https://www.evm.codes/#55?fork=shanghai
     fn exec_sstore(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        let key = self.stack.pop()?;
+        let value = self.stack.pop()?;
+        let evm_address = self.evm_address();
+        let storage_address = compute_storage_address(evm_address, key);
+        self.storage_journal.write(storage_address, value);
+        Result::Ok(())
     }
 
     /// 0x54 - SLOAD operation
     /// Load from storage.
     /// # Specification: https://www.evm.codes/#54?fork=shanghai
     fn exec_sload(ref self: Machine) -> Result<(), EVMError> {
-        let key = self.stack.pop_sba()?;
-        match self.storage_journal.read(key) {
+        let key = self.stack.pop()?;
+        let evm_address = self.evm_address();
+        let storage_address = compute_storage_address(evm_address, key);
+
+        match self.storage_journal.read(storage_address) {
             Option::Some(value) => {
                 self.stack.push(value)?;
                 return Result::Ok(());
             },
             Option::None => {
-                match Store::<u256>::read(0, key) {
+                match Store::<u256>::read(0, storage_address) {
                     Result::Ok(value) => {
                         self.stack.push(value)?;
                         return Result::Ok(());
@@ -169,3 +180,4 @@ impl MemoryOperation of MemoryOperationTrait {
         Result::Err(EVMError::NotImplemented)
     }
 }
+

@@ -61,28 +61,11 @@ trait IKakarotCore<TContractState> {
     fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
 }
 
-#[derive(Copy, Drop, Serde, starknet::Store)]
-enum ContractTypeStorage {
-    EOA: ContractAddress,
-    ContractAccount: ContractAccountStorage
-}
-
-#[derive(Copy, Drop, Serde, starknet::Store)]
-struct ContractAccountStorage {
-    nonce: u64,
-    balance: u256,
-// TODO: add bytecode as a field for ContractAccountStorage
-// bytecode: List
-
-//TODO: add valid jumps as a field for ContractAccountStorage
-// valid_jumps: LegacyMap<usize, bool>
-}
-
 
 #[starknet::contract]
 mod KakarotCore {
+    use evm::storage::{ContractAccountStorage, ContractTypeStorage};
     use starknet::{EthAddress, ContractAddress, ClassHash};
-    use super::{ContractAccountStorage, ContractTypeStorage};
     #[storage]
     struct Storage {
         /// Kakarot storage for accounts: Externally Owned Accounts (EOA) and Contract Accounts (CA)
@@ -91,7 +74,7 @@ mod KakarotCore {
         /// - starknet_address: the deterministic starknet address (31 bytes) computed given an EVM address (20 bytes)
         ///
         /// CAs:
-        /// Map EVM address of a CA and the corresponding Kakarot Core storage -> 
+        /// Map EVM address of a CA and the corresponding Kakarot Core storage ->
         /// - nonce (note that this nonce is not the same as the Starknet protocol nonce)
         /// - current balance in native token (CAs can use this balance as an allowance to spend native Starknet token through Kakarot Core)
         /// - bytecode of the CA
@@ -99,8 +82,7 @@ mod KakarotCore {
         native_token: ContractAddress,
         deploy_fee: u128,
         eoa_class_hash: ClassHash,
-        /// Storage of CAs in EVM is defined as a mapping of key (bytes32) - value (bytes32) pairs
-        contract_account_storage: LegacyMap<(EthAddress, u256), u256>,
+    // There are more storage variables accessed in low-level libraries - see "./instructions/memory_operations.cairo" `exec_sload` and `exec_sstore`
     // TODO: add ownable as component
     }
 
