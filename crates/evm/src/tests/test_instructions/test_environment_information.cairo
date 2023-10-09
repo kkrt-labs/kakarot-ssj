@@ -1,5 +1,7 @@
 use array::{ArrayTrait};
-use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
+use evm::errors::{
+    Errors, EVMErrorEnum, InternalErrorEnum, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR
+};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
@@ -201,7 +203,10 @@ fn test_calldataload_with_offset_conversion_error() {
     // Then
     assert(result.is_err(), 'should return error');
     assert(
-        result.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
+        result
+            .unwrap_err() == Errors::InternalError(
+                InternalErrorEnum::TypeConversionError(TYPE_CONVERSION_ERROR)
+            ),
         'should return ConversionError'
     );
 }
@@ -245,7 +250,10 @@ fn test_calldatacopy_type_conversion_error() {
     // Then
     assert(res.is_err(), 'should return error');
     assert(
-        res.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
+        res
+            .unwrap_err() == Errors::InternalError(
+                InternalErrorEnum::TypeConversionError(TYPE_CONVERSION_ERROR)
+            ),
         'should return ConversionError'
     );
 }
@@ -368,7 +376,10 @@ fn test_codecopy_type_conversion_error() {
     // Then
     assert(res.is_err(), 'should return error');
     assert(
-        res.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
+        res
+            .unwrap_err() == Errors::InternalError(
+                InternalErrorEnum::TypeConversionError(TYPE_CONVERSION_ERROR)
+            ),
         'should return ConversionError'
     );
 }
@@ -502,7 +513,10 @@ fn test_returndata_copy_type_conversion_error() {
 
     // Then
     assert(
-        res.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
+        res
+            .unwrap_err() == Errors::InternalError(
+                InternalErrorEnum::TypeConversionError(TYPE_CONVERSION_ERROR)
+            ),
         'should return ConversionError'
     );
 }
@@ -602,7 +616,10 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         Result::Ok(x) => {
             if (x > return_data.len()) {
                 assert(
-                    res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
+                    res
+                        .unwrap_err() == Errors::EVMError(
+                            EVMErrorEnum::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR)
+                        ),
                     'should return out of bounds'
                 );
                 return;
@@ -610,7 +627,10 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         },
         Result::Err(x) => {
             assert(
-                res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
+                res
+                    .unwrap_err() == Errors::EVMError(
+                        EVMErrorEnum::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR)
+                    ),
                 'should return out of bounds'
             );
             return;

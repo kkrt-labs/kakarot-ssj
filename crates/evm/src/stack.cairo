@@ -14,7 +14,9 @@
 //! let value = stack.pop()?;
 //! ```
 use debug::PrintTrait;
-use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW, TYPE_CONVERSION_ERROR};
+use evm::errors::{
+    Errors, EVMErrorEnum, InternalErrorEnum, STACK_OVERFLOW, STACK_UNDERFLOW, TYPE_CONVERSION_ERROR
+};
 use nullable::{nullable_from_box, NullableTrait};
 use starknet::{StorageBaseAddress, EthAddress};
 
@@ -33,16 +35,16 @@ struct Stack {
 trait StackTrait {
     fn new() -> Stack;
     fn set_active_segment(ref self: Stack, active_segment: usize);
-    fn push(ref self: Stack, item: u256) -> Result<(), EVMError>;
-    fn pop(ref self: Stack) -> Result<u256, EVMError>;
-    fn pop_usize(ref self: Stack) -> Result<usize, EVMError>;
-    fn pop_i256(ref self: Stack) -> Result<i256, EVMError>;
-    fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError>;
-    fn pop_sba(ref self: Stack) -> Result<StorageBaseAddress, EVMError>;
-    fn pop_n(ref self: Stack, n: usize) -> Result<Array<u256>, EVMError>;
+    fn push(ref self: Stack, item: u256) -> Result<(), Errors>;
+    fn pop(ref self: Stack) -> Result<u256, Errors>;
+    fn pop_usize(ref self: Stack) -> Result<usize, Errors>;
+    fn pop_i256(ref self: Stack) -> Result<i256, Errors>;
+    fn pop_eth_address(ref self: Stack) -> Result<EthAddress, Errors>;
+    fn pop_sba(ref self: Stack) -> Result<StorageBaseAddress, Errors>;
+    fn pop_n(ref self: Stack, n: usize) -> Result<Array<u256>, Errors>;
     fn peek(ref self: Stack) -> Option<u256>;
-    fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError>;
-    fn swap_i(ref self: Stack, index: usize) -> Result<(), EVMError>;
+    fn peek_at(ref self: Stack, index: usize) -> Result<u256, Errors>;
+    fn swap_i(ref self: Stack, index: usize) -> Result<(), Errors>;
     fn len(ref self: Stack) -> usize;
     fn is_empty(ref self: Stack) -> bool;
     fn active_segment(self: @Stack) -> usize;
@@ -75,11 +77,11 @@ impl StackImpl of StackTrait {
     ///
     /// If the stack is full, returns with a StackOverflow error.
     #[inline(always)]
-    fn push(ref self: Stack, item: u256) -> Result<(), EVMError> {
+    fn push(ref self: Stack, item: u256) -> Result<(), Errors> {
         let length = self.len();
         // we can store at most 1024 256-bits words
         if length == constants::STACK_MAX_DEPTH {
-            return Result::Err(EVMError::StackError(STACK_OVERFLOW));
+            return Result::Err(Errors::EVMError(EVMErrorEnum::StackError(STACK_OVERFLOW)));
         }
         let index = self.compute_active_segment_index(length);
         self.items.insert(index, NullableTrait::new(item));
@@ -93,10 +95,10 @@ impl StackImpl of StackTrait {
     ///
     /// If the stack is empty, returns with a StackOverflow error.
     #[inline(always)]
-    fn pop(ref self: Stack) -> Result<u256, EVMError> {
+    fn pop(ref self: Stack) -> Result<u256, Errors> {
         let length = self.len();
         if length == 0 {
-            return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
+            return Result::Err(Errors::EVMError(EVMErrorEnum::StackError(STACK_UNDERFLOW)));
         }
         self.len.insert(self.active_segment().into(), length - 1);
         let internal_index = self.compute_active_segment_index(self.len());
@@ -113,7 +115,7 @@ impl StackImpl of StackTrait {
     ///     - Stack is empty
     ///     - Type conversion failed
     #[inline(always)]
-    fn pop_usize(ref self: Stack) -> Result<usize, EVMError> {
+    fn pop_usize(ref self: Stack) -> Result<usize, Errors> {
         let item: u256 = self.pop()?;
         // item.try_into().ok_or(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
         let item: usize = item.try_into_result()?;
@@ -128,7 +130,7 @@ impl StackImpl of StackTrait {
     /// In case:
     ///     - Stack is empty
     #[inline(always)]
-    fn pop_i256(ref self: Stack) -> Result<i256, EVMError> {
+    fn pop_i256(ref self: Stack) -> Result<i256, Errors> {
         let item: u256 = self.pop()?;
         let item: i256 = item.into();
         Result::Ok(item)
@@ -143,7 +145,7 @@ impl StackImpl of StackTrait {
     ///     - Stack is empty
     ///     - Type conversion failed
     #[inline(always)]
-    fn pop_sba(ref self: Stack) -> Result<StorageBaseAddress, EVMError> {
+    fn pop_sba(ref self: Stack) -> Result<StorageBaseAddress, Errors> {
         let item: u256 = self.pop()?;
         let item: StorageBaseAddress = item.try_into_result()?;
         Result::Ok(item)
@@ -157,7 +159,7 @@ impl StackImpl of StackTrait {
     /// In case:
     ///     - Stack is empty
     #[inline(always)]
-    fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError> {
+    fn pop_eth_address(ref self: Stack) -> Result<EthAddress, Errors> {
         let item: u256 = self.pop()?;
         let item: EthAddress = item.into();
         Result::Ok(item)
@@ -168,9 +170,9 @@ impl StackImpl of StackTrait {
     /// # Errors
     ///
     /// If the stack length is less than than N, returns with a StackUnderflow error.
-    fn pop_n(ref self: Stack, mut n: usize) -> Result<Array<u256>, EVMError> {
+    fn pop_n(ref self: Stack, mut n: usize) -> Result<Array<u256>, Errors> {
         if n > self.len() {
-            return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
+            return Result::Err(Errors::EVMError(EVMErrorEnum::StackError(STACK_UNDERFLOW)));
         }
         let mut popped_items = ArrayTrait::<u256>::new();
         loop {
@@ -206,9 +208,9 @@ impl StackImpl of StackTrait {
     ///
     /// If the index is greather than the stack length, returns with a StackUnderflow error.
     #[inline(always)]
-    fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError> {
+    fn peek_at(ref self: Stack, index: usize) -> Result<u256, Errors> {
         if index >= self.len() {
-            return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
+            return Result::Err(Errors::EVMError(EVMErrorEnum::StackError(STACK_UNDERFLOW)));
         }
 
         let position = self.compute_active_segment_index(self.len() - 1 - index);
@@ -220,9 +222,9 @@ impl StackImpl of StackTrait {
     /// Swaps the item at the given index with the item on top of the stack.
     /// index is 0-based, 0 being the top of the stack (unallocated).
     #[inline(always)]
-    fn swap_i(ref self: Stack, index: usize) -> Result<(), EVMError> {
+    fn swap_i(ref self: Stack, index: usize) -> Result<(), Errors> {
         if index >= self.len() {
-            return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
+            return Result::Err(Errors::EVMError(EVMErrorEnum::StackError(STACK_UNDERFLOW)));
         }
         let position_0: felt252 = self.compute_active_segment_index(self.len() - 1);
         let position_item: felt252 = position_0 - index.into();

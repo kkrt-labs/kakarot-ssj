@@ -1,4 +1,4 @@
-use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION};
+use evm::errors::{Errors, EVMErrorEnum, InternalErrorEnum, STACK_UNDERFLOW, INVALID_DESTINATION};
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
@@ -110,7 +110,8 @@ fn test_exec_pop_should_stack_underflow() {
     // Then
     assert(result.is_err(), 'should return Err ');
     assert(
-        result.unwrap_err() == EVMError::StackError(STACK_UNDERFLOW), 'should return StackUnderflow'
+        result.unwrap_err() == Errors::EVMError(EVMErrorEnum::StackError(STACK_UNDERFLOW)),
+        'should return StackUnderflow'
     );
 }
 
@@ -330,7 +331,10 @@ fn test_exec_jump_invalid() {
 
     // Then
     assert(result.is_err(), 'invalid jump dest');
-    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+    assert(
+        result.unwrap_err() == Errors::EVMError(EVMErrorEnum::JumpError(INVALID_DESTINATION)),
+        'invalid jump dest'
+    );
 }
 
 #[test]
@@ -347,7 +351,10 @@ fn test_exec_jump_out_of_bounds() {
 
     // Then
     assert(result.is_err(), 'invalid jump dest');
-    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+    assert(
+        result.unwrap_err() == Errors::EVMError(EVMErrorEnum::JumpError(INVALID_DESTINATION)),
+        'invalid jump dest'
+    );
 }
 
 // TODO: This is third edge case in which `0x5B` is part of PUSHN instruction and hence
@@ -369,7 +376,10 @@ fn test_exec_jump_inside_pushn() {
 
     // Then
     assert(result.is_err(), 'invalid jump dest');
-    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+    assert(
+        result.unwrap_err() == Errors::EVMError(EVMErrorEnum::JumpError(INVALID_DESTINATION)),
+        'invalid jump dest'
+    );
 }
 
 #[test]
@@ -450,7 +460,10 @@ fn test_exec_jumpi_invalid_non_zero() {
 
     // Then
     assert(result.is_err(), 'invalid jump dest');
-    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+    assert(
+        result.unwrap_err() == Errors::EVMError(EVMErrorEnum::JumpError(INVALID_DESTINATION)),
+        'invalid jump dest'
+    );
 }
 
 
@@ -497,7 +510,10 @@ fn test_exec_jumpi_inside_pushn() {
 
     // Then
     assert(result.is_err(), 'invalid jump dest');
-    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+    assert(
+        result.unwrap_err() == Errors::EVMError(EVMErrorEnum::JumpError(INVALID_DESTINATION)),
+        'invalid jump dest'
+    );
 }
 
 #[test]

@@ -2,7 +2,7 @@
 
 /// Internal imports.
 use evm::context::{CallContextTrait,};
-use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
+use evm::errors::{Errors, EVMErrorEnum, InternalErrorEnum, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
     duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
     LoggingOperationsTrait, memory_operations, sha3, StopAndArithmeticOperationsTrait,
@@ -22,7 +22,7 @@ trait EVMInterpreterTrait {
     /// Execute the EVM bytecode.
     fn run(ref self: EVMInterpreter, ref machine: Machine);
     /// Decodes the opcode at `pc` and executes the associated function.
-    fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError>;
+    fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), Errors>;
 }
 
 
@@ -57,7 +57,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
     }
 
-    fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError> {
+    fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), Errors> {
         // Retrieve the current program counter.
         let pc = machine.pc();
         let bytecode = machine.call_ctx().bytecode();
@@ -65,7 +65,9 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
 
         // Check if PC is not out of bounds.
         if pc >= bytecode_len {
-            return Result::Err(EVMError::InvalidProgramCounter(PC_OUT_OF_BOUNDS));
+            return Result::Err(
+                Errors::EVMError(EVMErrorEnum::InvalidProgramCounter(PC_OUT_OF_BOUNDS))
+            );
         }
 
         let opcode: u8 = *bytecode.at(pc);
@@ -647,6 +649,6 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
             return machine.exec_selfdestruct();
         }
         // Unknown opcode
-        return Result::Err(EVMError::UnknownOpcode(opcode));
+        return Result::Err(Errors::EVMError(EVMErrorEnum::UnknownOpcode(opcode)));
     }
 }

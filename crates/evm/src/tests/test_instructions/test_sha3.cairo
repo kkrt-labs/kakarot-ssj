@@ -1,5 +1,5 @@
 use evm::context::{ExecutionContext, ExecutionContextTrait,};
-use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
+use evm::errors::{Errors, EVMErrorEnum, InternalErrorEnum, TYPE_CONVERSION_ERROR};
 use evm::instructions::Sha3Trait;
 use evm::instructions::sha3::internal;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};

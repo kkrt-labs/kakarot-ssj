@@ -1,6 +1,6 @@
 //! SHA3.
 
-use evm::errors::EVMError;
+use evm::errors::{Errors, EVMErrorEnum, InternalErrorEnum};
 // Internal imports
 use evm::machine::Machine;
 use evm::memory::MemoryTrait;
@@ -18,7 +18,7 @@ impl Sha3Impl of Sha3Trait {
     /// * `size` - The amount of bytes to read
     ///
     /// # Specification: https://www.evm.codes/#20?fork=shanghai
-    fn exec_sha3(ref self: Machine) -> Result<(), EVMError> {
+    fn exec_sha3(ref self: Machine) -> Result<(), Errors> {
         let offset: usize = self.stack.pop_usize()?;
         let mut size: usize = self.stack.pop_usize()?;
 

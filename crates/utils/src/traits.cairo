@@ -3,7 +3,7 @@ use starknet::{
     ContractAddress
 };
 use math::{Zeroable, Oneable};
-use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
+use evm::errors::{Errors, EVMErrorEnum, InternalErrorEnum, TYPE_CONVERSION_ERROR};
 
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
     #[inline(always)]
@@ -85,32 +85,38 @@ impl Felt252TryIntoStorageBaseAddress of TryInto<felt252, StorageBaseAddress> {
 
 
 trait TryIntoResult<T, U> {
-    fn try_into_result(self: T) -> Result<U, EVMError>;
+    fn try_into_result(self: T) -> Result<U, Errors>;
 }
 
 impl U256TryIntoResultU32 of TryIntoResult<u256, usize> {
-    /// Converts a u256 into a Result<u32, EVMError>
+    /// Converts a u256 into a Result<u32, Errors>
     /// If the u256 is larger than MAX_U32, it returns an error.
     /// Otherwise, it returns the casted value.
-    fn try_into_result(self: u256) -> Result<usize, EVMError> {
+    fn try_into_result(self: u256) -> Result<usize, Errors> {
         match self.try_into() {
             Option::Some(value) => Result::Ok(value),
-            Option::None => Result::Err(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
+            Option::None => Result::Err(
+                Errors::InternalError(InternalErrorEnum::TypeConversionError(TYPE_CONVERSION_ERROR))
+            )
         }
     }
 }
 
 impl U256TryIntoResultStorageBaseAddress of TryIntoResult<u256, StorageBaseAddress> {
-    /// Converts a u256 into a Result<u32, EVMError>
+    /// Converts a u256 into a Result<u32, Errors>
     /// If the u256 is larger than MAX_U32, it returns an error.
     /// Otherwise, it returns the casted value.
-    fn try_into_result(self: u256) -> Result<StorageBaseAddress, EVMError> {
+    fn try_into_result(self: u256) -> Result<StorageBaseAddress, Errors> {
         let res_felt: felt252 = self
             .try_into()
-            .ok_or(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))?;
+            .ok_or(
+                Errors::InternalError(InternalErrorEnum::TypeConversionError(TYPE_CONVERSION_ERROR))
+            )?;
         let res_sba: StorageBaseAddress = res_felt
             .try_into()
-            .ok_or(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))?;
+            .ok_or(
+                Errors::InternalError(InternalErrorEnum::TypeConversionError(TYPE_CONVERSION_ERROR))
+            )?;
         Result::Ok(res_sba)
     }
 }

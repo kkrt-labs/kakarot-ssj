@@ -1,4 +1,6 @@
-use evm::errors::{EVMError, WRITE_IN_STATIC_CONTEXT, TYPE_CONVERSION_ERROR};
+use evm::errors::{
+    Errors, EVMErrorEnum, InternalErrorEnum, WRITE_IN_STATIC_CONTEXT, TYPE_CONVERSION_ERROR
+};
 use evm::instructions::LoggingOperationsTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
@@ -194,7 +196,10 @@ fn test_exec_log1_read_only_context() {
     // Then
     assert(result.is_err(), 'should have returned an error');
     assert(
-        result.unwrap_err() == EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT),
+        result
+            .unwrap_err() == Errors::EVMError(
+                EVMErrorEnum::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT)
+            ),
         'err != WriteInStaticContext'
     );
 }
@@ -246,7 +251,10 @@ fn test_exec_log1_size_too_big() {
     // Then
     assert(result.is_err(), 'should return an error');
     assert(
-        result.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
+        result
+            .unwrap_err() == Errors::InternalError(
+                InternalErrorEnum::TypeConversionError(TYPE_CONVERSION_ERROR)
+            ),
         'err != TypeConversionError'
     );
 }
@@ -269,7 +277,10 @@ fn test_exec_log1_offset_too_big() {
     // Then
     assert(result.is_err(), 'should return an error');
     assert(
-        result.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
+        result
+            .unwrap_err() == Errors::InternalError(
+                InternalErrorEnum::TypeConversionError(TYPE_CONVERSION_ERROR)
+            ),
         'err != TypeConversionError'
     );
 }
