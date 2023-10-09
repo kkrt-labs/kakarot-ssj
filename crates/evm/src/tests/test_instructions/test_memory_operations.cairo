@@ -8,6 +8,7 @@ use evm::tests::test_utils::{
     setup_machine, setup_machine_with_bytecode, setup_machine_with_calldata, evm_address, callvalue
 };
 use integer::BoundedInt;
+use evm::storage::compute_storage_address;
 
 use starknet::{EthAddressIntoFelt252, storage_base_address_const, Store};
 use utils::helpers::{u256_to_bytes_array};
@@ -505,9 +506,10 @@ fn test_exec_jumpi_inside_pushn() {
 fn test_exec_sload_from_journal() {
     // Given
     let mut machine = setup_machine();
-    let key = storage_base_address_const::<0x10>();
+    let key: u256 = 0x100000000000000000000000000000001;
+    let storage_address = compute_storage_address(machine.evm_address(), key);
     let value = 0x02;
-    machine.storage_journal.write(key, value);
+    machine.storage_journal.write(storage_address, value);
 
     machine.stack.push(key.into());
 
@@ -525,9 +527,10 @@ fn test_exec_sload_from_journal() {
 fn test_exec_sload_from_storage() {
     // Given
     let mut machine = setup_machine();
-    let key = storage_base_address_const::<0x10>();
+    let key: u256 = 0x100000000000000000000000000000001;
+    let storage_address = compute_storage_address(machine.evm_address(), key);
     let value = 0x02;
-    Store::<u256>::write(0, key, value);
+    Store::<u256>::write(0, storage_address, value);
 
     machine.stack.push(key.into());
 
@@ -538,4 +541,44 @@ fn test_exec_sload_from_storage() {
     assert(result.is_ok(), 'should have succeeded');
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.pop().unwrap() == value, 'sload failed');
+}
+
+#[test]
+#[available_gas(2000000)]
+fn test_exec_sstore() {
+    // Given
+    let mut machine = setup_machine();
+    let key: u256 = 0x100000000000000000000000000000001;
+    let value: u256 = 0xABDE1E11A5;
+    machine.stack.push(value);
+    machine.stack.push(key);
+    let storage_address = compute_storage_address(machine.evm_address(), key);
+
+    // When
+    let result = machine.exec_sstore();
+
+    // Then
+    assert(
+        machine.storage_journal.read(storage_address).unwrap() == value, 'wrong value in journal'
+    )
+}
+
+#[test]
+#[available_gas(200000000)]
+fn test_exec_sstore_finalized() {
+    // Given
+    let mut machine = setup_machine();
+    let key: u256 = 0x100000000000000000000000000000001;
+    let value: u256 = 0xABDE1E11A5;
+    machine.stack.push(value);
+    machine.stack.push(key);
+    let storage_address = compute_storage_address(machine.evm_address(), key);
+
+    // When
+    let result = machine.exec_sstore();
+    machine.storage_journal.finalize_local();
+    machine.storage_journal.finalize_global();
+
+    // Then
+    assert(Store::<u256>::read(0, storage_address).unwrap() == value, 'wrong value in journal')
 }

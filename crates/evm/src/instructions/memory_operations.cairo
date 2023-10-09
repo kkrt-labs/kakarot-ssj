@@ -180,4 +180,3 @@ impl MemoryOperation of MemoryOperationTrait {
         Result::Err(EVMError::NotImplemented)
     }
 }
-

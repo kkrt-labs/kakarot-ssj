@@ -86,18 +86,3 @@ impl U256TryIntoResultU32 of TryIntoResult<u256, usize> {
         }
     }
 }
-
-impl U256TryIntoResultStorageBaseAddress of TryIntoResult<u256, StorageBaseAddress> {
-    /// Converts a u256 into a Result<u32, EVMError>
-    /// If the u256 is larger than MAX_U32, it returns an error.
-    /// Otherwise, it returns the casted value.
-    fn try_into_result(self: u256) -> Result<StorageBaseAddress, EVMError> {
-        let res_felt: felt252 = self
-            .try_into()
-            .ok_or(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))?;
-        let res_sba: StorageBaseAddress = res_felt
-            .try_into()
-            .ok_or(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))?;
-        Result::Ok(res_sba)
-    }
-}

@@ -21,3 +21,6 @@ mod test_storage_journal;
 
 #[cfg(test)]
 mod test_utils;
+
+#[cfg(test)]
+mod test_storage;
