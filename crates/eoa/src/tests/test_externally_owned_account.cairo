@@ -9,17 +9,7 @@ mod test_external_owned_account {
         deploy_syscall, ContractAddress, get_contract_address, contract_address_const, EthAddress
     };
     use starknet::testing::{set_caller_address, set_contract_address};
-
-    fn kakarot_address() -> ContractAddress {
-        let test_kakarot_address: ContractAddress = contract_address_const::<0x777>();
-        test_kakarot_address
-    }
-
-    fn eoa_address() -> EthAddress {
-        let evm_address: EthAddress = 0xe0a.try_into().unwrap();
-        evm_address
-    }
-
+    use evm::tests::test_utils::{kakarot_address, eoa_address};
 
     fn deploy_eoa() -> IExternallyOwnedAccountDispatcher {
         let calldata: Span<felt252> = array![kakarot_address().into(), eoa_address().into()].span();
