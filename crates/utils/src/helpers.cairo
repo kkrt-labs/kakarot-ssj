@@ -522,3 +522,4 @@ impl U256Impl of U256Trait {
         u256 { low: new_low, high: new_high }
     }
 }
+

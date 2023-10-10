@@ -28,6 +28,9 @@ mod model;
 // Stack module
 mod stack;
 
+// Storage module
+mod storage;
+
 // Storage journal module
 mod storage_journal;
 

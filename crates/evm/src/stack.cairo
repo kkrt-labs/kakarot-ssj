@@ -20,7 +20,7 @@ use starknet::{StorageBaseAddress, EthAddress};
 
 use utils::constants;
 use utils::i256::i256;
-use utils::traits::{Felt252TryIntoStorageBaseAddress, TryIntoResult};
+use utils::traits::{TryIntoResult};
 
 
 #[derive(Destruct, Default)]
@@ -38,7 +38,6 @@ trait StackTrait {
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError>;
     fn pop_i256(ref self: Stack) -> Result<i256, EVMError>;
     fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError>;
-    fn pop_sba(ref self: Stack) -> Result<StorageBaseAddress, EVMError>;
     fn pop_n(ref self: Stack, n: usize) -> Result<Array<u256>, EVMError>;
     fn peek(ref self: Stack) -> Option<u256>;
     fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError>;
@@ -131,21 +130,6 @@ impl StackImpl of StackTrait {
     fn pop_i256(ref self: Stack) -> Result<i256, EVMError> {
         let item: u256 = self.pop()?;
         let item: i256 = item.into();
-        Result::Ok(item)
-    }
-
-    /// Calls `Stack::pop` and converts it to a StorageBaseAddress
-    ///
-    /// # Errors
-    ///
-    /// Returns `EVMError::StackError` with appropriate message
-    /// In case:
-    ///     - Stack is empty
-    ///     - Type conversion failed
-    #[inline(always)]
-    fn pop_sba(ref self: Stack) -> Result<StorageBaseAddress, EVMError> {
-        let item: u256 = self.pop()?;
-        let item: StorageBaseAddress = item.try_into_result()?;
         Result::Ok(item)
     }
 
