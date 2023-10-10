@@ -3,12 +3,12 @@ use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::stack::StackTrait;
+use evm::storage::compute_storage_address;
 use evm::storage_journal::{JournalTrait};
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_bytecode, setup_machine_with_calldata, evm_address, callvalue
 };
 use integer::BoundedInt;
-use evm::storage::compute_storage_address;
 
 use starknet::{EthAddressIntoFelt252, storage_base_address_const, Store};
 use utils::helpers::{u256_to_bytes_array};
