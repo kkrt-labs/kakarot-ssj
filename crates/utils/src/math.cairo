@@ -369,7 +369,6 @@ impl BitshiftImpl<
     +Mul<T>,
     +Copy<T>,
     +Drop<T>,
-    +BoundedInt<T>,
     +PartialOrd<T>,
     +SizeOf<T>
 > of Bitshift<T> {
