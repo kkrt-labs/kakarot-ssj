@@ -1,7 +1,7 @@
 use integer::{
     u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt, u128_overflowing_mul
 };
-
+use utils::mem::SizeOf;
 
 /// TODO: remove the Zero trait when it's integrated in Cairo
 // === Zero ===
@@ -217,56 +217,6 @@ impl U256One of One<u256> {
 }
 
 
-// === SizeOf ===
-
-trait SizeOf<T> {
-    /// Returns the size in bits of Self
-    fn size(self: @T) -> T;
-}
-
-impl U8SizeOf of SizeOf<u8> {
-    fn size(self: @u8) -> u8 {
-        8
-    }
-}
-
-impl U16SizeOf of SizeOf<u16> {
-    fn size(self: @u16) -> u16 {
-        16
-    }
-}
-
-impl U32SizeOf of SizeOf<u32> {
-    fn size(self: @u32) -> u32 {
-        32
-    }
-}
-
-impl U64SizeOf of SizeOf<u64> {
-    fn size(self: @u64) -> u64 {
-        64
-    }
-}
-
-impl U128SizeOf of SizeOf<u128> {
-    fn size(self: @u128) -> u128 {
-        128
-    }
-}
-
-impl Felt252SizeOf of SizeOf<felt252> {
-    fn size(self: @felt252) -> felt252 {
-        252
-    }
-}
-
-impl U256SizeOf of SizeOf<u256> {
-    fn size(self: @u256) -> u256 {
-        256
-    }
-}
-
-
 // === Exponentiation ===
 
 trait Exponentiation<T> {
@@ -381,7 +331,7 @@ impl BitshiftImpl<
     fn shl(self: T, shift: T) -> T {
         // if we shift by more than nb_bits of T, the result is 0
         // we early return to save gas and prevent unexpected behavior
-        if shift > shift.size() - One::one() {
+        if shift > shift.size_of_val() - One::one() {
             panic_with_felt252('mul Overflow');
         }
         let two = One::one() + One::one();
@@ -390,7 +340,7 @@ impl BitshiftImpl<
 
     fn shr(self: T, shift: T) -> T {
         // early return to save gas if shift > nb_bits of T
-        if shift > shift.size() - One::one() {
+        if shift > shift.size_of_val() - One::one() {
             panic_with_felt252('mul Overflow');
         }
         let two = One::one() + One::one();

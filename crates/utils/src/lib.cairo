@@ -3,6 +3,7 @@
 mod helpers;
 mod constants;
 mod math;
+mod mem;
 mod eth_transaction;
 mod rlp;
 mod traits;
