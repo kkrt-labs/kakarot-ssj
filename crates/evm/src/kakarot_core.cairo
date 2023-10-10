@@ -64,11 +64,11 @@ trait IKakarotCore<TContractState> {
 
 #[starknet::contract]
 mod KakarotCore {
+    use core::traits::Into;
     use core::traits::TryInto;
     use core_contracts::components::ownable::ownable_component::InternalTrait;
-    use core::traits::Into;
-    use starknet::{EthAddress, ContractAddress, ClassHash};
     use core_contracts::components::ownable::{ownable_component};
+    use starknet::{EthAddress, ContractAddress, ClassHash};
     use super::{ContractAccountStorage};
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
 

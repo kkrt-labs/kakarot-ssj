@@ -1,6 +1,6 @@
+use evm::kakarot_core::IExtendedKakarotCoreDispatcherImpl;
 use evm::tests::test_utils;
 use starknet::{get_caller_address, testing, contract_address_const};
-use evm::kakarot_core::IExtendedKakarotCoreDispatcherImpl;
 
 #[test]
 #[available_gas(20000000)]

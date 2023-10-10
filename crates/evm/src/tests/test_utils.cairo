@@ -1,14 +1,14 @@
+use eoa::externally_owned_account::{ExternallyOwnedAccount};
 use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, DefaultOptionSpanU8
 };
+use evm::kakarot_core::{IExtendedKakarotCoreDispatcher, KakarotCore};
 
 use evm::machine::Machine;
 use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
 };
-use evm::kakarot_core::{IExtendedKakarotCoreDispatcher, KakarotCore};
-use eoa::externally_owned_account::{ExternallyOwnedAccount};
 
 fn starknet_address() -> ContractAddress {
     'starknet_address'.try_into().unwrap()
