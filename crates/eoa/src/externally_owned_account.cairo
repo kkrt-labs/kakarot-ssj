@@ -61,7 +61,7 @@ mod ExternallyOwnedAccount {
 
         /// Validate Declare is not used for Kakarot
         fn __validate_declare__(self: @ContractState, class_hash: felt252) -> felt252 {
-            assert(1 == 0, 'Cannot Declare EOA');
+        panic_with_felt252('Cannot Declare EOA')
             0
         }
 
