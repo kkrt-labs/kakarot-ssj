@@ -1,6 +1,6 @@
 use integer::{u256_overflowing_add, BoundedInt, u512};
 use utils::math::{
-    Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift, pow
+    Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift
 };
 
 #[test]
@@ -253,4 +253,3 @@ fn test_felt252_wrapping_shr_to_zero() {
     let expected = 0_felt252;
     assert(result == expected, 'wrong result');
 }
-

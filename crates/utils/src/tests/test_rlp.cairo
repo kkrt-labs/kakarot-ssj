@@ -1,6 +1,7 @@
 use utils::rlp::{rlp_decode, RLPType, RLPTypeTrait, RLPItem};
 use array::{ArrayTrait, SpanTrait};
 use result::ResultTrait;
+use utils::errors::{RLPError, RLP_INVALID_LENGTH};
 
 #[test]
 #[available_gas(9999999)]
@@ -8,26 +9,17 @@ fn test_rlp_types() {
     let mut i = 0;
     loop {
         if i <= 0x7f {
-            assert(RLPTypeTrait::from_byte(i).unwrap() == RLPType::String(()), 'Parse type String');
+            assert(RLPTypeTrait::from_byte(i) == RLPType::String(()), 'Parse type String');
         } else if i <= 0xb7 {
             assert(
-                RLPTypeTrait::from_byte(i).unwrap() == RLPType::StringShort(()),
-                'Parse type StringShort'
+                RLPTypeTrait::from_byte(i) == RLPType::StringShort(()), 'Parse type StringShort'
             );
         } else if i <= 0xbf {
-            assert(
-                RLPTypeTrait::from_byte(i).unwrap() == RLPType::StringLong(()),
-                'Parse type StringLong'
-            );
+            assert(RLPTypeTrait::from_byte(i) == RLPType::StringLong(()), 'Parse type StringLong');
         } else if i <= 0xf7 {
-            assert(
-                RLPTypeTrait::from_byte(i).unwrap() == RLPType::ListShort(()),
-                'Parse type ListShort'
-            );
+            assert(RLPTypeTrait::from_byte(i) == RLPType::ListShort(()), 'Parse type ListShort');
         } else if i <= 0xff {
-            assert(
-                RLPTypeTrait::from_byte(i).unwrap() == RLPType::ListLong(()), 'Parse type ListLong'
-            );
+            assert(RLPTypeTrait::from_byte(i) == RLPType::ListLong(()), 'Parse type ListLong');
         }
 
         if i == 0xff {
@@ -35,6 +27,18 @@ fn test_rlp_types() {
         }
         i += 1;
     };
+}
+
+#[test]
+#[available_gas(9999999)]
+fn test_rlp_empty() {
+    let res = rlp_decode(ArrayTrait::new().span());
+
+    assert(res.is_err(), 'should return an error');
+    assert(
+        res.unwrap_err() == RLPError::RlpInvalidLength(RLP_INVALID_LENGTH),
+        'err != RlpInvalidLength'
+    );
 }
 
 #[test]
@@ -93,6 +97,7 @@ fn test_rlp_decode_short_string() {
     let (res, len) = rlp_decode(arr.span()).unwrap();
     assert(len == 1 + (0x9b - 0x80), 'Wrong len');
 
+    // Remove the byte representing the data type
     arr.pop_front();
     let expected_item = RLPItem::Bytes(arr.span());
 
@@ -101,7 +106,7 @@ fn test_rlp_decode_short_string() {
 
 #[test]
 #[available_gas(99999999)]
-fn test_rlp_decode_long_string_len_of_len_1() {
+fn test_rlp_decode_long_string_with_payload_len_on_1_byte() {
     let mut arr = array![
         0xb8,
         0x3c,
@@ -170,6 +175,7 @@ fn test_rlp_decode_long_string_len_of_len_1() {
     let (res, len) = rlp_decode(arr.span()).unwrap();
     assert(len == 1 + (0xb8 - 0xb7) + 0x3c, 'Wrong len');
 
+    // Remove the bytes representing the data type and their length
     arr.pop_front();
     arr.pop_front();
     let expected_item = RLPItem::Bytes(arr.span());
@@ -179,7 +185,7 @@ fn test_rlp_decode_long_string_len_of_len_1() {
 
 #[test]
 #[available_gas(99999999)]
-fn test_rlp_decode_long_string_len_of_len_2() {
+fn test_rlp_decode_long_string_with_payload_len_on_2_bytes() {
     let mut arr = array![
         0xb9,
         0x01,
@@ -447,6 +453,7 @@ fn test_rlp_decode_long_string_len_of_len_2() {
     let (res, len) = rlp_decode(arr.span()).unwrap();
     assert(len == 1 + (0xb9 - 0xb7) + 0x0102, 'Wrong len');
 
+    // Remove the bytes representing the data type and their length
     arr.pop_front();
     arr.pop_front();
     arr.pop_front();

@@ -505,10 +505,10 @@ impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtensionTrait<T> {
     }
 }
 
-impl SpanU8TryIntoU256 of TryInto<Span<u8>, u256> {
-    fn try_into(self: Span<u8>) -> Option<u256> {
+impl SpanU8TryIntoU32 of TryInto<Span<u8>, u32> {
+    fn try_into(self: Span<u8>) -> Option<u32> {
         let len = self.len();
-        if len > 32 {
+        if len > 4 {
             return Option::None(());
         }
 
@@ -517,14 +517,14 @@ impl SpanU8TryIntoU256 of TryInto<Span<u8>, u256> {
         }
 
         let offset = len.into() - 1;
-        let mut result: u256 = 0;
+        let mut result: u32 = 0;
         let mut i: usize = 0;
         loop {
             if i >= len {
                 break ();
             }
-            let byte: u256 = (*self.at(i)).into();
-            result += Bitshift::shl(byte, 8 * (offset - i.into()));
+            let byte: u32 = (*self.at(i)).into();
+            result += byte.shl(8 * (offset - i.into()));
 
             i += 1;
         };

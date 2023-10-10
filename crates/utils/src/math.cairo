@@ -95,6 +95,19 @@ impl Felt252WrappingExpImpl of WrappingExponentiation<felt252> {
     }
 }
 
+impl U32ExpImpl of Exponentiation<u32> {
+    fn pow(self: u32, mut exponent: u32) -> u32 {
+        if self == 0 {
+            return 0;
+        }
+        if exponent == 0 {
+            return 1;
+        } else {
+            return self * Exponentiation::pow(self, exponent - 1);
+        }
+    }
+}
+
 
 /// Adds two 256-bit unsigned integers, returning a 512-bit unsigned integer result.
 ///
@@ -143,6 +156,24 @@ impl U256BitshiftImpl of Bitshift<u256> {
         if shift > 255 {
             // 2.pow(shift) for shift > 255 will panic with 'u256_mul Overflow'
             panic_with_felt252('u256_mul Overflow');
+        }
+        self / 2.pow(shift)
+    }
+}
+
+impl U32BitshiftImpl of Bitshift<u32> {
+    fn shl(self: u32, shift: u32) -> u32 {
+        if shift > 31 {
+            // 2.pow(shift) for shift > 32 will panic with 'u32_mul Overflow'
+            panic_with_felt252('u32_mul Overflow');
+        }
+        self * 2.pow(shift)
+    }
+
+    fn shr(self: u32, shift: u32) -> u32 {
+        if shift > 31 {
+            // 2.pow(shift) for shift > 32 will panic with 'u32_mul Overflow'
+            panic_with_felt252('u32_mul Overflow');
         }
         self / 2.pow(shift)
     }
@@ -229,31 +260,5 @@ impl U128WrappingBitshiftImpl of WrappingBitshift<u128> {
             return 0;
         }
         self / 2.pow(shift)
-    }
-}
-
-fn pow<
-    T,
-    impl TZeroable: Zeroable<T>,
-    impl TSub: Sub<T>,
-    impl TMul: Mul<T>,
-    impl TOneable: Oneable<T>,
-    impl TCopy: Copy<T>,
-    impl TDrop: Drop<T>
->(
-    base: T, mut exp: T
-) -> T {
-    if exp.is_zero() {
-        TOneable::one()
-    } else {
-        base * pow(base, exp - TOneable::one())
-    }
-}
-
-fn pow_felt252(base: felt252, exp: felt252) -> felt252 {
-    if exp == 0 {
-        1
-    } else {
-        base * pow_felt252(base, exp - 1)
     }
 }
