@@ -4,7 +4,7 @@ members = ["crates/*"]
 [workspace.package]
 description = "Kakarot is an (zk)-Ethereum Virtual Machine implementation written in Cairo."
 documentation = "https://www.kakarot.org/"
-cairo-version = "2.3.0-rc0"
+cairo-version = "2.3.0-rc1"
 version = "0.1.0"
 readme = "README.md"
 repository = "https://github.com/kkrt-labs/kakarot-ssj/"
