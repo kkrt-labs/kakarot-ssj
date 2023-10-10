@@ -69,7 +69,8 @@ mod KakarotCore {
     use core_contracts::components::ownable::ownable_component::InternalTrait;
     use core_contracts::components::ownable::{ownable_component};
     use starknet::{EthAddress, ContractAddress, ClassHash};
-    use super::{ContractAccountStorage};
+    use evm::storage::ContractAccountStorage;
+
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
 
     #[abi(embed_v0)]
