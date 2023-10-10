@@ -80,6 +80,19 @@ mod KakarotCore {
 
     impl OwnableInternalImpl = ownable_component::InternalImpl<ContractState>;
 
+    use core::traits::TryInto;
+    use core_contracts::components::ownable::ownable_component::InternalTrait;
+    use core::traits::Into;
+    use starknet::{EthAddress, ContractAddress, ClassHash};
+    use core_contracts::components::ownable::{ownable_component};
+    use super::{ContractAccountStorage};
+    component!(path: ownable_component, storage: ownable, event: OwnableEvent);
+
+    #[abi(embed_v0)]
+    impl OwnableImpl = ownable_component::Ownable<ContractState>;
+
+    impl OwnableInternalImpl = ownable_component::InternalImpl<ContractState>;
+
     #[storage]
     struct Storage {
         /// Kakarot storage for accounts: Externally Owned Accounts (EOA) and Contract Accounts (CA)
