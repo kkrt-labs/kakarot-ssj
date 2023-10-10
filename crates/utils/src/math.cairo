@@ -2,8 +2,9 @@ use integer::{
     u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt, u128_overflowing_mul
 };
 
-// === Zero ===
 
+/// TODO: remove the Zero trait when it's integrated in Cairo
+// === Zero ===
 trait Zero<T> {
     fn zero() -> T;
     fn is_zero(self: @T) -> bool;
@@ -102,6 +103,7 @@ impl U256Zero of Zero<u256> {
 }
 
 
+/// TODO: remove the One trait when it's integrated in Cairo
 // === One ===
 
 trait One<T> {
