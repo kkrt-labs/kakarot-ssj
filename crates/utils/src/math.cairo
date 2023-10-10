@@ -331,7 +331,7 @@ impl BitshiftImpl<
     fn shl(self: T, shift: T) -> T {
         // if we shift by more than nb_bits of T, the result is 0
         // we early return to save gas and prevent unexpected behavior
-        if shift > shift.size_of_val() - One::one() {
+        if shift > shift.size_of() - One::one() {
             panic_with_felt252('mul Overflow');
         }
         let two = One::one() + One::one();
@@ -340,7 +340,7 @@ impl BitshiftImpl<
 
     fn shr(self: T, shift: T) -> T {
         // early return to save gas if shift > nb_bits of T
-        if shift > shift.size_of_val() - One::one() {
+        if shift > shift.size_of() - One::one() {
             panic_with_felt252('mul Overflow');
         }
         let two = One::one() + One::one();
