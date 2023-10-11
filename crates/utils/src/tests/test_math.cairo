@@ -1,7 +1,8 @@
-use integer::{u256_overflowing_add, BoundedInt, u512};
+use integer::{u256_overflowing_add, BoundedInt, u512, u256_overflow_mul};
 use utils::math::{
     Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift
 };
+use debug::PrintTrait;
 
 #[test]
 #[available_gas(20000000)]
@@ -23,6 +24,19 @@ fn test_pow() {
     assert(5_u256.pow(45) == 28421709430404007434844970703125, '5^45 failed');
     assert(123456_u256.pow(0) == 1, 'n^0 should be 1');
     assert(0_u256.pow(123456) == 0, '0^n should be 0');
+}
+
+#[test]
+#[should_panic(expected: ('Out of gas',))]
+#[available_gas(20000000)]
+fn test_wrapping_slow_pow_runs_out_of_gas() {
+    3_u256.wrapping_slow_pow(3_u256.wrapping_fast_pow(10));
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_wrapping_fast_pow() {
+    assert(3_u256.wrapping_fast_pow(3_u256.wrapping_fast_pow(10)) == 6701808933569337837891967767170127839253608180143676463326689955522159283811, '3^(3^10) failed');
 }
 
 #[test]
