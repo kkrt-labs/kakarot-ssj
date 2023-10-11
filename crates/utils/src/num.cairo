@@ -1,5 +1,3 @@
-use math::{Zeroable, Oneable};
-
 // === SizeOf ===
 
 trait SizeOf<T> {
@@ -45,27 +43,33 @@ impl U64SizeOf of SizeOf<u64> {
 }
 
 impl U128SizeOf of SizeOf<u128> {
+    #[inline(always)]
     fn size() -> u128 {
         128
     }
+    #[inline(always)]
     fn size_of(self: @u128) -> u128 {
         U128SizeOf::size()
     }
 }
 
 impl Felt252SizeOf of SizeOf<felt252> {
+    #[inline(always)]
     fn size() -> felt252 {
         252
     }
+    #[inline(always)]
     fn size_of(self: @felt252) -> felt252 {
         Felt252SizeOf::size()
     }
 }
 
 impl U256SizeOf of SizeOf<u256> {
+    #[inline(always)]
     fn size() -> u256 {
         256
     }
+    #[inline(always)]
     fn size_of(self: @u256) -> u256 {
         U256SizeOf::size()
     }
@@ -84,15 +88,55 @@ trait Zero<T> {
     fn is_non_zero(self: @T) -> bool;
 }
 
-impl ZeroImpl<T, +Zeroable<T>, +PartialEq<T>, +Drop<T>, +Copy<T>> of Zero<T> {
-    fn zero() -> T {
-        Zeroable::zero()
-    }
-    fn is_zero(self: @T) -> bool {
-        *self == ZeroImpl::zero()
+impl Felt252Zero of Zero<felt252> {
+    #[inline(always)]
+    fn zero() -> felt252 {
+        0
     }
 
-    fn is_non_zero(self: @T) -> bool {
+    #[inline(always)]
+    fn is_zero(self: @felt252) -> bool {
+        *self == Zero::zero()
+    }
+
+    #[inline(always)]
+    fn is_non_zero(self: @felt252) -> bool {
+        !self.is_zero()
+    }
+}
+
+
+impl U128Zero of Zero<u128> {
+    #[inline(always)]
+    fn zero() -> u128 {
+        0
+    }
+
+    #[inline(always)]
+    fn is_zero(self: @u128) -> bool {
+        *self == Zero::zero()
+    }
+
+    #[inline(always)]
+    fn is_non_zero(self: @u128) -> bool {
+        !self.is_zero()
+    }
+}
+
+
+impl U256Zero of Zero<u256> {
+    #[inline(always)]
+    fn zero() -> u256 {
+        0
+    }
+
+    #[inline(always)]
+    fn is_zero(self: @u256) -> bool {
+        *self == Zero::zero()
+    }
+
+    #[inline(always)]
+    fn is_non_zero(self: @u256) -> bool {
         !self.is_zero()
     }
 }
@@ -110,30 +154,53 @@ trait One<T> {
     fn is_non_one(self: @T) -> bool;
 }
 
-impl OneImpl<T, +Oneable<T>, +PartialEq<T>, +Drop<T>, +Copy<T>> of One<T> {
-    fn one() -> T {
-        Oneable::one()
-    }
-
-    fn is_one(self: @T) -> bool {
-        *self == OneImpl::one()
-    }
-
-    fn is_non_one(self: @T) -> bool {
-        !self.is_one()
-    }
-}
-
 impl Felt252One of One<felt252> {
+    #[inline(always)]
     fn one() -> felt252 {
         1
     }
 
+    #[inline(always)]
     fn is_one(self: @felt252) -> bool {
-        *self == Felt252One::one()
+        *self == One::one()
     }
 
+    #[inline(always)]
     fn is_non_one(self: @felt252) -> bool {
+        !self.is_one()
+    }
+}
+
+impl U128One of One<u128> {
+    #[inline(always)]
+    fn one() -> u128 {
+        1
+    }
+
+    #[inline(always)]
+    fn is_one(self: @u128) -> bool {
+        *self == One::one()
+    }
+
+    #[inline(always)]
+    fn is_non_one(self: @u128) -> bool {
+        !self.is_one()
+    }
+}
+
+impl U256One of One<u256> {
+    #[inline(always)]
+    fn one() -> u256 {
+        1
+    }
+
+    #[inline(always)]
+    fn is_one(self: @u256) -> bool {
+        *self == One::one()
+    }
+
+    #[inline(always)]
+    fn is_non_one(self: @u256) -> bool {
         !self.is_one()
     }
 }
