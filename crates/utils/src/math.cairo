@@ -11,19 +11,48 @@ trait Exponentiation<T> {
     /// # Panics
     /// Panics if the result overflows the type T.
     fn pow(self: T, exponent: T) -> T;
+    fn slow_pow(self: T, exponent: T) -> T;
+    fn fast_pow(self: T, exponent: T) -> T;
 }
 
 impl ExponentiationImpl<
-    T, +Zero<T>, +One<T>, +Add<T>, +Sub<T>, +Mul<T>, +Copy<T>, +Drop<T>
+    T, +Zero<T>, +One<T>, +Add<T>, +Sub<T>, +Mul<T>, +Div<T>, +BitAnd<T>, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>
 > of Exponentiation<T> {
     fn pow(self: T, mut exponent: T) -> T {
         if self.is_zero() {
             return Zero::zero();
         }
+        let ten = One::one() + One::one() + One::one() + One::one() + One::one() + One::one() + One::one() + One::one() + One::one() + One::one();
+        if exponent > ten {
+            self.fast_pow(exponent)
+        } else {
+            self.slow_pow(exponent)
+        }
+    }
+    fn slow_pow(self: T, mut exponent: T) -> T {
         if exponent.is_zero() {
             return One::one();
+        } else {
+            return self * self.pow(exponent - One::one());
         }
-        self * self.pow(exponent - One::one())
+    }
+    fn fast_pow(self: T, mut exponent: T) -> T {
+        let mut result = One::one();
+        let mut base = self;
+        let two = One::one() + One::one();
+
+        loop {
+            if exponent & One::one() == One::one() {
+                result = result * base;
+            }
+
+            exponent = exponent / two;
+            if exponent == Zero::zero() {
+                break result;
+            }
+
+            base = base * base;
+        }
     }
 }
 
@@ -33,24 +62,8 @@ trait WrappingExponentiation<T> {
     /// from the core library, which wrap around when overflowing.
     /// * `T` - The result of base raised to the power of exp modulo MAX<T>.
     fn wrapping_pow(self: T, exponent: T) -> T;
-}
-
-impl U256WrappingExponentiationImpl of WrappingExponentiation<u256> {
-    fn wrapping_pow(self: u256, mut exponent: u256) -> u256 {
-        if self == 0 {
-            return 0;
-        }
-        let mut result = 1;
-        loop {
-            if exponent == 0 {
-                break;
-            }
-            let (new_result, _) = u256_overflow_mul(result, self);
-            result = new_result;
-            exponent -= 1;
-        };
-        result
-    }
+    fn wrapping_slow_pow(self: T, exponent: T) -> T;
+    fn wrapping_fast_pow(self: T, exponent: T) -> T;
 }
 
 impl U128WrappingExponentiationImpl of WrappingExponentiation<u128> {
@@ -58,34 +71,94 @@ impl U128WrappingExponentiationImpl of WrappingExponentiation<u128> {
         if self == 0 {
             return 0;
         }
+        if exponent > 10 {
+            self.wrapping_fast_pow(exponent)
+        } else {
+            self.wrapping_slow_pow(exponent)
+        }
+    }
+    fn wrapping_slow_pow(self: u128, exponent: u128) -> u128 {
+        let mut exponent = exponent;
+        let mut base = self;
         let mut result = 1;
+
         loop {
             if exponent == 0 {
-                break;
+                break result;
             }
-            let (new_result, _) = u128_overflowing_mul(result, self);
+            let (new_result, _) = u128_overflowing_mul(result, base);
             result = new_result;
             exponent -= 1;
-        };
-        result
+        }
+    }
+    fn wrapping_fast_pow(self: u128, exponent: u128) -> u128 {
+        let mut result = 1;
+        let mut base = self;
+        let mut exponent = exponent;
+
+        loop {
+            if exponent % 2 != 0 {
+                let (new_result, _) = u128_overflowing_mul(result, base);
+                result = new_result;
+            }
+
+            exponent = exponent / 2;
+            if exponent == 0 {
+                break result;
+            }
+
+            let (new_base, _) = u128_overflowing_mul(base, base);
+            base = new_base;
+        }
     }
 }
 
-
-impl Felt252WrappingExpImpl of WrappingExponentiation<felt252> {
-    fn wrapping_pow(self: felt252, mut exponent: felt252) -> felt252 {
+impl U256WrappingExponentiationImpl of WrappingExponentiation<u256> {
+    fn wrapping_pow(self: u256, mut exponent: u256) -> u256 {
         if self == 0 {
             return 0;
         }
-        if exponent == 0 {
-            return 1;
+        if exponent > 10 {
+            self.wrapping_fast_pow(exponent)
         } else {
-            // Mul<felt252> wraps around, so we don't need to worry about overflows.
-            return self * WrappingExponentiation::wrapping_pow(self, exponent - 1);
+            self.wrapping_slow_pow(exponent)
+        }
+    }
+    fn wrapping_slow_pow(self: u256, exponent: u256) -> u256 {
+        let mut exponent = exponent;
+        let mut base = self;
+        let mut result = 1;
+
+        loop {
+            if exponent == 0 {
+                break result;
+            }
+            let (new_result, _) = u256_overflow_mul(result, base);
+            result = new_result;
+            exponent -= 1;
+        }
+    }
+    fn wrapping_fast_pow(self: u256, exponent: u256) -> u256 {
+        let mut result = 1;
+        let mut base = self;
+        let mut exponent = exponent;
+
+        loop {
+            if exponent % 2 != 0 {
+                let (new_result, _) = u256_overflow_mul(result, base);
+                result = new_result;
+            }
+
+            exponent = exponent / 2;
+            if exponent == 0 {
+                break result;
+            }
+
+            let (new_base, _) = u256_overflow_mul(base, base);
+            base = new_base;
         }
     }
 }
-
 
 // === BitShift ===
 
@@ -110,6 +183,7 @@ impl BitshiftImpl<
     +Sub<T>,
     +Div<T>,
     +Mul<T>,
+    +Exponentiation<T>,
     +Copy<T>,
     +Drop<T>,
     +PartialOrd<T>,
@@ -146,25 +220,20 @@ trait WrappingBitshift<T> {
     fn wrapping_shr(self: T, shift: T) -> T;
 }
 
-impl Felt252WrappingBitshiftImpl of WrappingBitshift<felt252> {
-    fn wrapping_shl(self: felt252, shift: felt252) -> felt252 {
-        self * 2.wrapping_pow(shift)
+impl U128WrappingBitshiftImpl of WrappingBitshift<u128> {
+    fn wrapping_shl(self: u128, shift: u128) -> u128 {
+        let (result, _) = u128_overflowing_mul(self, 2.wrapping_pow(shift));
+        result
     }
 
-    fn wrapping_shr(self: felt252, shift: felt252) -> felt252 {
-        // converting to u256
-        let val: u256 = self.into();
-        let shift: u256 = shift.into();
-
-        // early return to save gas if shift > 255
-        if shift > 255 {
+    fn wrapping_shr(self: u128, shift: u128) -> u128 {
+        // if we shift by more than 255 bits, the result is 0 (the type is 128 bits wide)
+        // we early return to save gas
+        // and prevent unexpected behavior, e.g. 2.pow(128) == 0 mod 2^128, given we can't divide by zero
+        if shift > 127 {
             return 0;
         }
-
-        let shifted_u256 = val / 2_u256.wrapping_pow(shift);
-
-        // convert back to felt252
-        shifted_u256.try_into().unwrap()
+        self / 2.pow(shift)
     }
 }
 
@@ -179,23 +248,6 @@ impl U256WrappingBitshiftImpl of WrappingBitshift<u256> {
         // we early return to save gas
         // and prevent unexpected behavior, e.g. 2.pow(256) == 0 mod 2^256, given we can't divide by zero
         if shift > 255 {
-            return 0;
-        }
-        self / 2.pow(shift)
-    }
-}
-
-impl U128WrappingBitshiftImpl of WrappingBitshift<u128> {
-    fn wrapping_shl(self: u128, shift: u128) -> u128 {
-        let (result, _) = u128_overflowing_mul(self, 2.wrapping_pow(shift));
-        result
-    }
-
-    fn wrapping_shr(self: u128, shift: u128) -> u128 {
-        // if we shift by more than 255 bits, the result is 0 (the type is 128 bits wide)
-        // we early return to save gas
-        // and prevent unexpected behavior, e.g. 2.pow(128) == 0 mod 2^128, given we can't divide by zero
-        if shift > 127 {
             return 0;
         }
         self / 2.pow(shift)
