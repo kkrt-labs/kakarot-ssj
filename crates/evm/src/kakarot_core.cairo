@@ -68,9 +68,9 @@ mod KakarotCore {
     use core::box::BoxTrait;
     use core_contracts::components::ownable::ownable_component::InternalTrait;
     use core_contracts::components::ownable::{ownable_component};
+    use evm::errors::EVMError;
     use evm::storage::ContractAccountStorage;
     use starknet::{EthAddress, ContractAddress, ClassHash, get_tx_info, contract_address_const};
-    use evm::errors::EVMError;
     use super::INVOKE_ETH_CALL_ERROR;
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
