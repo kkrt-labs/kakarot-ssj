@@ -36,7 +36,13 @@ fn test_wrapping_slow_pow_runs_out_of_gas() {
 #[test]
 #[available_gas(20000000)]
 fn test_wrapping_fast_pow() {
-    assert(3_u256.wrapping_fast_pow(3_u256.wrapping_fast_pow(10)) == 6701808933569337837891967767170127839253608180143676463326689955522159283811, '3^(3^10) failed');
+    assert(
+        3_u256
+            .wrapping_fast_pow(
+                3_u256.wrapping_fast_pow(10)
+            ) == 6701808933569337837891967767170127839253608180143676463326689955522159283811,
+        '3^(3^10) failed'
+    );
 }
 
 #[test]

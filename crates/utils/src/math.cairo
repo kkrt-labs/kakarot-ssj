@@ -16,13 +16,33 @@ trait Exponentiation<T> {
 }
 
 impl ExponentiationImpl<
-    T, +Zero<T>, +One<T>, +Add<T>, +Sub<T>, +Mul<T>, +Div<T>, +BitAnd<T>, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>
+    T,
+    +Zero<T>,
+    +One<T>,
+    +Add<T>,
+    +Sub<T>,
+    +Mul<T>,
+    +Div<T>,
+    +BitAnd<T>,
+    +PartialOrd<T>,
+    +PartialEq<T>,
+    +Copy<T>,
+    +Drop<T>
 > of Exponentiation<T> {
     fn pow(self: T, mut exponent: T) -> T {
         if self.is_zero() {
             return Zero::zero();
         }
-        let ten = One::one() + One::one() + One::one() + One::one() + One::one() + One::one() + One::one() + One::one() + One::one() + One::one();
+        let ten = One::one()
+            + One::one()
+            + One::one()
+            + One::one()
+            + One::one()
+            + One::one()
+            + One::one()
+            + One::one()
+            + One::one()
+            + One::one();
         if exponent > ten {
             self.fast_pow(exponent)
         } else {
