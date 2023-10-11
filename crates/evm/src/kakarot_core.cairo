@@ -65,6 +65,8 @@ trait IKakarotCore<TContractState> {
 
 #[starknet::contract]
 mod KakarotCore {
+    use core::zeroable::Zeroable;
+    use core::starknet::SyscallResultTrait;
     use core::hash::{HashStateExTrait, HashStateTrait};
     use core::pedersen::{HashState, PedersenTrait};
     use core_contracts::components::ownable::ownable_component::InternalTrait;
@@ -72,8 +74,7 @@ mod KakarotCore {
     use evm::errors::EVMError;
     use evm::storage::ContractAccountStorage;
     use starknet::{
-        EthAddress, ContractAddress, ClassHash, get_tx_info, contract_address_const,
-        get_contract_address
+        EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
     use super::INVOKE_ETH_CALL_FORBIDDEN;
     use utils::constants::{CONTRACT_ADDRESS_PREFIX, POW_2_251};
@@ -203,8 +204,39 @@ mod KakarotCore {
 
         /// Deploys an EOA for a particular EVM address
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
-            // TODO: deploy EOA
-            panic_with_felt252('not implemented')
+            // First let's check that the EOA is not already deployed
+            let eoa_starknet_address = self.eoa_address_registry.read(evm_address);
+            if eoa_starknet_address.is_non_zero() {
+                panic_with_felt252('EOA already deployed');
+            }
+
+            // Get the class hash of the EOA to deploy it
+            let eoa_class_hash = self.eoa_class_hash.read();
+
+            // Prepare the deployments arguments
+            // Salt
+            let salt: felt252 = evm_address.into();
+            // Constructor calldata
+            let constructor_calldata: Span<felt252> = array![
+                get_contract_address().into(), evm_address.into()
+            ]
+                .span();
+
+            // We do not want to deploy from zero, but rather from Kakarot
+            let deploy_from_zero = false;
+
+            // The syscall should only return an error for unexpected problems
+            // As we've previously checked that the EOA is not deployed yet
+            let (starknet_address, _) = deploy_syscall(
+                eoa_class_hash, salt, constructor_calldata, deploy_from_zero
+            )
+                .unwrap_syscall();
+
+            // We write in the eoa address mapping the address of the EOA
+            // This enables Kakarot to be aware that this EOA was already deployed
+            self.eoa_address_registry.write(evm_address, starknet_address);
+
+            starknet_address
         }
 
         /// View entrypoint into the EVM
@@ -252,7 +284,7 @@ mod KakarotCore {
             // If the account that originated the transaction is not zero, this means we
             // are in an invoke transaction instead of a call; therefore, `eth_call` is being wrongly called
             // For invoke transactions, `eth_send_transaction` must be used
-            if tx_info.account_contract_address == contract_address_const::<0>() {
+            if tx_info.account_contract_address.is_zero() {
                 return Result::Err(EVMError::WriteInStaticContext(INVOKE_ETH_CALL_FORBIDDEN));
             }
             Result::Ok(())
