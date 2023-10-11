@@ -5,7 +5,7 @@ use evm::context::{
 use evm::machine::Machine;
 use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
-    ContractAddress, EthAddress
+    ContractAddress, EthAddress, contract_address_const
 };
 
 fn starknet_address() -> ContractAddress {
@@ -31,6 +31,17 @@ fn zero_address() -> ContractAddress {
 fn callvalue() -> u256 {
     123456789
 }
+
+fn kakarot_address() -> ContractAddress {
+    let test_kakarot_address: ContractAddress = contract_address_const::<0x777>();
+    test_kakarot_address
+}
+
+fn eoa_address() -> EthAddress {
+    let evm_address: EthAddress = 0xe0a.try_into().unwrap();
+    evm_address
+}
+
 
 fn setup_call_context() -> CallContext {
     let bytecode: Span<u8> = array![1, 2, 3].span();
