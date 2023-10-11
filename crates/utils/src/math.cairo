@@ -11,8 +11,6 @@ trait Exponentiation<T> {
     /// # Panics
     /// Panics if the result overflows the type T.
     fn pow(self: T, exponent: T) -> T;
-    fn slow_pow(self: T, exponent: T) -> T;
-    fn fast_pow(self: T, exponent: T) -> T;
 }
 
 impl ExponentiationImpl<
@@ -30,25 +28,10 @@ impl ExponentiationImpl<
     +Drop<T>
 > of Exponentiation<T> {
     fn pow(self: T, mut exponent: T) -> T {
+        let zero = Zero::zero();
         if self.is_zero() {
-            return Zero::zero();
+            return zero;
         }
-        let one = One::one();
-        let ten = one + one + one + one + one + one + one + one + one + one;
-        if exponent > ten {
-            self.fast_pow(exponent)
-        } else {
-            self.slow_pow(exponent)
-        }
-    }
-    fn slow_pow(self: T, mut exponent: T) -> T {
-        if exponent.is_zero() {
-            return One::one();
-        } else {
-            return self * self.pow(exponent - One::one());
-        }
-    }
-    fn fast_pow(self: T, mut exponent: T) -> T {
         let one = One::one();
         let mut result = one;
         let mut base = self;
@@ -60,7 +43,7 @@ impl ExponentiationImpl<
             }
 
             exponent = exponent / two;
-            if exponent == Zero::zero() {
+            if exponent == zero {
                 break result;
             }
 
