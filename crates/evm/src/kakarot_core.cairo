@@ -261,9 +261,7 @@ trait IExtendedKakarotCore<TContractState> {
     fn get_eoa_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// Deploys an EOA for a particular EVM address
-    fn deploy_eoa(
-        ref self: TContractState, evm_address: EthAddress
-    ) -> ContractAddress;
+    fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// View entrypoint into the EVM
     /// Performs view calls into the blockchain
