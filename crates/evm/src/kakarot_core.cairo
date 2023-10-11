@@ -1,5 +1,7 @@
 use starknet::{ContractAddress, EthAddress, ClassHash};
 
+const INVOKE_ETH_CALL_ERROR: felt252 = 'KKT: Cannot invoke eth_call';
+
 #[starknet::interface]
 trait IKakarotCore<TContractState> {
     /// Sets the native token, this token will be considered the native coin in the Ethereum sense
@@ -24,13 +26,12 @@ trait IKakarotCore<TContractState> {
     fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// Checks into KakarotCore storage if an EOA has been deployed for a
-    /// particular EVM address and if so, returns its corresponding Starknet Address
+    /// particular EVM address and if so, returns its corresponding Starknet Address.
+    /// Otherwise, returns 0
     fn get_eoa_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// Deploys an EOA for a particular EVM address
-    fn deploy_externally_owned_account(
-        ref self: TContractState, evm_address: EthAddress
-    ) -> ContractAddress;
+    fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// View entrypoint into the EVM
     /// Performs view calls into the blockchain
@@ -64,12 +65,13 @@ trait IKakarotCore<TContractState> {
 
 #[starknet::contract]
 mod KakarotCore {
-    use core::traits::Into;
-    use core::traits::TryInto;
+    use core::box::BoxTrait;
     use core_contracts::components::ownable::ownable_component::InternalTrait;
     use core_contracts::components::ownable::{ownable_component};
     use evm::storage::ContractAccountStorage;
-    use starknet::{EthAddress, ContractAddress, ClassHash};
+    use starknet::{EthAddress, ContractAddress, ClassHash, get_tx_info, contract_address_const};
+    use evm::errors::EVMError;
+    use super::INVOKE_ETH_CALL_ERROR;
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
 
@@ -115,13 +117,13 @@ mod KakarotCore {
         ref self: ContractState,
         native_token: ContractAddress,
         deploy_fee: u128,
-        externally_owned_account_class_hash: ClassHash,
+        eoa_class_hash: ClassHash,
         owner: ContractAddress,
         chain_id: u128,
     ) {
         self.native_token.write(native_token);
         self.deploy_fee.write(deploy_fee);
-        self.eoa_class_hash.write(externally_owned_account_class_hash);
+        self.eoa_class_hash.write(eoa_class_hash);
         self.ownable.initializer(owner);
         self.chain_id.write(chain_id);
     }
@@ -159,24 +161,22 @@ mod KakarotCore {
         fn compute_starknet_address(
             self: @ContractState, evm_address: EthAddress
         ) -> ContractAddress {
-            'not implemented'.try_into().unwrap()
+            panic_with_felt252('not implemented')
         }
 
         /// Checks into KakarotCore storage if an EOA has been deployed for a
         /// particular EVM address and if so, returns its corresponding Starknet Address
+        /// Otherwise, returns 0
         fn get_eoa_starknet_address(
             self: @ContractState, evm_address: EthAddress
         ) -> ContractAddress {
-            let eoa_starknet_address = self.eoa_address_registry.read(evm_address);
-            eoa_starknet_address
+            self.eoa_address_registry.read(evm_address)
         }
 
         /// Deploys an EOA for a particular EVM address
-        fn deploy_externally_owned_account(
-            ref self: ContractState, evm_address: EthAddress
-        ) -> ContractAddress {
+        fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
             // TODO: deploy EOA
-            'not implemented'.try_into().unwrap()
+            panic_with_felt252('not implemented')
         }
 
         /// View entrypoint into the EVM
@@ -191,6 +191,7 @@ mod KakarotCore {
             value: u128,
             data: Span<u8>
         ) -> Span<u8> {
+            self.assert_view();
             array![].span()
         }
 
@@ -212,6 +213,21 @@ mod KakarotCore {
         fn upgrade(
             ref self: ContractState, new_class_hash: ClassHash
         ) { //TODO: implement upgrade logic
+        }
+    }
+
+    #[generate_trait]
+    impl KakarotCoreInternalImpl of KakarotCoreInternal {
+        fn assert_view(self: @ContractState) -> Result<(), EVMError> {
+            let tx_info = get_tx_info().unbox();
+
+            // If the account that originated the transaction is not zero, this means we
+            // are in an invoke transaction instead of a call; therefore, `eth_call` is being wrongly called
+            // For invoke transactions, `eth_send_transaction` must be used
+            if tx_info.account_contract_address == contract_address_const::<0>() {
+                return Result::Err(EVMError::WriteInStaticContext(INVOKE_ETH_CALL_ERROR));
+            }
+            Result::Ok(())
         }
     }
 }
