@@ -1,11 +1,13 @@
+use eoa::externally_owned_account::{ExternallyOwnedAccount};
 use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, DefaultOptionSpanU8
 };
+use evm::kakarot_core::{IExtendedKakarotCoreDispatcher, KakarotCore};
 
 use evm::machine::Machine;
 use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
-    ContractAddress, EthAddress, contract_address_const
+    ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
 };
 
 fn starknet_address() -> ContractAddress {
@@ -20,6 +22,10 @@ fn other_evm_address() -> EthAddress {
     0xabde1.try_into().unwrap()
 }
 
+fn other_starknet_address() -> ContractAddress {
+    'other_starknet_address'.try_into().unwrap()
+}
+
 fn storage_base_address() -> StorageBaseAddress {
     storage_base_address_from_felt252('storage_base_address')
 }
@@ -32,6 +38,19 @@ fn callvalue() -> u256 {
     123456789
 }
 
+
+fn deploy_fee() -> u128 {
+    0x10
+}
+
+fn native_token() -> ContractAddress {
+    'native_token'.try_into().unwrap()
+}
+
+fn chain_id() -> u128 {
+    'CHAIN_ID'.try_into().unwrap()
+}
+
 fn kakarot_address() -> ContractAddress {
     let test_kakarot_address: ContractAddress = contract_address_const::<0x777>();
     test_kakarot_address
@@ -41,7 +60,6 @@ fn eoa_address() -> EthAddress {
     let evm_address: EthAddress = 0xe0a.try_into().unwrap();
     evm_address
 }
-
 
 fn setup_call_context() -> CallContext {
     let bytecode: Span<u8> = array![1, 2, 3].span();
@@ -208,4 +226,21 @@ fn setup_machine_with_nested_execution_context() -> Machine {
         memory: Default::default(),
         storage_journal: Default::default(),
     }
+}
+
+fn deploy_kakarot_core() -> IExtendedKakarotCoreDispatcher {
+    let mut calldata: Array<felt252> = array![
+        native_token().into(),
+        deploy_fee().into(),
+        ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(),
+        other_starknet_address().into(),
+        chain_id().into()
+    ];
+
+    let (contract_address, _) = deploy_syscall(
+        KakarotCore::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
+    )
+        .unwrap();
+
+    IExtendedKakarotCoreDispatcher { contract_address }
 }

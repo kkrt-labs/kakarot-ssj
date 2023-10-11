@@ -30,7 +30,7 @@ enum EVMError {
     NotImplemented,
     UnknownOpcode: u8,
     SyscallFailed: felt252,
-    WriteInStaticContext: felt252
+    WriteInStaticContext: felt252,
 }
 
 

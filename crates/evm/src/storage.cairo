@@ -1,11 +1,6 @@
 use hash::{HashStateTrait, HashStateExTrait};
 use poseidon::PoseidonTrait;
 use starknet::{ContractAddress, EthAddress, StorageBaseAddress, storage_base_address_from_felt252};
-#[derive(Copy, Drop, Serde, starknet::Store)]
-enum ContractTypeStorage {
-    EOA: ContractAddress,
-    ContractAccount: ContractAccountStorage
-}
 
 #[derive(Copy, Drop, Serde, starknet::Store)]
 struct ContractAccountStorage {
