@@ -38,6 +38,7 @@ fn callvalue() -> u256 {
     123456789
 }
 
+
 fn deploy_fee() -> u128 {
     0x10
 }
@@ -48,6 +49,16 @@ fn native_token() -> ContractAddress {
 
 fn chain_id() -> u128 {
     'CHAIN_ID'.try_into().unwrap()
+}
+
+fn kakarot_address() -> ContractAddress {
+    let test_kakarot_address: ContractAddress = contract_address_const::<0x777>();
+    test_kakarot_address
+}
+
+fn eoa_address() -> EthAddress {
+    let evm_address: EthAddress = 0xe0a.try_into().unwrap();
+    evm_address
 }
 
 fn setup_call_context() -> CallContext {

@@ -1,7 +1,7 @@
 /// System imports.
 
 /// Internal imports.
-use evm::context::{CallContextTrait,};
+use evm::context::{CallContextTrait, Status};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
     duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
@@ -11,6 +11,7 @@ use evm::instructions::{
     MemoryOperationTrait
 };
 use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::storage_journal::JournalTrait;
 use utils::{helpers::u256_to_bytes_array};
 
 #[derive(Drop, Copy)]
@@ -23,6 +24,7 @@ trait EVMInterpreterTrait {
     fn run(ref self: EVMInterpreter, ref machine: Machine);
     /// Decodes the opcode at `pc` and executes the associated function.
     fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError>;
+    fn handle_revert(ref self: EVMInterpreter, ref machine: Machine);
 }
 
 
@@ -38,21 +40,25 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
 
         match result {
             Result::Ok(_) => {
-                // Check if the execution is complete.
-                if !(machine.stopped()) {
-                    // Execute the next opcode.
-                    self.run(ref machine);
-                }
-                if machine.reverted() { // TODO: Revert logic
-                }
-                if machine.stopped() { // TODO: stopped logic
+                match machine.status() {
+                    Status::Active => {
+                        // execute the next opcode
+                        self.run(ref machine);
+                    },
+                    Status::Stopped => {
+                        machine.storage_journal.finalize_local();
+                        if machine.is_root() {
+                            machine.storage_journal.finalize_global();
+                        }
+                    },
+                    Status::Reverted => { self.handle_revert(ref machine); }
                 }
             },
             Result::Err(error) => {
                 // If an error occurred, revert execution machine.
                 // Currently, revert reason is a Span<u8>.
                 machine.revert(u256_to_bytes_array(error.into()).span());
-            // TODO: Revert logic
+                self.handle_revert(ref machine);
             }
         }
     }
@@ -648,5 +654,12 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
         // Unknown opcode
         return Result::Err(EVMError::UnknownOpcode(opcode));
+    }
+
+    /// Handles the revert of an execution context.
+    /// Clears all pending journal entries, not finalizing the pending state changes applied inside this context.
+    fn handle_revert(ref self: EVMInterpreter, ref machine: Machine) {
+        machine.storage_journal.clear_local();
+    //TODO add the rest of the revert handling.
     }
 }

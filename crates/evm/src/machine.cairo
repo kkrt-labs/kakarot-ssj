@@ -99,6 +99,15 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
         stopped
     }
 
+    #[inline(always)]
+    fn status(ref self: Machine) -> Status {
+        let current_execution_ctx = self.current_ctx.unbox();
+        let status = current_execution_ctx.status();
+
+        self.current_ctx = BoxTrait::new(current_execution_ctx);
+        status
+    }
+
 
     #[inline(always)]
     fn call_ctx(ref self: Machine) -> CallContext {

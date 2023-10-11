@@ -206,6 +206,11 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     #[inline(always)]
+    fn status(self: @ExecutionContext) -> Status {
+        *self.status
+    }
+
+    #[inline(always)]
     fn call_ctx(self: @ExecutionContext) -> CallContext {
         (*self.call_ctx).unbox()
     }
