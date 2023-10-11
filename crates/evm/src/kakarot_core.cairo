@@ -1,6 +1,6 @@
-use starknet::{ContractAddress, EthAddress, ClassHash};
+use starknet::{ContractAddress, EthAddress, ClassHash,};
 
-const INVOKE_ETH_CALL_ERROR: felt252 = 'KKT: Cannot invoke eth_call';
+const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
 #[starknet::interface]
 trait IKakarotCore<TContractState> {
@@ -65,13 +65,21 @@ trait IKakarotCore<TContractState> {
 
 #[starknet::contract]
 mod KakarotCore {
+    use core::traits::TryInto;
     use core::box::BoxTrait;
     use core_contracts::components::ownable::ownable_component::InternalTrait;
     use core_contracts::components::ownable::{ownable_component};
     use evm::errors::EVMError;
     use evm::storage::ContractAccountStorage;
-    use starknet::{EthAddress, ContractAddress, ClassHash, get_tx_info, contract_address_const};
-    use super::INVOKE_ETH_CALL_ERROR;
+    use utils::constants::{CONTRACT_ADDRESS_PREFIX, POW_2_251};
+    use utils::traits::U256TryIntoContractAddress;
+    use starknet::{
+        EthAddress, ContractAddress, ClassHash, get_tx_info, contract_address_const,
+        get_contract_address, storage_base_address_from_felt252
+    };
+    use super::INVOKE_ETH_CALL_FORBIDDEN;
+    use core::pedersen::{HashState, PedersenTrait};
+    use core::hash::{HashStateExTrait, HashStateTrait};
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
 
@@ -158,10 +166,29 @@ mod KakarotCore {
         /// Deterministically computes a Starknet address for an given EVM address
         /// The address is computed as the Starknet address corresponding to the deployment of an EOA,
         /// Using its EVM address as salt, and KakarotCore as deployer.
+        /// https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/starknet/core/os/contract_address/contract_address.cairo#L2
         fn compute_starknet_address(
             self: @ContractState, evm_address: EthAddress
         ) -> ContractAddress {
-            panic_with_felt252('not implemented')
+            // Deployer is always Kakarot Core
+            let deployer = get_contract_address();
+
+            // Constructor Calldata
+            // For an EOA, the constructor calldata is:
+            // fn constructor(kakarot_address: ContractAddress, evm_address: EthAddress)
+            let constructor_calldata_hash = PedersenTrait::new(0).update(deployer.into()).update(evm_address.into()).finalize();
+
+            let hash = PedersenTrait::new(0)
+                .update(CONTRACT_ADDRESS_PREFIX)
+                .update_with(deployer)
+                .update_with(evm_address)
+                .update_with(self.eoa_class_hash.read())
+                .update(constructor_calldata_hash)
+                .finalize();
+
+            let normalized_address: Option<ContractAddress> = (hash.into() & POW_2_251).try_into();
+            // We know this unwrap is safe, because of the above bitwise AND on 2 ** 251
+            normalized_address.unwrap()
         }
 
         /// Checks into KakarotCore storage if an EOA has been deployed for a
@@ -225,7 +252,7 @@ mod KakarotCore {
             // are in an invoke transaction instead of a call; therefore, `eth_call` is being wrongly called
             // For invoke transactions, `eth_send_transaction` must be used
             if tx_info.account_contract_address == contract_address_const::<0>() {
-                return Result::Err(EVMError::WriteInStaticContext(INVOKE_ETH_CALL_ERROR));
+                return Result::Err(EVMError::WriteInStaticContext(INVOKE_ETH_CALL_FORBIDDEN));
             }
             Result::Ok(())
         }

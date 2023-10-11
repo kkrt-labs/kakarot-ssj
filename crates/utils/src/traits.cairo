@@ -44,6 +44,16 @@ impl EthAddressIntoU256 of Into<EthAddress, u256> {
     }
 }
 
+impl U256TryIntoContractAddress of TryInto<u256, ContractAddress> {
+    fn try_into(self: u256) -> Option<ContractAddress> {
+        let intermediate: Option<felt252> = self.try_into();
+        match intermediate {
+            Option::Some(felt) => felt.try_into(),
+            Option::None => Option::None,
+        }
+    }
+}
+
 //TODO remove once merged in corelib
 impl StorageBaseAddressIntoFelt252 of Into<StorageBaseAddress, felt252> {
     fn into(self: StorageBaseAddress) -> felt252 {
