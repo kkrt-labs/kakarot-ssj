@@ -6,7 +6,7 @@ use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_calldata, setup_machine_with_bytecode, evm_address, callvalue,
-    setup_machine_with_nested_execution_context, other_evm_address
+    setup_machine_with_nested_execution_context, other_evm_address, return_from_subcontext
 };
 use integer::u32_overflowing_add;
 
@@ -474,14 +474,7 @@ fn test_returndatasize() {
     let return_data: Array<u8> = array![1, 2, 3, 4, 5];
     let size = return_data.len();
     let mut machine = setup_machine_with_nested_execution_context();
-
-    // Simulate return of subcontext where
-    /// 1. Set `return_data` field of parent context
-    /// 2. make `parent_ctx` of `current_ctx` the current ctx
-    machine.set_parent_return_data(return_data.span());
-    let current_ctx = machine.current_ctx.unbox();
-    let parent_ctx = current_ctx.parent_ctx.deref();
-    machine.current_ctx = BoxTrait::new(parent_ctx);
+    return_from_subcontext(ref machine, return_data.span());
 
     machine.exec_returndatasize();
 
@@ -588,13 +581,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         36
     ];
 
-    // Simulate return of subcontext where
-    /// 1. Set `return_data` field of parent context
-    /// 2. make `parent_ctx` of `current_ctx` the current ctx
-    machine.set_parent_return_data(return_data.span());
-    let current_ctx = machine.current_ctx.unbox();
-    let parent_ctx = current_ctx.parent_ctx.deref();
-    machine.current_ctx = BoxTrait::new(parent_ctx);
+    return_from_subcontext(ref machine, return_data.span());
     let return_data: Span<u8> = machine.return_data();
 
     if (size == 0) {

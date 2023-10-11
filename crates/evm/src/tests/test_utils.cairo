@@ -4,7 +4,7 @@ use evm::context::{
 };
 use evm::kakarot_core::{IExtendedKakarotCoreDispatcher, KakarotCore};
 
-use evm::machine::Machine;
+use evm::machine::{Machine, MachineCurrentContextTrait};
 use nullable::{match_nullable, FromNullableResult};
 use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
@@ -225,6 +225,17 @@ fn deploy_kakarot_core() -> IExtendedKakarotCoreDispatcher {
         .unwrap();
 
     IExtendedKakarotCoreDispatcher { contract_address }
+}
+
+
+// Simulate return of subcontext where
+/// 1. Set `return_data` field of parent context
+/// 2. make `parent_ctx` of `current_ctx` the current ctx
+fn return_from_subcontext(ref self: Machine, return_data: Span<u8>) {
+    self.set_parent_return_data(return_data);
+    let current_ctx = self.current_ctx.unbox();
+    let parent_ctx = current_ctx.parent_ctx.deref();
+    self.current_ctx = BoxTrait::new(parent_ctx);
 }
 
 /// Returns the `return_data` field of the parent_ctx of the current_ctx.
