@@ -102,7 +102,7 @@ fn test_shl() {
 
 #[test]
 #[available_gas(2000000000000)]
-#[should_panic(expected: ('u256_mul Overflow',))]
+#[should_panic(expected: ('mul Overflow',))]
 fn test_shl_256_bits_overflow() {
     // Given
     let a = 0x00000091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498faab3fe_u256;
@@ -178,7 +178,7 @@ fn test_shr() {
 
 #[test]
 #[available_gas(20000000000)]
-#[should_panic(expected: ('u256_mul Overflow',))]
+#[should_panic(expected: ('mul Overflow',))]
 fn test_shr_256_bits_overflow() {
     let a = 0xab91b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade6263a_u256;
     let shift = 32 * 8;

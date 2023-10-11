@@ -2,7 +2,7 @@ use starknet::{
     StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
     ContractAddress
 };
-use math::{Zeroable, Oneable};
+use utils::math::{Zero, One};
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
@@ -26,13 +26,13 @@ impl ContractAddressDefault of Default<ContractAddress> {
     }
 }
 
-impl BoolIntoNumeric<T, impl TZeroable: Zeroable<T>, impl TOneable: Oneable<T>> of Into<bool, T> {
+impl BoolIntoNumeric<T, +Zero<T>, +One<T>> of Into<bool, T> {
     #[inline(always)]
     fn into(self: bool) -> T {
         if self {
-            Oneable::<T>::one()
+            One::<T>::one()
         } else {
-            Zeroable::<T>::zero()
+            Zero::<T>::zero()
         }
     }
 }
