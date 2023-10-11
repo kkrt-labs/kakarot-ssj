@@ -83,8 +83,8 @@ mod KakarotCore {
     use core::traits::TryInto;
     use core_contracts::components::ownable::ownable_component::InternalTrait;
     use core_contracts::components::ownable::{ownable_component};
-    use starknet::{EthAddress, ContractAddress, ClassHash};
     use evm::storage::ContractAccountStorage;
+    use starknet::{EthAddress, ContractAddress, ClassHash};
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
 
