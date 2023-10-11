@@ -2,6 +2,7 @@
 
 /// Internal imports.
 use evm::context::{CallContextTrait, Status};
+use evm::context::{ExecutionContextTrait, ExecutionContext};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
     duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
@@ -11,7 +12,6 @@ use evm::instructions::{
     MemoryOperationTrait
 };
 use evm::machine::{Machine, MachineCurrentContextTrait};
-use evm::context::{ExecutionContextTrait, ExecutionContext};
 use evm::storage_journal::JournalTrait;
 use utils::{helpers::u256_to_bytes_array};
 

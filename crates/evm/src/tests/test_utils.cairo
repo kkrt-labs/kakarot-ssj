@@ -5,11 +5,11 @@ use evm::context::{
 use evm::kakarot_core::{IExtendedKakarotCoreDispatcher, KakarotCore};
 
 use evm::machine::Machine;
+use nullable::{match_nullable, FromNullableResult};
 use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
 };
-use nullable::{match_nullable, FromNullableResult};
 
 fn starknet_address() -> ContractAddress {
     'starknet_address'.try_into().unwrap()

@@ -6,9 +6,9 @@ use evm::{
     },
     stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}
 };
+use nullable::{match_nullable, FromNullableResult};
 
 use starknet::{EthAddress, ContractAddress};
-use nullable::{match_nullable, FromNullableResult};
 
 #[derive(Destruct)]
 struct Machine {

@@ -72,12 +72,7 @@ fn test_execution_context_new() {
 
     // When
     let mut execution_context = ExecutionContextTrait::new(
-        context_id,
-        evm_address,
-        starknet_address,
-        call_ctx,
-        parent_ctx,
-        return_data.span()
+        context_id, evm_address, starknet_address, call_ctx, parent_ctx, return_data.span()
     );
 
     // Then
