@@ -7,6 +7,10 @@ use utils::math::{
 #[available_gas(20000000)]
 fn test_wrapping_pow() {
     assert(5_u256.wrapping_pow(10) == 9765625, '5^10 should be 9765625');
+    assert(
+        5_u256.wrapping_pow(90) == 807793566946316088741610050849573099185363389551639556884765625,
+        '5^90 failed'
+    );
     assert(2_u256.wrapping_pow(256) == 0, 'should wrap to 0');
     assert(123456_u256.wrapping_pow(0) == 1, 'n^0 should be 1');
     assert(0_u256.wrapping_pow(123456) == 0, '0^n should be 0');
@@ -16,6 +20,7 @@ fn test_wrapping_pow() {
 #[available_gas(20000000)]
 fn test_pow() {
     assert(5_u256.pow(10) == 9765625, '5^10 should be 9765625');
+    assert(5_u256.pow(45) == 28421709430404007434844970703125, '5^45 failed');
     assert(123456_u256.pow(0) == 1, 'n^0 should be 1');
     assert(0_u256.pow(123456) == 0, '0^n should be 0');
 }
