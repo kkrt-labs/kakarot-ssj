@@ -1,4 +1,4 @@
-use utils::mem::{U8SizeOf, U64SizeOf, Felt252SizeOf, SizeOf};
+use utils::num::{U8SizeOf, U64SizeOf, Felt252SizeOf, SizeOf};
 
 #[test]
 #[available_gas(20000000)]
