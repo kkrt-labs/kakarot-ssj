@@ -123,3 +123,17 @@ impl OneImpl<T, +Oneable<T>, +PartialEq<T>, +Drop<T>, +Copy<T>> of One<T> {
         !self.is_one()
     }
 }
+
+impl Felt252One of One<felt252> {
+    fn one() -> felt252 {
+        1
+    }
+
+    fn is_one(self: @felt252) -> bool {
+        *self == Felt252One::one()
+    }
+
+    fn is_non_one(self: @felt252) -> bool {
+        !self.is_one()
+    }
+}
