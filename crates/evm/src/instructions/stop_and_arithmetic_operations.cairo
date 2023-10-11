@@ -17,7 +17,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// Halts the execution of the current program.
     /// # Specification: https://www.evm.codes/#00?fork=shanghai
     fn exec_stop(ref self: Machine) -> Result<(), EVMError> {
-        self.stop();
+        self.set_stopped();
         Result::Ok(())
     }
 

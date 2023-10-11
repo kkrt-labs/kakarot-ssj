@@ -2,7 +2,7 @@ use evm::context::CallContextTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::tests::test_utils::{
     evm_address, setup_machine_with_bytecode, setup_machine, starknet_address,
-    setup_execution_context
+    setup_execution_context, setup_machine_with_nested_execution_context, parent_ctx_return_data
 };
 
 
@@ -63,10 +63,10 @@ fn test_revert() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_stop() {
+fn test_stopped() {
     let mut machine = Default::default();
 
-    machine.stop();
+    machine.set_stopped();
 
     assert(!machine.reverted(), 'ctx should not be reverted');
     assert(machine.stopped(), 'ctx should be stopped');
@@ -151,6 +151,25 @@ fn test_create_addresses() {
 
     let create_addresses = machine.create_addresses();
     assert(create_addresses.len() == 0, 'wrong length');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_set_return_data_root() {
+    let mut machine: Machine = Default::default();
+    machine.set_return_data(array![0x01, 0x02, 0x03].span());
+    let return_data = machine.return_data();
+    assert(return_data == array![0x01, 0x02, 0x03].span(), 'wrong return data');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_set_return_data_subctx() {
+    let mut machine: Machine = setup_machine_with_nested_execution_context();
+    machine.set_return_data(array![0x01, 0x02, 0x03].span());
+    let return_data = parent_ctx_return_data(ref machine);
+    assert(return_data == array![0x01, 0x02, 0x03].span(), 'wrong return data');
 }
 
 #[test]

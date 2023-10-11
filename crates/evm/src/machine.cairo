@@ -152,7 +152,7 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
 
     /// Stops the current execution context.
     #[inline(always)]
-    fn stop(ref self: Machine) {
+    fn set_stopped(ref self: Machine) {
         let mut current_execution_ctx = self.current_ctx.unbox();
         current_execution_ctx.status = Status::Stopped;
         self.current_ctx = BoxTrait::new(current_execution_ctx);
@@ -259,17 +259,21 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
         is_root
     }
 
-    /// Sets the `return_data` field of the parent context of the current
-    /// context to the `value` passed as parameter. If the current context is
-    /// the root context, does nothing.  Should be called upon returning from a
-    /// child context.
+    /// Sets the `return_data` field of the appropriate execution context,
+    /// taking into acount EVM specs: If the current context is the root
+    /// context, sets the return_data field of the root context.  If the current
+    /// context is a subcontext, sets the return_data field of the parent.
+    /// Should be called when returning from a context.
     #[inline(always)]
-    fn set_parent_return_data(ref self: Machine, value: Span<u8>) {
+    fn set_return_data(ref self: Machine, value: Span<u8>) {
         let mut current_ctx = self.current_ctx.unbox();
         let maybe_parent_ctx = current_ctx.parent_ctx;
         match match_nullable(maybe_parent_ctx) {
             // Due to ownership mechanism, both branches need to explicitly re-bind the parent_ctx.
-            FromNullableResult::Null => { current_ctx.parent_ctx = Default::default(); },
+            FromNullableResult::Null => {
+                current_ctx.return_data = value;
+                current_ctx.parent_ctx = Default::default();
+            },
             FromNullableResult::NotNull(parent_ctx) => {
                 let mut parent_ctx = parent_ctx.unbox();
                 parent_ctx.return_data = value;

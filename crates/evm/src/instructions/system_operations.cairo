@@ -34,8 +34,8 @@ impl SystemOperations of SystemOperationsTrait {
         let size = self.stack.pop_usize()?;
         let mut return_data = Default::default();
         self.memory.load_n(size, ref return_data, offset);
-        self.set_parent_return_data(return_data.span());
-        self.stop();
+        self.set_return_data(return_data.span());
+        self.stopped();
         Result::Ok(())
     }
 
