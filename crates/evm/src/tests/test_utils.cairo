@@ -47,7 +47,7 @@ fn native_token() -> ContractAddress {
 }
 
 fn chain_id() -> u128 {
-    'KKRT'.try_into().unwrap()
+    'CHAIN_ID'.try_into().unwrap()
 }
 
 fn setup_call_context() -> CallContext {

@@ -261,7 +261,7 @@ trait IExtendedKakarotCore<TContractState> {
     fn get_eoa_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// Deploys an EOA for a particular EVM address
-    fn deploy_externally_owned_account(
+    fn deploy_eoa(
         ref self: TContractState, evm_address: EthAddress
     ) -> ContractAddress;
 
