@@ -33,16 +33,8 @@ impl ExponentiationImpl<
         if self.is_zero() {
             return Zero::zero();
         }
-        let ten = One::one()
-            + One::one()
-            + One::one()
-            + One::one()
-            + One::one()
-            + One::one()
-            + One::one()
-            + One::one()
-            + One::one()
-            + One::one();
+        let one = One::one();
+        let ten = one + one + one + one + one + one + one + one + one + one;
         if exponent > ten {
             self.fast_pow(exponent)
         } else {
@@ -57,12 +49,13 @@ impl ExponentiationImpl<
         }
     }
     fn fast_pow(self: T, mut exponent: T) -> T {
-        let mut result = One::one();
+        let one = One::one();
+        let mut result = one;
         let mut base = self;
-        let two = One::one() + One::one();
+        let two = one + one;
 
         loop {
-            if exponent & One::one() == One::one() {
+            if exponent & one == one {
                 result = result * base;
             }
 
