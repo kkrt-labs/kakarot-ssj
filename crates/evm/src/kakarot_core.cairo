@@ -1,4 +1,4 @@
-use starknet::{ContractAddress, EthAddress, ClassHash,};
+use starknet::{ContractAddress, EthAddress, ClassHash};
 
 const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
@@ -65,21 +65,19 @@ trait IKakarotCore<TContractState> {
 
 #[starknet::contract]
 mod KakarotCore {
-    use core::traits::TryInto;
-    use core::box::BoxTrait;
+    use core::hash::{HashStateExTrait, HashStateTrait};
+    use core::pedersen::{HashState, PedersenTrait};
     use core_contracts::components::ownable::ownable_component::InternalTrait;
     use core_contracts::components::ownable::{ownable_component};
     use evm::errors::EVMError;
     use evm::storage::ContractAccountStorage;
-    use utils::constants::{CONTRACT_ADDRESS_PREFIX, POW_2_251};
-    use utils::traits::U256TryIntoContractAddress;
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, contract_address_const,
-        get_contract_address, storage_base_address_from_felt252
+        get_contract_address
     };
     use super::INVOKE_ETH_CALL_FORBIDDEN;
-    use core::pedersen::{HashState, PedersenTrait};
-    use core::hash::{HashStateExTrait, HashStateTrait};
+    use utils::constants::{CONTRACT_ADDRESS_PREFIX, POW_2_251};
+    use utils::traits::U256TryIntoContractAddress;
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
 
@@ -176,7 +174,10 @@ mod KakarotCore {
             // Constructor Calldata
             // For an EOA, the constructor calldata is:
             // fn constructor(kakarot_address: ContractAddress, evm_address: EthAddress)
-            let constructor_calldata_hash = PedersenTrait::new(0).update(deployer.into()).update(evm_address.into()).finalize();
+            let constructor_calldata_hash = PedersenTrait::new(0)
+                .update(deployer.into())
+                .update(evm_address.into())
+                .finalize();
 
             let hash = PedersenTrait::new(0)
                 .update(CONTRACT_ADDRESS_PREFIX)
