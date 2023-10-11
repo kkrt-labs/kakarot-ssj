@@ -11,6 +11,7 @@ use evm::instructions::{
     MemoryOperationTrait
 };
 use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::context::{ExecutionContextTrait, ExecutionContext};
 use evm::storage_journal::JournalTrait;
 use utils::{helpers::u256_to_bytes_array};
 
@@ -24,7 +25,7 @@ trait EVMInterpreterTrait {
     fn run(ref self: EVMInterpreter, ref machine: Machine);
     /// Decodes the opcode at `pc` and executes the associated function.
     fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError>;
-    fn handle_revert(ref self: EVMInterpreter, ref machine: Machine);
+    fn finalize_revert(ref self: EVMInterpreter, ref machine: Machine);
 }
 
 
@@ -49,16 +50,16 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
                         machine.storage_journal.finalize_local();
                         if machine.is_root() {
                             machine.storage_journal.finalize_global();
-                        }
+                        };
                     },
-                    Status::Reverted => { self.handle_revert(ref machine); }
+                    Status::Reverted => { self.finalize_revert(ref machine); }
                 }
             },
             Result::Err(error) => {
                 // If an error occurred, revert execution machine.
                 // Currently, revert reason is a Span<u8>.
-                machine.revert(u256_to_bytes_array(error.into()).span());
-                self.handle_revert(ref machine);
+                machine.set_reverted();
+                self.finalize_revert(ref machine);
             }
         }
     }
@@ -656,9 +657,9 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         return Result::Err(EVMError::UnknownOpcode(opcode));
     }
 
-    /// Handles the revert of an execution context.
+    /// Finalizes the revert of an execution context.
     /// Clears all pending journal entries, not finalizing the pending state changes applied inside this context.
-    fn handle_revert(ref self: EVMInterpreter, ref machine: Machine) {
+    fn finalize_revert(ref self: EVMInterpreter, ref machine: Machine) {
         machine.storage_journal.clear_local();
     //TODO add the rest of the revert handling.
     }

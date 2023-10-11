@@ -473,8 +473,15 @@ fn test_returndatasize() {
     // Given
     let return_data: Array<u8> = array![1, 2, 3, 4, 5];
     let size = return_data.len();
-    let mut machine = setup_machine();
-    machine.set_return_data(return_data);
+    let mut machine = setup_machine_with_nested_execution_context();
+
+    // Simulate return of subcontext where
+    /// 1. Set `return_data` field of parent context
+    /// 2. make `parent_ctx` of `current_ctx` the current ctx
+    machine.set_parent_return_data(return_data.span());
+    let current_ctx = machine.current_ctx.unbox();
+    let parent_ctx = current_ctx.parent_ctx.deref();
+    machine.current_ctx = BoxTrait::new(parent_ctx);
 
     machine.exec_returndatasize();
 
@@ -539,49 +546,55 @@ fn test_returndata_copy_with_multiple_words() {
 
 fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
-    let mut machine = setup_machine();
-    machine
-        .set_return_data(
-            array![
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12,
-                13,
-                14,
-                15,
-                16,
-                17,
-                18,
-                19,
-                20,
-                21,
-                22,
-                23,
-                24,
-                25,
-                26,
-                27,
-                28,
-                29,
-                30,
-                31,
-                32,
-                33,
-                34,
-                35,
-                36
-            ]
-        );
+    let mut machine = setup_machine_with_nested_execution_context();
+    // Set the return data of the current context
 
+    let return_data = array![
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+    ];
+
+    // Simulate return of subcontext where
+    /// 1. Set `return_data` field of parent context
+    /// 2. make `parent_ctx` of `current_ctx` the current ctx
+    machine.set_parent_return_data(return_data.span());
+    let current_ctx = machine.current_ctx.unbox();
+    let parent_ctx = current_ctx.parent_ctx.deref();
+    machine.current_ctx = BoxTrait::new(parent_ctx);
     let return_data: Span<u8> = machine.return_data();
 
     if (size == 0) {

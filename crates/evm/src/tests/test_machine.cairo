@@ -55,7 +55,7 @@ fn test_set_pc() {
 fn test_revert() {
     let mut machine = Default::default();
 
-    machine.revert(array![0xde, 0xbf].span());
+    machine.set_reverted();
 
     assert(machine.reverted(), 'ctx should be reverted');
     assert(machine.stopped(), 'ctx should be stopped');
@@ -160,14 +160,4 @@ fn test_return_data() {
 
     let return_data = machine.return_data();
     assert(return_data.len() == 0, 'wrong length');
-}
-
-
-#[test]
-#[available_gas(20000000)]
-fn test_child_return_data() {
-    let mut machine: Machine = setup_machine();
-
-    let return_data = machine.child_return_data().unwrap();
-    assert(return_data == array![1, 2, 3].span(), 'wrong child return data');
 }

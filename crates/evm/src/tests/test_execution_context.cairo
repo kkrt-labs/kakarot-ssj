@@ -77,8 +77,7 @@ fn test_execution_context_new() {
         starknet_address,
         call_ctx,
         parent_ctx,
-        Default::default(),
-        return_data
+        return_data.span()
     );
 
     // Then
@@ -107,7 +106,7 @@ fn test_execution_context_stop_and_revert() {
     let mut execution_context = setup_execution_context();
 
     // When
-    execution_context.stop();
+    execution_context.set_stopped();
 
     // Then
     assert(execution_context.stopped() == true, 'should be stopped');
@@ -121,11 +120,10 @@ fn test_execution_context_revert() {
 
     // When
     let revert_reason = array![0, 1, 2, 3].span();
-    execution_context.revert(revert_reason);
+    execution_context.set_reverted();
 
     // Then
     assert(execution_context.reverted() == true, 'should be reverted');
-    assert(execution_context.return_data() == revert_reason, 'wrong revert reason');
 }
 
 #[test]
@@ -159,20 +157,6 @@ fn test_is_root() {
 
 #[test]
 #[available_gas(300000)]
-fn test_child_return_data() {
-    // Given
-    let mut execution_context = setup_execution_context();
-
-    // When
-    let child_return_data = execution_context.child_return_data().unwrap();
-
-    // Then
-    assert(child_return_data == array![1, 2, 3].span(), 'wrong child_return_data');
-}
-
-
-#[test]
-#[available_gas(300000)]
 fn test_origin() {
     // Given
     let mut execution_context = setup_nested_execution_context();
@@ -181,5 +165,5 @@ fn test_origin() {
     let origin = execution_context.origin();
 
     // Then
-    assert(origin == evm_address(), 'wrong child_return_data');
+    assert(origin == evm_address(), 'wrong origin');
 }

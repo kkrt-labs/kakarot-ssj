@@ -32,9 +32,9 @@ impl SystemOperations of SystemOperationsTrait {
     fn exec_return(ref self: Machine) -> Result<(), EVMError> {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
-        let mut return_data = array![];
+        let mut return_data = Default::default();
         self.memory.load_n(size, ref return_data, offset);
-        self.set_return_data(return_data);
+        self.set_parent_return_data(return_data.span());
         self.stop();
         Result::Ok(())
     }

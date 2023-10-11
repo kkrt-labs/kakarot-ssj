@@ -8,6 +8,7 @@ use evm::{
 };
 
 use starknet::{EthAddress, ContractAddress};
+use nullable::{match_nullable, FromNullableResult};
 
 #[derive(Destruct)]
 struct Machine {
@@ -77,9 +78,9 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     }
 
     #[inline(always)]
-    fn revert(ref self: Machine, revert_reason: Span<u8>) {
+    fn set_reverted(ref self: Machine) {
         let mut current_execution_ctx = self.current_ctx.unbox();
-        current_execution_ctx.revert(revert_reason);
+        current_execution_ctx.set_reverted();
         self.current_ctx = BoxTrait::new(current_execution_ctx);
     }
 
@@ -144,7 +145,7 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     #[inline(always)]
     fn return_data(ref self: Machine) -> Span<u8> {
         let current_execution_ctx = self.current_ctx.unbox();
-        let return_data = current_execution_ctx.return_data.span();
+        let return_data = current_execution_ctx.return_data;
         self.current_ctx = BoxTrait::new(current_execution_ctx);
         return_data
     }
@@ -258,20 +259,23 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
         is_root
     }
 
+    /// Sets the `return_data` field of the parent context of the current
+    /// context to the `value` passed as parameter. If the current context is
+    /// the root context, does nothing.  Should be called upon returning from a
+    /// child context.
     #[inline(always)]
-    fn set_return_data(ref self: Machine, value: Array<u8>) {
-        let mut current_execution_ctx = self.current_ctx.unbox();
-        current_execution_ctx.return_data = value;
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-    }
-
-    /// Getter for the return data of a child context, accessed from its parent context
-    /// Enabler for RETURNDATASIZE and RETURNDATACOPY opcodes
-    #[inline(always)]
-    fn child_return_data(ref self: Machine) -> Option<Span<u8>> {
-        let mut current_execution_ctx = self.current_ctx.unbox();
-        let child_return_data = current_execution_ctx.child_return_data();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        child_return_data
+    fn set_parent_return_data(ref self: Machine, value: Span<u8>) {
+        let mut current_ctx = self.current_ctx.unbox();
+        let maybe_parent_ctx = current_ctx.parent_ctx;
+        match match_nullable(maybe_parent_ctx) {
+            // Due to ownership mechanism, both branches need to explicitly re-bind the parent_ctx.
+            FromNullableResult::Null => { current_ctx.parent_ctx = Default::default(); },
+            FromNullableResult::NotNull(parent_ctx) => {
+                let mut parent_ctx = parent_ctx.unbox();
+                parent_ctx.return_data = value;
+                current_ctx.parent_ctx = NullableTrait::new(parent_ctx);
+            }
+        }
+        self.current_ctx = BoxTrait::new(current_ctx);
     }
 }
