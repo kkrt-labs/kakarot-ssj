@@ -58,8 +58,6 @@ trait WrappingExponentiation<T> {
     /// from the core library, which wrap around when overflowing.
     /// * `T` - The result of base raised to the power of exp modulo MAX<T>.
     fn wrapping_pow(self: T, exponent: T) -> T;
-    fn wrapping_slow_pow(self: T, exponent: T) -> T;
-    fn wrapping_fast_pow(self: T, exponent: T) -> T;
 }
 
 impl U128WrappingExponentiationImpl of WrappingExponentiation<u128> {
@@ -68,14 +66,20 @@ impl U128WrappingExponentiationImpl of WrappingExponentiation<u128> {
             return 0;
         }
         if exponent > 10 {
-            self.wrapping_fast_pow(exponent)
+            internal_wrapping_pow_u128::wrapping_fpow(self, exponent)
         } else {
-            self.wrapping_slow_pow(exponent)
+            internal_wrapping_pow_u128::wrapping_spow(self, exponent)
         }
     }
-    fn wrapping_slow_pow(self: u128, exponent: u128) -> u128 {
+}
+
+mod internal_wrapping_pow_u128 {
+    use integer::{
+        u128_overflowing_mul
+    };
+    fn wrapping_spow(base: u128, exponent: u128) -> u128 {
         let mut exponent = exponent;
-        let mut base = self;
+        let mut base = base;
         let mut result = 1;
 
         loop {
@@ -87,9 +91,9 @@ impl U128WrappingExponentiationImpl of WrappingExponentiation<u128> {
             exponent -= 1;
         }
     }
-    fn wrapping_fast_pow(self: u128, exponent: u128) -> u128 {
+    fn wrapping_fpow(base: u128, exponent: u128) -> u128 {
         let mut result = 1;
-        let mut base = self;
+        let mut base = base;
         let mut exponent = exponent;
 
         loop {
@@ -115,14 +119,20 @@ impl U256WrappingExponentiationImpl of WrappingExponentiation<u256> {
             return 0;
         }
         if exponent > 10 {
-            self.wrapping_fast_pow(exponent)
+            internal_wrapping_pow_u256::wrapping_fpow(self, exponent)
         } else {
-            self.wrapping_slow_pow(exponent)
+            internal_wrapping_pow_u256::wrapping_spow(self, exponent)
         }
     }
-    fn wrapping_slow_pow(self: u256, exponent: u256) -> u256 {
+}
+
+mod internal_wrapping_pow_u256 {
+    use integer::{
+        u256_overflow_mul, u256
+    };
+    fn wrapping_spow(base: u256, exponent: u256) -> u256 {
         let mut exponent = exponent;
-        let mut base = self;
+        let mut base = base;
         let mut result = 1;
 
         loop {
@@ -134,9 +144,9 @@ impl U256WrappingExponentiationImpl of WrappingExponentiation<u256> {
             exponent -= 1;
         }
     }
-    fn wrapping_fast_pow(self: u256, exponent: u256) -> u256 {
+    fn wrapping_fpow(base: u256, exponent: u256) -> u256 {
         let mut result = 1;
-        let mut base = self;
+        let mut base = base;
         let mut exponent = exponent;
 
         loop {

@@ -1,8 +1,8 @@
 use integer::{u256_overflowing_add, BoundedInt, u512, u256_overflow_mul};
 use utils::math::{
-    Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift
+    Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift,
+    internal_wrapping_pow_u256
 };
-use debug::PrintTrait;
 
 #[test]
 #[available_gas(20000000)]
@@ -30,17 +30,18 @@ fn test_pow() {
 #[should_panic(expected: ('Out of gas',))]
 #[available_gas(20000000)]
 fn test_wrapping_slow_pow_runs_out_of_gas() {
-    3_u256.wrapping_slow_pow(3_u256.wrapping_fast_pow(10));
+    let exp = internal_wrapping_pow_u256::wrapping_fpow(3_u256, 10);
+    internal_wrapping_pow_u256::wrapping_spow(3_u256, exp);
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_wrapping_fast_pow() {
+    let exp = internal_wrapping_pow_u256::wrapping_fpow(3_u256, 10);
     assert(
-        3_u256
-            .wrapping_fast_pow(
-                3_u256.wrapping_fast_pow(10)
-            ) == 6701808933569337837891967767170127839253608180143676463326689955522159283811,
+        internal_wrapping_pow_u256::wrapping_fpow(
+            3_u256, exp
+        ) == 6701808933569337837891967767170127839253608180143676463326689955522159283811,
         '3^(3^10) failed'
     );
 }
