@@ -35,7 +35,7 @@ impl SystemOperations of SystemOperationsTrait {
         let mut return_data = Default::default();
         self.memory.load_n(size, ref return_data, offset);
         self.set_return_data(return_data.span());
-        self.stopped();
+        self.set_stopped();
         Result::Ok(())
     }
 

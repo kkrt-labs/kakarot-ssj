@@ -63,7 +63,7 @@ fn test_revert() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_stopped() {
+fn test_set_stopped() {
     let mut machine = Default::default();
 
     machine.set_stopped();

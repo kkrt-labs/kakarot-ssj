@@ -24,6 +24,7 @@ fn test_exec_return() {
 
     // Then
     assert(1000 == load_word(32, parent_ctx_return_data(ref machine)), 'Wrong return_data');
+    assert(machine.stopped(), 'machine should be stopped')
 }
 
 #[test]
@@ -42,4 +43,5 @@ fn test_exec_return_with_offset() {
 
     // Then
     assert(256 == load_word(32, parent_ctx_return_data(ref machine)), 'Wrong return_data');
+    assert(machine.stopped(), 'machine should be stopped')
 }
