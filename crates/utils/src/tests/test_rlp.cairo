@@ -3,6 +3,7 @@ use array::{ArrayTrait, SpanTrait};
 use result::ResultTrait;
 use utils::errors::{RLPError, RLP_INVALID_LENGTH};
 
+// Tests source : https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
 #[test]
 #[available_gas(9999999)]
 fn test_rlp_types() {
@@ -97,6 +98,78 @@ fn test_rlp_decode_short_string() {
     let (res, len) = rlp_decode(arr.span()).unwrap();
     assert(len == 1 + (0x9b - 0x80), 'Wrong len');
 
+    // Remove the byte representing the data type
+    arr.pop_front();
+    let expected_item = RLPItem::Bytes(arr.span());
+
+    assert(res == expected_item, 'Wrong value');
+}
+#[test]
+#[available_gas(99999999)]
+fn test_rlp_decode_short_string2() {
+    let mut arr = array![
+        0x39,
+        0xc0,
+        0x34,
+        0xf6,
+        0x6c,
+        0x80,
+        0x5a,
+        0x9b,
+        0x1e,
+        0xa9,
+        0x49,
+        0xfd,
+        0x89,
+        0x2d,
+        0x8f,
+        0x8d,
+        0xbb,
+        0x94,
+        0x84,
+        0xcd,
+        0x74,
+        0xa4,
+        0x3d,
+        0xf3,
+        0xa8,
+        0xda,
+        0x3b,
+        0xf7
+    ];
+
+    let (res, len) = rlp_decode(arr.span()).unwrap();
+    assert(len == 1 + (0x9b - 0x80), 'Wrong len');
+
+    let mut arr = array![
+        0x8d,
+        0x39,
+        0xc0,
+        0x34,
+        0xf6,
+        0x6c,
+        0x80,
+        0x5a,
+        0xf3,
+        0x1e,
+        0xa9,
+        0x49,
+        0xfd,
+        0x89,
+        0x2d,
+        0x8f,
+        0xf7,
+        0xbb,
+        0x94,
+        0x84,
+        0xcd,
+        0x74,
+        0xa4,
+        0x3d,
+        0xa8,
+        0xda,
+        0x3b
+    ];
     // Remove the byte representing the data type
     arr.pop_front();
     let expected_item = RLPItem::Bytes(arr.span());

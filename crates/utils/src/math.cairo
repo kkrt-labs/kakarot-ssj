@@ -1,7 +1,6 @@
 use integer::{
     u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt, u128_overflowing_mul
 };
-use math::Oneable;
 
 trait Exponentiation<T> {
     /// Raise a number to a power.
