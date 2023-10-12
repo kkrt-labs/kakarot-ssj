@@ -74,9 +74,7 @@ impl U128WrappingExponentiationImpl of WrappingExponentiation<u128> {
 }
 
 mod internal_wrapping_pow_u128 {
-    use integer::{
-        u128_overflowing_mul
-    };
+    use integer::{u128_overflowing_mul};
     fn wrapping_spow(base: u128, exponent: u128) -> u128 {
         let mut exponent = exponent;
         let mut base = base;
@@ -127,9 +125,7 @@ impl U256WrappingExponentiationImpl of WrappingExponentiation<u256> {
 }
 
 mod internal_wrapping_pow_u256 {
-    use integer::{
-        u256_overflow_mul, u256
-    };
+    use integer::{u256_overflow_mul, u256};
     fn wrapping_spow(base: u256, exponent: u256) -> u256 {
         let mut exponent = exponent;
         let mut base = base;
