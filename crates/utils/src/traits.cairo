@@ -48,7 +48,7 @@ impl U256TryIntoContractAddress of TryInto<u256, ContractAddress> {
     fn try_into(self: u256) -> Option<ContractAddress> {
         let intermediate: Option<felt252> = self.try_into();
         match intermediate {
-            Option::Some(felt) => felt.try_into(),
+            Option::Some(value) => value.try_into(),
             Option::None => Option::None,
         }
     }
