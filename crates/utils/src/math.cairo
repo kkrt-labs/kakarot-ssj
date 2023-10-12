@@ -22,7 +22,6 @@ impl ExponentiationImpl<
     +Mul<T>,
     +Div<T>,
     +BitAnd<T>,
-    +PartialOrd<T>,
     +PartialEq<T>,
     +Copy<T>,
     +Drop<T>
