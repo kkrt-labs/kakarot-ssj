@@ -28,18 +28,18 @@ To overcome the problem stated above, we have come up with the following design:
   it.
 - Each execution context has a `parent_ctx` field, which value is either a
   pointer to its parent execution context or `null`.
-- Each execution context has a `child_return_data` field, which value is either
+- Each execution context has a `return_data` field, whose value is either
   nothing or the return data from the child context. This is meant to enable
   opcodes `RETURNDATASIZE` and `RETURNDATACOPY`. These two opcodes are the only
   ones enabling a current context to access its child context's return data.
 - The execution context tree is a directed acyclic graph, where each execution
-  context has at most one parent, and at most one child.
+  context has at most one parent.
 - A specific execution context is accessible by traversing the execution context
   tree, starting from the root execution context, and following the execution
   context tree until the desired execution context is reached. The machine also
   stores a pointer to the current execution context.
 - The execution context tree is initialized with a single root execution
-  context, which has no parent and no child. It has `id` field equal to 0.
+  context, which has no parent and no child. It has an `id` field equal to 0.
 
 The following diagram describes the model of the Kakarot Machine.
 

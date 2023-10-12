@@ -140,9 +140,9 @@ struct ExecutionContext {
     destroyed_contracts: Array<EthAddress>,
     events: Array<Event>,
     create_addresses: Array<EthAddress>,
-    return_data: Array<u8>,
+    // Return data of a child context.
+    return_data: Span<u8>,
     parent_ctx: Nullable<ExecutionContext>,
-    child_return_data: Option<Span<u8>>,
 }
 
 impl DefaultBoxExecutionContext of Default<Box<ExecutionContext>> {
@@ -165,8 +165,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         starknet_address: ContractAddress,
         call_ctx: CallContext,
         parent_ctx: Nullable<ExecutionContext>,
-        child_return_data: Option<Span<u8>>,
-        return_data: Array<u8>,
+        return_data: Span<u8>,
     ) -> ExecutionContext {
         ExecutionContext {
             id,
@@ -180,7 +179,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             create_addresses: Default::default(),
             return_data,
             parent_ctx,
-            child_return_data,
         }
     }
 
@@ -232,12 +230,12 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     #[inline(always)]
     fn return_data(self: @ExecutionContext) -> Span<u8> {
-        self.return_data.span()
+        *self.return_data
     }
 
     /// Stops the current execution context.
     #[inline(always)]
-    fn stop(ref self: ExecutionContext) {
+    fn set_stopped(ref self: ExecutionContext) {
         self.status = Status::Stopped;
     }
 
@@ -247,9 +245,8 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     /// (it is stopped) and contract creation and contract storage writes are
     /// reverted on its finalization.
     #[inline(always)]
-    fn revert(ref self: ExecutionContext, revert_reason: Span<u8>) {
+    fn set_reverted(ref self: ExecutionContext) {
         self.status = Status::Reverted;
-        ArrayExtensionTrait::concat(ref self.return_data, revert_reason);
     }
 
     // *************************************************************************
@@ -302,11 +299,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     #[inline(always)]
-    fn set_return_data(ref self: ExecutionContext, value: Array<u8>) {
-        self.return_data = value;
-    }
-
-    #[inline(always)]
     fn set_pc(ref self: ExecutionContext, value: u32) {
         self.program_counter = value;
     }
@@ -316,10 +308,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         *self.program_counter
     }
 
-    #[inline(always)]
-    fn child_return_data(self: @ExecutionContext) -> Option<Span<u8>> {
-        *self.child_return_data
-    }
 
     #[inline(always)]
     fn append_event(ref self: ExecutionContext, event: Event) {
