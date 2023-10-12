@@ -174,7 +174,7 @@ mod KakarotCore {
 
             // Constructor Calldata
             // For an EOA, the constructor calldata is:
-            // fn constructor(kakarot_address: ContractAddress, evm_address: EthAddress)
+            // [kakarot_address, evm_address]
             let constructor_calldata_hash = PedersenTrait::new(0)
                 .update(deployer.into())
                 .update(evm_address.into())
