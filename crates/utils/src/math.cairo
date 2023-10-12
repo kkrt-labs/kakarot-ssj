@@ -86,19 +86,6 @@ impl Felt252WrappingExpImpl of WrappingExponentiation<felt252> {
     }
 }
 
-impl U32ExpImpl of Exponentiation<u32> {
-    fn pow(self: u32, mut exponent: u32) -> u32 {
-        if self == 0 {
-            return 0;
-        }
-        if exponent == 0 {
-            return 1;
-        } else {
-            return self * Exponentiation::pow(self, exponent - 1);
-        }
-    }
-}
-
 
 // === BitShift ===
 
@@ -139,26 +126,6 @@ impl BitshiftImpl<
     }
 
     fn shr(self: T, shift: T) -> T {
-        // early return to save gas if shift > nb_bits of T
-        if shift > shift.size_of() - One::one() {
-            panic_with_felt252('mul Overflow');
-        }
-        let two = One::one() + One::one();
-        self / two.pow(shift)
-    }
-}
-
-impl U32BitshiftImpl of Bitshift<u32> {
-    fn shl(self: u32, shift: u32) -> u32 {
-        if shift > 31 {
-            // 2.pow(shift) for shift > 32 will panic with 'u32_mul Overflow'
-            panic_with_felt252('u32_mul Overflow');
-        }
-        let two = One::one() + One::one();
-        self * two.pow(shift)
-    }
-
-    fn shr(self: u32, shift: u32) -> u32 {
         // early return to save gas if shift > nb_bits of T
         if shift > shift.size_of() - One::one() {
             panic_with_felt252('mul Overflow');

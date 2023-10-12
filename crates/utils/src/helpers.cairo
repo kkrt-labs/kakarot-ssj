@@ -7,6 +7,7 @@ use utils::constants::{
     POW_256_16,
 };
 use keccak::u128_split;
+use utils::num::{Zero, One, SizeOf};
 use utils::math::Bitshift;
 
 
@@ -505,34 +506,35 @@ impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtensionTrait<T> {
     }
 }
 
-impl SpanU8TryIntoU32 of TryInto<Span<u8>, u32> {
-    fn try_into(self: Span<u8>) -> Option<u32> {
-        let len = self.len();
+trait BytesSerde<T> {
+    /// Serialize/deserialize bytes into/from
+    /// an array of bytes.
+    fn serialize(self: @T, ref output: Array<u8>);
+    fn deserialize(self: @Span<u8>) -> Option<T>;
+}
+
+impl BytesSerdeU32Impl of BytesSerde<u32> {
+    fn serialize(self: @u32, ref output: Array<u8>) {}
+    fn deserialize(self: @Span<u8>) -> Option<u32> {
+        let len = (*self).len();
         if len > 4 {
             return Option::None(());
         }
-
-        if self.is_empty() {
-            return Option::Some(0);
-        }
-
-        let offset = len.into() - 1;
+        let offset: u32 = len - 1;
         let mut result: u32 = 0;
-        let mut i: usize = 0;
+        let mut i: u32 = 0;
         loop {
-            if i >= len {
+            if i == len {
                 break ();
             }
-            let byte: u32 = (*self.at(i)).into();
-            result += byte.shl(8 * (offset - i.into()));
+            let byte: u32 = (*(*self).at(i)).into();
+            result += byte.shl(8 * (offset - i));
 
             i += 1;
         };
-
         Option::Some(result)
     }
 }
-
 
 #[generate_trait]
 impl U256Impl of U256Trait {
@@ -551,4 +553,3 @@ impl U256Impl of U256Trait {
         u256 { low: new_low, high: new_high }
     }
 }
-

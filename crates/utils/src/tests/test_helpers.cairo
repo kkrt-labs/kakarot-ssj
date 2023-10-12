@@ -1,6 +1,6 @@
 use utils::helpers;
 use utils::helpers::{
-    SpanExtension, SpanExtensionTrait, ArrayExtension, ArrayExtensionTrait, U256Trait
+    SpanExtension, SpanExtensionTrait, ArrayExtension, ArrayExtensionTrait, U256Trait, BytesSerde
 };
 use debug::PrintTrait;
 
@@ -200,4 +200,15 @@ fn test_split_u256_into_u64_little() {
     assert(low_h == 0xE5000000FFFFFFFA, 'split mismatch');
     assert(high_l == 0x0000450000DEFA00, 'split mismatch');
     assert(low_l == 0x00200400000000AD, 'split mismatch');
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test_bytes_serde_u32_deserialize() {
+    let input: Array<u8> = array![0xf4, 0x32, 0x15, 0x62];
+    let res: Option<u32> = input.span().deserialize();
+
+    assert(res != Option::None, 'should have a value');
+    let res = res.unwrap();
+    assert(res == 0xf4321562, 'wrong result value');
 }
