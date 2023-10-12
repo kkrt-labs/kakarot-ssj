@@ -188,7 +188,7 @@ mod KakarotCore {
                 .update(constructor_calldata_hash)
                 .finalize();
 
-            let normalized_address: Option<ContractAddress> = (hash.into() & POW_2_251).try_into();
+            let normalized_address:ContractAddress = (hash.into() & POW_2_251).try_into().unwrap();
             // We know this unwrap is safe, because of the above bitwise AND on 2 ** 251
             normalized_address.unwrap()
         }
