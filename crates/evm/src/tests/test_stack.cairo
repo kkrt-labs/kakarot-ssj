@@ -270,33 +270,6 @@ mod pop {
             'should return StackUnderflow'
         );
     }
-
-    #[test]
-    #[available_gas(2000000000)]
-    fn test_pop_sba_ok() {
-        let mut stack = StackTrait::new();
-        stack.push(0x01).unwrap();
-
-        let res = stack.pop_sba();
-        let expected_val: starknet::StorageBaseAddress = storage_base_address_const::<0x01>();
-        assert(res.unwrap() == expected_val, 'wrong result');
-    }
-
-    #[test]
-    #[available_gas(200000)]
-    fn test_pop_sba_err() {
-        let mut stack = StackTrait::new();
-        stack
-            .push(0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00)
-            .unwrap(); // Higher than max possible StorageBaseAddress value
-
-        let res = stack.pop_sba();
-        assert(res.is_err(), 'should return Err');
-        assert(
-            res.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
-            'should ret TypeConversionError'
-        );
-    }
 }
 
 #[cfg(test)]

@@ -2,6 +2,7 @@
 
 mod helpers;
 mod constants;
+mod num;
 mod math;
 mod eth_transaction;
 mod rlp;

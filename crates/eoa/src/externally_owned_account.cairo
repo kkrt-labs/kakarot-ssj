@@ -1,29 +1,79 @@
 // Migrate https://github.com/kkrt-labs/kakarot/blob/7ec7a96074394ddb592a2b6fbea279c6c5cb25a6/src/kakarot/accounts/eoa/externally_owned_account.cairo#L4
+use starknet::{ContractAddress, EthAddress,};
+use starknet::account::{Call, AccountContract};
 
 #[starknet::interface]
 trait IExternallyOwnedAccount<TContractState> {
-    fn bytecode(self: @TContractState) -> Span<u8>;
-    fn bytecode_len(self: @TContractState) -> u32;
+    fn kakarot_core_address(self: @TContractState) -> ContractAddress;
+    fn evm_address(self: @TContractState) -> EthAddress;
 }
 
 #[starknet::contract]
 mod ExternallyOwnedAccount {
-    use starknet::ContractAddress;
+    use starknet::{ContractAddress, EthAddress, VALIDATED, get_caller_address};
+    use starknet::account::{Call, AccountContract};
 
     #[storage]
     struct Storage {
-        starknet_address: ContractAddress
+        evm_address: EthAddress,
+        kakarot_core_address: ContractAddress,
+    }
+
+    #[constructor]
+    fn constructor(
+        ref self: ContractState, kakarot_address: ContractAddress, evm_address: EthAddress
+    ) {
+        self.kakarot_core_address.write(kakarot_address);
+        self.evm_address.write(evm_address);
     }
 
     #[external(v0)]
     impl ExternallyOwnedAccount of super::IExternallyOwnedAccount<ContractState> {
-        /// Returns an empty span, required for the EXTCODE opcode
-        fn bytecode(self: @ContractState) -> Span<u8> {
-            return ArrayTrait::<u8>::new().span();
+        fn kakarot_core_address(self: @ContractState) -> ContractAddress {
+            self.kakarot_core_address.read()
         }
-        /// Return 0 bytecode_len, required for the EXTCODE opcode
-        fn bytecode_len(self: @ContractState) -> u32 {
-            return 0;
+        fn evm_address(self: @ContractState) -> EthAddress {
+            self.evm_address.read()
+        }
+    }
+
+    #[external(v0)]
+    impl AccountContractImpl of AccountContract<ContractState> {
+        fn __validate__(ref self: ContractState, calls: Array<Call>) -> felt252 {
+            assert(get_caller_address().is_zero(), 'Caller not zero');
+            // TODO
+            // Steps:
+            // Receive a payload formed as:
+            // Starknet Transaction Signature field: r, s, v (EVM Signature fields)
+            // Calldata field: an RLP-encoded EVM transaction, without r, s, v
+
+            // Step 1:
+            // Hash RLP-encoded EVM transaction
+            // Step 2:
+            // Verify EVM signature using get_tx_info().signature field against the keccak hash of the EVM tx
+            // Step 3:
+            // If valid signature, decode the RLP-encoded payload
+            // Step 4:
+            // Return ok
+
+            VALIDATED
+        }
+
+        /// Validate Declare is not used for Kakarot
+        fn __validate_declare__(self: @ContractState, class_hash: felt252) -> felt252 {
+            panic_with_felt252('Cannot Declare EOA')
+        }
+
+
+        fn __execute__(ref self: ContractState, calls: Array<Call>) -> Array<Span<felt252>> {
+            // TODO
+
+            // Step 1:
+            // Decode RLP-encoded transaction
+            // Step 2:
+            // Call KakarotCore.send_eth_transaction with correct params
+
+            array![]
         }
     }
 }

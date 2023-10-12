@@ -5,7 +5,7 @@ mod test_execution_context;
 mod test_instructions;
 
 #[cfg(test)]
-mod test_kakarot;
+mod test_kakarot_core;
 
 #[cfg(test)]
 mod test_machine;
@@ -15,6 +15,9 @@ mod test_memory;
 
 #[cfg(test)]
 mod test_stack;
+
+#[cfg(test)]
+mod test_storage;
 
 #[cfg(test)]
 mod test_storage_journal;

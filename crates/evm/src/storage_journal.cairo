@@ -83,4 +83,9 @@ impl JournalImpl of JournalTrait {
         };
         self.global_keys = Default::default();
     }
+
+    fn clear_local(ref self: Journal) {
+        self.local_keys = Default::default();
+        self.local_changes = Default::default();
+    }
 }
