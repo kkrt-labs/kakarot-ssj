@@ -1,7 +1,7 @@
 use utils::rlp::{rlp_decode, RLPType, RLPTypeTrait, RLPItem};
 use array::{ArrayTrait, SpanTrait};
 use result::ResultTrait;
-use utils::errors::{RLPError, RLP_INVALID_LENGTH};
+use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 
 // Tests source : https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
 #[test]
@@ -34,10 +34,7 @@ fn test_rlp_empty() {
     let res = rlp_decode(ArrayTrait::new().span());
 
     assert(res.is_err(), 'should return an error');
-    assert(
-        res.unwrap_err() == RLPError::RlpInvalidLength(RLP_INVALID_LENGTH),
-        'err != RlpInvalidLength'
-    );
+    assert(res.unwrap_err() == RLPError::RlpEmptyInput(RLP_EMPTY_INPUT), 'err != RlpInvalidLength');
 }
 
 #[test]
@@ -101,6 +98,47 @@ fn test_rlp_decode_short_string() {
     let expected_item = RLPItem::Bytes(arr.span());
 
     assert(res == expected_item, 'Wrong value');
+}
+
+#[test]
+#[available_gas(99999999)]
+fn test_rlp_decode_short_string_input_too_short() {
+    let mut arr = array![
+        0x9b,
+        0x5a,
+        0x80,
+        0x6c,
+        0xf6,
+        0x34,
+        0xc0,
+        0x39,
+        0x8d,
+        0x8f,
+        0x2d,
+        0x89,
+        0xfd,
+        0x49,
+        0xa9,
+        0x1e,
+        0xf3,
+        0x3d,
+        0xa4,
+        0x74,
+        0xcd,
+        0x84,
+        0x94,
+        0xbb,
+        0xa8,
+        0xda,
+        0x3b
+    ];
+
+    let res = rlp_decode(arr.span());
+    assert(res.is_err(), 'should return an RLPError');
+    assert(
+        res.unwrap_err() == RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT),
+        'err != RlpInputTooShort'
+    );
 }
 
 #[test]
@@ -180,6 +218,80 @@ fn test_rlp_decode_long_string_with_payload_len_on_1_byte() {
     let expected_item = RLPItem::Bytes(arr.span());
 
     assert(res == expected_item, 'Wrong value');
+}
+
+#[test]
+#[available_gas(99999999)]
+fn test_rlp_decode_long_string_with_input_too_short() {
+    let mut arr = array![
+        0xb8,
+        0x3c,
+        0xf7,
+        0xa1,
+        0x7e,
+        0xf9,
+        0x59,
+        0xd4,
+        0x88,
+        0x38,
+        0x8d,
+        0xdc,
+        0x34,
+        0x7b,
+        0x3a,
+        0x10,
+        0xdd,
+        0x85,
+        0x43,
+        0x1d,
+        0x0c,
+        0x37,
+        0x98,
+        0x6a,
+        0x63,
+        0xbd,
+        0x18,
+        0xba,
+        0xa3,
+        0x8d,
+        0xb1,
+        0xa4,
+        0x81,
+        0x6f,
+        0x24,
+        0xde,
+        0xc3,
+        0xec,
+        0x16,
+        0x6e,
+        0xb3,
+        0xb2,
+        0xac,
+        0xc4,
+        0xc4,
+        0xf7,
+        0x79,
+        0x04,
+        0xba,
+        0x76,
+        0x3c,
+        0x67,
+        0xc6,
+        0xd0,
+        0x53,
+        0xda,
+        0xea,
+        0x10,
+        0x86,
+        0x19,
+    ];
+
+    let res = rlp_decode(arr.span());
+    assert(res.is_err(), 'should return an RLPError');
+    assert(
+        res.unwrap_err() == RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT),
+        'err != RlpInputTooShort'
+    );
 }
 
 #[test]
@@ -461,6 +573,20 @@ fn test_rlp_decode_long_string_with_payload_len_on_2_bytes() {
     assert(res == expected_item, 'Wrong value');
 }
 
+
+#[test]
+#[available_gas(99999999)]
+fn test_rlp_decode_long_string_with_payload_len_too_short() {
+    let mut arr = array![0xb9, 0x01,];
+
+    let res = rlp_decode(arr.span());
+    assert(res.is_err(), 'should return an RLPError');
+    assert(
+        res.unwrap_err() == RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT),
+        'err != RlpInputTooShort'
+    );
+}
+
 #[test]
 #[available_gas(99999999999)]
 fn test_rlp_decode_short_list() {
@@ -476,6 +602,19 @@ fn test_rlp_decode_short_list() {
     let expected_item = RLPItem::List(expected.span());
 
     assert(res == expected_item, 'Wrong value');
+}
+
+#[test]
+#[available_gas(99999999999)]
+fn test_rlp_decode_short_list_with_input_too_short() {
+    let mut arr = array![0xc9, 0x83, 0x35, 0x35, 0x89, 0x42, 0x83, 0x45, 0x38];
+
+    let res = rlp_decode(arr.span());
+    assert(res.is_err(), 'should return an RLPError');
+    assert(
+        res.unwrap_err() == RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT),
+        'err != RlpInputTooShort'
+    );
 }
 
 #[test]
@@ -1586,4 +1725,59 @@ fn test_rlp_decode_long_list() {
     let expected_item = RLPItem::List(expected.span());
 
     assert(res == expected_item, 'Wrong value');
+}
+
+#[test]
+#[available_gas(99999999999)]
+fn test_rlp_decode_long_list_with_input_too_short() {
+    let mut arr = array![
+        0xf9,
+        0x02,
+        0x11,
+        0xa0,
+        0x77,
+        0x70,
+        0xcf,
+        0x09,
+        0xb5,
+        0x06,
+        0x7a,
+        0x1b,
+        0x35,
+        0xdf,
+        0x62,
+        0xa9,
+        0x24,
+        0x89,
+        0x81,
+        0x75,
+        0xce,
+        0xae,
+        0xec,
+        0xad,
+        0x1f,
+        0x68,
+        0xcd,
+        0xb4
+    ];
+
+    let res = rlp_decode(arr.span());
+    assert(res.is_err(), 'should return an RLPError');
+    assert(
+        res.unwrap_err() == RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT),
+        'err != RlpInputTooShort'
+    );
+}
+
+#[test]
+#[available_gas(99999999999)]
+fn test_rlp_decode_long_list_with_len_too_short() {
+    let mut arr = array![0xf9, 0x02,];
+
+    let res = rlp_decode(arr.span());
+    assert(res.is_err(), 'should return an RLPError');
+    assert(
+        res.unwrap_err() == RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT),
+        'err != RlpInputTooShort'
+    );
 }

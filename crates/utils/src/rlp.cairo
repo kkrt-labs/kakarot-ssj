@@ -3,7 +3,7 @@ use option::OptionTrait;
 use array::{Array, ArrayTrait, Span, SpanTrait};
 use clone::Clone;
 use traits::{Into, TryInto};
-use utils::errors::{RLPError, RLP_INVALID_LENGTH};
+use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use utils::helpers::BytesSerde;
 
 // All possible RLP types
@@ -55,7 +55,7 @@ impl RLPTypeImpl of RLPTypeTrait {
 /// Return result with RLPItem and size of the decoded item
 fn rlp_decode(input: Span<u8>) -> Result<(RLPItem, usize), RLPError> {
     if input.len() == 0 {
-        return Result::Err(RLPError::RlpInvalidLength(RLP_INVALID_LENGTH));
+        return Result::Err(RLPError::RlpEmptyInput(RLP_EMPTY_INPUT));
     }
     let prefix = *input.at(0);
 
@@ -67,37 +67,55 @@ fn rlp_decode(input: Span<u8>) -> Result<(RLPItem, usize), RLPError> {
         },
         RLPType::StringShort => {
             let len = prefix.into() - 0x80;
+            if input.len() < len + 1 {
+                return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
+            }
             let res = input.slice(1, len);
 
             Result::Ok((RLPItem::Bytes(res), 1 + len))
         },
         RLPType::StringLong => {
-            // Extract the amount of bytes representing the data payload length
-            let len_len = prefix.into() - 0xb7;
-            let len_span = input.slice(1, len_len);
+            let len_of_len = prefix.into() - 0xb7;
+            if input.len() < len_of_len + 1 {
+                return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
+            }
 
-            // Bytes => u32
-            let len: u32 = len_span.deserialize().unwrap();
-            let res = input.slice(1 + len_len, len);
+            let len_in_bytes = input.slice(1, len_of_len);
+            let len: u32 = len_in_bytes.deserialize().unwrap();
+            if input.len() < len + len_of_len + 1 {
+                return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
+            }
 
-            Result::Ok((RLPItem::Bytes(res), 1 + len_len + len))
+            let res = input.slice(1 + len_of_len, len);
+
+            Result::Ok((RLPItem::Bytes(res), 1 + len_of_len + len))
         },
         RLPType::ListShort => {
             let len = prefix.into() - 0xc0;
-            let mut in = input.slice(1, len);
-            let res = rlp_decode_list(ref in);
+            if input.len() < len + 1 {
+                return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
+            }
+
+            let mut list_input = input.slice(1, len);
+            let res = rlp_decode_list(ref list_input);
             Result::Ok((RLPItem::List(res), 1 + len))
         },
         RLPType::ListLong => {
             // Extract the amount of bytes representing the data payload length
-            let len_len = prefix.into() - 0xf7;
-            let len_span = input.slice(1, len_len);
+            let len_of_len = prefix.into() - 0xf7;
+            if input.len() < len_of_len + 1 {
+                return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
+            }
 
-            // Bytes => u32
-            let len: u32 = len_span.deserialize().unwrap();
-            let mut in = input.slice(1 + len_len, len);
-            let res = rlp_decode_list(ref in);
-            Result::Ok((RLPItem::List(res), 1 + len_len + len))
+            let len_in_bytes = input.slice(1, len_of_len);
+            let len: u32 = len_in_bytes.deserialize().unwrap();
+            if input.len() < len + len_of_len + 1 {
+                return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
+            }
+
+            let mut list_input = input.slice(1 + len_of_len, len);
+            let res = rlp_decode_list(ref list_input);
+            Result::Ok((RLPItem::List(res), 1 + len_of_len + len))
         }
     }
 }
