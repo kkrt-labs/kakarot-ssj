@@ -1,6 +1,6 @@
 use nullable::{match_nullable, FromNullableResult};
 use starknet::{StorageBaseAddress, Store, storage_base_address_from_felt252};
-use utils::helpers::ArrayExtensionTrait;
+use utils::helpers::ArrayExtTrait;
 use utils::traits::{StorageBaseAddressPartialEq, StorageBaseAddressIntoFelt252};
 /// The Journal tracks the changes applied to storage during the execution of a transaction.
 /// Local changes tracks the changes applied inside a single execution context.

@@ -1,6 +1,6 @@
 use starknet::{
     StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
-    ContractAddress
+    ContractAddress, Store, SyscallResult
 };
 use utils::math::{Zero, One};
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
@@ -94,5 +94,40 @@ impl U256TryIntoResultU32 of TryIntoResult<u256, usize> {
             Option::Some(value) => Result::Ok(value),
             Option::None => Result::Err(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
         }
+    }
+}
+
+
+impl StoreBytes31 of Store<bytes31> {
+    fn read(address_domain: u32, base: StorageBaseAddress) -> SyscallResult<bytes31> {
+        Result::Ok(
+            Store::<felt252>::read(address_domain, base)?
+                .try_into()
+                .expect('StoreBytes31 - non bytes31')
+        )
+    }
+    #[inline(always)]
+    fn write(address_domain: u32, base: StorageBaseAddress, value: bytes31) -> SyscallResult<()> {
+        Store::<felt252>::write(address_domain, base, value.into())
+    }
+    #[inline(always)]
+    fn read_at_offset(
+        address_domain: u32, base: StorageBaseAddress, offset: u8
+    ) -> SyscallResult<bytes31> {
+        Result::Ok(
+            Store::<felt252>::read_at_offset(address_domain, base, offset)?
+                .try_into()
+                .expect('StoreBytes31 - non bytes31')
+        )
+    }
+    #[inline(always)]
+    fn write_at_offset(
+        address_domain: u32, base: StorageBaseAddress, offset: u8, value: bytes31
+    ) -> SyscallResult<()> {
+        Store::<felt252>::write_at_offset(address_domain, base, offset, value.into())
+    }
+    #[inline(always)]
+    fn size() -> u8 {
+        1_u8
     }
 }

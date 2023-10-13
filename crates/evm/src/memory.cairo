@@ -8,7 +8,7 @@ use utils::constants::{
     POW_2_72, POW_2_80, POW_2_88, POW_2_96, POW_2_104, POW_2_112, POW_2_120, POW_256_16
 };
 use utils::{
-    helpers, helpers::SpanExtensionTrait, helpers::ArrayExtensionTrait, math::Exponentiation,
+    helpers, helpers::SpanExtTrait, helpers::ArrayExtTrait, math::Exponentiation,
     math::WrappingExponentiation, math::Bitshift
 };
 

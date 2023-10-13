@@ -18,8 +18,7 @@ use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 
 use starknet::{EthAddressIntoFelt252, contract_address_const, testing::set_contract_address};
 use utils::helpers::{
-    u256_to_bytes_array, load_word, ArrayExtension, ArrayExtensionTrait, SpanExtension,
-    SpanExtensionTrait
+    u256_to_bytes_array, load_word, ArrayExtension, ArrayExtTrait, SpanExtension, SpanExtTrait
 };
 use utils::traits::{EthAddressIntoU256};
 
@@ -706,9 +705,9 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         let result_span = u256_to_bytes_array(result).span();
 
         if ((i + 1) * 32 > size) {
-            ArrayExtensionTrait::concat(ref results, result_span.slice(0, size - (i * 32)));
+            ArrayExtTrait::concat(ref results, result_span.slice(0, size - (i * 32)));
         } else {
-            ArrayExtensionTrait::concat(ref results, result_span);
+            ArrayExtTrait::concat(ref results, result_span);
         }
 
         i += 1;
