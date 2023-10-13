@@ -6,7 +6,7 @@ use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_calldata, setup_machine_with_bytecode, evm_address, callvalue,
-    setup_machine_with_nested_execution_context, other_evm_address
+    setup_machine_with_nested_execution_context, other_evm_address, return_from_subcontext
 };
 use integer::u32_overflowing_add;
 
@@ -473,8 +473,8 @@ fn test_returndatasize() {
     // Given
     let return_data: Array<u8> = array![1, 2, 3, 4, 5];
     let size = return_data.len();
-    let mut machine = setup_machine();
-    machine.set_return_data(return_data);
+    let mut machine = setup_machine_with_nested_execution_context();
+    return_from_subcontext(ref machine, return_data.span());
 
     machine.exec_returndatasize();
 
@@ -539,49 +539,49 @@ fn test_returndata_copy_with_multiple_words() {
 
 fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
-    let mut machine = setup_machine();
-    machine
-        .set_return_data(
-            array![
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12,
-                13,
-                14,
-                15,
-                16,
-                17,
-                18,
-                19,
-                20,
-                21,
-                22,
-                23,
-                24,
-                25,
-                26,
-                27,
-                28,
-                29,
-                30,
-                31,
-                32,
-                33,
-                34,
-                35,
-                36
-            ]
-        );
+    let mut machine = setup_machine_with_nested_execution_context();
+    // Set the return data of the current context
 
+    let return_data = array![
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+    ];
+
+    return_from_subcontext(ref machine, return_data.span());
     let return_data: Span<u8> = machine.return_data();
 
     if (size == 0) {

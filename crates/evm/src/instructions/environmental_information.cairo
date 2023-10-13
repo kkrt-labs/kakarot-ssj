@@ -165,7 +165,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get the size of return data.
     /// # Specification: https://www.evm.codes/#3d?fork=shanghai
     fn exec_returndatasize(ref self: Machine) -> Result<(), EVMError> {
-        let size: u32 = self.return_data().len();
+        let size = self.return_data().len();
         self.stack.push(size.into())
     }
 

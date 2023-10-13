@@ -25,9 +25,8 @@ classDiagram
         destroyed_contracts: Array~EthAddress~,
         events: Array~Event~,
         create_addresses: Array~EthAddress~,
-        return_data: Array~u32~,
+        return_data: Span~u8~,
         parent_ctx: Nullable~ExecutionContext~,
-        child_return_data: Option~Span~u8~~
     }
 
     class CallContext{
