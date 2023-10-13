@@ -80,11 +80,11 @@ impl U256SizeOf of SizeOf<u256> {
 // === Zero ===
 
 trait Zero<T> {
-    /// Returns the multiplicative identity element of Self, 0.
+    /// Returns the additive identity element of Self, 0.
     fn zero() -> T;
-    /// Returns whether self is equal to 0, the multiplicative identity element.
+    /// Returns whether self is equal to 0, the additive identity element.
     fn is_zero(self: @T) -> bool;
-    /// Returns whether self is not equal to 0, the multiplicative identity element.
+    /// Returns whether self is not equal to 0, the additive identity element.
     fn is_non_zero(self: @T) -> bool;
 }
 

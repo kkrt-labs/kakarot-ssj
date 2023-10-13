@@ -4,7 +4,8 @@ use evm::context::{
 };
 use evm::kakarot_core::{IExtendedKakarotCoreDispatcher, KakarotCore};
 
-use evm::machine::Machine;
+use evm::machine::{Machine, MachineCurrentContextTrait};
+use nullable::{match_nullable, FromNullableResult};
 use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
@@ -78,17 +79,10 @@ fn setup_execution_context() -> ExecutionContext {
     let call_ctx = setup_call_context();
     let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
-    let return_data = Default::default();
-    let child_return_data = Option::Some(array![1, 2, 3].span());
+    let return_data = array![1, 2, 3].span();
 
     ExecutionContextTrait::new(
-        context_id,
-        evm_address,
-        starknet_address,
-        call_ctx,
-        Default::default(),
-        child_return_data,
-        return_data,
+        context_id, evm_address, starknet_address, call_ctx, Default::default(), return_data,
     )
 }
 
@@ -123,16 +117,10 @@ fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext
     let call_ctx = setup_call_context_with_bytecode(bytecode);
     let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
-    let return_data = Default::default();
+    let return_data = Default::default().span();
 
     ExecutionContextTrait::new(
-        context_id,
-        evm_address,
-        starknet_address,
-        call_ctx,
-        Default::default(),
-        Default::default(),
-        return_data,
+        context_id, evm_address, starknet_address, call_ctx, Default::default(), return_data,
     )
 }
 
@@ -153,16 +141,10 @@ fn setup_execution_context_with_calldata(calldata: Span<u8>) -> ExecutionContext
     let call_ctx = setup_call_context_with_calldata(calldata);
     let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
-    let return_data = Default::default();
+    let return_data = Default::default().span();
 
     ExecutionContextTrait::new(
-        context_id,
-        evm_address,
-        starknet_address,
-        call_ctx,
-        Default::default(),
-        Default::default(),
-        return_data,
+        context_id, evm_address, starknet_address, call_ctx, Default::default(), return_data,
     )
 }
 
@@ -243,4 +225,36 @@ fn deploy_kakarot_core() -> IExtendedKakarotCoreDispatcher {
         .unwrap();
 
     IExtendedKakarotCoreDispatcher { contract_address }
+}
+
+
+// Simulate return of subcontext where
+/// 1. Set `return_data` field of parent context
+/// 2. make `parent_ctx` of `current_ctx` the current ctx
+fn return_from_subcontext(ref self: Machine, return_data: Span<u8>) {
+    self.set_return_data(return_data);
+    let current_ctx = self.current_ctx.unbox();
+    let parent_ctx = current_ctx.parent_ctx.deref();
+    self.current_ctx = BoxTrait::new(parent_ctx);
+}
+
+/// Returns the `return_data` field of the parent_ctx of the current_ctx.
+fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
+    let mut current_ctx = self.current_ctx.unbox();
+    let maybe_parent_ctx = current_ctx.parent_ctx;
+    let value = match match_nullable(maybe_parent_ctx) {
+        // Due to ownership mechanism, both branches need to explicitly re-bind the parent_ctx.
+        FromNullableResult::Null => {
+            current_ctx.parent_ctx = Default::default();
+            array![].span()
+        },
+        FromNullableResult::NotNull(parent_ctx) => {
+            let mut parent_ctx = parent_ctx.unbox();
+            let value = parent_ctx.return_data();
+            current_ctx.parent_ctx = NullableTrait::new(parent_ctx);
+            value
+        }
+    };
+    self.current_ctx = BoxTrait::new(current_ctx);
+    value
 }
