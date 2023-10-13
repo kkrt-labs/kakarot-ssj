@@ -1,10 +1,10 @@
-use core_contracts::kakarot_core::{IExtendedKakarotCoreDispatcherImpl, KakarotCore};
 use core_contracts::components::ownable::ownable_component;
+use core_contracts::kakarot_core::{IExtendedKakarotCoreDispatcherImpl, KakarotCore};
 use core_contracts::tests::utils;
-use evm::tests::test_utils;
-use starknet::{get_caller_address, testing, contract_address_const, ContractAddress, ClassHash};
 use debug::PrintTrait;
 use eoa::externally_owned_account::ExternallyOwnedAccount;
+use evm::tests::test_utils;
+use starknet::{get_caller_address, testing, contract_address_const, ContractAddress, ClassHash};
 
 #[test]
 #[available_gas(20000000)]

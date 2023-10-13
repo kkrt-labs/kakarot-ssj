@@ -1,7 +1,7 @@
 mod components;
 
-#[cfg(test)]
-mod tests;
-
 // Kakarot smart contract
 mod kakarot_core;
+
+#[cfg(test)]
+mod tests;
