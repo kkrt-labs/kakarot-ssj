@@ -98,7 +98,10 @@ fn rlp_decode(input: Span<u8>) -> Result<(RLPItem, usize), RLPError> {
 
             let mut list_input = input.slice(1, len);
             let res = rlp_decode_list(ref list_input);
-            Result::Ok((RLPItem::List(res), 1 + len))
+            if res.is_err() {
+                return Result::Err(res.unwrap_err());
+            }
+            Result::Ok((RLPItem::List(res.unwrap()), 1 + len))
         },
         RLPType::ListLong => {
             // Extract the amount of bytes representing the data payload length
@@ -115,22 +118,31 @@ fn rlp_decode(input: Span<u8>) -> Result<(RLPItem, usize), RLPError> {
 
             let mut list_input = input.slice(1 + len_of_len, len);
             let res = rlp_decode_list(ref list_input);
-            Result::Ok((RLPItem::List(res), 1 + len_of_len + len))
+            if res.is_err() {
+                return Result::Err(res.unwrap_err());
+            }
+            Result::Ok((RLPItem::List(res.unwrap()), 1 + len_of_len + len))
         }
     }
 }
 
-fn rlp_decode_list(ref input: Span<u8>) -> Span<Span<u8>> {
+fn rlp_decode_list(ref input: Span<u8>) -> Result<Span<Span<u8>>, RLPError> {
     let mut i = 0;
     let len = input.len();
     let mut output = ArrayTrait::new();
+    let mut decode_error: Option<RLPError> = Option::None;
 
     loop {
         if i >= len {
             break ();
         }
 
-        let (decoded, decoded_len) = rlp_decode(input).unwrap();
+        let res = rlp_decode(input);
+        if res.is_err() {
+            decode_error = Option::Some(res.unwrap_err());
+            break;
+        }
+        let (decoded, decoded_len) = res.unwrap();
         match decoded {
             RLPItem::Bytes(b) => {
                 output.append(b);
@@ -140,5 +152,8 @@ fn rlp_decode_list(ref input: Span<u8>) -> Span<Span<u8>> {
         }
         i += decoded_len;
     };
-    output.span()
+    if decode_error != Option::None {
+        return Result::Err(decode_error.unwrap());
+    }
+    Result::Ok(output.span())
 }
