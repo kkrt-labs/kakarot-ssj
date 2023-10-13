@@ -181,6 +181,10 @@ mod KakarotCore {
             // Deployer is always Kakarot Core
             let deployer = get_contract_address();
 
+            // pedersen(a1, a2, a3) is defined as:
+            // pedersen(pedersen(pedersen(a1, a2), a3), len([a1, a2, a3]))
+            // https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/hash_state.py#L6
+            // https://github.com/xJonathanLEI/starknet-rs/blob/master/starknet-core/src/crypto.rs#L49
             // Constructor Calldata
             // For an EOA, the constructor calldata is:
             // [kakarot_address, evm_address]
@@ -250,7 +254,7 @@ mod KakarotCore {
             self.eoa_address_registry.write(evm_address, starknet_address);
 
             // Emit an event
-            self.emit(EOADeployed { evm_address, starknet_address: starknet_address });
+            self.emit(EOADeployed { evm_address, starknet_address });
 
             starknet_address
         }
