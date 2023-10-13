@@ -78,7 +78,7 @@ fn test_kakarot_core_set_native_token() {
 fn test_kakarot_core_deploy_eoa() {
     let kakarot_core = utils::deploy_kakarot_core();
     let eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
-    // We drop the first even of Kakarot Core, as it is the initializer from Ownable,
+    // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
     // triggerred in the constructor
     utils::drop_event(kakarot_core.contract_address);
 
