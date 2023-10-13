@@ -1,8 +1,6 @@
-use eoa::externally_owned_account::{ExternallyOwnedAccount};
 use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, DefaultOptionSpanU8
 };
-use evm::kakarot_core::{IExtendedKakarotCoreDispatcher, KakarotCore};
 
 use evm::machine::Machine;
 use starknet::{
@@ -226,21 +224,4 @@ fn setup_machine_with_nested_execution_context() -> Machine {
         memory: Default::default(),
         storage_journal: Default::default(),
     }
-}
-
-fn deploy_kakarot_core() -> IExtendedKakarotCoreDispatcher {
-    let mut calldata: Array<felt252> = array![
-        native_token().into(),
-        deploy_fee().into(),
-        ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(),
-        other_starknet_address().into(),
-        chain_id().into()
-    ];
-
-    let (contract_address, _) = deploy_syscall(
-        KakarotCore::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
-    )
-        .unwrap();
-
-    IExtendedKakarotCoreDispatcher { contract_address }
 }

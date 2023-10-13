@@ -65,10 +65,10 @@ trait IKakarotCore<TContractState> {
 
 #[starknet::contract]
 mod KakarotCore {
-    use core::zeroable::Zeroable;
-    use core::starknet::SyscallResultTrait;
     use core::hash::{HashStateExTrait, HashStateTrait};
     use core::pedersen::{HashState, PedersenTrait};
+    use core::starknet::SyscallResultTrait;
+    use core::zeroable::Zeroable;
     use core_contracts::components::ownable::ownable_component::InternalTrait;
     use core_contracts::components::ownable::{ownable_component};
     use evm::errors::EVMError;
@@ -77,7 +77,7 @@ mod KakarotCore {
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
     use super::INVOKE_ETH_CALL_FORBIDDEN;
-    use utils::constants::{CONTRACT_ADDRESS_PREFIX, POW_2_251};
+    use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
     use utils::traits::U256TryIntoContractAddress;
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
@@ -116,7 +116,14 @@ mod KakarotCore {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        OwnableEvent: ownable_component::Event
+        OwnableEvent: ownable_component::Event,
+        EOADeployed: EOADeployed,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct EOADeployed {
+        evm_address: EthAddress,
+        starknet_address: ContractAddress,
     }
 
     #[constructor]
@@ -188,9 +195,11 @@ mod KakarotCore {
                 .update(constructor_calldata_hash)
                 .finalize();
 
-            let normalized_address:ContractAddress = (hash.into() & POW_2_251).try_into().unwrap();
+            let normalized_address: ContractAddress = (hash.into() & MAX_ADDRESS)
+                .try_into()
+                .unwrap();
             // We know this unwrap is safe, because of the above bitwise AND on 2 ** 251
-            normalized_address.unwrap()
+            normalized_address
         }
 
         /// Checks into KakarotCore storage if an EOA has been deployed for a
@@ -222,7 +231,7 @@ mod KakarotCore {
             ]
                 .span();
 
-            // We do not want to deploy from zero, but rather from Kakarot
+            // We do not want to deploy from zero, but with Kakarot Core as deployer
             let deploy_from_zero = false;
 
             // The syscall should only return an error for unexpected problems
@@ -235,6 +244,9 @@ mod KakarotCore {
             // We write in the eoa address mapping the address of the EOA
             // This enables Kakarot to be aware that this EOA was already deployed
             self.eoa_address_registry.write(evm_address, starknet_address);
+
+            // Emit an event
+            self.emit(EOADeployed { evm_address, starknet_address });
 
             starknet_address
         }
