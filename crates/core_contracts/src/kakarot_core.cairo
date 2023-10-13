@@ -122,7 +122,9 @@ mod KakarotCore {
 
     #[derive(Drop, starknet::Event)]
     struct EOADeployed {
+        #[key]
         evm_address: EthAddress,
+        #[key]
         starknet_address: ContractAddress,
     }
 
@@ -183,16 +185,18 @@ mod KakarotCore {
             // For an EOA, the constructor calldata is:
             // [kakarot_address, evm_address]
             let constructor_calldata_hash = PedersenTrait::new(0)
-                .update(deployer.into())
-                .update(evm_address.into())
+                .update_with(deployer)
+                .update_with(evm_address)
+                .update(2)
                 .finalize();
 
             let hash = PedersenTrait::new(0)
-                .update(CONTRACT_ADDRESS_PREFIX)
+                .update_with(CONTRACT_ADDRESS_PREFIX)
                 .update_with(deployer)
                 .update_with(evm_address)
                 .update_with(self.eoa_class_hash.read())
-                .update(constructor_calldata_hash)
+                .update_with(constructor_calldata_hash)
+                .update(5)
                 .finalize();
 
             let normalized_address: ContractAddress = (hash.into() & MAX_ADDRESS)
@@ -246,7 +250,7 @@ mod KakarotCore {
             self.eoa_address_registry.write(evm_address, starknet_address);
 
             // Emit an event
-            self.emit(EOADeployed { evm_address, starknet_address });
+            self.emit(EOADeployed { evm_address, starknet_address: starknet_address });
 
             starknet_address
         }

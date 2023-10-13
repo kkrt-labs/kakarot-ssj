@@ -1,4 +1,5 @@
 use core_contracts::kakarot_core::{IExtendedKakarotCoreDispatcherImpl, KakarotCore};
+use core_contracts::components::ownable::ownable_component;
 use core_contracts::tests::utils;
 use evm::tests::test_utils;
 use starknet::{get_caller_address, testing, contract_address_const, ContractAddress, ClassHash};
@@ -77,7 +78,12 @@ fn test_kakarot_core_set_native_token() {
 fn test_kakarot_core_deploy_eoa() {
     let kakarot_core = utils::deploy_kakarot_core();
     let eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
+    // We drop the first even of Kakarot Core, as it is the initializer from Ownable,
+    // triggerred in the constructor
+    utils::drop_event(kakarot_core.contract_address);
+
     let event = utils::pop_log::<KakarotCore::EOADeployed>(kakarot_core.contract_address).unwrap();
+    assert(event.starknet_address == eoa_starknet_address, 'wrong starknet address');
 }
 
 #[test]
@@ -85,23 +91,16 @@ fn test_kakarot_core_deploy_eoa() {
 fn test_kakarot_core_compute_starknet_address() {
     let evm_address = test_utils::evm_address();
     let kakarot_core = utils::deploy_kakarot_core();
-    let expected_starknet_address = kakarot_core.compute_starknet_address(evm_address);
-    let eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
 
-    '***'.print();
-    'EOA CLASS HASH'.print();
-    (ExternallyOwnedAccount::TEST_CLASS_HASH).print();
-    '***'.print();
+    // Precomputed Starknet address with starknet-rs and starknetjs
+    // With arguments:
+    // ['STARKNET_CONTRACT_ADDRESS', kakarot_address: 0x01, salt: evm_address, class_hash: ExternallyOwnedAccount::TEST_CLASS_HASH, constructor_calldata: hash([kakarot_address, evm_address]), ]
+    let expected_starknet_address: ContractAddress = contract_address_const::<
+        0x4ce3d4b8b65c387f5e7c1abcecf364ebc7cbfdbc3e7de18e813bead64cc0ce5
+    >();
 
-    '***'.print();
-    'EOA STARKNET ADDRESS'.print();
-    eoa_starknet_address.print();
-    '***'.print();
+    let eoa_starknet_address = kakarot_core.compute_starknet_address(evm_address);
 
-    '***'.print();
-    'EXPECTED STARKNET ADDRESS'.print();
-    expected_starknet_address.print();
-    '***'.print();
-    assert(expected_starknet_address == eoa_starknet_address, 'wrong starknet address');
+    assert(eoa_starknet_address == expected_starknet_address, 'wrong starknet address');
 }
 
