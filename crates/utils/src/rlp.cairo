@@ -97,11 +97,8 @@ fn rlp_decode(input: Span<u8>) -> Result<(RLPItem, usize), RLPError> {
             }
 
             let mut list_input = input.slice(1, len);
-            let res = rlp_decode_list(ref list_input);
-            if res.is_err() {
-                return Result::Err(res.unwrap_err());
-            }
-            Result::Ok((RLPItem::List(res.unwrap()), 1 + len))
+            let res = rlp_decode_list(ref list_input)?;
+            Result::Ok((RLPItem::List(res), 1 + len))
         },
         RLPType::ListLong => {
             // Extract the amount of bytes representing the data payload length
@@ -117,11 +114,8 @@ fn rlp_decode(input: Span<u8>) -> Result<(RLPItem, usize), RLPError> {
             }
 
             let mut list_input = input.slice(1 + len_of_len, len);
-            let res = rlp_decode_list(ref list_input);
-            if res.is_err() {
-                return Result::Err(res.unwrap_err());
-            }
-            Result::Ok((RLPItem::List(res.unwrap()), 1 + len_of_len + len))
+            let res = rlp_decode_list(ref list_input)?;
+            Result::Ok((RLPItem::List(res), 1 + len_of_len + len))
         }
     }
 }
