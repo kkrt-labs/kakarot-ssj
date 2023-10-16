@@ -1,10 +1,16 @@
+use core::hash::{HashStateExTrait, HashStateTrait};
+use core_contracts::interfaces::erc20::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+use core_contracts::kakarot_core::storage_address::EOA_ADDRESS_REGISTRY;
 //! Environmental Information.
 use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
+use evm::storage::kakarot_core_native_token;
 use integer::u32_overflowing_add;
+use pedersen::{PedersenTrait, HashState};
+use starknet::{Store, storage_base_address_from_felt252, ContractAddress};
 use utils::helpers::{load_word};
 use utils::traits::{EthAddressIntoU256};
 
@@ -21,6 +27,26 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get ETH balance of the specified address.
     /// # Specification: https://www.evm.codes/#31?fork=shanghai
     fn exec_balance(ref self: Machine) -> Result<(), EVMError> {
+        let evm_address = self.stack.pop_eth_address()?;
+
+        // Check in KakarotCore.eoa_address_registry if the evm_address corresponds
+        // to a deployed EOA
+        let eoa_address_registry_sba = storage_base_address_from_felt252(
+            PedersenTrait::new(0)
+                .update_with(EOA_ADDRESS_REGISTRY)
+                .update_with(evm_address)
+                .finalize()
+        );
+
+        // TODO THIS PR: replace unwrap by graceful error handling
+        let eoa_starknet_address = Store::<ContractAddress>::read(0, eoa_address_registry_sba)
+            .unwrap();
+
+        if !eoa_starknet_address.is_zero() { // EOA is deployed and exists
+            let native_token_address = kakarot_core_native_token();
+            let native_token = IERC20CamelDispatcher { contract_address: native_token_address };
+            return self.stack.push(native_token.balanceOf(eoa_starknet_address));
+        }
         Result::Ok(())
     }
 

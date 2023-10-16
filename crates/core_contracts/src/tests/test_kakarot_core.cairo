@@ -1,5 +1,7 @@
 use core_contracts::components::ownable::ownable_component;
-use core_contracts::kakarot_core::{IExtendedKakarotCoreDispatcherImpl, KakarotCore};
+use core_contracts::kakarot_core::{
+    interface::IExtendedKakarotCoreDispatcherImpl, contract::KakarotCore
+};
 use core_contracts::tests::utils;
 use debug::PrintTrait;
 use eoa::externally_owned_account::ExternallyOwnedAccount;

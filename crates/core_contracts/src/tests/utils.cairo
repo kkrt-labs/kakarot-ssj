@@ -1,4 +1,6 @@
-use core_contracts::kakarot_core::{IExtendedKakarotCoreDispatcher, KakarotCore};
+use core_contracts::kakarot_core::{
+    interface::IExtendedKakarotCoreDispatcher, contract::KakarotCore
+};
 use eoa::externally_owned_account::{ExternallyOwnedAccount};
 use evm::tests::test_utils::{native_token, deploy_fee, other_starknet_address, chain_id};
 use starknet::{testing, contract_address_const, ContractAddress, deploy_syscall};

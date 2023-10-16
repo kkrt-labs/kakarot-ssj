@@ -1,17 +1,9 @@
+use core_contracts::kakarot_core::storage_address::NATIVE_TOKEN;
 use hash::{HashStateTrait, HashStateExTrait};
 use poseidon::PoseidonTrait;
-use starknet::{ContractAddress, EthAddress, StorageBaseAddress, storage_base_address_from_felt252};
-
-#[derive(Copy, Drop, Serde, starknet::Store)]
-struct ContractAccountStorage {
-    nonce: u64,
-    balance: u256,
-// TODO: add bytecode as a field for ContractAccountStorage
-// bytecode: List
-
-//TODO: add valid jumps as a field for ContractAccountStorage
-// valid_jumps: LegacyMap<usize, bool>
-}
+use starknet::{
+    ContractAddress, EthAddress, StorageBaseAddress, storage_base_address_from_felt252, Store
+};
 
 
 /// Computes the storage address for a given EVM address and an EVM storage key.
@@ -24,4 +16,12 @@ struct ContractAccountStorage {
 fn compute_storage_address(evm_address: EthAddress, key: u256) -> StorageBaseAddress {
     let hash = PoseidonTrait::new().update_with(evm_address).update_with(key).finalize();
     storage_base_address_from_felt252(hash)
+}
+
+fn kakarot_core_native_token() -> ContractAddress {
+    // TODO THIS PR: remove unwrap and replace by graceful error handling
+    let native_token_address = Store::<
+        ContractAddress
+    >::read(0, storage_base_address_from_felt252(NATIVE_TOKEN));
+    native_token_address.unwrap()
 }
