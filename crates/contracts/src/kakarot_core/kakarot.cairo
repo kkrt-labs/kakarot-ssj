@@ -1,6 +1,7 @@
 use starknet::{ContractAddress, EthAddress, ClassHash};
 
 const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
+const INVOKE_ETH_CALL_ERROR: felt252 = 'KKT: Cannot invoke eth_call';
 
 
 #[derive(Copy, Drop, Serde, starknet::Store)]
@@ -25,7 +26,11 @@ mod KakarotCore {
     use core::pedersen::{HashState, PedersenTrait};
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
+    use core_contracts::components::ownable::ownable_component::InternalTrait;
+    use core_contracts::components::ownable::{ownable_component};
     use evm::errors::EVMError;
+    use evm::execution::execute;
+    use evm::storage::ContractAccountStorage;
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
@@ -266,6 +271,27 @@ mod KakarotCore {
                 return Result::Err(EVMError::WriteInStaticContext(INVOKE_ETH_CALL_FORBIDDEN));
             }
             Result::Ok(())
+        }
+
+
+        /// Deploys a contract account for a particular EVM address
+        fn deploy_contract_account(
+            ref self: ContractState, evm_address: EthAddress, value: u256, bytecode: Span<u8>
+        ) -> bool {
+            let (ret_status, ret_data) = execute(
+                :evm_address,
+                :bytecode,
+                calldata: array![].span(),
+                :value,
+                gas_price: 0,
+                gas_limit: 0,
+            );
+            //TODO gas params
+            if ret_status != Status::Reverted {
+                //TODO store_bytecode
+                return true;
+            }
+            return false;
         }
     }
 }

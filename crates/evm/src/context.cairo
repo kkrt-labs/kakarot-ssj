@@ -258,12 +258,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         *self.evm_address
     }
 
-    #[inline(always)]
-    fn starknet_address(self: @ExecutionContext) -> ContractAddress {
-        *self.starknet_address
-    }
-
-
     // *************************************************************************
     //                          ExecutionContext methods
     // *************************************************************************
