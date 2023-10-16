@@ -1,4 +1,10 @@
 use array::{ArrayTrait};
+use core_contracts::erc20::interface::IERC20CamelDispatcherTrait;
+use core_contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use core_contracts::tests::utils::{
+    deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
+};
+use debug::U256PrintImpl;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
@@ -16,12 +22,6 @@ use utils::helpers::{
     SpanExtensionTrait
 };
 use utils::traits::{EthAddressIntoU256};
-use core_contracts::tests::utils::{
-    deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
-};
-use core_contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
-use core_contracts::erc20::interface::IERC20CamelDispatcherTrait;
-use debug::U256PrintImpl;
 
 // *************************************************************************
 // 0x30: ADDRESS

@@ -1,5 +1,5 @@
-use starknet::{ContractAddress, EthAddress, ClassHash};
 use core_contracts::kakarot_core::contract::ContractAccountStorage;
+use starknet::{ContractAddress, EthAddress, ClassHash};
 
 #[starknet::interface]
 trait IKakarotCore<TContractState> {

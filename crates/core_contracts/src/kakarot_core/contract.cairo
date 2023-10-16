@@ -17,13 +17,13 @@ struct ContractAccountStorage {
 
 #[starknet::contract]
 mod KakarotCore {
-    use core_contracts::kakarot_core::interface::IKakarotCore;
     use core::hash::{HashStateExTrait, HashStateTrait};
     use core::pedersen::{HashState, PedersenTrait};
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
     use core_contracts::components::ownable::ownable_component::InternalTrait;
     use core_contracts::components::ownable::{ownable_component};
+    use core_contracts::kakarot_core::interface::IKakarotCore;
     use core_contracts::kakarot_core::interface;
     use evm::errors::EVMError;
     use starknet::{

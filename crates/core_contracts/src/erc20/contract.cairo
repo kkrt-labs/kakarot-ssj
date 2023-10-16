@@ -20,9 +20,9 @@
 //! A derived contract can use [_mint](_mint) to create a different supply mechanism.
 #[starknet::contract]
 mod ERC20 {
-    use integer::BoundedInt;
     use core_contracts::erc20::interface::IERC20;
     use core_contracts::erc20::interface::IERC20CamelOnly;
+    use integer::BoundedInt;
     use starknet::ContractAddress;
     use starknet::get_caller_address;
 
