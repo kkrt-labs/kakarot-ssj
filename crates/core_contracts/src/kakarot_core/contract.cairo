@@ -17,6 +17,7 @@ struct ContractAccountStorage {
 
 #[starknet::contract]
 mod KakarotCore {
+    use core_contracts::kakarot_core::interface::IKakarotCore;
     use core::hash::{HashStateExTrait, HashStateTrait};
     use core::pedersen::{HashState, PedersenTrait};
     use core::starknet::SyscallResultTrait;
@@ -165,10 +166,15 @@ mod KakarotCore {
         /// Checks into KakarotCore storage if an EOA has been deployed for a
         /// particular EVM address and if so, returns its corresponding Starknet Address
         /// Otherwise, returns 0
-        fn get_eoa_starknet_address(
-            self: @ContractState, evm_address: EthAddress
-        ) -> ContractAddress {
+        fn eoa_starknet_address(self: @ContractState, evm_address: EthAddress) -> ContractAddress {
             self.eoa_address_registry.read(evm_address)
+        }
+
+        /// Gets the storage associated to a contract account
+        fn contract_account_storage(
+            self: @ContractState, evm_address: EthAddress
+        ) -> ContractAccountStorage {
+            self.contract_account_storage.read(evm_address)
         }
 
         /// Deploys an EOA for a particular EVM address

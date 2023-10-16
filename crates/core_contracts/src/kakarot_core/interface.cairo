@@ -1,5 +1,5 @@
 use starknet::{ContractAddress, EthAddress, ClassHash};
-
+use core_contracts::kakarot_core::contract::ContractAccountStorage;
 
 #[starknet::interface]
 trait IKakarotCore<TContractState> {
@@ -27,7 +27,12 @@ trait IKakarotCore<TContractState> {
     /// Checks into KakarotCore storage if an EOA has been deployed for a
     /// particular EVM address and if so, returns its corresponding Starknet Address.
     /// Otherwise, returns 0
-    fn get_eoa_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
+    fn eoa_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
+
+    /// Gets the storage associated to a contract account
+    fn contract_account_storage(
+        self: @TContractState, evm_address: EthAddress
+    ) -> ContractAccountStorage;
 
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
@@ -86,7 +91,13 @@ trait IExtendedKakarotCore<TContractState> {
 
     /// Checks into KakarotCore storage if an EOA has been deployed for a
     /// particular EVM address and if so, returns its corresponding Starknet Address
-    fn get_eoa_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
+    fn eoa_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
+
+
+    /// Gets the storage associated to a contract account
+    fn contract_account_storage(
+        self: @TContractState, evm_address: EthAddress
+    ) -> ContractAccountStorage;
 
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;

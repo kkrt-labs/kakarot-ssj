@@ -75,6 +75,26 @@ fn test_balance_eoa() {
     assert(machine.stack.peek().unwrap() == native_token.balanceOf(eoa), 'wrong balance');
 }
 
+#[test]
+#[available_gas(5000000)]
+fn test_balance_zero() {
+    // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+
+    // And
+    let mut machine = setup_machine();
+    machine.stack.push(evm_address().into()).unwrap();
+
+    // When
+    set_contract_address(kakarot_core.contract_address);
+    machine.exec_balance();
+
+    // Then
+    machine.stack.peek().unwrap().print();
+    assert(machine.stack.peek().unwrap() == 0x00, 'wrong balance');
+}
+
 
 // *************************************************************************
 // 0x33: CALLER

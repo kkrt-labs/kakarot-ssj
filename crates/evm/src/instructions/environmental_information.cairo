@@ -1,7 +1,9 @@
 use core::hash::{HashStateExTrait, HashStateTrait};
 use core_contracts::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use core_contracts::kakarot_core::storage_address::{EOA_ADDRESS_REGISTRY, CONTRACT_ACCOUNT_STORAGE};
 use core_contracts::kakarot_core::contract::ContractAccountStorage;
+use core_contracts::kakarot_core::interface::{
+    IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
+};
 use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
@@ -10,7 +12,7 @@ use evm::stack::StackTrait;
 use evm::storage::kakarot_core_native_token;
 use integer::u32_overflowing_add;
 use pedersen::{PedersenTrait, HashState};
-use starknet::{Store, storage_base_address_from_felt252, ContractAddress};
+use starknet::{Store, storage_base_address_from_felt252, ContractAddress, get_contract_address};
 use utils::helpers::{load_word};
 use utils::traits::{EthAddressIntoU256};
 
@@ -29,24 +31,11 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_balance(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        // Check in KakarotCore.eoa_address_registry if the evm_address corresponds
-        // to a deployed EOA
-        let eoa_address_registry_sba = storage_base_address_from_felt252(
-            PedersenTrait::new(0)
-                .update_with(EOA_ADDRESS_REGISTRY)
-                .update_with(evm_address)
-                .finalize()
-        );
+        // Get Kakarot Dispatcher
+        let kakarot_address = get_contract_address();
+        let kakarot_core = IExtendedKakarotCoreDispatcher { contract_address: kakarot_address };
 
-        let eoa_starknet_address =
-            match Store::<ContractAddress>::read(0, eoa_address_registry_sba) {
-            Result::Ok(eoa_starknet_address) => eoa_starknet_address,
-            Result::Err(_) => { return Result::Err(EVMError::SyscallFailed(READ_SYSCALL_FAILED)); },
-        };
-
-        if eoa_starknet_address.is_zero() {
-            panic_with_felt252('EOA SN ADDR IS 0');
-        }
+        let eoa_starknet_address = kakarot_core.eoa_starknet_address(evm_address);
 
         // Case 1: EOA is deployed
         // BALANCE is the EOA's native_token.balanceOf(eoa_starknet_address)
@@ -58,16 +47,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
         // Case 2: EOA is not deployed
         // We check if a contract account is initialized at evm_address
-        let ca_address_storage_sba = storage_base_address_from_felt252(
-            PedersenTrait::new(0)
-                .update_with(CONTRACT_ACCOUNT_STORAGE)
-                .update_with(evm_address)
-                .finalize()
-        );
-        let ca_storage = match Store::<ContractAccountStorage>::read(0, ca_address_storage_sba) {
-            Result::Ok(ca_storage) => ca_storage,
-            Result::Err(_) => { return Result::Err(EVMError::SyscallFailed(READ_SYSCALL_FAILED)); },
-        };
+        let ca_storage = kakarot_core.contract_account_storage(evm_address);
 
         // We return the contract account's balance
         // Note that there is case 3: neither an EOA or CA is initialized at evm_address,
