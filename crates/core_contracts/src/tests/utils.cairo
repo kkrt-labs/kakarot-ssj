@@ -1,10 +1,10 @@
-use core_contracts::erc20::contract::ERC20;
-use core_contracts::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use core_contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcher, contract::KakarotCore
 };
 use eoa::externally_owned_account::{ExternallyOwnedAccount};
 use evm::tests::test_utils::{deploy_fee, other_starknet_address, chain_id};
+use openzeppelin::token::erc20::ERC20;
+use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{testing, contract_address_const, ContractAddress, deploy_syscall};
 
 

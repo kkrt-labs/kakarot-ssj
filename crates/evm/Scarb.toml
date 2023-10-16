@@ -9,6 +9,7 @@ starknet.workspace = true
 utils = { path = "../utils" }
 core_contracts = { path = "../core_contracts" }
 eoa = { path = "../eoa" }
+openzeppelin = { path = "../openzeppelin" }
 
 [tool.fmt]
 sort-module-level-items = true

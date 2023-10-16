@@ -7,6 +7,7 @@ version = "0.1.0"
 [dependencies]
 starknet.workspace = true
 evm = { path = "../evm" }
+openzeppelin = { path = "../openzeppelin" }
 
 [tool.fmt]
 sort-module-level-items = true

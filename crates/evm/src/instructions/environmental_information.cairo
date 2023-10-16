@@ -1,5 +1,4 @@
 use core::hash::{HashStateExTrait, HashStateTrait};
-use core_contracts::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use core_contracts::kakarot_core::contract::{ContractAccountStorage, KakarotCore};
 use core_contracts::kakarot_core::interface::{IKakarotCore};
 use evm::context::ExecutionContextTrait;
@@ -8,6 +7,7 @@ use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use integer::u32_overflowing_add;
+use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use pedersen::{PedersenTrait, HashState};
 use starknet::{Store, storage_base_address_from_felt252, ContractAddress, get_contract_address};
 use utils::helpers::{load_word};
@@ -31,16 +31,14 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         // Get access to Kakarot State locally
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
 
-        let eoa_starknet_address = KakarotCore::IKakarotCore::<
-            KakarotCore::ContractState
-        >::eoa_starknet_address(@kakarot_state, evm_address);
+        let eoa_starknet_address = KakarotCore::KakarotCoreImpl::eoa_starknet_address(
+            @kakarot_state, evm_address
+        );
 
         // Case 1: EOA is deployed
         // BALANCE is the EOA's native_token.balanceOf(eoa_starknet_address)
         if !eoa_starknet_address.is_zero() {
-            let native_token_address = KakarotCore::IKakarotCore::<
-                KakarotCore::ContractState
-            >::native_token(@kakarot_state);
+            let native_token_address = KakarotCore::KakarotCoreImpl::native_token(@kakarot_state);
             let native_token = IERC20CamelDispatcher { contract_address: native_token_address };
             return self.stack.push(native_token.balanceOf(eoa_starknet_address));
         }

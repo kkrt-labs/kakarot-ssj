@@ -1,5 +1,4 @@
 use array::{ArrayTrait};
-use core_contracts::erc20::interface::IERC20CamelDispatcherTrait;
 use core_contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use core_contracts::tests::utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
@@ -15,6 +14,7 @@ use evm::tests::test_utils::{
     setup_machine_with_nested_execution_context, other_evm_address, return_from_subcontext
 };
 use integer::u32_overflowing_add;
+use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 
 use starknet::{EthAddressIntoFelt252, contract_address_const, testing::set_contract_address};
 use utils::helpers::{
