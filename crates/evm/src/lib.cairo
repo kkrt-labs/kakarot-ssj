@@ -13,8 +13,6 @@ mod instructions;
 // interpreter module
 mod interpreter;
 
-// Kakarot smart contract
-mod kakarot_core;
 
 // Machine module
 mod machine;
