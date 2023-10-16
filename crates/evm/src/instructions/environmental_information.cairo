@@ -31,30 +31,33 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         // Get access to Kakarot State locally
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
 
-        let eoa_starknet_address = KakarotCore::KakarotCoreImpl::eoa_starknet_address(
-            @kakarot_state, evm_address
-        );
+        let eoa_starknet_address = kakarot_state.eoa_starknet_address(evm_address);
 
         // Case 1: EOA is deployed
         // BALANCE is the EOA's native_token.balanceOf(eoa_starknet_address)
         if !eoa_starknet_address.is_zero() {
-            let native_token_address = KakarotCore::KakarotCoreImpl::native_token(@kakarot_state);
+            let native_token_address = kakarot_state.native_token();
+            // TODO: make sure this part of the codebase is upgradable
+            // As native_token might become a snake_case implementation
+            // instead of camelCase
             let native_token = IERC20CamelDispatcher { contract_address: native_token_address };
             return self.stack.push(native_token.balanceOf(eoa_starknet_address));
         }
 
-        // Case 2: EOA is not deployed
+        // Case 2: EOA is not deployed and CA is deployed
         // We check if a contract account is initialized at evm_address
+        // A good condition to check is nonce > 0, as deploying a contract account
+        // will set its nonce to 1
         let ca_storage = KakarotCore::IKakarotCore::<
             KakarotCore::ContractState
         >::contract_account_storage(@kakarot_state, evm_address);
+        if ca_storage.nonce > 0 {
+            return self.stack.push(ca_storage.balance);
+        }
 
-        // We return the contract account's balance
-        // Note that there is case 3: neither an EOA or CA is initialized at evm_address,
-        // In which case we return 0. This case is included in the following situation:
-        // If no contract account is initialized at evm_address,
-        // ca_storage.balance == 0
-        return self.stack.push(ca_storage.balance);
+        // Case 3: No EOA nor CA are deployed at `evm_address`
+        // Return 0
+        return self.stack.push(0);
     }
 
     /// 0x32 - ORIGIN

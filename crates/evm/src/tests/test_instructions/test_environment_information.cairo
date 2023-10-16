@@ -94,7 +94,9 @@ fn test_balance_zero() {
     machine.stack.peek().unwrap().print();
     assert(machine.stack.peek().unwrap() == 0x00, 'wrong balance');
 }
-#[should_panic(expected: ('Not implemented yet',))]
+
+// TODO: implement balance once contracts accounts can be deployed
+#[ignore]
 #[test]
 #[available_gas(5000000)]
 fn test_balance_contract_account() {
