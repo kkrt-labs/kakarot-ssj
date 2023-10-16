@@ -7,7 +7,6 @@ use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED}
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
-use evm::storage::kakarot_core_native_token;
 use integer::u32_overflowing_add;
 use pedersen::{PedersenTrait, HashState};
 use starknet::{Store, storage_base_address_from_felt252, ContractAddress, get_contract_address};
@@ -39,7 +38,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         // Case 1: EOA is deployed
         // BALANCE is the EOA's native_token.balanceOf(eoa_starknet_address)
         if !eoa_starknet_address.is_zero() {
-            let native_token_address = kakarot_core_native_token();
+            let native_token_address = KakarotCore::IKakarotCore::<
+                KakarotCore::ContractState
+            >::native_token(@kakarot_state);
             let native_token = IERC20CamelDispatcher { contract_address: native_token_address };
             return self.stack.push(native_token.balanceOf(eoa_starknet_address));
         }

@@ -16,11 +16,3 @@ fn compute_storage_address(evm_address: EthAddress, key: u256) -> StorageBaseAdd
     let hash = PoseidonTrait::new().update_with(evm_address).update_with(key).finalize();
     storage_base_address_from_felt252(hash)
 }
-
-fn kakarot_core_native_token() -> ContractAddress {
-    // TODO THIS PR: remove unwrap and replace by graceful error handling
-    let native_token_address = Store::<
-        ContractAddress
-    >::read(0, storage_base_address_from_felt252(selector!("native_token")));
-    native_token_address.unwrap()
-}

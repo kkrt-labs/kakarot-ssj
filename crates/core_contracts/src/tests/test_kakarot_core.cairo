@@ -57,13 +57,6 @@ fn test_kakarot_core_set_deploy_fee() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_kakarot_core_native_token() {
-    let kakarot_core = utils::deploy_kakarot_core(test_utils::native_token());
-    assert(kakarot_core.native_token() == test_utils::native_token(), 'wrong native_token');
-}
-
-#[test]
-#[available_gas(20000000)]
 fn test_kakarot_core_set_native_token() {
     let kakarot_core = utils::deploy_kakarot_core(test_utils::native_token());
     assert(kakarot_core.native_token() == test_utils::native_token(), 'wrong native_token');
