@@ -1,9 +1,7 @@
 use core::hash::{HashStateExTrait, HashStateTrait};
 use core_contracts::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use core_contracts::kakarot_core::contract::ContractAccountStorage;
-use core_contracts::kakarot_core::interface::{
-    IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
-};
+use core_contracts::kakarot_core::contract::{ContractAccountStorage, KakarotCore};
+use core_contracts::kakarot_core::interface::{IKakarotCore};
 use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
@@ -31,11 +29,12 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_balance(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        // Get Kakarot Dispatcher
-        let kakarot_address = get_contract_address();
-        let kakarot_core = IExtendedKakarotCoreDispatcher { contract_address: kakarot_address };
+        // Get access to Kakarot State locally
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
 
-        let eoa_starknet_address = kakarot_core.eoa_starknet_address(evm_address);
+        let eoa_starknet_address = KakarotCore::IKakarotCore::<
+            KakarotCore::ContractState
+        >::eoa_starknet_address(@kakarot_state, evm_address);
 
         // Case 1: EOA is deployed
         // BALANCE is the EOA's native_token.balanceOf(eoa_starknet_address)
@@ -47,7 +46,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
         // Case 2: EOA is not deployed
         // We check if a contract account is initialized at evm_address
-        let ca_storage = kakarot_core.contract_account_storage(evm_address);
+        let ca_storage = KakarotCore::IKakarotCore::<
+            KakarotCore::ContractState
+        >::contract_account_storage(@kakarot_state, evm_address);
 
         // We return the contract account's balance
         // Note that there is case 3: neither an EOA or CA is initialized at evm_address,

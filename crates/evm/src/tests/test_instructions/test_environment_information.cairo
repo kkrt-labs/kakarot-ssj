@@ -94,6 +94,28 @@ fn test_balance_zero() {
     machine.stack.peek().unwrap().print();
     assert(machine.stack.peek().unwrap() == 0x00, 'wrong balance');
 }
+#[should_panic(expected: ('Not implemented yet',))]
+#[test]
+#[available_gas(5000000)]
+fn test_balance_contract_account() {
+    // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    // TODO: deploy contract account
+    // and fund it
+
+    // And
+    let mut machine = setup_machine();
+    machine.stack.push(evm_address().into()).unwrap();
+
+    // When
+    set_contract_address(kakarot_core.contract_address);
+    machine.exec_balance();
+
+    // Then
+    machine.stack.peek().unwrap().print();
+    panic_with_felt252('Not implemented yet');
+}
 
 
 // *************************************************************************
