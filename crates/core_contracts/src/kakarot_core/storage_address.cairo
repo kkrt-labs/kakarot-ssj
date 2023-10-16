@@ -1,7 +1,7 @@
 // STORAGE ADDRESSES
 // EOA_ADDRESS_REGISTRY: the SN_KECCAK("eoa_address_registry") from KakarotCore
 const EOA_ADDRESS_REGISTRY: felt252 =
-    0x20f5e688e49ae452b62dd1cb674c1c1431291cf288672a9382f719aa83ef2fd;
+    0x020f5e688e49ae452b62dd1cb674c1c1431291cf288672a9382f719aa83ef2fd;
 
 // NATIVE_TOKEN
 // the SN_KECCAK('native_token') from KakarotCore

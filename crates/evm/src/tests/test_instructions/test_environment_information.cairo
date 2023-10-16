@@ -10,12 +10,18 @@ use evm::tests::test_utils::{
 };
 use integer::u32_overflowing_add;
 
-use starknet::EthAddressIntoFelt252;
+use starknet::{EthAddressIntoFelt252, contract_address_const, testing::set_contract_address};
 use utils::helpers::{
     u256_to_bytes_array, load_word, ArrayExtension, ArrayExtensionTrait, SpanExtension,
     SpanExtensionTrait
 };
 use utils::traits::{EthAddressIntoU256};
+use core_contracts::tests::utils::{
+    deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
+};
+use core_contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use core_contracts::erc20::interface::IERC20CamelDispatcherTrait;
+use debug::U256PrintImpl;
 
 // *************************************************************************
 // 0x30: ADDRESS
@@ -41,6 +47,32 @@ fn test_address_basic() {
 fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls)-> C (smart contract)
 // TODO: Once we have ability to do nested smart contract calls, check that in `C`s context `ADDRESS` should return address `B`
 // ref: https://github.com/kkrt-labs/kakarot-ssj/issues/183
+}
+
+// *************************************************************************
+// 0x31: BALANCE
+// *************************************************************************
+#[test]
+#[available_gas(5000000)]
+fn test_balance_eoa() {
+    // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    let eoa = kakarot_core.deploy_eoa(evm_address());
+
+    fund_account_with_native_token(eoa, native_token);
+
+    // And
+    let mut machine = setup_machine();
+    machine.stack.push(evm_address().into()).unwrap();
+
+    // When
+    set_contract_address(kakarot_core.contract_address);
+    machine.exec_balance();
+
+    // Then
+    machine.stack.peek().unwrap().print();
+    assert(machine.stack.peek().unwrap() == native_token.balanceOf(eoa), 'wrong balance');
 }
 
 

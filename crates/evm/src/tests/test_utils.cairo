@@ -51,7 +51,7 @@ fn chain_id() -> u128 {
 }
 
 fn kakarot_address() -> ContractAddress {
-    let test_kakarot_address: ContractAddress = contract_address_const::<0x777>();
+    let test_kakarot_address: ContractAddress = contract_address_const::<0xcaca101>();
     test_kakarot_address
 }
 

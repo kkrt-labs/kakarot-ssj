@@ -1,9 +1,9 @@
 use core::hash::{HashStateExTrait, HashStateTrait};
-use core_contracts::interfaces::erc20::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use core_contracts::kakarot_core::storage_address::EOA_ADDRESS_REGISTRY;
-//! Environmental Information.
+use core_contracts::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+use core_contracts::kakarot_core::storage_address::{EOA_ADDRESS_REGISTRY, CONTRACT_ACCOUNT_STORAGE};
+use core_contracts::kakarot_core::contract::ContractAccountStorage;
 use evm::context::ExecutionContextTrait;
-use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR};
+use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
@@ -38,16 +38,43 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
                 .finalize()
         );
 
-        // TODO THIS PR: replace unwrap by graceful error handling
-        let eoa_starknet_address = Store::<ContractAddress>::read(0, eoa_address_registry_sba)
-            .unwrap();
+        let eoa_starknet_address =
+            match Store::<ContractAddress>::read(0, eoa_address_registry_sba) {
+            Result::Ok(eoa_starknet_address) => eoa_starknet_address,
+            Result::Err(_) => { return Result::Err(EVMError::SyscallFailed(READ_SYSCALL_FAILED)); },
+        };
 
-        if !eoa_starknet_address.is_zero() { // EOA is deployed and exists
+        if eoa_starknet_address.is_zero() {
+            panic_with_felt252('EOA SN ADDR IS 0');
+        }
+
+        // Case 1: EOA is deployed
+        // BALANCE is the EOA's native_token.balanceOf(eoa_starknet_address)
+        if !eoa_starknet_address.is_zero() {
             let native_token_address = kakarot_core_native_token();
             let native_token = IERC20CamelDispatcher { contract_address: native_token_address };
             return self.stack.push(native_token.balanceOf(eoa_starknet_address));
         }
-        Result::Ok(())
+
+        // Case 2: EOA is not deployed
+        // We check if a contract account is initialized at evm_address
+        let ca_address_storage_sba = storage_base_address_from_felt252(
+            PedersenTrait::new(0)
+                .update_with(CONTRACT_ACCOUNT_STORAGE)
+                .update_with(evm_address)
+                .finalize()
+        );
+        let ca_storage = match Store::<ContractAccountStorage>::read(0, ca_address_storage_sba) {
+            Result::Ok(ca_storage) => ca_storage,
+            Result::Err(_) => { return Result::Err(EVMError::SyscallFailed(READ_SYSCALL_FAILED)); },
+        };
+
+        // We return the contract account's balance
+        // Note that there is case 3: neither an EOA or CA is initialized at evm_address,
+        // In which case we return 0. This case is included in the following situation:
+        // If no contract account is initialized at evm_address,
+        // ca_storage.balance == 0
+        return self.stack.push(ca_storage.balance);
     }
 
     /// 0x32 - ORIGIN

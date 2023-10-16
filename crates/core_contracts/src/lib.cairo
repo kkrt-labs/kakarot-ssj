@@ -1,7 +1,6 @@
 mod components;
 
-// Interfaces
-mod interfaces;
+mod erc20;
 
 // Kakarot smart contract
 mod kakarot_core;
