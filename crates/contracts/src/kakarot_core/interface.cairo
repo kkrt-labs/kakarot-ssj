@@ -1,4 +1,4 @@
-use core_contracts::kakarot_core::contract::ContractAccountStorage;
+use contracts::kakarot_core::ContractAccountStorage;
 use starknet::{ContractAddress, EthAddress, ClassHash};
 
 #[starknet::interface]

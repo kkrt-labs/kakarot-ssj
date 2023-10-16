@@ -1,6 +1,6 @@
-use core_contracts::components::ownable::{ownable_component};
-use core_contracts::tests::utils::constants::{ZERO, OWNER, OTHER};
-use core_contracts::tests::utils;
+use contracts::components::ownable::{ownable_component};
+use contracts::tests::utils::constants::{ZERO, OWNER, OTHER};
+use contracts::tests::utils;
 
 
 use ownable_component::{InternalImpl, OwnableImpl};
@@ -10,7 +10,7 @@ use starknet::testing;
 
 #[starknet::contract]
 mod MockContract {
-    use core_contracts::components::ownable::{ownable_component};
+    use contracts::components::ownable::{ownable_component};
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
 

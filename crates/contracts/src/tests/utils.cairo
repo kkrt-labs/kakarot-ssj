@@ -1,6 +1,4 @@
-use core_contracts::kakarot_core::{
-    interface::IExtendedKakarotCoreDispatcher, contract::KakarotCore
-};
+use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcher, KakarotCore};
 use eoa::externally_owned_account::{ExternallyOwnedAccount};
 use evm::tests::test_utils::{deploy_fee, other_starknet_address, chain_id};
 use openzeppelin::token::erc20::ERC20;

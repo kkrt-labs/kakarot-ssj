@@ -7,7 +7,7 @@ version = "0.1.0"
 [dependencies]
 starknet.workspace = true
 utils = { path = "../utils" }
-core_contracts = { path = "../core_contracts" }
+contracts = { path = "../contracts" }
 eoa = { path = "../eoa" }
 openzeppelin = { path = "../openzeppelin" }
 
