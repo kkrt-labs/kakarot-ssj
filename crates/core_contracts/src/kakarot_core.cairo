@@ -1,6 +1,6 @@
 use starknet::{ContractAddress, EthAddress, ClassHash};
 
-const INVOKE_ETH_CALL_ERROR: felt252 = 'KKT: Cannot invoke eth_call';
+const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
 #[starknet::interface]
 trait IKakarotCore<TContractState> {
@@ -65,13 +65,20 @@ trait IKakarotCore<TContractState> {
 
 #[starknet::contract]
 mod KakarotCore {
-    use core::box::BoxTrait;
+    use core::hash::{HashStateExTrait, HashStateTrait};
+    use core::pedersen::{HashState, PedersenTrait};
+    use core::starknet::SyscallResultTrait;
+    use core::zeroable::Zeroable;
     use core_contracts::components::ownable::ownable_component::InternalTrait;
     use core_contracts::components::ownable::{ownable_component};
     use evm::errors::EVMError;
     use evm::storage::ContractAccountStorage;
-    use starknet::{EthAddress, ContractAddress, ClassHash, get_tx_info, contract_address_const};
-    use super::INVOKE_ETH_CALL_ERROR;
+    use starknet::{
+        EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
+    };
+    use super::INVOKE_ETH_CALL_FORBIDDEN;
+    use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
+    use utils::traits::U256TryIntoContractAddress;
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
 
@@ -109,7 +116,16 @@ mod KakarotCore {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        OwnableEvent: ownable_component::Event
+        OwnableEvent: ownable_component::Event,
+        EOADeployed: EOADeployed,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct EOADeployed {
+        #[key]
+        evm_address: EthAddress,
+        #[key]
+        starknet_address: ContractAddress,
     }
 
     #[constructor]
@@ -158,10 +174,40 @@ mod KakarotCore {
         /// Deterministically computes a Starknet address for an given EVM address
         /// The address is computed as the Starknet address corresponding to the deployment of an EOA,
         /// Using its EVM address as salt, and KakarotCore as deployer.
+        /// https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/starknet/core/os/contract_address/contract_address.cairo#L2
         fn compute_starknet_address(
             self: @ContractState, evm_address: EthAddress
         ) -> ContractAddress {
-            panic_with_felt252('not implemented')
+            // Deployer is always Kakarot Core
+            let deployer = get_contract_address();
+
+            // pedersen(a1, a2, a3) is defined as:
+            // pedersen(pedersen(pedersen(a1, a2), a3), len([a1, a2, a3]))
+            // https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/hash_state.py#L6
+            // https://github.com/xJonathanLEI/starknet-rs/blob/master/starknet-core/src/crypto.rs#L49
+            // Constructor Calldata
+            // For an EOA, the constructor calldata is:
+            // [kakarot_address, evm_address]
+            let constructor_calldata_hash = PedersenTrait::new(0)
+                .update_with(deployer)
+                .update_with(evm_address)
+                .update(2)
+                .finalize();
+
+            let hash = PedersenTrait::new(0)
+                .update_with(CONTRACT_ADDRESS_PREFIX)
+                .update_with(deployer)
+                .update_with(evm_address)
+                .update_with(self.eoa_class_hash.read())
+                .update_with(constructor_calldata_hash)
+                .update(5)
+                .finalize();
+
+            let normalized_address: ContractAddress = (hash.into() & MAX_ADDRESS)
+                .try_into()
+                .unwrap();
+            // We know this unwrap is safe, because of the above bitwise AND on 2 ** 251
+            normalized_address
         }
 
         /// Checks into KakarotCore storage if an EOA has been deployed for a
@@ -175,8 +221,42 @@ mod KakarotCore {
 
         /// Deploys an EOA for a particular EVM address
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
-            // TODO: deploy EOA
-            panic_with_felt252('not implemented')
+            // First let's check that the EOA is not already deployed
+            let eoa_starknet_address = self.eoa_address_registry.read(evm_address);
+            if eoa_starknet_address.is_non_zero() {
+                panic_with_felt252('EOA already deployed');
+            }
+
+            // Get the class hash of the EOA to deploy it
+            let eoa_class_hash = self.eoa_class_hash.read();
+
+            // Prepare the deployments arguments
+            // Salt
+            let salt: felt252 = evm_address.into();
+            // Constructor calldata
+            let constructor_calldata: Span<felt252> = array![
+                get_contract_address().into(), evm_address.into()
+            ]
+                .span();
+
+            // We do not want to deploy from zero, but with Kakarot Core as deployer
+            let deploy_from_zero = false;
+
+            // The syscall should only return an error for unexpected problems
+            // As we've previously checked that the EOA is not deployed yet
+            let (starknet_address, _) = deploy_syscall(
+                eoa_class_hash, salt, constructor_calldata, deploy_from_zero
+            )
+                .unwrap_syscall();
+
+            // We write in the eoa address mapping the address of the EOA
+            // This enables Kakarot to be aware that this EOA was already deployed
+            self.eoa_address_registry.write(evm_address, starknet_address);
+
+            // Emit an event
+            self.emit(EOADeployed { evm_address, starknet_address });
+
+            starknet_address
         }
 
         /// View entrypoint into the EVM
@@ -224,8 +304,8 @@ mod KakarotCore {
             // If the account that originated the transaction is not zero, this means we
             // are in an invoke transaction instead of a call; therefore, `eth_call` is being wrongly called
             // For invoke transactions, `eth_send_transaction` must be used
-            if tx_info.account_contract_address == contract_address_const::<0>() {
-                return Result::Err(EVMError::WriteInStaticContext(INVOKE_ETH_CALL_ERROR));
+            if tx_info.account_contract_address.is_zero() {
+                return Result::Err(EVMError::WriteInStaticContext(INVOKE_ETH_CALL_FORBIDDEN));
             }
             Result::Ok(())
         }

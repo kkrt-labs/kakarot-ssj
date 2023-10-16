@@ -5,9 +5,6 @@ mod test_execution_context;
 mod test_instructions;
 
 #[cfg(test)]
-mod test_kakarot_core;
-
-#[cfg(test)]
 mod test_machine;
 
 #[cfg(test)]
