@@ -10,7 +10,7 @@ use starknet::{
 };
 
 fn starknet_address() -> ContractAddress {
-    'starknet_address'.try_into().unwrap()
+    contract_address_const::<'starknet_address'>()
 }
 
 fn evm_address() -> EthAddress {
@@ -22,7 +22,7 @@ fn other_evm_address() -> EthAddress {
 }
 
 fn other_starknet_address() -> ContractAddress {
-    'other_starknet_address'.try_into().unwrap()
+    contract_address_const::<'other_starknet_address'>()
 }
 
 fn storage_base_address() -> StorageBaseAddress {
@@ -30,7 +30,7 @@ fn storage_base_address() -> StorageBaseAddress {
 }
 
 fn zero_address() -> ContractAddress {
-    0.try_into().unwrap()
+    contract_address_const::<0x00>()
 }
 
 fn callvalue() -> u256 {
@@ -43,7 +43,7 @@ fn deploy_fee() -> u128 {
 }
 
 fn native_token() -> ContractAddress {
-    'native_token'.try_into().unwrap()
+    contract_address_const::<'native_token'>()
 }
 
 fn chain_id() -> u128 {
@@ -51,8 +51,7 @@ fn chain_id() -> u128 {
 }
 
 fn kakarot_address() -> ContractAddress {
-    let test_kakarot_address: ContractAddress = contract_address_const::<0xcaca101>();
-    test_kakarot_address
+    contract_address_const::<'kakarot'>()
 }
 
 fn eoa_address() -> EthAddress {
