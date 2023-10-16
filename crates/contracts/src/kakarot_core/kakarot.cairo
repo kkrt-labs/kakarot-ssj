@@ -26,15 +26,13 @@ mod KakarotCore {
     use core::pedersen::{HashState, PedersenTrait};
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
-    use core_contracts::components::ownable::ownable_component::InternalTrait;
-    use core_contracts::components::ownable::{ownable_component};
     use evm::errors::EVMError;
     use evm::execution::execute;
-    use evm::storage::ContractAccountStorage;
+    use evm::context::Status;
+    use super::ContractAccountStorage;
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
-    use super::ContractAccountStorage;
     use super::INVOKE_ETH_CALL_FORBIDDEN;
     use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
     use utils::traits::U256TryIntoContractAddress;

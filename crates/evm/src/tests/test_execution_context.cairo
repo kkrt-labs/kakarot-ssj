@@ -59,7 +59,6 @@ fn test_execution_context_new() {
     let stopped: bool = false;
     let return_data: Array<u8> = ArrayTrait::new();
 
-    let starknet_address: ContractAddress = 0.try_into().unwrap();
     let evm_address: EthAddress = 0.try_into().unwrap();
     let destroyed_contracts: Array<EthAddress> = Default::default();
     let events: Array<Event> = Default::default();
@@ -72,7 +71,7 @@ fn test_execution_context_new() {
 
     // When
     let mut execution_context = ExecutionContextTrait::new(
-        context_id, evm_address, starknet_address, call_ctx, parent_ctx, return_data.span()
+        context_id, evm_address,  call_ctx, parent_ctx, return_data.span()
     );
 
     // Then

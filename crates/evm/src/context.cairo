@@ -133,7 +133,6 @@ impl DefaultOptionSpanU8 of Default<Option<Span<u8>>> {
 struct ExecutionContext {
     id: usize,
     evm_address: EthAddress,
-    starknet_address: ContractAddress,
     program_counter: u32,
     status: Status,
     call_ctx: Box<CallContext>,
@@ -162,7 +161,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     fn new(
         id: usize,
         evm_address: EthAddress,
-        starknet_address: ContractAddress,
         call_ctx: CallContext,
         parent_ctx: Nullable<ExecutionContext>,
         return_data: Span<u8>,
@@ -170,7 +168,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         ExecutionContext {
             id,
             evm_address,
-            starknet_address,
             program_counter: Default::default(),
             status: Status::Active,
             call_ctx: BoxTrait::new(call_ctx),
