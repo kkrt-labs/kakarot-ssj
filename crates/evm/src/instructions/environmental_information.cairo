@@ -51,7 +51,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let ca_storage = KakarotCore::IKakarotCore::<
             KakarotCore::ContractState
         >::contract_account_storage(@kakarot_state, evm_address);
-        if ca_storage.nonce > 0 {
+        if ca_storage.nonce != 0 {
             return self.stack.push(ca_storage.balance);
         }
 
