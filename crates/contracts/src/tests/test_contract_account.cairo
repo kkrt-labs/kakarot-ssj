@@ -1,6 +1,6 @@
 use alexandria_storage::list::{List, ListTrait};
-use core_contracts::contract_account::{store_bytecode};
-use core_contracts::tests::utils::constants::EVM_ADDRESS;
+use contracts::contract_account::{store_bytecode};
+use contracts::tests::utils::constants::EVM_ADDRESS;
 use starknet::{storage_base_address_from_felt252, Store};
 use utils::storage::{compute_storage_base_address};
 use utils::traits::{StoreBytes31, StorageBaseAddressIntoFelt252};
