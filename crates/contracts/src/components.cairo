@@ -1,2 +1,2 @@
 mod ownable;
-mod upgradable;
+mod upgradeable;

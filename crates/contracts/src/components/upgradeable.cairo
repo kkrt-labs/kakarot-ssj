@@ -1,13 +1,13 @@
 use starknet::{replace_class_syscall, ClassHash};
 
 #[starknet::interface]
-trait IUpgradable<TContractState> {
+trait Iupgradeable<TContractState> {
     fn upgrade_contract(ref self: TContractState, class_hash: ClassHash);
 }
 
 
 #[starknet::component]
-mod upgradable_component {
+mod upgradeable_component {
     use starknet::ClassHash;
     use starknet::info::get_caller_address;
 
@@ -25,10 +25,10 @@ mod upgradable_component {
         new_class_hash: ClassHash
     }
 
-    #[embeddable_as(UpgradableImpl)]
-    impl Upgradable<
+    #[embeddable_as(upgradeableImpl)]
+    impl upgradeable<
         TContractState, +HasComponent<TContractState>
-    > of super::IUpgradable<ComponentState<TContractState>> {
+    > of super::Iupgradeable<ComponentState<TContractState>> {
         fn upgrade_contract(
             ref self: ComponentState<TContractState>, class_hash: starknet::ClassHash
         ) {
