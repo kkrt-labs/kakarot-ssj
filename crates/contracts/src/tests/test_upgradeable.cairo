@@ -42,14 +42,6 @@ mod MockContractUpgradeableV0 {
     }
 }
 
-type TestingState = upgradeable_component::ComponentState<MockContractUpgradeableV0::ContractState>;
-
-impl TestingStateDefault of Default<TestingState> {
-    fn default() -> TestingState {
-        upgradeable_component::component_state_for_testing()
-    }
-}
-
 #[starknet::contract]
 mod MockContractUpgradeableV1 {
     use contracts::components::upgradeable::{upgradeable_component};

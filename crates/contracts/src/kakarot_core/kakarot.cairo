@@ -43,7 +43,7 @@ mod KakarotCore {
 
     impl OwnableInternalImpl = ownable_component::InternalImpl<ContractState>;
 
-    impl upgradeableImpl = upgradeable_component::Upgradeable<ContractState>;
+    impl UpgradeableImpl = upgradeable_component::Upgradeable<ContractState>;
 
     #[storage]
     struct Storage {
