@@ -8,7 +8,8 @@ use starknet::{EthAddress, ContractAddress};
 ///
 /// # Arguments
 ///
-/// * `evm_contract_address` - The EVM address of the called contract. Set to 0 if there is no notion of deployed contract in the bytecode.
+/// * `evm_contract_address` - The EVM address of the called contract. Set to 0
+/// if there is no notion of deployed contract in the bytecode.
 /// * `bytecode` - The bytecode to run.
 /// * `calldata` - The calldata of the execution.
 /// * `value` - The value of the execution.
