@@ -7,6 +7,8 @@ use utils::constants::{
     POW_256_16,
 };
 use keccak::u128_split;
+use traits::DivRem;
+use integer::U32TryIntoNonZero;
 
 
 /// Ceils a number of bits to the next word (32 bytes)
@@ -530,12 +532,39 @@ impl ByteArrayExt of ByteArrayExTrait {
         // we can just deserialize bytes by chunks of 31, skipping pending_word
         // checks
         let mut arr: ByteArray = Default::default();
+        let (mut q, mut r) = DivRem::div_rem(bytes.len(), 31_u32.try_into().unwrap());
         loop {
-            match bytes.pop_front() {
-                Option::Some(byte) => { arr.append_byte(*byte); },
-                Option::None => { break; }
-            }
+            if q == 0 {
+                break;
+            };
+            let mut word: felt252 = 0;
+            let mut i = 0;
+            loop {
+                if i == 31 {
+                    break;
+                };
+                word = word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
+                i += 1;
+            };
+            arr.data.append(word.try_into().unwrap()); 
+            q -= 1;
         };
+
+        if r == 0 {
+            return arr;
+        };
+
+        arr.pending_word_len = r;
+        let mut pending_word: felt252 = 0;
+
+        loop {
+            if r == 0 {
+                break;
+            };
+            pending_word = pending_word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
+            r -= 1;
+        };
+        arr.pending_word = pending_word;
         arr
     }
 }
