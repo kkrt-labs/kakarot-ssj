@@ -20,7 +20,7 @@ mod MockContractUpgradeableV0 {
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
     #[abi(embed_v0)]
-    impl upgradeableImpl = upgradeable_component::Upgradeable<ContractState>;
+    impl UpgradeableImpl = upgradeable_component::Upgradeable<ContractState>;
 
     #[storage]
     struct Storage {

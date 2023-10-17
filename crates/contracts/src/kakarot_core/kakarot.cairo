@@ -76,7 +76,7 @@ mod KakarotCore {
     #[derive(Drop, starknet::Event)]
     enum Event {
         OwnableEvent: ownable_component::Event,
-        upgradeableEvent: upgradeable_component::Event,
+        UpgradeableEvent: upgradeable_component::Event,
         EOADeployed: EOADeployed,
     }
 
