@@ -19,8 +19,7 @@ struct ContractAccountStorage {
 mod KakarotCore {
     use contracts::components::ownable::ownable_component::InternalTrait;
     use contracts::components::ownable::{ownable_component};
-    use contracts::components::upgradeable::IUpgradeable;
-    use contracts::components::upgradeable::{upgradeable_component};
+    use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
     use core::hash::{HashStateExTrait, HashStateTrait};
@@ -44,7 +43,7 @@ mod KakarotCore {
 
     impl OwnableInternalImpl = ownable_component::InternalImpl<ContractState>;
 
-    impl upgradeableImpl = upgradeable_component::UpgradeableImpl<ContractState>;
+    impl upgradeableImpl = upgradeable_component::Upgradeable<ContractState>;
 
     #[storage]
     struct Storage {

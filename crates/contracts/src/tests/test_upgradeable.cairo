@@ -50,31 +50,6 @@ impl TestingStateDefault of Default<TestingState> {
     }
 }
 
-#[test]
-#[available_gas(500000)]
-fn test_upgradeable_update_contract() {
-    let (contract_address, _) = deploy_syscall(
-        MockContractUpgradeableV0::TEST_CLASS_HASH.try_into().unwrap(), 0, array![].span(), false
-    )
-        .unwrap();
-
-    let version = IMockContractUpgradeableDispatcher { contract_address: contract_address }
-        .version();
-
-    assert(version == 0, 'version is not 0');
-
-    let mut call_data: Array<felt252> = array![];
-
-    let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
-
-    IUpgradeableDispatcher { contract_address: contract_address }.upgrade_contract(new_class_hash);
-
-    let version = IMockContractUpgradeableDispatcher { contract_address: contract_address }
-        .version();
-    assert(version == 1, 'version is not 1');
-}
-
-
 #[starknet::contract]
 mod MockContractUpgradeableV1 {
     use contracts::components::upgradeable::{upgradeable_component};
@@ -99,4 +74,28 @@ mod MockContractUpgradeableV1 {
             1
         }
     }
+}
+
+#[test]
+#[available_gas(500000)]
+fn test_upgradeable_update_contract() {
+    let (contract_address, _) = deploy_syscall(
+        MockContractUpgradeableV0::TEST_CLASS_HASH.try_into().unwrap(), 0, array![].span(), false
+    )
+        .unwrap();
+
+    let version = IMockContractUpgradeableDispatcher { contract_address: contract_address }
+        .version();
+
+    assert(version == 0, 'version is not 0');
+
+    let mut call_data: Array<felt252> = array![];
+
+    let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
+
+    IUpgradeableDispatcher { contract_address: contract_address }.upgrade_contract(new_class_hash);
+
+    let version = IMockContractUpgradeableDispatcher { contract_address: contract_address }
+        .version();
+    assert(version == 1, 'version is not 1');
 }
