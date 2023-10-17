@@ -2,7 +2,7 @@ use starknet::{replace_class_syscall, ClassHash};
 
 #[starknet::interface]
 trait IUpgradeable<TContractState> {
-    fn upgrade_contract(ref self: TContractState, class_hash: ClassHash);
+    fn upgrade_contract(ref self: TContractState, new_class_hash: ClassHash);
 }
 
 
@@ -30,10 +30,10 @@ mod upgradeable_component {
         TContractState, +HasComponent<TContractState>
     > of super::IUpgradeable<ComponentState<TContractState>> {
         fn upgrade_contract(
-            ref self: ComponentState<TContractState>, class_hash: starknet::ClassHash
+            ref self: ComponentState<TContractState>, new_class_hash: starknet::ClassHash
         ) {
-            starknet::replace_class_syscall(class_hash);
-            self.emit(ContractUpgraded { new_class_hash: class_hash });
+            starknet::replace_class_syscall(new_class_hash);
+            self.emit(ContractUpgraded { new_class_hash: new_class_hash });
         }
     }
 }
