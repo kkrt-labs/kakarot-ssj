@@ -36,7 +36,7 @@ mod KakarotCore {
     use utils::traits::U256TryIntoContractAddress;
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
-    component!(path: upgradeable_component, storage: upgradeable, event: upgradeableEvent);
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
     #[abi(embed_v0)]
     impl OwnableImpl = ownable_component::Ownable<ContractState>;
