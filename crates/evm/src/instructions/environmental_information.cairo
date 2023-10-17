@@ -48,7 +48,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         // We check if a contract account is initialized at evm_address
         // A good condition to check is nonce > 0, as deploying a contract account
         // will set its nonce to 1
-        let ca_storage = KakarotCore::IKakarotCore::<
+        let ca_storage = kakarot_state.contract_account_storage(evm_address);
             KakarotCore::ContractState
         >::contract_account_storage(@kakarot_state, evm_address);
         if ca_storage.nonce != 0 {
