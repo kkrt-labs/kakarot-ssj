@@ -1,17 +1,8 @@
 use hash::{HashStateTrait, HashStateExTrait};
 use poseidon::PoseidonTrait;
-use starknet::{ContractAddress, EthAddress, StorageBaseAddress, storage_base_address_from_felt252};
-
-#[derive(Copy, Drop, Serde, starknet::Store)]
-struct ContractAccountStorage {
-    nonce: u64,
-    balance: u256,
-// TODO: add bytecode as a field for ContractAccountStorage
-// bytecode: List
-
-//TODO: add valid jumps as a field for ContractAccountStorage
-// valid_jumps: LegacyMap<usize, bool>
-}
+use starknet::{
+    ContractAddress, EthAddress, StorageBaseAddress, storage_base_address_from_felt252, Store
+};
 
 
 /// Computes the storage address for a given EVM address and an EVM storage key.
