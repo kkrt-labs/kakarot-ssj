@@ -1,12 +1,12 @@
 use MockContractUpgradeableV0::HasComponentImpl_upgradeable_component;
-use contracts::components::upgradeable::{IupgradeableDispatcher, IupgradeableDispatcherTrait};
+use contracts::components::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use contracts::components::upgradeable::{upgradeable_component};
 use contracts::tests::utils;
 use debug::PrintTrait;
 use serde::Serde;
 use starknet::{deploy_syscall, ClassHash, ContractAddress, testing};
 
-use upgradeable_component::{upgradeableImpl};
+use upgradeable_component::{UpgradeableImpl};
 
 #[starknet::interface]
 trait IMockContractUpgradeable<TContractState> {
@@ -17,10 +17,10 @@ trait IMockContractUpgradeable<TContractState> {
 mod MockContractUpgradeableV0 {
     use contracts::components::upgradeable::{upgradeable_component};
     use super::IMockContractUpgradeable;
-    component!(path: upgradeable_component, storage: upgradeable, event: upgradeableEvent);
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
     #[abi(embed_v0)]
-    impl upgradeableImpl = upgradeable_component::upgradeableImpl<ContractState>;
+    impl upgradeableImpl = upgradeable_component::Upgradeable<ContractState>;
 
     #[storage]
     struct Storage {
@@ -31,7 +31,7 @@ mod MockContractUpgradeableV0 {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        upgradeableEvent: upgradeable_component::Event
+        UpgradeableEvent: upgradeable_component::Event
     }
 
     #[external(v0)]
@@ -67,7 +67,7 @@ fn test_upgradeable_update_contract() {
 
     let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
 
-    IupgradeableDispatcher { contract_address: contract_address }.upgrade_contract(new_class_hash);
+    IUpgradeableDispatcher { contract_address: contract_address }.upgrade_contract(new_class_hash);
 
     let version = IMockContractUpgradeableDispatcher { contract_address: contract_address }
         .version();

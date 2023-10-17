@@ -1,7 +1,7 @@
 use starknet::{replace_class_syscall, ClassHash};
 
 #[starknet::interface]
-trait Iupgradeable<TContractState> {
+trait IUpgradeable<TContractState> {
     fn upgrade_contract(ref self: TContractState, class_hash: ClassHash);
 }
 
@@ -17,23 +17,23 @@ mod upgradeable_component {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        ContractUpgrated: ContractUpgrated
+        ContractUpgraded: ContractUpgraded
     }
 
     #[derive(Drop, starknet::Event)]
-    struct ContractUpgrated {
+    struct ContractUpgraded {
         new_class_hash: ClassHash
     }
 
-    #[embeddable_as(upgradeableImpl)]
-    impl upgradeable<
+    #[embeddable_as(Upgradeable)]
+    impl UpgradeableImpl<
         TContractState, +HasComponent<TContractState>
-    > of super::Iupgradeable<ComponentState<TContractState>> {
+    > of super::IUpgradeable<ComponentState<TContractState>> {
         fn upgrade_contract(
             ref self: ComponentState<TContractState>, class_hash: starknet::ClassHash
         ) {
             starknet::replace_class_syscall(class_hash);
-            self.emit(ContractUpgrated { new_class_hash: class_hash });
+            self.emit(ContractUpgraded { new_class_hash: class_hash });
         }
     }
 }
