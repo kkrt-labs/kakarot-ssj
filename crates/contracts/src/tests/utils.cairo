@@ -36,7 +36,7 @@ fn assert_no_events_left(address: ContractAddress) {
 }
 
 mod constants {
-    use starknet::{testing, contract_address_const, ContractAddress};
+    use starknet::{EthAddress, testing, contract_address_const, ContractAddress};
     fn ZERO() -> ContractAddress {
         contract_address_const::<0>()
     }
@@ -47,6 +47,10 @@ mod constants {
 
     fn OTHER() -> ContractAddress {
         contract_address_const::<0xe1145>()
+    }
+
+    fn EVM_ADDRESS() -> EthAddress {
+        0xc0ffee.try_into().unwrap()
     }
 
     fn ETH_BANK() -> ContractAddress {

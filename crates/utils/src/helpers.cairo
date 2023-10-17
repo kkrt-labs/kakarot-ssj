@@ -335,8 +335,8 @@ fn pow2(pow: usize) -> u128 {
 /// Splits a u256 into `len` bytes, big-endian, and appends the result to `dst`.
 fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
     let word_le = split_word_le(value, len);
-    let word_be = ArrayExtensionTrait::reverse(word_le.span());
-    ArrayExtensionTrait::concat(ref dst, word_be.span());
+    let word_be = ArrayExtTrait::reverse(word_le.span());
+    ArrayExtTrait::concat(ref dst, word_be.span());
 }
 
 fn split_u128_le(ref dest: Array<u8>, mut value: u128, mut len: usize) {
@@ -442,7 +442,7 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
 }
 
 #[generate_trait]
-impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtensionTrait<T> {
+impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtTrait<T> {
     // Concatenates two arrays by adding the elements of arr2 to arr1.
     fn concat(ref self: Array<T>, mut arr2: Span<T>) {
         loop {
@@ -490,7 +490,7 @@ impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtensi
 }
 
 #[generate_trait]
-impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtensionTrait<T> {
+impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
     // Returns true if the array contains an item.
     fn contains<+PartialEq<T>>(mut self: Span<T>, value: T) -> bool {
         loop {
@@ -523,3 +523,19 @@ impl U256Impl of U256Trait {
     }
 }
 
+#[generate_trait]
+impl ByteArrayExt of ByteArrayExTrait {
+    fn from_bytes(mut bytes: Span<u8>) -> ByteArray {
+        //TODO(eni): optimize deserialization of Span<u8> to ByteArray;
+        // we can just deserialize bytes by chunks of 31, skipping pending_word
+        // checks
+        let mut arr: ByteArray = Default::default();
+        loop {
+            match bytes.pop_front() {
+                Option::Some(byte) => { arr.append_byte(*byte); },
+                Option::None => { break; }
+            }
+        };
+        arr
+    }
+}
