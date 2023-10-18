@@ -13,7 +13,6 @@
 
 //! let value = stack.pop()?;
 //! ```
-use debug::PrintTrait;
 use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW, TYPE_CONVERSION_ERROR};
 use nullable::{nullable_from_box, NullableTrait};
 use starknet::{StorageBaseAddress, EthAddress};

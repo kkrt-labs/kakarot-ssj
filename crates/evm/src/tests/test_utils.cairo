@@ -74,13 +74,10 @@ fn setup_call_context() -> CallContext {
 fn setup_execution_context() -> ExecutionContext {
     let context_id = 0;
     let call_ctx = setup_call_context();
-    let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
     let return_data = array![1, 2, 3].span();
 
-    ExecutionContextTrait::new(
-        context_id, evm_address, starknet_address, call_ctx, Default::default(), return_data,
-    )
+    ExecutionContextTrait::new(context_id, evm_address, call_ctx, Default::default(), return_data,)
 }
 
 fn setup_nested_execution_context() -> ExecutionContext {
@@ -112,13 +109,10 @@ fn setup_call_context_with_bytecode(bytecode: Span<u8>) -> CallContext {
 fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext {
     let context_id = 0;
     let call_ctx = setup_call_context_with_bytecode(bytecode);
-    let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
     let return_data = Default::default().span();
 
-    ExecutionContextTrait::new(
-        context_id, evm_address, starknet_address, call_ctx, Default::default(), return_data,
-    )
+    ExecutionContextTrait::new(context_id, evm_address, call_ctx, Default::default(), return_data,)
 }
 
 
@@ -136,13 +130,10 @@ fn setup_call_context_with_calldata(calldata: Span<u8>) -> CallContext {
 fn setup_execution_context_with_calldata(calldata: Span<u8>) -> ExecutionContext {
     let context_id = 0;
     let call_ctx = setup_call_context_with_calldata(calldata);
-    let starknet_address: ContractAddress = starknet_address();
     let evm_address: EthAddress = evm_address();
     let return_data = Default::default().span();
 
-    ExecutionContextTrait::new(
-        context_id, evm_address, starknet_address, call_ctx, Default::default(), return_data,
-    )
+    ExecutionContextTrait::new(context_id, evm_address, call_ctx, Default::default(), return_data,)
 }
 
 impl CallContextPartialEq of PartialEq<CallContext> {

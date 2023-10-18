@@ -1,10 +1,10 @@
-use evm::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
+use evm::memory::{MemoryTrait, InternalMemoryTrait};
 use integer::BoundedInt;
 use utils::constants::{POW_2_8, POW_2_56, POW_2_64, POW_2_120};
 use utils::{math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtTrait};
 
 mod internal {
-    use evm::memory::{MemoryTrait, InternalMemoryTrait, MemoryPrintTrait};
+    use evm::memory::{MemoryTrait, InternalMemoryTrait};
     use utils::{math::Exponentiation, helpers};
 
     fn load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(

@@ -1,4 +1,3 @@
-use debug::PrintTrait;
 use evm::instructions::DuplicationOperationsTrait;
 use evm::stack::Stack;
 use evm::stack::StackTrait;

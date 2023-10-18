@@ -1,5 +1,4 @@
 use core::nullable::{NullableTrait, null};
-use debug::PrintTrait;
 use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, DefaultOptionSpanU8
 };
@@ -59,7 +58,6 @@ fn test_execution_context_new() {
     let stopped: bool = false;
     let return_data: Array<u8> = ArrayTrait::new();
 
-    let starknet_address: ContractAddress = 0.try_into().unwrap();
     let evm_address: EthAddress = 0.try_into().unwrap();
     let destroyed_contracts: Array<EthAddress> = Default::default();
     let events: Array<Event> = Default::default();
@@ -72,7 +70,7 @@ fn test_execution_context_new() {
 
     // When
     let mut execution_context = ExecutionContextTrait::new(
-        context_id, evm_address, starknet_address, call_ctx, parent_ctx, return_data.span()
+        context_id, evm_address, call_ctx, parent_ctx, return_data.span()
     );
 
     // Then
@@ -81,7 +79,6 @@ fn test_execution_context_new() {
     assert(execution_context.program_counter == program_counter, 'wrong program_counter');
     assert(execution_context.stopped() == stopped, 'wrong stopped');
     assert(execution_context.return_data() == Default::default().span(), 'wrong return_data');
-    assert(execution_context.starknet_address() == starknet_address, 'wrong starknet_address');
     assert(execution_context.evm_address() == evm_address, 'wrong evm_address');
     assert(
         execution_context.destroyed_contracts() == destroyed_contracts.span(),
