@@ -9,6 +9,8 @@ use utils::constants::{
 use keccak::u128_split;
 use traits::DivRem;
 use integer::U32TryIntoNonZero;
+use utils::num::{Zero, One, SizeOf};
+use utils::math::Bitshift;
 
 
 /// Ceils a number of bits to the next word (32 bytes)
@@ -506,6 +508,33 @@ impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
     }
 }
 
+trait BytesSerde<T> {
+    /// Serialize/deserialize bytes into/from
+    /// an array of bytes.
+    fn deserialize(self: Span<u8>) -> Option<T>;
+}
+
+impl BytesSerdeU32Impl of BytesSerde<u32> {
+    fn deserialize(self: Span<u8>) -> Option<u32> {
+        let len = self.len();
+        if len > 4 {
+            return Option::None(());
+        }
+        let offset: u32 = len - 1;
+        let mut result: u32 = 0;
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: u32 = (*self.at(i)).into();
+            result += byte.shl(8 * (offset - i));
+
+            i += 1;
+        };
+        Option::Some(result)
+    }
+}
 
 #[generate_trait]
 impl U256Impl of U256Trait {
@@ -524,7 +553,6 @@ impl U256Impl of U256Trait {
         u256 { low: new_low, high: new_high }
     }
 }
-
 #[generate_trait]
 impl ByteArrayExt of ByteArrayExTrait {
     fn from_bytes(mut bytes: Span<u8>) -> ByteArray {

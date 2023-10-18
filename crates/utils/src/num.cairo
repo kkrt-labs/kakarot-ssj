@@ -105,6 +105,22 @@ impl Felt252Zero of Zero<felt252> {
     }
 }
 
+impl U32Zero of Zero<u32> {
+    #[inline(always)]
+    fn zero() -> u32 {
+        0
+    }
+
+    #[inline(always)]
+    fn is_zero(self: @u32) -> bool {
+        *self == Zero::zero()
+    }
+
+    #[inline(always)]
+    fn is_non_zero(self: @u32) -> bool {
+        !self.is_zero()
+    }
+}
 
 impl U128Zero of Zero<u128> {
     #[inline(always)]
@@ -167,6 +183,23 @@ impl Felt252One of One<felt252> {
 
     #[inline(always)]
     fn is_non_one(self: @felt252) -> bool {
+        !self.is_one()
+    }
+}
+
+impl U32One of One<u32> {
+    #[inline(always)]
+    fn one() -> u32 {
+        1
+    }
+
+    #[inline(always)]
+    fn is_one(self: @u32) -> bool {
+        *self == One::one()
+    }
+
+    #[inline(always)]
+    fn is_non_one(self: @u32) -> bool {
         !self.is_one()
     }
 }

@@ -1,5 +1,7 @@
 use utils::helpers;
-use utils::helpers::{SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait};
+use utils::helpers::{
+    SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, BytesSerde
+};
 use utils::helpers::{ByteArrayExTrait};
 use debug::PrintTrait;
 
@@ -268,4 +270,15 @@ fn test_pack_bytes_ge_bytes31() {
         assert(*arr[i] == res[i], 'byte mismatch');
         i += 1;
     };
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test_bytes_serde_u32_deserialize() {
+    let input: Array<u8> = array![0xf4, 0x32, 0x15, 0x62];
+    let res: Option<u32> = input.span().deserialize();
+
+    assert(res != Option::None, 'should have a value');
+    let res = res.unwrap();
+    assert(res == 0xf4321562, 'wrong result value');
 }
