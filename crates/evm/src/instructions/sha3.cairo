@@ -6,7 +6,7 @@ use evm::machine::Machine;
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use keccak::{cairo_keccak, u128_split};
-use utils::helpers::{ArrayExtensionTrait, U256Trait};
+use utils::helpers::{ArrayExtTrait, U256Trait};
 
 #[generate_trait]
 impl Sha3Impl of Sha3Trait {

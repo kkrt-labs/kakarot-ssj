@@ -2,108 +2,65 @@ use starknet::{ContractAddress, EthAddress, ClassHash};
 
 const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
-#[starknet::interface]
-trait IKakarotCore<TContractState> {
-    /// Sets the native token, this token will be considered the native coin in the Ethereum sense
-    fn set_native_token(ref self: TContractState, native_token: ContractAddress);
 
-    /// Gets the native token used by the Kakarot smart contract
-    fn native_token(self: @TContractState) -> ContractAddress;
+#[derive(Copy, Drop, Serde, starknet::Store)]
+struct ContractAccountStorage {
+    nonce: u64,
+    balance: u256,
+// TODO: add bytecode as a field for ContractAccountStorage
+// bytecode: List
 
-    /// Sets the deploy fee for an EOA
-    /// Currently, the Kakarot RPC can trigger an EOA deployment,
-    /// and optimistically fund it.
-    /// Then, the KakarotCore smart contract is able to levy this fee retroactively from the EOA
-    /// And reimburse the RPC's smart wallet.
-    fn set_deploy_fee(ref self: TContractState, deploy_fee: u128);
-
-    /// Get the deploy fee
-    fn deploy_fee(self: @TContractState) -> u128;
-
-    /// Deterministically computes a Starknet address for an given EVM address
-    /// The address is computed as the Starknet address corresponding to the deployment of an EOA,
-    /// Using its EVM address as salt, and KakarotCore as deployer.
-    fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
-
-    /// Checks into KakarotCore storage if an EOA has been deployed for a
-    /// particular EVM address and if so, returns its corresponding Starknet Address.
-    /// Otherwise, returns 0
-    fn get_eoa_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
-
-    /// Deploys an EOA for a particular EVM address
-    fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
-
-    /// View entrypoint into the EVM
-    /// Performs view calls into the blockchain
-    /// It cannot modify the state of the chain
-    fn eth_call(
-        self: @TContractState,
-        from: EthAddress,
-        to: EthAddress,
-        gas_limit: u128,
-        gas_price: u128,
-        value: u128,
-        data: Span<u8>
-    ) -> Span<u8>;
-
-    /// Transaction entrypoint into the EVM
-    /// Executes an EVM transaction and possibly modifies the state
-    fn eth_send_transaction(
-        ref self: TContractState,
-        to: EthAddress,
-        gas_limit: u128,
-        gas_price: u128,
-        value: u128,
-        data: Span<u8>
-    ) -> Span<u8>;
-
-    /// Upgrade the KakarotCore smart contract
-    /// Using replace_class_syscall
-    fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
+//TODO: add valid jumps as a field for ContractAccountStorage
+// valid_jumps: LegacyMap<usize, bool>
 }
 
 
 #[starknet::contract]
 mod KakarotCore {
+    use contracts::components::ownable::ownable_component::InternalTrait;
+    use contracts::components::ownable::{ownable_component};
+    use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
+    use contracts::kakarot_core::interface::IKakarotCore;
+    use contracts::kakarot_core::interface;
     use core::hash::{HashStateExTrait, HashStateTrait};
     use core::pedersen::{HashState, PedersenTrait};
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
-    use core_contracts::components::ownable::ownable_component::InternalTrait;
-    use core_contracts::components::ownable::{ownable_component};
     use evm::errors::EVMError;
-    use evm::storage::ContractAccountStorage;
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
+    use super::ContractAccountStorage;
     use super::INVOKE_ETH_CALL_FORBIDDEN;
     use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
     use utils::traits::U256TryIntoContractAddress;
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
     #[abi(embed_v0)]
     impl OwnableImpl = ownable_component::Ownable<ContractState>;
 
     impl OwnableInternalImpl = ownable_component::InternalImpl<ContractState>;
 
+    impl UpgradeableImpl = upgradeable_component::Upgradeable<ContractState>;
+
     #[storage]
     struct Storage {
         /// Kakarot storage for accounts: Externally Owned Accounts (EOA) and Contract Accounts (CA)
-        /// EOAs:
-        /// Map their EVM address and their Starknet address
-        /// - starknet_address: the deterministic starknet address (31 bytes) computed given an EVM address (20 bytes)
-        ///
         /// CAs:
         /// Map EVM address of a CA and the corresponding Kakarot Core storage ->
         /// - nonce (note that this nonce is not the same as the Starknet protocol nonce)
         /// - current balance in native token (CAs can use this balance as an allowance to spend native Starknet token through Kakarot Core)
         /// - bytecode of the CA
+        /// Storage of CAs in EVM is defined as a mapping of key (bytes32) - value (bytes32) pairs
+        ///
+        /// EOAs:
+        /// Map their EVM address and their Starknet address
+        /// - starknet_address: the deterministic starknet address (31 bytes) computed given an EVM address (20 bytes)
+        contract_account_storage: LegacyMap::<EthAddress, ContractAccountStorage>,
         eoa_address_registry: LegacyMap::<EthAddress, ContractAddress>,
         eoa_class_hash: ClassHash,
-        /// Storage of CAs in EVM is defined as a mapping of key (bytes32) - value (bytes32) pairs
-        contract_account_storage: LegacyMap<(EthAddress, u256), u256>,
-        contract_account_registry: LegacyMap::<EthAddress, ContractAccountStorage>,
         // Utility storage
         native_token: ContractAddress,
         deploy_fee: u128,
@@ -111,12 +68,15 @@ mod KakarotCore {
         // Components
         #[substorage(v0)]
         ownable: ownable_component::Storage,
+        #[substorage(v0)]
+        upgradeable: upgradeable_component::Storage,
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
         OwnableEvent: ownable_component::Event,
+        UpgradeableEvent: upgradeable_component::Event,
         EOADeployed: EOADeployed,
     }
 
@@ -145,7 +105,7 @@ mod KakarotCore {
     }
 
     #[external(v0)]
-    impl KakarotCoreImpl of super::IKakarotCore<ContractState> {
+    impl KakarotCoreImpl of interface::IKakarotCore<ContractState> {
         fn set_native_token(ref self: ContractState, native_token: ContractAddress) {
             self.ownable.assert_only_owner();
             self.native_token.write(native_token);
@@ -213,10 +173,15 @@ mod KakarotCore {
         /// Checks into KakarotCore storage if an EOA has been deployed for a
         /// particular EVM address and if so, returns its corresponding Starknet Address
         /// Otherwise, returns 0
-        fn get_eoa_starknet_address(
-            self: @ContractState, evm_address: EthAddress
-        ) -> ContractAddress {
+        fn eoa_starknet_address(self: @ContractState, evm_address: EthAddress) -> ContractAddress {
             self.eoa_address_registry.read(evm_address)
+        }
+
+        /// Gets the storage associated to a contract account
+        fn contract_account_storage(
+            self: @ContractState, evm_address: EthAddress
+        ) -> ContractAccountStorage {
+            self.contract_account_storage.read(evm_address)
         }
 
         /// Deploys an EOA for a particular EVM address
@@ -290,9 +255,9 @@ mod KakarotCore {
 
         /// Upgrade the KakarotCore smart contract
         /// Using replace_class_syscall
-        fn upgrade(
-            ref self: ContractState, new_class_hash: ClassHash
-        ) { //TODO: implement upgrade logic
+        fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
+            self.ownable.assert_only_owner();
+            self.upgradeable.upgrade_contract(new_class_hash);
         }
     }
 
@@ -311,68 +276,3 @@ mod KakarotCore {
         }
     }
 }
-
-
-#[starknet::interface]
-trait IExtendedKakarotCore<TContractState> {
-    /// Sets the native token, this token will be considered the native coin in the Ethereum sense
-    fn set_native_token(ref self: TContractState, native_token: ContractAddress);
-
-    /// Gets the native token used by the Kakarot smart contract
-    fn native_token(self: @TContractState) -> ContractAddress;
-
-    /// Sets the deploy fee for an EOA
-    /// Currently, the Kakarot RPC can trigger an EOA deployment,
-    /// and optimistically fund it.
-    /// Then, the KakarotCore smart contract is able to levy this fee retroactively from the EOA
-    /// And reimburse the RPC's smart wallet.
-    fn set_deploy_fee(ref self: TContractState, deploy_fee: u128);
-
-    /// Get the deploy fee
-    fn deploy_fee(self: @TContractState) -> u128;
-
-    /// Deterministically computes a Starknet address for an given EVM address
-    /// The address is computed as the Starknet address corresponding to the deployment of an EOA,
-    /// Using its EVM address as salt, and KakarotCore as deployer.
-    fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
-
-    /// Checks into KakarotCore storage if an EOA has been deployed for a
-    /// particular EVM address and if so, returns its corresponding Starknet Address
-    fn get_eoa_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
-
-    /// Deploys an EOA for a particular EVM address
-    fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
-
-    /// View entrypoint into the EVM
-    /// Performs view calls into the blockchain
-    /// It cannot modify the state of the chain
-    fn eth_call(
-        self: @TContractState,
-        from: EthAddress,
-        to: EthAddress,
-        gas_limit: u128,
-        gas_price: u128,
-        value: u128,
-        data: Span<u8>
-    ) -> Span<u8>;
-
-    /// Transaction entrypoint into the EVM
-    /// Executes an EVM transaction and possibly modifies the state
-    fn eth_send_transaction(
-        ref self: TContractState,
-        to: EthAddress,
-        gas_limit: u128,
-        gas_price: u128,
-        value: u128,
-        data: Span<u8>
-    ) -> Span<u8>;
-
-    /// Upgrade the KakarotCore smart contract
-    /// Using replace_class_syscall
-    fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
-
-    fn owner(self: @TContractState) -> ContractAddress;
-    fn transfer_ownership(ref self: TContractState, new_owner: ContractAddress);
-    fn renounce_ownership(ref self: TContractState);
-}
-

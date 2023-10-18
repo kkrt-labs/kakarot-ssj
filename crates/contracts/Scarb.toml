@@ -1,5 +1,5 @@
 [package]
-name = "core_contracts"
+name = "contracts"
 version = "0.1.0"
 
 # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
@@ -7,6 +7,9 @@ version = "0.1.0"
 [dependencies]
 starknet.workspace = true
 evm = { path = "../evm" }
+openzeppelin = { path = "../openzeppelin" }
+utils = { path = "../utils" }
+alexandria_storage = { git = "https://github.com/keep-starknet-strange/alexandria.git", rev = "3356bf0c5c1a089167d7d3c28d543e195325e596" }
 
 [tool.fmt]
 sort-module-level-items = true

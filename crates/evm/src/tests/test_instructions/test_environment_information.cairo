@@ -1,4 +1,9 @@
 use array::{ArrayTrait};
+use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::tests::utils::{
+    deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
+};
+use debug::U256PrintImpl;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
@@ -9,11 +14,11 @@ use evm::tests::test_utils::{
     setup_machine_with_nested_execution_context, other_evm_address, return_from_subcontext
 };
 use integer::u32_overflowing_add;
+use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 
-use starknet::EthAddressIntoFelt252;
+use starknet::{EthAddressIntoFelt252, contract_address_const, testing::set_contract_address};
 use utils::helpers::{
-    u256_to_bytes_array, load_word, ArrayExtension, ArrayExtensionTrait, SpanExtension,
-    SpanExtensionTrait
+    u256_to_bytes_array, load_word, ArrayExtension, ArrayExtTrait, SpanExtension, SpanExtTrait
 };
 use utils::traits::{EthAddressIntoU256};
 
@@ -41,6 +46,76 @@ fn test_address_basic() {
 fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls)-> C (smart contract)
 // TODO: Once we have ability to do nested smart contract calls, check that in `C`s context `ADDRESS` should return address `B`
 // ref: https://github.com/kkrt-labs/kakarot-ssj/issues/183
+}
+
+// *************************************************************************
+// 0x31: BALANCE
+// *************************************************************************
+#[test]
+#[available_gas(5000000)]
+fn test_balance_eoa() {
+    // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    let eoa = kakarot_core.deploy_eoa(evm_address());
+
+    fund_account_with_native_token(eoa, native_token);
+
+    // And
+    let mut machine = setup_machine();
+    machine.stack.push(evm_address().into()).unwrap();
+
+    // When
+    set_contract_address(kakarot_core.contract_address);
+    machine.exec_balance();
+
+    // Then
+    machine.stack.peek().unwrap().print();
+    assert(machine.stack.peek().unwrap() == native_token.balanceOf(eoa), 'wrong balance');
+}
+
+#[test]
+#[available_gas(5000000)]
+fn test_balance_zero() {
+    // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+
+    // And
+    let mut machine = setup_machine();
+    machine.stack.push(evm_address().into()).unwrap();
+
+    // When
+    set_contract_address(kakarot_core.contract_address);
+    machine.exec_balance();
+
+    // Then
+    machine.stack.peek().unwrap().print();
+    assert(machine.stack.peek().unwrap() == 0x00, 'wrong balance');
+}
+
+// TODO: implement balance once contracts accounts can be deployed
+#[ignore]
+#[test]
+#[available_gas(5000000)]
+fn test_balance_contract_account() {
+    // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    // TODO: deploy contract account
+    // and fund it
+
+    // And
+    let mut machine = setup_machine();
+    machine.stack.push(evm_address().into()).unwrap();
+
+    // When
+    set_contract_address(kakarot_core.contract_address);
+    machine.exec_balance();
+
+    // Then
+    machine.stack.peek().unwrap().print();
+    panic_with_felt252('Not implemented yet');
 }
 
 
@@ -630,9 +705,9 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         let result_span = u256_to_bytes_array(result).span();
 
         if ((i + 1) * 32 > size) {
-            ArrayExtensionTrait::concat(ref results, result_span.slice(0, size - (i * 32)));
+            ArrayExtTrait::concat(ref results, result_span.slice(0, size - (i * 32)));
         } else {
-            ArrayExtensionTrait::concat(ref results, result_span);
+            ArrayExtTrait::concat(ref results, result_span);
         }
 
         i += 1;

@@ -7,6 +7,8 @@ use utils::constants::{
     POW_256_16,
 };
 use keccak::u128_split;
+use traits::DivRem;
+use integer::U32TryIntoNonZero;
 use utils::num::{Zero, One, SizeOf};
 use utils::math::Bitshift;
 
@@ -337,8 +339,8 @@ fn pow2(pow: usize) -> u128 {
 /// Splits a u256 into `len` bytes, big-endian, and appends the result to `dst`.
 fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
     let word_le = split_word_le(value, len);
-    let word_be = ArrayExtensionTrait::reverse(word_le.span());
-    ArrayExtensionTrait::concat(ref dst, word_be.span());
+    let word_be = ArrayExtTrait::reverse(word_le.span());
+    ArrayExtTrait::concat(ref dst, word_be.span());
 }
 
 fn split_u128_le(ref dest: Array<u8>, mut value: u128, mut len: usize) {
@@ -444,7 +446,7 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
 }
 
 #[generate_trait]
-impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtensionTrait<T> {
+impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtTrait<T> {
     // Concatenates two arrays by adding the elements of arr2 to arr1.
     fn concat(ref self: Array<T>, mut arr2: Span<T>) {
         loop {
@@ -492,7 +494,7 @@ impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtensi
 }
 
 #[generate_trait]
-impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtensionTrait<T> {
+impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
     // Returns true if the array contains an item.
     fn contains<+PartialEq<T>>(mut self: Span<T>, value: T) -> bool {
         loop {
@@ -549,5 +551,49 @@ impl U256Impl of U256Trait {
         let new_low = integer::u128_byte_reverse(self.high);
         let new_high = integer::u128_byte_reverse(self.low);
         u256 { low: new_low, high: new_high }
+    }
+}
+#[generate_trait]
+impl ByteArrayExt of ByteArrayExTrait {
+    fn from_bytes(mut bytes: Span<u8>) -> ByteArray {
+        let mut arr: ByteArray = Default::default();
+        let (nb_full_words, pending_word_len) = DivRem::div_rem(
+            bytes.len(), 31_u32.try_into().unwrap()
+        );
+        let mut i = 0;
+        loop {
+            if i == nb_full_words {
+                break;
+            };
+            let mut word: felt252 = 0;
+            let mut j = 0;
+            loop {
+                if j == 31 {
+                    break;
+                };
+                word = word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
+                j += 1;
+            };
+            arr.data.append(word.try_into().unwrap());
+            i += 1;
+        };
+
+        if pending_word_len == 0 {
+            return arr;
+        };
+
+        let mut pending_word: felt252 = 0;
+        let mut i = 0;
+
+        loop {
+            if i == pending_word_len {
+                break;
+            };
+            pending_word = pending_word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
+            i += 1;
+        };
+        arr.pending_word_len = pending_word_len;
+        arr.pending_word = pending_word;
+        arr
     }
 }

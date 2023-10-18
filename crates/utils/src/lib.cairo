@@ -8,6 +8,7 @@ mod eth_transaction;
 mod rlp;
 mod traits;
 mod i256;
+mod storage;
 mod errors;
 
 #[cfg(test)]

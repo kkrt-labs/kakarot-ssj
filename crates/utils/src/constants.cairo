@@ -14,6 +14,7 @@ const CHAIN_ID: u256 = 1263227476;
 // STACK
 const STACK_MAX_DEPTH: usize = 1024;
 
+
 // Numeric constants
 const POW_256_0: u128 = 0x1;
 const POW_256_1: u128 = 0x100;

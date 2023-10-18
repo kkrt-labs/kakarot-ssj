@@ -1,7 +1,6 @@
 use utils::helpers;
-use utils::helpers::{
-    SpanExtension, SpanExtensionTrait, ArrayExtension, ArrayExtensionTrait, U256Trait, BytesSerde
-};
+use utils::helpers::{SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, BytesSerde};
+use utils::helpers::{ByteArrayExTrait};
 use debug::PrintTrait;
 
 #[test]
@@ -200,6 +199,75 @@ fn test_split_u256_into_u64_little() {
     assert(low_h == 0xE5000000FFFFFFFA, 'split mismatch');
     assert(high_l == 0x0000450000DEFA00, 'split mismatch');
     assert(low_l == 0x00200400000000AD, 'split mismatch');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_pack_bytes_le_bytes31() {
+    let mut arr = array![0x11, 0x22, 0x33, 0x44];
+    let res = ByteArrayExTrait::from_bytes(arr.span());
+
+    // Ensure that the result is complete and keeps the same order
+    let mut i = 0;
+    loop {
+        if i == arr.len() {
+            break;
+        };
+        assert(*arr[i] == res[i], 'byte mismatch');
+        i += 1;
+    };
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_pack_bytes_ge_bytes31() {
+    let mut arr = array![
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x08,
+        0x09,
+        0x0A,
+        0x0B,
+        0x0C,
+        0x0D,
+        0x0E,
+        0x0F,
+        0x10,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x18,
+        0x19,
+        0x1A,
+        0x1B,
+        0x1C,
+        0x1D,
+        0x1E,
+        0x1F,
+        0x20,
+        0x21 // 33 elements
+    ];
+
+    let res = ByteArrayExTrait::from_bytes(arr.span());
+
+    // Ensure that the result is complete and keeps the same order
+    let mut i = 0;
+    loop {
+        if i == arr.len() {
+            break;
+        };
+        assert(*arr[i] == res[i], 'byte mismatch');
+        i += 1;
+    };
 }
 
 #[test]

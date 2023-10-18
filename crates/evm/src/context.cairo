@@ -4,7 +4,7 @@ use evm::model::Event;
 use evm::stack::{Stack, StackTrait};
 use starknet::get_caller_address;
 use starknet::{EthAddress, ContractAddress};
-use utils::helpers::{ArrayExtension, ArrayExtensionTrait};
+use utils::helpers::{ArrayExtension, ArrayExtTrait};
 use utils::traits::{SpanDefault, EthAddressDefault, ContractAddressDefault};
 
 #[derive(Drop, Default, Copy, PartialEq)]
