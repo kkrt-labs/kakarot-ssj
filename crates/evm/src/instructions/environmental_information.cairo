@@ -212,14 +212,4 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_extcodehash(ref self: Machine) -> Result<(), EVMError> {
         Result::Ok(())
     }
-
-    /// 0x47  - SELFBALANCE
-    /// Get balance of currently executing account
-    fn exec_selfbalance(ref self: Machine) -> Result<(), EVMError> {
-        let evm_address = self.evm_address();
-
-        let balance = balance(evm_address);
-
-        return self.stack.push(balance);
-    }
 }

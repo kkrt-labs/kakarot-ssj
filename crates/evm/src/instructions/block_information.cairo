@@ -7,6 +7,7 @@ use evm::stack::StackTrait;
 // Corelib imports
 use starknet::info::{get_block_number, get_block_timestamp};
 use utils::constants::CHAIN_ID;
+use evm::balance::balance;
 
 #[generate_trait]
 impl BlockInformation of BlockInformationTrait {
@@ -65,7 +66,11 @@ impl BlockInformation of BlockInformationTrait {
     /// Get balance of currently executing contract
     /// # Specification: https://www.evm.codes/#47?fork=shanghai
     fn exec_selfbalance(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        let evm_address = self.evm_address();
+
+        let balance = balance(evm_address);
+
+        self.stack.push(balance)
     }
 
     /// 0x48 - BASEFEE
