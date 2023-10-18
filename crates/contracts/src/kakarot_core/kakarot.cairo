@@ -269,27 +269,6 @@ mod KakarotCore {
             }
             Result::Ok(())
         }
-
-
-        /// Deploys a contract account for a particular EVM address
-        fn deploy_contract_account(
-            ref self: ContractState, evm_address: EthAddress, value: u256, bytecode: Span<u8>
-        ) -> bool {
-            let (ret_status, ret_data) = execute(
-                :evm_address,
-                :bytecode,
-                calldata: array![].span(),
-                :value,
-                gas_price: 0,
-                gas_limit: 0,
-            );
-            //TODO gas params
-            if ret_status != Status::Reverted {
-                //TODO store_bytecode
-                return true;
-            }
-            return false;
-        }
     }
 }
 
