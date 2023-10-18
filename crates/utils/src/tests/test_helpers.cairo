@@ -1,5 +1,7 @@
 use utils::helpers;
-use utils::helpers::{SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, BytesSerde};
+use utils::helpers::{
+    SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, BytesSerde
+};
 use utils::helpers::{ByteArrayExTrait};
 use debug::PrintTrait;
 
