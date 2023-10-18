@@ -7,6 +7,8 @@ use utils::constants::{
     POW_256_16,
 };
 use keccak::u128_split;
+use traits::DivRem;
+use integer::U32TryIntoNonZero;
 
 
 /// Ceils a number of bits to the next word (32 bytes)
@@ -526,16 +528,44 @@ impl U256Impl of U256Trait {
 #[generate_trait]
 impl ByteArrayExt of ByteArrayExTrait {
     fn from_bytes(mut bytes: Span<u8>) -> ByteArray {
-        //TODO(eni): optimize deserialization of Span<u8> to ByteArray;
-        // we can just deserialize bytes by chunks of 31, skipping pending_word
-        // checks
         let mut arr: ByteArray = Default::default();
+        let (nb_full_words, pending_word_len) = DivRem::div_rem(
+            bytes.len(), 31_u32.try_into().unwrap()
+        );
+        let mut i = 0;
         loop {
-            match bytes.pop_front() {
-                Option::Some(byte) => { arr.append_byte(*byte); },
-                Option::None => { break; }
-            }
+            if i == nb_full_words {
+                break;
+            };
+            let mut word: felt252 = 0;
+            let mut j = 0;
+            loop {
+                if j == 31 {
+                    break;
+                };
+                word = word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
+                j += 1;
+            };
+            arr.data.append(word.try_into().unwrap());
+            i += 1;
         };
+
+        if pending_word_len == 0 {
+            return arr;
+        };
+
+        let mut pending_word: felt252 = 0;
+        let mut i = 0;
+
+        loop {
+            if i == pending_word_len {
+                break;
+            };
+            pending_word = pending_word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
+            i += 1;
+        };
+        arr.pending_word_len = pending_word_len;
+        arr.pending_word = pending_word;
         arr
     }
 }
