@@ -26,7 +26,9 @@ mod KakarotCore {
     use core::pedersen::{HashState, PedersenTrait};
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
+    use evm::context::Status;
     use evm::errors::EVMError;
+    use evm::execution::execute;
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
