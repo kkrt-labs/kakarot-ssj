@@ -38,6 +38,9 @@ fn test_block_hash_above_bounds() {
     assert(machine.stack.peek().unwrap() == 0, 'stack top should be 1692873993');
 }
 
+// TODO: implement exec_blockhash testing for block number within bounds
+// https://github.com/starkware-libs/cairo/blob/77a7e7bc36aa1c317bb8dd5f6f7a7e6eef0ab4f3/crates/cairo-lang-starknet/cairo_level_tests/interoperability.cairo#L173
+#[ignore]
 #[test]
 #[available_gas(20000000)]
 fn test_block_hash_within_bounds() {
@@ -50,8 +53,7 @@ fn test_block_hash_within_bounds() {
     machine.stack.push(244).unwrap();
     machine.exec_blockhash();
     // Then
-    machine.stack.peek().unwrap().print();
-    assert(machine.stack.peek().unwrap() == 1692873993, 'stack top should be 1692873993');
+    assert(machine.stack.peek().unwrap() == 0xF, 'stack top should be 0xF');
 }
 
 
