@@ -4,7 +4,7 @@ use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDi
 use starknet::EthAddress;
 
 
-/// Returns the balance in native token for a given EVM address
+/// Returns the balance in native token for a given EVM account (EOA or CA)
 /// This is equivalent to checking the balance in native coin, i.e. ETHER of an account in Ethereum
 fn balance(evm_address: EthAddress) -> u256 {
     // Get access to Kakarot State locally
