@@ -1,7 +1,12 @@
+use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::tests::utils::{
+    deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
+};
 use evm::instructions::BlockInformationTrait;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::setup_machine;
-use starknet::testing::{set_block_timestamp, set_block_number};
+use evm::tests::test_utils::{setup_machine, evm_address};
+use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
+use starknet::testing::{set_block_timestamp, set_block_number, set_contract_address};
 use utils::constants::CHAIN_ID;
 
 #[test]
@@ -48,6 +53,71 @@ fn test_gaslimit() {
     // This value is set in [setup_execution_context].
     assert(machine.stack.peek().unwrap() == 0xffffff, 'stack top should be 0xffffff');
 }
+
+// *************************************************************************
+// 0x47: SELFBALANCE
+// *************************************************************************
+#[test]
+#[available_gas(5000000)]
+fn test_exec_selfbalance_eoa() {
+    // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    let eoa = kakarot_core.deploy_eoa(evm_address());
+
+    fund_account_with_native_token(eoa, native_token);
+
+    // And
+    let mut machine = setup_machine();
+
+    // When
+    set_contract_address(kakarot_core.contract_address);
+    machine.exec_selfbalance();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == native_token.balanceOf(eoa), 'wrong balance');
+}
+
+#[test]
+#[available_gas(5000000)]
+fn test_exec_selfbalance_zero() {
+    // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+
+    // And
+    let mut machine = setup_machine();
+
+    // When
+    set_contract_address(kakarot_core.contract_address);
+    machine.exec_selfbalance();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0x00, 'wrong balance');
+}
+
+// TODO: implement balance once contracts accounts can be deployed
+#[ignore]
+#[test]
+#[available_gas(5000000)]
+fn test_exec_selfbalance_contract_account() {
+    // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    // TODO: deploy contract account
+    // and fund it
+
+    // And
+    let mut machine = setup_machine();
+
+    // When
+    set_contract_address(kakarot_core.contract_address);
+    machine.exec_selfbalance();
+
+    // Then
+    panic_with_felt252('Not implemented yet');
+}
+
 
 #[test]
 #[available_gas(20000000)]

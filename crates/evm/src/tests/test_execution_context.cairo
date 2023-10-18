@@ -1,5 +1,4 @@
 use core::nullable::{NullableTrait, null};
-use debug::PrintTrait;
 use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, DefaultOptionSpanU8
 };

@@ -1,9 +1,7 @@
-use array::{ArrayTrait};
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
-use debug::U256PrintImpl;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
@@ -53,7 +51,7 @@ fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls
 // *************************************************************************
 #[test]
 #[available_gas(5000000)]
-fn test_balance_eoa() {
+fn test_exec_balance_eoa() {
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
@@ -70,13 +68,12 @@ fn test_balance_eoa() {
     machine.exec_balance();
 
     // Then
-    machine.stack.peek().unwrap().print();
     assert(machine.stack.peek().unwrap() == native_token.balanceOf(eoa), 'wrong balance');
 }
 
 #[test]
 #[available_gas(5000000)]
-fn test_balance_zero() {
+fn test_exec_balance_zero() {
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
@@ -90,7 +87,6 @@ fn test_balance_zero() {
     machine.exec_balance();
 
     // Then
-    machine.stack.peek().unwrap().print();
     assert(machine.stack.peek().unwrap() == 0x00, 'wrong balance');
 }
 
@@ -98,7 +94,7 @@ fn test_balance_zero() {
 #[ignore]
 #[test]
 #[available_gas(5000000)]
-fn test_balance_contract_account() {
+fn test_exec_balance_contract_account() {
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
@@ -114,7 +110,6 @@ fn test_balance_contract_account() {
     machine.exec_balance();
 
     // Then
-    machine.stack.peek().unwrap().print();
     panic_with_felt252('Not implemented yet');
 }
 
@@ -714,3 +709,4 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     };
     assert(results.span() == return_data.slice(offset, size), 'wrong data value');
 }
+

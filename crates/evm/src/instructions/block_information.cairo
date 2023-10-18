@@ -1,3 +1,4 @@
+use evm::balance::balance;
 //! Block Information.
 
 use evm::errors::EVMError;
@@ -65,7 +66,11 @@ impl BlockInformation of BlockInformationTrait {
     /// Get balance of currently executing contract
     /// # Specification: https://www.evm.codes/#47?fork=shanghai
     fn exec_selfbalance(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        let evm_address = self.evm_address();
+
+        let balance = balance(evm_address);
+
+        self.stack.push(balance)
     }
 
     /// 0x48 - BASEFEE
