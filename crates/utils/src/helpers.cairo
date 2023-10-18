@@ -529,7 +529,7 @@ impl U256Impl of U256Trait {
 impl ByteArrayExt of ByteArrayExTrait {
     fn from_bytes(mut bytes: Span<u8>) -> ByteArray {
         let mut arr: ByteArray = Default::default();
-        let (mut nb_full_words, mut pending_word_len) = DivRem::div_rem(
+        let (nb_full_words, pending_word_len) = DivRem::div_rem(
             bytes.len(), 31_u32.try_into().unwrap()
         );
         let mut i = 0;
