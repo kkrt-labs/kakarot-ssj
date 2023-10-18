@@ -1,13 +1,13 @@
-use evm::instructions::BlockInformationTrait;
-use evm::stack::StackTrait;
-use evm::tests::test_utils::{setup_machine, evm_address};
-use starknet::testing::{set_block_timestamp, set_block_number, set_contract_address};
-use utils::constants::CHAIN_ID;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
+use evm::instructions::BlockInformationTrait;
+use evm::stack::StackTrait;
+use evm::tests::test_utils::{setup_machine, evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
+use starknet::testing::{set_block_timestamp, set_block_number, set_contract_address};
+use utils::constants::CHAIN_ID;
 
 #[test]
 #[available_gas(20000000)]

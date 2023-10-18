@@ -1,3 +1,4 @@
+use evm::balance::balance;
 //! Block Information.
 
 use evm::errors::EVMError;
@@ -7,7 +8,6 @@ use evm::stack::StackTrait;
 // Corelib imports
 use starknet::info::{get_block_number, get_block_timestamp};
 use utils::constants::CHAIN_ID;
-use evm::balance::balance;
 
 #[generate_trait]
 impl BlockInformation of BlockInformationTrait {
