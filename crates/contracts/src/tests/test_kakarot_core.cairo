@@ -1,5 +1,9 @@
 use contracts::components::ownable::ownable_component;
 use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore};
+use contracts::tests::test_upgradeable::{
+    MockContractUpgradeableV1, IMockContractUpgradeableDispatcher,
+    IMockContractUpgradeableDispatcherTrait
+};
 use contracts::tests::utils;
 use debug::PrintTrait;
 use eoa::externally_owned_account::ExternallyOwnedAccount;
@@ -97,3 +101,18 @@ fn test_kakarot_core_compute_starknet_address() {
     assert(eoa_starknet_address == expected_starknet_address, 'wrong starknet address');
 }
 
+#[test]
+#[available_gas(20000000)]
+fn test_kakarot_core_upgrade_contract() {
+    let kakarot_core = utils::deploy_kakarot_core(test_utils::native_token());
+    let class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
+
+    testing::set_contract_address(utils::other_starknet_address());
+    kakarot_core.upgrade(class_hash);
+
+    let version = IMockContractUpgradeableDispatcher {
+        contract_address: kakarot_core.contract_address
+    }
+        .version();
+    assert(version == 1, 'version is not 1');
+}

@@ -19,6 +19,7 @@ struct ContractAccountStorage {
 mod KakarotCore {
     use contracts::components::ownable::ownable_component::InternalTrait;
     use contracts::components::ownable::{ownable_component};
+    use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
     use core::hash::{HashStateExTrait, HashStateTrait};
@@ -35,11 +36,14 @@ mod KakarotCore {
     use utils::traits::U256TryIntoContractAddress;
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
     #[abi(embed_v0)]
     impl OwnableImpl = ownable_component::Ownable<ContractState>;
 
     impl OwnableInternalImpl = ownable_component::InternalImpl<ContractState>;
+
+    impl UpgradeableImpl = upgradeable_component::Upgradeable<ContractState>;
 
     #[storage]
     struct Storage {
@@ -64,12 +68,15 @@ mod KakarotCore {
         // Components
         #[substorage(v0)]
         ownable: ownable_component::Storage,
+        #[substorage(v0)]
+        upgradeable: upgradeable_component::Storage,
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
         OwnableEvent: ownable_component::Event,
+        UpgradeableEvent: upgradeable_component::Event,
         EOADeployed: EOADeployed,
     }
 
@@ -248,9 +255,9 @@ mod KakarotCore {
 
         /// Upgrade the KakarotCore smart contract
         /// Using replace_class_syscall
-        fn upgrade(
-            ref self: ContractState, new_class_hash: ClassHash
-        ) { //TODO: implement upgrade logic
+        fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
+            self.ownable.assert_only_owner();
+            self.upgradeable.upgrade_contract(new_class_hash);
         }
     }
 
@@ -269,4 +276,3 @@ mod KakarotCore {
         }
     }
 }
-
