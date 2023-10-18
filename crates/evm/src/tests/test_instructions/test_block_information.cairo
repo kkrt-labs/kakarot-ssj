@@ -1,8 +1,59 @@
+use debug::U256PrintImpl;
 use evm::instructions::BlockInformationTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::setup_machine;
 use starknet::testing::{set_block_timestamp, set_block_number};
 use utils::constants::CHAIN_ID;
+
+/// 0x40 - BLOCKHASH
+#[test]
+#[available_gas(20000000)]
+fn test_block_hash_below_bounds() {
+    // Given
+    let mut machine = setup_machine();
+
+    set_block_number(500);
+
+    // When
+    machine.stack.push(243).unwrap();
+    machine.exec_blockhash();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'stack top should be 1692873993');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_block_hash_above_bounds() {
+    // Given
+    let mut machine = setup_machine();
+
+    set_block_number(500);
+
+    // When
+    machine.stack.push(491).unwrap();
+    machine.exec_blockhash();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'stack top should be 1692873993');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_block_hash_within_bounds() {
+    // Given
+    let mut machine = setup_machine();
+
+    set_block_number(500);
+
+    // When
+    machine.stack.push(244).unwrap();
+    machine.exec_blockhash();
+    // Then
+    machine.stack.peek().unwrap().print();
+    assert(machine.stack.peek().unwrap() == 1692873993, 'stack top should be 1692873993');
+}
+
 
 #[test]
 #[available_gas(20000000)]

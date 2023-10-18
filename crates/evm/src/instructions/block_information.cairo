@@ -1,11 +1,12 @@
 //! Block Information.
 
-use evm::errors::EVMError;
+use evm::errors::{EVMError, BLOCK_HASH_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::stack::StackTrait;
 
 // Corelib imports
-use starknet::info::{get_block_number, get_block_timestamp};
+use starknet::info::{get_block_number, get_block_timestamp, get_block_info};
+use starknet::{get_block_hash_syscall};
 use utils::constants::CHAIN_ID;
 
 #[generate_trait]
@@ -14,7 +15,27 @@ impl BlockInformation of BlockInformationTrait {
     /// Get the hash of one of the 256 most recent complete blocks.
     /// # Specification: https://www.evm.codes/#40?fork=shanghai
     fn exec_blockhash(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        let block_number = self.stack.pop_u64()?;
+        let current_block = get_block_number();
+
+        // If input block number is lower than current_block - 256, return 0
+        // If input block number is higher than current_block - 10, return 0
+        // Note: in the specs, input block number can be equal - at most - to the current block number minus one.
+        // In Starknet, the `get_block_hash_syscall` is capped at current block minus ten.
+        // TODO: monitor the changes in the `get_block_hash_syscall` syscall.
+        // source: https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/system-calls-cairo1/#get_block_hash
+        if block_number + 10 > current_block || block_number + 256 < current_block {
+            return self.stack.push(0);
+        }
+
+        let block_hash = get_block_hash_syscall(block_number);
+        match block_hash {
+            Result::Ok(block_hash) => self.stack.push(block_hash.into()),
+            // This syscall should not error out, as we made sure block_number =< current_block - 10
+            // In case of failed syscall, we can either return 0, or revert.
+            // Since this situation would be highly breaking, we choose to revert.
+            Result::Err(_) => Result::Err(EVMError::SyscallFailed(BLOCK_HASH_SYSCALL_FAILED)),
+        }
     }
 
     /// 0x41 - COINBASE
