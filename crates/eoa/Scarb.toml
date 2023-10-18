@@ -10,3 +10,4 @@ evm = { path = "../evm" }
 
 [tool]
 fmt.workspace = true
+contracts = { path = "../contracts" }
