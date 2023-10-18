@@ -509,12 +509,12 @@ impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtensionTrait<T> {
 trait BytesSerde<T> {
     /// Serialize/deserialize bytes into/from
     /// an array of bytes.
-    fn deserialize(self: @Span<u8>) -> Option<T>;
+    fn deserialize(self: Span<u8>) -> Option<T>;
 }
 
 impl BytesSerdeU32Impl of BytesSerde<u32> {
-    fn deserialize(self: @Span<u8>) -> Option<u32> {
-        let len = (*self).len();
+    fn deserialize(self: Span<u8>) -> Option<u32> {
+        let len = self.len();
         if len > 4 {
             return Option::None(());
         }
@@ -525,7 +525,7 @@ impl BytesSerdeU32Impl of BytesSerde<u32> {
             if i == len {
                 break ();
             }
-            let byte: u32 = (*(*self).at(i)).into();
+            let byte: u32 = (*self.at(i)).into();
             result += byte.shl(8 * (offset - i));
 
             i += 1;
