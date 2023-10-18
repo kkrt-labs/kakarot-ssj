@@ -51,7 +51,7 @@ fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls
 // *************************************************************************
 #[test]
 #[available_gas(5000000)]
-fn test_balance_eoa() {
+fn test_exec_balance_eoa() {
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
@@ -73,7 +73,7 @@ fn test_balance_eoa() {
 
 #[test]
 #[available_gas(5000000)]
-fn test_balance_zero() {
+fn test_exec_balance_zero() {
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
@@ -94,7 +94,7 @@ fn test_balance_zero() {
 #[ignore]
 #[test]
 #[available_gas(5000000)]
-fn test_balance_contract_account() {
+fn test_exec_balance_contract_account() {
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);

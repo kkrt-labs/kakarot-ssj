@@ -59,7 +59,7 @@ fn test_gaslimit() {
 // *************************************************************************
 #[test]
 #[available_gas(5000000)]
-fn test_selfbalance_eoa() {
+fn test_exec_selfbalance_eoa() {
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
@@ -80,7 +80,7 @@ fn test_selfbalance_eoa() {
 
 #[test]
 #[available_gas(5000000)]
-fn test_selfbalance_zero() {
+fn test_exec_selfbalance_zero() {
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
@@ -100,7 +100,7 @@ fn test_selfbalance_zero() {
 #[ignore]
 #[test]
 #[available_gas(5000000)]
-fn test_selfbalance_contract_account() {
+fn test_exec_selfbalance_contract_account() {
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
