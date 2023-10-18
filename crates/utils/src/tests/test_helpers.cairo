@@ -3,7 +3,6 @@ use utils::helpers::{
     SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, BytesSerde
 };
 use utils::helpers::{ByteArrayExTrait};
-use debug::PrintTrait;
 
 #[test]
 #[available_gas(2000000000)]
