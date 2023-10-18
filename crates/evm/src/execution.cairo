@@ -1,8 +1,8 @@
 use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, Status};
 use evm::interpreter::EVMInterpreterTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
-use starknet::{EthAddress, ContractAddress};
 use evm::model::ExecutionResult;
+use starknet::{EthAddress, ContractAddress};
 
 /// Creates an instance of the EVM to execute the given bytecode.
 ///
