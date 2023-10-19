@@ -3,7 +3,7 @@
 //! KakarotCore's storage.
 
 use alexandria_storage::list::{List, ListTrait};
-use evm::errors::{EVMError, READ_SYSCALL_FAILED};
+use evm::errors::{EVMError, READ_SYSCALL_FAILED, WRITE_SYSCALL_FAILED};
 use hash::{HashStateTrait, HashStateExTrait};
 use poseidon::PoseidonTrait;
 use starknet::{
@@ -52,7 +52,7 @@ impl ContractAccountImpl of ContractAccountTrait {
         let nonce: u64 = Store::<u64>::read(0, storage_address)
             .map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))?;
         Store::<u64>::write(0, storage_address, nonce + 1)
-            .map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))
+            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))
     }
 
     /// Returns the balance of a contract account.
@@ -78,7 +78,7 @@ impl ContractAccountImpl of ContractAccountTrait {
             selector!("contract_account_balance"), array![self.evm_address.into()].span()
         );
         Store::<u256>::write(0, storage_address, balance)
-            .map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))
+            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))
     }
 
     /// Returns the value stored at a `u256` key inside the Contract Account storage.
@@ -108,7 +108,7 @@ impl ContractAccountImpl of ContractAccountTrait {
             array![self.evm_address.into(), key.low.into(), key.high.into()].span()
         );
         Store::<u256>::write(0, storage_address, value)
-            .map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))
+            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))
     }
 
     /// Stores the EVM bytecode of a contract account in Kakarot Core's contract storage.  The bytecode is first packed
@@ -138,7 +138,7 @@ impl ContractAccountImpl of ContractAccountTrait {
         >::write(
             0, storage_base_address_from_felt252(pending_word_addr), packed_bytecode.pending_word
         )
-            .map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))?;
+            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))?;
         Store::<
             usize
         >::write(
@@ -146,7 +146,7 @@ impl ContractAccountImpl of ContractAccountTrait {
             storage_base_address_from_felt252(pending_word_len_addr),
             packed_bytecode.pending_word_len
         )
-            .map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))?;
+            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))?;
         //TODO(eni) PR Alexandria so that from_span returns SyscallResult
         stored_list.from_span(packed_bytecode.data.span());
         Result::Ok(())
@@ -220,7 +220,7 @@ impl ContractAccountImpl of ContractAccountTrait {
             array![self.evm_address.into(), offset.into()].span()
         );
         Store::<bool>::write(0, data_address, true)
-            .map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))
+            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))
     }
 }
 
