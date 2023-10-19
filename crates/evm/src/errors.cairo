@@ -23,6 +23,9 @@ const BLOCK_HASH_SYSCALL_FAILED: felt252 = 'KKT: block_hash syscall failed';
 const WRITE_SYSCALL_FAILED: felt252 = 'KKT: write syscall failed';
 const CONTRACT_SYSCALL_FAILED: felt252 = 'KKT: contract syscall failed';
 
+// CALL
+const CALL_GAS_GT_GAS_LIMIT: felt252 = 'KKT: call gas gt gas limit';
+
 #[derive(Drop, Copy, PartialEq)]
 enum EVMError {
     StackError: felt252,
@@ -34,6 +37,7 @@ enum EVMError {
     UnknownOpcode: u8,
     SyscallFailed: felt252,
     WriteInStaticContext: felt252,
+    InsufficientGas: felt252,
 }
 
 
@@ -50,6 +54,7 @@ impl EVMErrorIntoU256 of Into<EVMError, u256> {
             EVMError::UnknownOpcode => 'UnknownOpcode'.into(),
             EVMError::SyscallFailed(error_message) => error_message.into(),
             EVMError::WriteInStaticContext(error_message) => error_message.into(),
+            EVMError::InsufficientGas(error_message) => error_message.into(),
         }
     }
 }

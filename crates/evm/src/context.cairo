@@ -34,8 +34,8 @@ struct CallContext {
     value: u256,
     // If the call is read only (cannot modify the state of the chain)
     read_only: bool,
-    gas_limit: u64,
-    gas_price: u64
+    gas_limit: u128,
+    gas_price: u128
 }
 
 trait CallContextTrait {
@@ -45,16 +45,16 @@ trait CallContextTrait {
         calldata: Span<u8>,
         value: u256,
         read_only: bool,
-        gas_limit: u64,
-        gas_price: u64,
+        gas_limit: u128,
+        gas_price: u128,
     ) -> CallContext;
     fn caller(self: @CallContext) -> EthAddress;
     fn bytecode(self: @CallContext) -> Span<u8>;
     fn calldata(self: @CallContext) -> Span<u8>;
     fn value(self: @CallContext) -> u256;
     fn read_only(self: @CallContext) -> bool;
-    fn gas_limit(self: @CallContext) -> u64;
-    fn gas_price(self: @CallContext) -> u64;
+    fn gas_limit(self: @CallContext) -> u128;
+    fn gas_price(self: @CallContext) -> u128;
 }
 
 impl CallContextImpl of CallContextTrait {
@@ -65,8 +65,8 @@ impl CallContextImpl of CallContextTrait {
         calldata: Span<u8>,
         value: u256,
         read_only: bool,
-        gas_limit: u64,
-        gas_price: u64,
+        gas_limit: u128,
+        gas_price: u128,
     ) -> CallContext {
         CallContext { caller, bytecode, calldata, value, read_only, gas_limit, gas_price }
     }
@@ -99,12 +99,12 @@ impl CallContextImpl of CallContextTrait {
     }
 
     #[inline(always)]
-    fn gas_limit(self: @CallContext) -> u64 {
+    fn gas_limit(self: @CallContext) -> u128 {
         *self.gas_limit
     }
 
     #[inline(always)]
-    fn gas_price(self: @CallContext) -> u64 {
+    fn gas_price(self: @CallContext) -> u128 {
         *self.gas_price
     }
 }

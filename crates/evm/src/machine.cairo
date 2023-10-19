@@ -206,13 +206,13 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     }
 
     #[inline(always)]
-    fn gas_limit(ref self: Machine) -> u64 {
+    fn gas_limit(ref self: Machine) -> u128 {
         let current_call_ctx = self.call_ctx();
         current_call_ctx.gas_limit()
     }
 
     #[inline(always)]
-    fn gas_price(ref self: Machine) -> u64 {
+    fn gas_price(ref self: Machine) -> u128 {
         let current_call_ctx = self.call_ctx();
         current_call_ctx.gas_price()
     }

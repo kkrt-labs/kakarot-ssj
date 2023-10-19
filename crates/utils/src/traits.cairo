@@ -54,6 +54,16 @@ impl U256TryIntoContractAddress of TryInto<u256, ContractAddress> {
     }
 }
 
+impl U256TryIntoEthAddress of TryInto<u256, EthAddress> {
+    fn try_into(self: u256) -> Option<EthAddress> {
+        let maybe_value: Option<felt252> = self.try_into();
+        match maybe_value {
+            Option::Some(value) => value.try_into(),
+            Option::None => Option::None,
+        }
+    }
+}
+
 //TODO remove once merged in corelib
 impl StorageBaseAddressIntoFelt252 of Into<StorageBaseAddress, felt252> {
     fn into(self: StorageBaseAddress) -> felt252 {
@@ -86,9 +96,6 @@ trait TryIntoResult<T, U> {
 }
 
 impl U256TryIntoResult<U, +TryInto<u256, U>> of TryIntoResult<u256, U> {
-    /// Converts a u256 into a Result<U, EVMError>
-    /// If the u256 cannot be converted into U, it returns an error.
-    /// Otherwise, it returns the casted value.
     fn try_into_result(self: u256) -> Result<U, EVMError> {
         match self.try_into() {
             Option::Some(value) => Result::Ok(value),
