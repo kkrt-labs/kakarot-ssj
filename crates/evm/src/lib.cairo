@@ -1,3 +1,6 @@
+// Bytecode utils
+mod bytecode;
+
 // Call opcodes helpers
 mod call_helpers;
 
