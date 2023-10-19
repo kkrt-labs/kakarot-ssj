@@ -71,11 +71,6 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
         // The caller in the subcontext is the current context's current address
         let caller = self.evm_address();
 
-        // The read_only parameter is:
-        // True if read_only == true, else current_ctx.read_only,
-        // Example: if a staticcall performs a subcall
-        let read_only = read_only | self.read_only();
-
         // TODO: handle gas accurately
         let call_ctx = CallContextTrait::new(
             caller,
