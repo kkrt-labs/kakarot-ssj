@@ -1,3 +1,6 @@
+// Call opcodes helpers
+mod call_helpers;
+
 // Context module
 mod context;
 
@@ -31,9 +34,6 @@ mod storage;
 
 // Storage journal module
 mod storage_journal;
-
-// Call opcodes helpers
-mod call_helpers;
 
 // tests
 #[cfg(test)]
