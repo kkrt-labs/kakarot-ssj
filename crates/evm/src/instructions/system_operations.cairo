@@ -72,7 +72,7 @@ impl SystemOperations of SystemOperationsTrait {
         // If sender_balance > value, return early, pushing
         // 0 on the stack to indicate call failure.
         let caller_address = self.evm_address();
-        let sender_balance = balance(caller_address);
+        let sender_balance = balance(caller_address)?;
         if sender_balance < value {
             self.stack.push(0);
             return Result::Ok(());

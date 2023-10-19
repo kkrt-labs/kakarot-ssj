@@ -72,7 +72,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         // Case 2: `to` address is not a precompile
         // We enter the standard flow
-        let bytecode = bytecode(call_args.to);
+        let bytecode = bytecode(call_args.to)?;
         // The caller in the subcontext is the current context's current address
         let caller = self.evm_address();
 
