@@ -8,9 +8,9 @@ mod KakarotCore {
     use contracts::components::ownable::ownable_component::InternalTrait;
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
+    use contracts::contract_account::{ContractAccount, ContractAccountTrait};
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
-    use contracts::contract_account::{ContractAccount, ContractAccountTrait};
     use core::hash::{HashStateExTrait, HashStateTrait};
     use core::pedersen::{HashState, PedersenTrait};
     use core::starknet::SyscallResultTrait;
@@ -183,7 +183,7 @@ mod KakarotCore {
             self: @ContractState, evm_address: EthAddress, key: u256
         ) -> u256 {
             let ca = ContractAccountTrait::new(evm_address);
-            ca.get_key(key)
+            ca.get_storage(key)
         }
 
 

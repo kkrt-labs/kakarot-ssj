@@ -1,6 +1,6 @@
+use contracts::contract_account::{ContractAccount, ContractAccountTrait};
 use contracts::kakarot_core::interface::{IKakarotCore};
 use contracts::kakarot_core::{KakarotCore};
-use contracts::contract_account::{ContractAccount, ContractAccountTrait};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::EthAddress;
 

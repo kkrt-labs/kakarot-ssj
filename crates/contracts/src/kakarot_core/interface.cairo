@@ -1,5 +1,5 @@
-use utils::traits::ByteArraySerde;
 use starknet::{ContractAddress, EthAddress, ClassHash};
+use utils::traits::ByteArraySerde;
 
 #[starknet::interface]
 trait IKakarotCore<TContractState> {

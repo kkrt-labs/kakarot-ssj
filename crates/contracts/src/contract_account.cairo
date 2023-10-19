@@ -1,4 +1,6 @@
-//! Contract Account related functions, including bytecode storage
+//! Contract Account related functions to interact with the storage of a
+//! contract account.  The storage of a contract account is embedded in
+//! KakarotCore's storage.
 
 use alexandria_storage::list::{List, ListTrait};
 use hash::{HashStateTrait, HashStateExTrait};
@@ -12,11 +14,11 @@ use utils::helpers::{ByteArrayExTrait};
 use utils::storage::{compute_storage_base_address};
 use utils::traits::{StorageBaseAddressIntoFelt252, StoreBytes31};
 
+
+/// Wrapper struct around an evm_address corresponding to a ContractAccount
 #[derive(Copy, Drop)]
 struct ContractAccount {
     evm_address: EthAddress,
-//TODO: add valid jumps as a field for ContractAccount
-// valid_jumps: LegacyMap<usize, bool>
 }
 
 #[generate_trait]
@@ -74,7 +76,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// Returns the value stored at a `u256` key inside the Contract Account storage.
     /// The new value is written in Kakarot Core's contract storage.
     /// The storage address used is h(sn_keccak("contract_account_storage_keys"), evm_address, key), where `h` is the poseidon hash function.
-    fn get_key(self: @ContractAccount, key: u256) -> u256 {
+    fn get_storage(self: @ContractAccount, key: u256) -> u256 {
         let storage_address = compute_storage_base_address(
             selector!("contract_account_storage_keys"),
             array![(*self.evm_address).into(), key.low.into(), key.high.into()].span()
@@ -89,7 +91,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `self` - The contract account instance
     /// * `key` - The key to set
     /// * `value` - The value to set
-    fn set_key(ref self: ContractAccount, key: u256, value: u256) {
+    fn set_storage(ref self: ContractAccount, key: u256, value: u256) {
         let storage_address = compute_storage_base_address(
             selector!("contract_account_storage_keys"),
             array![self.evm_address.into(), key.low.into(), key.high.into()].span()
