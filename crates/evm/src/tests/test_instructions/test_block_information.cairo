@@ -12,7 +12,7 @@ use utils::constants::CHAIN_ID;
 /// 0x40 - BLOCKHASH
 #[test]
 #[available_gas(20000000)]
-fn test_block_hash_below_bounds() {
+fn test_exec_blockhash_below_bounds() {
     // Given
     let mut machine = setup_machine();
 
@@ -23,12 +23,12 @@ fn test_block_hash_below_bounds() {
     machine.exec_blockhash();
 
     // Then
-    assert(machine.stack.peek().unwrap() == 0, 'stack top should be 1692873993');
+    assert(machine.stack.peek().unwrap() == 0, 'stack top should be 0');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_block_hash_above_bounds() {
+fn test_exec_blockhash_above_bounds() {
     // Given
     let mut machine = setup_machine();
 
@@ -39,7 +39,7 @@ fn test_block_hash_above_bounds() {
     machine.exec_blockhash();
 
     // Then
-    assert(machine.stack.peek().unwrap() == 0, 'stack top should be 1692873993');
+    assert(machine.stack.peek().unwrap() == 0, 'stack top should be 0');
 }
 
 // TODO: implement exec_blockhash testing for block number within bounds
@@ -47,7 +47,7 @@ fn test_block_hash_above_bounds() {
 #[ignore]
 #[test]
 #[available_gas(20000000)]
-fn test_block_hash_within_bounds() {
+fn test_exec_blockhash_within_bounds() {
     // Given
     let mut machine = setup_machine();
 

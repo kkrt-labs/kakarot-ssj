@@ -118,7 +118,7 @@ impl StackImpl of StackTrait {
         Result::Ok(item)
     }
 
-    /// Calls `Stack::pop` and tries to convert it to usize
+    /// Calls `Stack::pop` and tries to convert it to u64
     ///
     /// # Errors
     ///

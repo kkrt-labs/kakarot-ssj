@@ -85,9 +85,9 @@ trait TryIntoResult<T, U> {
     fn try_into_result(self: T) -> Result<U, EVMError>;
 }
 
-impl U256TryIntoResultU32<U, +TryInto<u256, U>> of TryIntoResult<u256, U> {
-    /// Converts a u256 into a Result<u32, EVMError>
-    /// If the u256 is larger than MAX_U32, it returns an error.
+impl U256TryIntoResult<U, +TryInto<u256, U>> of TryIntoResult<u256, U> {
+    /// Converts a u256 into a Result<U, EVMError>
+    /// If the u256 cannot be converted into U, it returns an error.
     /// Otherwise, it returns the casted value.
     fn try_into_result(self: u256) -> Result<U, EVMError> {
         match self.try_into() {

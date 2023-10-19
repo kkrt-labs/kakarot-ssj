@@ -29,8 +29,8 @@ impl BlockInformation of BlockInformationTrait {
             return self.stack.push(0);
         }
 
-        let block_hash = get_block_hash_syscall(block_number);
-        match block_hash {
+        let maybe_block_hash = get_block_hash_syscall(block_number);
+        match maybe_block_hash {
             Result::Ok(block_hash) => self.stack.push(block_hash.into()),
             // This syscall should not error out, as we made sure block_number =< current_block - 10
             // In case of failed syscall, we can either return 0, or revert.
