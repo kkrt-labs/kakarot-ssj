@@ -1,4 +1,4 @@
-use evm::context::CallContextTrait;
+use evm::context::{CallContextTrait, ExecutionContextId, ExecutionContextTrait};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::tests::test_utils::{
     evm_address, setup_machine_with_bytecode, setup_machine, starknet_address,
@@ -23,7 +23,7 @@ fn test_set_current_ctx() {
     let mut machine: Machine = Default::default();
 
     let first_ctx = machine.current_ctx.unbox();
-    assert(first_ctx.id == 0, 'wrong first id');
+    assert(first_ctx.id() == 0, 'wrong first id');
     // We need to re-box the context into the machine, otherwise we have a "Variable Moved" error.
     machine.current_ctx = BoxTrait::new(first_ctx);
     assert(machine.stack.active_segment == 0, 'wrong initial stack segment');
@@ -31,12 +31,12 @@ fn test_set_current_ctx() {
 
     // Create another context with id=1
     let mut second_ctx = setup_execution_context();
-    second_ctx.id = 1;
+    second_ctx.id = ExecutionContextId::Call(1);
 
     machine.set_current_ctx(second_ctx);
     assert(machine.stack.active_segment == 1, 'wrong updated stack segment');
     assert(machine.memory.active_segment == 1, 'wrong updated stack segment');
-    assert(machine.current_ctx.unbox().id == 1, 'wrong updated id');
+    assert(machine.current_ctx.unbox().id() == 1, 'wrong updated id');
 }
 
 #[test]
@@ -53,7 +53,7 @@ fn test_set_pc() {
 #[test]
 #[available_gas(20000000)]
 fn test_revert() {
-    let mut machine = Default::default();
+    let mut machine: Machine = Default::default();
 
     machine.set_reverted();
 
@@ -64,7 +64,7 @@ fn test_revert() {
 #[test]
 #[available_gas(20000000)]
 fn test_set_stopped() {
-    let mut machine = Default::default();
+    let mut machine: Machine = Default::default();
 
     machine.set_stopped();
 

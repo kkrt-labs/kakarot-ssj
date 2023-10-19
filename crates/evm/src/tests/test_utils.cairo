@@ -1,5 +1,6 @@
 use evm::context::{
-    CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, DefaultOptionSpanU8
+    CallContext, CallContextTrait, ExecutionContext, ExecutionContextId, ExecutionContextTrait,
+    DefaultOptionSpanU8
 };
 
 use evm::machine::{Machine, MachineCurrentContextTrait};
@@ -67,12 +68,24 @@ fn setup_call_context() -> CallContext {
     let read_only = false;
     let gas_price = 0xaaaaaa;
     let gas_limit = 0xffffff;
+    let output_offset = 0;
+    let output_size = 0;
 
-    CallContextTrait::new(address, bytecode, calldata, value, read_only, gas_limit, gas_price)
+    CallContextTrait::new(
+        address,
+        bytecode,
+        calldata,
+        value,
+        read_only,
+        gas_limit,
+        gas_price,
+        output_offset,
+        output_size
+    )
 }
 
 fn setup_execution_context() -> ExecutionContext {
-    let context_id = 0;
+    let context_id = ExecutionContextId::Root(0);
     let call_ctx = setup_call_context();
     let evm_address: EthAddress = evm_address();
     let return_data = array![1, 2, 3].span();
@@ -84,7 +97,7 @@ fn setup_nested_execution_context() -> ExecutionContext {
     let mut parent_context = setup_execution_context();
 
     // Second Execution Context
-    let context_id = 1;
+    let context_id = ExecutionContextId::Call(1);
     let mut child_context = setup_execution_context();
     child_context.id = context_id;
     child_context.parent_ctx = NullableTrait::new(parent_context);
@@ -102,12 +115,24 @@ fn setup_call_context_with_bytecode(bytecode: Span<u8>) -> CallContext {
     let read_only = false;
     let gas_price = 0xaaaaaa;
     let gas_limit = 0xffffff;
+    let output_offset = 0;
+    let output_size = 0;
 
-    CallContextTrait::new(address, bytecode, calldata, value, read_only, gas_limit, gas_price)
+    CallContextTrait::new(
+        address,
+        bytecode,
+        calldata,
+        value,
+        read_only,
+        gas_limit,
+        gas_price,
+        output_offset,
+        output_size
+    )
 }
 
 fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext {
-    let context_id = 0;
+    let context_id = ExecutionContextId::Root(0);
     let call_ctx = setup_call_context_with_bytecode(bytecode);
     let evm_address: EthAddress = evm_address();
     let return_data = Default::default().span();
@@ -123,12 +148,24 @@ fn setup_call_context_with_calldata(calldata: Span<u8>) -> CallContext {
     let read_only = false;
     let gas_price = 0xffffff;
     let gas_limit = 0xffffff;
+    let output_offset = 0;
+    let output_size = 0;
 
-    CallContextTrait::new(address, bytecode, calldata, value, read_only, gas_price, gas_limit)
+    CallContextTrait::new(
+        address,
+        bytecode,
+        calldata,
+        value,
+        read_only,
+        gas_price,
+        gas_limit,
+        output_offset,
+        output_size
+    )
 }
 
 fn setup_execution_context_with_calldata(calldata: Span<u8>) -> ExecutionContext {
-    let context_id = 0;
+    let context_id = ExecutionContextId::Root(0);
     let call_ctx = setup_call_context_with_calldata(calldata);
     let evm_address: EthAddress = evm_address();
     let return_data = Default::default().span();
@@ -216,7 +253,7 @@ fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
         // Due to ownership mechanism, both branches need to explicitly re-bind the parent_ctx.
         FromNullableResult::Null => {
             current_ctx.parent_ctx = Default::default();
-            array![].span()
+            Default::default().span()
         },
         FromNullableResult::NotNull(parent_ctx) => {
             let mut parent_ctx = parent_ctx.unbox();

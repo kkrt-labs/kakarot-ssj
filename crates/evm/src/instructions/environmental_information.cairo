@@ -147,7 +147,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let bytecode: Span<u8> = self.bytecode();
 
         let copied: Span<u8> = if offset > bytecode.len() {
-            array![].span()
+            Default::default().span()
         } else if (offset + size > bytecode.len()) {
             bytecode.slice(offset, bytecode.len() - offset)
         } else {

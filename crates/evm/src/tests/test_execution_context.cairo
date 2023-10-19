@@ -1,6 +1,7 @@
 use core::nullable::{NullableTrait, null};
 use evm::context::{
-    CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, DefaultOptionSpanU8
+    CallContext, CallContextTrait, ExecutionContext, ExecutionContextId, ExecutionContextTrait,
+    DefaultOptionSpanU8
 };
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::Event;
@@ -33,9 +34,19 @@ fn test_call_context_new() {
     let gas_price = 0xabde1;
     let gas_limit = 0xe11a5;
     let read_only = false;
+    let output_offset = 0;
+    let output_size = 0;
 
     let call_ctx = CallContextTrait::new(
-        address, bytecode, calldata, value, read_only, gas_limit, gas_price
+        address,
+        bytecode,
+        calldata,
+        value,
+        read_only,
+        gas_limit,
+        gas_price,
+        output_offset,
+        output_size
     );
 
     // Then
@@ -52,7 +63,7 @@ fn test_call_context_new() {
 fn test_execution_context_new() {
     // Given
     let call_ctx = setup_call_context();
-    let context_id = 0;
+    let context_id = ExecutionContextId::Root(0);
     let program_counter: u32 = 0;
 
     let stopped: bool = false;
