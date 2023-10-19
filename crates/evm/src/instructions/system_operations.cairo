@@ -30,11 +30,17 @@ impl SystemOperations of SystemOperationsTrait {
     /// RETURN
     /// # Specification: https://www.evm.codes/#f3?fork=shanghai
     fn exec_return(ref self: Machine) -> Result<(), EVMError> {
+        // Pop the offset and size to load return data from memory
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
+
+        // Load the data from memory
         let mut return_data = Default::default();
         self.memory.load_n(size, ref return_data, offset);
-        self.set_return_data(return_data.span());
+
+        // Set the memory data to the context output
+        // and halt the context.
+        self.set_output(return_data.span());
         self.set_stopped();
         Result::Ok(())
     }
