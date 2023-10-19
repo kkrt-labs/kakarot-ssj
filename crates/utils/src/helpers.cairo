@@ -507,14 +507,15 @@ impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
     }
 }
 
-trait BytesSerde<T> {
-    /// Serialize/deserialize bytes into/from
-    /// an array of bytes.
-    fn deserialize(self: Span<u8>) -> Option<T>;
-}
-
-impl BytesSerdeU32Impl of BytesSerde<u32> {
-    fn deserialize(self: Span<u8>) -> Option<u32> {
+#[generate_trait]
+impl U32Impl of U32Trait {
+    /// Packs 4 bytes into a u32
+    /// # Arguments
+    /// * `self` a Span<u8> of len <=4
+    /// # Returns
+    /// * Option::Some(u32) if the operation succeeds
+    /// * Option::None otherwise
+    fn from_bytes(self: Span<u8>) -> Option<u32> {
         let len = self.len();
         if len > 4 {
             return Option::None(());
@@ -594,5 +595,16 @@ impl ByteArrayExt of ByteArrayExTrait {
         arr.pending_word_len = pending_word_len;
         arr.pending_word = pending_word;
         arr
+    }
+}
+
+#[generate_trait]
+impl ResultExImpl<T, E, +Drop<T>, +Drop<E>> of ResultExTrait<T, E> {
+    /// Converts a Result<T,E> to a Result<T,F>
+    fn map_err<F, +Drop<F>>(self: Result<T, E>, err: F) -> Result<T, F> {
+        match self {
+            Result::Ok(val) => Result::Ok(val),
+            Result::Err(_) => Result::Err(err)
+        }
     }
 }

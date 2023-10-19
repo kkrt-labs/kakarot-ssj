@@ -10,9 +10,9 @@ use utils::traits::{StoreBytes31, StorageBaseAddressIntoFelt252};
 fn test_nonce() {
     let evm_address = EVM_ADDRESS();
     let mut ca = ContractAccountTrait::new(evm_address);
-    assert(ca.nonce() == 0, 'initial nonce not 0');
+    assert(ca.nonce().unwrap() == 0, 'initial nonce not 0');
     ca.increment_nonce();
-    assert(ca.nonce() == 1, 'nonce not incremented');
+    assert(ca.nonce().unwrap() == 1, 'nonce not incremented');
 }
 
 #[test]
@@ -20,9 +20,9 @@ fn test_nonce() {
 fn test_balance() {
     let evm_address = EVM_ADDRESS();
     let mut ca = ContractAccountTrait::new(evm_address);
-    assert(ca.balance() == 0, 'initial balance not 0');
+    assert(ca.balance().unwrap() == 0, 'initial balance not 0');
     ca.set_balance(1);
-    assert(ca.balance() == 1, 'balance not incremented');
+    assert(ca.balance().unwrap() == 1, 'balance not incremented');
 }
 
 #[test]
@@ -31,10 +31,10 @@ fn test_contract_storage() {
     let evm_address = EVM_ADDRESS();
     let mut ca = ContractAccountTrait::new(evm_address);
     let key = u256 { low: 10, high: 10 };
-    assert(ca.get_storage(key) == 0, 'initial key not null');
+    assert(ca.storage_at(key).unwrap() == 0, 'initial key not null');
     let value = u256 { low: 0, high: 1 };
-    ca.set_storage(key, value);
-    let value_read = ca.get_storage(key);
+    ca.set_storage_at(key, value);
+    let value_read = ca.storage_at(key).unwrap();
     assert(value_read == value, 'value not read correctly');
 }
 
@@ -242,7 +242,7 @@ fn test_load_bytecode() {
     let evm_address = EVM_ADDRESS();
     let mut ca = ContractAccountTrait::new(evm_address);
     ca.store_bytecode(byte_array.span());
-    let bytecode = ca.load_bytecode();
+    let bytecode = ca.load_bytecode().unwrap();
     let mut i: u32 = 0;
     loop {
         if i == byte_array.len() {
@@ -258,9 +258,9 @@ fn test_load_bytecode() {
 fn test_valid_jumps() {
     let evm_address = EVM_ADDRESS();
     let mut ca = ContractAccountTrait::new(evm_address);
-    assert(!ca.is_valid_jump(10), 'should default false');
+    assert(!ca.is_valid_jump(10).unwrap(), 'should default false');
     ca.set_valid_jump(10);
-    assert(ca.is_valid_jump(10), 'should be true')
+    assert(ca.is_valid_jump(10).unwrap(), 'should be true')
 }
 //TODO add a test with huge amount of bytecode - using SNFoundry and loading data from txt
 

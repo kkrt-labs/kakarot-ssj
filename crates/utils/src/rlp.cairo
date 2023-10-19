@@ -4,7 +4,7 @@ use array::{Array, ArrayTrait, Span, SpanTrait};
 use clone::Clone;
 use traits::{Into, TryInto};
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
-use utils::helpers::BytesSerde;
+use utils::helpers::U32Trait;
 
 // All possible RLP types
 #[derive(Drop, PartialEq)]
@@ -81,7 +81,7 @@ fn rlp_decode(input: Span<u8>) -> Result<(RLPItem, usize), RLPError> {
             }
 
             let string_len_bytes = input.slice(1, len_bytes_count);
-            let string_len: u32 = string_len_bytes.deserialize().unwrap();
+            let string_len: u32 = U32Trait::from_bytes(string_len_bytes).unwrap();
             if input.len() <= string_len + len_bytes_count {
                 return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
             }
@@ -107,7 +107,7 @@ fn rlp_decode(input: Span<u8>) -> Result<(RLPItem, usize), RLPError> {
             }
 
             let list_len_bytes = input.slice(1, len_bytes_count);
-            let list_len: u32 = list_len_bytes.deserialize().unwrap();
+            let list_len: u32 = U32Trait::from_bytes(list_len_bytes).unwrap();
             if input.len() < list_len + len_bytes_count + 1 {
                 return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
             }

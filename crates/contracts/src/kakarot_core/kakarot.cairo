@@ -169,28 +169,28 @@ mod KakarotCore {
         /// Gets the nonce associated to a contract account
         fn contract_account_nonce(self: @ContractState, evm_address: EthAddress) -> u64 {
             let ca = ContractAccountTrait::new(evm_address);
-            ca.nonce()
+            ca.nonce().unwrap()
         }
 
         /// Gets the balance associated to a contract account
         fn contract_account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
             let ca = ContractAccountTrait::new(evm_address);
-            ca.balance()
+            ca.balance().unwrap()
         }
 
         /// Gets the value associated to a key in the contract account storage
-        fn contract_account_storage(
+        fn contract_account_storage_at(
             self: @ContractState, evm_address: EthAddress, key: u256
         ) -> u256 {
             let ca = ContractAccountTrait::new(evm_address);
-            ca.get_storage(key)
+            ca.storage_at(key).unwrap()
         }
 
 
         /// Gets the bytecode associated to a contract account
         fn contract_account_bytecode(self: @ContractState, evm_address: EthAddress) -> ByteArray {
             let mut ca = ContractAccountTrait::new(evm_address);
-            ca.load_bytecode()
+            ca.load_bytecode().unwrap()
         }
 
         /// Returns true if the given `offset` is a valid jump destination in the bytecode of a contract account.
@@ -198,7 +198,7 @@ mod KakarotCore {
             self: @ContractState, evm_address: EthAddress, offset: usize
         ) -> bool {
             let ca = ContractAccountTrait::new(evm_address);
-            ca.is_valid_jump(offset)
+            ca.is_valid_jump(offset).unwrap()
         }
 
         /// Deploys an EOA for a particular EVM address

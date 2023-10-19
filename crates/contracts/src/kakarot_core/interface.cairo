@@ -36,7 +36,9 @@ trait IKakarotCore<TContractState> {
     fn contract_account_balance(self: @TContractState, evm_address: EthAddress) -> u256;
 
     /// Gets the value associated to a key in the contract account storage
-    fn contract_account_storage(self: @TContractState, evm_address: EthAddress, key: u256) -> u256;
+    fn contract_account_storage_at(
+        self: @TContractState, evm_address: EthAddress, key: u256
+    ) -> u256;
 
     /// Gets the bytecode associated to a contract account
     fn contract_account_bytecode(self: @TContractState, evm_address: EthAddress) -> ByteArray;

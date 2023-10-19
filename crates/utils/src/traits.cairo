@@ -142,7 +142,8 @@ impl ByteArraySerde of Serde<ByteArray> {
             if i == self.data.len() {
                 break;
             }
-            output.append((*self.data[i]).into())
+            output.append((*self.data[i]).into());
+            i += 1;
         };
 
         // Last felt is the pending_word.

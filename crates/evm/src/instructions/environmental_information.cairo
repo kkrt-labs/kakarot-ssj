@@ -29,7 +29,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_balance(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        let balance = balance(evm_address);
+        let balance = balance(evm_address)?;
 
         return self.stack.push(balance);
     }
