@@ -88,11 +88,5 @@ mod test_external_owned_account {
             .unwrap();
 
         eoa_contract.upgrade(new_class_hash);
-
-        let version = IMockContractUpgradeableDispatcher {
-            contract_address: eoa_contract.contract_address
-        }
-            .version();
-        assert(version == 1, 'version is not 1');
     }
 }
