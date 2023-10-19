@@ -31,6 +31,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// Returns the nonce of a contract account.
     /// # Arguments
     /// * `self` - The contract account instance
+    #[inline(always)]
     fn nonce(self: @ContractAccount) -> u64 {
         let storage_address = compute_storage_base_address(
             selector!("contract_account_nonce"), array![(*self.evm_address).into()].span()
@@ -43,6 +44,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// The storage address used is h(sn_keccak("contract_account_nonce"), evm_address), where `h` is the poseidon hash function.
     /// # Arguments
     /// * `self` - The contract account instance
+    #[inline(always)]
     fn increment_nonce(ref self: ContractAccount) {
         let storage_address = compute_storage_base_address(
             selector!("contract_account_nonce"), array![self.evm_address.into()].span()
@@ -53,6 +55,7 @@ impl ContractAccountImpl of ContractAccountTrait {
 
     /// Returns the balance of a contract account.
     /// * `self` - The contract account instance
+    #[inline(always)]
     fn balance(self: @ContractAccount) -> u256 {
         let storage_address = compute_storage_base_address(
             selector!("contract_account_balance"), array![(*self.evm_address).into()].span()
@@ -66,6 +69,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// # Arguments
     /// * `self` - The contract account instance
     /// * `balance` - The new balance
+    #[inline(always)]
     fn set_balance(ref self: ContractAccount, balance: u256) {
         let storage_address = compute_storage_base_address(
             selector!("contract_account_balance"), array![self.evm_address.into()].span()
@@ -76,6 +80,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// Returns the value stored at a `u256` key inside the Contract Account storage.
     /// The new value is written in Kakarot Core's contract storage.
     /// The storage address used is h(sn_keccak("contract_account_storage_keys"), evm_address, key), where `h` is the poseidon hash function.
+    #[inline(always)]
     fn get_storage(self: @ContractAccount, key: u256) -> u256 {
         let storage_address = compute_storage_base_address(
             selector!("contract_account_storage_keys"),
@@ -91,6 +96,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `self` - The contract account instance
     /// * `key` - The key to set
     /// * `value` - The value to set
+    #[inline(always)]
     fn set_storage(ref self: ContractAccount, key: u256, value: u256) {
         let storage_address = compute_storage_base_address(
             selector!("contract_account_storage_keys"),
@@ -181,6 +187,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// # Returns
     /// * `true` - If the offset is a valid jump destination
     /// * `false` - Otherwise
+    #[inline(always)]
     fn is_valid_jump(self: @ContractAccount, offset: usize) -> bool {
         let data_address = compute_storage_base_address(
             selector!("contract_account_valid_jumps"),
@@ -194,6 +201,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// # Arguments
     /// * `self` - The ContractAccount
     /// * `offset` - The offset to set as a valid jump destination
+    #[inline(always)]
     fn set_valid_jump(ref self: ContractAccount, offset: usize) {
         let data_address = compute_storage_base_address(
             selector!("contract_account_valid_jumps"),
