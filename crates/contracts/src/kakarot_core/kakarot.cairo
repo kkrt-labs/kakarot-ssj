@@ -291,31 +291,5 @@ mod KakarotCore {
             }
             Result::Ok(())
         }
-
-        /// Deploys a contract account by setting up the storage associated to a contract account for a particular EVM address
-        /// # Arguments
-        /// * `evm_address` - The EVM address of the contract account
-        /// * `nonce` - The value to be transferred as part of this operation
-        /// * `balance` - The value to be transferred as part of this operation
-        /// * `bytecode` - The deploy bytecode
-        fn deploy_contract_account(
-            ref self: ContractState, evm_address: EthAddress, value: u256, bytecode: Span<u8>
-        ) {
-            let mut ca = ContractAccountTrait::new(evm_address);
-            let execution_result = execute(
-                :evm_address,
-                :bytecode,
-                calldata: array![].span(),
-                :value,
-                gas_price: 0,
-                gas_limit: 0,
-            );
-            //TODO gas params
-            if execution_result.status == Status::Reverted {
-                return;
-            }
-
-            ca.store_bytecode(execution_result.return_data);
-        }
     }
 }
