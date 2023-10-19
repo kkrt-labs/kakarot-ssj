@@ -1,10 +1,15 @@
 //! System operations.
 
 use box::BoxTrait;
+use evm::balance::balance;
+use evm::call_helpers::MachineCallHelpers;
 use evm::errors::EVMError;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
+use utils::math::Exponentiation;
+
+const VALUE_TRANSFER_IN_STATIC_CALL: felt252 = 'KKT: transfer value in static';
 
 #[generate_trait]
 impl SystemOperations of SystemOperationsTrait {
@@ -54,7 +59,29 @@ impl SystemOperations of SystemOperationsTrait {
     /// CALL
     /// # Specification: https://www.evm.codes/#f1?fork=shanghai
     fn exec_call(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        // Prepare the call arguments with with_value = true for a call.
+        let call_args = self.prepare_call(true)?;
+        let read_only = self.read_only();
+        let value = call_args.value;
+
+        // Check if current context is read only that value == 0.
+        if read_only & (value != 0) {
+            return Result::Err(EVMError::WriteInStaticContext(VALUE_TRANSFER_IN_STATIC_CALL));
+        }
+
+        // If sender_balance > value, return early, pushing
+        // 0 on the stack to indicate call failure.
+        let caller_address = self.evm_address();
+        let sender_balance = balance(caller_address);
+        if sender_balance < value {
+            self.stack.push(0);
+            return Result::Ok(());
+        }
+
+        // Initialize the sub context.
+        self.init_sub_call_ctx(call_args, read_only,);
+
+        Result::Ok(())
     }
 
     /// STATICCALL
