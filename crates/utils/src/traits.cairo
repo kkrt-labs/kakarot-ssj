@@ -135,8 +135,10 @@ impl StoreBytes31 of Store<bytes31> {
 impl ByteArraySerde of Serde<ByteArray> {
     fn serialize(self: @ByteArray, ref output: Array<felt252>) {
         // First felt is number of bytes used in the last felt
+        // Second felt is the pending word
         // Subsequent felts are the full 31-byte words
         output.append((*self.pending_word_len).into());
+        output.append((*self.pending_word).into());
         let mut i = 0;
         loop {
             if i == self.data.len() {
@@ -145,14 +147,11 @@ impl ByteArraySerde of Serde<ByteArray> {
             output.append((*self.data[i]).into());
             i += 1;
         };
-
-        // Last felt is the pending_word.
-        output.append(*self.pending_word);
     }
 
     fn deserialize(ref serialized: Span<felt252>) -> Option<ByteArray> {
         let pending_word_len: u32 = (*serialized.pop_front()?).try_into()?;
-        let pending_word = *serialized.pop_back()?;
+        let pending_word = *serialized.pop_front()?;
         let mut data: Array<bytes31> = Default::default();
         loop {
             match serialized.pop_front() {

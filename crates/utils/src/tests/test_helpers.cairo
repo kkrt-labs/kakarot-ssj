@@ -287,7 +287,7 @@ fn test_bytes_serde_u32_deserialize() {
 #[available_gas(2000000000)]
 fn test_bytearray_deserialize() {
     let mut serialized: Span<felt252> = array![
-        0x03, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 0xabcdef
+        0x03, 0xabcdef, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
     ]
         .span();
 
@@ -328,9 +328,9 @@ fn test_bytearray_serialize() {
     // One extra element encodes the length of the pending word
     assert(serialized.len() == 3, 'len mismatch');
     assert(*serialized[0] == 3, 'pending_word_len mismatch');
+    assert(*serialized[1] == 0xabcdef, 'pending_word mismatch');
     assert(
-        *serialized[1] == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        *serialized[2] == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
         'full_word mismatch'
     );
-    assert(*serialized[2] == 0xabcdef, 'pending_word mismatch');
 }
