@@ -9,6 +9,58 @@ use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::{set_block_timestamp, set_block_number, set_contract_address};
 use utils::constants::CHAIN_ID;
 
+/// 0x40 - BLOCKHASH
+#[test]
+#[available_gas(20000000)]
+fn test_exec_blockhash_below_bounds() {
+    // Given
+    let mut machine = setup_machine();
+
+    set_block_number(500);
+
+    // When
+    machine.stack.push(243).unwrap();
+    machine.exec_blockhash();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'stack top should be 0');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_blockhash_above_bounds() {
+    // Given
+    let mut machine = setup_machine();
+
+    set_block_number(500);
+
+    // When
+    machine.stack.push(491).unwrap();
+    machine.exec_blockhash();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'stack top should be 0');
+}
+
+// TODO: implement exec_blockhash testing for block number within bounds
+// https://github.com/starkware-libs/cairo/blob/77a7e7bc36aa1c317bb8dd5f6f7a7e6eef0ab4f3/crates/cairo-lang-starknet/cairo_level_tests/interoperability.cairo#L173
+#[ignore]
+#[test]
+#[available_gas(20000000)]
+fn test_exec_blockhash_within_bounds() {
+    // Given
+    let mut machine = setup_machine();
+
+    set_block_number(500);
+
+    // When
+    machine.stack.push(244).unwrap();
+    machine.exec_blockhash();
+    // Then
+    assert(machine.stack.peek().unwrap() == 0xF, 'stack top should be 0xF');
+}
+
+
 #[test]
 #[available_gas(20000000)]
 fn test_block_timestamp_set_to_1692873993() {
