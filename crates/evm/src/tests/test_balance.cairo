@@ -19,7 +19,7 @@ fn test_balance_eoa() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    let balance = balance(evm_address());
+    let balance = balance(evm_address()).unwrap();
 
     // Then
     assert(balance == native_token.balanceOf(eoa), 'wrong balance');
@@ -34,7 +34,7 @@ fn test_balance_zero() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    let balance = balance(evm_address());
+    let balance = balance(evm_address()).unwrap();
 
     // Then
     assert(balance == 0x00, 'wrong balance');

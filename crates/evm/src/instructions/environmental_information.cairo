@@ -1,5 +1,5 @@
 use contracts::kakarot_core::interface::{IKakarotCore};
-use contracts::kakarot_core::{ContractAccountStorage, KakarotCore};
+use contracts::kakarot_core::{KakarotCore};
 use core::hash::{HashStateExTrait, HashStateTrait};
 use evm::balance::balance;
 use evm::context::ExecutionContextTrait;
@@ -29,7 +29,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_balance(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        let balance = balance(evm_address);
+        let balance = balance(evm_address)?;
 
         return self.stack.push(balance);
     }

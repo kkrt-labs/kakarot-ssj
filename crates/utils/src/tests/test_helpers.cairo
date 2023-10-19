@@ -1,8 +1,9 @@
 use utils::helpers;
 use utils::helpers::{
-    SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, BytesSerde
+    SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, U32Trait
 };
 use utils::helpers::{ByteArrayExTrait};
+use utils::traits::{ByteArraySerde};
 
 #[test]
 #[available_gas(2000000000)]
@@ -275,9 +276,61 @@ fn test_pack_bytes_ge_bytes31() {
 #[available_gas(2000000000)]
 fn test_bytes_serde_u32_deserialize() {
     let input: Array<u8> = array![0xf4, 0x32, 0x15, 0x62];
-    let res: Option<u32> = input.span().deserialize();
+    let res: Option<u32> = U32Trait::from_bytes(input.span());
 
     assert(res != Option::None, 'should have a value');
     let res = res.unwrap();
     assert(res == 0xf4321562, 'wrong result value');
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test_bytearray_deserialize() {
+    let mut serialized: Span<felt252> = array![
+        0x03, 0xabcdef, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+    ]
+        .span();
+
+    let deserialized: ByteArray = Serde::<ByteArray>::deserialize(ref serialized).unwrap();
+
+    let expected = ByteArray {
+        data: array![
+            0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff.try_into().unwrap()
+        ],
+        pending_word_len: 3,
+        pending_word: 0xabcdef
+    };
+    assert(expected.len() == deserialized.len(), 'len mismatch');
+    let mut i = 0;
+    loop {
+        if i == deserialized.len() {
+            break;
+        }
+
+        assert(expected[i] == deserialized[i], 'item mismatch');
+        i += 1;
+    };
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_bytearray_serialize() {
+    let byte_arr = ByteArray {
+        data: array![
+            0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff.try_into().unwrap()
+        ],
+        pending_word_len: 3,
+        pending_word: 0xabcdef
+    };
+    let mut serialized: Array<felt252> = Default::default();
+    byte_arr.serialize(ref serialized);
+
+    // One extra element encodes the length of the pending word
+    assert(serialized.len() == 3, 'len mismatch');
+    assert(*serialized[0] == 3, 'pending_word_len mismatch');
+    assert(*serialized[1] == 0xabcdef, 'pending_word mismatch');
+    assert(
+        *serialized[2] == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        'full_word mismatch'
+    );
 }
