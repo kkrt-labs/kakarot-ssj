@@ -58,8 +58,6 @@ mod test_external_owned_account {
     #[test]
     #[available_gas(2000000000)]
     fn test_eoa_upgrade() {
-        let owner = contract_address_const::<1>();
-
         let eoa_contract = deploy_eoa();
         let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH
             .try_into()
@@ -80,8 +78,6 @@ mod test_external_owned_account {
     #[available_gas(2000000000)]
     #[should_panic(expected: ('Caller not contract address', 'ENTRYPOINT_FAILED'))]
     fn test_eoa_upgrade_from_noncontractaddress() {
-        let owner = contract_address_const::<1>();
-
         let eoa_contract = deploy_eoa();
         let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH
             .try_into()
