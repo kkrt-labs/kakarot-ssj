@@ -68,9 +68,24 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     /// multiple sub-structures relative to a single context.
     #[inline(always)]
     fn set_current_ctx(ref self: Machine, ctx: ExecutionContext) {
-        self.memory.set_active_segment(ctx.id);
-        self.stack.set_active_segment(ctx.id);
+        self.memory.set_active_segment(ctx.id());
+        self.stack.set_active_segment(ctx.id());
         self.current_ctx = BoxTrait::new(ctx);
+    }
+
+    #[inline(always)]
+    fn output(ref self: Machine) -> Span<u8> {
+        let current_execution_ctx = self.current_ctx.unbox();
+        let output = current_execution_ctx.output();
+        self.current_ctx = BoxTrait::new(current_execution_ctx);
+        output
+    }
+
+    #[inline(always)]
+    fn set_output(ref self: Machine, output: Span<u8>) {
+        let mut current_execution_ctx = self.current_ctx.unbox();
+        current_execution_ctx.output = output;
+        self.current_ctx = BoxTrait::new(current_execution_ctx);
     }
 
     #[inline(always)]
@@ -127,6 +142,23 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
         let call_ctx = current_execution_ctx.call_ctx.unbox();
         self.current_ctx = BoxTrait::new(current_execution_ctx);
         call_ctx
+    }
+
+    /// Returns from the sub context by setting the current context
+    /// to the parent context.
+    #[inline(always)]
+    fn return_to_parent_ctx(ref self: Machine) {
+        let mut current_ctx = self.current_ctx.unbox();
+        let maybe_parent_ctx = current_ctx.parent_ctx;
+        let maybe_parent_ctx = match match_nullable(maybe_parent_ctx) {
+            FromNullableResult::Null => current_ctx = Default::default(),
+            FromNullableResult::NotNull(parent_ctx) => {
+                let parent_ctx = parent_ctx.unbox();
+                current_ctx.parent_ctx = Default::default();
+                current_ctx = parent_ctx;
+            },
+        };
+        self.current_ctx = BoxTrait::new(current_ctx);
     }
 
     #[inline(always)]
@@ -257,9 +289,18 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     #[inline(always)]
     fn is_root(ref self: Machine) -> bool {
         let current_execution_ctx = self.current_ctx.unbox();
-        let is_root = current_execution_ctx.id == 0;
+        let is_root = current_execution_ctx.is_root();
         self.current_ctx = BoxTrait::new(current_execution_ctx);
         is_root
+    }
+
+    /// Returns whether the current execution context is a call context.
+    #[inline(always)]
+    fn is_call(ref self: Machine) -> bool {
+        let current_execution_ctx = self.current_ctx.unbox();
+        let is_call = current_execution_ctx.is_call();
+        self.current_ctx = BoxTrait::new(current_execution_ctx);
+        is_call
     }
 
     /// Sets the `return_data` field of the appropriate execution context,

@@ -1,6 +1,7 @@
 /// System imports.
 
 /// Internal imports.
+use evm::call_helpers::MachineCallHelpers;
 use evm::context::{CallContextTrait, Status};
 use evm::context::{ExecutionContextTrait, ExecutionContext};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
@@ -50,6 +51,10 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
                         machine.storage_journal.finalize_local();
                         if machine.is_root() {
                             machine.storage_journal.finalize_global();
+                        } else if machine.is_call() {
+                            machine.finalize_calling_context();
+                            self.run(ref machine);
+                        } else {// TODO(greg): finalize the create context
                         };
                     },
                     Status::Reverted => { self.finalize_revert(ref machine); }
@@ -67,7 +72,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
     fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError> {
         // Retrieve the current program counter.
         let pc = machine.pc();
-        let bytecode = machine.call_ctx().bytecode();
+        let bytecode = CallContextTrait::bytecode(@machine.call_ctx());
         let bytecode_len = bytecode.len();
 
         // Check if PC is not out of bounds.
