@@ -89,7 +89,7 @@ impl BlockInformation of BlockInformationTrait {
     fn exec_selfbalance(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.evm_address();
 
-        let balance = balance(evm_address);
+        let balance = balance(evm_address)?;
 
         self.stack.push(balance)
     }

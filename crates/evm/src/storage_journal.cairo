@@ -1,6 +1,7 @@
+use evm::errors::{EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED};
 use nullable::{match_nullable, FromNullableResult};
 use starknet::{StorageBaseAddress, Store, storage_base_address_from_felt252};
-use utils::helpers::ArrayExtTrait;
+use utils::helpers::{ArrayExtTrait, ResultExTrait};
 use utils::traits::{StorageBaseAddressPartialEq, StorageBaseAddressIntoFelt252};
 /// The Journal tracks the changes applied to storage during the execution of a transaction.
 /// Local changes tracks the changes applied inside a single execution context.
@@ -63,7 +64,7 @@ impl JournalImpl of JournalTrait {
 
     /// Finalizes the global changes in the journal by writing them to the storage to be stored permanently onchain.
     /// Global changes are relative the the execution of an entire transaction. `finalize_global` must be called upon finishing the transaction.
-    fn finalize_global(ref self: Journal) {
+    fn finalize_global(ref self: Journal) -> Result<(), EVMError> {
         let mut global_keys = self.global_keys.span();
         loop {
             match global_keys.pop_front() {
@@ -74,14 +75,22 @@ impl JournalImpl of JournalTrait {
                         FromNullableResult::Null => {},
                         FromNullableResult::NotNull(value) => {
                             let value = value.unbox();
-                            Store::write(0, key, value);
+                            match Store::write(0, key, value) {
+                                Result::Ok(()) => {},
+                                Result::Err(error) => {
+                                    break Result::Err(
+                                        EVMError::SyscallFailed(WRITE_SYSCALL_FAILED)
+                                    );
+                                }
+                            };
                         }
                     };
                 },
-                Option::None => { break; }
-            }
-        };
+                Option::None => { break Result::Ok(()); }
+            };
+        }?;
         self.global_keys = Default::default();
+        Result::Ok(())
     }
 
     fn clear_local(ref self: Journal) {

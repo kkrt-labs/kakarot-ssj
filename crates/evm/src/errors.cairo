@@ -20,6 +20,7 @@ const WRITE_IN_STATIC_CONTEXT: felt252 = 'KKT: WriteInStaticContext';
 // STARKNET_SYSCALLS
 const READ_SYSCALL_FAILED: felt252 = 'KKT: read syscall failed';
 const BLOCK_HASH_SYSCALL_FAILED: felt252 = 'KKT: block_hash syscall failed';
+const WRITE_SYSCALL_FAILED: felt252 = 'KKT: write syscall failed';
 
 #[derive(Drop, Copy, PartialEq)]
 enum EVMError {
