@@ -1,5 +1,6 @@
 use contracts::kakarot_core::interface::{IKakarotCore};
-use contracts::kakarot_core::{ContractAccountStorage, KakarotCore};
+use contracts::kakarot_core::{KakarotCore};
+use contracts::contract_account::{ContractAccount, ContractAccountTrait};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::EthAddress;
 
@@ -27,9 +28,9 @@ fn balance(evm_address: EthAddress) -> u256 {
     // We check if a contract account is initialized at evm_address
     // A good condition to check is nonce > 0, as deploying a contract account
     // will set its nonce to 1
-    let ca_storage = kakarot_state.contract_account_storage(evm_address);
-    if ca_storage.nonce != 0 {
-        return ca_storage.balance;
+    let ca = ContractAccountTrait::new(evm_address);
+    if ca.nonce() != 0 {
+        return ca.balance();
     }
 
     // Case 3: No EOA nor CA are deployed at `evm_address`

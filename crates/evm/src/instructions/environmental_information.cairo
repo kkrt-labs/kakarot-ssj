@@ -1,5 +1,5 @@
 use contracts::kakarot_core::interface::{IKakarotCore};
-use contracts::kakarot_core::{ContractAccountStorage, KakarotCore};
+use contracts::kakarot_core::{KakarotCore};
 use core::hash::{HashStateExTrait, HashStateTrait};
 use evm::balance::balance;
 use evm::context::ExecutionContextTrait;

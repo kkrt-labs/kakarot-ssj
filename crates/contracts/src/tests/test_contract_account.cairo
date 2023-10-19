@@ -1,5 +1,5 @@
 use alexandria_storage::list::{List, ListTrait};
-use contracts::contract_account::{store_bytecode};
+use contracts::contract_account::{ContractAccount, ContractAccountTrait};
 use contracts::tests::utils::constants::EVM_ADDRESS;
 use starknet::{storage_base_address_from_felt252, Store};
 use utils::storage::{compute_storage_base_address};
@@ -11,7 +11,8 @@ fn test_store_bytecode_word_not_full() {
     let byte_array: Array<u8> = array![0x01, 0x02, 0x03, // 3 elements
     ];
     let evm_address = EVM_ADDRESS();
-    store_bytecode(evm_address, byte_array.span());
+    let mut ca = ContractAccountTrait::new(evm_address);
+    ca.store_bytecode(byte_array.span());
 
     // Address at which the bytecode should be stored
     let data_addr = compute_storage_base_address(
@@ -70,7 +71,8 @@ fn test_store_bytecode_one_word() {
         0x1F, // 31 elements
     ];
     let evm_address = EVM_ADDRESS();
-    store_bytecode(evm_address, byte_array.span());
+    let mut ca = ContractAccountTrait::new(evm_address);
+    ca.store_bytecode(byte_array.span());
 
     // Address at which the bytecode should be stored
     let data_addr = compute_storage_base_address(
@@ -137,7 +139,8 @@ fn test_store_bytecode_one_word_pending() {
         0x21 // 33 elements
     ];
     let evm_address = EVM_ADDRESS();
-    store_bytecode(evm_address, byte_array.span());
+    let mut ca = ContractAccountTrait::new(evm_address);
+    ca.store_bytecode(byte_array.span());
 
     // Address at which the bytecode should be stored
     let data_addr = compute_storage_base_address(

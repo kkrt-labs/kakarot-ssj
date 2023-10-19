@@ -1,4 +1,4 @@
-use contracts::kakarot_core::ContractAccountStorage;
+use utils::traits::ByteArraySerde;
 use starknet::{ContractAddress, EthAddress, ClassHash};
 
 #[starknet::interface]
@@ -29,10 +29,22 @@ trait IKakarotCore<TContractState> {
     /// Otherwise, returns 0
     fn eoa_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
-    /// Gets the storage associated to a contract account
-    fn contract_account_storage(
-        self: @TContractState, evm_address: EthAddress
-    ) -> ContractAccountStorage;
+    /// Gets the nonce associated to a contract account
+    fn contract_account_nonce(self: @TContractState, evm_address: EthAddress) -> u64;
+
+    /// Gets the balance associated to a contract account
+    fn contract_account_balance(self: @TContractState, evm_address: EthAddress) -> u256;
+
+    /// Gets the value associated to a key in the contract account storage
+    fn contract_account_storage(self: @TContractState, evm_address: EthAddress, key: u256) -> u256;
+
+    /// Gets the bytecode associated to a contract account
+    fn contract_account_bytecode(self: @TContractState, evm_address: EthAddress) -> ByteArray;
+
+    /// Returns true if the given `offset` is a valid jump destination in the bytecode of a contract account.
+    fn contract_account_valid_jump(
+        self: @TContractState, evm_address: EthAddress, offset: usize
+    ) -> bool;
 
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
@@ -92,12 +104,6 @@ trait IExtendedKakarotCore<TContractState> {
     /// Checks into KakarotCore storage if an EOA has been deployed for a
     /// particular EVM address and if so, returns its corresponding Starknet Address
     fn eoa_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
-
-
-    /// Gets the storage associated to a contract account
-    fn contract_account_storage(
-        self: @TContractState, evm_address: EthAddress
-    ) -> ContractAccountStorage;
 
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
