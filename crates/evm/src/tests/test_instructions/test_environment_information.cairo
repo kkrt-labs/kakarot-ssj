@@ -21,6 +21,8 @@ use utils::helpers::{
 };
 use utils::traits::{EthAddressIntoU256};
 use debug::U256PrintImpl;
+use contracts::contract_account::ContractAccountTrait;
+use contracts::tests::utils::counter_evm_bytecode;
 
 // *************************************************************************
 // 0x30: ADDRESS
@@ -717,7 +719,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
 // *************************************************************************
 #[test]
 #[available_gas(20000000)]
-fn test_exec_extcodehash_eoa_empty_hash() {
+fn test_exec_extcodehash_eoa() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
@@ -730,7 +732,6 @@ fn test_exec_extcodehash_eoa_empty_hash() {
     machine.exec_extcodehash().unwrap();
 
     // Then
-    machine.stack.peek().unwrap().print();
     assert(
         machine
             .stack
@@ -740,3 +741,79 @@ fn test_exec_extcodehash_eoa_empty_hash() {
     );
 }
 
+#[test]
+#[available_gas(20000000)]
+fn test_exec_extcodehash_ca_empty() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    set_contract_address(kakarot_core.contract_address);
+
+    // Set nonce of CA to 1 so that it appears as an existing account
+    // The bytecode remains empty, and we expect the empty hash in return
+    let mut contract_account = ContractAccountTrait::new(evm_address);
+    contract_account.increment_nonce().unwrap();
+
+    machine.stack.push(evm_address.into());
+
+    // When
+    machine.exec_extcodehash().unwrap();
+
+    // Then
+    assert(
+        machine
+            .stack
+            .peek()
+            .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
+        'expected empty hash'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_extcodehash_ca_uninitialized() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+
+    machine.stack.push(evm_address.into());
+    set_contract_address(kakarot_core.contract_address);
+
+    // When
+    machine.exec_extcodehash().unwrap();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'expected stack top to be 0');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_extcodehash_ca_with_bytecode() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    set_contract_address(kakarot_core.contract_address);
+
+    // Set nonce of CA to 1 so that it appears as an existing account
+    // The bytecode remains empty, and we expect the empty hash in return
+    let mut contract_account = ContractAccountTrait::new(evm_address);
+    contract_account.increment_nonce().unwrap();
+    contract_account.store_bytecode(counter_evm_bytecode());
+
+    machine.stack.push(evm_address.into());
+    // When
+    machine.exec_extcodehash().unwrap();
+
+    // Then
+    machine.stack.peek().unwrap().print();
+    assert(
+        machine
+            .stack
+            .peek()
+            .unwrap() == 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275,
+        'expected counter SC code hash'
+    );
+}

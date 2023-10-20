@@ -216,7 +216,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
     /// 0x3F - EXTCODEHASH
     /// Get hash of a contract's code.
-    // If the account has no code, return the empty hash:
+    // If the account has no code (or is a precompile), return the empty hash:
     // `0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470`
     // If the account does not exist of was destroyed (SELFDESTRUCT), return 0
     // Else return, the hash of the account's code
