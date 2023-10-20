@@ -62,7 +62,7 @@ impl RLPImpl of RLPTrait {
             return Result::Ok(
                 ByteArray { data: Default::default(), pending_word: 0x80, pending_word_len: 1 }
             );
-        } else if len == 1 && input.at(0).unwrap() < 0x80 {
+        } else if len == 1 && input[0] < 0x80 {
             return Result::Ok(input);
         } else if len < 56 {
             let mut prefixes: ByteArray = Default::default();
