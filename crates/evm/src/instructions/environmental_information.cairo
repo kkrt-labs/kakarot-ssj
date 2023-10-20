@@ -1,3 +1,4 @@
+use contracts::contract_account::ContractAccountTrait;
 use contracts::kakarot_core::interface::{IKakarotCore};
 use contracts::kakarot_core::{KakarotCore};
 use core::hash::{HashStateExTrait, HashStateTrait};
@@ -8,14 +9,13 @@ use evm::memory::MemoryTrait;
 use evm::model::{AccountTrait, Account};
 use evm::stack::StackTrait;
 use integer::u32_overflowing_add;
+use keccak::keccak_u256s_be_inputs;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use pedersen::{PedersenTrait, HashState};
 use starknet::{Store, storage_base_address_from_felt252, ContractAddress, get_contract_address};
+use utils::constants::EMPTY_KECCAK;
 use utils::helpers::{load_word, U256Trait};
 use utils::traits::{EthAddressIntoU256, ByteArrayZero};
-use contracts::contract_account::ContractAccountTrait;
-use utils::constants::EMPTY_KECCAK;
-use keccak::keccak_u256s_be_inputs;
 
 
 #[generate_trait]

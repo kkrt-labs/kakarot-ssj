@@ -1,4 +1,4 @@
-use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore};
 use contracts::tests::utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
@@ -9,7 +9,8 @@ use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_calldata, setup_machine_with_bytecode, evm_address, callvalue,
-    setup_machine_with_nested_execution_context, other_evm_address, return_from_subcontext
+    setup_machine_with_nested_execution_context, other_evm_address, return_from_subcontext,
+    native_token
 };
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
@@ -19,6 +20,7 @@ use utils::helpers::{
     u256_to_bytes_array, load_word, ArrayExtension, ArrayExtTrait, SpanExtension, SpanExtTrait
 };
 use utils::traits::{EthAddressIntoU256};
+use debug::U256PrintImpl;
 
 // *************************************************************************
 // 0x30: ADDRESS
@@ -708,5 +710,33 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         i += 1;
     };
     assert(results.span() == return_data.slice(offset, size), 'wrong data value');
+}
+
+// *************************************************************************
+// 0x3F: EXTCODEHASH
+// *************************************************************************
+#[test]
+#[available_gas(20000000)]
+fn test_exec_extcodehash_eoa_empty_hash() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
+    machine.stack.push(evm_address.into());
+    set_contract_address(kakarot_core.contract_address);
+
+    // When
+    machine.exec_extcodehash().unwrap();
+
+    // Then
+    machine.stack.peek().unwrap().print();
+    assert(
+        machine
+            .stack
+            .peek()
+            .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
+        'expected empty hash'
+    );
 }
 
