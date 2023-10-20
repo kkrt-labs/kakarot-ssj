@@ -3,7 +3,7 @@
 const FELT252_PRIME: u256 = 0x800000000000011000000000000000000000000000000000000000000000001;
 
 // Prefix used to compute the address of a Starknet contract being deployed.
-// https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/starknet/core/os/contract_address/contract_address.cairo
+// <https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/starknet/core/os/contract_address/contract_address.cairo>
 const CONTRACT_ADDRESS_PREFIX: felt252 = 'STARKNET_CONTRACT_ADDRESS';
 
 
@@ -21,6 +21,8 @@ const STACK_MAX_DEPTH: usize = 1024;
 //         return keccak256("");
 //     }
 // }
+// Reproducing link:
+// <https://emn178.github.io/online-tools/keccak_256.html?input=&input_type=hex>
 const EMPTY_KECCAK: u256 = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
 
 
