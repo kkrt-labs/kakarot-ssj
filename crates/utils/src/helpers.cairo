@@ -556,9 +556,9 @@ impl U32Impl of U32Trait {
         bytes.span()
     }
 
-    /// Returns the number of bytes used to represent a `u64` value.
+    /// Returns the number of bytes used to represent a `u32` value.
     /// # Arguments
-    /// * `val` - The value to check.
+    /// * `self` - The value to check.
     /// # Returns
     /// The number of bytes used to represent the value.
     fn bytes_used(self: usize) -> u8 {
@@ -600,13 +600,11 @@ impl U256Impl of U256Trait {
 #[generate_trait]
 impl ByteArrayExt of ByteArrayExTrait {
     fn append_span_bytes(ref self: ByteArray, mut bytes: Span<u8>) {
-        let mut i = 0;
         loop {
-            if i == bytes.len() {
-                break;
+            match bytes.pop_front() {
+                Option::Some(val) => { self.append_byte(*val) },
+                Option::None => { break; }
             }
-            self.append_byte(*bytes.at(i));
-            i += 1;
         }
     }
 

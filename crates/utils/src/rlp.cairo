@@ -59,13 +59,15 @@ impl RLPImpl of RLPTrait {
     fn encode_string(input: ByteArray) -> Result<ByteArray, RLPError> {
         let len = input.len();
         if len == 0 {
-            return Result::Err(RLPError::RlpEmptyInput(RLP_EMPTY_INPUT));
+            return Result::Ok(
+                ByteArray { data: Default::default(), pending_word: 0x80, pending_word_len: 1 }
+            );
         } else if len == 1 && input.at(0).unwrap() < 0x80 {
             return Result::Ok(input);
-        } else if len <= 55 {
+        } else if len < 56 {
             let mut prefixes: ByteArray = Default::default();
             prefixes.append_byte(0x80 + len.try_into().unwrap());
-            let encoding = ByteArrayTrait::concat(@prefixes, @input);
+            let encoding = prefixes + input;
             return Result::Ok(encoding);
         } else {
             let mut prefixes: ByteArray = Default::default();
@@ -74,7 +76,7 @@ impl RLPImpl of RLPTrait {
             let prefix = 0xb7 + len_bytes_count.try_into().unwrap();
             prefixes.append_byte(prefix);
             prefixes.append_span_bytes(len_as_bytes);
-            let encoding = ByteArrayTrait::concat(@prefixes, @input);
+            let encoding = prefixes + input;
             return Result::Ok(encoding);
         }
     }

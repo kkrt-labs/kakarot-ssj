@@ -41,9 +41,12 @@ fn test_rlp_empty() {
 #[test]
 #[available_gas(20000000)]
 fn test_rlp_encode_string_empty_input() {
-    let input: ByteArray = Default::default();
-    let res = RLPTrait::encode_string(input);
-    assert(res.is_err(), 'should return error');
+    let mut input: ByteArray = Default::default();
+
+    let res = RLPTrait::encode_string(input).unwrap();
+
+    assert(res.len() == 1, 'wrong len');
+    assert(res[0] == 0x80, 'wrong encoded value');
 }
 
 #[test]
