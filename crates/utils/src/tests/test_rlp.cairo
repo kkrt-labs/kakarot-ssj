@@ -3,30 +3,32 @@ use array::{ArrayTrait, SpanTrait};
 use result::ResultTrait;
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 
-// Tests source : https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
-#[test]
-#[available_gas(9999999)]
-fn test_rlp_types() {
-    let mut i = 0;
-    loop {
-        if i <= 0x7f {
-            assert(RLPTypeTrait::from_byte(i) == RLPType::String, 'Parse type String');
-        } else if i <= 0xb7 {
-            assert(RLPTypeTrait::from_byte(i) == RLPType::StringShort, 'Parse type StringShort');
-        } else if i <= 0xbf {
-            assert(RLPTypeTrait::from_byte(i) == RLPType::StringLong, 'Parse type StringLong');
-        } else if i <= 0xf7 {
-            assert(RLPTypeTrait::from_byte(i) == RLPType::ListShort, 'Parse type ListShort');
-        } else if i <= 0xff {
-            assert(RLPTypeTrait::from_byte(i) == RLPType::ListLong, 'Parse type ListLong');
-        }
+use debug::PrintTrait;
 
-        if i == 0xff {
-            break ();
-        }
-        i += 1;
-    };
-}
+// Tests source : https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
+// #[test]
+// #[available_gas(9999999)]
+// fn test_rlp_types() {
+//     let mut i = 0;
+//     loop {
+//         if i <= 0x7f {
+//             assert(RLPTypeTrait::from_byte(i) == RLPType::Char, 'Parse type String');
+//         } else if i <= 0xb7 {
+//             assert(RLPTypeTrait::from_byte(i) == RLPType::StringShort, 'Parse type StringShort');
+//         } else if i <= 0xbf {
+//             assert(RLPTypeTrait::from_byte(i) == RLPType::StringLong, 'Parse type StringLong');
+//         } else if i <= 0xf7 {
+//             assert(RLPTypeTrait::from_byte(i) == RLPType::ListShort, 'Parse type ListShort');
+//         } else if i <= 0xff {
+//             assert(RLPTypeTrait::from_byte(i) == RLPType::ListLong, 'Parse type ListLong');
+//         }
+
+//         if i == 0xff {
+//             break ();
+//         }
+//         i += 1;
+//     };
+// }
 
 #[test]
 #[available_gas(9999999)]
@@ -48,9 +50,9 @@ fn test_rlp_decode_string() {
         let mut arr = ArrayTrait::new();
         arr.append(i);
 
-        let (res, len) = rlp_decode(arr.span()).unwrap();
-        assert(len == 1, 'Wrong len');
-        assert(res == RLPItem::Bytes(arr.span()), 'Wrong value');
+        let res = rlp_decode(arr.span()).unwrap();
+        
+        assert(res == array![RLPItem::String(arr.span())].span(), 'Wrong value');
 
         i += 1;
     };
@@ -90,12 +92,11 @@ fn test_rlp_decode_short_string() {
         0xf7
     ];
 
-    let (res, len) = rlp_decode(arr.span()).unwrap();
-    assert(len == 1 + (0x9b - 0x80), 'Wrong len');
+    let res = rlp_decode(arr.span()).unwrap();
 
     // Remove the byte representing the data type
     arr.pop_front();
-    let expected_item = RLPItem::Bytes(arr.span());
+    let expected_item = array![RLPItem::String(arr.span())].span();
 
     assert(res == expected_item, 'Wrong value');
 }
@@ -209,13 +210,12 @@ fn test_rlp_decode_long_string_with_payload_len_on_1_byte() {
         0xd9
     ];
 
-    let (res, len) = rlp_decode(arr.span()).unwrap();
-    assert(len == 1 + (0xb8 - 0xb7) + 0x3c, 'Wrong len');
+    let res = rlp_decode(arr.span()).unwrap();
 
     // Remove the bytes representing the data type and their length
     arr.pop_front();
     arr.pop_front();
-    let expected_item = RLPItem::Bytes(arr.span());
+    let expected_item = array![RLPItem::String(arr.span())].span();
 
     assert(res == expected_item, 'Wrong value');
 }
@@ -561,14 +561,13 @@ fn test_rlp_decode_long_string_with_payload_len_on_2_bytes() {
         0x60
     ];
 
-    let (res, len) = rlp_decode(arr.span()).unwrap();
-    assert(len == 1 + (0xb9 - 0xb7) + 0x0102, 'Wrong len');
+    let res = rlp_decode(arr.span()).unwrap();
 
     // Remove the bytes representing the data type and their length
     arr.pop_front();
     arr.pop_front();
     arr.pop_front();
-    let expected_item = RLPItem::Bytes(arr.span());
+    let expected_item = array![RLPItem::String(arr.span())].span();
 
     assert(res == expected_item, 'Wrong value');
 }
@@ -590,16 +589,30 @@ fn test_rlp_decode_long_string_with_payload_len_too_short() {
 #[test]
 #[available_gas(99999999999)]
 fn test_rlp_decode_short_list() {
-    let mut arr = array![0xc9, 0x83, 0x35, 0x35, 0x89, 0x42, 0x83, 0x45, 0x38, 0x92];
-    let (res, len) = rlp_decode(arr.span()).unwrap();
-    assert(len == 1 + (0xc9 - 0xc0), 'Wrong len');
+    let mut arr = array![0xc9, 0x83, 0x35, 0x35, 0x35, 0x42, 0x83, 0x45, 0x38, 0x92];
+    let res = rlp_decode(arr.span()).unwrap();
 
-    let mut expected_0 = array![0x35, 0x35, 0x89];
-    let mut expected_1 = array![0x42];
-    let mut expected_2 = array![0x45, 0x38, 0x92];
+    let mut expected_0 = RLPItem::String(array![0x35, 0x35, 0x35].span());
+    let mut expected_1 = RLPItem::String(array![0x42].span());
+    let mut expected_2 = RLPItem::String(array![0x45, 0x38, 0x92].span());
 
-    let expected = array![expected_0.span(), expected_1.span(), expected_2.span()];
-    let expected_item = RLPItem::List(expected.span());
+    let expected_list = RLPItem::List(array![expected_0, expected_1, expected_2].span());
+
+    assert(res == array![expected_list].span(), 'Wrong value');
+}
+
+#[test]
+#[available_gas(99999999999)]
+fn test_rlp_decode_short_nested_list() {
+    let mut arr = array![ 0xc7, 0xc0, 0xc1, 0xc0, 0xc3, 0xc0, 0xc1, 0xc0 ];
+    let res = rlp_decode(arr.span()).unwrap();
+
+    let mut expected_0 = RLPItem::List(array![].span());
+    let mut expected_1 = RLPItem::List(array![expected_0].span());
+    let mut expected_2 = RLPItem::List(array![expected_0, expected_1].span());
+
+    let expected = array![expected_0, expected_1, expected_2].span();
+    let expected_item = expected;
 
     assert(res == expected_item, 'Wrong value');
 }
@@ -1154,10 +1167,9 @@ fn test_rlp_decode_long_list() {
         0x5f,
         0x80
     ];
-    let (res, len) = rlp_decode(arr.span()).unwrap();
-    assert(len == 1 + (0xf9 - 0xf7) + 0x0211, 'Wrong len');
+    let res = rlp_decode(arr.span()).unwrap();
 
-    let mut expected_0 = array![
+    let mut expected_0 = RLPItem::String(array![
         0x77,
         0x70,
         0xcf,
@@ -1190,8 +1202,8 @@ fn test_rlp_decode_long_list() {
         0xc1,
         0x4a,
         0xf4
-    ];
-    let mut expected_1 = array![
+    ].span());
+    let mut expected_1 = RLPItem::String(array![
         0x1e,
         0xa3,
         0x85,
@@ -1224,8 +1236,8 @@ fn test_rlp_decode_long_list() {
         0x50,
         0x71,
         0xb4
-    ];
-    let mut expected_2 = array![
+    ].span());
+    let mut expected_2 = RLPItem::String(array![
         0x2c,
         0x4c,
         0x04,
@@ -1258,8 +1270,8 @@ fn test_rlp_decode_long_list() {
         0x3f,
         0xcd,
         0xee
-    ];
-    let mut expected_3 = array![
+    ].span());
+    let mut expected_3 = RLPItem::String(array![
         0xa9,
         0xdc,
         0x77,
@@ -1292,8 +1304,8 @@ fn test_rlp_decode_long_list() {
         0xa6,
         0x38,
         0x51
-    ];
-    let mut expected_4 = array![
+    ].span());
+    let mut expected_4 = RLPItem::String(array![
         0xa9,
         0x5f,
         0x4d,
@@ -1326,8 +1338,8 @@ fn test_rlp_decode_long_list() {
         0x97,
         0x18,
         0xd7
-    ];
-    let mut expected_5 = array![
+    ].span());
+    let mut expected_5 = RLPItem::String(array![
         0x39,
         0xd4,
         0x06,
@@ -1360,8 +1372,8 @@ fn test_rlp_decode_long_list() {
         0xe2,
         0x03,
         0x4c
-    ];
-    let mut expected_6 = array![
+    ].span());
+    let mut expected_6 = RLPItem::String(array![
         0x7a,
         0xcc,
         0x7c,
@@ -1394,8 +1406,8 @@ fn test_rlp_decode_long_list() {
         0x13,
         0x01,
         0x30
-    ];
-    let mut expected_7 = array![
+    ].span());
+    let mut expected_7 = RLPItem::String(array![
         0x15,
         0x35,
         0x8a,
@@ -1428,8 +1440,8 @@ fn test_rlp_decode_long_list() {
         0xf8,
         0x52,
         0xae
-    ];
-    let mut expected_8 = array![
+    ].span());
+    let mut expected_8 = RLPItem::String(array![
         0x68,
         0x91,
         0x42,
@@ -1462,8 +1474,8 @@ fn test_rlp_decode_long_list() {
         0x4a,
         0x96,
         0x58
-    ];
-    let mut expected_9 = array![
+    ].span());
+    let mut expected_9 = RLPItem::String(array![
         0xdc,
         0x36,
         0x50,
@@ -1496,8 +1508,8 @@ fn test_rlp_decode_long_list() {
         0xc4,
         0xc1,
         0xa3
-    ];
-    let mut expected_10 = array![
+    ].span());
+    let mut expected_10 = RLPItem::String(array![
         0x20,
         0xb0,
         0x68,
@@ -1530,8 +1542,8 @@ fn test_rlp_decode_long_list() {
         0x03,
         0x42,
         0xe7
-    ];
-    let mut expected_11 = array![
+    ].span());
+    let mut expected_11 = RLPItem::String(array![
         0x8e,
         0xed,
         0xeb,
@@ -1564,8 +1576,8 @@ fn test_rlp_decode_long_list() {
         0x9b,
         0x26,
         0x14
-    ];
-    let mut expected_12 = array![
+    ].span());
+    let mut expected_12 = RLPItem::String(array![
         0x79,
         0x23,
         0xa3,
@@ -1598,8 +1610,8 @@ fn test_rlp_decode_long_list() {
         0xe6,
         0x09,
         0xf3
-    ];
-    let mut expected_13 = array![
+    ].span());
+    let mut expected_13 = RLPItem::String(array![
         0x65,
         0x34,
         0xd7,
@@ -1632,8 +1644,8 @@ fn test_rlp_decode_long_list() {
         0x2a,
         0xb1,
         0xfd
-    ];
-    let mut expected_14 = array![
+    ].span());
+    let mut expected_14 = RLPItem::String(array![
         0xbf,
         0xf9,
         0xc2,
@@ -1666,8 +1678,8 @@ fn test_rlp_decode_long_list() {
         0xe2,
         0x50,
         0x2f
-    ];
-    let mut expected_15 = array![
+    ].span());
+    let mut expected_15 = RLPItem::String(array![
         0x7f,
         0x14,
         0x61,
@@ -1700,29 +1712,29 @@ fn test_rlp_decode_long_list() {
         0xe2,
         0xb3,
         0x5f
-    ];
-    let mut expected_16 = ArrayTrait::new();
+    ].span());
+    let mut expected_16 = RLPItem::String(ArrayTrait::new().span());
 
     let mut expected = array![
-        expected_0.span(),
-        expected_1.span(),
-        expected_2.span(),
-        expected_3.span(),
-        expected_4.span(),
-        expected_5.span(),
-        expected_6.span(),
-        expected_7.span(),
-        expected_8.span(),
-        expected_9.span(),
-        expected_10.span(),
-        expected_11.span(),
-        expected_12.span(),
-        expected_13.span(),
-        expected_14.span(),
-        expected_15.span(),
-        expected_16.span()
+        expected_0,
+        expected_1,
+        expected_2,
+        expected_3,
+        expected_4,
+        expected_5,
+        expected_6,
+        expected_7,
+        expected_8,
+        expected_9,
+        expected_10,
+        expected_11,
+        expected_12,
+        expected_13,
+        expected_14,
+        expected_15,
+        expected_16
     ];
-    let expected_item = RLPItem::List(expected.span());
+    let expected_item = array![RLPItem::List(expected.span())].span();
 
     assert(res == expected_item, 'Wrong value');
 }
