@@ -137,7 +137,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         // Machine logic
         // Decrement the total context count
-        self.ctx_count += 1;
+        self.ctx_count -= 1;
         return ();
     }
 }

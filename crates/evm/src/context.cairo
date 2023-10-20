@@ -136,11 +136,15 @@ struct ExecutionContext {
     parent_ctx: Nullable<ExecutionContext>,
 }
 
+/// The current execution context id
 #[derive(Drop, Default, Copy, PartialEq)]
 enum ExecutionContextId {
+    /// Root context
     #[default]
     Root: usize,
+    /// Call context
     Call: usize,
+    /// Create context
     Create: usize
 }
 

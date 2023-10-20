@@ -37,7 +37,6 @@ enum EVMError {
     UnknownOpcode: u8,
     SyscallFailed: felt252,
     WriteInStaticContext: felt252,
-    InsufficientGas: felt252,
 }
 
 
@@ -54,7 +53,6 @@ impl EVMErrorIntoU256 of Into<EVMError, u256> {
             EVMError::UnknownOpcode => 'UnknownOpcode'.into(),
             EVMError::SyscallFailed(error_message) => error_message.into(),
             EVMError::WriteInStaticContext(error_message) => error_message.into(),
-            EVMError::InsufficientGas(error_message) => error_message.into(),
         }
     }
 }
