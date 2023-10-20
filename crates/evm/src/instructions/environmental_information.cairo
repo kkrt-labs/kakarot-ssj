@@ -11,8 +11,12 @@ use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use pedersen::{PedersenTrait, HashState};
 use starknet::{Store, storage_base_address_from_felt252, ContractAddress, get_contract_address};
-use utils::helpers::{load_word};
-use utils::traits::{EthAddressIntoU256};
+use utils::helpers::{load_word, U256Trait};
+use utils::traits::{EthAddressIntoU256, ByteArrayZero};
+use contracts::contract_account::ContractAccountTrait;
+use utils::constants::EMPTY_KECCAK;
+use keccak::keccak_u256s_be_inputs;
+
 
 #[generate_trait]
 impl EnvironmentInformationImpl of EnvironmentInformationTrait {
@@ -212,8 +216,51 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
     /// 0x3F - EXTCODEHASH
     /// Get hash of a contract's code.
+    // If the account has no code, return the empty hash:
+    // `0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470`
+    // If the account does not exist of was destroyed (SELFDESTRUCT), return 0
+    // Else return, the hash of the account's code
     /// # Specification: https://www.evm.codes/#3f?fork=shanghai
     fn exec_extcodehash(ref self: Machine) -> Result<(), EVMError> {
-        Result::Ok(())
+        let evm_address = self.stack.pop_eth_address()?;
+
+        // Case 1: The address corresponds to a EOA. If so, the account exists but has no code.
+        // We return the empty hash.
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let eoa_starknet_address = kakarot_state.eoa_starknet_address(evm_address);
+        if !eoa_starknet_address.is_zero() {
+            return self.stack.push(EMPTY_KECCAK);
+        }
+
+        let contract_account = ContractAccountTrait::new(evm_address);
+        // Case 2: The address corresponds to a non-existing or destroyed contract account.
+        // Checking if the nonce of a contrat account equals zero is a sufficient condition,
+        // as upon deployment, its nonce is increment to 1.
+        let account_exists = contract_account.nonce()? != 0;
+        if !account_exists {
+            return self.stack.push(0);
+        }
+
+        // Case 3: The address corresponds to an existing contract account.
+        let mut bytecode = contract_account.load_bytecode()?;
+        // If the bytecode is empty, return the empty keccak hash.
+        if bytecode.is_zero() {
+            return self.stack.push(EMPTY_KECCAK);
+        }
+
+        // Else hash the bytecode and push the hash on the stack
+        let mut keccak_input: Array<u256> = Default::default();
+        loop {
+            let word = match bytecode.data.pop_front() {
+                Option::Some(word) => word,
+                Option::None => { break; },
+            };
+            keccak_input.append(word.into());
+        };
+        // Append last word of the bytecode
+        keccak_input.append(bytecode.pending_word.into());
+
+        let hash = keccak_u256s_be_inputs(keccak_input.span());
+        self.stack.push(hash.reverse_endianness())
     }
 }

@@ -14,6 +14,15 @@ const CHAIN_ID: u256 = 1263227476;
 // STACK
 const STACK_MAX_DEPTH: usize = 1024;
 
+// KECCAK
+// The empty keccak256 hash, Solidity equivalent:
+// contract EmptyHash {
+//     function emptyHash() public pure returns(bytes32) {
+//         return keccak256("");
+//     }
+// }
+const EMPTY_KECCAK: u256 = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
+
 
 // Numeric constants
 const POW_256_0: u128 = 0x1;

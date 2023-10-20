@@ -132,6 +132,20 @@ impl StoreBytes31 of Store<bytes31> {
     }
 }
 
+impl ByteArrayZero of Zero<ByteArray> {
+    fn zero() -> ByteArray {
+        Default::default()
+    }
+
+    fn is_zero(self: @ByteArray) -> bool {
+        self == Default::default()
+    }
+
+    fn is_non_zero(self: @ByteArray) -> bool {
+        !self.is_zero()
+    }
+}
+
 impl ByteArraySerde of Serde<ByteArray> {
     fn serialize(self: @ByteArray, ref output: Array<felt252>) {
         // First felt is number of bytes used in the last felt
