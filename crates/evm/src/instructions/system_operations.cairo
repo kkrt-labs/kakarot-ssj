@@ -43,9 +43,9 @@ impl SystemOperations of SystemOperationsTrait {
         let mut return_data = Default::default();
         self.memory.load_n(size, ref return_data, offset);
 
-        // Set the memory data to the context output
+        // Set the memory data to the parent context return data
         // and halt the context.
-        self.set_output(return_data.span());
+        self.set_return_data(return_data.span());
         self.set_stopped();
         Result::Ok(())
     }

@@ -123,15 +123,14 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         // Set the return_data of the parent context if a call, or of the
         // root.
-        let ctx_output = self.output();
-        self.set_return_data(ctx_output);
+        let return_data = self.parent_ctx_return_data();
 
         // Get the min between len(output) and call_ctx.output_size.
         let call_ctx = self.call_ctx();
-        let return_data_len = min(ctx_output.len(), call_ctx.output_size);
+        let return_data_len = min(return_data.len(), call_ctx.output_size);
 
         // Save the return data in memory.
-        let return_data = ctx_output.slice(0, return_data_len);
+        let return_data = return_data.slice(0, return_data_len);
         self.memory.store_n(return_data, call_ctx.output_offset);
 
         // Return from the current sub ctx by setting the execution context

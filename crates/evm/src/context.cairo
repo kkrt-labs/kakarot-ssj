@@ -141,8 +141,6 @@ struct ExecutionContext {
     create_addresses: Array<EthAddress>,
     // Return data of a child context.
     return_data: Span<u8>,
-    // Output of the current context.
-    output: Span<u8>,
     parent_ctx: Nullable<ExecutionContext>,
 }
 
@@ -185,7 +183,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             events: Default::default(),
             create_addresses: Default::default(),
             return_data,
-            output: Default::default(),
             parent_ctx,
         }
     }
@@ -239,11 +236,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn return_data(self: @ExecutionContext) -> Span<u8> {
         *self.return_data
-    }
-
-    #[inline(always)]
-    fn output(self: @ExecutionContext) -> Span<u8> {
-        *self.output
     }
 
     /// Stops the current execution context.
