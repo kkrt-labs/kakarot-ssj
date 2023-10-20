@@ -1,8 +1,9 @@
+use contracts::contract_account::{ContractAccountTrait};
 use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextId, ExecutionContextTrait,
     DefaultOptionSpanU8
 };
-
+use evm::errors::{EVMError};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use nullable::{match_nullable, FromNullableResult};
 use starknet::{
@@ -264,4 +265,10 @@ fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
     };
     self.current_ctx = BoxTrait::new(current_ctx);
     value
+}
+
+/// Sets the contract account bytecode at the provide ethereum address
+fn set_code(eth_address: EthAddress, bytecode: Span<u8>) -> Result<(), EVMError> {
+    let mut ca = ContractAccountTrait::new(eth_address);
+    ca.store_bytecode(bytecode)
 }
