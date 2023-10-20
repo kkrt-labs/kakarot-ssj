@@ -101,6 +101,7 @@ fn fund_account_with_native_token(
 
 // Counter Smart Contract Bytecode:
 // 0.8.18+commit.87f61d96
+// with optimisation enabled (depth 200) (remix.ethereum.org)
 // SPDX-License-Identifier: MIT
 // pragma solidity >=0.7.0 <0.9.0;
 

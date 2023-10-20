@@ -1,7 +1,10 @@
+use contracts::contract_account::ContractAccountTrait;
 use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore};
+use contracts::tests::utils::counter_evm_bytecode;
 use contracts::tests::utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
+use debug::U256PrintImpl;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
@@ -20,9 +23,6 @@ use utils::helpers::{
     u256_to_bytes_array, load_word, ArrayExtension, ArrayExtTrait, SpanExtension, SpanExtTrait
 };
 use utils::traits::{EthAddressIntoU256};
-use debug::U256PrintImpl;
-use contracts::contract_account::ContractAccountTrait;
-use contracts::tests::utils::counter_evm_bytecode;
 
 // *************************************************************************
 // 0x30: ADDRESS
@@ -798,7 +798,7 @@ fn test_exec_extcodehash_ca_with_bytecode() {
     set_contract_address(kakarot_core.contract_address);
 
     // Set nonce of CA to 1 so that it appears as an existing account
-    // The bytecode remains empty, and we expect the empty hash in return
+    // The bytecode stored is the bytecode of a Counter.sol smart contract
     let mut contract_account = ContractAccountTrait::new(evm_address);
     contract_account.increment_nonce().unwrap();
     contract_account.store_bytecode(counter_evm_bytecode());
@@ -813,6 +813,7 @@ fn test_exec_extcodehash_ca_with_bytecode() {
         machine
             .stack
             .peek()
+            // extcodehash(Counter.sol) := 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275 (source: remix)
             .unwrap() == 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275,
         'expected counter SC code hash'
     );

@@ -8,6 +8,7 @@ use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::model::{AccountTrait, Account};
 use evm::stack::StackTrait;
+use integer::u32_as_non_zero;
 use integer::u32_overflowing_add;
 use keccak::cairo_keccak;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
@@ -15,9 +16,8 @@ use pedersen::{PedersenTrait, HashState};
 use starknet::{Store, storage_base_address_from_felt252, ContractAddress, get_contract_address};
 use utils::constants::EMPTY_KECCAK;
 use utils::helpers::{load_word, U256Trait};
-use utils::traits::{EthAddressIntoU256, ByteArrayZero};
 use utils::math::BitshiftImpl;
-use integer::u32_as_non_zero;
+use utils::traits::{EthAddressIntoU256, ByteArrayZero};
 
 
 #[generate_trait]
