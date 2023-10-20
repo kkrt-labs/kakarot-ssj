@@ -789,7 +789,7 @@ fn test_exec_extcodehash_ca_uninitialized() {
 }
 
 #[test]
-#[available_gas(20000000)]
+#[available_gas(20000000000)]
 fn test_exec_extcodehash_ca_with_bytecode() {
     // Given
     let evm_address = evm_address();

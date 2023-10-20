@@ -9,13 +9,15 @@ use evm::memory::MemoryTrait;
 use evm::model::{AccountTrait, Account};
 use evm::stack::StackTrait;
 use integer::u32_overflowing_add;
-use keccak::keccak_u256s_be_inputs;
+use keccak::cairo_keccak;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use pedersen::{PedersenTrait, HashState};
 use starknet::{Store, storage_base_address_from_felt252, ContractAddress, get_contract_address};
 use utils::constants::EMPTY_KECCAK;
 use utils::helpers::{load_word, U256Trait};
 use utils::traits::{EthAddressIntoU256, ByteArrayZero};
+use utils::math::BitshiftImpl;
+use integer::u32_as_non_zero;
 
 
 #[generate_trait]
@@ -249,18 +251,75 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         }
 
         // Else hash the bytecode and push the hash on the stack
-        let mut keccak_input: Array<u256> = Default::default();
+        // Since bytecode is a ByteArray, we need to perform a couple of transformations.
+        // `cairo_keccak` takes in an array of little-endian u64s
+        // First we compute how many full u64s there are in bytecode as well as the keccak `last_word`
+        let (full_u64_word_count, last_input_num_bytes) = DivRem::div_rem(
+            bytecode.len(), u32_as_non_zero(8)
+        );
+
+        // The `keccak_input` parameter of `cairo_keccak`
+        let mut keccak_input: Array<u64> = Default::default();
+        // A counter for the 8 bytes in a u64, runs in the range [0..8].
+        let mut byte_counter: u8 = 0;
+        // The temporary variable where we accumulate full u64 words
+        let mut tmp: u64 = 0;
+        // A counter to track the number of u64 words we iterated on.
+        let mut u64_word_counter: usize = 0;
+
+        // We need to return bytecode at the end of the loop
+        // To restore ownership of the bytecode ByteArray to bytecode.
+        // Otherwise, we'll get a `X Was Previously Moved` error
+        bytecode =
+            loop {
+                // We break if we've reached the number of full u64 words we can push in the keccak input array
+                if u64_word_counter == full_u64_word_count {
+                    break bytecode;
+                }
+                // Once byte_counter is 8, we've successfully filled a u64 word.
+                if byte_counter == 8 {
+                    // Append to the keccak_input the accumulated u64
+                    keccak_input.append(tmp);
+                    // Reset the counter and tmp
+                    byte_counter = 0;
+                    tmp = 0;
+                    // Increase the u64 counter
+                    u64_word_counter += 1;
+                }
+                tmp += match bytecode.at(u64_word_counter * 8 + byte_counter.into()) {
+                    Option::Some(byte) => {
+                        let byte: u64 = byte.into();
+                        // Accumulate tmp in a little endian manner
+                        byte.shl(8_u64 * byte_counter.into())
+                    },
+                    Option::None => { break bytecode; },
+                };
+                byte_counter += 1;
+            };
+
+        // Fill the last input word
+        let mut last_input_word: u64 = 0;
+        let mut byte_counter: u8 = 0;
+
+        // We enter a second loop for clarity.
+        // O(2n) should be okay
+        // We might want to regroup every computation into a single loop with appropriate `if` branching
+        // For optimisation
         loop {
-            let word = match bytecode.data.pop_front() {
-                Option::Some(word) => word,
+            if byte_counter.into() == last_input_num_bytes {
+                break;
+            }
+            last_input_word += match bytecode.at(full_u64_word_count * 8 + byte_counter.into()) {
+                Option::Some(byte) => {
+                    let byte: u64 = byte.into();
+                    byte.shl(8_u64 * byte_counter.into())
+                },
                 Option::None => { break; },
             };
-            keccak_input.append(word.into());
+            byte_counter += 1;
         };
-        // Append last word of the bytecode
-        keccak_input.append(bytecode.pending_word.into());
 
-        let hash = keccak_u256s_be_inputs(keccak_input.span());
+        let hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes);
         self.stack.push(hash.reverse_endianness())
     }
 }
