@@ -511,12 +511,12 @@ impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
 impl U32Impl of U32Trait {
     /// Packs 4 bytes into a u32
     /// # Arguments
-    /// * `self` a Span<u8> of len <=4
+    /// * `input` a Span<u8> of len <=4
     /// # Returns
     /// * Option::Some(u32) if the operation succeeds
     /// * Option::None otherwise
-    fn from_bytes(self: Span<u8>) -> Option<u32> {
-        let len = self.len();
+    fn from_bytes(input: Span<u8>) -> Option<u32> {
+        let len = input.len();
         if len > 4 {
             return Option::None(());
         }
@@ -527,12 +527,56 @@ impl U32Impl of U32Trait {
             if i == len {
                 break ();
             }
-            let byte: u32 = (*self.at(i)).into();
+            let byte: u32 = (*input.at(i)).into();
             result += byte.shl(8 * (offset - i));
 
             i += 1;
         };
         Option::Some(result)
+    }
+
+    /// Unpacks a u32 into an array of bytes
+    /// # Arguments
+    /// * `self` a `u32` value.
+    /// # Returns
+    /// * The bytes array representation of the value.
+    fn to_bytes(mut self: u32) -> Span<u8> {
+        let bytes_used: u32 = self.bytes_used().into();
+        let mut reversed_res: Array<u8> = Default::default();
+        let mut i = 0;
+        loop {
+            if i == bytes_used {
+                break ();
+            }
+            reversed_res.append((self & 0xFF).try_into().unwrap());
+            self = self.shr(8);
+            i += 1;
+        };
+
+        reversed_res.span().reverse().span()
+    }
+
+    /// Returns the number of bytes used to represent a `u64` value.
+    /// # Arguments
+    /// * `val` - The value to check.
+    /// # Returns
+    /// The number of bytes used to represent the value.
+    fn bytes_used(self: usize) -> u8 {
+        if self < 0x10000 { // 256^2
+            if self < 0x100 { // 256^1
+                if self == 0 {
+                    return 0;
+                } else {
+                    return 1;
+                };
+            }
+            return 2;
+        } else {
+            if self < 0x1000000 { // 256^6
+                return 3;
+            }
+            return 4;
+        }
     }
 }
 
@@ -555,6 +599,17 @@ impl U256Impl of U256Trait {
 }
 #[generate_trait]
 impl ByteArrayExt of ByteArrayExTrait {
+    fn append_span_bytes(ref self: ByteArray, mut bytes: Span<u8>) {
+        let mut i = 0;
+        loop {
+            if i == bytes.len() {
+                break;
+            }
+            self.append_byte(*bytes.at(i));
+            i += 1;
+        }
+    }
+
     fn from_bytes(mut bytes: Span<u8>) -> ByteArray {
         let mut arr: ByteArray = Default::default();
         let (nb_full_words, pending_word_len) = DivRem::div_rem(

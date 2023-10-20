@@ -1,7 +1,8 @@
-use utils::rlp::{rlp_decode, RLPType, RLPTypeTrait, RLPItem};
+use utils::rlp::{RLPType, RLPTrait, RLPItem};
 use array::{ArrayTrait, SpanTrait};
 use result::ResultTrait;
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
+use utils::helpers::U32Trait;
 
 // Tests source : https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
 #[test]
@@ -10,15 +11,15 @@ fn test_rlp_types() {
     let mut i = 0;
     loop {
         if i <= 0x7f {
-            assert(RLPTypeTrait::from_byte(i) == RLPType::String, 'Parse type String');
+            assert(RLPTrait::decode_type(i) == RLPType::String, 'Parse type String');
         } else if i <= 0xb7 {
-            assert(RLPTypeTrait::from_byte(i) == RLPType::StringShort, 'Parse type StringShort');
+            assert(RLPTrait::decode_type(i) == RLPType::StringShort, 'Parse type StringShort');
         } else if i <= 0xbf {
-            assert(RLPTypeTrait::from_byte(i) == RLPType::StringLong, 'Parse type StringLong');
+            assert(RLPTrait::decode_type(i) == RLPType::StringLong, 'Parse type StringLong');
         } else if i <= 0xf7 {
-            assert(RLPTypeTrait::from_byte(i) == RLPType::ListShort, 'Parse type ListShort');
+            assert(RLPTrait::decode_type(i) == RLPType::ListShort, 'Parse type ListShort');
         } else if i <= 0xff {
-            assert(RLPTypeTrait::from_byte(i) == RLPType::ListLong, 'Parse type ListLong');
+            assert(RLPTrait::decode_type(i) == RLPType::ListLong, 'Parse type ListLong');
         }
 
         if i == 0xff {
@@ -31,10 +32,143 @@ fn test_rlp_types() {
 #[test]
 #[available_gas(9999999)]
 fn test_rlp_empty() {
-    let res = rlp_decode(ArrayTrait::new().span());
+    let res = RLPTrait::decode(ArrayTrait::new().span());
 
     assert(res.is_err(), 'should return an error');
     assert(res.unwrap_err() == RLPError::RlpEmptyInput(RLP_EMPTY_INPUT), 'err != RlpInvalidLength');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_rlp_encode_string_empty_input() {
+    let input: ByteArray = Default::default();
+    let res = RLPTrait::encode_string(input);
+    assert(res.is_err(), 'should return error');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_rlp_encode_single_byte_lt_0x80() {
+    let mut input: ByteArray = Default::default();
+    input.append_byte(0x40);
+
+    let res = RLPTrait::encode_string(input).unwrap();
+
+    assert(res.len() == 1, 'wrong len');
+    assert(res[0] == 0x40, 'wrong encoded value');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_rlp_encode_single_byte_ge_0x80() {
+    let mut input: ByteArray = Default::default();
+    input.append_byte(0x80);
+
+    let res = RLPTrait::encode_string(input).unwrap();
+
+    assert(res.len() == 2, 'wrong len');
+    assert(res[0] == 0x81, 'wrong prefix');
+    assert(res[1] == 0x80, 'wrong encoded value');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_rlp_encode_length_between_2_and_55() {
+    let mut input: ByteArray = Default::default();
+    input.append_byte(0x40);
+    input.append_byte(0x50);
+
+    let res = RLPTrait::encode_string(input).unwrap();
+
+    assert(res.len() == 3, 'wrong len');
+    assert(res[0] == 0x82, 'wrong prefix');
+    assert(res[1] == 0x40, 'wrong first value');
+    assert(res[2] == 0x50, 'wrong second value');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_rlp_encode_length_exactly_56() {
+    let mut input: ByteArray = Default::default();
+    let mut i = 0;
+    loop {
+        if i == 56 {
+            break;
+        }
+        input.append_byte(0x60);
+        i += 1;
+    };
+
+    let res = RLPTrait::encode_string(input).unwrap();
+
+    assert(res.len() == 58, 'wrong len');
+    assert(res[0] == 0xb8, 'wrong prefix');
+    assert(res[1] == 56, 'wrong string length');
+    let mut i = 2;
+    loop {
+        if i == 58 {
+            break;
+        }
+        assert(res[i] == 0x60, 'wrong value in sequence');
+        i += 1;
+    };
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_rlp_encode_length_greater_than_56() {
+    let mut input: ByteArray = Default::default();
+    let mut i = 0;
+    loop {
+        if i == 60 {
+            break;
+        }
+        input.append_byte(0x70);
+        i += 1;
+    };
+
+    let res = RLPTrait::encode_string(input).unwrap();
+
+    assert(res.len() == 62, 'wrong len');
+    assert(res[0] == 0xb8, 'wrong prefix');
+    assert(res[1] == 60, 'wrong length byte');
+    let mut i = 2;
+    loop {
+        if i == 62 {
+            break;
+        }
+        assert(res[i] == 0x70, 'wrong value in sequence');
+        i += 1;
+    }
+}
+
+#[test]
+#[available_gas(200000000)]
+fn test_rlp_encode_large_bytearray_inputs() {
+    let mut input: ByteArray = Default::default();
+    let mut i = 0;
+    loop {
+        if i == 500 {
+            break;
+        }
+        input.append_byte(0x70);
+        i += 1;
+    };
+
+    let res = RLPTrait::encode_string(input).unwrap();
+
+    assert(res.len() == 503, 'wrong len');
+    assert(res[0] == 0xb9, 'wrong prefix');
+    assert(res[1] == 0x01, 'wrong first length byte');
+    assert(res[2] == 0xF4, 'wrong second length byte');
+    let mut i = 3;
+    loop {
+        if i == 503 {
+            break;
+        }
+        assert(res[i] == 0x70, 'wrong value in sequence');
+        i += 1;
+    }
 }
 
 #[test]
@@ -48,7 +182,7 @@ fn test_rlp_decode_string() {
         let mut arr = ArrayTrait::new();
         arr.append(i);
 
-        let (res, len) = rlp_decode(arr.span()).unwrap();
+        let (res, len) = RLPTrait::decode(arr.span()).unwrap();
         assert(len == 1, 'Wrong len');
         assert(res == RLPItem::Bytes(arr.span()), 'Wrong value');
 
@@ -90,7 +224,7 @@ fn test_rlp_decode_short_string() {
         0xf7
     ];
 
-    let (res, len) = rlp_decode(arr.span()).unwrap();
+    let (res, len) = RLPTrait::decode(arr.span()).unwrap();
     assert(len == 1 + (0x9b - 0x80), 'Wrong len');
 
     // Remove the byte representing the data type
@@ -133,7 +267,7 @@ fn test_rlp_decode_short_string_input_too_short() {
         0x3b
     ];
 
-    let res = rlp_decode(arr.span());
+    let res = RLPTrait::decode(arr.span());
     assert(res.is_err(), 'should return an RLPError');
     assert(
         res.unwrap_err() == RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT),
@@ -209,7 +343,7 @@ fn test_rlp_decode_long_string_with_payload_len_on_1_byte() {
         0xd9
     ];
 
-    let (res, len) = rlp_decode(arr.span()).unwrap();
+    let (res, len) = RLPTrait::decode(arr.span()).unwrap();
     assert(len == 1 + (0xb8 - 0xb7) + 0x3c, 'Wrong len');
 
     // Remove the bytes representing the data type and their length
@@ -286,7 +420,7 @@ fn test_rlp_decode_long_string_with_input_too_short() {
         0x19,
     ];
 
-    let res = rlp_decode(arr.span());
+    let res = RLPTrait::decode(arr.span());
     assert(res.is_err(), 'should return an RLPError');
     assert(
         res.unwrap_err() == RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT),
@@ -561,7 +695,7 @@ fn test_rlp_decode_long_string_with_payload_len_on_2_bytes() {
         0x60
     ];
 
-    let (res, len) = rlp_decode(arr.span()).unwrap();
+    let (res, len) = RLPTrait::decode(arr.span()).unwrap();
     assert(len == 1 + (0xb9 - 0xb7) + 0x0102, 'Wrong len');
 
     // Remove the bytes representing the data type and their length
@@ -579,7 +713,7 @@ fn test_rlp_decode_long_string_with_payload_len_on_2_bytes() {
 fn test_rlp_decode_long_string_with_payload_len_too_short() {
     let mut arr = array![0xb9, 0x01,];
 
-    let res = rlp_decode(arr.span());
+    let res = RLPTrait::decode(arr.span());
     assert(res.is_err(), 'should return an RLPError');
     assert(
         res.unwrap_err() == RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT),
@@ -591,7 +725,7 @@ fn test_rlp_decode_long_string_with_payload_len_too_short() {
 #[available_gas(99999999999)]
 fn test_rlp_decode_short_list() {
     let mut arr = array![0xc9, 0x83, 0x35, 0x35, 0x89, 0x42, 0x83, 0x45, 0x38, 0x92];
-    let (res, len) = rlp_decode(arr.span()).unwrap();
+    let (res, len) = RLPTrait::decode(arr.span()).unwrap();
     assert(len == 1 + (0xc9 - 0xc0), 'Wrong len');
 
     let mut expected_0 = array![0x35, 0x35, 0x89];
@@ -609,7 +743,7 @@ fn test_rlp_decode_short_list() {
 fn test_rlp_decode_short_list_with_input_too_short() {
     let mut arr = array![0xc9, 0x83, 0x35, 0x35, 0x89, 0x42, 0x83, 0x45, 0x38];
 
-    let res = rlp_decode(arr.span());
+    let res = RLPTrait::decode(arr.span());
     assert(res.is_err(), 'should return an RLPError');
     assert(
         res.unwrap_err() == RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT),
@@ -1154,7 +1288,7 @@ fn test_rlp_decode_long_list() {
         0x5f,
         0x80
     ];
-    let (res, len) = rlp_decode(arr.span()).unwrap();
+    let (res, len) = RLPTrait::decode(arr.span()).unwrap();
     assert(len == 1 + (0xf9 - 0xf7) + 0x0211, 'Wrong len');
 
     let mut expected_0 = array![
@@ -1761,7 +1895,7 @@ fn test_rlp_decode_long_list_with_input_too_short() {
         0xb4
     ];
 
-    let res = rlp_decode(arr.span());
+    let res = RLPTrait::decode(arr.span());
     assert(res.is_err(), 'should return an RLPError');
     assert(
         res.unwrap_err() == RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT),
@@ -1774,7 +1908,7 @@ fn test_rlp_decode_long_list_with_input_too_short() {
 fn test_rlp_decode_long_list_with_len_too_short() {
     let mut arr = array![0xf9, 0x02,];
 
-    let res = rlp_decode(arr.span());
+    let res = RLPTrait::decode(arr.span());
     assert(res.is_err(), 'should return an RLPError');
     assert(
         res.unwrap_err() == RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT),
