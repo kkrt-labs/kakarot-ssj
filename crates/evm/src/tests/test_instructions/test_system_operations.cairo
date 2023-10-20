@@ -8,8 +8,8 @@ use evm::tests::test_utils::{
     setup_machine_with_nested_execution_context, setup_machine, setup_machine_with_bytecode,
     parent_ctx_return_data, set_code
 };
-use utils::helpers::load_word;
 use starknet::EthAddress;
+use utils::helpers::load_word;
 
 #[test]
 #[available_gas(20000000)]

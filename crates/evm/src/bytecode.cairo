@@ -1,9 +1,9 @@
 use contracts::contract_account::{ContractAccount, ContractAccountTrait};
-use contracts::kakarot_core::{KakarotCore};
 use contracts::kakarot_core::interface::{IKakarotCore};
+use contracts::kakarot_core::{KakarotCore};
 use evm::errors::{EVMError};
-use utils::helpers::ByteArrayExTrait;
 use starknet::EthAddress;
+use utils::helpers::ByteArrayExTrait;
 
 /// Returns the bytecode of the EVM account (EOA or CA)
 fn bytecode(evm_address: EthAddress) -> Result<Span<u8>, EVMError> {
