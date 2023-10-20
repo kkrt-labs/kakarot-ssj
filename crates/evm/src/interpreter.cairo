@@ -54,7 +54,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
                         } else if machine.is_call() {
                             machine.finalize_calling_context();
                             self.run(ref machine);
-                        } else {// TODO(greg): finalize the create context
+                        } else { // TODO(greg): finalize the create context
                         };
                     },
                     Status::Reverted => { self.finalize_revert(ref machine); }
@@ -72,7 +72,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
     fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError> {
         // Retrieve the current program counter.
         let pc = machine.pc();
-        let bytecode = CallContextTrait::bytecode(@machine.call_ctx());
+        let bytecode = machine.call_ctx().bytecode();
         let bytecode_len = bytecode.len();
 
         // Check if PC is not out of bounds.

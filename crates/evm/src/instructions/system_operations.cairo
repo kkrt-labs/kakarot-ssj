@@ -65,7 +65,7 @@ impl SystemOperations of SystemOperationsTrait {
         let value = call_args.value;
 
         // Check if current context is read only that value == 0.
-        if read_only & (value != 0) {
+        if read_only && (value != 0) {
             return Result::Err(EVMError::WriteInStaticContext(VALUE_TRANSFER_IN_STATIC_CALL));
         }
 
@@ -79,9 +79,7 @@ impl SystemOperations of SystemOperationsTrait {
         }
 
         // Initialize the sub context.
-        self.init_sub_call_ctx(call_args, read_only,);
-
-        Result::Ok(())
+        self.init_sub_call_ctx(call_args, read_only)
     }
 
     /// STATICCALL

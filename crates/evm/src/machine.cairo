@@ -135,7 +135,7 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     fn return_to_parent_ctx(ref self: Machine) {
         let mut current_ctx = self.current_ctx.unbox();
         let maybe_parent_ctx = current_ctx.parent_ctx;
-        let maybe_parent_ctx = match match_nullable(maybe_parent_ctx) {
+        match match_nullable(maybe_parent_ctx) {
             FromNullableResult::Null => current_ctx = Default::default(),
             FromNullableResult::NotNull(parent_ctx) => {
                 let parent_ctx = parent_ctx.unbox();

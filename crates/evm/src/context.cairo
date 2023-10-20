@@ -38,10 +38,10 @@ struct CallContext {
     gas_limit: u128,
     // Evm gas price for the call
     gas_price: u128,
-    // The offset in memory to store the context output
-    output_offset: usize,
-    // The size in memory to store the context output
-    output_size: usize,
+    // The offset in memory to store the context return
+    ret_offset: usize,
+    // The size in memory to store the context return
+    ret_size: usize,
 }
 
 #[generate_trait]
@@ -55,19 +55,11 @@ impl CallContextImpl of CallContextTrait {
         read_only: bool,
         gas_limit: u128,
         gas_price: u128,
-        output_offset: usize,
-        output_size: usize
+        ret_offset: usize,
+        ret_size: usize
     ) -> CallContext {
         CallContext {
-            caller,
-            bytecode,
-            calldata,
-            value,
-            read_only,
-            gas_limit,
-            gas_price,
-            output_offset,
-            output_size
+            caller, bytecode, calldata, value, read_only, gas_limit, gas_price, ret_offset, ret_size
         }
     }
 

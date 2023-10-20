@@ -20,8 +20,8 @@ struct CallArgs {
     gas: u128,
     value: u256,
     calldata: Span<u8>,
-    output_offset: usize,
-    output_size: usize,
+    ret_offset: usize,
+    ret_size: usize,
 }
 
 #[generate_trait]
@@ -46,15 +46,13 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
         let args_offset = self.stack.pop_usize()?;
         let args_size = self.stack.pop_usize()?;
 
-        let output_offset = self.stack.pop_usize()?;
-        let output_size = self.stack.pop_usize()?;
+        let ret_offset = self.stack.pop_usize()?;
+        let ret_size = self.stack.pop_usize()?;
 
         let mut calldata = Default::default();
         self.memory.load_n(args_size, ref calldata, args_offset);
 
-        Result::Ok(
-            CallArgs { to, value, gas, calldata: calldata.span(), output_offset, output_size }
-        )
+        Result::Ok(CallArgs { to, value, gas, calldata: calldata.span(), ret_offset, ret_size })
     }
 
     /// Initializes and enters into a new call sub-context
@@ -84,8 +82,8 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
             read_only,
             call_args.gas,
             self.gas_price(),
-            call_args.output_offset,
-            call_args.output_size
+            call_args.ret_offset,
+            call_args.ret_size
         );
 
         let parent_ctx = NullableTrait::new(self.current_ctx.unbox());
@@ -114,12 +112,12 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
     fn finalize_calling_context(ref self: Machine) -> () {
         // Put the status of the call on the stack.
         let status = self.status();
-        let status = match status {
+        let success = match status {
             Status::Active => 1,
             Status::Stopped => 1,
             Status::Reverted => 0,
         };
-        self.stack.push(status);
+        self.stack.push(success);
 
         // Set the return_data of the parent context if a call, or of the
         // root.
@@ -127,11 +125,11 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         // Get the min between len(output) and call_ctx.output_size.
         let call_ctx = self.call_ctx();
-        let return_data_len = min(return_data.len(), call_ctx.output_size);
+        let return_data_len = min(return_data.len(), call_ctx.ret_size);
 
         // Save the return data in memory.
         let return_data = return_data.slice(0, return_data_len);
-        self.memory.store_n(return_data, call_ctx.output_offset);
+        self.memory.store_n(return_data, call_ctx.ret_offset);
 
         // Return from the current sub ctx by setting the execution context
         // to the parent context.

@@ -42,8 +42,8 @@ fn execute(
         read_only: false,
         :gas_limit,
         :gas_price,
-        output_offset: 0,
-        output_size: 0
+        ret_offset: 0,
+        ret_size: 0
     );
     let ctx = ExecutionContextTrait::new(
         id: Default::default(),
