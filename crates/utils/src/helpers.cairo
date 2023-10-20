@@ -542,18 +542,18 @@ impl U32Impl of U32Trait {
     /// * The bytes array representation of the value.
     fn to_bytes(mut self: u32) -> Span<u8> {
         let bytes_used: u32 = self.bytes_used().into();
-        let mut reversed_res: Array<u8> = Default::default();
+        let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
         loop {
             if i == bytes_used {
                 break ();
             }
-            reversed_res.append((self & 0xFF).try_into().unwrap());
-            self = self.shr(8);
+            let val = self.shr(8 * (bytes_used.try_into().unwrap() - i - 1));
+            bytes.append((val & 0xFF).try_into().unwrap());
             i += 1;
         };
 
-        reversed_res.span().reverse().span()
+        bytes.span()
     }
 
     /// Returns the number of bytes used to represent a `u64` value.
