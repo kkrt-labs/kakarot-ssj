@@ -2,6 +2,7 @@ use contracts::contract_account::{ContractAccount, ContractAccountTrait};
 use contracts::kakarot_core::{KakarotCore};
 use contracts::kakarot_core::interface::{IKakarotCore};
 use evm::errors::{EVMError};
+use utils::helpers::ByteArrayExTrait;
 use starknet::EthAddress;
 
 /// Returns the bytecode of the EVM account (EOA or CA)
@@ -18,6 +19,7 @@ fn bytecode(evm_address: EthAddress) -> Result<Span<u8>, EVMError> {
 
     // Case 2: EOA is not deployed and CA is deployed
     let ca = ContractAccountTrait::new(evm_address);
-    return Result::Ok(Default::default().span());
+    let bytecode = ca.load_bytecode()?;
+    Result::Ok(ByteArrayExTrait::into_bytes(bytecode))
 }
 

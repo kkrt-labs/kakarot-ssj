@@ -1,3 +1,4 @@
+use array::ArrayTrait;
 use starknet::{EthAddress, EthAddressIntoFelt252};
 use cmp::min;
 use utils::constants::{
@@ -716,6 +717,20 @@ impl ByteArrayExt of ByteArrayExTrait {
             };
 
         (u64_words, last_input_word, last_input_num_bytes)
+    }
+
+    fn into_bytes(byte_array: ByteArray) -> Span<u8> {
+        let mut output: Array<u8> = Default::default();
+        let len = byte_array.len();
+        let mut i = 0;
+        loop {
+            if i == len {
+                break;
+            };
+            output.append(byte_array[i]);
+            i += 1;
+        };
+        output.span()
     }
 }
 
