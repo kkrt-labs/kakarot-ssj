@@ -36,7 +36,7 @@ impl RLPTypeImpl of RLPTypeTrait {
         }
 
         let byte = *input[0];
-        
+
         if byte <= 0x7f { // Char
             Result::Ok((RLPType::String, 0, 1))
         } else if byte <= 0xb7 { // Short String
@@ -52,7 +52,7 @@ impl RLPTypeImpl of RLPTypeTrait {
                 return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
             }
 
-            Result::Ok((RLPType::String, 1+len_bytes_count, string_len))
+            Result::Ok((RLPType::String, 1 + len_bytes_count, string_len))
         } else if byte <= 0xf7 { // Short List
             Result::Ok((RLPType::List, 1, byte.into() - 0xc0))
         } else { // Long List
@@ -66,8 +66,7 @@ impl RLPTypeImpl of RLPTypeTrait {
             if input.len() < list_len + len_bytes_count + 1 {
                 return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
             }
-            
-            Result::Ok((RLPType::String, 1+len_bytes_count, list_len))
+            Result::Ok((RLPType::List, 1 + len_bytes_count, list_len))
         }
     }
 }
@@ -85,31 +84,32 @@ fn rlp_decode(input: Span<u8>) -> Result<Span<RLPItem>, RLPError> {
     let mut i = 0;
 
     let mut decode_error: Option<RLPError> = loop {
-
-        let res = RLPTypeTrait::from_byte(input.slice(i, input_len-i));
+        let res = RLPTypeTrait::from_byte(input.slice(i, input_len - i));
         let (rlp_type, offset, len) = match res {
             Result::Ok(res_dec) => { res_dec },
             Result::Err(err) => { break Option::Some(err); }
         };
 
-        if input_len < offset+len {
+        if input_len < offset + len {
             break Option::Some(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
         }
 
         match rlp_type {
-            RLPType::String => {
-                output.append(RLPItem::String(input.slice(offset, len)));
-            },
+            RLPType::String => { output.append(RLPItem::String(input.slice(offset + i, len))); },
             RLPType::List => {
-                let res = rlp_decode(input.slice(offset, len));
-                match res {
-                    Result::Ok(res_dec) => { output.append(RLPItem::List(res_dec)); },
-                    Result::Err(err) => { break Option::Some(err); }
-                };
+                if len > 0 {
+                    let res = rlp_decode(input.slice(offset + i, len));
+                    match res {
+                        Result::Ok(res_dec) => { output.append(RLPItem::List(res_dec)); },
+                        Result::Err(err) => { break Option::Some(err); }
+                    };
+                } else {
+                    output.append(RLPItem::List(array![].span()));
+                }
             }
         };
 
-        i += len+offset;
+        i += len + offset;
         if i >= input_len {
             break Option::None;
         }
@@ -117,5 +117,6 @@ fn rlp_decode(input: Span<u8>) -> Result<Span<RLPItem>, RLPError> {
     if decode_error.is_some() {
         return Result::Err(decode_error.unwrap());
     }
+
     Result::Ok(output.span())
 }
