@@ -84,6 +84,20 @@ fn test_kakarot_core_deploy_eoa() {
 
 #[test]
 #[available_gas(20000000)]
+fn test_kakarot_core_eoa_mapping() {
+    // Given
+    let kakarot_core = utils::deploy_kakarot_core(test_utils::native_token());
+    let expected_eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
+
+    // When
+    let eoa_starknet_address = kakarot_core.eoa_starknet_address(test_utils::evm_address());
+
+    // Then
+    assert(eoa_starknet_address == expected_eoa_starknet_address, 'wrong starknet address');
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test_kakarot_core_compute_starknet_address() {
     let evm_address = test_utils::evm_address();
     let kakarot_core = utils::deploy_kakarot_core(test_utils::native_token());

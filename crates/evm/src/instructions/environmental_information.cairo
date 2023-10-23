@@ -5,14 +5,19 @@ use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::{AccountTrait, Account};
+use evm::model::{AccountTrait, Account, ContractAccountTrait};
 use evm::stack::StackTrait;
+use integer::u32_as_non_zero;
 use integer::u32_overflowing_add;
+use keccak::cairo_keccak;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use pedersen::{PedersenTrait, HashState};
 use starknet::{Store, storage_base_address_from_felt252, ContractAddress, get_contract_address};
-use utils::helpers::{load_word};
+use utils::constants::EMPTY_KECCAK;
+use utils::helpers::{load_word, U256Trait, ByteArrayExTrait};
+use utils::math::BitshiftImpl;
 use utils::traits::{EthAddressIntoU256};
+
 
 #[generate_trait]
 impl EnvironmentInformationImpl of EnvironmentInformationTrait {
@@ -212,8 +217,33 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
     /// 0x3F - EXTCODEHASH
     /// Get hash of a contract's code.
+    // If the account has no code (or is a precompile), return the empty hash:
+    // `0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470`
+    // If the account does not exist of was destroyed (SELFDESTRUCT), return 0
+    // Else return, the hash of the account's code
     /// # Specification: https://www.evm.codes/#3f?fork=shanghai
     fn exec_extcodehash(ref self: Machine) -> Result<(), EVMError> {
-        Result::Ok(())
+        let evm_address = self.stack.pop_eth_address()?;
+
+        let maybe_account = AccountTrait::account_at(evm_address)?;
+        let account = match maybe_account {
+            Option::Some(account) => account,
+            Option::None => { return self.stack.push(0); },
+        };
+
+        match account {
+            Account::EOA(eoa) => { return self.stack.push(EMPTY_KECCAK); },
+            Account::ContractAccount(ca) => {
+                let mut bytecode = ca.load_bytecode()?;
+                if bytecode.is_empty() {
+                    return self.stack.push(EMPTY_KECCAK);
+                }
+                // `cairo_keccak` takes in an array of little-endian u64s
+                let (mut keccak_input, last_input_word, last_input_num_bytes) = bytecode
+                    .to_u64_words();
+                let hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes);
+                self.stack.push(hash.reverse_endianness())
+            }
+        }
     }
 }

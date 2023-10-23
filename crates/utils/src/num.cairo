@@ -122,6 +122,23 @@ impl U32Zero of Zero<u32> {
     }
 }
 
+impl U64Zero of Zero<u64> {
+    #[inline(always)]
+    fn zero() -> u64 {
+        0
+    }
+
+    #[inline(always)]
+    fn is_zero(self: @u64) -> bool {
+        *self == Zero::zero()
+    }
+
+    #[inline(always)]
+    fn is_non_zero(self: @u64) -> bool {
+        !self.is_zero()
+    }
+}
+
 impl U128Zero of Zero<u128> {
     #[inline(always)]
     fn zero() -> u128 {
@@ -203,6 +220,24 @@ impl U32One of One<u32> {
         !self.is_one()
     }
 }
+
+impl U64One of One<u64> {
+    #[inline(always)]
+    fn one() -> u64 {
+        1
+    }
+
+    #[inline(always)]
+    fn is_one(self: @u64) -> bool {
+        *self == One::one()
+    }
+
+    #[inline(always)]
+    fn is_non_one(self: @u64) -> bool {
+        !self.is_one()
+    }
+}
+
 
 impl U128One of One<u128> {
     #[inline(always)]
