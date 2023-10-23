@@ -18,6 +18,15 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// # Specification: https://www.evm.codes/#00?fork=shanghai
     fn exec_stop(ref self: Machine) -> Result<(), EVMError> {
         self.set_stopped();
+
+        // In our architecture, when finalizing a subcontext,
+        // we write its `return_data` field to its parent `return_data` field.
+        // As STOP does not allow `return_data` to be written to the execution summary,
+        // We simply erase the `return_data` field.
+        let mut current_ctx = self.current_ctx.unbox();
+        current_ctx.return_data = Default::default().span();
+        self.current_ctx = BoxTrait::new(current_ctx);
+
         Result::Ok(())
     }
 

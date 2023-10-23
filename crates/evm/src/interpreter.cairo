@@ -70,9 +70,13 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         let bytecode = machine.call_ctx().bytecode();
         let bytecode_len = bytecode.len();
 
-        // Check if PC is not out of bounds.
-        if pc >= bytecode_len {
+        if pc > bytecode_len {
             return Result::Err(EVMError::InvalidProgramCounter(PC_OUT_OF_BOUNDS));
+        }
+        // If the PC has reached the end of the bytecode length, and there are no STOP, RETURN nor REVERT opcode
+        // Halt the execution successfully
+        if pc == bytecode_len {
+            return machine.exec_stop();
         }
 
         let opcode: u8 = *bytecode.at(pc);
