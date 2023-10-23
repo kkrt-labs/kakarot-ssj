@@ -218,25 +218,15 @@ impl MemoryImpl of MemoryTrait {
             return;
         }
 
-        if offset > self.size() && source.is_empty() {
-            self.ensure_length(offset + length);
-            return;
-        }
-
         // For performance reasons, we don't add the zeros directly to the source, which would generate an implicit copy, which might be expensive if the source is big.
         // Instead, we'll copy the source into memory, then create a new span containing the zeros.
         // TODO: optimize this with a specific function
-        let slice_size = if (length > source.len()) {
-            source.len()
-        } else {
-            length
-        };
+        let mut slice_size = cmp::min(source.len(), length);
 
         let data_to_copy: Span<u8> = source.slice(0, slice_size);
         self.store_n(data_to_copy, offset);
-
         // For out of bound bytes, 0s will be copied.
-        if (slice_size < length) {
+        if (length > source.len()) {
             let mut out_of_bounds_bytes: Array<u8> = ArrayTrait::new();
             out_of_bounds_bytes.append_n(0, length - source.len());
 

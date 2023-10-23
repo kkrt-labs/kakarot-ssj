@@ -607,6 +607,7 @@ fn test_exec_extcodesize_ca_with_bytecode() {
     );
 }
 
+
 #[test]
 #[available_gas(2000000000)]
 fn test_exec_extcodecopy_ca() {
@@ -638,6 +639,9 @@ fn test_exec_extcodecopy_ca() {
     assert(bytecode_slice.span() == counter_evm_bytecode().slice(200, 50), 'wrong bytecode');
 }
 
+// *************************************************************************
+// 0x3C - EXTCODECOPY
+// *************************************************************************
 #[test]
 #[available_gas(20000000)]
 fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
@@ -665,6 +669,58 @@ fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
 
     // When
     machine.exec_extcodecopy().unwrap();
+    // Then
+    let mut bytecode_slice = array![];
+    machine.memory.load_n(5, ref bytecode_slice, 20);
+    assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
+}
+
+fn test_exec_extcodecopy_eoa() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
+
+    // size
+    machine.stack.push(5);
+    // offset
+    machine.stack.push(5000);
+    // destOffset
+    machine.stack.push(20);
+    machine.stack.push(evm_address.into());
+
+    set_contract_address(kakarot_core.contract_address);
+
+    // When
+    machine.exec_extcodecopy().unwrap();
+
+    // Then
+    let mut bytecode_slice = array![];
+    machine.memory.load_n(5, ref bytecode_slice, 20);
+    assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
+}
+
+
+fn test_exec_extcodecopy_account_none() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+
+    // size
+    machine.stack.push(5);
+    // offset
+    machine.stack.push(5000);
+    // destOffset
+    machine.stack.push(20);
+    machine.stack.push(evm_address.into());
+
+    set_contract_address(kakarot_core.contract_address);
+
+    // When
+    machine.exec_extcodecopy().unwrap();
+
     // Then
     let mut bytecode_slice = array![];
     machine.memory.load_n(5, ref bytecode_slice, 20);
