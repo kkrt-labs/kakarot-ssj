@@ -6,29 +6,6 @@ use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use debug::PrintTrait;
 
 // Tests source : https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
-// #[test]
-// #[available_gas(9999999)]
-// fn test_rlp_types() {
-//     let mut i = 0;
-//     loop {
-//         if i <= 0x7f {
-//             assert(RLPTypeTrait::from_byte(i) == RLPType::Char, 'Parse type String');
-//         } else if i <= 0xb7 {
-//             assert(RLPTypeTrait::from_byte(i) == RLPType::StringShort, 'Parse type StringShort');
-//         } else if i <= 0xbf {
-//             assert(RLPTypeTrait::from_byte(i) == RLPType::StringLong, 'Parse type StringLong');
-//         } else if i <= 0xf7 {
-//             assert(RLPTypeTrait::from_byte(i) == RLPType::ListShort, 'Parse type ListShort');
-//         } else if i <= 0xff {
-//             assert(RLPTypeTrait::from_byte(i) == RLPType::ListLong, 'Parse type ListLong');
-//         }
-
-//         if i == 0xff {
-//             break ();
-//         }
-//         i += 1;
-//     };
-// }
 
 #[test]
 #[available_gas(9999999)]
