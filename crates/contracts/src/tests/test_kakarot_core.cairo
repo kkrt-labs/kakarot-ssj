@@ -47,6 +47,13 @@ fn test_kakarot_core_deploy_fee() {
 
 #[test]
 #[available_gas(20000000)]
+fn test_kakarot_core_chain_id() {
+    let kakarot_core = utils::deploy_kakarot_core(test_utils::native_token());
+    assert(kakarot_core.chain_id() == utils::chain_id(), 'wrong chain id');
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test_kakarot_core_set_deploy_fee() {
     let kakarot_core = utils::deploy_kakarot_core(test_utils::native_token());
     assert(kakarot_core.deploy_fee() == utils::deploy_fee(), 'wrong deploy_fee');

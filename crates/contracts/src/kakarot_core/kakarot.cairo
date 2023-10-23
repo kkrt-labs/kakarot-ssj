@@ -121,6 +121,11 @@ mod KakarotCore {
             self.deploy_fee.read()
         }
 
+        /// Get the chain id
+        fn chain_id(self: @ContractState) -> u128 {
+            self.chain_id.read()
+        }
+
         /// Deterministically computes a Starknet address for an given EVM address
         /// The address is computed as the Starknet address corresponding to the deployment of an EOA,
         /// Using its EVM address as salt, and KakarotCore as deployer.

@@ -1,5 +1,7 @@
 //! Block Information.
 
+use contracts::kakarot_core::{KakarotCore, IKakarotCore};
+
 use evm::errors::{EVMError, BLOCK_HASH_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::model::{AccountTrait, Account};
@@ -8,7 +10,6 @@ use evm::stack::StackTrait;
 // Corelib imports
 use starknet::info::{get_block_number, get_block_timestamp, get_block_info};
 use starknet::{get_block_hash_syscall};
-use utils::constants::CHAIN_ID;
 
 #[generate_trait]
 impl BlockInformation of BlockInformationTrait {
@@ -77,10 +78,9 @@ impl BlockInformation of BlockInformationTrait {
     /// Get the chain ID.
     /// # Specification: https://www.evm.codes/#46?fork=shanghai
     fn exec_chainid(ref self: Machine) -> Result<(), EVMError> {
-        // CHAIN_ID = KKRT (0x4b4b5254) in ASCII
-        // TODO: Replace the hardcoded value by a value set in kakarot main contract constructor
-        // Push the chain ID to stack
-        self.stack.push(CHAIN_ID)
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let chain_id = kakarot_state.chain_id();
+        self.stack.push(chain_id.into())
     }
 
     /// 0x47 - SELFBALANCE
