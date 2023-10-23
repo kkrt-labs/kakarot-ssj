@@ -1,6 +1,6 @@
 use cmp::min;
 use evm::context::{
-    ExecutionContext, Status, CallContext, CallContextTrait, ExecutionContextId,
+    ExecutionContext, Status, CallContext, CallContextTrait, ExecutionContextType,
     ExecutionContextTrait
 };
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
@@ -93,7 +93,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         let parent_ctx = NullableTrait::new(self.current_ctx.unbox());
         let child_ctx = ExecutionContextTrait::new(
-            ExecutionContextId::Call(self.ctx_count),
+            ExecutionContextType::Call(self.ctx_count),
             call_args.to,
             call_ctx,
             parent_ctx,

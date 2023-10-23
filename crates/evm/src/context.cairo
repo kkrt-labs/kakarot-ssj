@@ -123,7 +123,7 @@ impl DefaultOptionSpanU8 of Default<Option<Span<u8>>> {
 /// Stores all data relevant to the current execution context.
 #[derive(Drop, Default)]
 struct ExecutionContext {
-    id: ExecutionContextId,
+    ctx_type: ExecutionContextType,
     evm_address: EthAddress,
     program_counter: u32,
     status: Status,
@@ -141,7 +141,7 @@ struct ExecutionContext {
 /// to access their respective Stack and Memory; while the Root context always has
 /// id equal to 0.
 #[derive(Drop, Default, Copy, PartialEq)]
-enum ExecutionContextId {
+enum ExecutionContextType {
     #[default]
     Root,
     Call: usize,
@@ -163,14 +163,14 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     /// Create a new execution context instance.
     #[inline(always)]
     fn new(
-        id: ExecutionContextId,
+        ctx_type: ExecutionContextType,
         evm_address: EthAddress,
         call_ctx: CallContext,
         parent_ctx: Nullable<ExecutionContext>,
         return_data: Span<u8>,
     ) -> ExecutionContext {
         ExecutionContext {
-            id,
+            ctx_type,
             evm_address,
             program_counter: Default::default(),
             status: Status::Active,
@@ -292,29 +292,29 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     #[inline(always)]
     fn is_call(self: @ExecutionContext) -> bool {
-        match *self.id {
-            ExecutionContextId::Root(_) => false,
-            ExecutionContextId::Call(_) => true,
-            ExecutionContextId::Create(_) => false,
+        match *self.ctx_type {
+            ExecutionContextType::Root(_) => false,
+            ExecutionContextType::Call(_) => true,
+            ExecutionContextType::Create(_) => false,
         }
     }
 
     #[inline(always)]
     fn is_root(self: @ExecutionContext) -> bool {
-        *self.id == ExecutionContextId::Root
+        *self.ctx_type == ExecutionContextType::Root
     }
 
     #[inline(always)]
-    fn execution_ctx_id(self: @ExecutionContext) -> ExecutionContextId {
-        *self.id
+    fn ctx_type(self: @ExecutionContext) -> ExecutionContextType {
+        *self.ctx_type
     }
 
     #[inline(always)]
     fn id(self: @ExecutionContext) -> usize {
-        match *self.id {
-            ExecutionContextId::Root => 0,
-            ExecutionContextId::Call(id) => id,
-            ExecutionContextId::Create(id) => id,
+        match *self.ctx_type {
+            ExecutionContextType::Root => 0,
+            ExecutionContextType::Call(id) => id,
+            ExecutionContextType::Create(id) => id,
         }
     }
 

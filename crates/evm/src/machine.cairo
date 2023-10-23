@@ -2,7 +2,7 @@ use evm::errors::{EVMError, MISSING_PARENT_CONTEXT};
 use evm::storage_journal::Journal;
 use evm::{
     context::{
-        ExecutionContext, ExecutionContextId, ExecutionContextTrait, DefaultBoxExecutionContext,
+        ExecutionContext, ExecutionContextType, ExecutionContextTrait, DefaultBoxExecutionContext,
         CallContext, CallContextTrait, Status, Event
     },
     stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}
@@ -278,9 +278,9 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
 
     /// Returns whether the current execution context type.
     #[inline(always)]
-    fn id(ref self: Machine) -> ExecutionContextId {
+    fn ctx_type(ref self: Machine) -> ExecutionContextType {
         let current_execution_ctx = self.current_ctx.unbox();
-        let id = current_execution_ctx.execution_ctx_id();
+        let id = current_execution_ctx.ctx_type();
         self.current_ctx = BoxTrait::new(current_execution_ctx);
         id
     }

@@ -1,6 +1,6 @@
 use core::nullable::{NullableTrait, null};
 use evm::context::{
-    CallContext, CallContextTrait, ExecutionContext, ExecutionContextId, ExecutionContextTrait,
+    CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
     DefaultOptionSpanU8
 };
 use evm::memory::{Memory, MemoryTrait};
@@ -63,7 +63,7 @@ fn test_call_context_new() {
 fn test_execution_context_new() {
     // Given
     let call_ctx = setup_call_context();
-    let context_id = ExecutionContextId::Root;
+    let context_id = ExecutionContextType::Root;
     let program_counter: u32 = 0;
 
     let stopped: bool = false;

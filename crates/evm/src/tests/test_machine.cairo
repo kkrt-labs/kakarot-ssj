@@ -1,4 +1,4 @@
-use evm::context::{CallContextTrait, ExecutionContextId, ExecutionContextTrait};
+use evm::context::{CallContextTrait, ExecutionContextType, ExecutionContextTrait};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::tests::test_utils::{
     evm_address, setup_machine_with_bytecode, setup_machine, starknet_address,
@@ -31,7 +31,7 @@ fn test_set_current_ctx() {
 
     // Create another context with id=1
     let mut second_ctx = setup_execution_context();
-    second_ctx.id = ExecutionContextId::Call(1);
+    second_ctx.ctx_type = ExecutionContextType::Call(1);
 
     machine.set_current_ctx(second_ctx);
     assert(machine.stack.active_segment == 1, 'wrong updated stack segment');

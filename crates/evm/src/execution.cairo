@@ -1,5 +1,5 @@
 use evm::context::{
-    CallContext, CallContextTrait, ExecutionContext, ExecutionContextId, ExecutionContextTrait,
+    CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
     Status
 };
 use evm::interpreter::EVMInterpreterTrait;
@@ -46,7 +46,7 @@ fn execute(
         ret_size: 0
     );
     let ctx = ExecutionContextTrait::new(
-        id: Default::default(),
+        ctx_type: Default::default(),
         :evm_address,
         :call_ctx,
         parent_ctx: Default::default(),
