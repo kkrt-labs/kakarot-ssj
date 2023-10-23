@@ -59,6 +59,8 @@ mod ExternallyOwnedAccount {
             self.evm_address.read()
         }
 
+        // TODO: make this function reachable from an external invoke call
+        // TODO: add some security methods to make sure that only some specific upgrades can be made ( low priority )
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
             assert(get_caller_address() == get_contract_address(), 'Caller not contract address');
             self.upgradeable.upgrade_contract(new_class_hash);
