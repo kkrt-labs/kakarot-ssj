@@ -1,9 +1,8 @@
 use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore};
-use contracts::tests::utils::counter_evm_bytecode;
+use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
-use debug::U256PrintImpl;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};

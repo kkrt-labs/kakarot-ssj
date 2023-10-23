@@ -228,19 +228,13 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let maybe_account = AccountTrait::account_at(evm_address)?;
         let account = match maybe_account {
             Option::Some(account) => account,
-            // Case 1: The address corresponds to a non-existing or destroyed contract account.
             Option::None => { return self.stack.push(0); },
         };
 
         match account {
-            Account::EOA(eoa) => {
-                // Case 2: The address corresponds to a EOA. If so, the account exists but has no code.
-                // We return the empty hash.
-                return self.stack.push(EMPTY_KECCAK);
-            },
+            Account::EOA(eoa) => { return self.stack.push(EMPTY_KECCAK); },
             Account::ContractAccount(ca) => {
                 let mut bytecode = ca.load_bytecode()?;
-                // If the bytecode is empty, return the empty keccak hash.
                 if bytecode.is_empty() {
                     return self.stack.push(EMPTY_KECCAK);
                 }

@@ -1,5 +1,9 @@
 #[cfg(test)]
 mod test_contract_account;
+
+
+#[cfg(test)]
+mod test_data;
 #[cfg(test)]
 mod test_kakarot_core;
 
