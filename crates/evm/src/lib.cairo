@@ -1,5 +1,3 @@
-// Balance utils
-mod balance;
 // Context module
 mod context;
 

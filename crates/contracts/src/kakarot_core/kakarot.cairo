@@ -8,7 +8,6 @@ mod KakarotCore {
     use contracts::components::ownable::ownable_component::InternalTrait;
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
-    use contracts::contract_account::{ContractAccount, ContractAccountTrait};
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
     use core::hash::{HashStateExTrait, HashStateTrait};
@@ -18,6 +17,7 @@ mod KakarotCore {
     use evm::context::Status;
     use evm::errors::EVMError;
     use evm::execution::execute;
+    use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
