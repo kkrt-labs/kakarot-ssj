@@ -1,10 +1,10 @@
-use evm::model::{ContractAccountTrait};
 use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextId, ExecutionContextTrait,
     DefaultOptionSpanU8
 };
 use evm::errors::{EVMError};
 use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::model::{ContractAccountTrait};
 use nullable::{match_nullable, FromNullableResult};
 use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,

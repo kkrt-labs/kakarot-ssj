@@ -1,7 +1,7 @@
-use evm::model::{ContractAccount, ContractAccountTrait};
 use contracts::kakarot_core::interface::{IKakarotCore};
 use contracts::kakarot_core::{KakarotCore};
 use evm::errors::{EVMError};
+use evm::model::{ContractAccount, ContractAccountTrait};
 use starknet::EthAddress;
 use utils::helpers::ByteArrayExTrait;
 
