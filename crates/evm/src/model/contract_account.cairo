@@ -8,8 +8,8 @@ use hash::{HashStateTrait, HashStateExTrait};
 use poseidon::PoseidonTrait;
 use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, Store, EthAddress, SyscallResult,
-    storage_write_syscall, storage_address_from_base, storage_read_syscall,
-    storage_address_from_base_and_offset
+    get_contract_address, storage_write_syscall, storage_address_from_base, storage_read_syscall,
+    storage_address_from_base_and_offset, ContractAddress
 };
 use utils::helpers::{ByteArrayExTrait, ResultExTrait};
 use utils::storage::{compute_storage_base_address};
@@ -19,13 +19,17 @@ use utils::traits::{StorageBaseAddressIntoFelt252, StoreBytes31};
 #[derive(Copy, Drop)]
 struct ContractAccount {
     evm_address: EthAddress,
+    starknet_address: ContractAddress
 }
 
 #[generate_trait]
 impl ContractAccountImpl of ContractAccountTrait {
     /// Creates a new ContractAccount instance from the given `evm_address`.
+    /// starknet_address is `get_contract_address`, since ContractAccounts
+    /// are embedded into KakarotCore.
+    #[inline(always)]
     fn new(evm_address: EthAddress) -> ContractAccount {
-        ContractAccount { evm_address: evm_address, }
+        ContractAccount { evm_address: evm_address, starknet_address: get_contract_address() }
     }
 
     /// Returns the nonce of a contract account.

@@ -1,11 +1,11 @@
 use contracts::kakarot_core::interface::{IKakarotCore};
 use contracts::kakarot_core::{KakarotCore};
 use core::hash::{HashStateExTrait, HashStateTrait};
-use evm::balance::balance;
 use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
+use evm::model::{AccountTrait, Account};
 use evm::stack::StackTrait;
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
@@ -29,7 +29,11 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_balance(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        let balance = balance(evm_address)?;
+        let maybe_account = AccountTrait::account_at(evm_address)?;
+        let balance: u256 = match maybe_account {
+            Option::Some(acc) => acc.balance()?,
+            Option::None => 0
+        };
 
         return self.stack.push(balance);
     }

@@ -32,8 +32,8 @@ trait IKakarotCore<TContractState> {
     /// Gets the nonce associated to a contract account
     fn contract_account_nonce(self: @TContractState, evm_address: EthAddress) -> u64;
 
-    /// Gets the balance associated to a contract account
-    fn contract_account_balance(self: @TContractState, evm_address: EthAddress) -> u256;
+    /// Gets the balance associated to an account.
+    fn account_balance(self: @TContractState, evm_address: EthAddress) -> u256;
 
     /// Gets the value associated to a key in the contract account storage
     fn contract_account_storage_at(

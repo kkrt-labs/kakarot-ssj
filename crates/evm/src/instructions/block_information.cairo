@@ -1,8 +1,8 @@
-use evm::balance::balance;
 //! Block Information.
 
 use evm::errors::{EVMError, BLOCK_HASH_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::model::{AccountTrait, Account};
 use evm::stack::StackTrait;
 
 // Corelib imports
@@ -89,7 +89,11 @@ impl BlockInformation of BlockInformationTrait {
     fn exec_selfbalance(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.evm_address();
 
-        let balance = balance(evm_address)?;
+        let maybe_account = AccountTrait::account_at(evm_address)?;
+        let balance: u256 = match maybe_account {
+            Option::Some(acc) => acc.balance()?,
+            Option::None => 0
+        };
 
         self.stack.push(balance)
     }
