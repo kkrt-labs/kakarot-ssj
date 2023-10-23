@@ -4,7 +4,7 @@ use evm::context::{
     ExecutionContext, Status, CallContext, CallContextTrait, ExecutionContextId,
     ExecutionContextTrait
 };
-use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT};
+use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
@@ -40,7 +40,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
         let value = if with_value {
             self.stack.pop()?
         } else {
-            0
+            self.value()
         };
 
         let args_offset = self.stack.pop_usize()?;
@@ -55,11 +55,11 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
         Result::Ok(CallArgs { to, value, gas, calldata: calldata.span(), ret_offset, ret_size })
     }
 
-    /// Initializes and enters into a new call sub-context
+    /// Initializes and enters into a new sub-context
     /// The Machine will change its `current_ctx` to point to the
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
-    fn init_sub_call_ctx(
+    fn init_sub_ctx(
         ref self: Machine, call_args: CallArgs, read_only: bool
     ) -> Result<(), EVMError> {
         // Case 1: `to` address is a precompile
@@ -109,15 +109,19 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
     /// - Set the return data of the parent context
     /// - Store the return data in Memory
     /// - Return to parent context and decrease the ctx_count.
-    fn finalize_calling_context(ref self: Machine) -> () {
+    fn finalize_calling_context(ref self: Machine) -> Result<(), EVMError> {
         // Put the status of the call on the stack.
         let status = self.status();
         let success = match status {
-            Status::Active => 1,
+            Status::Active => {
+                return Result::Err(
+                    EVMError::InvalidMachineState(ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION)
+                );
+            },
             Status::Stopped => 1,
             Status::Reverted => 0,
         };
-        self.stack.push(success);
+        self.stack.push(success)?;
 
         // Set the return_data of the parent context if a call, or of the
         // root.
@@ -135,10 +139,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
         // to the parent context.
         self.return_to_parent_ctx();
 
-        // Machine logic
-        // Decrement the total context count
-        self.ctx_count -= 1;
-        return ();
+        return Result::Ok(());
     }
 }
 

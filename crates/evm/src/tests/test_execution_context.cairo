@@ -63,7 +63,7 @@ fn test_call_context_new() {
 fn test_execution_context_new() {
     // Given
     let call_ctx = setup_call_context();
-    let context_id = ExecutionContextId::Root(0);
+    let context_id = ExecutionContextId::Root;
     let program_counter: u32 = 0;
 
     let stopped: bool = false;

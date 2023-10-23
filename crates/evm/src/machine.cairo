@@ -1,8 +1,8 @@
 use evm::storage_journal::Journal;
 use evm::{
     context::{
-        ExecutionContext, ExecutionContextTrait, DefaultBoxExecutionContext, CallContext,
-        CallContextTrait, Status, Event
+        ExecutionContext, ExecutionContextId, ExecutionContextTrait, DefaultBoxExecutionContext,
+        CallContext, CallContextTrait, Status, Event
     },
     stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}
 };
@@ -268,9 +268,16 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
         code
     }
 
+    /// Returns whether the current execution context id.
+    #[inline(always)]
+    fn execution_ctx_id(ref self: Machine) -> ExecutionContextId {
+        let current_execution_ctx = self.current_ctx.unbox();
+        let id = current_execution_ctx.execution_ctx_id();
+        self.current_ctx = BoxTrait::new(current_execution_ctx);
+        id
+    }
 
     /// Returns whether the current execution context is the root context.
-    /// The root is always the first context to be executed, and thus has id 0.
     #[inline(always)]
     fn is_root(ref self: Machine) -> bool {
         let current_execution_ctx = self.current_ctx.unbox();

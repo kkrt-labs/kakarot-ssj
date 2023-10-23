@@ -3,7 +3,7 @@
 /// Internal imports.
 use evm::call_helpers::MachineCallHelpers;
 use evm::context::{CallContextTrait, Status};
-use evm::context::{ExecutionContextTrait, ExecutionContext};
+use evm::context::{ExecutionContextTrait, ExecutionContext, ExecutionContextId};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
     duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
@@ -49,13 +49,16 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
                     },
                     Status::Stopped => {
                         machine.storage_journal.finalize_local();
-                        if machine.is_root() {
-                            machine.storage_journal.finalize_global();
-                        } else if machine.is_call() {
-                            machine.finalize_calling_context();
-                            self.run(ref machine);
-                        } else { // TODO(greg): finalize the create context
-                        };
+                        match machine.execution_ctx_id() {
+                            ExecutionContextId::Root => {
+                                machine.storage_journal.finalize_global(); // TODO: error handling
+                            },
+                            ExecutionContextId::Call(_) => {
+                                machine.finalize_calling_context(); // TODO: error handling
+                                self.run(ref machine);
+                            },
+                            ExecutionContextId::Create(_) => {} // TODO(greg): finalize the create context
+                        }
                     },
                     Status::Reverted => { self.finalize_revert(ref machine); }
                 }

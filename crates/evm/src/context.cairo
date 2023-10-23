@@ -141,7 +141,7 @@ struct ExecutionContext {
 enum ExecutionContextId {
     /// Root context
     #[default]
-    Root: usize,
+    Root,
     /// Call context
     Call: usize,
     /// Create context
@@ -301,13 +301,18 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     #[inline(always)]
     fn is_root(self: @ExecutionContext) -> bool {
-        *self.id == ExecutionContextId::Root(0)
+        *self.id == ExecutionContextId::Root
+    }
+
+    #[inline(always)]
+    fn execution_ctx_id(self: @ExecutionContext) -> ExecutionContextId {
+        *self.id
     }
 
     #[inline(always)]
     fn id(self: @ExecutionContext) -> usize {
         match *self.id {
-            ExecutionContextId::Root(id) => id,
+            ExecutionContextId::Root => 0,
             ExecutionContextId::Call(id) => id,
             ExecutionContextId::Create(id) => id,
         }

@@ -86,7 +86,7 @@ fn setup_call_context() -> CallContext {
 }
 
 fn setup_execution_context() -> ExecutionContext {
-    let context_id = ExecutionContextId::Root(0);
+    let context_id = ExecutionContextId::Root;
     let call_ctx = setup_call_context();
     let evm_address: EthAddress = evm_address();
     let return_data = array![1, 2, 3].span();
@@ -133,7 +133,7 @@ fn setup_call_context_with_bytecode(bytecode: Span<u8>) -> CallContext {
 }
 
 fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext {
-    let context_id = ExecutionContextId::Root(0);
+    let context_id = ExecutionContextId::Root;
     let call_ctx = setup_call_context_with_bytecode(bytecode);
     let evm_address: EthAddress = evm_address();
     let return_data = Default::default().span();
@@ -166,7 +166,7 @@ fn setup_call_context_with_calldata(calldata: Span<u8>) -> CallContext {
 }
 
 fn setup_execution_context_with_calldata(calldata: Span<u8>) -> ExecutionContext {
-    let context_id = ExecutionContextId::Root(0);
+    let context_id = ExecutionContextId::Root;
     let call_ctx = setup_call_context_with_calldata(calldata);
     let evm_address: EthAddress = evm_address();
     let return_data = Default::default().span();

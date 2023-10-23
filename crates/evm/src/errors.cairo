@@ -14,6 +14,10 @@ const RETURNDATA_OUT_OF_BOUNDS_ERROR: felt252 = 'KKT: ReturnDataOutOfBounds';
 // JUMP
 const INVALID_DESTINATION: felt252 = 'KKT: invalid JUMP destination';
 
+// CALL
+const VALUE_TRANSFER_IN_STATIC_CALL: felt252 = 'KKT: transfer value in static';
+const ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION: felt252 = 'KKT: active state in end call';
+
 // EVM STATE
 const WRITE_IN_STATIC_CONTEXT: felt252 = 'KKT: WriteInStaticContext';
 
@@ -37,6 +41,7 @@ enum EVMError {
     UnknownOpcode: u8,
     SyscallFailed: felt252,
     WriteInStaticContext: felt252,
+    InvalidMachineState: felt252,
 }
 
 
@@ -53,6 +58,7 @@ impl EVMErrorIntoU256 of Into<EVMError, u256> {
             EVMError::UnknownOpcode => 'UnknownOpcode'.into(),
             EVMError::SyscallFailed(error_message) => error_message.into(),
             EVMError::WriteInStaticContext(error_message) => error_message.into(),
+            EVMError::InvalidMachineState(error_message) => error_message.into(),
         }
     }
 }

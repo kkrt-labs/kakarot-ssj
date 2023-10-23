@@ -3,13 +3,12 @@
 use box::BoxTrait;
 use evm::balance::balance;
 use evm::call_helpers::MachineCallHelpers;
-use evm::errors::EVMError;
+use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use utils::math::Exponentiation;
 
-const VALUE_TRANSFER_IN_STATIC_CALL: felt252 = 'KKT: transfer value in static';
 
 #[generate_trait]
 impl SystemOperations of SystemOperationsTrait {
@@ -79,7 +78,7 @@ impl SystemOperations of SystemOperationsTrait {
         }
 
         // Initialize the sub context.
-        self.init_sub_call_ctx(call_args, read_only)
+        self.init_sub_ctx(call_args, read_only)
     }
 
     /// STATICCALL
