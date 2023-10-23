@@ -112,7 +112,6 @@ fn test_kakarot_core_compute_starknet_address() {
     // Precomputed Starknet address with starknet-rs and starknetjs
     // With arguments:
     // ['STARKNET_CONTRACT_ADDRESS', kakarot_address: 0x01, salt: evm_address, class_hash: ExternallyOwnedAccount::TEST_CLASS_HASH, constructor_calldata: hash([kakarot_address, evm_address]), ]
-    // you would have to convert starknet_address from decimal to hex in case of starknet-rs
     let expected_starknet_address: ContractAddress = contract_address_const::<
         0x172FC9E2D7D70DB6C4400CCABABA5FC06871124CB0C67A34BB9463CB171F64F
     >();
@@ -138,5 +137,3 @@ fn test_kakarot_core_upgrade_contract() {
     assert(version == 1, 'version is not 1');
 }
 // TODO add tests related to contract accounts once they can be deployed.
-
-
