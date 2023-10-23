@@ -537,8 +537,76 @@ fn test_gasprice() {
 }
 
 // *************************************************************************
-// 0x3D: RETURNDATASIZE
+// 0x3B - EXTCODESIZE
 // *************************************************************************
+#[test]
+#[available_gas(20000000)]
+fn test_exec_extcodesize_eoa() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
+    machine.stack.push(evm_address.into());
+    set_contract_address(kakarot_core.contract_address);
+
+    // When
+    machine.exec_extcodesize().unwrap();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'expected code size 0');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_extcodesize_ca_empty() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    set_contract_address(kakarot_core.contract_address);
+
+    // The bytecode remains empty, and we expect the empty hash in return
+    let mut contract_account = ContractAccountTrait::new(evm_address);
+
+    machine.stack.push(evm_address.into());
+
+    // When
+    machine.exec_extcodesize().unwrap();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'expected code size 0');
+}
+
+
+#[test]
+#[available_gas(20000000000)]
+fn test_exec_extcodesize_ca_with_bytecode() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    set_contract_address(kakarot_core.contract_address);
+
+    // Set nonce of CA to 1 so that it appears as an existing account
+    // The bytecode stored is the bytecode of a Counter.sol smart contract
+    let mut contract_account = ContractAccountTrait::new(evm_address);
+    contract_account.increment_nonce().unwrap();
+    contract_account.store_bytecode(counter_evm_bytecode());
+
+    machine.stack.push(evm_address.into());
+    // When
+    machine.exec_extcodesize().unwrap();
+
+    // Then
+    assert(
+        machine.stack.peek() // extcodesize(Counter.sol) := 487 (source: remix)
+        .unwrap() == 275,
+        'expected counter SC code size'
+    );
+}
+
 
 #[test]
 #[available_gas(20000000)]
