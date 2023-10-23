@@ -244,8 +244,6 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
                 if bytecode.is_empty() {
                     return self.stack.push(EMPTY_KECCAK);
                 }
-                // Else hash the bytecode and push the hash on the stack
-                // Since bytecode is a ByteArray, we need to perform a couple of transformations.
                 // `cairo_keccak` takes in an array of little-endian u64s
                 let (mut keccak_input, last_input_word, last_input_num_bytes) = bytecode
                     .to_u64_words();

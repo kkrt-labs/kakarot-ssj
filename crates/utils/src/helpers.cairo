@@ -664,7 +664,7 @@ impl ByteArrayExt of ByteArrayExTrait {
 
         let mut u64_words: Array<u64> = Default::default();
         let mut byte_counter: u8 = 0;
-        let mut tmp: u64 = 0;
+        let mut pending_word: u64 = 0;
         let mut u64_word_counter: usize = 0;
 
         // We need to return self at the end of the loop
@@ -676,15 +676,15 @@ impl ByteArrayExt of ByteArrayExTrait {
                     break self;
                 }
                 if byte_counter == 8 {
-                    u64_words.append(tmp);
+                    u64_words.append(pending_word);
                     byte_counter = 0;
-                    tmp = 0;
+                    pending_word = 0;
                     u64_word_counter += 1;
                 }
-                tmp += match self.at(u64_word_counter * 8 + byte_counter.into()) {
+                pending_word += match self.at(u64_word_counter * 8 + byte_counter.into()) {
                     Option::Some(byte) => {
                         let byte: u64 = byte.into();
-                        // Accumulate tmp in a little endian manner
+                        // Accumulate pending_word in a little endian manner
                         byte.shl(8_u64 * byte_counter.into())
                     },
                     Option::None => { break self; },
