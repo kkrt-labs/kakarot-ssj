@@ -170,7 +170,21 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get size of an account's code.
     /// # Specification: https://www.evm.codes/#3b?fork=shanghai
     fn exec_extcodesize(ref self: Machine) -> Result<(), EVMError> {
-        Result::Ok(())
+        let evm_address = self.stack.pop_eth_address()?;
+
+        let maybe_account = AccountTrait::account_at(evm_address)?;
+        let account = match maybe_account {
+            Option::Some(account) => account,
+            Option::None => { return self.stack.push(0); },
+        };
+
+        match account {
+            Account::EOA(eoa) => { return self.stack.push(0); },
+            Account::ContractAccount(ca) => {
+                let mut bytecode = ca.load_bytecode()?;
+                self.stack.push(bytecode.len().into())
+            }
+        }
     }
 
     /// 0x3C - EXTCODECOPY
