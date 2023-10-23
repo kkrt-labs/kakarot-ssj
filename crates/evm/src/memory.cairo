@@ -218,6 +218,11 @@ impl MemoryImpl of MemoryTrait {
             return;
         }
 
+        if offset > self.size() && source.is_empty() {
+            self.ensure_length(offset + length);
+            return;
+        }
+
         // For performance reasons, we don't add the zeros directly to the source, which would generate an implicit copy, which might be expensive if the source is big.
         // Instead, we'll copy the source into memory, then create a new span containing the zeros.
         // TODO: optimize this with a specific function
@@ -528,12 +533,10 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     }
 
 
-    /// Expands the memory by a specified length and returns the cost of the expansion.
+    /// Expands the memory by a specified length
     ///
-    /// The cost of the expansion is the difference in cost between the old memory size and the
-    /// new memory size.
     /// The function updates the `bytes_len` field of the `Memory` instance to reflect the new size of the memory
-    /// chunk, and returns the cost of the expansion.
+    /// chunk,
     ///
     /// # Arguments
     ///

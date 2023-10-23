@@ -191,7 +191,40 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Copy an account's code to memory
     /// # Specification: https://www.evm.codes/#3c?fork=shanghai
     fn exec_extcodecopy(ref self: Machine) -> Result<(), EVMError> {
-        Result::Ok(())
+        let evm_address = self.stack.pop_eth_address()?;
+        let dest_offset = self.stack.pop_usize()?;
+        let offset = self.stack.pop_usize()?;
+        let size = self.stack.pop_usize()?;
+
+        let maybe_account = AccountTrait::account_at(evm_address)?;
+        let account = match maybe_account {
+            Option::Some(account) => account,
+            Option::None => {
+                self.memory.store_padded_segment(dest_offset, size, Default::default().span());
+                return Result::Ok(());
+            },
+        };
+
+        match account {
+            Account::EOA(eoa) => {
+                self.memory.store_padded_segment(dest_offset, size, Default::default().span());
+                return Result::Ok(());
+            },
+            Account::ContractAccount(ca) => {
+                let mut bytecode = ca.load_bytecode()?;
+                // `cairo_keccak` takes in an array of little-endian u64s
+
+                let bytecode_len = bytecode.len();
+                let bytecode_slice = if offset < bytecode_len {
+                    bytecode.into_bytes().slice(offset, bytecode_len - offset)
+                } else {
+                    Default::default().span()
+                };
+
+                self.memory.store_padded_segment(dest_offset, size, bytecode_slice);
+                Result::Ok(())
+            }
+        }
     }
 
     /// 0x3D - RETURNDATASIZE
