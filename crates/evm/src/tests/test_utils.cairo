@@ -1,5 +1,5 @@
 use evm::context::{
-    CallContext, CallContextTrait, ExecutionContext, ExecutionContextId, ExecutionContextTrait,
+    CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
     DefaultOptionSpanU8
 };
 use evm::errors::{EVMError};
@@ -86,7 +86,7 @@ fn setup_call_context() -> CallContext {
 }
 
 fn setup_execution_context() -> ExecutionContext {
-    let context_id = ExecutionContextId::Root;
+    let context_id = ExecutionContextType::Root;
     let call_ctx = setup_call_context();
     let evm_address: EthAddress = evm_address();
     let return_data = array![1, 2, 3].span();
@@ -98,9 +98,9 @@ fn setup_nested_execution_context() -> ExecutionContext {
     let mut parent_context = setup_execution_context();
 
     // Second Execution Context
-    let context_id = ExecutionContextId::Call(1);
+    let context_id = ExecutionContextType::Call(1);
     let mut child_context = setup_execution_context();
-    child_context.id = context_id;
+    child_context.ctx_type = context_id;
     child_context.parent_ctx = NullableTrait::new(parent_context);
     let mut call_ctx = child_context.call_ctx.unbox();
     call_ctx.caller = other_evm_address();
@@ -133,7 +133,7 @@ fn setup_call_context_with_bytecode(bytecode: Span<u8>) -> CallContext {
 }
 
 fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext {
-    let context_id = ExecutionContextId::Root;
+    let context_id = ExecutionContextType::Root;
     let call_ctx = setup_call_context_with_bytecode(bytecode);
     let evm_address: EthAddress = evm_address();
     let return_data = Default::default().span();
@@ -166,7 +166,7 @@ fn setup_call_context_with_calldata(calldata: Span<u8>) -> CallContext {
 }
 
 fn setup_execution_context_with_calldata(calldata: Span<u8>) -> ExecutionContext {
-    let context_id = ExecutionContextId::Root;
+    let context_id = ExecutionContextType::Root;
     let call_ctx = setup_call_context_with_calldata(calldata);
     let evm_address: EthAddress = evm_address();
     let return_data = Default::default().span();
@@ -267,10 +267,29 @@ fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
     value
 }
 
-/// Sets the contract account bytecode at the provide ethereum address. Also
-/// increments the nonce in order to activate the contract.
-fn set_code(eth_address: EthAddress, bytecode: Span<u8>) -> Result<(), EVMError> {
+/// Initializes the contract account by setting the bytecode, the storage
+/// and incrementing the nonce to 1.
+fn initialize_contract_account(
+    eth_address: EthAddress, bytecode: Span<u8>, storage: Span<(u256, u256)>
+) -> Result<(), EVMError> {
     let mut ca = ContractAccountTrait::new(eth_address);
+
+    // Increment the nonce to one.
     ca.increment_nonce()?;
-    ca.store_bytecode(bytecode)
+
+    // Set the bytecode of the contract account
+    ca.store_bytecode(bytecode)?;
+
+    // Set the storage of the contract account
+    let mut i = 0;
+    loop {
+        if i == storage.len() {
+            break;
+        };
+        let (key, value) = storage.get(i).unwrap().unbox();
+        ca.set_storage_at(*key, *value);
+        i += 1;
+    };
+
+    Result::Ok(())
 }

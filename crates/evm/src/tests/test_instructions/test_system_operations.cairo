@@ -6,7 +6,7 @@ use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine_with_nested_execution_context, setup_machine, setup_machine_with_bytecode,
-    parent_ctx_return_data, set_code
+    parent_ctx_return_data, initialize_contract_account
 };
 use starknet::EthAddress;
 use utils::helpers::load_word;
@@ -88,7 +88,8 @@ fn test_exec_call() {
     ]
         .span();
     let eth_address: EthAddress = 0x100_u256.into();
-    set_code(eth_address, deployed_bytecode).expect('set code failed');
+    initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        .expect('set code failed');
 
     // When
     interpreter.run(ref machine);
@@ -134,7 +135,8 @@ fn test_exec_call_no_return() {
     // (+ 0x1 0x1)
     let deployed_bytecode = array![0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
     let eth_address: EthAddress = 0x100_u256.into();
-    set_code(eth_address, deployed_bytecode).expect('set code failed');
+    initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        .expect('set code failed');
 
     // When
     interpreter.run(ref machine);
