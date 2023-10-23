@@ -267,8 +267,10 @@ fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
     value
 }
 
-/// Sets the contract account bytecode at the provide ethereum address
+/// Sets the contract account bytecode at the provide ethereum address. Also
+/// increments the nonce in order to activate the contract.
 fn set_code(eth_address: EthAddress, bytecode: Span<u8>) -> Result<(), EVMError> {
     let mut ca = ContractAccountTrait::new(eth_address);
+    ca.increment_nonce()?;
     ca.store_bytecode(bytecode)
 }
