@@ -1,9 +1,11 @@
+mod test_contract_account;
+mod test_eoa;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
-use evm::model::{Account, AccountTrait};
-use evm::tests::test_utils::{evm_address};
+use evm::model::{Account, AccountTrait, ContractAccountTrait};
+use evm::tests::test_utils::{evm_address, other_evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::{set_contract_address};
 
@@ -25,13 +27,11 @@ fn test_account_at_eoa() {
 
 #[test]
 #[available_gas(20000000)]
-#[ignore]
-fn test_account_at_ca() {
-    //TODO: implement this once ContractAccounts are deployable
+fn test_account_at_ca_exists() {
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    // kakarot_core.deploy_contrat_account(...);
+    ContractAccountTrait::deploy(other_evm_address(), evm_address(), array![].span());
 
     // When
     set_contract_address(kakarot_core.contract_address);
@@ -45,7 +45,6 @@ fn test_account_at_ca() {
 #[test]
 #[available_gas(20000000)]
 fn test_account_at_undeployed() {
-    //TODO: implement this once ContractAccounts are deployable
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);

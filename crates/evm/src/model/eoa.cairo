@@ -1,9 +1,10 @@
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
-use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
+use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
+use integer::BoundedInt;
 use openzeppelin::token::erc20::interface::{
     IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
 };
-use starknet::{EthAddress, ContractAddress};
+use starknet::{EthAddress, ContractAddress, get_contract_address, deploy_syscall};
 use utils::helpers::ResultExTrait;
 
 #[derive(Copy, Drop)]
@@ -12,11 +13,51 @@ struct EOA {
     starknet_address: ContractAddress
 }
 
+const EOA_CLASS_HASH: felt252 = '123';
+
 #[generate_trait]
 impl EOAImpl of EOATrait {
-    ///TODO implement methods for EOA
+    /// Deploys a new EOA contract.
+    fn deploy(evm_address: EthAddress) -> Result<EOA, EVMError> {
+        //TODO finish in another PR(I started but realised it's out of scope)
+        // let maybe_eoa = EOATrait::at(evm_address)?;
+        // if maybe_eoa.is_some() {
+        //     return Result::Err(EVMError::DeployError(EOA_EXISTS));
+        // }
+
+        // let kakarot_address = get_contract_address();
+        // let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
+
+        // let maybe_address = deploy_syscall(
+        //     EOA_CLASS_HASH.try_into().unwrap(), evm_address.into(), calldata, false
+        // );
+
+        // // Panic with err as syscall failure can't be caught, so we can't manage
+        // // the error
+        // match maybe_address {
+        //     Result::Ok((
+        //         contract_address, _
+        //     )) => {
+        //         Result::Ok(EOA { evm_address, starknet_address: contract_address }) },
+        //     Result::Err(err) => panic(err)
+        // }
+        panic_with_felt252('unimplemented')
+    }
+
+    fn at(evm_address: EthAddress) -> Result<Option<EOA>, EVMError> {
+        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let eoa_starknet_address = kakarot_state.eoa_starknet_address(evm_address);
+        if !eoa_starknet_address.is_zero() {
+            return Result::Ok(
+                Option::Some(EOA { evm_address, starknet_address: eoa_starknet_address })
+            );
+        } else {
+            return Result::Ok(Option::None);
+        }
+    }
+
+
     fn balance(self: @EOA) -> Result<u256, EVMError> {
-        //TODO: read directly from the contract state instead of getting explicit kakarot state
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
         let native_token_address = kakarot_state.native_token();
         // TODO: make sure this part of the codebase is upgradable

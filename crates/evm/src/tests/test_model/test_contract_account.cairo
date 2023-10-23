@@ -1,25 +1,88 @@
 use alexandria_storage::list::{List, ListTrait};
+use contracts::kakarot_core::KakarotCore;
+use contracts::tests::utils as contract_utils;
 use contracts::tests::utils::constants::EVM_ADDRESS;
+use evm::errors::EVMErrorTrait;
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
-use starknet::{storage_base_address_from_felt252, Store};
+use evm::tests::test_utils;
+use starknet::testing;
+use starknet::{storage_base_address_from_felt252, Store, get_contract_address};
 use utils::storage::{compute_storage_base_address};
 use utils::traits::{StoreBytes31, StorageBaseAddressIntoFelt252};
+use utils::helpers::ByteArrayExTrait;
+
+
+#[test]
+#[available_gas(200000000)]
+fn test_contract_account_deploy() {
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
+    // triggerred in the constructor
+    contract_utils::drop_event(kakarot_core.contract_address);
+    let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
+    testing::set_contract_address(kakarot_core.contract_address);
+    let bytecode = array![0x01,0x02,0x03].span();
+    let ca = ContractAccountTrait::deploy(
+        test_utils::other_evm_address(), test_utils::evm_address(), bytecode
+    );
+    let ca = match ca {
+        Result::Ok(ca) => ca,
+        Result::Err(err) => panic_with_felt252(err.to_string())
+    };
+    let event = contract_utils::pop_log::<
+        KakarotCore::ContractAccountDeployed
+    >(kakarot_core.contract_address)
+        .unwrap();
+    assert(event.deployer == test_utils::other_evm_address(), 'wrong deployer address');
+    assert(event.evm_address == test_utils::evm_address(), 'wrong evm address');
+    assert(ca.nonce().unwrap() == 1, 'initial nonce not 1');
+    assert(ByteArrayExTrait::to_bytes(ca.load_bytecode().unwrap())== bytecode, 'wrong bytecode');
+}
+
+#[test]
+#[available_gas(2000000)]
+fn test_at_contract_account_deployed() {
+    let evm_address = EVM_ADDRESS();
+    ContractAccountTrait::deploy(test_utils::other_evm_address(), evm_address, array![].span())
+        .unwrap();
+    let maybe_ca = ContractAccountTrait::at(evm_address).unwrap();
+    assert(maybe_ca.is_some(), 'contract account should exist');
+    let mut ca = maybe_ca.unwrap();
+    assert(ca.evm_address == evm_address, 'evm_address incorrect');
+    assert(ca.starknet_address == get_contract_address(), 'starknet_address mismatch');
+}
+
+
+#[test]
+#[available_gas(2000000)]
+fn test_at_contract_account_undeployed() {
+    let evm_address = EVM_ADDRESS();
+    let maybe_ca = ContractAccountTrait::at(evm_address).unwrap();
+    assert(maybe_ca.is_none(), 'contract account shouldnt exist');
+}
+
 
 #[test]
 #[available_gas(2000000)]
 fn test_nonce() {
     let evm_address = EVM_ADDRESS();
-    let mut ca = ContractAccountTrait::new(evm_address);
-    assert(ca.nonce().unwrap() == 0, 'initial nonce not 0');
+    let mut ca = ContractAccountTrait::deploy(
+        test_utils::other_evm_address(), test_utils::evm_address(), array![].span()
+    )
+        .unwrap();
+    assert(ca.nonce().unwrap() == 1, 'initial nonce not 1');
     ca.increment_nonce();
-    assert(ca.nonce().unwrap() == 1, 'nonce not incremented');
+    assert(ca.nonce().unwrap() == 2, 'nonce not incremented');
 }
 
 #[test]
 #[available_gas(2000000)]
 fn test_balance() {
     let evm_address = EVM_ADDRESS();
-    let mut ca = ContractAccountTrait::new(evm_address);
+    let mut ca = ContractAccountTrait::deploy(
+        test_utils::other_evm_address(), test_utils::evm_address(), array![].span()
+    )
+        .unwrap();
     assert(ca.balance().unwrap() == 0, 'initial balance not 0');
     ca.set_balance(1);
     assert(ca.balance().unwrap() == 1, 'balance not incremented');
@@ -29,7 +92,10 @@ fn test_balance() {
 #[available_gas(20000000)]
 fn test_contract_storage() {
     let evm_address = EVM_ADDRESS();
-    let mut ca = ContractAccountTrait::new(evm_address);
+    let mut ca = ContractAccountTrait::deploy(
+        test_utils::other_evm_address(), test_utils::evm_address(), array![].span()
+    )
+        .unwrap();
     let key = u256 { low: 10, high: 10 };
     assert(ca.storage_at(key).unwrap() == 0, 'initial key not null');
     let value = u256 { low: 0, high: 1 };
@@ -44,7 +110,9 @@ fn test_store_bytecode_word_not_full() {
     let byte_array: Array<u8> = array![0x01, 0x02, 0x03, // 3 elements
     ];
     let evm_address = EVM_ADDRESS();
-    let mut ca = ContractAccountTrait::new(evm_address);
+    let mut ca = ContractAccount {
+        evm_address: evm_address, starknet_address: get_contract_address()
+    };
     ca.store_bytecode(byte_array.span());
 
     // Address at which the bytecode should be stored
@@ -104,7 +172,9 @@ fn test_store_bytecode_one_word() {
         0x1F, // 31 elements
     ];
     let evm_address = EVM_ADDRESS();
-    let mut ca = ContractAccountTrait::new(evm_address);
+    let mut ca = ContractAccount {
+        evm_address: evm_address, starknet_address: get_contract_address()
+    };
     ca.store_bytecode(byte_array.span());
 
     // Address at which the bytecode should be stored
@@ -172,7 +242,9 @@ fn test_store_bytecode_one_word_pending() {
         0x21 // 33 elements
     ];
     let evm_address = EVM_ADDRESS();
-    let mut ca = ContractAccountTrait::new(evm_address);
+    let mut ca = ContractAccount {
+        evm_address: evm_address, starknet_address: get_contract_address()
+    };
     ca.store_bytecode(byte_array.span());
 
     // Address at which the bytecode should be stored
@@ -240,7 +312,9 @@ fn test_load_bytecode() {
         0x21 // 33 elements
     ];
     let evm_address = EVM_ADDRESS();
-    let mut ca = ContractAccountTrait::new(evm_address);
+    let mut ca = ContractAccount {
+        evm_address: evm_address, starknet_address: get_contract_address()
+    };
     ca.store_bytecode(byte_array.span());
     let bytecode = ca.load_bytecode().unwrap();
     let mut i: u32 = 0;
@@ -257,7 +331,9 @@ fn test_load_bytecode() {
 #[available_gas(2000000)]
 fn test_valid_jumps() {
     let evm_address = EVM_ADDRESS();
-    let mut ca = ContractAccountTrait::new(evm_address);
+    let mut ca = ContractAccount {
+        evm_address: evm_address, starknet_address: get_contract_address()
+    };
     assert(!ca.is_valid_jump(10).unwrap(), 'should default false');
     ca.set_valid_jump(10);
     assert(ca.is_valid_jump(10).unwrap(), 'should be true')

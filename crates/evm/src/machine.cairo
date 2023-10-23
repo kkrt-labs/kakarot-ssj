@@ -17,7 +17,8 @@ struct Machine {
     ctx_count: usize,
     stack: Stack,
     memory: Memory,
-    storage_journal: Journal
+    storage_journal: Journal,
+    error: Option<EVMError>
 }
 
 impl DefaultMachine of Default<Machine> {
@@ -28,6 +29,7 @@ impl DefaultMachine of Default<Machine> {
             stack: Default::default(),
             memory: Default::default(),
             storage_journal: Default::default(),
+            error: Option::None
         }
     }
 }
@@ -60,6 +62,7 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
             stack: Default::default(),
             memory: Default::default(),
             storage_journal: Default::default(),
+            error: Option::None
         }
     }
 
@@ -258,6 +261,12 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     fn calldata(ref self: Machine) -> Span<u8> {
         let current_call_ctx = self.call_ctx();
         current_call_ctx.calldata()
+    }
+
+
+    #[inline(always)]
+    fn error(self: @Machine) -> Option<EVMError> {
+        *self.error
     }
 
     /// Reads and returns `size` elements from bytecode starting from the current value

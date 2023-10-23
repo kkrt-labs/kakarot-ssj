@@ -190,6 +190,7 @@ fn setup_machine() -> Machine {
         stack: Default::default(),
         memory: Default::default(),
         storage_journal: Default::default(),
+        error: Option::None
     }
 }
 
@@ -201,6 +202,7 @@ fn setup_machine_with_bytecode(bytecode: Span<u8>) -> Machine {
         stack: Default::default(),
         memory: Default::default(),
         storage_journal: Default::default(),
+        error: Option::None
     }
 }
 
@@ -212,6 +214,7 @@ fn setup_machine_with_calldata(calldata: Span<u8>) -> Machine {
         stack: Default::default(),
         memory: Default::default(),
         storage_journal: Default::default(),
+        error: Option::None
     }
 }
 
@@ -233,6 +236,7 @@ fn setup_machine_with_nested_execution_context() -> Machine {
         stack: Default::default(),
         memory: Default::default(),
         storage_journal: Default::default(),
+        error: Option::None
     }
 }
 
