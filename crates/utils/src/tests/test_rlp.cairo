@@ -7,6 +7,80 @@ use utils::helpers::U32Trait;
 // Tests source : https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
 
 #[test]
+#[available_gas(99999999)]
+fn test_rlp_decode_type_byte() {
+    let mut arr = array![0x78];
+
+    let (rlp_type, offset, size) = RLPTrait::decode_type(arr.span()).unwrap();
+
+    assert(rlp_type == RLPType::String, 'Wrong type');
+    assert(offset == 0, 'Wrong offset');
+    assert(size == 1, 'Wrong size');
+}
+
+#[test]
+#[available_gas(99999999)]
+fn test_rlp_decode_type_short_string() {
+    let mut arr = array![0x82];
+
+    let (rlp_type, offset, size) = RLPTrait::decode_type(arr.span()).unwrap();
+
+    assert(rlp_type == RLPType::String, 'Wrong type');
+    assert(offset == 1, 'Wrong offset');
+    assert(size == 2, 'Wrong size');
+}
+
+#[test]
+#[available_gas(99999999)]
+fn test_rlp_decode_type_long_string() {
+    let mut arr = array![0xb9, 0x01, 0x02];
+
+    let (rlp_type, offset, size) = RLPTrait::decode_type(arr.span()).unwrap();
+
+    assert(rlp_type == RLPType::String, 'Wrong type');
+    assert(offset == 3, 'Wrong offset');
+    assert(size == 258, 'Wrong size');
+}
+
+#[test]
+#[available_gas(99999999)]
+fn test_rlp_decode_type_short_list() {
+    let mut arr = array![0xc3];
+
+    let (rlp_type, offset, size) = RLPTrait::decode_type(arr.span()).unwrap();
+
+    assert(rlp_type == RLPType::List, 'Wrong type');
+    assert(offset == 1, 'Wrong offset');
+    assert(size == 3, 'Wrong size');
+}
+
+#[test]
+#[available_gas(99999999)]
+fn test_rlp_decode_type_long_list() {
+    let mut arr = array![0xf9, 0x01, 0x02];
+
+    let (rlp_type, offset, size) = RLPTrait::decode_type(arr.span()).unwrap();
+
+    assert(rlp_type == RLPType::List, 'Wrong type');
+    assert(offset == 3, 'Wrong offset');
+    assert(size == 258, 'Wrong size');
+}
+
+#[test]
+#[available_gas(99999999)]
+fn test_rlp_decode_type_long_list_len_too_short() {
+    let mut arr = array![0xf9, 0x01];
+
+    let res = RLPTrait::decode_type(arr.span());
+
+    assert(res.is_err(), 'Wrong type');
+    assert(
+        res.unwrap_err() == RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT),
+        'err != RlpInputTooShort'
+    );
+}
+
+#[test]
 #[available_gas(9999999)]
 fn test_rlp_empty() {
     let res = RLPTrait::decode(ArrayTrait::new().span());
@@ -717,7 +791,7 @@ fn test_rlp_decode_short_list() {
 #[available_gas(99999999999)]
 fn test_rlp_decode_short_nested_list() {
     let mut arr = array![0xc7, 0xc0, 0xc1, 0xc0, 0xc3, 0xc0, 0xc1, 0xc0];
-    let res = rlp_decode(arr.span()).unwrap();
+    let res = RLPTrait::decode(arr.span()).unwrap();
 
     let mut expected_0 = RLPItem::List(array![].span());
     let mut expected_1 = RLPItem::List(array![expected_0].span());
