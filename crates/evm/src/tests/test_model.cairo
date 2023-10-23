@@ -5,7 +5,7 @@ use contracts::tests::utils::{
 use evm::model::{Account, AccountTrait};
 use evm::tests::test_utils::{evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-use starknet::testing::{set_caller_address, set_contract_address};
+use starknet::testing::{set_contract_address};
 
 #[test]
 #[available_gas(20000000)]
@@ -17,7 +17,6 @@ fn test_account_at_eoa() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    set_caller_address(kakarot_core.contract_address);
     let account = AccountTrait::account_at(evm_address()).unwrap().unwrap();
 
     // Then

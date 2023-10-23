@@ -95,13 +95,7 @@ impl AccountImpl of AccountTrait {
     #[inline(always)]
     fn balance(self: @Account) -> Result<u256, EVMError> {
         match self {
-            // Case 1: EOA is deployed
-            // BALANCE is the EOA's native_token.balanceOf(eoa_starknet_address)
             Account::EOA(eoa) => { eoa.balance() },
-            // Case 2: EOA is not deployed and CA is deployed
-            // We check if a contract account is initialized at evm_address
-            // A good condition to check is nonce > 0, as deploying a contract account
-            // will set its nonce to 1
             Account::ContractAccount(ca) => { ca.balance() }
         }
     }

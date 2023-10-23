@@ -18,6 +18,7 @@ mod KakarotCore {
     use evm::errors::EVMError;
     use evm::execution::execute;
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
+    use evm::model::{Account, AccountTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
@@ -173,9 +174,12 @@ mod KakarotCore {
         }
 
         /// Gets the balance associated to a contract account
-        fn contract_account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
-            let ca = ContractAccountTrait::new(evm_address);
-            ca.balance().unwrap()
+        fn account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
+            let maybe_account = AccountTrait::account_at(evm_address).unwrap();
+            match maybe_account {
+                Option::Some(account) => account.balance().unwrap(),
+                Option::None => 0
+            }
         }
 
         /// Gets the value associated to a key in the contract account storage
