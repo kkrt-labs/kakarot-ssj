@@ -1,8 +1,8 @@
 //! System operations.
 
 use box::BoxTrait;
-use evm::balance::balance;
 use evm::call_helpers::MachineCallHelpers;
+use evm::model::AccountTrait;
 use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
@@ -68,10 +68,14 @@ impl SystemOperations of SystemOperationsTrait {
             return Result::Err(EVMError::WriteInStaticContext(VALUE_TRANSFER_IN_STATIC_CALL));
         }
 
-        // If sender_balance > value, return early, pushing
+        // If sender_balance < value, return early, pushing
         // 0 on the stack to indicate call failure.
         let caller_address = self.evm_address();
-        let sender_balance = balance(caller_address)?;
+        let maybe_account = AccountTrait::account_at(caller_address)?;
+        let sender_balance = match maybe_account {
+            Option::Some(account) => account.balance()?,
+            Option::None => 0,
+        };
         if sender_balance < value {
             self.stack.push(0);
             return Result::Ok(());

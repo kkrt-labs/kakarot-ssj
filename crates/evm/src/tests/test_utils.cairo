@@ -1,4 +1,4 @@
-use contracts::contract_account::{ContractAccountTrait};
+use evm::model::{ContractAccountTrait};
 use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextId, ExecutionContextTrait,
     DefaultOptionSpanU8
