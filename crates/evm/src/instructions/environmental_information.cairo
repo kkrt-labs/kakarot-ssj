@@ -6,6 +6,7 @@ use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED}
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::model::{AccountTrait, Account, ContractAccountTrait};
+use evm::stack::StackTrait;
 use integer::u32_as_non_zero;
 use integer::u32_overflowing_add;
 use keccak::cairo_keccak;
@@ -16,7 +17,6 @@ use utils::constants::EMPTY_KECCAK;
 use utils::helpers::{load_word, U256Trait, ByteArrayExTrait};
 use utils::math::BitshiftImpl;
 use utils::traits::{EthAddressIntoU256};
-use evm::stack::StackTrait;
 
 
 #[generate_trait]
