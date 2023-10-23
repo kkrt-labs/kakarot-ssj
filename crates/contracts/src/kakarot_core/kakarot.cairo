@@ -3,18 +3,6 @@ use starknet::{ContractAddress, EthAddress, ClassHash};
 const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
 
-#[derive(Copy, Drop, Serde, starknet::Store)]
-struct ContractAccountStorage {
-    nonce: u64,
-    balance: u256,
-// TODO: add bytecode as a field for ContractAccountStorage
-// bytecode: List
-
-//TODO: add valid jumps as a field for ContractAccountStorage
-// valid_jumps: LegacyMap<usize, bool>
-}
-
-
 #[starknet::contract]
 mod KakarotCore {
     use contracts::components::ownable::ownable_component::InternalTrait;
@@ -26,14 +14,17 @@ mod KakarotCore {
     use core::pedersen::{HashState, PedersenTrait};
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
+    use evm::context::Status;
     use evm::errors::EVMError;
+    use evm::execution::execute;
+    use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
+    use evm::model::{Account, AccountTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
-    use super::ContractAccountStorage;
     use super::INVOKE_ETH_CALL_FORBIDDEN;
     use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
-    use utils::traits::U256TryIntoContractAddress;
+    use utils::traits::{U256TryIntoContractAddress, ByteArraySerde};
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
@@ -48,8 +39,8 @@ mod KakarotCore {
     #[storage]
     struct Storage {
         /// Kakarot storage for accounts: Externally Owned Accounts (EOA) and Contract Accounts (CA)
-        /// CAs:
-        /// Map EVM address of a CA and the corresponding Kakarot Core storage ->
+        /// CAs storage is handled outside of the Storage struct (see contract_account.cairo)
+        /// It maps the EVM address of a CA and the corresponding Kakarot Core storage ->
         /// - nonce (note that this nonce is not the same as the Starknet protocol nonce)
         /// - current balance in native token (CAs can use this balance as an allowance to spend native Starknet token through Kakarot Core)
         /// - bytecode of the CA
@@ -58,7 +49,6 @@ mod KakarotCore {
         /// EOAs:
         /// Map their EVM address and their Starknet address
         /// - starknet_address: the deterministic starknet address (31 bytes) computed given an EVM address (20 bytes)
-        contract_account_storage: LegacyMap::<EthAddress, ContractAccountStorage>,
         eoa_address_registry: LegacyMap::<EthAddress, ContractAddress>,
         eoa_class_hash: ClassHash,
         // Utility storage
@@ -177,11 +167,42 @@ mod KakarotCore {
             self.eoa_address_registry.read(evm_address)
         }
 
-        /// Gets the storage associated to a contract account
-        fn contract_account_storage(
-            self: @ContractState, evm_address: EthAddress
-        ) -> ContractAccountStorage {
-            self.contract_account_storage.read(evm_address)
+        /// Gets the nonce associated to a contract account
+        fn contract_account_nonce(self: @ContractState, evm_address: EthAddress) -> u64 {
+            let ca = ContractAccountTrait::new(evm_address);
+            ca.nonce().unwrap()
+        }
+
+        /// Gets the balance associated to a contract account
+        fn account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
+            let maybe_account = AccountTrait::account_at(evm_address).unwrap();
+            match maybe_account {
+                Option::Some(account) => account.balance().unwrap(),
+                Option::None => 0
+            }
+        }
+
+        /// Gets the value associated to a key in the contract account storage
+        fn contract_account_storage_at(
+            self: @ContractState, evm_address: EthAddress, key: u256
+        ) -> u256 {
+            let ca = ContractAccountTrait::new(evm_address);
+            ca.storage_at(key).unwrap()
+        }
+
+
+        /// Gets the bytecode associated to a contract account
+        fn contract_account_bytecode(self: @ContractState, evm_address: EthAddress) -> ByteArray {
+            let mut ca = ContractAccountTrait::new(evm_address);
+            ca.load_bytecode().unwrap()
+        }
+
+        /// Returns true if the given `offset` is a valid jump destination in the bytecode of a contract account.
+        fn contract_account_valid_jump(
+            self: @ContractState, evm_address: EthAddress, offset: usize
+        ) -> bool {
+            let ca = ContractAccountTrait::new(evm_address);
+            ca.is_valid_jump(offset).unwrap()
         }
 
         /// Deploys an EOA for a particular EVM address

@@ -14,12 +14,15 @@ mod test_external_owned_account {
     fn deploy_eoa() -> IExternallyOwnedAccountDispatcher {
         let calldata: Span<felt252> = array![kakarot_address().into(), eoa_address().into()].span();
 
-        let (contract_address, _) = deploy_syscall(
-            ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata, true
-        )
-            .unwrap();
-
-        IExternallyOwnedAccountDispatcher { contract_address }
+        let maybe_address = deploy_syscall(
+            ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata, false
+        );
+        match maybe_address {
+            Result::Ok((
+                contract_address, _
+            )) => { IExternallyOwnedAccountDispatcher { contract_address } },
+            Result::Err(err) => panic(err)
+        }
     }
 
     #[test]

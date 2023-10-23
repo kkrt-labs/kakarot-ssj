@@ -1,4 +1,5 @@
 mod interface;
 mod kakarot;
+use interface::IKakarotCore;
 
-use kakarot::{KakarotCore, ContractAccountStorage};
+use kakarot::KakarotCore;

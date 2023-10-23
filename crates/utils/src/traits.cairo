@@ -85,11 +85,11 @@ trait TryIntoResult<T, U> {
     fn try_into_result(self: T) -> Result<U, EVMError>;
 }
 
-impl U256TryIntoResultU32 of TryIntoResult<u256, usize> {
-    /// Converts a u256 into a Result<u32, EVMError>
-    /// If the u256 is larger than MAX_U32, it returns an error.
+impl U256TryIntoResult<U, +TryInto<u256, U>> of TryIntoResult<u256, U> {
+    /// Converts a u256 into a Result<U, EVMError>
+    /// If the u256 cannot be converted into U, it returns an error.
     /// Otherwise, it returns the casted value.
-    fn try_into_result(self: u256) -> Result<usize, EVMError> {
+    fn try_into_result(self: u256) -> Result<U, EVMError> {
         match self.try_into() {
             Option::Some(value) => Result::Ok(value),
             Option::None => Result::Err(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
@@ -129,5 +129,38 @@ impl StoreBytes31 of Store<bytes31> {
     #[inline(always)]
     fn size() -> u8 {
         1_u8
+    }
+}
+
+impl ByteArraySerde of Serde<ByteArray> {
+    fn serialize(self: @ByteArray, ref output: Array<felt252>) {
+        // First felt is number of bytes used in the last felt
+        // Second felt is the pending word
+        // Subsequent felts are the full 31-byte words
+        output.append((*self.pending_word_len).into());
+        output.append((*self.pending_word).into());
+        let mut i = 0;
+        loop {
+            if i == self.data.len() {
+                break;
+            }
+            output.append((*self.data[i]).into());
+            i += 1;
+        };
+    }
+
+    fn deserialize(ref serialized: Span<felt252>) -> Option<ByteArray> {
+        let pending_word_len: u32 = (*serialized.pop_front()?).try_into()?;
+        let pending_word = *serialized.pop_front()?;
+        let mut data: Array<bytes31> = Default::default();
+        loop {
+            match serialized.pop_front() {
+                Option::Some(val) => { data.append((*val).try_into().unwrap()); },
+                Option::None => { break; }
+            }
+        };
+        Option::Some(
+            ByteArray { data: data, pending_word: pending_word, pending_word_len: pending_word_len }
+        )
     }
 }

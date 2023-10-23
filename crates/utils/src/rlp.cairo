@@ -4,9 +4,7 @@ use array::{Array, ArrayTrait, Span, SpanTrait};
 use clone::Clone;
 use traits::{Into, TryInto};
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
-use utils::helpers::BytesSerde;
-
-use debug::PrintTrait;
+use utils::helpers::{U32Trait, ByteArrayExTrait};
 
 // All possible RLP tpypes
 #[derive(Drop, PartialEq)]
@@ -22,12 +20,12 @@ enum RLPItem {
 }
 
 #[generate_trait]
-impl RLPTypeImpl of RLPTypeTrait {
+impl RLPImpl of RLPTrait {
     /// Returns RLPType from the leading byte
     ///
     /// # Arguments
     ///
-    /// * `byte` - Leading byte
+    /// * `byte` - Leading byte of the RLP encoded data
     /// Return result with RLPType
     fn from_byte(input: Span<u8>) -> Result<(RLPType, u32, u32), RLPError> {
         let input_len = input.len();

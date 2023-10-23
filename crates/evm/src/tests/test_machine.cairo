@@ -121,10 +121,6 @@ fn test_addresses() {
 
     let evm_address = machine.evm_address();
     assert(evm_address == evm_address_expected, 'wrong evm address');
-
-    let starknet_address = machine.starknet_address();
-    let starknet_address_expected = starknet_address();
-    assert(starknet_address == starknet_address_expected, 'wrong starknet address');
 }
 
 #[test]

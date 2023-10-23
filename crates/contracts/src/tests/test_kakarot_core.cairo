@@ -5,7 +5,6 @@ use contracts::tests::test_upgradeable::{
     IMockContractUpgradeableDispatcherTrait
 };
 use contracts::tests::utils;
-use debug::PrintTrait;
 use eoa::externally_owned_account::ExternallyOwnedAccount;
 use evm::tests::test_utils;
 use starknet::{get_caller_address, testing, contract_address_const, ContractAddress, ClassHash};
@@ -116,3 +115,6 @@ fn test_kakarot_core_upgrade_contract() {
         .version();
     assert(version == 1, 'version is not 1');
 }
+// TODO add tests related to contract accounts once they can be deployed.
+
+

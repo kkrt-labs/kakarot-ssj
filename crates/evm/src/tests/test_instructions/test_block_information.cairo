@@ -1,8 +1,65 @@
+use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::tests::utils::{
+    deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
+};
 use evm::instructions::BlockInformationTrait;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::setup_machine;
-use starknet::testing::{set_block_timestamp, set_block_number};
+use evm::tests::test_utils::{setup_machine, evm_address};
+use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
+use starknet::testing::{set_block_timestamp, set_block_number, set_contract_address};
 use utils::constants::CHAIN_ID;
+
+/// 0x40 - BLOCKHASH
+#[test]
+#[available_gas(20000000)]
+fn test_exec_blockhash_below_bounds() {
+    // Given
+    let mut machine = setup_machine();
+
+    set_block_number(500);
+
+    // When
+    machine.stack.push(243).unwrap();
+    machine.exec_blockhash();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'stack top should be 0');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_blockhash_above_bounds() {
+    // Given
+    let mut machine = setup_machine();
+
+    set_block_number(500);
+
+    // When
+    machine.stack.push(491).unwrap();
+    machine.exec_blockhash();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'stack top should be 0');
+}
+
+// TODO: implement exec_blockhash testing for block number within bounds
+// https://github.com/starkware-libs/cairo/blob/77a7e7bc36aa1c317bb8dd5f6f7a7e6eef0ab4f3/crates/cairo-lang-starknet/cairo_level_tests/interoperability.cairo#L173
+#[ignore]
+#[test]
+#[available_gas(20000000)]
+fn test_exec_blockhash_within_bounds() {
+    // Given
+    let mut machine = setup_machine();
+
+    set_block_number(500);
+
+    // When
+    machine.stack.push(244).unwrap();
+    machine.exec_blockhash();
+    // Then
+    assert(machine.stack.peek().unwrap() == 0xF, 'stack top should be 0xF');
+}
+
 
 #[test]
 #[available_gas(20000000)]
@@ -48,6 +105,71 @@ fn test_gaslimit() {
     // This value is set in [setup_execution_context].
     assert(machine.stack.peek().unwrap() == 0xffffff, 'stack top should be 0xffffff');
 }
+
+// *************************************************************************
+// 0x47: SELFBALANCE
+// *************************************************************************
+#[test]
+#[available_gas(5000000)]
+fn test_exec_selfbalance_eoa() {
+    // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    let eoa = kakarot_core.deploy_eoa(evm_address());
+
+    fund_account_with_native_token(eoa, native_token);
+
+    // And
+    let mut machine = setup_machine();
+
+    // When
+    set_contract_address(kakarot_core.contract_address);
+    machine.exec_selfbalance();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == native_token.balanceOf(eoa), 'wrong balance');
+}
+
+#[test]
+#[available_gas(5000000)]
+fn test_exec_selfbalance_zero() {
+    // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+
+    // And
+    let mut machine = setup_machine();
+
+    // When
+    set_contract_address(kakarot_core.contract_address);
+    machine.exec_selfbalance();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0x00, 'wrong balance');
+}
+
+// TODO: implement balance once contracts accounts can be deployed
+#[ignore]
+#[test]
+#[available_gas(5000000)]
+fn test_exec_selfbalance_contract_account() {
+    // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    // TODO: deploy contract account
+    // and fund it
+
+    // And
+    let mut machine = setup_machine();
+
+    // When
+    set_contract_address(kakarot_core.contract_address);
+    machine.exec_selfbalance();
+
+    // Then
+    panic_with_felt252('Not implemented yet');
+}
+
 
 #[test]
 #[available_gas(20000000)]

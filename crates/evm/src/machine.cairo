@@ -51,6 +51,17 @@ impl DefaultMachine of Default<Machine> {
 
 #[generate_trait]
 impl MachineCurrentContextImpl of MachineCurrentContextTrait {
+    #[inline(always)]
+    fn new(ctx: ExecutionContext) -> Machine {
+        Machine {
+            current_ctx: BoxTrait::new(ctx),
+            ctx_count: 1,
+            stack: Default::default(),
+            memory: Default::default(),
+            storage_journal: Default::default(),
+        }
+    }
+
     /// Sets the current execution context being executed by the machine.
     /// This is an implementation-specific concept that is used
     /// to divide a unique Stack/Memory simulated by a dict into
@@ -165,14 +176,6 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
         let evm_address = current_execution_ctx.evm_address();
         self.current_ctx = BoxTrait::new(current_execution_ctx);
         evm_address
-    }
-
-    #[inline(always)]
-    fn starknet_address(ref self: Machine) -> ContractAddress {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let starknet_address = current_execution_ctx.starknet_address();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        starknet_address
     }
 
     #[inline(always)]
