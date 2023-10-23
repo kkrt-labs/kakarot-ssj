@@ -1,3 +1,4 @@
+use evm::errors::{EVMError, MISSING_PARENT_CONTEXT};
 use evm::storage_journal::Journal;
 use evm::{
     context::{
@@ -131,19 +132,26 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
 
     /// Returns from the sub context by setting the current context
     /// to the parent context.
+    ///
+    /// # Errors
+    /// - InvalidMachineState: when the parent context is Null.
     #[inline(always)]
-    fn return_to_parent_ctx(ref self: Machine) {
+    fn return_to_parent_ctx(ref self: Machine) -> Result<(), EVMError> {
         let mut current_ctx = self.current_ctx.unbox();
         let maybe_parent_ctx = current_ctx.parent_ctx;
         match match_nullable(maybe_parent_ctx) {
-            FromNullableResult::Null => current_ctx = Default::default(),
+            FromNullableResult::Null => {
+                current_ctx.parent_ctx = Default::default();
+                self.current_ctx = BoxTrait::new(current_ctx);
+                return Result::Err(EVMError::InvalidMachineState(MISSING_PARENT_CONTEXT));
+            },
             FromNullableResult::NotNull(parent_ctx) => {
                 let parent_ctx = parent_ctx.unbox();
-                current_ctx.parent_ctx = Default::default();
                 current_ctx = parent_ctx;
             },
         };
         self.current_ctx = BoxTrait::new(current_ctx);
+        Result::Ok(())
     }
 
     #[inline(always)]

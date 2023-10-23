@@ -137,9 +137,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         // Return from the current sub ctx by setting the execution context
         // to the parent context.
-        self.return_to_parent_ctx();
-
-        return Result::Ok(());
+        self.return_to_parent_ctx()
     }
 }
 

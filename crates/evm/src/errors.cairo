@@ -17,6 +17,7 @@ const INVALID_DESTINATION: felt252 = 'KKT: invalid JUMP destination';
 // CALL
 const VALUE_TRANSFER_IN_STATIC_CALL: felt252 = 'KKT: transfer value in static';
 const ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION: felt252 = 'KKT: active state in end call';
+const MISSING_PARENT_CONTEXT: felt252 = 'KKT: missing parent context';
 
 // EVM STATE
 const WRITE_IN_STATIC_CONTEXT: felt252 = 'KKT: WriteInStaticContext';
