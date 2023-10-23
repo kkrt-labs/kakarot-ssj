@@ -1,4 +1,3 @@
-use contracts::contract_account::ContractAccountTrait;
 use contracts::kakarot_core::interface::{IKakarotCore};
 use contracts::kakarot_core::{KakarotCore};
 use core::hash::{HashStateExTrait, HashStateTrait};
@@ -6,8 +5,7 @@ use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::{AccountTrait, Account};
-use evm::stack::StackTrait;
+use evm::model::{AccountTrait, Account, ContractAccountTrait};
 use integer::u32_as_non_zero;
 use integer::u32_overflowing_add;
 use keccak::cairo_keccak;
@@ -15,9 +13,10 @@ use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDi
 use pedersen::{PedersenTrait, HashState};
 use starknet::{Store, storage_base_address_from_felt252, ContractAddress, get_contract_address};
 use utils::constants::EMPTY_KECCAK;
-use utils::helpers::{load_word, U256Trait};
+use utils::helpers::{load_word, U256Trait, ByteArrayExTrait};
 use utils::math::BitshiftImpl;
-use utils::traits::{EthAddressIntoU256, ByteArrayZero};
+use utils::traits::{EthAddressIntoU256};
+use evm::stack::StackTrait;
 
 
 #[generate_trait]
@@ -226,100 +225,33 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_extcodehash(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        // Case 1: The address corresponds to a EOA. If so, the account exists but has no code.
-        // We return the empty hash.
-        let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let eoa_starknet_address = kakarot_state.eoa_starknet_address(evm_address);
-        if !eoa_starknet_address.is_zero() {
-            return self.stack.push(EMPTY_KECCAK);
-        }
-
-        let contract_account = ContractAccountTrait::new(evm_address);
-        // Case 2: The address corresponds to a non-existing or destroyed contract account.
-        // Checking if the nonce of a contrat account equals zero is a sufficient condition,
-        // as upon deployment, its nonce is increment to 1.
-        let account_exists = contract_account.nonce()? != 0;
-        if !account_exists {
-            return self.stack.push(0);
-        }
-
-        // Case 3: The address corresponds to an existing contract account.
-        let mut bytecode = contract_account.load_bytecode()?;
-        // If the bytecode is empty, return the empty keccak hash.
-        if bytecode.is_zero() {
-            return self.stack.push(EMPTY_KECCAK);
-        }
-
-        // Else hash the bytecode and push the hash on the stack
-        // Since bytecode is a ByteArray, we need to perform a couple of transformations.
-        // `cairo_keccak` takes in an array of little-endian u64s
-        // First we compute how many full u64s there are in bytecode as well as the keccak `last_word`
-        let (full_u64_word_count, last_input_num_bytes) = DivRem::div_rem(
-            bytecode.len(), u32_as_non_zero(8)
-        );
-
-        // The `keccak_input` parameter of `cairo_keccak`
-        let mut keccak_input: Array<u64> = Default::default();
-        // A counter for the 8 bytes in a u64, runs in the range [0..8].
-        let mut byte_counter: u8 = 0;
-        // The temporary variable where we accumulate full u64 words
-        let mut tmp: u64 = 0;
-        // A counter to track the number of u64 words we iterated on.
-        let mut u64_word_counter: usize = 0;
-
-        // We need to return bytecode at the end of the loop
-        // To restore ownership of the bytecode ByteArray to bytecode.
-        // Otherwise, we'll get a `X Was Previously Moved` error
-        bytecode =
-            loop {
-                // We break if we've reached the number of full u64 words we can push in the keccak input array
-                if u64_word_counter == full_u64_word_count {
-                    break bytecode;
-                }
-                // Once byte_counter is 8, we've successfully filled a u64 word.
-                if byte_counter == 8 {
-                    // Append to the keccak_input the accumulated u64
-                    keccak_input.append(tmp);
-                    // Reset the counter and tmp
-                    byte_counter = 0;
-                    tmp = 0;
-                    // Increase the u64 counter
-                    u64_word_counter += 1;
-                }
-                tmp += match bytecode.at(u64_word_counter * 8 + byte_counter.into()) {
-                    Option::Some(byte) => {
-                        let byte: u64 = byte.into();
-                        // Accumulate tmp in a little endian manner
-                        byte.shl(8_u64 * byte_counter.into())
-                    },
-                    Option::None => { break bytecode; },
-                };
-                byte_counter += 1;
-            };
-
-        // Fill the last input word
-        let mut last_input_word: u64 = 0;
-        let mut byte_counter: u8 = 0;
-
-        // We enter a second loop for clarity.
-        // O(2n) should be okay
-        // We might want to regroup every computation into a single loop with appropriate `if` branching
-        // For optimisation
-        loop {
-            if byte_counter.into() == last_input_num_bytes {
-                break;
-            }
-            last_input_word += match bytecode.at(full_u64_word_count * 8 + byte_counter.into()) {
-                Option::Some(byte) => {
-                    let byte: u64 = byte.into();
-                    byte.shl(8_u64 * byte_counter.into())
-                },
-                Option::None => { break; },
-            };
-            byte_counter += 1;
+        let maybe_account = AccountTrait::account_at(evm_address)?;
+        let account = match maybe_account {
+            Option::Some(account) => account,
+            // Case 1: The address corresponds to a non-existing or destroyed contract account.
+            Option::None => { return self.stack.push(0); },
         };
 
-        let hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes);
-        self.stack.push(hash.reverse_endianness())
+        match account {
+            Account::EOA(eoa) => {
+                // Case 2: The address corresponds to a EOA. If so, the account exists but has no code.
+                // We return the empty hash.
+                return self.stack.push(EMPTY_KECCAK);
+            },
+            Account::ContractAccount(ca) => {
+                let mut bytecode = ca.load_bytecode()?;
+                // If the bytecode is empty, return the empty keccak hash.
+                if bytecode.is_empty() {
+                    return self.stack.push(EMPTY_KECCAK);
+                }
+                // Else hash the bytecode and push the hash on the stack
+                // Since bytecode is a ByteArray, we need to perform a couple of transformations.
+                // `cairo_keccak` takes in an array of little-endian u64s
+                let (mut keccak_input, last_input_word, last_input_num_bytes) = bytecode
+                    .to_u64_words();
+                let hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes);
+                self.stack.push(hash.reverse_endianness())
+            }
+        }
     }
 }

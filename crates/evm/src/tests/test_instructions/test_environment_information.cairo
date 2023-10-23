@@ -1,4 +1,4 @@
-use contracts::contract_account::ContractAccountTrait;
+use evm::model::contract_account::ContractAccountTrait;
 use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore};
 use contracts::tests::utils::counter_evm_bytecode;
 use contracts::tests::utils::{
