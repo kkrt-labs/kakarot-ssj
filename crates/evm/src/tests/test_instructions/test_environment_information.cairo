@@ -601,7 +601,7 @@ fn test_exec_extcodesize_ca_with_bytecode() {
 
     // Then
     assert(
-        machine.stack.peek() // extcodesize(Counter.sol) := 487 (source: remix)
+        machine.stack.peek() // extcodesize(Counter.sol) := 275 (source: remix)
         .unwrap() == 275,
         'expected counter SC code size'
     );
