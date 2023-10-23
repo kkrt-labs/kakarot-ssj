@@ -136,15 +136,15 @@ struct ExecutionContext {
     parent_ctx: Nullable<ExecutionContext>,
 }
 
-/// The current execution context id
+/// A context is either: the root, a call sub-context or a create sub-context.
+/// In the case of call and create, the execution context requires an id number
+/// to access their respective Stack and Memory; while the Root context always has
+/// id equal to 0.
 #[derive(Drop, Default, Copy, PartialEq)]
 enum ExecutionContextId {
-    /// Root context
     #[default]
     Root,
-    /// Call context
     Call: usize,
-    /// Create context
     Create: usize
 }
 

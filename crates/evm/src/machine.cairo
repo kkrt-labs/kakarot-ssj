@@ -276,7 +276,7 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
         code
     }
 
-    /// Returns whether the current execution context id.
+    /// Returns whether the current execution context type.
     #[inline(always)]
     fn execution_ctx_id(ref self: Machine) -> ExecutionContextId {
         let current_execution_ctx = self.current_ctx.unbox();

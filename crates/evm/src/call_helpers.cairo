@@ -1,5 +1,4 @@
 use cmp::min;
-use evm::bytecode::bytecode;
 use evm::context::{
     ExecutionContext, Status, CallContext, CallContextTrait, ExecutionContextId,
     ExecutionContextTrait
@@ -7,6 +6,7 @@ use evm::context::{
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
+use evm::model::AccountTrait;
 use evm::stack::StackTrait;
 //! CALL, CALLCODE, DELEGATECALL, STATICCALL opcode helpers
 use starknet::{EthAddress};
@@ -70,7 +70,12 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         // Case 2: `to` address is not a precompile
         // We enter the standard flow
-        let bytecode = bytecode(call_args.to)?;
+        let maybe_account = AccountTrait::account_at(call_args.to)?;
+        let bytecode = match maybe_account {
+            Option::Some(acc) => acc.bytecode()?,
+            Option::None => Default::default().span(),
+        };
+
         // The caller in the subcontext is the current context's current address
         let caller = self.evm_address();
 
