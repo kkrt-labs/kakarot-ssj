@@ -49,7 +49,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
                     },
                     Status::Stopped => {
                         machine.storage_journal.finalize_local();
-                        match machine.execution_ctx_id() {
+                        match machine.id() {
                             ExecutionContextId::Root => {
                                 machine.storage_journal.finalize_global(); // TODO: error handling
                             },
