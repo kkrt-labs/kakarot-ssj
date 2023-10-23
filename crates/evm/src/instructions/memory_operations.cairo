@@ -177,6 +177,10 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Get the amount of available gas, including the corresponding reduction for the cost of this instruction.
     /// # Specification: https://www.evm.codes/#5a?fork=shanghai
     fn exec_gas(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        // Since there is no Starknet syscall to get the gas left in a transaction,
+        // We're forced to return the initial gas available in the transaction.
+        // When we transition to gas accounting inside the runtime, or
+        // a new syscall is introduced, gas opcode will not be accurate.
+        self.stack.push(self.gas_limit().into())
     }
 }

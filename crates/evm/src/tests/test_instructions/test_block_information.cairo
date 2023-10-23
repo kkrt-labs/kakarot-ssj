@@ -201,3 +201,18 @@ fn test_chainid_should_push_chain_id_to_stack() {
     let result = machine.stack.peek().unwrap();
     assert(result == chain_id, 'stack should have chain id');
 }
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_randao_should_push_zero_to_stack() {
+    // Given
+    let mut machine = setup_machine();
+
+    // When
+    machine.exec_prevrandao().unwrap();
+
+    // Then
+    let result = machine.stack.peek().unwrap();
+    assert(result == 0x00, 'stack top should be zero');
+}
