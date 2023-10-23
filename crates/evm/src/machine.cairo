@@ -280,9 +280,9 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     #[inline(always)]
     fn ctx_type(ref self: Machine) -> ExecutionContextType {
         let current_execution_ctx = self.current_ctx.unbox();
-        let id = current_execution_ctx.ctx_type();
+        let ctx_type = current_execution_ctx.ctx_type();
         self.current_ctx = BoxTrait::new(current_execution_ctx);
-        id
+        ctx_type
     }
 
     /// Returns whether the current execution context is the root context.
