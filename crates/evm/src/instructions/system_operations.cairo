@@ -57,7 +57,6 @@ impl SystemOperations of SystemOperationsTrait {
     /// CALL
     /// # Specification: https://www.evm.codes/#f1?fork=shanghai
     fn exec_call(ref self: Machine) -> Result<(), EVMError> {
-        // Prepare the call arguments with with_value = true for a call.
         let call_args = self.prepare_call(true)?;
         let read_only = self.read_only();
         let value = call_args.value;
