@@ -21,7 +21,7 @@ mod internal {
         memory.store_n(bytes_array.span(), offset);
 
         // When
-        let mut elements: Array<u8> = array![];
+        let mut elements: Array<u8> = Default::default();
         memory.load_n_internal(32, ref elements, offset);
 
         // Then
@@ -173,7 +173,7 @@ fn test_store_n_2_aligned_words() {
     // value [35] will be stored in final word
     assert(memory.size() == 64, 'memory should be 64 bytes');
 
-    let mut stored_bytes = array![];
+    let mut stored_bytes = Default::default();
     memory.load_n_internal(35, ref stored_bytes, 15);
     assert(stored_bytes.span() == bytes_arr, 'stored bytes not == expected');
 }

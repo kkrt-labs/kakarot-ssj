@@ -34,8 +34,8 @@ classDiagram
         bytecode: Span~u8~,
         calldata: Span~u8~,
         value: u256,
-        gas_price: u32,
-        gas_limit: u32,
+        gas_price: u128,
+        gas_limit: u128,
         read_only: bool,
     }
 

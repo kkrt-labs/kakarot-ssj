@@ -1,4 +1,7 @@
-use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, Status};
+use evm::context::{
+    CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
+    Status
+};
 use evm::interpreter::EVMInterpreterTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::model::ExecutionResult;
@@ -27,15 +30,23 @@ fn execute(
     bytecode: Span<u8>,
     calldata: Span<u8>,
     value: u256,
-    gas_price: u64,
-    gas_limit: u64,
+    gas_price: u128,
+    gas_limit: u128,
 ) -> ExecutionResult {
     // Create a new root execution context.
     let call_ctx = CallContextTrait::new(
-        caller: evm_address, :bytecode, :calldata, :value, read_only: false, :gas_limit, :gas_price
+        caller: evm_address,
+        :bytecode,
+        :calldata,
+        :value,
+        read_only: false,
+        :gas_limit,
+        :gas_price,
+        ret_offset: 0,
+        ret_size: 0
     );
     let ctx = ExecutionContextTrait::new(
-        id: 0,
+        ctx_type: Default::default(),
         :evm_address,
         :call_ctx,
         parent_ctx: Default::default(),

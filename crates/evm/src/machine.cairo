@@ -1,8 +1,9 @@
+use evm::errors::{EVMError, MISSING_PARENT_CONTEXT};
 use evm::storage_journal::Journal;
 use evm::{
     context::{
-        ExecutionContext, ExecutionContextTrait, DefaultBoxExecutionContext, CallContext,
-        CallContextTrait, Status, Event
+        ExecutionContext, ExecutionContextType, ExecutionContextTrait, DefaultBoxExecutionContext,
+        CallContext, CallContextTrait, Status, Event
     },
     stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}
 };
@@ -68,8 +69,8 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     /// multiple sub-structures relative to a single context.
     #[inline(always)]
     fn set_current_ctx(ref self: Machine, ctx: ExecutionContext) {
-        self.memory.set_active_segment(ctx.id);
-        self.stack.set_active_segment(ctx.id);
+        self.memory.set_active_segment(ctx.id());
+        self.stack.set_active_segment(ctx.id());
         self.current_ctx = BoxTrait::new(ctx);
     }
 
@@ -127,6 +128,30 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
         let call_ctx = current_execution_ctx.call_ctx.unbox();
         self.current_ctx = BoxTrait::new(current_execution_ctx);
         call_ctx
+    }
+
+    /// Returns from the sub context by setting the current context
+    /// to the parent context.
+    ///
+    /// # Errors
+    /// - InvalidMachineState: when the parent context is Null.
+    #[inline(always)]
+    fn return_to_parent_ctx(ref self: Machine) -> Result<(), EVMError> {
+        let mut current_ctx = self.current_ctx.unbox();
+        let maybe_parent_ctx = current_ctx.parent_ctx;
+        match match_nullable(maybe_parent_ctx) {
+            FromNullableResult::Null => {
+                current_ctx.parent_ctx = Default::default();
+                self.current_ctx = BoxTrait::new(current_ctx);
+                return Result::Err(EVMError::InvalidMachineState(MISSING_PARENT_CONTEXT));
+            },
+            FromNullableResult::NotNull(parent_ctx) => {
+                let parent_ctx = parent_ctx.unbox();
+                current_ctx = parent_ctx;
+            },
+        };
+        self.current_ctx = BoxTrait::new(current_ctx);
+        Result::Ok(())
     }
 
     #[inline(always)]
@@ -206,13 +231,13 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     }
 
     #[inline(always)]
-    fn gas_limit(ref self: Machine) -> u64 {
+    fn gas_limit(ref self: Machine) -> u128 {
         let current_call_ctx = self.call_ctx();
         current_call_ctx.gas_limit()
     }
 
     #[inline(always)]
-    fn gas_price(ref self: Machine) -> u64 {
+    fn gas_price(ref self: Machine) -> u128 {
         let current_call_ctx = self.call_ctx();
         current_call_ctx.gas_price()
     }
@@ -251,15 +276,31 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
         code
     }
 
+    /// Returns the current execution context type (root, call or create).
+    #[inline(always)]
+    fn ctx_type(ref self: Machine) -> ExecutionContextType {
+        let current_execution_ctx = self.current_ctx.unbox();
+        let ctx_type = current_execution_ctx.ctx_type();
+        self.current_ctx = BoxTrait::new(current_execution_ctx);
+        ctx_type
+    }
 
     /// Returns whether the current execution context is the root context.
-    /// The root is always the first context to be executed, and thus has id 0.
     #[inline(always)]
     fn is_root(ref self: Machine) -> bool {
         let current_execution_ctx = self.current_ctx.unbox();
-        let is_root = current_execution_ctx.id == 0;
+        let is_root = current_execution_ctx.is_root();
         self.current_ctx = BoxTrait::new(current_execution_ctx);
         is_root
+    }
+
+    /// Returns whether the current execution context is a call context.
+    #[inline(always)]
+    fn is_call(ref self: Machine) -> bool {
+        let current_execution_ctx = self.current_ctx.unbox();
+        let is_call = current_execution_ctx.is_call();
+        self.current_ctx = BoxTrait::new(current_execution_ctx);
+        is_call
     }
 
     /// Sets the `return_data` field of the appropriate execution context,
@@ -284,5 +325,27 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
             }
         }
         self.current_ctx = BoxTrait::new(current_ctx);
+    }
+
+    /// Gets the parent context return data if any, or returns an empty Span
+    #[inline(always)]
+    fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
+        let mut current_ctx = self.current_ctx.unbox();
+        let maybe_parent_ctx = current_ctx.parent_ctx;
+        let return_data = match match_nullable(maybe_parent_ctx) {
+            // Due to ownership mechanism, both branches need to explicitly re-bind the parent_ctx.
+            FromNullableResult::Null => {
+                current_ctx.parent_ctx = Default::default();
+                Default::default().span()
+            },
+            FromNullableResult::NotNull(parent_ctx) => {
+                let mut parent_ctx = parent_ctx.unbox();
+                let return_data = parent_ctx.return_data;
+                current_ctx.parent_ctx = NullableTrait::new(parent_ctx);
+                return_data
+            }
+        };
+        self.current_ctx = BoxTrait::new(current_ctx);
+        return_data
     }
 }

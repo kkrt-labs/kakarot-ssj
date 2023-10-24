@@ -86,9 +86,6 @@ trait TryIntoResult<T, U> {
 }
 
 impl U256TryIntoResult<U, +TryInto<u256, U>> of TryIntoResult<u256, U> {
-    /// Converts a u256 into a Result<U, EVMError>
-    /// If the u256 cannot be converted into U, it returns an error.
-    /// Otherwise, it returns the casted value.
     fn try_into_result(self: u256) -> Result<U, EVMError> {
         match self.try_into() {
             Option::Some(value) => Result::Ok(value),

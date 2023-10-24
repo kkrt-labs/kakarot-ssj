@@ -6,6 +6,7 @@ use evm::execution::Status;
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::model::eoa::{EOA, EOATrait};
 use starknet::{EthAddress, get_contract_address, ContractAddress};
+use utils::helpers::ByteArrayExTrait;
 
 #[derive(Drop)]
 struct Event {
@@ -97,6 +98,17 @@ impl AccountImpl of AccountTrait {
         match self {
             Account::EOA(eoa) => { eoa.balance() },
             Account::ContractAccount(ca) => { ca.balance() }
+        }
+    }
+
+    /// Returns the bytecode of the EVM account (EOA or CA)
+    fn bytecode(self: @Account) -> Result<Span<u8>, EVMError> {
+        match self {
+            Account::EOA(_) => Result::Ok(Default::default().span()),
+            Account::ContractAccount(ca) => {
+                let bytecode = ca.load_bytecode()?;
+                Result::Ok(ByteArrayExTrait::into_bytes(bytecode))
+            }
         }
     }
 }
