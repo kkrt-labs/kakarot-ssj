@@ -524,6 +524,23 @@ fn test_store_padded_segment_should_not_change_the_memory() {
 
 #[test]
 #[available_gas(20000000)]
+fn test_store_padded_segment_should_expand_memory() {
+    // Given
+    let mut memory = MemoryTrait::new();
+
+    // When
+    let bytes = Default::default().span();
+    memory.store_padded_segment(10, 10, bytes);
+
+    // Then
+    let len = memory.size();
+    assert(len == 32, 'memory should be length 32');
+    let word = memory.load(10);
+    assert(word == 0, 'word should be 0');
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test_store_padded_segment_should_add_n_elements_to_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();

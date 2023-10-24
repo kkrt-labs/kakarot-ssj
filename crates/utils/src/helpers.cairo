@@ -655,6 +655,20 @@ impl ByteArrayExt of ByteArrayExTrait {
         self.len() == 0
     }
 
+    fn into_bytes(self: ByteArray) -> Span<u8> {
+        let mut output: Array<u8> = Default::default();
+        let len = self.len();
+        let mut i = 0;
+        loop {
+            if i == len {
+                break;
+            };
+            output.append(self[i]);
+            i += 1;
+        };
+        output.span()
+    }
+
 
     /// Transforms a ByteArray into an Array of u64 full words, a pending u64 word and its length in bytes
     fn to_u64_words(ref self: ByteArray) -> (Array<u64>, u64, usize) {
@@ -716,20 +730,6 @@ impl ByteArrayExt of ByteArrayExTrait {
             };
 
         (u64_words, last_input_word, last_input_num_bytes)
-    }
-
-    fn into_bytes(byte_array: ByteArray) -> Span<u8> {
-        let mut output: Array<u8> = Default::default();
-        let len = byte_array.len();
-        let mut i = 0;
-        loop {
-            if i == len {
-                break;
-            };
-            output.append(byte_array[i]);
-            i += 1;
-        };
-        output.span()
     }
 }
 
