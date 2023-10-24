@@ -27,6 +27,7 @@ const READ_SYSCALL_FAILED: felt252 = 'KKT: read syscall failed';
 const BLOCK_HASH_SYSCALL_FAILED: felt252 = 'KKT: block_hash syscall failed';
 const WRITE_SYSCALL_FAILED: felt252 = 'KKT: write syscall failed';
 const CONTRACT_SYSCALL_FAILED: felt252 = 'KKT: contract syscall failed';
+const EXECUTION_INFO_SYSCALL_FAILED: felt252 = 'KKT: exec info syscall failed';
 
 // CALL
 const CALL_GAS_GT_GAS_LIMIT: felt252 = 'KKT: call gas gt gas limit';

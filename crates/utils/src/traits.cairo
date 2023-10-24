@@ -1,3 +1,5 @@
+use core::option::OptionTrait;
+use core::traits::TryInto;
 use starknet::{
     StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
     ContractAddress, Store, SyscallResult
@@ -83,6 +85,13 @@ impl StorageBaseAddressPartialEq of PartialEq<StorageBaseAddress> {
 
 trait TryIntoResult<T, U> {
     fn try_into_result(self: T) -> Result<U, EVMError>;
+}
+
+impl EthAddressTryIntoResult of TryIntoResult<ContractAddress, EthAddress> {
+    fn try_into_result(self: ContractAddress) -> Result<EthAddress, EVMError> {
+        let tmp: felt252 = self.into();
+        tmp.try_into().ok_or(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
+    }
 }
 
 impl U256TryIntoResult<U, +TryInto<u256, U>> of TryIntoResult<u256, U> {
