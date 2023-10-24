@@ -136,4 +136,9 @@ fn test_kakarot_core_upgrade_contract() {
         .version();
     assert(version == 1, 'version is not 1');
 }
+
 // TODO add tests related to contract accounts once they can be deployed.
+#[ignore]
+#[test]
+#[available_gas(20000000)]
+fn test_kakarot_contract_account() {}
