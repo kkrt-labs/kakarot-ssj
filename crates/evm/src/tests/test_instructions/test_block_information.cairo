@@ -9,10 +9,10 @@ use evm::instructions::BlockInformationTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{setup_machine, evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
+use starknet::contract_address_const;
 use starknet::testing::{
     set_block_timestamp, set_block_number, set_contract_address, set_sequencer_address
 };
-use starknet::contract_address_const;
 
 /// 0x40 - BLOCKHASH
 #[test]

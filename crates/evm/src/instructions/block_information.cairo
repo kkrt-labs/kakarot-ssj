@@ -1,8 +1,8 @@
-use core::option::OptionTrait;
-use core::traits::TryInto;
 //! Block Information.
 
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
+use core::option::OptionTrait;
+use core::traits::TryInto;
 
 use evm::errors::{
     EVMError, BLOCK_HASH_SYSCALL_FAILED, EXECUTION_INFO_SYSCALL_FAILED, TYPE_CONVERSION_ERROR
@@ -11,12 +11,12 @@ use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::model::{AccountTrait, Account};
 use evm::stack::StackTrait;
 
-use utils::helpers::ResultExTrait;
-use utils::traits::{EthAddressTryIntoResult, EthAddressIntoU256};
-
 // Corelib imports
 use starknet::info::{get_block_number, get_block_timestamp, get_block_info};
 use starknet::{get_block_hash_syscall, get_execution_info_syscall, EthAddress};
+
+use utils::helpers::ResultExTrait;
+use utils::traits::{EthAddressTryIntoResult, EthAddressIntoU256};
 
 #[generate_trait]
 impl BlockInformation of BlockInformationTrait {
