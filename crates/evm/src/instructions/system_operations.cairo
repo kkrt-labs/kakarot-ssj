@@ -34,7 +34,6 @@ impl SystemOperations of SystemOperationsTrait {
     /// RETURN
     /// # Specification: https://www.evm.codes/#f3?fork=shanghai
     fn exec_return(ref self: Machine) -> Result<(), EVMError> {
-        // Pop the offset and size to load return data from memory
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
