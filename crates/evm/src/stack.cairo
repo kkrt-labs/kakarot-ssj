@@ -160,7 +160,6 @@ impl StackImpl of StackTrait {
     #[inline(always)]
     fn pop_u128(ref self: Stack) -> Result<u128, EVMError> {
         let item: u256 = self.pop()?;
-        // item.try_into().ok_or(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
         let item: u128 = item.try_into_result()?;
         Result::Ok(item)
     }

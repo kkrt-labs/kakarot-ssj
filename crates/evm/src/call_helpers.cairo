@@ -1,3 +1,4 @@
+//! CALL, CALLCODE, DELEGATECALL, STATICCALL opcode helpers
 use cmp::min;
 use evm::context::{
     ExecutionContext, Status, CallContext, CallContextTrait, ExecutionContextType,
@@ -8,7 +9,6 @@ use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::model::AccountTrait;
 use evm::stack::StackTrait;
-//! CALL, CALLCODE, DELEGATECALL, STATICCALL opcode helpers
 use starknet::{EthAddress};
 use utils::traits::{BoolIntoNumeric, U256TryIntoResult};
 
@@ -101,9 +101,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
         );
 
         // Machine logic
-        // Increment the total context count
         self.ctx_count += 1;
-        // Set the current context to be the newly created child context
         self.current_ctx = BoxTrait::new(child_ctx);
 
         Result::Ok(())
@@ -128,15 +126,13 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
         };
         self.stack.push(success)?;
 
-        // Set the return_data of the parent context if a call, or of the
-        // root.
+        // Get the return_data of the parent context.
         let return_data = self.parent_ctx_return_data();
 
-        // Get the min between len(output) and call_ctx.output_size.
+        // Get the min between len(return_data) and call_ctx.ret_size.
         let call_ctx = self.call_ctx();
         let return_data_len = min(return_data.len(), call_ctx.ret_size);
 
-        // Save the return data in memory.
         let return_data = return_data.slice(0, return_data_len);
         self.memory.store_n(return_data, call_ctx.ret_offset);
 
@@ -146,11 +142,10 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
     }
 }
 
-/// Check whether a `to` address for a call-family opcode is a precompile
-/// Since range check is expensive in Cairo, we proceed with checking equality
+/// Check whether a `to` address for a call-family opcode is a precompile.
 fn is_precompile(to: EthAddress) -> bool {
     let to: felt252 = to.into();
-    if to.into() <= 0x9_u256 {
+    if to.into() < 0x10_u256 {
         return true;
     }
     false

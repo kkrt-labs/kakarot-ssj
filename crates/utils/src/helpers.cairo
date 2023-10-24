@@ -1,4 +1,3 @@
-use array::ArrayTrait;
 use starknet::{EthAddress, EthAddressIntoFelt252};
 use cmp::min;
 use utils::constants::{

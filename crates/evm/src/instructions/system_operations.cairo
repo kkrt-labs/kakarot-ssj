@@ -37,7 +37,6 @@ impl SystemOperations of SystemOperationsTrait {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
-        // Load the data from memory
         let mut return_data = Default::default();
         self.memory.load_n(size, ref return_data, offset);
 
@@ -75,7 +74,7 @@ impl SystemOperations of SystemOperationsTrait {
             Option::None => 0,
         };
         if sender_balance < value {
-            self.stack.push(0);
+            self.stack.push(0)?;
             return Result::Ok(());
         }
 

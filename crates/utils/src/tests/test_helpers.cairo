@@ -331,14 +331,7 @@ fn test_byte_array_into_bytes() {
     let res = ByteArrayExTrait::into_bytes(byte_array);
 
     // Ensure that the elements are correct
-    let mut i = 0;
-    loop {
-        if i == input.len() {
-            break;
-        }
-        assert(res[i] == input.span()[i], 'byte mismatch');
-        i += 1;
-    };
+    assert(res == input.span(), 'bytes mismatch');
 }
 
 #[test]
