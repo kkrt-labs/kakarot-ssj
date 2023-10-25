@@ -1,11 +1,14 @@
 use evm::context::{ExecutionContext, ExecutionContextTrait,};
 use evm::instructions::MemoryOperationTrait;
 use evm::instructions::SystemOperationsTrait;
+use evm::interpreter::EVMInterpreterTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{
-    setup_machine_with_nested_execution_context, setup_machine, parent_ctx_return_data
+    setup_machine_with_nested_execution_context, setup_machine, setup_machine_with_bytecode,
+    parent_ctx_return_data, initialize_contract_account
 };
+use starknet::EthAddress;
 use utils::helpers::load_word;
 
 #[test]
@@ -43,5 +46,102 @@ fn test_exec_return_with_offset() {
 
     // Then
     assert(256 == load_word(32, parent_ctx_return_data(ref machine)), 'Wrong return_data');
+    assert(machine.stopped(), 'machine should be stopped')
+}
+
+#[test]
+#[available_gas(40000000)]
+fn test_exec_call() {
+    // Given
+    let mut interpreter = EVMInterpreterTrait::new();
+
+    // Set machine bytecode
+    // (call 0xffffff 0x100 0 0 0 0 1)
+    let bytecode = array![
+        0x60,
+        0x01,
+        0x60,
+        0x00,
+        0x60,
+        0x00,
+        0x60,
+        0x00,
+        0x60,
+        0x00,
+        0x61,
+        0x01,
+        0x00,
+        0x62,
+        0xff,
+        0xff,
+        0xff,
+        0xf1,
+        0x00
+    ]
+        .span();
+    let mut machine = setup_machine_with_bytecode(bytecode);
+
+    // Deploy bytecode at 0x100
+    // ret (+ 0x1 0x1)
+    let deployed_bytecode = array![
+        0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
+    ]
+        .span();
+    let eth_address: EthAddress = 0x100_u256.into();
+    initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        .expect('set code failed');
+
+    // When
+    interpreter.run(ref machine);
+
+    // Then
+    assert(2 == load_word(1, machine.return_data()), 'Wrong return_data');
+    assert(machine.stopped(), 'machine should be stopped')
+}
+
+#[test]
+#[available_gas(40000000)]
+fn test_exec_call_no_return() {
+    // Given
+    let mut interpreter = EVMInterpreterTrait::new();
+
+    // Set machine bytecode
+    // (call 0xffffff 0x100 0 0 0 0 1)
+    let bytecode = array![
+        0x60,
+        0x01,
+        0x60,
+        0x00,
+        0x60,
+        0x00,
+        0x60,
+        0x00,
+        0x60,
+        0x00,
+        0x61,
+        0x01,
+        0x00,
+        0x62,
+        0xff,
+        0xff,
+        0xff,
+        0xf1,
+        0x00
+    ]
+        .span();
+    let mut machine = setup_machine_with_bytecode(bytecode);
+
+    // Deploy bytecode at 0x100
+    // (+ 0x1 0x1)
+    let deployed_bytecode = array![0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
+    let eth_address: EthAddress = 0x100_u256.into();
+    initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        .expect('set code failed');
+
+    // When
+    interpreter.run(ref machine);
+
+    // Then
+    assert(machine.return_data().is_empty(), 'Wrong return_data len');
     assert(machine.stopped(), 'machine should be stopped')
 }

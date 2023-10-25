@@ -21,7 +21,7 @@ mod internal {
         memory.store_n(bytes_array.span(), offset);
 
         // When
-        let mut elements: Array<u8> = array![];
+        let mut elements: Array<u8> = Default::default();
         memory.load_n_internal(32, ref elements, offset);
 
         // Then
@@ -173,7 +173,7 @@ fn test_store_n_2_aligned_words() {
     // value [35] will be stored in final word
     assert(memory.size() == 64, 'memory should be 64 bytes');
 
-    let mut stored_bytes = array![];
+    let mut stored_bytes = Default::default();
     memory.load_n_internal(35, ref stored_bytes, 15);
     assert(stored_bytes.span() == bytes_arr, 'stored bytes not == expected');
 }
@@ -520,6 +520,23 @@ fn test_store_padded_segment_should_not_change_the_memory() {
     // Then
     let len = memory.size();
     assert(len == 0, 'memory should be 0bytes');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_store_padded_segment_should_expand_memory() {
+    // Given
+    let mut memory = MemoryTrait::new();
+
+    // When
+    let bytes = Default::default().span();
+    memory.store_padded_segment(10, 10, bytes);
+
+    // Then
+    let len = memory.size();
+    assert(len == 32, 'memory should be length 32');
+    let word = memory.load(10);
+    assert(word == 0, 'word should be 0');
 }
 
 #[test]

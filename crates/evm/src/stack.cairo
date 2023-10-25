@@ -36,6 +36,7 @@ trait StackTrait {
     fn pop(ref self: Stack) -> Result<u256, EVMError>;
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError>;
     fn pop_u64(ref self: Stack) -> Result<u64, EVMError>;
+    fn pop_u128(ref self: Stack) -> Result<u128, EVMError>;
     fn pop_i256(ref self: Stack) -> Result<i256, EVMError>;
     fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError>;
     fn pop_n(ref self: Stack, n: usize) -> Result<Array<u256>, EVMError>;
@@ -144,6 +145,22 @@ impl StackImpl of StackTrait {
     fn pop_i256(ref self: Stack) -> Result<i256, EVMError> {
         let item: u256 = self.pop()?;
         let item: i256 = item.into();
+        Result::Ok(item)
+    }
+
+
+    /// Calls `Stack::pop` and tries to convert it to u128
+    ///
+    /// # Errors
+    ///
+    /// Returns `EVMError::StackError` with appropriate message
+    /// In case:
+    ///     - Stack is empty
+    ///     - Type conversion failed
+    #[inline(always)]
+    fn pop_u128(ref self: Stack) -> Result<u128, EVMError> {
+        let item: u256 = self.pop()?;
+        let item: u128 = item.try_into_result()?;
         Result::Ok(item)
     }
 

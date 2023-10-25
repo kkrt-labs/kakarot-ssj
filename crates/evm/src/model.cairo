@@ -6,6 +6,7 @@ use evm::execution::Status;
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::model::eoa::{EOA, EOATrait};
 use starknet::{EthAddress, get_contract_address, ContractAddress};
+use utils::helpers::ByteArrayExTrait;
 
 #[derive(Drop)]
 struct Event {
@@ -18,7 +19,8 @@ struct ExecutionResult {
     return_data: Span<u8>,
     create_addresses: Span<EthAddress>,
     destroyed_contracts: Span<EthAddress>,
-    events: Span<Event>
+    events: Span<Event>,
+    error: Option<EVMError>,
 }
 
 
@@ -49,26 +51,16 @@ impl AccountImpl of AccountTrait {
     ///
     /// Returns an `EVMError` if there was an error while retrieving the nonce account of the account contract using the read_syscall.
     fn account_at(address: EthAddress) -> Result<Option<Account>, EVMError> {
-        //TODO: refactor this to directly read from the correct storage slot
-        let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let eoa_starknet_address = kakarot_state.eoa_starknet_address(address);
+        let maybe_eoa = EOATrait::at(address)?;
+        if maybe_eoa.is_some() {
+            return Result::Ok(Option::Some(Account::EOA(maybe_eoa.unwrap())));
+        };
 
-        if !eoa_starknet_address.is_zero() {
-            return Result::Ok(
-                Option::Some(
-                    Account::EOA(
-                        EOA { evm_address: address, starknet_address: eoa_starknet_address }
-                    )
-                )
-            );
-        } else {
-            let ca = ContractAccountTrait::new(address);
-            let nonce = ca.nonce()?;
-            if nonce != 0 {
-                return Result::Ok(Option::Some(Account::ContractAccount(ca)));
-            }
+        let maybe_ca = ContractAccountTrait::at(address)?;
+        match maybe_ca {
+            Option::Some(ca) => { Result::Ok(Option::Some(Account::ContractAccount(ca))) },
+            Option::None => { Result::Ok(Option::None) }
         }
-        return Result::Ok(Option::None);
     }
 
     /// Returns `true` if the account is an Externally Owned Account (EOA).
@@ -97,6 +89,17 @@ impl AccountImpl of AccountTrait {
         match self {
             Account::EOA(eoa) => { eoa.balance() },
             Account::ContractAccount(ca) => { ca.balance() }
+        }
+    }
+
+    /// Returns the bytecode of the EVM account (EOA or CA)
+    fn bytecode(self: @Account) -> Result<Span<u8>, EVMError> {
+        match self {
+            Account::EOA(_) => Result::Ok(Default::default().span()),
+            Account::ContractAccount(ca) => {
+                let bytecode = ca.load_bytecode()?;
+                Result::Ok(bytecode.into_bytes())
+            }
         }
     }
 }

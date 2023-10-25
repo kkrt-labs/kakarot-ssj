@@ -1,8 +1,8 @@
-use utils::rlp::{RLPType, RLPTrait, RLPItem};
 use array::{ArrayTrait, SpanTrait};
 use result::ResultTrait;
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use utils::helpers::U32Trait;
+use utils::rlp::{RLPType, RLPTrait, RLPItem};
 
 // Tests source : https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
 

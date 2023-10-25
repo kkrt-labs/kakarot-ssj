@@ -1,4 +1,7 @@
-use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::kakarot_core::interface::{
+    IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
+};
+
 use contracts::tests::utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
@@ -7,7 +10,6 @@ use evm::stack::StackTrait;
 use evm::tests::test_utils::{setup_machine, evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::{set_block_timestamp, set_block_number, set_contract_address};
-use utils::constants::CHAIN_ID;
 
 /// 0x40 - BLOCKHASH
 #[test]
@@ -187,12 +189,19 @@ fn test_basefee() {
 #[test]
 #[available_gas(20000000)]
 fn test_chainid_should_push_chain_id_to_stack() {
+    let native_token = deploy_native_token();
+    let kakarot = deploy_kakarot_core(native_token.contract_address);
+
+    set_contract_address(kakarot.contract_address);
+
     // Given
     let mut machine = setup_machine();
 
-    // CHAIN_ID = KKRT (0x4b4b5254) in ASCII
-    // TODO: Replace the hardcoded value by a value set in kakarot main contract constructor
-    let chain_id: u256 = CHAIN_ID;
+    let chain_id: u256 = IExtendedKakarotCoreDispatcher {
+        contract_address: kakarot.contract_address
+    }
+        .chain_id()
+        .into();
 
     // When
     machine.exec_chainid();
@@ -200,4 +209,19 @@ fn test_chainid_should_push_chain_id_to_stack() {
     // Then
     let result = machine.stack.peek().unwrap();
     assert(result == chain_id, 'stack should have chain id');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_randao_should_push_zero_to_stack() {
+    // Given
+    let mut machine = setup_machine();
+
+    // When
+    machine.exec_prevrandao().unwrap();
+
+    // Then
+    let result = machine.stack.peek().unwrap();
+    assert(result == 0x00, 'stack top should be zero');
 }

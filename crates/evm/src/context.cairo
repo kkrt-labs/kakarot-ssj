@@ -34,29 +34,17 @@ struct CallContext {
     value: u256,
     // If the call is read only (cannot modify the state of the chain)
     read_only: bool,
-    gas_limit: u64,
-    gas_price: u64
+    // Evm gas limit for the call
+    gas_limit: u128,
+    // Evm gas price for the call
+    gas_price: u128,
+    // The offset in memory to store the context return
+    ret_offset: usize,
+    // The size in memory to store the context return
+    ret_size: usize,
 }
 
-trait CallContextTrait {
-    fn new(
-        caller: EthAddress,
-        bytecode: Span<u8>,
-        calldata: Span<u8>,
-        value: u256,
-        read_only: bool,
-        gas_limit: u64,
-        gas_price: u64,
-    ) -> CallContext;
-    fn caller(self: @CallContext) -> EthAddress;
-    fn bytecode(self: @CallContext) -> Span<u8>;
-    fn calldata(self: @CallContext) -> Span<u8>;
-    fn value(self: @CallContext) -> u256;
-    fn read_only(self: @CallContext) -> bool;
-    fn gas_limit(self: @CallContext) -> u64;
-    fn gas_price(self: @CallContext) -> u64;
-}
-
+#[generate_trait]
 impl CallContextImpl of CallContextTrait {
     #[inline(always)]
     fn new(
@@ -65,10 +53,14 @@ impl CallContextImpl of CallContextTrait {
         calldata: Span<u8>,
         value: u256,
         read_only: bool,
-        gas_limit: u64,
-        gas_price: u64,
+        gas_limit: u128,
+        gas_price: u128,
+        ret_offset: usize,
+        ret_size: usize
     ) -> CallContext {
-        CallContext { caller, bytecode, calldata, value, read_only, gas_limit, gas_price }
+        CallContext {
+            caller, bytecode, calldata, value, read_only, gas_limit, gas_price, ret_offset, ret_size
+        }
     }
 
 
@@ -99,12 +91,12 @@ impl CallContextImpl of CallContextTrait {
     }
 
     #[inline(always)]
-    fn gas_limit(self: @CallContext) -> u64 {
+    fn gas_limit(self: @CallContext) -> u128 {
         *self.gas_limit
     }
 
     #[inline(always)]
-    fn gas_price(self: @CallContext) -> u64 {
+    fn gas_price(self: @CallContext) -> u128 {
         *self.gas_price
     }
 }
@@ -131,7 +123,7 @@ impl DefaultOptionSpanU8 of Default<Option<Span<u8>>> {
 /// Stores all data relevant to the current execution context.
 #[derive(Drop, Default)]
 struct ExecutionContext {
-    id: usize,
+    ctx_type: ExecutionContextType,
     evm_address: EthAddress,
     program_counter: u32,
     status: Status,
@@ -142,6 +134,18 @@ struct ExecutionContext {
     // Return data of a child context.
     return_data: Span<u8>,
     parent_ctx: Nullable<ExecutionContext>,
+}
+
+/// A context is either: the root, a call sub-context or a create sub-context.
+/// In the case of call and create, the execution context requires an id number
+/// to access their respective Stack and Memory; while the Root context always has
+/// id equal to 0.
+#[derive(Drop, Default, Copy, PartialEq)]
+enum ExecutionContextType {
+    #[default]
+    Root,
+    Call: usize,
+    Create: usize
 }
 
 impl DefaultBoxExecutionContext of Default<Box<ExecutionContext>> {
@@ -159,14 +163,14 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     /// Create a new execution context instance.
     #[inline(always)]
     fn new(
-        id: usize,
+        ctx_type: ExecutionContextType,
         evm_address: EthAddress,
         call_ctx: CallContext,
         parent_ctx: Nullable<ExecutionContext>,
         return_data: Span<u8>,
     ) -> ExecutionContext {
         ExecutionContext {
-            id,
+            ctx_type,
             evm_address,
             program_counter: Default::default(),
             status: Status::Active,
@@ -274,10 +278,44 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         code
     }
 
+    /// Returns the read only field for the current call context
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The `ExecutionContext` instance to read the data from.
+    #[inline(always)]
+    fn read_only(self: @ExecutionContext) -> bool {
+        let read_only = (*self.call_ctx).unbox().read_only();
+
+        read_only
+    }
+
+    #[inline(always)]
+    fn is_call(self: @ExecutionContext) -> bool {
+        match *self.ctx_type {
+            ExecutionContextType::Root(_) => false,
+            ExecutionContextType::Call(_) => true,
+            ExecutionContextType::Create(_) => false,
+        }
+    }
 
     #[inline(always)]
     fn is_root(self: @ExecutionContext) -> bool {
-        *self.id == 0
+        *self.ctx_type == ExecutionContextType::Root
+    }
+
+    #[inline(always)]
+    fn ctx_type(self: @ExecutionContext) -> ExecutionContextType {
+        *self.ctx_type
+    }
+
+    #[inline(always)]
+    fn id(self: @ExecutionContext) -> usize {
+        match *self.ctx_type {
+            ExecutionContextType::Root => 0,
+            ExecutionContextType::Call(id) => id,
+            ExecutionContextType::Create(id) => id,
+        }
     }
 
     // TODO: Implement print_debug

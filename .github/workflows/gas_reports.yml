@@ -12,7 +12,8 @@ permissions:
 jobs:
   compare-snapshot:
     permissions: write-all
-    runs-on: ubuntu-latest
+    # trunk-ignore(actionlint/runner-label)
+    runs-on: ubuntu-latest-16-cores
 
     steps:
       - name: Checkout code
@@ -26,7 +27,7 @@ jobs:
       - name: Set up Scarb
         uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: 2.3.0-rc1
+          scarb-version: 2.3.0
 
       - name: Run compare_snapshot script
         id: run-script

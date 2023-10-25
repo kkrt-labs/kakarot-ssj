@@ -1,9 +1,9 @@
+use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use starknet::{
     StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
     ContractAddress, Store, SyscallResult
 };
 use utils::math::{Zero, One};
-use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
     #[inline(always)]
@@ -85,10 +85,14 @@ trait TryIntoResult<T, U> {
     fn try_into_result(self: T) -> Result<U, EVMError>;
 }
 
+impl EthAddressTryIntoResultContractAddress of TryIntoResult<ContractAddress, EthAddress> {
+    fn try_into_result(self: ContractAddress) -> Result<EthAddress, EVMError> {
+        let tmp: felt252 = self.into();
+        tmp.try_into().ok_or(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
+    }
+}
+
 impl U256TryIntoResult<U, +TryInto<u256, U>> of TryIntoResult<u256, U> {
-    /// Converts a u256 into a Result<U, EVMError>
-    /// If the u256 cannot be converted into U, it returns an error.
-    /// Otherwise, it returns the casted value.
     fn try_into_result(self: u256) -> Result<U, EVMError> {
         match self.try_into() {
             Option::Some(value) => Result::Ok(value),

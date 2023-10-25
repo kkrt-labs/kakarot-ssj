@@ -1,6 +1,6 @@
+use integer::{u256_try_as_non_zero, BoundedInt};
 use utils::constants::POW_2_127;
 use utils::math::{Bitshift, Exponentiation};
-use integer::{u256_try_as_non_zero, BoundedInt};
 
 #[derive(Copy, Drop, PartialEq)]
 struct i256 {

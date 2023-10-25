@@ -5,7 +5,6 @@ const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
 #[starknet::contract]
 mod KakarotCore {
-    use contracts::components::ownable::ownable_component::InternalTrait;
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::kakarot_core::interface::IKakarotCore;
@@ -15,8 +14,7 @@ mod KakarotCore {
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
     use evm::context::Status;
-    use evm::errors::EVMError;
-    use evm::execution::execute;
+    use evm::errors::{EVMError, EVMErrorTrait};
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
     use evm::model::{Account, AccountTrait};
     use starknet::{
@@ -68,6 +66,7 @@ mod KakarotCore {
         OwnableEvent: ownable_component::Event,
         UpgradeableEvent: upgradeable_component::Event,
         EOADeployed: EOADeployed,
+        ContractAccountDeployed: ContractAccountDeployed
     }
 
     #[derive(Drop, starknet::Event)]
@@ -76,6 +75,12 @@ mod KakarotCore {
         evm_address: EthAddress,
         #[key]
         starknet_address: ContractAddress,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct ContractAccountDeployed {
+        #[key]
+        evm_address: EthAddress,
     }
 
     #[constructor]
@@ -119,6 +124,11 @@ mod KakarotCore {
         /// Get the deploy fee
         fn deploy_fee(self: @ContractState) -> u128 {
             self.deploy_fee.read()
+        }
+
+        /// Get the chain id
+        fn chain_id(self: @ContractState) -> u128 {
+            self.chain_id.read()
         }
 
         /// Deterministically computes a Starknet address for an given EVM address
@@ -169,7 +179,7 @@ mod KakarotCore {
 
         /// Gets the nonce associated to a contract account
         fn contract_account_nonce(self: @ContractState, evm_address: EthAddress) -> u64 {
-            let ca = ContractAccountTrait::new(evm_address);
+            let ca = ContractAccountTrait::at(evm_address).unwrap().unwrap();
             ca.nonce().unwrap()
         }
 
@@ -186,14 +196,14 @@ mod KakarotCore {
         fn contract_account_storage_at(
             self: @ContractState, evm_address: EthAddress, key: u256
         ) -> u256 {
-            let ca = ContractAccountTrait::new(evm_address);
+            let ca = ContractAccountTrait::at(evm_address).unwrap().unwrap();
             ca.storage_at(key).unwrap()
         }
 
 
         /// Gets the bytecode associated to a contract account
         fn contract_account_bytecode(self: @ContractState, evm_address: EthAddress) -> ByteArray {
-            let mut ca = ContractAccountTrait::new(evm_address);
+            let ca = ContractAccountTrait::at(evm_address).unwrap().unwrap();
             ca.load_bytecode().unwrap()
         }
 
@@ -201,7 +211,7 @@ mod KakarotCore {
         fn contract_account_valid_jump(
             self: @ContractState, evm_address: EthAddress, offset: usize
         ) -> bool {
-            let ca = ContractAccountTrait::new(evm_address);
+            let ca = ContractAccountTrait::at(evm_address).unwrap().unwrap();
             ca.is_valid_jump(offset).unwrap()
         }
 

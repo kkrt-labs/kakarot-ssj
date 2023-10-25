@@ -1,5 +1,5 @@
-use utils::storage::compute_storage_base_address;
 use starknet::{StorageBaseAddress, storage_base_address_from_felt252, storage_address_from_base};
+use utils::storage::compute_storage_base_address;
 
 #[test]
 #[available_gas(20000000)]

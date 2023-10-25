@@ -1,14 +1,20 @@
 //! Block Information.
 
-use evm::errors::{EVMError, BLOCK_HASH_SYSCALL_FAILED};
+use contracts::kakarot_core::{KakarotCore, IKakarotCore};
+
+use evm::errors::{
+    EVMError, BLOCK_HASH_SYSCALL_FAILED, EXECUTION_INFO_SYSCALL_FAILED, TYPE_CONVERSION_ERROR
+};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::model::{AccountTrait, Account};
 use evm::stack::StackTrait;
 
 // Corelib imports
 use starknet::info::{get_block_number, get_block_timestamp, get_block_info};
-use starknet::{get_block_hash_syscall};
-use utils::constants::CHAIN_ID;
+use starknet::{get_block_hash_syscall, get_execution_info_syscall, EthAddress};
+
+use utils::helpers::ResultExTrait;
+use utils::traits::{EthAddressTryIntoResultContractAddress, EthAddressIntoU256};
 
 #[generate_trait]
 impl BlockInformation of BlockInformationTrait {
@@ -43,7 +49,15 @@ impl BlockInformation of BlockInformationTrait {
     /// Get the block's beneficiary address.
     /// # Specification: https://www.evm.codes/#41?fork=shanghai
     fn exec_coinbase(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        let execution_info = get_execution_info_syscall()
+            .map_err(EVMError::SyscallFailed(EXECUTION_INFO_SYSCALL_FAILED))?
+            .unbox();
+        let coinbase: EthAddress = execution_info
+            .block_info
+            .unbox()
+            .sequencer_address
+            .try_into_result()?;
+        self.stack.push(coinbase.into())
     }
 
     /// 0x42 - TIMESTAMP
@@ -63,7 +77,9 @@ impl BlockInformation of BlockInformationTrait {
     /// 0x44 - PREVRANDAO
     /// # Specification: https://www.evm.codes/#44?fork=shanghai
     fn exec_prevrandao(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        // PREVRANDAO does not exist in Starknet
+        // PREVRANDAO used to be DIFFICULTY, which returns 0 for non-POW chains
+        self.stack.push(0x00)
     }
 
     /// 0x45 - GASLIMIT
@@ -77,10 +93,9 @@ impl BlockInformation of BlockInformationTrait {
     /// Get the chain ID.
     /// # Specification: https://www.evm.codes/#46?fork=shanghai
     fn exec_chainid(ref self: Machine) -> Result<(), EVMError> {
-        // CHAIN_ID = KKRT (0x4b4b5254) in ASCII
-        // TODO: Replace the hardcoded value by a value set in kakarot main contract constructor
-        // Push the chain ID to stack
-        self.stack.push(CHAIN_ID)
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let chain_id = kakarot_state.chain_id();
+        self.stack.push(chain_id.into())
     }
 
     /// 0x47 - SELFBALANCE

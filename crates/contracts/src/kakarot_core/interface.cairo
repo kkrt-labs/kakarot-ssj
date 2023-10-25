@@ -19,6 +19,9 @@ trait IKakarotCore<TContractState> {
     /// Get the deploy fee
     fn deploy_fee(self: @TContractState) -> u128;
 
+    /// Get the chain id
+    fn chain_id(self: @TContractState) -> u128;
+
     /// Deterministically computes a Starknet address for an given EVM address
     /// The address is computed as the Starknet address corresponding to the deployment of an EOA,
     /// Using its EVM address as salt, and KakarotCore as deployer.
@@ -98,6 +101,9 @@ trait IExtendedKakarotCore<TContractState> {
     /// Get the deploy fee
     fn deploy_fee(self: @TContractState) -> u128;
 
+    /// Get the chain id
+    fn chain_id(self: @TContractState) -> u128;
+
     /// Deterministically computes a Starknet address for an given EVM address
     /// The address is computed as the Starknet address corresponding to the deployment of an EOA,
     /// Using its EVM address as salt, and KakarotCore as deployer.
@@ -142,4 +148,3 @@ trait IExtendedKakarotCore<TContractState> {
     fn transfer_ownership(ref self: TContractState, new_owner: ContractAddress);
     fn renounce_ownership(ref self: TContractState);
 }
-

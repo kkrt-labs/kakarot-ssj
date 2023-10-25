@@ -1,4 +1,5 @@
-use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore};
+use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
@@ -6,10 +7,12 @@ use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERRO
 use evm::instructions::EnvironmentInformationTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
+use evm::model::contract_account::ContractAccountTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_calldata, setup_machine_with_bytecode, evm_address, callvalue,
-    setup_machine_with_nested_execution_context, other_evm_address, return_from_subcontext
+    setup_machine_with_nested_execution_context, other_evm_address, return_from_subcontext,
+    native_token
 };
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
@@ -534,8 +537,188 @@ fn test_gasprice() {
 }
 
 // *************************************************************************
-// 0x3D: RETURNDATASIZE
+// 0x3B - EXTCODESIZE
 // *************************************************************************
+#[test]
+#[available_gas(20000000)]
+fn test_exec_extcodesize_eoa() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
+    machine.stack.push(evm_address.into());
+    set_contract_address(kakarot_core.contract_address);
+
+    // When
+    machine.exec_extcodesize().unwrap();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'expected code size 0');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_extcodesize_ca_empty() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    set_contract_address(kakarot_core.contract_address);
+
+    // The bytecode remains empty, and we expect the empty hash in return
+    let mut ca = ContractAccountTrait::deploy(evm_address(), array![].span());
+
+    machine.stack.push(evm_address.into());
+
+    // When
+    machine.exec_extcodesize().unwrap();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'expected code size 0');
+}
+
+
+#[test]
+#[available_gas(20000000000)]
+fn test_exec_extcodesize_ca_with_bytecode() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    set_contract_address(kakarot_core.contract_address);
+
+    // The bytecode stored is the bytecode of a Counter.sol smart contract
+    let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
+
+    machine.stack.push(evm_address.into());
+    // When
+    machine.exec_extcodesize().unwrap();
+
+    // Then
+    assert(
+        machine.stack.peek() // extcodesize(Counter.sol) := 275 (source: remix)
+        .unwrap() == 275,
+        'expected counter SC code size'
+    );
+}
+
+
+#[test]
+#[available_gas(2000000000)]
+fn test_exec_extcodecopy_ca() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    set_contract_address(kakarot_core.contract_address);
+
+    // The bytecode stored is the bytecode of a Counter.sol smart contract
+    let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
+
+    // size
+    machine.stack.push(50).unwrap();
+    // offset
+    machine.stack.push(200).unwrap();
+    // destOffset (memory offset)
+    machine.stack.push(20).unwrap();
+    machine.stack.push(evm_address.into()).unwrap();
+
+    // When
+    machine.exec_extcodecopy().unwrap();
+
+    // Then
+    let mut bytecode_slice = array![];
+    machine.memory.load_n(50, ref bytecode_slice, 20);
+    assert(bytecode_slice.span() == counter_evm_bytecode().slice(200, 50), 'wrong bytecode');
+}
+
+// *************************************************************************
+// 0x3C - EXTCODECOPY
+// *************************************************************************
+#[test]
+#[available_gas(20000000)]
+fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    set_contract_address(kakarot_core.contract_address);
+
+    // The bytecode stored is the bytecode of a Counter.sol smart contract
+    let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
+
+    // size
+    machine.stack.push(5);
+    // offset
+    machine.stack.push(5000);
+    // destOffset
+    machine.stack.push(20);
+    machine.stack.push(evm_address.into());
+
+    set_contract_address(kakarot_core.contract_address);
+
+    // When
+    machine.exec_extcodecopy().unwrap();
+    // Then
+    let mut bytecode_slice = array![];
+    machine.memory.load_n(5, ref bytecode_slice, 20);
+    assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
+}
+
+fn test_exec_extcodecopy_eoa() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
+
+    // size
+    machine.stack.push(5);
+    // offset
+    machine.stack.push(5000);
+    // destOffset
+    machine.stack.push(20);
+    machine.stack.push(evm_address.into());
+
+    set_contract_address(kakarot_core.contract_address);
+
+    // When
+    machine.exec_extcodecopy().unwrap();
+
+    // Then
+    let mut bytecode_slice = array![];
+    machine.memory.load_n(5, ref bytecode_slice, 20);
+    assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
+}
+
+
+fn test_exec_extcodecopy_account_none() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+
+    // size
+    machine.stack.push(5);
+    // offset
+    machine.stack.push(5000);
+    // destOffset
+    machine.stack.push(20);
+    machine.stack.push(evm_address.into());
+
+    set_contract_address(kakarot_core.contract_address);
+
+    // When
+    machine.exec_extcodecopy().unwrap();
+
+    // Then
+    let mut bytecode_slice = array![];
+    machine.memory.load_n(5, ref bytecode_slice, 20);
+    assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
+}
+
 
 #[test]
 #[available_gas(20000000)]
@@ -710,3 +893,102 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     assert(results.span() == return_data.slice(offset, size), 'wrong data value');
 }
 
+// *************************************************************************
+// 0x3F: EXTCODEHASH
+// *************************************************************************
+#[test]
+#[available_gas(20000000)]
+fn test_exec_extcodehash_eoa() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
+    machine.stack.push(evm_address.into());
+    set_contract_address(kakarot_core.contract_address);
+
+    // When
+    machine.exec_extcodehash().unwrap();
+
+    // Then
+    assert(
+        machine
+            .stack
+            .peek()
+            .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
+        'expected empty hash'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_extcodehash_ca_empty() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    set_contract_address(kakarot_core.contract_address);
+
+    // The bytecode remains empty, and we expect the empty hash in return
+    let mut ca = ContractAccountTrait::deploy(evm_address(), array![].span());
+
+    machine.stack.push(evm_address.into());
+
+    // When
+    machine.exec_extcodehash().unwrap();
+
+    // Then
+    assert(
+        machine
+            .stack
+            .peek()
+            .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
+        'expected empty hash'
+    );
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_extcodehash_ca_uninitialized() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+
+    machine.stack.push(evm_address.into());
+    set_contract_address(kakarot_core.contract_address);
+
+    // When
+    machine.exec_extcodehash().unwrap();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'expected stack top to be 0');
+}
+
+#[test]
+#[available_gas(20000000000)]
+fn test_exec_extcodehash_ca_with_bytecode() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let kakarot_core = deploy_kakarot_core(native_token());
+    set_contract_address(kakarot_core.contract_address);
+
+    // The bytecode stored is the bytecode of a Counter.sol smart contract
+    let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
+
+    machine.stack.push(evm_address.into());
+    // When
+    machine.exec_extcodehash().unwrap();
+
+    // Then
+    assert(
+        machine
+            .stack
+            .peek()
+            // extcodehash(Counter.sol) := 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275 (source: remix)
+            // <https://emn178.github.io/online-tools/keccak_256.html?input=6080604052348015600f57600080fd5b506004361060465760003560e01c806306661abd14604b578063371303c01460655780636d4ce63c14606d578063b3bcfa82146074575b600080fd5b605360005481565b60405190815260200160405180910390f35b606b607a565b005b6000546053565b606b6091565b6001600080828254608a919060b7565b9091555050565b6001600080828254608a919060cd565b634e487b7160e01b600052601160045260246000fd5b8082018082111560c75760c760a1565b92915050565b8181038181111560c75760c760a156fea2646970667358221220f379b9089b70e8e00da8545f9a86f648441fdf27ece9ade2c71653b12fb80c7964736f6c63430008120033&input_type=hex>
+            .unwrap() == 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275,
+        'expected counter SC code hash'
+    );
+}
