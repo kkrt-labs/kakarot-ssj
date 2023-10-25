@@ -60,10 +60,10 @@ trait IKakarotCore<TContractState> {
     fn eth_call(
         self: @TContractState,
         from: EthAddress,
-        to: EthAddress,
+        to: Option<EthAddress>,
         gas_limit: u128,
         gas_price: u128,
-        value: u128,
+        value: u256,
         data: Span<u8>
     ) -> Span<u8>;
 
@@ -74,7 +74,7 @@ trait IKakarotCore<TContractState> {
         to: EthAddress,
         gas_limit: u128,
         gas_price: u128,
-        value: u128,
+        value: u256,
         data: Span<u8>
     ) -> Span<u8>;
 
@@ -122,10 +122,10 @@ trait IExtendedKakarotCore<TContractState> {
     fn eth_call(
         self: @TContractState,
         from: EthAddress,
-        to: EthAddress,
+        to: Option<EthAddress>,
         gas_limit: u128,
         gas_price: u128,
-        value: u128,
+        value: u256,
         data: Span<u8>
     ) -> Span<u8>;
 
@@ -136,7 +136,7 @@ trait IExtendedKakarotCore<TContractState> {
         to: EthAddress,
         gas_limit: u128,
         gas_price: u128,
-        value: u128,
+        value: u256,
         data: Span<u8>
     ) -> Span<u8>;
 

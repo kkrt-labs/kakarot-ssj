@@ -10,6 +10,7 @@ mod KakarotCore {
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
     use core::hash::{HashStateExTrait, HashStateTrait};
+    use core::option::OptionTrait;
     use core::pedersen::{HashState, PedersenTrait};
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
@@ -227,10 +228,10 @@ mod KakarotCore {
         fn eth_call(
             self: @ContractState,
             from: EthAddress,
-            to: EthAddress,
+            to: Option<EthAddress>,
             gas_limit: u128,
             gas_price: u128,
-            value: u128,
+            value: u256,
             data: Span<u8>
         ) -> Span<u8> {
             self.assert_view();
@@ -244,7 +245,7 @@ mod KakarotCore {
             to: EthAddress,
             gas_limit: u128,
             gas_price: u128,
-            value: u128,
+            value: u256,
             data: Span<u8>
         ) -> Span<u8> {
             array![].span()
@@ -270,6 +271,31 @@ mod KakarotCore {
                 return Result::Err(EVMError::WriteInStaticContext(INVOKE_ETH_CALL_FORBIDDEN));
             }
             Result::Ok(())
+        }
+
+        fn handle_eth_call(
+            self: @ContractState,
+            from: EthAddress,
+            to: Option<EthAddress>,
+            gas_limit: u128,
+            gas_price: u128,
+            value: u256,
+            data: Span<u8>
+        ) -> Result<ExecutionResult, EVMError> {
+            match to {
+                // TODO: Transfer ETH
+                Option::Some(to) => {
+                    let bytecode = match AccountTrait::account_at(to)? {
+                        Option::Some(account) => account.bytecode()?,
+                        Option::None => Default::default().span(),
+                    };
+                    let execution_result = execute(
+                        to, :bytecode, calldata: data, :value, :gas_price, :gas_limit,
+                    );
+                    return Result::Ok(execution_result);
+                },
+                Option::None => panic_with_felt252('unimplemented'),
+            }
         }
     }
 }
