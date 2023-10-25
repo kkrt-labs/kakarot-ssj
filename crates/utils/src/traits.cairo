@@ -87,7 +87,7 @@ trait TryIntoResult<T, U> {
     fn try_into_result(self: T) -> Result<U, EVMError>;
 }
 
-impl EthAddressTryIntoResult of TryIntoResult<ContractAddress, EthAddress> {
+impl EthAddressTryIntoResultContractAddress of TryIntoResult<ContractAddress, EthAddress> {
     fn try_into_result(self: ContractAddress) -> Result<EthAddress, EVMError> {
         let tmp: felt252 = self.into();
         tmp.try_into().ok_or(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))
