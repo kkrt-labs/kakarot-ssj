@@ -774,7 +774,7 @@ fn test_rlp_decode_long_string_with_payload_len_too_short() {
 
 #[test]
 #[available_gas(99999999999)]
-fn test_rlp_decode_short_list() {
+fn test_rlp_decode_short_list1() {
     let mut arr = array![0xc9, 0x83, 0x35, 0x35, 0x35, 0x42, 0x83, 0x45, 0x38, 0x92];
     let res = RLPTrait::decode(arr.span()).unwrap();
 

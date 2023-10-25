@@ -4,7 +4,9 @@ use array::{Array, ArrayTrait, Span, SpanTrait};
 use clone::Clone;
 use traits::{Into, TryInto};
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
-use utils::helpers::{U32Trait, ByteArrayExTrait};
+use utils::helpers::{U32Trait, ByteArrayExTrait, ArrayExtension};
+
+use debug::PrintTrait;
 
 // All possible RLP tpypes
 #[derive(Drop, PartialEq)]
@@ -108,43 +110,29 @@ impl RLPImpl of RLPTrait {
     fn decode(input: Span<u8>) -> Result<Span<RLPItem>, RLPError> {
         let mut output: Array<RLPItem> = Default::default();
         let input_len = input.len();
-        let mut i = 0;
 
-        let mut decode_error: Option<RLPError> = loop {
-            let res = RLPTrait::decode_type(input.slice(i, input_len - i));
-            let (rlp_type, offset, len) = match res {
-                Result::Ok(res_dec) => { res_dec },
-                Result::Err(err) => { break Option::Some(err); }
-            };
+        let (rlp_type, offset, len) = RLPTrait::decode_type(input)?;
 
-            if input_len < offset + len {
-                break Option::Some(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
-            }
+        if input_len < offset + len {
+            return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
+        }
 
-            match rlp_type {
-                RLPType::String => {
-                    output.append(RLPItem::String(input.slice(offset + i, len)));
-                },
-                RLPType::List => {
-                    if len > 0 {
-                        let res = RLPTrait::decode(input.slice(offset + i, len));
-                        match res {
-                            Result::Ok(res_dec) => { output.append(RLPItem::List(res_dec)); },
-                            Result::Err(err) => { break Option::Some(err); }
-                        };
-                    } else {
-                        output.append(RLPItem::List(array![].span()));
-                    }
+        match rlp_type {
+            RLPType::String => { output.append(RLPItem::String(input.slice(offset, len))); },
+            RLPType::List => {
+                if len > 0 {
+                    let res = RLPTrait::decode(input.slice(offset, len))?;
+                    output.append(RLPItem::List(res));
+                } else {
+                    output.append(RLPItem::List(array![].span()));
                 }
-            };
-
-            i += len + offset;
-            if i >= input_len {
-                break Option::None;
             }
         };
-        if decode_error.is_some() {
-            return Result::Err(decode_error.unwrap());
+
+        let total_item_len = len + offset;
+        if total_item_len < input_len {
+            output
+                .concat(RLPTrait::decode(input.slice(total_item_len, input_len - total_item_len))?);
         }
 
         Result::Ok(output.span())
