@@ -57,14 +57,15 @@ fn execute(
     let mut machine: Machine = MachineCurrentContextTrait::new(ctx);
 
     let mut interpreter = EVMInterpreterTrait::new();
-    // Execute the bytecode.
+    // Execute the bytecode
     interpreter.run(ref machine);
     ExecutionResult {
         status: machine.status(),
         return_data: machine.return_data(),
         destroyed_contracts: machine.destroyed_contracts(),
         create_addresses: machine.create_addresses(),
-        events: machine.events()
+        events: machine.events(),
+        error: machine.error()
     }
 }
 

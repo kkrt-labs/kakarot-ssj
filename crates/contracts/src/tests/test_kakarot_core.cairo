@@ -1,5 +1,7 @@
 use contracts::components::ownable::ownable_component;
-use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore};
+use contracts::kakarot_core::{
+    interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::KakarotCoreInternal
+};
 use contracts::tests::test_upgradeable::{
     MockContractUpgradeableV1, IMockContractUpgradeableDispatcher,
     IMockContractUpgradeableDispatcherTrait
@@ -88,6 +90,7 @@ fn test_kakarot_core_deploy_eoa() {
     let event = utils::pop_log::<KakarotCore::EOADeployed>(kakarot_core.contract_address).unwrap();
     assert(event.starknet_address == eoa_starknet_address, 'wrong starknet address');
 }
+
 
 #[test]
 #[available_gas(20000000)]

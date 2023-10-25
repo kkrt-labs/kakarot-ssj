@@ -3,7 +3,15 @@
 //! KakarotCore's storage.
 
 use alexandria_storage::list::{List, ListTrait};
-use evm::errors::{EVMError, READ_SYSCALL_FAILED, WRITE_SYSCALL_FAILED};
+use contracts::kakarot_core::{
+    KakarotCore, KakarotCore::ContractStateEventEmitter, KakarotCore::ContractAccountDeployed
+};
+use evm::context::Status;
+use evm::errors::{
+    EVMError, READ_SYSCALL_FAILED, WRITE_SYSCALL_FAILED, ACCOUNT_EXISTS, DEPLOYMENT_FAILED
+};
+use evm::execution::execute;
+use evm::model::AccountTrait;
 use hash::{HashStateTrait, HashStateExTrait};
 use poseidon::PoseidonTrait;
 use starknet::{
@@ -24,12 +32,49 @@ struct ContractAccount {
 
 #[generate_trait]
 impl ContractAccountImpl of ContractAccountTrait {
-    /// Creates a new ContractAccount instance from the given `evm_address`.
+    /// Deploys a contract account by setting up the storage associated to a
+    /// contract account for a particular EVM address, setting the nonce to 1,
+    /// storing the contract bytecode and emitting a ContractAccountDeployed
+    /// event.
+    /// # Arguments
+    /// * `origin` - The EVM address of the transaction sender
+    /// * `evm_address` - The EVM address of the contract account
+    /// * `bytecode` - The deploy bytecode
+    /// # Returns
+    /// * The evm_address and starknet_address the CA is deployed at - which is KakarotCore
+    /// # Errors
+    /// * `ACCOUNT_EXISTS` - If a contract account already exists at the given `evm_address`
+    fn deploy(evm_address: EthAddress, bytecode: Span<u8>) -> Result<ContractAccount, EVMError> {
+        let mut maybe_acc = AccountTrait::account_at(evm_address)?;
+        if maybe_acc.is_some() {
+            return Result::Err(EVMError::DeployError(ACCOUNT_EXISTS));
+        }
+        let mut ca = ContractAccount {
+            evm_address: evm_address, starknet_address: get_contract_address()
+        };
+        ca.set_nonce(1);
+        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
+        //TODO delay emission of this event when commiting context changes.
+        kakarot_state.emit(ContractAccountDeployed { evm_address });
+        ca.store_bytecode(bytecode)?;
+        return Result::Ok(
+            ContractAccount { evm_address: evm_address, starknet_address: get_contract_address() }
+        );
+    }
+    /// Returns a ContractAccount instance from the given `evm_address`.
+    /// This assumes that the contract deployed at `evm_address` is a ContractAccount.
     /// starknet_address is `get_contract_address`, since ContractAccounts
     /// are embedded into KakarotCore.
     #[inline(always)]
-    fn new(evm_address: EthAddress) -> ContractAccount {
-        ContractAccount { evm_address: evm_address, starknet_address: get_contract_address() }
+    fn at(evm_address: EthAddress) -> Result<Option<ContractAccount>, EVMError> {
+        let ca = ContractAccount {
+            evm_address: evm_address, starknet_address: get_contract_address()
+        };
+        let nonce = ca.nonce()?;
+        if nonce != 0 {
+            return Result::Ok(Option::Some(ca));
+        }
+        return Result::Ok(Option::None);
     }
 
     /// Returns the nonce of a contract account.
@@ -41,6 +86,20 @@ impl ContractAccountImpl of ContractAccountTrait {
             selector!("contract_account_nonce"), array![(*self.evm_address).into()].span()
         );
         Store::<u64>::read(0, storage_address).map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))
+    }
+
+    /// Sets the nonce of a contract account.
+    /// The new nonce is written in Kakarot Core's contract storage.
+    /// The storage address used is h(sn_keccak("contract_account_nonce"), evm_address), where `h` is the poseidon hash function.
+    /// # Arguments
+    /// * `self` - The contract account instance
+    #[inline(always)]
+    fn set_nonce(ref self: ContractAccount, nonce: u64) -> Result<(), EVMError> {
+        let storage_address = compute_storage_base_address(
+            selector!("contract_account_nonce"), array![self.evm_address.into()].span()
+        );
+        Store::<u64>::write(0, storage_address, nonce)
+            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))
     }
 
     /// Increments the nonce of a contract account.

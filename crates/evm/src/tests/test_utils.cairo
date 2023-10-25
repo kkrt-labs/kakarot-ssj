@@ -190,6 +190,7 @@ fn setup_machine() -> Machine {
         stack: Default::default(),
         memory: Default::default(),
         storage_journal: Default::default(),
+        error: Option::None
     }
 }
 
@@ -201,6 +202,7 @@ fn setup_machine_with_bytecode(bytecode: Span<u8>) -> Machine {
         stack: Default::default(),
         memory: Default::default(),
         storage_journal: Default::default(),
+        error: Option::None
     }
 }
 
@@ -212,6 +214,7 @@ fn setup_machine_with_calldata(calldata: Span<u8>) -> Machine {
         stack: Default::default(),
         memory: Default::default(),
         storage_journal: Default::default(),
+        error: Option::None
     }
 }
 
@@ -233,6 +236,7 @@ fn setup_machine_with_nested_execution_context() -> Machine {
         stack: Default::default(),
         memory: Default::default(),
         storage_journal: Default::default(),
+        error: Option::None
     }
 }
 
@@ -272,14 +276,7 @@ fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
 fn initialize_contract_account(
     eth_address: EthAddress, bytecode: Span<u8>, storage: Span<(u256, u256)>
 ) -> Result<(), EVMError> {
-    let mut ca = ContractAccountTrait::new(eth_address);
-
-    // Increment the nonce to one.
-    ca.increment_nonce()?;
-
-    // Set the bytecode of the contract account
-    ca.store_bytecode(bytecode)?;
-
+    let mut ca = ContractAccountTrait::deploy(eth_address, bytecode).expect('failed deploying CA');
     // Set the storage of the contract account
     let mut i = 0;
     loop {

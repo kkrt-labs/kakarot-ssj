@@ -19,7 +19,8 @@ struct ExecutionResult {
     return_data: Span<u8>,
     create_addresses: Span<EthAddress>,
     destroyed_contracts: Span<EthAddress>,
-    events: Span<Event>
+    events: Span<Event>,
+    error: Option<EVMError>,
 }
 
 
@@ -50,26 +51,16 @@ impl AccountImpl of AccountTrait {
     ///
     /// Returns an `EVMError` if there was an error while retrieving the nonce account of the account contract using the read_syscall.
     fn account_at(address: EthAddress) -> Result<Option<Account>, EVMError> {
-        //TODO: refactor this to directly read from the correct storage slot
-        let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let eoa_starknet_address = kakarot_state.eoa_starknet_address(address);
+        let maybe_eoa = EOATrait::at(address)?;
+        if maybe_eoa.is_some() {
+            return Result::Ok(Option::Some(Account::EOA(maybe_eoa.unwrap())));
+        };
 
-        if !eoa_starknet_address.is_zero() {
-            return Result::Ok(
-                Option::Some(
-                    Account::EOA(
-                        EOA { evm_address: address, starknet_address: eoa_starknet_address }
-                    )
-                )
-            );
-        } else {
-            let ca = ContractAccountTrait::new(address);
-            let nonce = ca.nonce()?;
-            if nonce != 0 {
-                return Result::Ok(Option::Some(Account::ContractAccount(ca)));
-            }
+        let maybe_ca = ContractAccountTrait::at(address)?;
+        match maybe_ca {
+            Option::Some(ca) => { Result::Ok(Option::Some(Account::ContractAccount(ca))) },
+            Option::None => { Result::Ok(Option::None) }
         }
-        return Result::Ok(Option::None);
     }
 
     /// Returns `true` if the account is an Externally Owned Account (EOA).

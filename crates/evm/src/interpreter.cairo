@@ -80,7 +80,8 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
 
         // Check if PC is not out of bounds.
         if pc >= bytecode_len {
-            return Result::Err(EVMError::InvalidProgramCounter(PC_OUT_OF_BOUNDS));
+            machine.set_stopped();
+            return Result::Ok(());
         }
 
         let opcode: u8 = *bytecode.at(pc);
