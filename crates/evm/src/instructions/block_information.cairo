@@ -2,14 +2,19 @@
 
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 
-use evm::errors::{EVMError, BLOCK_HASH_SYSCALL_FAILED};
+use evm::errors::{
+    EVMError, BLOCK_HASH_SYSCALL_FAILED, EXECUTION_INFO_SYSCALL_FAILED, TYPE_CONVERSION_ERROR
+};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::model::{AccountTrait, Account};
 use evm::stack::StackTrait;
 
 // Corelib imports
 use starknet::info::{get_block_number, get_block_timestamp, get_block_info};
-use starknet::{get_block_hash_syscall};
+use starknet::{get_block_hash_syscall, get_execution_info_syscall, EthAddress};
+
+use utils::helpers::ResultExTrait;
+use utils::traits::{EthAddressTryIntoResultContractAddress, EthAddressIntoU256};
 
 #[generate_trait]
 impl BlockInformation of BlockInformationTrait {
@@ -44,7 +49,15 @@ impl BlockInformation of BlockInformationTrait {
     /// Get the block's beneficiary address.
     /// # Specification: https://www.evm.codes/#41?fork=shanghai
     fn exec_coinbase(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        let execution_info = get_execution_info_syscall()
+            .map_err(EVMError::SyscallFailed(EXECUTION_INFO_SYSCALL_FAILED))?
+            .unbox();
+        let coinbase: EthAddress = execution_info
+            .block_info
+            .unbox()
+            .sequencer_address
+            .try_into_result()?;
+        self.stack.push(coinbase.into())
     }
 
     /// 0x42 - TIMESTAMP
