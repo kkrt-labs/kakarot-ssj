@@ -1,4 +1,6 @@
 use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcher, KakarotCore};
+
+use debug::PrintTrait;
 use eoa::externally_owned_account::{ExternallyOwnedAccount};
 use evm::tests::test_utils::{deploy_fee, other_starknet_address, chain_id};
 use openzeppelin::token::erc20::ERC20;
@@ -70,8 +72,6 @@ fn deploy_native_token() -> IERC20CamelDispatcher {
         Result::Err(err) => panic(err)
     }
 }
-
-
 fn deploy_kakarot_core(native_token: ContractAddress) -> IExtendedKakarotCoreDispatcher {
     let calldata: Array<felt252> = array![
         native_token.into(),
@@ -83,6 +83,9 @@ fn deploy_kakarot_core(native_token: ContractAddress) -> IExtendedKakarotCoreDis
     let maybe_address = deploy_syscall(
         KakarotCore::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
     );
+    (*calldata[2]).print();
+    ExternallyOwnedAccount::TEST_CLASS_HASH.print();
+
     match maybe_address {
         Result::Ok((
             contract_address, _
