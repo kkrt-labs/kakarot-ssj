@@ -1,22 +1,43 @@
 use starknet::account::{Call, AccountContract};
-// Migrate https://github.com/kkrt-labs/kakarot/blob/7ec7a96074394ddb592a2b6fbea279c6c5cb25a6/src/kakarot/accounts/eoa/externally_owned_account.cairo#L4
-use starknet::{ContractAddress, EthAddress,};
+use starknet::{ContractAddress, EthAddress, ClassHash};
 
 #[starknet::interface]
 trait IExternallyOwnedAccount<TContractState> {
     fn kakarot_core_address(self: @TContractState) -> ContractAddress;
     fn evm_address(self: @TContractState) -> EthAddress;
+
+    /// Upgrade the ExternallyOwnedAccount smart contract
+    /// Using replace_class_syscall
+    fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
 }
 
 #[starknet::contract]
 mod ExternallyOwnedAccount {
+    use contracts::components::upgradeable::IUpgradeable;
+    use contracts::components::upgradeable::upgradeable_component;
     use starknet::account::{Call, AccountContract};
-    use starknet::{ContractAddress, EthAddress, VALIDATED, get_caller_address};
+
+    use starknet::{
+        ContractAddress, EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address
+    };
+
+    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
+
+    impl UpgradeableImpl = upgradeable_component::Upgradeable<ContractState>;
 
     #[storage]
     struct Storage {
         evm_address: EthAddress,
         kakarot_core_address: ContractAddress,
+        #[substorage(v0)]
+        upgradeable: upgradeable_component::Storage,
+    }
+
+
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        UpgradeableEvent: upgradeable_component::Event,
     }
 
     #[constructor]
@@ -34,6 +55,13 @@ mod ExternallyOwnedAccount {
         }
         fn evm_address(self: @ContractState) -> EthAddress {
             self.evm_address.read()
+        }
+
+        // TODO: make this function reachable from an external invoke call
+        // TODO: add some security methods to make sure that only some specific upgrades can be made ( low priority )
+        fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
+            assert(get_caller_address() == get_contract_address(), 'Caller not contract address');
+            self.upgradeable.upgrade_contract(new_class_hash);
         }
     }
 
@@ -77,4 +105,3 @@ mod ExternallyOwnedAccount {
         }
     }
 }
-

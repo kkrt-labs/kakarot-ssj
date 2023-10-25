@@ -113,7 +113,7 @@ fn test_kakarot_core_compute_starknet_address() {
     // With arguments:
     // ['STARKNET_CONTRACT_ADDRESS', kakarot_address: 0x01, salt: evm_address, class_hash: ExternallyOwnedAccount::TEST_CLASS_HASH, constructor_calldata: hash([kakarot_address, evm_address]), ]
     let expected_starknet_address: ContractAddress = contract_address_const::<
-        0x565f056dee3912582282a923a556c2087841ffc1387cc530cf00d419d1a45f4
+        0x3ed5b415783f3d8fa489610fe13be234f3219694bd65a31345c430b84b72227
     >();
 
     let eoa_starknet_address = kakarot_core.compute_starknet_address(evm_address);
@@ -136,6 +136,9 @@ fn test_kakarot_core_upgrade_contract() {
         .version();
     assert(version == 1, 'version is not 1');
 }
+
 // TODO add tests related to contract accounts once they can be deployed.
-
-
+#[ignore]
+#[test]
+#[available_gas(20000000)]
+fn test_kakarot_contract_account() {}
