@@ -64,7 +64,9 @@ impl BlockInformation of BlockInformationTrait {
     /// 0x44 - PREVRANDAO
     /// # Specification: https://www.evm.codes/#44?fork=shanghai
     fn exec_prevrandao(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        // PREVRANDAO does not exist in Starknet
+        // PREVRANDAO used to be DIFFICULTY, which returns 0 for non-POW chains
+        self.stack.push(0x00)
     }
 
     /// 0x45 - GASLIMIT
