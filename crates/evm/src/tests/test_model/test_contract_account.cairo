@@ -7,9 +7,9 @@ use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::tests::test_utils;
 use starknet::testing;
 use starknet::{storage_base_address_from_felt252, Store, get_contract_address};
+use utils::helpers::ByteArrayExTrait;
 use utils::storage::{compute_storage_base_address};
 use utils::traits::{StoreBytes31, StorageBaseAddressIntoFelt252};
-use utils::helpers::ByteArrayExTrait;
 
 
 #[test]
@@ -21,7 +21,7 @@ fn test_contract_account_deploy() {
     contract_utils::drop_event(kakarot_core.contract_address);
     let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
     testing::set_contract_address(kakarot_core.contract_address);
-    let bytecode = array![0x01,0x02,0x03].span();
+    let bytecode = array![0x01, 0x02, 0x03].span();
     let ca = ContractAccountTrait::deploy(
         test_utils::other_evm_address(), test_utils::evm_address(), bytecode
     );
@@ -36,7 +36,7 @@ fn test_contract_account_deploy() {
     assert(event.deployer == test_utils::other_evm_address(), 'wrong deployer address');
     assert(event.evm_address == test_utils::evm_address(), 'wrong evm address');
     assert(ca.nonce().unwrap() == 1, 'initial nonce not 1');
-    assert(ByteArrayExTrait::to_bytes(ca.load_bytecode().unwrap())== bytecode, 'wrong bytecode');
+    assert(ByteArrayExTrait::into_bytes(ca.load_bytecode().unwrap()) == bytecode, 'wrong bytecode');
 }
 
 #[test]

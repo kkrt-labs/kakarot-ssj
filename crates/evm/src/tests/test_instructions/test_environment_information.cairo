@@ -568,7 +568,7 @@ fn test_exec_extcodesize_ca_empty() {
     set_contract_address(kakarot_core.contract_address);
 
     // The bytecode remains empty, and we expect the empty hash in return
-    let mut contract_account = ContractAccountTrait::new(evm_address);
+    let mut ca = ContractAccountTrait::deploy(other_evm_address(), evm_address(), array![].span());
 
     machine.stack.push(evm_address.into());
 
@@ -589,11 +589,10 @@ fn test_exec_extcodesize_ca_with_bytecode() {
     let kakarot_core = deploy_kakarot_core(native_token());
     set_contract_address(kakarot_core.contract_address);
 
-    // Set nonce of CA to 1 so that it appears as an existing account
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    let mut contract_account = ContractAccountTrait::new(evm_address);
-    contract_account.increment_nonce().unwrap();
-    contract_account.store_bytecode(counter_evm_bytecode());
+    let mut ca = ContractAccountTrait::deploy(
+        other_evm_address(), evm_address(), counter_evm_bytecode()
+    );
 
     machine.stack.push(evm_address.into());
     // When
@@ -616,11 +615,11 @@ fn test_exec_extcodecopy_ca() {
     let mut machine = setup_machine();
     let kakarot_core = deploy_kakarot_core(native_token());
     set_contract_address(kakarot_core.contract_address);
-    // Set nonce of CA to 1 so that it appears as an existing account
+
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    let mut contract_account = ContractAccountTrait::new(evm_address);
-    contract_account.increment_nonce().unwrap();
-    contract_account.store_bytecode(counter_evm_bytecode());
+    let mut ca = ContractAccountTrait::deploy(
+        other_evm_address(), evm_address(), counter_evm_bytecode()
+    );
 
     // size
     machine.stack.push(50).unwrap();
@@ -651,11 +650,10 @@ fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
     let kakarot_core = deploy_kakarot_core(native_token());
     set_contract_address(kakarot_core.contract_address);
 
-    // Set nonce of CA to 1 so that it appears as an existing account
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    let mut contract_account = ContractAccountTrait::new(evm_address);
-    contract_account.increment_nonce().unwrap();
-    contract_account.store_bytecode(counter_evm_bytecode());
+    let mut ca = ContractAccountTrait::deploy(
+        other_evm_address(), evm_address(), counter_evm_bytecode()
+    );
 
     // size
     machine.stack.push(5);
@@ -937,10 +935,8 @@ fn test_exec_extcodehash_ca_empty() {
     let kakarot_core = deploy_kakarot_core(native_token());
     set_contract_address(kakarot_core.contract_address);
 
-    // Set nonce of CA to 1 so that it appears as an existing account
     // The bytecode remains empty, and we expect the empty hash in return
-    let mut contract_account = ContractAccountTrait::new(evm_address);
-    contract_account.increment_nonce().unwrap();
+    let mut ca = ContractAccountTrait::deploy(other_evm_address(), evm_address(), array![].span());
 
     machine.stack.push(evm_address.into());
 
@@ -984,11 +980,10 @@ fn test_exec_extcodehash_ca_with_bytecode() {
     let kakarot_core = deploy_kakarot_core(native_token());
     set_contract_address(kakarot_core.contract_address);
 
-    // Set nonce of CA to 1 so that it appears as an existing account
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    let mut contract_account = ContractAccountTrait::new(evm_address);
-    contract_account.increment_nonce().unwrap();
-    contract_account.store_bytecode(counter_evm_bytecode());
+    let mut ca = ContractAccountTrait::deploy(
+        other_evm_address(), evm_address(), counter_evm_bytecode()
+    );
 
     machine.stack.push(evm_address.into());
     // When

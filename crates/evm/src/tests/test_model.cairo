@@ -31,10 +31,13 @@ fn test_account_at_ca_exists() {
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    ContractAccountTrait::deploy(other_evm_address(), evm_address(), array![].span());
+    // We need to set_contract_address as the nonce is stored inside the contract that calls this function - here, it's the test contract by default.
+    // By mocking the contract address, we make sure that the nonce is stored in the KakarotCore contract.
+    set_contract_address(kakarot_core.contract_address);
+    ContractAccountTrait::deploy(other_evm_address(), evm_address(), array![].span())
+        .expect('failed deploy contract account',);
 
     // When
-    set_contract_address(kakarot_core.contract_address);
     let account = AccountTrait::account_at(evm_address()).unwrap().unwrap();
 
     // Then
