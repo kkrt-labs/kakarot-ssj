@@ -44,9 +44,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * The evm_address and starknet_address the CA is deployed at - which is KakarotCore
     /// # Errors
     /// * `ACCOUNT_EXISTS` - If a contract account already exists at the given `evm_address`
-    fn deploy(
-        origin: EthAddress, evm_address: EthAddress, bytecode: Span<u8>
-    ) -> Result<ContractAccount, EVMError> {
+    fn deploy(evm_address: EthAddress, bytecode: Span<u8>) -> Result<ContractAccount, EVMError> {
         let mut maybe_acc = AccountTrait::account_at(evm_address)?;
         if maybe_acc.is_some() {
             return Result::Err(EVMError::DeployError(ACCOUNT_EXISTS));
@@ -57,7 +55,7 @@ impl ContractAccountImpl of ContractAccountTrait {
         ca.set_nonce(1);
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
         //TODO delay emission of this event when commiting context changes.
-        kakarot_state.emit(ContractAccountDeployed { evm_address, deployer: origin });
+        kakarot_state.emit(ContractAccountDeployed { evm_address });
         ca.store_bytecode(bytecode)?;
         return Result::Ok(
             ContractAccount { evm_address: evm_address, starknet_address: get_contract_address() }

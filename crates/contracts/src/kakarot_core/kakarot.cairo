@@ -81,8 +81,6 @@ mod KakarotCore {
     struct ContractAccountDeployed {
         #[key]
         evm_address: EthAddress,
-        #[key]
-        deployer: EthAddress
     }
 
     #[constructor]

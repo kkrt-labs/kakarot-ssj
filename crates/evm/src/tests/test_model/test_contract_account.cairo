@@ -22,9 +22,7 @@ fn test_contract_account_deploy() {
     let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
     testing::set_contract_address(kakarot_core.contract_address);
     let bytecode = array![0x01, 0x02, 0x03].span();
-    let ca = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), test_utils::evm_address(), bytecode
-    );
+    let ca = ContractAccountTrait::deploy(test_utils::evm_address(), bytecode);
     let ca = match ca {
         Result::Ok(ca) => ca,
         Result::Err(err) => panic_with_felt252(err.to_string())
@@ -33,7 +31,6 @@ fn test_contract_account_deploy() {
         KakarotCore::ContractAccountDeployed
     >(kakarot_core.contract_address)
         .unwrap();
-    assert(event.deployer == test_utils::other_evm_address(), 'wrong deployer address');
     assert(event.evm_address == test_utils::evm_address(), 'wrong evm address');
     assert(ca.nonce().unwrap() == 1, 'initial nonce not 1');
     assert(ByteArrayExTrait::into_bytes(ca.load_bytecode().unwrap()) == bytecode, 'wrong bytecode');
@@ -43,8 +40,7 @@ fn test_contract_account_deploy() {
 #[available_gas(2000000)]
 fn test_at_contract_account_deployed() {
     let evm_address = EVM_ADDRESS();
-    ContractAccountTrait::deploy(test_utils::other_evm_address(), evm_address, array![].span())
-        .unwrap();
+    ContractAccountTrait::deploy(evm_address, array![].span()).unwrap();
     let maybe_ca = ContractAccountTrait::at(evm_address).unwrap();
     assert(maybe_ca.is_some(), 'contract account should exist');
     let mut ca = maybe_ca.unwrap();
@@ -66,10 +62,7 @@ fn test_at_contract_account_undeployed() {
 #[available_gas(2000000)]
 fn test_nonce() {
     let evm_address = EVM_ADDRESS();
-    let mut ca = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), test_utils::evm_address(), array![].span()
-    )
-        .unwrap();
+    let mut ca = ContractAccountTrait::deploy(test_utils::evm_address(), array![].span()).unwrap();
     assert(ca.nonce().unwrap() == 1, 'initial nonce not 1');
     ca.increment_nonce();
     assert(ca.nonce().unwrap() == 2, 'nonce not incremented');
@@ -79,10 +72,7 @@ fn test_nonce() {
 #[available_gas(2000000)]
 fn test_balance() {
     let evm_address = EVM_ADDRESS();
-    let mut ca = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), test_utils::evm_address(), array![].span()
-    )
-        .unwrap();
+    let mut ca = ContractAccountTrait::deploy(test_utils::evm_address(), array![].span()).unwrap();
     assert(ca.balance().unwrap() == 0, 'initial balance not 0');
     ca.set_balance(1);
     assert(ca.balance().unwrap() == 1, 'balance not incremented');
@@ -92,10 +82,7 @@ fn test_balance() {
 #[available_gas(20000000)]
 fn test_contract_storage() {
     let evm_address = EVM_ADDRESS();
-    let mut ca = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), test_utils::evm_address(), array![].span()
-    )
-        .unwrap();
+    let mut ca = ContractAccountTrait::deploy(test_utils::evm_address(), array![].span()).unwrap();
     let key = u256 { low: 10, high: 10 };
     assert(ca.storage_at(key).unwrap() == 0, 'initial key not null');
     let value = u256 { low: 0, high: 1 };

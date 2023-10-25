@@ -34,7 +34,7 @@ fn test_account_at_ca_exists() {
     // We need to set_contract_address as the nonce is stored inside the contract that calls this function - here, it's the test contract by default.
     // By mocking the contract address, we make sure that the nonce is stored in the KakarotCore contract.
     set_contract_address(kakarot_core.contract_address);
-    ContractAccountTrait::deploy(other_evm_address(), evm_address(), array![].span())
+    ContractAccountTrait::deploy(evm_address(), array![].span())
         .expect('failed deploy contract account',);
 
     // When

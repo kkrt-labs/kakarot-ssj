@@ -568,7 +568,7 @@ fn test_exec_extcodesize_ca_empty() {
     set_contract_address(kakarot_core.contract_address);
 
     // The bytecode remains empty, and we expect the empty hash in return
-    let mut ca = ContractAccountTrait::deploy(other_evm_address(), evm_address(), array![].span());
+    let mut ca = ContractAccountTrait::deploy(evm_address(), array![].span());
 
     machine.stack.push(evm_address.into());
 
@@ -590,9 +590,7 @@ fn test_exec_extcodesize_ca_with_bytecode() {
     set_contract_address(kakarot_core.contract_address);
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    let mut ca = ContractAccountTrait::deploy(
-        other_evm_address(), evm_address(), counter_evm_bytecode()
-    );
+    let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
 
     machine.stack.push(evm_address.into());
     // When
@@ -617,9 +615,7 @@ fn test_exec_extcodecopy_ca() {
     set_contract_address(kakarot_core.contract_address);
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    let mut ca = ContractAccountTrait::deploy(
-        other_evm_address(), evm_address(), counter_evm_bytecode()
-    );
+    let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
 
     // size
     machine.stack.push(50).unwrap();
@@ -651,9 +647,7 @@ fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
     set_contract_address(kakarot_core.contract_address);
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    let mut ca = ContractAccountTrait::deploy(
-        other_evm_address(), evm_address(), counter_evm_bytecode()
-    );
+    let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
 
     // size
     machine.stack.push(5);
@@ -936,7 +930,7 @@ fn test_exec_extcodehash_ca_empty() {
     set_contract_address(kakarot_core.contract_address);
 
     // The bytecode remains empty, and we expect the empty hash in return
-    let mut ca = ContractAccountTrait::deploy(other_evm_address(), evm_address(), array![].span());
+    let mut ca = ContractAccountTrait::deploy(evm_address(), array![].span());
 
     machine.stack.push(evm_address.into());
 
@@ -981,9 +975,7 @@ fn test_exec_extcodehash_ca_with_bytecode() {
     set_contract_address(kakarot_core.contract_address);
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    let mut ca = ContractAccountTrait::deploy(
-        other_evm_address(), evm_address(), counter_evm_bytecode()
-    );
+    let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
 
     machine.stack.push(evm_address.into());
     // When
