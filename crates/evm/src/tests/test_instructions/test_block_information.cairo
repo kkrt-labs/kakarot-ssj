@@ -227,4 +227,17 @@ fn test_coinbase() {
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xc012ba5e, 'stack top should be 0xc012ba5e');
+
+#[test]
+#[available_gas(20000000)]
+fn test_randao_should_push_zero_to_stack() {
+    // Given
+    let mut machine = setup_machine();
+
+    // When
+    machine.exec_prevrandao().unwrap();
+
+    // Then
+    let result = machine.stack.peek().unwrap();
+    assert(result == 0x00, 'stack top should be zero');
 }

@@ -45,7 +45,7 @@ This document describes the opcodes supported by Kakarot.
 
 | Opcode Value | Opcode Name | Description             | Implemented |
 | ------------ | ----------- | ----------------------- | ----------- |
-| 0x20         | SHA3        | Compute Keccak-256 hash |             |
+| 0x20         | SHA3        | Compute Keccak-256 hash | ✅          |
 
 ## Environmental Information
 
@@ -54,7 +54,7 @@ This document describes the opcodes supported by Kakarot.
 | Opcode Value | Opcode Name    | Description                                                                       | Implemented |
 | ------------ | -------------- | --------------------------------------------------------------------------------- | ----------- |
 | 0x30         | ADDRESS        | Get address of currently executing account                                        | ✅          |
-| 0x31         | BALANCE        | Get balance of the given account                                                  |             |
+| 0x31         | BALANCE        | Get balance of the given account                                                  | ✅          |
 | 0x32         | ORIGIN         | Get execution origination address                                                 | ✅          |
 | 0x33         | CALLER         | Get caller address                                                                | ✅          |
 | 0x34         | CALLVALUE      | Get deposited value by the instruction/transaction responsible for this execution | ✅          |
@@ -64,11 +64,11 @@ This document describes the opcodes supported by Kakarot.
 | 0x38         | CODESIZE       | Get size of code running in current environment                                   | ✅          |
 | 0x39         | CODECOPY       | Copy code running in current environment to memory                                | ✅          |
 | 0x3a         | GASPRICE       | Get price of gas in current environment                                           | ✅          |
-| 0x3b         | EXTCODESIZE    | Get size of an account's code                                                     |             |
-| 0x3c         | EXTCODECOPY    | Copy an account's code to memory                                                  |             |
+| 0x3b         | EXTCODESIZE    | Get size of an account's code                                                     | ✅          |
+| 0x3c         | EXTCODECOPY    | Copy an account's code to memory                                                  | ✅          |
 | 0x3d         | RETURNDATASIZE | Get size of output data from the previous call from the current environment       | ✅          |
 | 0x3e         | RETURNDATACOPY | Copy output data from the previous call to memory                                 | ✅          |
-| 0x3f         | EXTCODEHASH    | Get the code hash of an account                                                   |             |
+| 0x3f         | EXTCODEHASH    | Get the code hash of an account                                                   | ✅          |
 
 <!-- markdownlint-restore -->
 
@@ -78,14 +78,14 @@ This document describes the opcodes supported by Kakarot.
 
 | Opcode Value | Opcode Name | Description                                                | Implemented |
 | ------------ | ----------- | ---------------------------------------------------------- | ----------- |
-| 0x40         | BLOCKHASH   | Get the hash of one of the 256 most recent complete blocks |             |
+| 0x40         | BLOCKHASH   | Get the hash of one of the 256 most recent complete blocks | ✅          |
 | 0x41         | COINBASE    | Get the block's beneficiary address                        |             |
 | 0x42         | TIMESTAMP   | Get the block's timestamp                                  | ✅          |
 | 0x43         | NUMBER      | Get the block's number                                     | ✅          |
-| 0x44         | PREVRANDAO  | Get the block's difficulty                                 |             |
+| 0x44         | PREVRANDAO  | Get the block's difficulty                                 | ✅          |
 | 0x45         | GASLIMIT    | Get the block's gas limit                                  | ✅          |
 | 0x46         | CHAINID     | Get the chain ID                                           | ✅          |
-| 0x47         | SELFBALANCE | Get the balance of the current contract                    |             |
+| 0x47         | SELFBALANCE | Get the balance of the current contract                    | ✅          |
 | 0x48         | BASEFEE     | Get the base fee of the current block                      | ✅          |
 
 <!-- markdownlint-restore -->
@@ -106,7 +106,7 @@ This document describes the opcodes supported by Kakarot.
 | 0x57         | JUMPI       | Conditionally alter the program counter                                                            | ✅          |
 | 0x58         | PC          | Get the value of the program counter prior to the increment                                        | ✅          |
 | 0x59         | MSIZE       | Get the size of active memory in bytes                                                             | ✅          |
-| 0x5a         | GAS         | Get the amount of available gas, including the corresponding reduction the amount of available gas |             |
+| 0x5a         | GAS         | Get the amount of available gas, including the corresponding reduction the amount of available gas | ✅          |
 | 0x5b         | JUMPDEST    | Mark a valid destination for jumps                                                                 | ✅          |
 
 <!-- markdownlint-restore -->

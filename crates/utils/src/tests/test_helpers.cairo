@@ -1,8 +1,8 @@
-use utils::helpers;
 use utils::helpers::{
     SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, U32Trait
 };
 use utils::helpers::{ByteArrayExTrait};
+use utils::helpers;
 use utils::traits::{ByteArraySerde};
 
 #[test]

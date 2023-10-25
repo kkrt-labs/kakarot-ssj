@@ -7,3 +7,7 @@ version = "0.1.0"
 [dependencies]
 starknet.workspace = true
 evm = { path = "../evm" }
+
+[tool]
+fmt.workspace = true
+contracts = { path = "../contracts" }

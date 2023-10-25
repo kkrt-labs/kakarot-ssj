@@ -1,11 +1,9 @@
-use core::option::OptionTrait;
-use core::traits::TryInto;
+use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use starknet::{
     StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
     ContractAddress, Store, SyscallResult
 };
 use utils::math::{Zero, One};
-use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
     #[inline(always)]

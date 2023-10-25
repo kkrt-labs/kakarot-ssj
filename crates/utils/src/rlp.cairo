@@ -1,5 +1,3 @@
-use result::ResultTrait;
-use option::OptionTrait;
 use array::{Array, ArrayTrait, Span, SpanTrait};
 use clone::Clone;
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};

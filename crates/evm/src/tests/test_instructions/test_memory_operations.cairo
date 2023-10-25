@@ -582,3 +582,18 @@ fn test_exec_sstore_finalized() {
     // Then
     assert(Store::<u256>::read(0, storage_address).unwrap() == value, 'wrong value in journal')
 }
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_gas_should_push_gas_limit_to_stack() {
+    // Given
+    let mut machine = setup_machine();
+
+    // When
+    machine.exec_gas().unwrap();
+
+    // Then
+    let result = machine.stack.peek().unwrap();
+    assert(result == machine.gas_limit().into(), 'stack top should be gas_limit');
+}
