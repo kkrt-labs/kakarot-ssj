@@ -1,5 +1,9 @@
 #[cfg(test)]
 mod test_external_owned_account {
+    use contracts::tests::test_upgradeable::{
+        IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
+        MockContractUpgradeableV1
+    };
     use core::debug::PrintTrait;
     use core::option::OptionTrait;
     use core::traits::TryInto;
@@ -13,10 +17,6 @@ mod test_external_owned_account {
     use starknet::{
         deploy_syscall, ContractAddress, ClassHash, get_contract_address, contract_address_const,
         EthAddress
-    };
-    use contracts::tests::test_upgradeable::{
-        IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
-        MockContractUpgradeableV1
     };
 
     fn deploy_eoa() -> IExternallyOwnedAccountDispatcher {

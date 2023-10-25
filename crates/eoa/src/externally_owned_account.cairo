@@ -15,11 +15,11 @@ trait IExternallyOwnedAccount<TContractState> {
 mod ExternallyOwnedAccount {
     use contracts::components::upgradeable::IUpgradeable;
     use contracts::components::upgradeable::upgradeable_component;
+    use starknet::account::{Call, AccountContract};
 
     use starknet::{
         ContractAddress, EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address
     };
-    use starknet::account::{Call, AccountContract};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
