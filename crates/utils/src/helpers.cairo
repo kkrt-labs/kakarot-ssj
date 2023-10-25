@@ -1,16 +1,16 @@
-use starknet::{EthAddress, EthAddressIntoFelt252};
 use cmp::min;
+use integer::U32TryIntoNonZero;
+use integer::u32_as_non_zero;
+use keccak::u128_split;
+use starknet::{EthAddress, EthAddressIntoFelt252};
+use traits::DivRem;
 use utils::constants::{
     POW_256_0, POW_256_1, POW_256_2, POW_256_3, POW_256_4, POW_256_5, POW_256_6, POW_256_7,
     POW_256_8, POW_256_9, POW_256_10, POW_256_11, POW_256_12, POW_256_13, POW_256_14, POW_256_15,
     POW_256_16,
 };
-use keccak::u128_split;
-use traits::DivRem;
-use integer::U32TryIntoNonZero;
-use utils::num::{Zero, One, SizeOf};
 use utils::math::Bitshift;
-use integer::u32_as_non_zero;
+use utils::num::{Zero, One, SizeOf};
 
 
 /// Ceils a number of bits to the next word (32 bytes)

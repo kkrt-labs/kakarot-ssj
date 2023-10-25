@@ -1,6 +1,6 @@
+use starknet::account::{Call, AccountContract};
 // Migrate https://github.com/kkrt-labs/kakarot/blob/7ec7a96074394ddb592a2b6fbea279c6c5cb25a6/src/kakarot/accounts/eoa/externally_owned_account.cairo#L4
 use starknet::{ContractAddress, EthAddress,};
-use starknet::account::{Call, AccountContract};
 
 #[starknet::interface]
 trait IExternallyOwnedAccount<TContractState> {
@@ -10,8 +10,8 @@ trait IExternallyOwnedAccount<TContractState> {
 
 #[starknet::contract]
 mod ExternallyOwnedAccount {
-    use starknet::{ContractAddress, EthAddress, VALIDATED, get_caller_address};
     use starknet::account::{Call, AccountContract};
+    use starknet::{ContractAddress, EthAddress, VALIDATED, get_caller_address};
 
     #[storage]
     struct Storage {

@@ -1,9 +1,9 @@
-use utils::traits::{StorageBaseAddressPartialEq};
 use starknet::{
     StorageBaseAddress, StorageAddress, storage_address_from_base, storage_address_try_from_felt252,
     storage_base_address_from_felt252
 };
 use test::test_utils::{assert_eq, assert_ne};
+use utils::traits::{StorageBaseAddressPartialEq};
 
 #[test]
 fn test_eq_storage_base_address() {
