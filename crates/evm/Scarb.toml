@@ -11,5 +11,5 @@ contracts = { path = "../contracts" }
 eoa = { path = "../eoa" }
 openzeppelin = { path = "../openzeppelin" }
 
-[tool.fmt]
-sort-module-level-items = true
+[tool]
+fmt.workspace = true

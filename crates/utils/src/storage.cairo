@@ -1,10 +1,10 @@
+use hash::{HashStateTrait, HashStateExTrait};
+use poseidon::PoseidonTrait;
 use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, Store, EthAddress, SyscallResult,
     storage_write_syscall, storage_address_from_base, storage_read_syscall,
     storage_address_from_base_and_offset
 };
-use poseidon::PoseidonTrait;
-use hash::{HashStateTrait, HashStateExTrait};
 
 
 /// Computes the StorageBaseAddress of a storage variable.  The address is

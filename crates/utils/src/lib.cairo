@@ -1,15 +1,15 @@
+mod constants;
+mod errors;
+mod eth_transaction;
 //! Utilities for kakarot standard library.
 
 mod helpers;
-mod constants;
-mod num;
-mod math;
-mod eth_transaction;
-mod rlp;
-mod traits;
 mod i256;
+mod math;
+mod num;
+mod rlp;
 mod storage;
-mod errors;
 
 #[cfg(test)]
 mod tests;
+mod traits;
