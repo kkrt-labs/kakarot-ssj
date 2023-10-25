@@ -83,8 +83,6 @@ fn deploy_kakarot_core(native_token: ContractAddress) -> IExtendedKakarotCoreDis
     let maybe_address = deploy_syscall(
         KakarotCore::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
     );
-    (*calldata[2]).print();
-    ExternallyOwnedAccount::TEST_CLASS_HASH.print();
 
     match maybe_address {
         Result::Ok((
