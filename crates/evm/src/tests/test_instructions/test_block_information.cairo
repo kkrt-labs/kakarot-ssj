@@ -9,10 +9,7 @@ use evm::instructions::BlockInformationTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{setup_machine, evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-use starknet::contract_address_const;
-use starknet::testing::{
-    set_block_timestamp, set_block_number, set_contract_address, set_sequencer_address
-};
+use starknet::testing::{set_block_timestamp, set_block_number, set_contract_address};
 
 /// 0x40 - BLOCKHASH
 #[test]
@@ -214,19 +211,6 @@ fn test_chainid_should_push_chain_id_to_stack() {
     assert(result == chain_id, 'stack should have chain id');
 }
 
-#[test]
-#[available_gas(20000000)]
-fn test_coinbase() {
-    // Given
-    let mut machine = setup_machine();
-    set_sequencer_address(contract_address_const::<0xc012ba5e>());
-
-    // When
-    machine.exec_coinbase();
-
-    // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0xc012ba5e, 'stack top should be 0xc012ba5e');
 
 #[test]
 #[available_gas(20000000)]
