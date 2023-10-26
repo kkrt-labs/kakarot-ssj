@@ -1,9 +1,5 @@
-use array::{Array, ArrayTrait, Span, SpanTrait};
-use clone::Clone;
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use utils::helpers::{U32Trait, ByteArrayExTrait, ArrayExtension};
-
-use debug::PrintTrait;
 
 // All possible RLP tpypes
 #[derive(Drop, PartialEq)]
