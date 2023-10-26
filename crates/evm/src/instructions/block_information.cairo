@@ -6,7 +6,8 @@ use evm::errors::{
     EVMError, BLOCK_HASH_SYSCALL_FAILED, EXECUTION_INFO_SYSCALL_FAILED, TYPE_CONVERSION_ERROR
 };
 use evm::machine::{Machine, MachineCurrentContextTrait};
-use evm::model::{AccountTrait, Account};
+use evm::model::Account;
+use evm::model::account::AccountTrait;
 use evm::stack::StackTrait;
 
 // Corelib imports

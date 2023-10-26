@@ -15,9 +15,9 @@ mod KakarotCore {
     use core::zeroable::Zeroable;
     use evm::context::Status;
     use evm::errors::{EVMError, EVMErrorTrait};
+    use evm::model::account::{Account, AccountTrait};
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
     use evm::model::eoa::{EOA, EOATrait};
-    use evm::model::{Account, AccountTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };

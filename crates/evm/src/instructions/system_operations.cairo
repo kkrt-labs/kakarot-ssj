@@ -5,7 +5,7 @@ use evm::call_helpers::MachineCallHelpers;
 use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::AccountTrait;
+use evm::model::account::AccountTrait;
 use evm::stack::StackTrait;
 use utils::math::Exponentiation;
 

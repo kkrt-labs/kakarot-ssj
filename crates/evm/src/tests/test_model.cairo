@@ -4,7 +4,8 @@ use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
-use evm::model::{Account, AccountTrait, ContractAccountTrait};
+use evm::model::account::AccountTrait;
+use evm::model::{Account, ContractAccountTrait};
 use evm::tests::test_utils::{evm_address, other_evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::{set_contract_address};
