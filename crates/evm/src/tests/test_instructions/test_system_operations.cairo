@@ -30,6 +30,26 @@ fn test_exec_return() {
     assert(machine.stopped(), 'machine should be stopped')
 }
 
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_revert() {
+    // Given
+    let mut machine = setup_machine_with_nested_execution_context();
+    // When
+    machine.stack.push(1000);
+    machine.stack.push(0);
+    machine.exec_mstore();
+
+    machine.stack.push(32);
+    machine.stack.push(0);
+    assert(machine.exec_return().is_ok(), 'Exec revert failed');
+
+    // Then
+    assert(1000 == load_word(32, parent_ctx_return_data(ref machine)), 'Wrong return_data');
+    assert(machine.stopped(), 'machine should be stopped')
+}
+
 #[test]
 #[available_gas(20000000)]
 fn test_exec_return_with_offset() {

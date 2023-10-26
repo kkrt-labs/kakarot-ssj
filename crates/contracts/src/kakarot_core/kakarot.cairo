@@ -234,8 +234,16 @@ mod KakarotCore {
             value: u256,
             data: Span<u8>
         ) -> Span<u8> {
-            self.assert_view();
-            array![].span()
+            if !self.is_view() {
+                panic_with_felt252('fn must be called, not invoked');
+            };
+            let result = self.handle_call(:from, :to, :gas_limit, :gas_price, :value, :data);
+            match result {
+                Result::Ok(result) => result.return_data,
+                // TODO: Return the error message as Bytes in the response
+                // Eliminate all paths of possible panic in logic with relations to the EVM itself.
+                Result::Err(err) => panic_with_felt252(err.to_string()),
+            }
         }
 
         /// Transaction entrypoint into the EVM
@@ -261,19 +269,19 @@ mod KakarotCore {
 
     #[generate_trait]
     impl KakarotCoreInternalImpl of KakarotCoreInternal {
-        fn assert_view(self: @ContractState) -> Result<(), EVMError> {
+        fn is_view(self: @ContractState) -> bool {
             let tx_info = get_tx_info().unbox();
 
             // If the account that originated the transaction is not zero, this means we
             // are in an invoke transaction instead of a call; therefore, `eth_call` is being wrongly called
             // For invoke transactions, `eth_send_transaction` must be used
-            if tx_info.account_contract_address.is_zero() {
-                return Result::Err(EVMError::WriteInStaticContext(INVOKE_ETH_CALL_FORBIDDEN));
+            if !tx_info.account_contract_address.is_zero() {
+                return false;
             }
-            Result::Ok(())
+            true
         }
 
-        fn handle_eth_call(
+        fn handle_call(
             self: @ContractState,
             from: EthAddress,
             to: Option<EthAddress>,
@@ -283,18 +291,29 @@ mod KakarotCore {
             data: Span<u8>
         ) -> Result<ExecutionResult, EVMError> {
             match to {
-                // TODO: Transfer ETH
                 Option::Some(to) => {
                     let bytecode = match AccountTrait::account_at(to)? {
                         Option::Some(account) => account.bytecode()?,
                         Option::None => Default::default().span(),
                     };
                     let execution_result = execute(
-                        to, :bytecode, calldata: data, :value, :gas_price, :gas_limit,
+                        from,
+                        to,
+                        :bytecode,
+                        calldata: data,
+                        :value,
+                        :gas_price,
+                        :gas_limit,
+                        read_only: false,
                     );
                     return Result::Ok(execution_result);
                 },
-                Option::None => panic_with_felt252('unimplemented'),
+                Option::None => {
+                    let bytecode = data;
+                    // TODO: compute_evm_address
+                    // HASH(RLP(deployer_address, deployer_nonce))[0..20]
+                    panic_with_felt252('unimplemented')
+                },
             }
         }
     }

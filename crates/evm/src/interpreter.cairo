@@ -68,6 +68,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
                 // Currently, revert reason is a Span<u8>.
                 machine.set_reverted();
                 self.finalize_revert(ref machine);
+                machine.error = Option::Some(error);
             }
         }
     }
