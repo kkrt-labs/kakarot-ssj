@@ -1,5 +1,6 @@
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
+use evm::model::{Account, AccountType};
 use integer::BoundedInt;
 use openzeppelin::token::erc20::interface::{
     IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
@@ -42,6 +43,26 @@ impl EOAImpl of EOATrait {
         //     Result::Err(err) => panic(err)
         // }
         panic_with_felt252('unimplemented')
+    }
+
+    /// Retrieves the EOA content stored at address `evm_address`.
+    /// There is no way to access the nonce of an EOA currently But putting 1
+    /// shouldn't have any impact and is safer than 0 since has_code_or_nonce is
+    /// used in some places to trigger collision
+    /// # Arguments
+    /// * `evm_address` - The EVM address of the eoa
+    /// # Returns
+    /// * The corresponding Account instance
+    fn fetch(self: @EOA) -> Result<Account, EVMError> {
+        Result::Ok(
+            Account {
+                account_type: AccountType::EOA(*self),
+                code: Default::default().span(),
+                storage: Default::default(),
+                nonce: 1,
+                selfdestruct: false
+            }
+        )
     }
 
     fn at(evm_address: EthAddress) -> Result<Option<EOA>, EVMError> {

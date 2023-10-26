@@ -70,7 +70,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         // Case 2: `to` address is not a precompile
         // We enter the standard flow
-        let maybe_account = AccountTrait::account_at(call_args.to)?;
+        let maybe_account = AccountTrait::account_type_at(call_args.to)?;
         let bytecode = match maybe_account {
             Option::Some(acc) => acc.bytecode()?,
             Option::None => Default::default().span(),

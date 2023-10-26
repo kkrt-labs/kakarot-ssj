@@ -68,7 +68,7 @@ impl SystemOperations of SystemOperationsTrait {
         // If sender_balance < value, return early, pushing
         // 0 on the stack to indicate call failure.
         let caller_address = self.evm_address();
-        let maybe_account = AccountTrait::account_at(caller_address)?;
+        let maybe_account = AccountTrait::account_type_at(caller_address)?;
         let sender_balance = match maybe_account {
             Option::Some(account) => account.balance()?,
             Option::None => 0,

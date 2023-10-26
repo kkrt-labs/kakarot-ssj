@@ -104,7 +104,7 @@ impl BlockInformation of BlockInformationTrait {
     fn exec_selfbalance(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.evm_address();
 
-        let maybe_account = AccountTrait::account_at(evm_address)?;
+        let maybe_account = AccountTrait::account_type_at(evm_address)?;
         let balance: u256 = match maybe_account {
             Option::Some(acc) => acc.balance()?,
             Option::None => 0

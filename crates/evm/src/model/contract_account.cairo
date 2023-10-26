@@ -11,7 +11,7 @@ use evm::errors::{
     EVMError, READ_SYSCALL_FAILED, WRITE_SYSCALL_FAILED, ACCOUNT_EXISTS, DEPLOYMENT_FAILED
 };
 use evm::execution::execute;
-use evm::model::AccountTrait;
+use evm::model::{Account, AccountTrait, AccountType};
 use hash::{HashStateTrait, HashStateExTrait};
 use poseidon::PoseidonTrait;
 use starknet::{
@@ -45,7 +45,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// # Errors
     /// * `ACCOUNT_EXISTS` - If a contract account already exists at the given `evm_address`
     fn deploy(evm_address: EthAddress, bytecode: Span<u8>) -> Result<ContractAccount, EVMError> {
-        let mut maybe_acc = AccountTrait::account_at(evm_address)?;
+        let mut maybe_acc = AccountTrait::account_type_at(evm_address)?;
         if maybe_acc.is_some() {
             return Result::Err(EVMError::DeployError(ACCOUNT_EXISTS));
         }
@@ -75,6 +75,23 @@ impl ContractAccountImpl of ContractAccountTrait {
             return Result::Ok(Option::Some(ca));
         }
         return Result::Ok(Option::None);
+    }
+
+    /// Retrieves the contract account content stored at address `evm_address`.
+    /// # Arguments
+    /// * `evm_address` - The EVM address of the contract account
+    /// # Returns
+    /// * The corresponding Account instance
+    fn fetch(self: @ContractAccount) -> Result<Account, EVMError> {
+        Result::Ok(
+            Account {
+                account_type: AccountType::ContractAccount(*self),
+                code: ByteArrayExTrait::into_bytes(self.load_bytecode()?),
+                storage: Default::default(),
+                nonce: self.nonce()?,
+                selfdestruct: false
+            }
+        )
     }
 
     /// Returns the nonce of a contract account.

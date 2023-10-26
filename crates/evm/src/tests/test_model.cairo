@@ -19,7 +19,7 @@ fn test_account_at_eoa() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    let account = AccountTrait::account_at(evm_address()).unwrap().unwrap();
+    let account = AccountTrait::account_type_at(evm_address()).unwrap().unwrap();
 
     // Then
     assert(account.is_eoa(), 'wrong account type');
@@ -38,7 +38,7 @@ fn test_account_at_ca_exists() {
         .expect('failed deploy contract account',);
 
     // When
-    let account = AccountTrait::account_at(evm_address()).unwrap().unwrap();
+    let account = AccountTrait::account_type_at(evm_address()).unwrap().unwrap();
 
     // Then
     assert(account.is_ca(), 'wrong account type');
@@ -54,7 +54,7 @@ fn test_account_at_undeployed() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    let maybe_account = AccountTrait::account_at(evm_address()).unwrap();
+    let maybe_account = AccountTrait::account_type_at(evm_address()).unwrap();
 
     // Then
     assert(maybe_account.is_none(), 'account should be None');
@@ -73,7 +73,7 @@ fn test_balance_eoa() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    let account = AccountTrait::account_at(evm_address()).unwrap().unwrap();
+    let account = AccountTrait::account_type_at(evm_address()).unwrap().unwrap();
     let balance = account.balance().unwrap();
 
     // Then
@@ -93,7 +93,7 @@ fn test_balance_contract_account() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    let account = AccountTrait::account_at(evm_address()).unwrap().unwrap();
+    let account = AccountTrait::account_type_at(evm_address()).unwrap().unwrap();
     let balance = account.balance().unwrap();
 
     // Then

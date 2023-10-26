@@ -185,7 +185,7 @@ mod KakarotCore {
 
         /// Gets the balance associated to a contract account
         fn account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
-            let maybe_account = AccountTrait::account_at(evm_address).unwrap();
+            let maybe_account = AccountTrait::account_type_at(evm_address).unwrap();
             match maybe_account {
                 Option::Some(account) => account.balance().unwrap(),
                 Option::None => 0
