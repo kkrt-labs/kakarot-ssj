@@ -63,7 +63,7 @@ fn test_account_at_undeployed() {
 
 #[test]
 #[available_gas(5000000)]
-fn test_balance_eoa() {
+fn test_account_balance_eoa() {
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
@@ -84,7 +84,7 @@ fn test_balance_eoa() {
 #[ignore]
 #[test]
 #[available_gas(5000000)]
-fn test_balance_contract_account() {
+fn test_account_balance_contract_account() {
     // Given
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);

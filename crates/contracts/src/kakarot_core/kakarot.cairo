@@ -16,6 +16,7 @@ mod KakarotCore {
     use evm::context::Status;
     use evm::errors::{EVMError, EVMErrorTrait};
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
+    use evm::model::eoa::{EOA, EOATrait};
     use evm::model::{Account, AccountTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
@@ -217,42 +218,7 @@ mod KakarotCore {
 
         /// Deploys an EOA for a particular EVM address
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
-            // First let's check that the EOA is not already deployed
-            let eoa_starknet_address = self.eoa_address_registry.read(evm_address);
-            if eoa_starknet_address.is_non_zero() {
-                panic_with_felt252('EOA already deployed');
-            }
-
-            // Get the class hash of the EOA to deploy it
-            let eoa_class_hash = self.eoa_class_hash.read();
-
-            // Prepare the deployments arguments
-            // Salt
-            let salt: felt252 = evm_address.into();
-            // Constructor calldata
-            let constructor_calldata: Span<felt252> = array![
-                get_contract_address().into(), evm_address.into()
-            ]
-                .span();
-
-            // We do not want to deploy from zero, but with Kakarot Core as deployer
-            let deploy_from_zero = false;
-
-            // The syscall should only return an error for unexpected problems
-            // As we've previously checked that the EOA is not deployed yet
-            let (starknet_address, _) = deploy_syscall(
-                eoa_class_hash, salt, constructor_calldata, deploy_from_zero
-            )
-                .unwrap_syscall();
-
-            // We write in the eoa address mapping the address of the EOA
-            // This enables Kakarot to be aware that this EOA was already deployed
-            self.eoa_address_registry.write(evm_address, starknet_address);
-
-            // Emit an event
-            self.emit(EOADeployed { evm_address, starknet_address });
-
-            starknet_address
+            EOATrait::deploy(evm_address).unwrap().starknet_address
         }
 
         /// View entrypoint into the EVM
