@@ -41,17 +41,10 @@ mod KakarotCore {
     #[storage]
     struct Storage {
         /// Kakarot storage for accounts: Externally Owned Accounts (EOA) and Contract Accounts (CA)
-        /// CAs storage is handled outside of the Storage struct (see contract_account.cairo)
-        /// It maps the EVM address of a CA and the corresponding Kakarot Core storage ->
-        /// - nonce (note that this nonce is not the same as the Starknet protocol nonce)
-        /// - current balance in native token (CAs can use this balance as an allowance to spend native Starknet token through Kakarot Core)
-        /// - bytecode of the CA
-        /// Storage of CAs in EVM is defined as a mapping of key (bytes32) - value (bytes32) pairs
-        ///
-        /// EOAs:
         /// Map their EVM address and their Starknet address
         /// - starknet_address: the deterministic starknet address (31 bytes) computed given an EVM address (20 bytes)
-        eoa_address_registry: LegacyMap::<EthAddress, ContractAddress>,
+        address_registry: LegacyMap::<EthAddress, ContractAddress>,
+        account_class_hash: ClassHash,
         eoa_class_hash: ClassHash,
         // Utility storage
         native_token: ContractAddress,
@@ -92,12 +85,14 @@ mod KakarotCore {
         ref self: ContractState,
         native_token: ContractAddress,
         deploy_fee: u128,
+        account_class_hash: ClassHash,
         eoa_class_hash: ClassHash,
         owner: ContractAddress,
         chain_id: u128,
     ) {
         self.native_token.write(native_token);
         self.deploy_fee.write(deploy_fee);
+        self.account_class_hash.write(account_class_hash);
         self.eoa_class_hash.write(eoa_class_hash);
         self.ownable.initializer(owner);
         self.chain_id.write(chain_id);
@@ -136,7 +131,7 @@ mod KakarotCore {
         }
 
         /// Deterministically computes a Starknet address for an given EVM address
-        /// The address is computed as the Starknet address corresponding to the deployment of an EOA,
+        /// The address is computed as the Starknet address corresponding to the deployment of an Account,
         /// Using its EVM address as salt, and KakarotCore as deployer.
         /// https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/starknet/core/os/contract_address/contract_address.cairo#L2
         fn compute_starknet_address(
@@ -150,7 +145,7 @@ mod KakarotCore {
             // https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/hash_state.py#L6
             // https://github.com/xJonathanLEI/starknet-rs/blob/master/starknet-core/src/crypto.rs#L49
             // Constructor Calldata
-            // For an EOA, the constructor calldata is:
+            // For an Account, the constructor calldata is:
             // [kakarot_address, evm_address]
             let constructor_calldata_hash = PedersenTrait::new(0)
                 .update_with(deployer)
@@ -162,7 +157,7 @@ mod KakarotCore {
                 .update_with(CONTRACT_ADDRESS_PREFIX)
                 .update_with(deployer)
                 .update_with(evm_address)
-                .update_with(self.eoa_class_hash.read())
+                .update_with(self.account_class_hash.read())
                 .update_with(constructor_calldata_hash)
                 .update(5)
                 .finalize();
@@ -174,11 +169,11 @@ mod KakarotCore {
             normalized_address
         }
 
-        /// Checks into KakarotCore storage if an EOA has been deployed for a
+        /// Checks into KakarotCore storage if an Account has been deployed for a
         /// particular EVM address and if so, returns its corresponding Starknet Address
         /// Otherwise, returns 0
-        fn eoa_starknet_address(self: @ContractState, evm_address: EthAddress) -> ContractAddress {
-            self.eoa_address_registry.read(evm_address)
+        fn address_registry(self: @ContractState, evm_address: EthAddress) -> ContractAddress {
+            self.address_registry.read(evm_address)
         }
 
         /// Gets the nonce associated to a contract account

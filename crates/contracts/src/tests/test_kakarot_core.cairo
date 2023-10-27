@@ -109,7 +109,7 @@ fn test_kakarot_core_eoa_mapping() {
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
 
     // When
-    let eoa_starknet_address = kakarot_core.eoa_starknet_address(test_utils::evm_address());
+    let eoa_starknet_address = kakarot_core.address_registry(test_utils::evm_address());
 
     // Then
     assert(eoa_starknet_address == expected_eoa_starknet_address, 'wrong starknet address');
@@ -125,7 +125,7 @@ fn test_kakarot_core_compute_starknet_address() {
     // With arguments:
     // ['STARKNET_CONTRACT_ADDRESS', kakarot_address: 0x01, salt: evm_address, class_hash: ExternallyOwnedAccount::TEST_CLASS_HASH, constructor_calldata: hash([kakarot_address, evm_address]), ]
     let expected_starknet_address: ContractAddress = contract_address_const::<
-        0x3ed5b415783f3d8fa489610fe13be234f3219694bd65a31345c430b84b72227
+        0x2992c1e3ec7713ad8aaca00764e10d5a9130c42aca86df2245a009d6bd97a7e
     >();
 
     let eoa_starknet_address = kakarot_core.compute_starknet_address(evm_address);
