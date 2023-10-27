@@ -292,7 +292,7 @@ mod KakarotCore {
         ) -> Result<ExecutionResult, EVMError> {
             match to {
                 Option::Some(to) => {
-                    let bytecode = match AccountTrait::account_at(to)? {
+                    let bytecode = match AccountTrait::account_type_at(to)? {
                         Option::Some(account) => account.bytecode()?,
                         Option::None => Default::default().span(),
                     };
