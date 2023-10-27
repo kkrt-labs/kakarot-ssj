@@ -5,7 +5,7 @@ use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::{AccountTrait, Account, ContractAccountTrait};
+use evm::model::{AccountTrait, AccountType, ContractAccountTrait};
 use evm::stack::StackTrait;
 use integer::u32_as_non_zero;
 use integer::u32_overflowing_add;
@@ -34,7 +34,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_balance(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        let maybe_account = AccountTrait::account_at(evm_address)?;
+        let maybe_account = AccountTrait::account_type_at(evm_address)?;
         let balance: u256 = match maybe_account {
             Option::Some(acc) => acc.balance()?,
             Option::None => 0
@@ -172,15 +172,15 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_extcodesize(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        let maybe_account = AccountTrait::account_at(evm_address)?;
-        let account = match maybe_account {
+        let maybe_account = AccountTrait::account_type_at(evm_address)?;
+        let account_type = match maybe_account {
             Option::Some(account) => account,
             Option::None => { return self.stack.push(0); },
         };
 
-        match account {
-            Account::EOA(eoa) => { return self.stack.push(0); },
-            Account::ContractAccount(ca) => {
+        match account_type {
+            AccountType::EOA(eoa) => { return self.stack.push(0); },
+            AccountType::ContractAccount(ca) => {
                 let mut bytecode = ca.load_bytecode()?;
                 self.stack.push(bytecode.len().into())
             }
@@ -196,8 +196,8 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
-        let maybe_account = AccountTrait::account_at(evm_address)?;
-        let account = match maybe_account {
+        let maybe_account = AccountTrait::account_type_at(evm_address)?;
+        let account_type = match maybe_account {
             Option::Some(account) => account,
             Option::None => {
                 self.memory.store_padded_segment(dest_offset, size, Default::default().span());
@@ -205,12 +205,12 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
             },
         };
 
-        match account {
-            Account::EOA(eoa) => {
+        match account_type {
+            AccountType::EOA(eoa) => {
                 self.memory.store_padded_segment(dest_offset, size, Default::default().span());
                 return Result::Ok(());
             },
-            Account::ContractAccount(ca) => {
+            AccountType::ContractAccount(ca) => {
                 let mut bytecode = ca.load_bytecode()?;
                 // `cairo_keccak` takes in an array of little-endian u64s
 
@@ -272,15 +272,15 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_extcodehash(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        let maybe_account = AccountTrait::account_at(evm_address)?;
-        let account = match maybe_account {
+        let maybe_account = AccountTrait::account_type_at(evm_address)?;
+        let account_type = match maybe_account {
             Option::Some(account) => account,
             Option::None => { return self.stack.push(0); },
         };
 
-        match account {
-            Account::EOA(eoa) => { return self.stack.push(EMPTY_KECCAK); },
-            Account::ContractAccount(ca) => {
+        match account_type {
+            AccountType::EOA(eoa) => { return self.stack.push(EMPTY_KECCAK); },
+            AccountType::ContractAccount(ca) => {
                 let mut bytecode = ca.load_bytecode()?;
                 if bytecode.is_empty() {
                     return self.stack.push(EMPTY_KECCAK);
