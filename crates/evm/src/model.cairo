@@ -17,12 +17,18 @@ struct Event {
 }
 
 
-/// A struct to save Starknet native ETH transfers to be made when finalizing a
-/// tx
+#[derive(Copy, Drop)]
+struct Address {
+    evm: EthAddress,
+    starknet: ContractAddress,
+}
+
+/// A struct to save native token transfers to be made when finalizing
+/// a tx
 #[derive(Copy, Drop)]
 struct Transfer {
-    sender: EthAddress,
-    recipient: EthAddress,
+    sender: Address,
+    recipient: Address,
     amount: u256
 }
 
