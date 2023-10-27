@@ -156,7 +156,32 @@ fn test_kakarot_core_upgrade_contract() {
 fn test_kakarot_contract_account() {}
 
 #[test]
-fn test_eth_call() {}
+#[available_gas(2000000000000)]
+fn test_eth_call() {
+    // Given
+    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
+    testing::set_contract_address(kakarot_core.contract_address);
+
+    let account = ContractAccountTrait::deploy(
+        test_utils::other_evm_address(), counter_evm_bytecode()
+    )
+        .unwrap();
+
+    let from = test_utils::evm_address();
+    let to = Option::Some(test_utils::other_evm_address());
+    let gas_limit = test_utils::gas_limit();
+    let gas_price = test_utils::gas_price();
+    let value = 0;
+    // selector: function get()
+    let data = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+
+    // When
+
+    let return_data = kakarot_core.eth_call(:from, :to, :gas_limit, :gas_price, :value, :data);
+
+    // Then
+    assert(return_data == u256_to_bytes_array(0).span(), 'wrong result');
+}
 
 
 #[test]
