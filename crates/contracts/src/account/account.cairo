@@ -1,9 +1,9 @@
 #[starknet::contract]
 mod Account {
-    use starknet::{ContractAddress, EthAddress, ClassHash, get_caller_address};
+    use contracts::account::interface::IAccount;
     use contracts::components::upgradeable::IUpgradeable;
     use contracts::components::upgradeable::upgradeable_component;
-    use contracts::account::interface::IAccount;
+    use starknet::{ContractAddress, EthAddress, ClassHash, get_caller_address};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 

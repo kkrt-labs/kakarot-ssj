@@ -1,3 +1,4 @@
+use contracts::account::interface::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::kakarot::KakarotCore::{
     address_registryContractMemberStateTrait, account_class_hashContractMemberStateTrait,
     eoa_class_hashContractMemberStateTrait, ContractStateEventEmitter, EOADeployed
@@ -12,7 +13,6 @@ use openzeppelin::token::erc20::interface::{
 };
 use starknet::{EthAddress, ContractAddress, get_contract_address, deploy_syscall};
 use utils::helpers::ResultExTrait;
-use contracts::account::interface::{IAccountDispatcher, IAccountDispatcherTrait};
 
 
 #[derive(Copy, Drop)]
