@@ -18,7 +18,7 @@ use evm::machine::Status;
 use evm::model::contract_account::ContractAccountTrait;
 use evm::tests::test_utils;
 use starknet::{get_caller_address, testing, contract_address_const, ContractAddress, ClassHash};
-use utils::helpers::{U32Trait, ByteArrayExTrait};
+use utils::helpers::{U32Trait, ByteArrayExTrait, u256_to_bytes_array};
 
 #[test]
 #[available_gas(20000000)]
@@ -176,7 +176,7 @@ fn test_handle_call() {
     let to = Option::Some(test_utils::other_evm_address());
     let gas_limit = test_utils::gas_limit();
     let gas_price = test_utils::gas_price();
-    let value = test_utils::value();
+    let value = 0;
     // selector: function get()
     let data = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
@@ -184,14 +184,11 @@ fn test_handle_call() {
 
     let result = kakarot_core
         .handle_call(:from, :to, :gas_limit, :gas_price, :value, :data)
-        .unwrap();
+        .expect('handle_call failed');
     let return_data = result.return_data;
-
-    // let error = result.error;
-    // error.unwrap().to_string().print();
 
     assert(result.status == Status::Stopped, 'wrong status');
 
     // Then
-    assert(U32Trait::from_bytes(return_data).unwrap() == 0_u32, 'wrong result');
+    assert(return_data == u256_to_bytes_array(0).span(), 'wrong result');
 }
