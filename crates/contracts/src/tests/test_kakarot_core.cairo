@@ -20,6 +20,7 @@ use evm::tests::test_utils;
 use starknet::{get_caller_address, testing, contract_address_const, ContractAddress, ClassHash};
 use utils::helpers::{U32Trait, ByteArrayExTrait, u256_to_bytes_array};
 
+
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_owner() {
@@ -125,7 +126,7 @@ fn test_kakarot_core_compute_starknet_address() {
     // With arguments:
     // ['STARKNET_CONTRACT_ADDRESS', kakarot_address: 0x01, salt: evm_address, class_hash: ExternallyOwnedAccount::TEST_CLASS_HASH, constructor_calldata: hash([kakarot_address, evm_address]), ]
     let expected_starknet_address: ContractAddress = contract_address_const::<
-        0x2992c1e3ec7713ad8aaca00764e10d5a9130c42aca86df2245a009d6bd97a7e
+        0x2573d54403a28df8e49c92539df6ba1343206aaaa051b1fc3adb4651959ea00
     >();
 
     let eoa_starknet_address = kakarot_core.compute_starknet_address(evm_address);
