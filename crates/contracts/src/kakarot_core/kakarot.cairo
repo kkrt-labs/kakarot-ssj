@@ -15,12 +15,12 @@ mod KakarotCore {
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
     use evm::context::Status;
-    use evm::execution::execute;
     use evm::errors::{EVMError, EVMErrorTrait};
+    use evm::execution::execute;
+    use evm::model::ExecutionResult;
     use evm::model::account::{Account, AccountTrait};
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
     use evm::model::eoa::{EOA, EOATrait};
-    use evm::model::ExecutionResult;
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
