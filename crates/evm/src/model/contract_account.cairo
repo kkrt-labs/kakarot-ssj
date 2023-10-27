@@ -11,7 +11,8 @@ use evm::errors::{
     EVMError, READ_SYSCALL_FAILED, WRITE_SYSCALL_FAILED, ACCOUNT_EXISTS, DEPLOYMENT_FAILED
 };
 use evm::execution::execute;
-use evm::model::{Account, AccountTrait, AccountType};
+use evm::model::account::{Account, AccountTrait};
+use evm::model::{AccountType};
 use hash::{HashStateTrait, HashStateExTrait};
 use poseidon::PoseidonTrait;
 use starknet::{
@@ -23,12 +24,14 @@ use utils::helpers::{ByteArrayExTrait, ResultExTrait};
 use utils::storage::{compute_storage_base_address};
 use utils::traits::{StorageBaseAddressIntoFelt252, StoreBytes31};
 
+
 /// Wrapper struct around an evm_address corresponding to a ContractAccount
 #[derive(Copy, Drop)]
 struct ContractAccount {
     evm_address: EthAddress,
     starknet_address: ContractAddress
 }
+
 
 #[generate_trait]
 impl ContractAccountImpl of ContractAccountTrait {

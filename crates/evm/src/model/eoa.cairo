@@ -4,7 +4,8 @@ use contracts::kakarot_core::kakarot::KakarotCore::{
 };
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
-use evm::model::{Account, AccountTrait, AccountType};
+use evm::model::account::{Account, AccountTrait};
+use evm::model::{AccountType};
 use integer::BoundedInt;
 use openzeppelin::token::erc20::interface::{
     IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
