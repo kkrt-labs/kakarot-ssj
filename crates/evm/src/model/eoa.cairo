@@ -67,26 +67,6 @@ impl EOAImpl of EOATrait {
         )
     }
 
-    /// Retrieves the EOA content stored at address `evm_address`.
-    /// There is no way to access the nonce of an EOA currently But putting 1
-    /// shouldn't have any impact and is safer than 0 since has_code_or_nonce is
-    /// used in some places to trigger collision
-    /// # Arguments
-    /// * `evm_address` - The EVM address of the eoa
-    /// # Returns
-    /// * The corresponding Account instance
-    fn fetch(self: @EOA) -> Result<Account, EVMError> {
-        Result::Ok(
-            Account {
-                account_type: AccountType::EOA(*self),
-                code: Default::default().span(),
-                storage: Default::default(),
-                nonce: 1,
-                selfdestruct: false
-            }
-        )
-    }
-
     fn at(evm_address: EthAddress) -> Result<Option<EOA>, EVMError> {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
         let eoa_starknet_address = kakarot_state.eoa_starknet_address(evm_address);
