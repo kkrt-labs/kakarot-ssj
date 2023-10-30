@@ -1,8 +1,10 @@
+//! The generic account that is deployed by Kakarot Core before being "specialized" into an Externally Owned Account or a Contract Account
+//! This aims at having only one class hash for all the contracts deployed by Kakarot, thus enforcing a unique and consistent address mapping Eth Address <=> Starknet Address
 #[starknet::contract]
-mod Account {
-    use contracts::account::interface::IAccount;
+mod UninitializedAccount {
     use contracts::components::upgradeable::IUpgradeable;
     use contracts::components::upgradeable::upgradeable_component;
+    use contracts::uninitialized_account::interface::IUninitializedAccount;
     use starknet::{ContractAddress, EthAddress, ClassHash, get_caller_address};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
@@ -32,7 +34,7 @@ mod Account {
     }
 
     #[external(v0)]
-    impl AccountImpl of IAccount<ContractState> {
+    impl AccountImpl of IUninitializedAccount<ContractState> {
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
             assert(
                 get_caller_address() == self.kakarot_core_address.read(),

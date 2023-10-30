@@ -1,9 +1,11 @@
-use contracts::account::interface::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::kakarot::KakarotCore::{
     address_registryContractMemberStateTrait, account_class_hashContractMemberStateTrait,
     eoa_class_hashContractMemberStateTrait, ContractStateEventEmitter, EOADeployed
 };
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
+use contracts::uninitialized_account::interface::{
+    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
+};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
 use evm::model::account::{Account, AccountTrait};
 use evm::model::{AccountType};
@@ -42,7 +44,9 @@ impl EOAImpl of EOATrait {
             Result::Ok((
                 starknet_address, _
             )) => {
-                let account = IAccountDispatcher { contract_address: starknet_address };
+                let account = IUninitializedAccountDispatcher {
+                    contract_address: starknet_address
+                };
                 account.upgrade(kakarot_state.eoa_class_hash.read());
                 kakarot_state.address_registry.write(evm_address, starknet_address);
                 kakarot_state.emit(EOADeployed { evm_address, starknet_address });

@@ -27,7 +27,7 @@ trait IKakarotCore<TContractState> {
     /// Using its EVM address as salt, and KakarotCore as deployer.
     fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
-    /// Checks into KakarotCore storage if an EOA has been deployed for a
+    /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
     /// particular EVM address and if so, returns its corresponding Starknet Address.
     /// Otherwise, returns 0
     fn address_registry(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
@@ -109,7 +109,7 @@ trait IExtendedKakarotCore<TContractState> {
     /// Using its EVM address as salt, and KakarotCore as deployer.
     fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
-    /// Checks into KakarotCore storage if an EOA has been deployed for a
+    /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
     /// particular EVM address and if so, returns its corresponding Starknet Address
     fn address_registry(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 

@@ -126,7 +126,7 @@ fn test_kakarot_core_compute_starknet_address() {
     // With arguments:
     // ['STARKNET_CONTRACT_ADDRESS', kakarot_address: 0x01, salt: evm_address, class_hash: ExternallyOwnedAccount::TEST_CLASS_HASH, constructor_calldata: hash([kakarot_address, evm_address]), ]
     let expected_starknet_address: ContractAddress = contract_address_const::<
-        0x2573d54403a28df8e49c92539df6ba1343206aaaa051b1fc3adb4651959ea00
+        0x5a8147ec6a3f317a465a7655b472c6d3a7ce542c2537b706f67d64bf07052fc
     >();
 
     let eoa_starknet_address = kakarot_core.compute_starknet_address(evm_address);

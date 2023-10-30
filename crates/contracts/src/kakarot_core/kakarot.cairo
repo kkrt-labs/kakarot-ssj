@@ -169,7 +169,7 @@ mod KakarotCore {
             normalized_address
         }
 
-        /// Checks into KakarotCore storage if an Account has been deployed for a
+        /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
         /// particular EVM address and if so, returns its corresponding Starknet Address
         /// Otherwise, returns 0
         fn address_registry(self: @ContractState, evm_address: EthAddress) -> ContractAddress {

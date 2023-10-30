@@ -1,10 +1,12 @@
-use contracts::account::account::Account;
-
-use contracts::account::interface::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::tests::test_upgradeable::{
     IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
     MockContractUpgradeableV1
 };
+
+use contracts::uninitialized_account::interface::{
+    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
+};
+use contracts::uninitialized_account::uninitialized_account::UninitializedAccount;
 use evm::tests::test_utils::{kakarot_address, eoa_address};
 use starknet::class_hash::Felt252TryIntoClassHash;
 use starknet::testing::{set_caller_address, set_contract_address};
@@ -13,14 +15,16 @@ use starknet::{
     EthAddress
 };
 
-fn deploy_account() -> IAccountDispatcher {
+fn deploy_account() -> IUninitializedAccountDispatcher {
     let calldata: Span<felt252> = array![kakarot_address().into(), eoa_address().into()].span();
 
     let maybe_address = deploy_syscall(
-        Account::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata, false
+        UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata, false
     );
     match maybe_address {
-        Result::Ok((contract_address, _)) => { IAccountDispatcher { contract_address } },
+        Result::Ok((
+            contract_address, _
+        )) => { IUninitializedAccountDispatcher { contract_address } },
         Result::Err(err) => panic(err)
     }
 }
