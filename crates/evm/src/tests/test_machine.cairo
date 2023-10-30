@@ -1,4 +1,5 @@
 use evm::context::{CallContextTrait, ExecutionContextType, ExecutionContextTrait};
+use evm::errors::{EVMError, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::tests::test_utils::{
     evm_address, setup_machine_with_bytecode, setup_machine, starknet_address,
@@ -95,6 +96,20 @@ fn test_is_root() {
     let mut machine: Machine = Default::default();
 
     assert(machine.is_root(), 'current_ctx should be root');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_set_error() {
+    let mut machine: Machine = Default::default();
+
+    let error = EVMError::SyscallFailed(READ_SYSCALL_FAILED);
+    machine.set_error(error);
+
+    assert(
+        machine.error == Option::Some(EVMError::SyscallFailed(READ_SYSCALL_FAILED)), 'wrong error'
+    );
 }
 
 
