@@ -10,11 +10,14 @@ mod KakarotCore {
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
     use core::hash::{HashStateExTrait, HashStateTrait};
+    use core::option::OptionTrait;
     use core::pedersen::{HashState, PedersenTrait};
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
     use evm::context::Status;
     use evm::errors::{EVMError, EVMErrorTrait};
+    use evm::execution::execute;
+    use evm::model::ExecutionResult;
     use evm::model::account::{Account, AccountTrait};
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
     use evm::model::eoa::{EOA, EOATrait};
@@ -227,14 +230,22 @@ mod KakarotCore {
         fn eth_call(
             self: @ContractState,
             from: EthAddress,
-            to: EthAddress,
+            to: Option<EthAddress>,
             gas_limit: u128,
             gas_price: u128,
-            value: u128,
+            value: u256,
             data: Span<u8>
         ) -> Span<u8> {
-            self.assert_view();
-            array![].span()
+            if !self.is_view() {
+                panic_with_felt252('fn must be called, not invoked');
+            };
+            let result = self.handle_call(:from, :to, :gas_limit, :gas_price, :value, :data);
+            match result {
+                Result::Ok(result) => result.return_data,
+                // TODO: Return the error message as Bytes in the response
+                // Eliminate all paths of possible panic in logic with relations to the EVM itself.
+                Result::Err(err) => panic_with_felt252(err.to_string()),
+            }
         }
 
         /// Transaction entrypoint into the EVM
@@ -244,7 +255,7 @@ mod KakarotCore {
             to: EthAddress,
             gas_limit: u128,
             gas_price: u128,
-            value: u128,
+            value: u256,
             data: Span<u8>
         ) -> Span<u8> {
             array![].span()
@@ -260,16 +271,52 @@ mod KakarotCore {
 
     #[generate_trait]
     impl KakarotCoreInternalImpl of KakarotCoreInternal {
-        fn assert_view(self: @ContractState) -> Result<(), EVMError> {
+        fn is_view(self: @ContractState) -> bool {
             let tx_info = get_tx_info().unbox();
 
             // If the account that originated the transaction is not zero, this means we
             // are in an invoke transaction instead of a call; therefore, `eth_call` is being wrongly called
             // For invoke transactions, `eth_send_transaction` must be used
-            if tx_info.account_contract_address.is_zero() {
-                return Result::Err(EVMError::WriteInStaticContext(INVOKE_ETH_CALL_FORBIDDEN));
+            if !tx_info.account_contract_address.is_zero() {
+                return false;
             }
-            Result::Ok(())
+            true
+        }
+
+        fn handle_call(
+            self: @ContractState,
+            from: EthAddress,
+            to: Option<EthAddress>,
+            gas_limit: u128,
+            gas_price: u128,
+            value: u256,
+            data: Span<u8>
+        ) -> Result<ExecutionResult, EVMError> {
+            match to {
+                Option::Some(to) => {
+                    let bytecode = match AccountTrait::account_type_at(to)? {
+                        Option::Some(account) => account.bytecode()?,
+                        Option::None => Default::default().span(),
+                    };
+                    let execution_result = execute(
+                        from,
+                        to,
+                        :bytecode,
+                        calldata: data,
+                        :value,
+                        :gas_price,
+                        :gas_limit,
+                        read_only: false,
+                    );
+                    return Result::Ok(execution_result);
+                },
+                Option::None => {
+                    let bytecode = data;
+                    // TODO: compute_evm_address
+                    // HASH(RLP(deployer_address, deployer_nonce))[0..20]
+                    panic_with_felt252('unimplemented')
+                },
+            }
         }
     }
 }

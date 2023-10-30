@@ -1,7 +1,7 @@
 use alexandria_storage::list::{List, ListTrait};
 use contracts::kakarot_core::KakarotCore;
-use contracts::tests::utils as contract_utils;
-use contracts::tests::utils::constants::EVM_ADDRESS;
+use contracts::tests::test_utils as contract_utils;
+use contracts::tests::test_utils::constants::EVM_ADDRESS;
 use evm::errors::EVMErrorTrait;
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::tests::test_utils;

@@ -2,7 +2,7 @@ use contracts::kakarot_core::interface::{
     IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
 
-use contracts::tests::utils::{
+use contracts::tests::test_utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
 use evm::instructions::BlockInformationTrait;

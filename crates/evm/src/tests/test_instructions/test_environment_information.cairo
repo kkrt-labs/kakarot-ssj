@@ -1,8 +1,9 @@
 use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore};
 use contracts::tests::test_data::counter_evm_bytecode;
-use contracts::tests::utils::{
+use contracts::tests::test_utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
+use debug::PrintTrait;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
@@ -254,6 +255,25 @@ fn test_calldataload_with_offset_beyond_calldata() {
     // Then
     let result: u256 = machine.stack.pop().unwrap();
     assert(result == 0, 'result should be 0');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_calldataload_with_function_selector() {
+    // Given
+    let calldata = array![0x6d, 0x4c, 0xe6, 0x3c];
+    let mut machine = setup_machine_with_calldata(calldata.span());
+    let offset: u32 = 0;
+    machine.stack.push(offset.into());
+
+    // When
+    machine.exec_calldataload();
+
+    // Then
+    let result: u256 = machine.stack.pop().unwrap();
+    assert(
+        result == 0x6d4ce63c00000000000000000000000000000000000000000000000000000000, 'wrong result'
+    );
 }
 
 

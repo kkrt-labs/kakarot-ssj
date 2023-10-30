@@ -1,7 +1,7 @@
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
-use contracts::tests::utils as contract_utils;
-use contracts::tests::utils::{
+use contracts::tests::test_utils as contract_utils;
+use contracts::tests::test_utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
 use evm::errors::EVMErrorTrait;

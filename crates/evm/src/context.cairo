@@ -173,7 +173,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             ctx_type,
             evm_address,
             program_counter: Default::default(),
-            status: Status::Active,
+            status: Default::default(),
             call_ctx: BoxTrait::new(call_ctx),
             destroyed_contracts: Default::default(),
             events: Default::default(),

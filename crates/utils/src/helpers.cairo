@@ -389,7 +389,7 @@ fn load_word(mut len: usize, words: Span<u8>) -> u256 {
 
     loop {
         if len == 0 {
-            break ();
+            break;
         }
         let loaded: u8 = *words[counter];
         let tmp = current * 256;
@@ -518,8 +518,11 @@ impl U32Impl of U32Trait {
     /// * Option::None otherwise
     fn from_bytes(input: Span<u8>) -> Option<u32> {
         let len = input.len();
+        if len == 0 {
+            return Option::None;
+        }
         if len > 4 {
-            return Option::None(());
+            return Option::None;
         }
         let offset: u32 = len - 1;
         let mut result: u32 = 0;

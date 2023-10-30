@@ -50,7 +50,17 @@ impl SystemOperations of SystemOperationsTrait {
     /// REVERT
     /// # Specification: https://www.evm.codes/#fd?fork=shanghai
     fn exec_revert(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        let offset = self.stack.pop_usize()?;
+        let size = self.stack.pop_usize()?;
+
+        let mut return_data = Default::default();
+        self.memory.load_n(size, ref return_data, offset);
+
+        // Set the memory data to the parent context return data
+        // and halt the context.
+        self.set_return_data(return_data.span());
+        self.set_reverted();
+        Result::Ok(())
     }
 
     /// CALL

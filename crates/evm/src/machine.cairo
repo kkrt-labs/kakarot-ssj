@@ -124,6 +124,11 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
         status
     }
 
+    #[inline(always)]
+    fn set_error(ref self: Machine, error: EVMError) {
+        self.error = Option::Some(error);
+    }
+
 
     #[inline(always)]
     fn call_ctx(ref self: Machine) -> CallContext {
