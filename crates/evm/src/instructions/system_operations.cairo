@@ -119,6 +119,9 @@ impl SystemOperations of SystemOperationsTrait {
     /// SELFDESTRUCT
     /// # Specification: https://www.evm.codes/#ff?fork=shanghai
     fn exec_selfdestruct(ref self: Machine) -> Result<(), EVMError> {
+        if self.read_only() {
+            return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
+        }
         Result::Err(EVMError::NotImplemented)
     }
 }
