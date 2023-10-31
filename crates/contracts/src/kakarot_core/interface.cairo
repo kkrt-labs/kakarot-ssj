@@ -27,10 +27,10 @@ trait IKakarotCore<TContractState> {
     /// Using its EVM address as salt, and KakarotCore as deployer.
     fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
-    /// Checks into KakarotCore storage if an EOA has been deployed for a
+    /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
     /// particular EVM address and if so, returns its corresponding Starknet Address.
     /// Otherwise, returns 0
-    fn eoa_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
+    fn address_registry(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// Gets the nonce associated to a contract account
     fn contract_account_nonce(self: @TContractState, evm_address: EthAddress) -> u64;
@@ -109,9 +109,9 @@ trait IExtendedKakarotCore<TContractState> {
     /// Using its EVM address as salt, and KakarotCore as deployer.
     fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
-    /// Checks into KakarotCore storage if an EOA has been deployed for a
+    /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
     /// particular EVM address and if so, returns its corresponding Starknet Address
-    fn eoa_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
+    fn address_registry(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
