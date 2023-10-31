@@ -341,11 +341,14 @@ mod test_state {
             evm: recipient_evm_address, starknet: recipient_starknet_address
         };
         let transfer = Transfer { sender, recipient, amount: 100 };
+        // Write user balances in cache to avoid fetching from SN storage
         state.write_balance(sender, 200);
+        state.write_balance(recipient, 0);
 
         // When
         state.add_transfer(transfer.clone()).unwrap();
 
+        // Then, transfer appended to log and cached balances updated
         assert(state.transfers.contextual_logs.len() == 1, 'Transfer not added');
         assert(state.transfers.contextual_logs[0].clone() == transfer, 'Transfer mismatch');
 

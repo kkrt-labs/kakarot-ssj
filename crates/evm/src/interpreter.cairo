@@ -665,19 +665,18 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
 
     /// Finalizes the changes performed during a context by applying them to the
     /// transactional changes.
-    fn finalize_context(
-        ref self: EVMInterpreter, ref machine: Machine
-    ) { //TODO Apply contextual state updates
-    // machine.storage_journal.finalize_local();
-    // match machine.ctx_type() {
-    //     ExecutionContextType::Root => {
-    //         machine.storage_journal.finalize_global(); // TODO: error handling
-    //     },
-    //     ExecutionContextType::Call(_) => {
-    //         machine.finalize_calling_context(); // TODO: error handling
-    //         self.run(ref machine);
-    //     },
-    //     ExecutionContextType::Create(_) => {} // TODO(greg): finalize the create context
-    // }
+    fn finalize_context(ref self: EVMInterpreter, ref machine: Machine) {
+        machine.state.commit_context();
+        match machine.ctx_type() {
+            ExecutionContextType::Root => {
+                // TODO: error handling
+                machine.state.commit_state();
+            },
+            ExecutionContextType::Call(_) => {
+                machine.finalize_calling_context(); // TODO: error handling
+                self.run(ref machine);
+            },
+            ExecutionContextType::Create(_) => {} // TODO(greg): finalize the create context
+        }
     }
 }

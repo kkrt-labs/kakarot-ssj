@@ -340,7 +340,9 @@ impl StateImpl of StateTrait {
         self.balances.clear_context();
     }
 
-    fn commit_state(ref self: State) {}
+    fn commit_state(ref self: State) {
+        //TODO(state) implement this
+    }
 }
 #[generate_trait]
 impl StateInternalImpl of StateInternalTrait {
