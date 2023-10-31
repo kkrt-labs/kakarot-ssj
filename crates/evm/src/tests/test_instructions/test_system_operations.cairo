@@ -5,6 +5,7 @@ use evm::instructions::MemoryOperationTrait;
 use evm::instructions::SystemOperationsTrait;
 use evm::interpreter::EVMInterpreterTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine_with_nested_execution_context, setup_machine, setup_machine_with_bytecode,
@@ -30,12 +31,14 @@ fn test_exec_return() {
     // Then
     assert(1000 == load_word(32, machine.return_data()), 'Wrong return_data');
     assert(machine.stopped(), 'machine should be stopped');
+    assert(machine.id() == 1, 'wrong ctx id');
 
     // And
     machine.finalize_calling_context();
 
     // Then
-    assert(1000 == load_word(32, parent_ctx_return_data(ref machine)), 'Wrong return_data');
+    assert(machine.id() == 0, 'should be parent id');
+    assert(1000 == load_word(32, machine.return_data()), 'Wrong return_data');
 }
 
 
@@ -95,10 +98,14 @@ fn test_exec_return_with_offset() {
     // Then
     assert(256 == load_word(32, machine.return_data()), 'Wrong return_data');
     assert(machine.stopped(), 'machine should be stopped');
+    assert(machine.id() == 1, 'wrong ctx id');
 
     // And
     machine.finalize_calling_context();
-    assert(256 == load_word(32, parent_ctx_return_data(ref machine)), 'Wrong return_data');
+
+    // Then
+    assert(machine.id() == 0, 'should be parent id');
+    assert(256 == load_word(32, machine.return_data()), 'Wrong return_data');
 }
 
 #[test]

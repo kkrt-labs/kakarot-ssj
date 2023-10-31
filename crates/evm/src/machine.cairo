@@ -66,6 +66,14 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
         }
     }
 
+    #[inline(always)]
+    fn id(ref self: Machine) -> usize {
+        let current_execution_ctx = self.current_ctx.unbox();
+        let id = current_execution_ctx.id();
+        self.current_ctx = BoxTrait::new(current_execution_ctx);
+        id
+    }
+
     /// Sets the current execution context being executed by the machine.
     /// This is an implementation-specific concept that is used
     /// to divide a unique Stack/Memory simulated by a dict into

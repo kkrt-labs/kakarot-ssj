@@ -244,7 +244,7 @@ fn setup_machine_with_nested_execution_context() -> Machine {
     let current_ctx = BoxTrait::new(setup_nested_execution_context());
     Machine {
         current_ctx,
-        ctx_count: 1,
+        ctx_count: 2,
         stack: Default::default(),
         memory: Default::default(),
         storage_journal: Default::default(),
