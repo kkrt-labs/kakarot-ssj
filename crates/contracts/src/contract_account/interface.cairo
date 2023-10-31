@@ -45,7 +45,7 @@ trait IContractAccount<TContractState> {
     /// Prevents false positive checks in JUMP opcode of the type: jump destination opcode == JUMPDEST in appearance, but is a PUSH opcode bytecode slice.
     fn is_false_jumpdest(self: @TContractState, offset: usize) -> bool;
 
-    fn set_false_jumpdest(ref self: TContractState, offset: usize);
+    fn set_false_positive_jumpdest(ref self: TContractState, offset: usize);
 
     /// Upgrade the ExternallyOwnedAccount smart contract
     /// Using replace_class_syscall

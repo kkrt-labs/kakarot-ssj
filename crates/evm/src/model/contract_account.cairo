@@ -245,7 +245,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `true` - If the offset is a valid jump destination
     /// * `false` - Otherwise
     #[inline(always)]
-    fn is_false_jumpdest(self: @ContractAccount, offset: usize) -> Result<bool, EVMError> {
+    fn is_false_positive_jumpdest(self: @ContractAccount, offset: usize) -> Result<bool, EVMError> {
         let contract_account = IContractAccountDispatcher {
             contract_address: *self.starknet_address
         };
@@ -259,11 +259,13 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `self` - The ContractAccount
     /// * `offset` - The offset to set as a valid jump destination
     #[inline(always)]
-    fn set_valid_jump(ref self: ContractAccount, offset: usize) -> Result<(), EVMError> {
+    fn set_false_positive_jumpdest(
+        ref self: ContractAccount, offset: usize
+    ) -> Result<(), EVMError> {
         let mut contract_account = IContractAccountDispatcher {
             contract_address: self.starknet_address
         };
-        contract_account.set_false_jumpdest(offset);
+        contract_account.set_false_positive_jumpdest(offset);
         Result::Ok(())
     }
 }

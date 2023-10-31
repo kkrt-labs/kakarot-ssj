@@ -55,7 +55,7 @@ trait IKakarotCore<TContractState> {
 
     /// Checks if for a specific offset, i.e. if  bytecode at index `offset`, bytecode[offset] == 0x5B && is part of a PUSH opcode input.
     /// Prevents false positive checks in JUMP opcode of the type: jump destination opcode == JUMPDEST in appearance, but is a PUSH opcode bytecode slice.
-    fn contract_account_false_jumpdest(
+    fn contract_account_false_positive_jumpdest(
         self: @TContractState, evm_address: EthAddress, offset: usize
     ) -> bool;
 
@@ -164,7 +164,7 @@ trait IExtendedKakarotCore<TContractState> {
 
     /// Checks if for a specific offset, i.e. if  bytecode at index `offset`, bytecode[offset] == 0x5B && is part of a PUSH opcode input.
     /// Prevents false positive checks in JUMP opcode of the type: jump destination opcode == JUMPDEST in appearance, but is a PUSH opcode bytecode slice.
-    fn contract_account_false_jumpdest(
+    fn contract_account_false_positive_jumpdest(
         self: @TContractState, evm_address: EthAddress, offset: usize
     ) -> bool;
 

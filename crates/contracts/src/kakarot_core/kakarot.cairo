@@ -89,26 +89,20 @@ mod KakarotCore {
 
     #[derive(Drop, starknet::Event)]
     struct AccountClassHashChange {
-        #[key]
         old_class_hash: ClassHash,
-        #[key]
         new_class_hash: ClassHash,
     }
 
 
     #[derive(Drop, starknet::Event)]
     struct EOAClassHashChange {
-        #[key]
         old_class_hash: ClassHash,
-        #[key]
         new_class_hash: ClassHash,
     }
 
     #[derive(Drop, starknet::Event)]
     struct CAClassHashChange {
-        #[key]
         old_class_hash: ClassHash,
-        #[key]
         new_class_hash: ClassHash,
     }
 
@@ -139,35 +133,23 @@ mod KakarotCore {
             self.native_token.write(native_token);
         }
 
-        /// Gets the native token used by the Kakarot smart contract
         fn native_token(self: @ContractState) -> ContractAddress {
             self.native_token.read()
         }
 
-        /// Sets the deploy fee for an EOA
-        /// Currently, the Kakarot RPC can trigger an EOA deployment,
-        /// and optimistically fund it.
-        /// Then, the KakarotCore smart contract is able to levy this fee retroactively from the EOA
-        /// And reimburse the RPC's smart wallet.
         fn set_deploy_fee(ref self: ContractState, deploy_fee: u128) {
             self.ownable.assert_only_owner();
             self.deploy_fee.write(deploy_fee);
         }
 
-        /// Get the deploy fee
         fn deploy_fee(self: @ContractState) -> u128 {
             self.deploy_fee.read()
         }
 
-        /// Get the chain id
         fn chain_id(self: @ContractState) -> u128 {
             self.chain_id.read()
         }
 
-        /// Deterministically computes a Starknet address for an given EVM address
-        /// The address is computed as the Starknet address corresponding to the deployment of an Account,
-        /// Using its EVM address as salt, and KakarotCore as deployer.
-        /// https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/starknet/core/os/contract_address/contract_address.cairo#L2
         fn compute_starknet_address(
             self: @ContractState, evm_address: EthAddress
         ) -> ContractAddress {
@@ -203,29 +185,21 @@ mod KakarotCore {
             normalized_address
         }
 
-        /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
-        /// particular EVM address and if so, returns its corresponding Starknet Address
-        /// Otherwise, returns 0
         fn address_registry(self: @ContractState, evm_address: EthAddress) -> StoredAccountType {
             self.address_registry.read(evm_address)
         }
 
-
-        /// Maps an EVM address to a Starknet address
-        /// Triggerred when deployment of an EOA or CA is successful
         fn set_address_registry(
             ref self: ContractState, evm_address: EthAddress, account: StoredAccountType
         ) {
             self.address_registry.write(evm_address, account);
         }
 
-        /// Gets the nonce associated to a contract account
         fn contract_account_nonce(self: @ContractState, evm_address: EthAddress) -> u64 {
             let ca = ContractAccountTrait::at(evm_address).unwrap().unwrap();
             ca.nonce().unwrap()
         }
 
-        /// Gets the balance associated to a contract account
         fn account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
             let maybe_account = AccountTrait::account_type_at(evm_address).unwrap();
             match maybe_account {
@@ -234,7 +208,6 @@ mod KakarotCore {
             }
         }
 
-        /// Gets the value associated to a key in the contract account storage
         fn contract_account_storage_at(
             self: @ContractState, evm_address: EthAddress, key: u256
         ) -> u256 {
@@ -242,37 +215,28 @@ mod KakarotCore {
             ca.storage_at(key).unwrap()
         }
 
-
-        /// Gets the bytecode associated to a contract account
         fn contract_account_bytecode(self: @ContractState, evm_address: EthAddress) -> Span<u8> {
             let ca = ContractAccountTrait::at(evm_address).unwrap().unwrap();
             ca.load_bytecode().unwrap()
         }
 
-        /// Checks if for a specific offset, i.e. if  bytecode at index `offset`, bytecode[offset] == 0x5B && is part of a PUSH opcode input.
-        /// Prevents false positive checks in JUMP opcode of the type: jump destination opcode == JUMPDEST in appearance, but is a PUSH opcode bytecode slice.
-        fn contract_account_false_jumpdest(
+        fn contract_account_false_positive_jumpdest(
             self: @ContractState, evm_address: EthAddress, offset: usize
         ) -> bool {
             let ca = ContractAccountTrait::at(evm_address).unwrap().unwrap();
-            ca.is_false_jumpdest(offset).unwrap()
+            ca.is_false_positive_jumpdest(offset).unwrap()
         }
 
-        /// Deploys an EOA for a particular EVM address
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
             EOATrait::deploy(evm_address).unwrap().starknet_address
         }
 
-        /// Deploys a Contract Account for a particular EVM address
         fn deploy_ca(
             ref self: ContractState, evm_address: EthAddress, bytecode: Span<u8>
         ) -> ContractAddress {
             ContractAccountTrait::deploy(evm_address, bytecode).unwrap().starknet_address
         }
 
-        /// View entrypoint into the EVM
-        /// Performs view calls into the blockchain
-        /// It cannot modify the state of the chain
         fn eth_call(
             self: @ContractState,
             from: EthAddress,
@@ -294,8 +258,6 @@ mod KakarotCore {
             }
         }
 
-        /// Transaction entrypoint into the EVM
-        /// Executes an EVM transaction and possibly modifies the state
         fn eth_send_transaction(
             ref self: ContractState,
             to: EthAddress,
@@ -307,40 +269,35 @@ mod KakarotCore {
             array![].span()
         }
 
-        /// Upgrade the KakarotCore smart contract
-        /// Using replace_class_syscall
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
             self.ownable.assert_only_owner();
             self.upgradeable.upgrade_contract(new_class_hash);
         }
 
-        // Getter for the EOA Class Hash
         fn eoa_class_hash(self: @ContractState) -> ClassHash {
             self.eoa_class_hash.read()
         }
-        // Setter for the EOA Class Hash
+
         fn set_eoa_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
             let old_class_hash = self.eoa_class_hash.read();
             self.eoa_class_hash.write(new_class_hash);
             self.emit(EOAClassHashChange { old_class_hash, new_class_hash });
         }
 
-        // Getter for the Contract Account Class
         fn ca_class_hash(self: @ContractState) -> ClassHash {
             self.ca_class_hash.read()
         }
-        // Setter for the Contract Account Class
+
         fn set_ca_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
             let old_class_hash = self.ca_class_hash.read();
             self.ca_class_hash.write(new_class_hash);
             self.emit(CAClassHashChange { old_class_hash, new_class_hash });
         }
 
-        // Getter for the Contract Account Class
         fn account_class_hash(self: @ContractState) -> ClassHash {
             self.account_class_hash.read()
         }
-        // Setter for the Contract Account Class
+
         fn set_account_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
             let old_class_hash = self.account_class_hash.read();
             self.account_class_hash.write(new_class_hash);
