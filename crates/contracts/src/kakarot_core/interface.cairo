@@ -1,4 +1,4 @@
-use contracts::kakarot_core::storage_types::StoredAccountType;
+use contracts::kakarot_core::kakarot::StoredAccountType;
 use starknet::{ContractAddress, EthAddress, ClassHash};
 use utils::traits::ByteArraySerde;
 

@@ -6,7 +6,7 @@ use alexandria_storage::list::{List, ListTrait};
 use contracts::contract_account::interface::{
     IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount
 };
-use contracts::kakarot_core::storage_types::StoredAccountType;
+use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     KakarotCore, IKakarotCore, KakarotCore::ContractStateEventEmitter,
     KakarotCore::ContractAccountDeployed

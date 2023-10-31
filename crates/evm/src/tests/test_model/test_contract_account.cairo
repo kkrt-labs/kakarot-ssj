@@ -1,7 +1,7 @@
 use alexandria_storage::list::{List, ListTrait};
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
-use contracts::kakarot_core::storage_types::StoredAccountType;
+use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_utils as contract_utils;
 use contracts::tests::test_utils::constants::EVM_ADDRESS;

@@ -1,5 +1,5 @@
 use contracts::kakarot_core::kakarot::KakarotCore::{ContractStateEventEmitter, EOADeployed};
-use contracts::kakarot_core::storage_types::StoredAccountType;
+use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
 use contracts::uninitialized_account::interface::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait

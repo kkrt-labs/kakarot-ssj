@@ -2,13 +2,24 @@ use starknet::{ContractAddress, EthAddress, ClassHash};
 
 const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
+
+// Local enum to differentiate EOA and CA in storage
+// TODO: remove distinction between EOA and CA as EVM accounts
+// As soon as EOA::nonce can be handled at the application level
+#[derive(Drop, starknet::Store, Serde, PartialEq, Default)]
+enum StoredAccountType {
+    #[default]
+    UninitializedAccount,
+    EOA: ContractAddress,
+    ContractAccount: ContractAddress,
+}
+
 #[starknet::contract]
 mod KakarotCore {
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
-    use contracts::kakarot_core::storage_types::{StoredAccountType, StoredAccountTypeStorePacking};
     use core::hash::{HashStateExTrait, HashStateTrait};
     use core::option::OptionTrait;
     use core::pedersen::{HashState, PedersenTrait};
@@ -25,6 +36,7 @@ mod KakarotCore {
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
+    use super::{StoredAccountType};
     use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
     use utils::traits::{U256TryIntoContractAddress, ByteArraySerde};
 
