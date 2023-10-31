@@ -34,8 +34,8 @@ mod UninitializedAccount {
     }
 
     #[external(v0)]
-    impl AccountImpl of IUninitializedAccount<ContractState> {
-        fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
+    impl UninitializedAccountImpl of IUninitializedAccount<ContractState> {
+        fn initialize(ref self: ContractState, new_class_hash: ClassHash) {
             assert(
                 get_caller_address() == self.kakarot_core_address.read(),
                 'Caller not Kakarot Core address'

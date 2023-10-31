@@ -47,7 +47,7 @@ impl EOAImpl of EOATrait {
                 let account = IUninitializedAccountDispatcher {
                     contract_address: starknet_address
                 };
-                account.upgrade(kakarot_state.eoa_class_hash.read());
+                account.initialize(kakarot_state.eoa_class_hash.read());
                 kakarot_state.address_registry.write(evm_address, starknet_address);
                 kakarot_state.emit(EOADeployed { evm_address, starknet_address });
                 Result::Ok(EOA { evm_address, starknet_address })

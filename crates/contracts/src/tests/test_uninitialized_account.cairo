@@ -37,7 +37,7 @@ fn test_account_upgrade() {
 
     set_contract_address(kakarot_address());
 
-    account.upgrade(new_class_hash);
+    account.initialize(new_class_hash);
 
     let version = IMockContractUpgradeableDispatcher { contract_address: account.contract_address }
         .version();
@@ -51,5 +51,5 @@ fn test_eoa_upgrade_from_nonkakarot() {
     let account = deploy_account();
     let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
 
-    account.upgrade(new_class_hash);
+    account.initialize(new_class_hash);
 }
