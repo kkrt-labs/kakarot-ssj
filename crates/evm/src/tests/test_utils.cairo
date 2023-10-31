@@ -102,9 +102,42 @@ fn setup_call_context() -> CallContext {
     )
 }
 
+fn setup_static_call_context() -> CallContext {
+    let bytecode: Span<u8> = array![1, 2, 3].span();
+    let calldata: Span<u8> = array![4, 5, 6].span();
+    let value: u256 = callvalue();
+    let address = evm_address();
+    let read_only = true;
+    let gas_price = 0xaaaaaa;
+    let gas_limit = 0xffffff;
+    let output_offset = 0;
+    let output_size = 0;
+
+    CallContextTrait::new(
+        address,
+        bytecode,
+        calldata,
+        value,
+        read_only,
+        gas_limit,
+        gas_price,
+        output_offset,
+        output_size
+    )
+}
+
 fn setup_execution_context() -> ExecutionContext {
     let context_id = ExecutionContextType::Root;
     let call_ctx = setup_call_context();
+    let evm_address: EthAddress = evm_address();
+    let return_data = array![1, 2, 3].span();
+
+    ExecutionContextTrait::new(context_id, evm_address, call_ctx, Default::default(), return_data,)
+}
+
+fn setup_static_execution_context() -> ExecutionContext {
+    let context_id = ExecutionContextType::Root;
+    let call_ctx = setup_static_call_context();
     let evm_address: EthAddress = evm_address();
     let return_data = array![1, 2, 3].span();
 
@@ -211,6 +244,19 @@ fn setup_machine() -> Machine {
     }
 }
 
+
+fn setup_static_machine() -> Machine {
+    Machine {
+        current_ctx: BoxTrait::new(setup_static_execution_context()),
+        ctx_count: 1,
+        stack: Default::default(),
+        memory: Default::default(),
+        storage_journal: Default::default(),
+        error: Option::None
+    }
+}
+
+
 fn setup_machine_with_bytecode(bytecode: Span<u8>) -> Machine {
     let current_ctx = BoxTrait::new(setup_execution_context_with_bytecode(bytecode));
     Machine {
@@ -249,7 +295,7 @@ fn setup_machine_with_nested_execution_context() -> Machine {
     let current_ctx = BoxTrait::new(setup_nested_execution_context());
     Machine {
         current_ctx,
-        ctx_count: 1,
+        ctx_count: 2,
         stack: Default::default(),
         memory: Default::default(),
         storage_journal: Default::default(),
@@ -261,9 +307,9 @@ fn setup_machine_with_nested_execution_context() -> Machine {
 /// 1. Set `return_data` field of parent context
 /// 2. make `parent_ctx` of `current_ctx` the current ctx
 fn return_from_subcontext(ref self: Machine, return_data: Span<u8>) {
-    self.set_return_data(return_data);
     let current_ctx = self.current_ctx.unbox();
-    let parent_ctx = current_ctx.parent_ctx.deref();
+    let mut parent_ctx = current_ctx.parent_ctx.deref();
+    parent_ctx.return_data = return_data;
     self.current_ctx = BoxTrait::new(parent_ctx);
 }
 

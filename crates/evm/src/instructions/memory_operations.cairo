@@ -1,5 +1,5 @@
 //! Stack Memory Storage and Flow Operations.
-use evm::errors::{EVMError, INVALID_DESTINATION, READ_SYSCALL_FAILED};
+use evm::errors::{EVMError, INVALID_DESTINATION, READ_SYSCALL_FAILED, WRITE_IN_STATIC_CONTEXT};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
@@ -138,6 +138,9 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save 32-byte word to storage.
     /// # Specification: https://www.evm.codes/#55?fork=shanghai
     fn exec_sstore(ref self: Machine) -> Result<(), EVMError> {
+        if self.read_only() {
+            return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
+        }
         let key = self.stack.pop()?;
         let value = self.stack.pop()?;
         let evm_address = self.evm_address();
