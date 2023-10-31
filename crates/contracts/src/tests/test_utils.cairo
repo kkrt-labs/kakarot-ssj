@@ -106,6 +106,7 @@ fn deploy_kakarot_core(native_token: ContractAddress) -> IExtendedKakarotCoreDis
 fn deploy_contract_account(
     kakarot_address: ContractAddress, bytecode: Span<u8>
 ) -> IContractAccountDispatcher {
+    testing::set_contract_address(kakarot_address);
     let calldata: Array<felt252> = array![kakarot_address.into(), ca_address().into(),];
 
     let (contract_address, _) = deploy_syscall(

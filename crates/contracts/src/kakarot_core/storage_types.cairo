@@ -7,7 +7,7 @@ use utils::traits::U256TryIntoContractAddress;
 // Local enum to differentiate EOA and CA in storage
 // TODO: remove distinction between EOA and CA as EVM accounts
 // As soon as EOA::nonce can be handled at the application level
-#[derive(Drop, starknet::Store, Serde, PartialEq, Default)]
+#[derive(Drop, Serde, PartialEq, Default)]
 enum StoredAccountType {
     #[default]
     UninitializedAccount,

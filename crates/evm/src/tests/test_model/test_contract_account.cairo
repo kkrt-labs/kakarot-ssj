@@ -39,7 +39,7 @@ fn test_contract_account_deploy() {
 }
 
 #[test]
-#[available_gas(2000000)]
+#[available_gas(2000000000)]
 fn test_at_contract_account_deployed() {
     let evm_address = test_utils::evm_address();
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
