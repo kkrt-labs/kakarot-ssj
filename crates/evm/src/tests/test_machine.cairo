@@ -3,7 +3,7 @@ use evm::errors::{EVMError, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::tests::test_utils::{
     evm_address, setup_machine_with_bytecode, setup_machine, starknet_address,
-    setup_execution_context, setup_machine_with_nested_execution_context, parent_ctx_return_data
+    setup_execution_context, setup_machine_with_nested_execution_context
 };
 
 
@@ -179,7 +179,7 @@ fn test_set_return_data_root() {
 fn test_set_return_data_subctx() {
     let mut machine: Machine = setup_machine_with_nested_execution_context();
     machine.set_return_data(array![0x01, 0x02, 0x03].span());
-    let return_data = parent_ctx_return_data(ref machine);
+    let return_data = machine.return_data();
     assert(return_data == array![0x01, 0x02, 0x03].span(), 'wrong return data');
 }
 

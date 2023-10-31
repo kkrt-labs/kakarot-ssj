@@ -256,9 +256,9 @@ fn setup_machine_with_nested_execution_context() -> Machine {
 /// 1. Set `return_data` field of parent context
 /// 2. make `parent_ctx` of `current_ctx` the current ctx
 fn return_from_subcontext(ref self: Machine, return_data: Span<u8>) {
-    self.set_return_data(return_data);
     let current_ctx = self.current_ctx.unbox();
-    let parent_ctx = current_ctx.parent_ctx.deref();
+    let mut parent_ctx = current_ctx.parent_ctx.deref();
+    parent_ctx.return_data = return_data;
     self.current_ctx = BoxTrait::new(parent_ctx);
 }
 

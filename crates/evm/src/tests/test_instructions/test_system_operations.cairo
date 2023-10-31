@@ -1,3 +1,5 @@
+use evm::call_helpers::MachineCallHelpers;
+use evm::call_helpers::MachineCallHelpersImpl;
 use evm::context::{ExecutionContext, ExecutionContextTrait,};
 use evm::instructions::MemoryOperationTrait;
 use evm::instructions::SystemOperationsTrait;
@@ -26,8 +28,14 @@ fn test_exec_return() {
     assert(machine.exec_return().is_ok(), 'Exec return failed');
 
     // Then
+    assert(1000 == load_word(32, machine.return_data()), 'Wrong return_data');
+    assert(machine.stopped(), 'machine should be stopped');
+
+    // And
+    machine.finalize_calling_context();
+
+    // Then
     assert(1000 == load_word(32, parent_ctx_return_data(ref machine)), 'Wrong return_data');
-    assert(machine.stopped(), 'machine should be stopped')
 }
 
 
@@ -65,7 +73,7 @@ fn test_exec_revert_nested() {
     assert(machine.exec_revert().is_ok(), 'Exec revert failed');
 
     // Then
-    assert(1000 == load_word(32, parent_ctx_return_data(ref machine)), 'Wrong return_data');
+    assert(1000 == load_word(32, machine.return_data()), 'Wrong return_data');
     assert(machine.stopped(), 'machine should be stopped')
 }
 
@@ -85,8 +93,12 @@ fn test_exec_return_with_offset() {
     assert(machine.exec_return().is_ok(), 'Exec return failed');
 
     // Then
+    assert(256 == load_word(32, machine.return_data()), 'Wrong return_data');
+    assert(machine.stopped(), 'machine should be stopped');
+
+    // And
+    machine.finalize_calling_context();
     assert(256 == load_word(32, parent_ctx_return_data(ref machine)), 'Wrong return_data');
-    assert(machine.stopped(), 'machine should be stopped')
 }
 
 #[test]
