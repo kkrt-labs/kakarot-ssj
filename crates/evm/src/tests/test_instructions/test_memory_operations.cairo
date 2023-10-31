@@ -3,17 +3,18 @@ use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION, WRITE_IN_STATI
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
+use evm::model::contract_account::ContractAccountTrait;
 use evm::stack::StackTrait;
-use evm::storage::compute_storage_address;
-use evm::storage_journal::{JournalTrait};
+use evm::state::{StateTrait, StateInternalTrait, compute_state_key, compute_storage_address};
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_bytecode, setup_machine_with_calldata, evm_address, callvalue,
     setup_static_machine
 };
 use integer::BoundedInt;
 
-use starknet::{EthAddressIntoFelt252, storage_base_address_const, Store};
+use starknet::{EthAddressIntoFelt252, storage_base_address_const, Store, get_contract_address};
 use utils::helpers::{u256_to_bytes_array};
+use utils::storage::{compute_storage_base_address};
 use utils::traits::{EthAddressIntoU256, StorageBaseAddressIntoU256};
 
 
@@ -505,13 +506,13 @@ fn test_exec_jumpi_inside_pushn() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_exec_sload_from_journal() {
+fn test_exec_sload_from_state() {
     // Given
     let mut machine = setup_machine();
     let key: u256 = 0x100000000000000000000000000000001;
-    let storage_address = compute_storage_address(machine.evm_address(), key);
     let value = 0x02;
-    machine.storage_journal.write(storage_address, value);
+    // `evm_address` must match the one used to instantiate the machine
+    machine.state.write_storage(machine.evm_address(), key, value);
 
     machine.stack.push(key.into());
 
@@ -530,7 +531,10 @@ fn test_exec_sload_from_storage() {
     // Given
     let mut machine = setup_machine();
     let key: u256 = 0x100000000000000000000000000000001;
-    let storage_address = compute_storage_address(machine.evm_address(), key);
+    let storage_address = compute_storage_base_address(
+        selector!("contract_account_storage_keys"),
+        array![machine.evm_address().into(), key.low.into(), key.high.into()].span()
+    );
     let value = 0x02;
     Store::<u256>::write(0, storage_address, value);
 
@@ -547,24 +551,20 @@ fn test_exec_sload_from_storage() {
 
 #[test]
 #[available_gas(2000000)]
-fn test_exec_sstore() {
+fn test_exec_sstore_from_state() {
     // Given
     let mut machine = setup_machine();
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
     machine.stack.push(value);
     machine.stack.push(key);
-    let storage_address = compute_storage_address(machine.evm_address(), key);
 
     // When
     let result = machine.exec_sstore();
 
     // Then
-    assert(
-        machine.storage_journal.read(storage_address).unwrap() == value, 'wrong value in journal'
-    )
+    assert(machine.state.read_storage(evm_address(), key).unwrap() == value, 'wrong value in state')
 }
-
 #[test]
 #[available_gas(2000000)]
 fn test_exec_sstore_static_call() {
@@ -592,21 +592,27 @@ fn test_exec_sstore_static_call() {
 fn test_exec_sstore_finalized() {
     // Given
     let mut machine = setup_machine();
+    // Deploys the contract account to be able to commit storage changes.
+    ContractAccountTrait::deploy(machine.evm_address(), array![].span());
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
     machine.stack.push(value);
     machine.stack.push(key);
-    let storage_address = compute_storage_address(machine.evm_address(), key);
+    //TODO(CA-migration: read from CA storage instead of using internal Store::write)
+    let storage_address = compute_storage_base_address(
+        selector!("contract_account_storage_keys"),
+        array![machine.evm_address().into(), key.low.into(), key.high.into()].span()
+    );
 
     // When
     let result = machine.exec_sstore();
-    machine.storage_journal.finalize_local();
-    machine.storage_journal.finalize_global();
+
+    machine.state.commit_context();
+    machine.state.commit_storage();
 
     // Then
     assert(Store::<u256>::read(0, storage_address).unwrap() == value, 'wrong value in journal')
 }
-
 
 #[test]
 #[available_gas(20000000)]

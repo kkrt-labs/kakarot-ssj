@@ -37,7 +37,7 @@ use utils::traits::{StorageBaseAddressIntoFelt252, StoreBytes31};
 
 
 /// Wrapper struct around an evm_address corresponding to a ContractAccount
-#[derive(Copy, Drop)]
+#[derive(Copy, Drop, PartialEq)]
 struct ContractAccount {
     evm_address: EthAddress,
     starknet_address: ContractAddress
@@ -120,8 +120,7 @@ impl ContractAccountImpl of ContractAccountTrait {
         Result::Ok(
             Account {
                 account_type: AccountType::ContractAccount(*self),
-                code: self.load_bytecode()?,
-                storage: Default::default(),
+                code: ByteArrayExTrait::into_bytes(self.load_bytecode()?),
                 nonce: self.nonce()?,
                 selfdestruct: false
             }
@@ -137,6 +136,11 @@ impl ContractAccountImpl of ContractAccountTrait {
             contract_address: *self.starknet_address
         };
         Result::Ok(contract_account.nonce())
+    }
+
+    #[inline(always)]
+    fn evm_address(self: @ContractAccount) -> EthAddress {
+        *self.evm_address
     }
 
     /// Sets the nonce of a contract account.
@@ -269,4 +273,3 @@ impl ContractAccountImpl of ContractAccountTrait {
         Result::Ok(())
     }
 }
-

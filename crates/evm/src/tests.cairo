@@ -16,10 +16,7 @@ mod test_model;
 mod test_stack;
 
 #[cfg(test)]
-mod test_storage;
-
-#[cfg(test)]
-mod test_storage_journal;
+mod test_state;
 
 #[cfg(test)]
 mod test_utils;

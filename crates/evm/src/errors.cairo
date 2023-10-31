@@ -8,6 +8,10 @@ const PC_OUT_OF_BOUNDS: felt252 = 'KKT: pc >= bytecode length';
 // TYPE CONVERSION
 const TYPE_CONVERSION_ERROR: felt252 = 'KKT: type conversion error';
 
+// NUMERIC OPERATIONS
+const BALANCE_UNDERFLOW: felt252 = 'KKT: balance underflow';
+const BALANCE_OVERFLOW: felt252 = 'KKT: balance overflow';
+
 // RETURNDATA
 const RETURNDATA_OUT_OF_BOUNDS_ERROR: felt252 = 'KKT: ReturnDataOutOfBounds';
 
@@ -41,6 +45,7 @@ enum EVMError {
     StackError: felt252,
     InvalidProgramCounter: felt252,
     TypeConversionError: felt252,
+    NumericOperations: felt252,
     ReturnDataError: felt252,
     JumpError: felt252,
     NotImplemented,
@@ -58,6 +63,7 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::StackError(error_message) => error_message,
             EVMError::InvalidProgramCounter(error_message) => error_message,
             EVMError::TypeConversionError(error_message) => error_message,
+            EVMError::NumericOperations(error_message) => error_message,
             EVMError::ReturnDataError(error_message) => error_message,
             EVMError::JumpError(error_message) => error_message,
             EVMError::NotImplemented => 'NotImplemented',

@@ -3,8 +3,7 @@ use evm::errors::{EVMError, INVALID_DESTINATION, READ_SYSCALL_FAILED, WRITE_IN_S
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
-use evm::storage::compute_storage_address;
-use evm::storage_journal::JournalTrait;
+use evm::state::{StateTrait, compute_state_key};
 use hash::{HashStateTrait, HashStateExTrait};
 use poseidon::PoseidonTrait;
 use starknet::{storage_base_address_from_felt252, Store};
@@ -144,8 +143,7 @@ impl MemoryOperation of MemoryOperationTrait {
         let key = self.stack.pop()?;
         let value = self.stack.pop()?;
         let evm_address = self.evm_address();
-        let storage_address = compute_storage_address(evm_address, key);
-        self.storage_journal.write(storage_address, value);
+        self.state.write_storage(:evm_address, :key, :value);
         Result::Ok(())
     }
 
@@ -155,25 +153,9 @@ impl MemoryOperation of MemoryOperationTrait {
     fn exec_sload(ref self: Machine) -> Result<(), EVMError> {
         let key = self.stack.pop()?;
         let evm_address = self.evm_address();
-        let storage_address = compute_storage_address(evm_address, key);
 
-        match self.storage_journal.read(storage_address) {
-            Option::Some(value) => {
-                self.stack.push(value)?;
-                return Result::Ok(());
-            },
-            Option::None => {
-                match Store::<u256>::read(0, storage_address) {
-                    Result::Ok(value) => {
-                        self.stack.push(value)?;
-                        return Result::Ok(());
-                    },
-                    Result::Err(_) => {
-                        return Result::Err(EVMError::SyscallFailed(READ_SYSCALL_FAILED));
-                    },
-                }
-            }
-        }
+        let value = self.state.read_storage(evm_address, key)?;
+        self.stack.push(value)
     }
 
     /// 0x5A - GAS operation
