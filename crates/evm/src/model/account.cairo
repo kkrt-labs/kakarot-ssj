@@ -116,7 +116,7 @@ impl AccountImpl of AccountTrait {
             AccountType::EOA(_) => Result::Ok(Default::default().span()),
             AccountType::ContractAccount(ca) => {
                 let bytecode = ca.load_bytecode()?;
-                Result::Ok(bytecode.into_bytes())
+                Result::Ok(bytecode)
             }
         }
     }

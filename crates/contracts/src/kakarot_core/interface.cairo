@@ -1,3 +1,4 @@
+use contracts::kakarot_core::storage_types::StoredAccountType;
 use starknet::{ContractAddress, EthAddress, ClassHash};
 use utils::traits::ByteArraySerde;
 
@@ -28,9 +29,15 @@ trait IKakarotCore<TContractState> {
     fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
+    /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
     /// particular EVM address and if so, returns its corresponding Starknet Address.
     /// Otherwise, returns 0
-    fn address_registry(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
+    fn address_registry(self: @TContractState, evm_address: EthAddress) -> StoredAccountType;
+    /// Maps an EVM address to a Starknet address
+    /// Triggerred when deployment of an EOA or CA is successful
+    fn set_address_registry(
+        ref self: TContractState, evm_address: EthAddress, account: StoredAccountType
+    );
 
     /// Gets the nonce associated to a contract account
     fn contract_account_nonce(self: @TContractState, evm_address: EthAddress) -> u64;
@@ -44,15 +51,21 @@ trait IKakarotCore<TContractState> {
     ) -> u256;
 
     /// Gets the bytecode associated to a contract account
-    fn contract_account_bytecode(self: @TContractState, evm_address: EthAddress) -> ByteArray;
+    fn contract_account_bytecode(self: @TContractState, evm_address: EthAddress) -> Span<u8>;
 
-    /// Returns true if the given `offset` is a valid jump destination in the bytecode of a contract account.
-    fn contract_account_valid_jump(
+    /// Checks if for a specific offset, i.e. if  bytecode at index `offset`, bytecode[offset] == 0x5B && is part of a PUSH opcode input.
+    /// Prevents false positive checks in JUMP opcode of the type: jump destination opcode == JUMPDEST in appearance, but is a PUSH opcode bytecode slice.
+    fn contract_account_false_jumpdest(
         self: @TContractState, evm_address: EthAddress, offset: usize
     ) -> bool;
 
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
+
+    /// Deploys a Contract Account for a particular EVM address
+    fn deploy_ca(
+        ref self: TContractState, evm_address: EthAddress, bytecode: Span<u8>
+    ) -> ContractAddress;
 
     /// View entrypoint into the EVM
     /// Performs view calls into the blockchain
@@ -81,6 +94,21 @@ trait IKakarotCore<TContractState> {
     /// Upgrade the KakarotCore smart contract
     /// Using replace_class_syscall
     fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
+
+    // Getter for the EOA Class Hash
+    fn eoa_class_hash(self: @TContractState) -> ClassHash;
+    // Setter for the EOA Class Hash
+    fn set_eoa_class_hash(ref self: TContractState, new_class_hash: ClassHash);
+
+    // Getter for the Contract Account Class
+    fn ca_class_hash(self: @TContractState) -> ClassHash;
+    // Setter for the Contract Account Class
+    fn set_ca_class_hash(ref self: TContractState, new_class_hash: ClassHash);
+
+    // Getter for the Generic Account Class
+    fn account_class_hash(self: @TContractState) -> ClassHash;
+    // Setter for the Generic Account Class
+    fn set_account_class_hash(ref self: TContractState, new_class_hash: ClassHash);
 }
 
 #[starknet::interface]
@@ -110,11 +138,43 @@ trait IExtendedKakarotCore<TContractState> {
     fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
+    /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
     /// particular EVM address and if so, returns its corresponding Starknet Address
-    fn address_registry(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
+    fn address_registry(self: @TContractState, evm_address: EthAddress) -> StoredAccountType;
+    /// Maps an EVM address to a Starknet address
+    /// Triggerred when deployment of an EOA or CA is successful
+    fn set_address_registry(
+        ref self: TContractState, evm_address: EthAddress, account: StoredAccountType
+    );
+
+
+    /// Gets the nonce associated to a contract account
+    fn contract_account_nonce(self: @TContractState, evm_address: EthAddress) -> u64;
+
+    /// Gets the balance associated to an account.
+    fn account_balance(self: @TContractState, evm_address: EthAddress) -> u256;
+
+    /// Gets the value associated to a key in the contract account storage
+    fn contract_account_storage_at(
+        self: @TContractState, evm_address: EthAddress, key: u256
+    ) -> u256;
+
+    /// Gets the bytecode associated to a contract account
+    fn contract_account_bytecode(self: @TContractState, evm_address: EthAddress) -> Span<u8>;
+
+    /// Checks if for a specific offset, i.e. if  bytecode at index `offset`, bytecode[offset] == 0x5B && is part of a PUSH opcode input.
+    /// Prevents false positive checks in JUMP opcode of the type: jump destination opcode == JUMPDEST in appearance, but is a PUSH opcode bytecode slice.
+    fn contract_account_false_jumpdest(
+        self: @TContractState, evm_address: EthAddress, offset: usize
+    ) -> bool;
+
 
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
+    /// Deploys a Contract Account for a particular EVM address
+    fn deploy_ca(
+        ref self: TContractState, evm_address: EthAddress, bytecode: Span<u8>
+    ) -> ContractAddress;
 
     /// View entrypoint into the EVM
     /// Performs view calls into the blockchain
@@ -143,6 +203,21 @@ trait IExtendedKakarotCore<TContractState> {
     /// Upgrade the KakarotCore smart contract
     /// Using replace_class_syscall
     fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
+
+    // Getter for the EOA Class Hash
+    fn eoa_class_hash(self: @TContractState) -> ClassHash;
+    // Setter for the EOA Class Hash
+    fn set_eoa_class_hash(ref self: TContractState, new_class_hash: ClassHash);
+
+    // Getter for the Contract Account Class
+    fn ca_class_hash(self: @TContractState) -> ClassHash;
+    // Setter for the Contract Account Class
+    fn set_ca_class_hash(ref self: TContractState, new_class_hash: ClassHash);
+
+    // Getter for the Generic Account Class
+    fn account_class_hash(self: @TContractState) -> ClassHash;
+    // Setter for the Generic Account Class
+    fn set_account_class_hash(ref self: TContractState, new_class_hash: ClassHash);
 
     fn owner(self: @TContractState) -> ContractAddress;
     fn transfer_ownership(ref self: TContractState, new_owner: ContractAddress);

@@ -1,13 +1,21 @@
+use contracts::contract_account::contract_account::ContractAccount;
+use contracts::contract_account::interface::{
+    IContractAccountDispatcher, IContractAccountDispatcherTrait
+};
 use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcher, KakarotCore};
+use contracts::uninitialized_account::interface::{
+    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
+};
 use contracts::uninitialized_account::uninitialized_account::UninitializedAccount;
 
 use debug::PrintTrait;
 use eoa::externally_owned_account::{ExternallyOwnedAccount};
-use evm::tests::test_utils::{deploy_fee, other_starknet_address, chain_id};
+use evm::tests::test_utils::{deploy_fee, ca_address, other_starknet_address, chain_id};
 use openzeppelin::token::erc20::ERC20;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use starknet::{testing, contract_address_const, ContractAddress, deploy_syscall};
-
+use starknet::{
+    testing, contract_address_const, ContractAddress, deploy_syscall, get_contract_address
+};
 
 /// Pop the earliest unpopped logged event for the contract as the requested type
 /// and checks there's no more data left on the event, preventing unaccounted params.
@@ -79,6 +87,7 @@ fn deploy_kakarot_core(native_token: ContractAddress) -> IExtendedKakarotCoreDis
         deploy_fee().into(),
         UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(),
         ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(),
+        ContractAccount::TEST_CLASS_HASH.try_into().unwrap(),
         other_starknet_address().into(),
         chain_id().into()
     ];
@@ -94,10 +103,34 @@ fn deploy_kakarot_core(native_token: ContractAddress) -> IExtendedKakarotCoreDis
     }
 }
 
+fn deploy_contract_account(
+    kakarot_address: ContractAddress, bytecode: Span<u8>
+) -> IContractAccountDispatcher {
+    let calldata: Array<felt252> = array![kakarot_address.into(), ca_address().into(),];
+
+    let (contract_address, _) = deploy_syscall(
+        UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
+    )
+        .expect('Deployment should succeed');
+    IUninitializedAccountDispatcher { contract_address }
+        .initialize(ContractAccount::TEST_CLASS_HASH.try_into().unwrap());
+
+    let contract_account = IContractAccountDispatcher { contract_address };
+
+    // Initialize the contract account
+    contract_account.set_nonce(1);
+    contract_account.set_bytecode(bytecode);
+
+    contract_account
+}
+
+
 fn fund_account_with_native_token(
     contract_address: ContractAddress, native_token: IERC20CamelDispatcher
 ) {
+    let current_contract = get_contract_address();
     let amount: u256 = 0x01;
     testing::set_contract_address(constants::ETH_BANK());
     native_token.transfer(contract_address, amount);
+    testing::set_contract_address(current_contract);
 }

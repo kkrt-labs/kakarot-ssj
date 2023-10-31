@@ -73,6 +73,11 @@ fn value() -> u256 {
     0xffffffffffffffffffffffffffffffff
 }
 
+fn ca_address() -> EthAddress {
+    let evm_address: EthAddress = 0xca.try_into().unwrap();
+    evm_address
+}
+
 fn setup_call_context() -> CallContext {
     let bytecode: Span<u8> = array![1, 2, 3].span();
     let calldata: Span<u8> = array![4, 5, 6].span();

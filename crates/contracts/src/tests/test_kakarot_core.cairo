@@ -1,15 +1,17 @@
 use contracts::components::ownable::ownable_component;
+use contracts::contract_account::contract_account::ContractAccount;
+use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::kakarot_core::storage_types::StoredAccountType;
 use contracts::kakarot_core::{
-    interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::KakarotCoreInternal
+    interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
 };
 use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_upgradeable::{
     MockContractUpgradeableV1, IMockContractUpgradeableDispatcher,
     IMockContractUpgradeableDispatcherTrait
 };
-use contracts::tests::test_utils::{
-    deploy_kakarot_core, deploy_native_token, deploy_fee, chain_id, drop_event, pop_log
-};
+use contracts::tests::test_utils as contract_utils;
+use contracts::uninitialized_account::uninitialized_account::UninitializedAccount;
 use core::result::ResultTrait;
 use debug::PrintTrait;
 use eoa::externally_owned_account::ExternallyOwnedAccount;
@@ -24,7 +26,7 @@ use utils::helpers::{U32Trait, ByteArrayExTrait, u256_to_bytes_array};
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_owner() {
-    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
 
     assert(kakarot_core.owner() == test_utils::other_starknet_address(), 'wrong owner')
 }
@@ -32,7 +34,7 @@ fn test_kakarot_core_owner() {
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_transfer_ownership() {
-    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     assert(kakarot_core.owner() == test_utils::other_starknet_address(), 'wrong owner');
     testing::set_contract_address(test_utils::other_starknet_address());
     kakarot_core.transfer_ownership(test_utils::starknet_address());
@@ -42,7 +44,7 @@ fn test_kakarot_core_transfer_ownership() {
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_renounce_ownership() {
-    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     assert(kakarot_core.owner() == test_utils::other_starknet_address(), 'wrong owner');
     testing::set_contract_address(test_utils::other_starknet_address());
     kakarot_core.renounce_ownership();
@@ -53,22 +55,22 @@ fn test_kakarot_core_renounce_ownership() {
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_deploy_fee() {
-    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
-    assert(kakarot_core.deploy_fee() == deploy_fee(), 'wrong deploy_fee');
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    assert(kakarot_core.deploy_fee() == contract_utils::deploy_fee(), 'wrong deploy_fee');
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_chain_id() {
-    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
-    assert(kakarot_core.chain_id() == chain_id(), 'wrong chain id');
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    assert(kakarot_core.chain_id() == contract_utils::chain_id(), 'wrong chain id');
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_set_deploy_fee() {
-    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
-    assert(kakarot_core.deploy_fee() == deploy_fee(), 'wrong deploy_fee');
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    assert(kakarot_core.deploy_fee() == contract_utils::deploy_fee(), 'wrong deploy_fee');
     testing::set_contract_address(test_utils::other_starknet_address());
     kakarot_core.set_deploy_fee(0x100);
     assert(kakarot_core.deploy_fee() == 0x100, 'wrong new deploy_fee');
@@ -78,7 +80,7 @@ fn test_kakarot_core_set_deploy_fee() {
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_set_native_token() {
-    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     assert(kakarot_core.native_token() == test_utils::native_token(), 'wrong native_token');
 
     testing::set_contract_address(test_utils::other_starknet_address());
@@ -91,13 +93,14 @@ fn test_kakarot_core_set_native_token() {
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_deploy_eoa() {
-    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     let eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
     // triggerred in the constructor
-    drop_event(kakarot_core.contract_address);
+    contract_utils::drop_event(kakarot_core.contract_address);
 
-    let event = pop_log::<KakarotCore::EOADeployed>(kakarot_core.contract_address).unwrap();
+    let event = contract_utils::pop_log::<KakarotCore::EOADeployed>(kakarot_core.contract_address)
+        .unwrap();
     assert(event.starknet_address == eoa_starknet_address, 'wrong starknet address');
 }
 
@@ -106,21 +109,45 @@ fn test_kakarot_core_deploy_eoa() {
 #[available_gas(20000000)]
 fn test_kakarot_core_eoa_mapping() {
     // Given
-    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    assert(
+        kakarot_core
+            .address_registry(test_utils::evm_address()) == StoredAccountType::UninitializedAccount,
+        'should be uninitialized'
+    );
+
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
 
     // When
     let eoa_starknet_address = kakarot_core.address_registry(test_utils::evm_address());
 
     // Then
-    assert(eoa_starknet_address == expected_eoa_starknet_address, 'wrong starknet address');
+    assert(
+        eoa_starknet_address == StoredAccountType::EOA(expected_eoa_starknet_address),
+        'wrong starknet address'
+    );
+
+    let another_sn_address: ContractAddress = 0xbeef.try_into().unwrap();
+
+    kakarot_core
+        .set_address_registry(
+            test_utils::evm_address(), StoredAccountType::EOA(another_sn_address)
+        );
+
+    assert(
+        kakarot_core
+            .address_registry(
+                test_utils::evm_address()
+            ) == StoredAccountType::EOA(another_sn_address),
+        'wrong registry address'
+    );
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_compute_starknet_address() {
     let evm_address = test_utils::evm_address();
-    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
 
     // Precomputed Starknet address with starknet-rs and starknetjs
     // With arguments:
@@ -137,7 +164,7 @@ fn test_kakarot_core_compute_starknet_address() {
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_upgrade_contract() {
-    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     let class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
 
     testing::set_contract_address(test_utils::other_starknet_address());
@@ -160,7 +187,7 @@ fn test_kakarot_contract_account() {}
 #[available_gas(2000000000000)]
 fn test_eth_call() {
     // Given
-    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     testing::set_contract_address(kakarot_core.contract_address);
 
     let account = ContractAccountTrait::deploy(
@@ -189,7 +216,7 @@ fn test_eth_call() {
 #[available_gas(2000000000)]
 fn test_handle_call() {
     // Given
-    let kakarot_core = deploy_kakarot_core(test_utils::native_token());
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     testing::set_contract_address(kakarot_core.contract_address);
     let kakarot_core = KakarotCore::unsafe_new_contract_state();
 
@@ -217,4 +244,82 @@ fn test_handle_call() {
 
     // Then
     assert(return_data == u256_to_bytes_array(0).span(), 'wrong result');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_contract_account_class_hash() {
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
+    // triggerred in the constructor
+    contract_utils::drop_event(kakarot_core.contract_address);
+
+    let class_hash = kakarot_core.ca_class_hash();
+
+    assert(class_hash == ContractAccount::TEST_CLASS_HASH.try_into().unwrap(), 'wrong class hash');
+
+    let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
+    kakarot_core.set_ca_class_hash(new_class_hash);
+
+    assert(kakarot_core.ca_class_hash() == new_class_hash, 'wrong class hash');
+    let event = contract_utils::pop_log::<
+        KakarotCore::CAClassHashChange
+    >(kakarot_core.contract_address)
+        .unwrap();
+    assert(event.old_class_hash == class_hash, 'wrong old hash');
+    assert(event.new_class_hash == kakarot_core.ca_class_hash(), 'wrong new hash');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_account_class_hash() {
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
+    // triggerred in the constructor
+    contract_utils::drop_event(kakarot_core.contract_address);
+
+    let class_hash = kakarot_core.account_class_hash();
+
+    assert(
+        class_hash == UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(), 'wrong class hash'
+    );
+
+    let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
+    kakarot_core.set_account_class_hash(new_class_hash);
+
+    assert(kakarot_core.account_class_hash() == new_class_hash, 'wrong class hash');
+    let event = contract_utils::pop_log::<
+        KakarotCore::AccountClassHashChange
+    >(kakarot_core.contract_address)
+        .unwrap();
+    assert(event.old_class_hash == class_hash, 'wrong old hash');
+    assert(event.new_class_hash == kakarot_core.account_class_hash(), 'wrong new hash');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_eoa_class_hash() {
+    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
+    // triggerred in the constructor
+    contract_utils::drop_event(kakarot_core.contract_address);
+
+    let class_hash = kakarot_core.eoa_class_hash();
+
+    assert(
+        class_hash == ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(),
+        'wrong class hash'
+    );
+
+    let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
+    kakarot_core.set_eoa_class_hash(new_class_hash);
+
+    assert(kakarot_core.eoa_class_hash() == new_class_hash, 'wrong class hash');
+    let event = contract_utils::pop_log::<
+        KakarotCore::EOAClassHashChange
+    >(kakarot_core.contract_address)
+        .unwrap();
+    assert(event.old_class_hash == class_hash, 'wrong old hash');
+    assert(event.new_class_hash == kakarot_core.eoa_class_hash(), 'wrong new hash');
 }

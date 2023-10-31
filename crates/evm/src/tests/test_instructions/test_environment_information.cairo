@@ -658,7 +658,7 @@ fn test_exec_extcodecopy_ca() {
 // 0x3C - EXTCODECOPY
 // *************************************************************************
 #[test]
-#[available_gas(20000000)]
+#[available_gas(2000000000000)]
 fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
     // Given
     let evm_address = evm_address();

@@ -1,8 +1,9 @@
-use contracts::kakarot_core::kakarot::KakarotCore::{
-    address_registryContractMemberStateTrait, account_class_hashContractMemberStateTrait,
-    eoa_class_hashContractMemberStateTrait, ContractStateEventEmitter, EOADeployed
-};
+use contracts::kakarot_core::kakarot::KakarotCore::{ContractStateEventEmitter, EOADeployed};
+use contracts::kakarot_core::storage_types::StoredAccountType;
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
+use contracts::uninitialized_account::interface::{
+    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
+};
 use contracts::uninitialized_account::interface::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
@@ -33,10 +34,11 @@ impl EOAImpl of EOATrait {
         }
 
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let account_class_hash = kakarot_state.account_class_hash.read();
+        let account_class_hash = kakarot_state.account_class_hash();
         let kakarot_address = get_contract_address();
         let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
 
+        let maybe_address = deploy_syscall(account_class_hash, evm_address.into(), calldata, false);
         let maybe_address = deploy_syscall(account_class_hash, evm_address.into(), calldata, false);
         // Panic with err as syscall failure can't be caught, so we can't manage
         // the error
@@ -47,8 +49,9 @@ impl EOAImpl of EOATrait {
                 let account = IUninitializedAccountDispatcher {
                     contract_address: starknet_address
                 };
-                account.initialize(kakarot_state.eoa_class_hash.read());
-                kakarot_state.address_registry.write(evm_address, starknet_address);
+                account.initialize(kakarot_state.eoa_class_hash());
+                kakarot_state
+                    .set_address_registry(evm_address, StoredAccountType::EOA(starknet_address));
                 kakarot_state.emit(EOADeployed { evm_address, starknet_address });
                 Result::Ok(EOA { evm_address, starknet_address })
             },
@@ -76,15 +79,16 @@ impl EOAImpl of EOATrait {
         )
     }
 
+    /// Returns an EOA instance from the given `evm_address`.
     fn at(evm_address: EthAddress) -> Result<Option<EOA>, EVMError> {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let eoa_starknet_address = kakarot_state.address_registry(evm_address);
-        if !eoa_starknet_address.is_zero() {
-            return Result::Ok(
+        let account = kakarot_state.address_registry(evm_address);
+        match account {
+            StoredAccountType::UninitializedAccount => Result::Ok(Option::None),
+            StoredAccountType::EOA(eoa_starknet_address) => Result::Ok(
                 Option::Some(EOA { evm_address, starknet_address: eoa_starknet_address })
-            );
-        } else {
-            return Result::Ok(Option::None);
+            ),
+            StoredAccountType::ContractAccount(_) => Result::Ok(Option::None),
         }
     }
 

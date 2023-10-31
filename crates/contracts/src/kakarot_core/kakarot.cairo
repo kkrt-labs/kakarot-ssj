@@ -2,13 +2,13 @@ use starknet::{ContractAddress, EthAddress, ClassHash};
 
 const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
-
 #[starknet::contract]
 mod KakarotCore {
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
+    use contracts::kakarot_core::storage_types::{StoredAccountType, StoredAccountTypeStorePacking};
     use core::hash::{HashStateExTrait, HashStateTrait};
     use core::option::OptionTrait;
     use core::pedersen::{HashState, PedersenTrait};
@@ -24,7 +24,7 @@ mod KakarotCore {
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
-    use super::INVOKE_ETH_CALL_FORBIDDEN;
+    use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
     use utils::traits::{U256TryIntoContractAddress, ByteArraySerde};
 
@@ -38,14 +38,16 @@ mod KakarotCore {
 
     impl UpgradeableImpl = upgradeable_component::Upgradeable<ContractState>;
 
+
     #[storage]
     struct Storage {
         /// Kakarot storage for accounts: Externally Owned Accounts (EOA) and Contract Accounts (CA)
         /// Map their EVM address and their Starknet address
         /// - starknet_address: the deterministic starknet address (31 bytes) computed given an EVM address (20 bytes)
-        address_registry: LegacyMap::<EthAddress, ContractAddress>,
+        address_registry: LegacyMap::<EthAddress, StoredAccountType>,
         account_class_hash: ClassHash,
         eoa_class_hash: ClassHash,
+        ca_class_hash: ClassHash,
         // Utility storage
         native_token: ContractAddress,
         deploy_fee: u128,
@@ -63,7 +65,10 @@ mod KakarotCore {
         OwnableEvent: ownable_component::Event,
         UpgradeableEvent: upgradeable_component::Event,
         EOADeployed: EOADeployed,
-        ContractAccountDeployed: ContractAccountDeployed
+        ContractAccountDeployed: ContractAccountDeployed,
+        AccountClassHashChange: AccountClassHashChange,
+        EOAClassHashChange: EOAClassHashChange,
+        CAClassHashChange: CAClassHashChange,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -78,6 +83,33 @@ mod KakarotCore {
     struct ContractAccountDeployed {
         #[key]
         evm_address: EthAddress,
+        #[key]
+        starknet_address: ContractAddress,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct AccountClassHashChange {
+        #[key]
+        old_class_hash: ClassHash,
+        #[key]
+        new_class_hash: ClassHash,
+    }
+
+
+    #[derive(Drop, starknet::Event)]
+    struct EOAClassHashChange {
+        #[key]
+        old_class_hash: ClassHash,
+        #[key]
+        new_class_hash: ClassHash,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct CAClassHashChange {
+        #[key]
+        old_class_hash: ClassHash,
+        #[key]
+        new_class_hash: ClassHash,
     }
 
     #[constructor]
@@ -87,6 +119,7 @@ mod KakarotCore {
         deploy_fee: u128,
         account_class_hash: ClassHash,
         eoa_class_hash: ClassHash,
+        ca_class_hash: ClassHash,
         owner: ContractAddress,
         chain_id: u128,
     ) {
@@ -94,6 +127,7 @@ mod KakarotCore {
         self.deploy_fee.write(deploy_fee);
         self.account_class_hash.write(account_class_hash);
         self.eoa_class_hash.write(eoa_class_hash);
+        self.ca_class_hash.write(ca_class_hash);
         self.ownable.initializer(owner);
         self.chain_id.write(chain_id);
     }
@@ -172,8 +206,17 @@ mod KakarotCore {
         /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
         /// particular EVM address and if so, returns its corresponding Starknet Address
         /// Otherwise, returns 0
-        fn address_registry(self: @ContractState, evm_address: EthAddress) -> ContractAddress {
+        fn address_registry(self: @ContractState, evm_address: EthAddress) -> StoredAccountType {
             self.address_registry.read(evm_address)
+        }
+
+
+        /// Maps an EVM address to a Starknet address
+        /// Triggerred when deployment of an EOA or CA is successful
+        fn set_address_registry(
+            ref self: ContractState, evm_address: EthAddress, account: StoredAccountType
+        ) {
+            self.address_registry.write(evm_address, account);
         }
 
         /// Gets the nonce associated to a contract account
@@ -201,22 +244,30 @@ mod KakarotCore {
 
 
         /// Gets the bytecode associated to a contract account
-        fn contract_account_bytecode(self: @ContractState, evm_address: EthAddress) -> ByteArray {
+        fn contract_account_bytecode(self: @ContractState, evm_address: EthAddress) -> Span<u8> {
             let ca = ContractAccountTrait::at(evm_address).unwrap().unwrap();
             ca.load_bytecode().unwrap()
         }
 
-        /// Returns true if the given `offset` is a valid jump destination in the bytecode of a contract account.
-        fn contract_account_valid_jump(
+        /// Checks if for a specific offset, i.e. if  bytecode at index `offset`, bytecode[offset] == 0x5B && is part of a PUSH opcode input.
+        /// Prevents false positive checks in JUMP opcode of the type: jump destination opcode == JUMPDEST in appearance, but is a PUSH opcode bytecode slice.
+        fn contract_account_false_jumpdest(
             self: @ContractState, evm_address: EthAddress, offset: usize
         ) -> bool {
             let ca = ContractAccountTrait::at(evm_address).unwrap().unwrap();
-            ca.is_valid_jump(offset).unwrap()
+            ca.is_false_jumpdest(offset).unwrap()
         }
 
         /// Deploys an EOA for a particular EVM address
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
             EOATrait::deploy(evm_address).unwrap().starknet_address
+        }
+
+        /// Deploys a Contract Account for a particular EVM address
+        fn deploy_ca(
+            ref self: ContractState, evm_address: EthAddress, bytecode: Span<u8>
+        ) -> ContractAddress {
+            ContractAccountTrait::deploy(evm_address, bytecode).unwrap().starknet_address
         }
 
         /// View entrypoint into the EVM
@@ -261,6 +312,39 @@ mod KakarotCore {
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
             self.ownable.assert_only_owner();
             self.upgradeable.upgrade_contract(new_class_hash);
+        }
+
+        // Getter for the EOA Class Hash
+        fn eoa_class_hash(self: @ContractState) -> ClassHash {
+            self.eoa_class_hash.read()
+        }
+        // Setter for the EOA Class Hash
+        fn set_eoa_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
+            let old_class_hash = self.eoa_class_hash.read();
+            self.eoa_class_hash.write(new_class_hash);
+            self.emit(EOAClassHashChange { old_class_hash, new_class_hash });
+        }
+
+        // Getter for the Contract Account Class
+        fn ca_class_hash(self: @ContractState) -> ClassHash {
+            self.ca_class_hash.read()
+        }
+        // Setter for the Contract Account Class
+        fn set_ca_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
+            let old_class_hash = self.ca_class_hash.read();
+            self.ca_class_hash.write(new_class_hash);
+            self.emit(CAClassHashChange { old_class_hash, new_class_hash });
+        }
+
+        // Getter for the Contract Account Class
+        fn account_class_hash(self: @ContractState) -> ClassHash {
+            self.account_class_hash.read()
+        }
+        // Setter for the Contract Account Class
+        fn set_account_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
+            let old_class_hash = self.account_class_hash.read();
+            self.account_class_hash.write(new_class_hash);
+            self.emit(AccountClassHashChange { old_class_hash, new_class_hash });
         }
     }
 
