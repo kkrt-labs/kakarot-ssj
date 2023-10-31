@@ -5,6 +5,7 @@ use utils::helpers::U32Trait;
 use utils::rlp::{RLPType, RLPTrait, RLPItem};
 
 // Tests source : https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
+//                https://github.com/ethereum/tests/blob/develop/RLPTests/rlptest.json
 
 #[test]
 #[available_gas(99999999)]
@@ -798,6 +799,30 @@ fn test_rlp_decode_short_nested_list() {
     let mut expected_2 = RLPItem::List(array![expected_0, expected_1].span());
 
     let expected = RLPItem::List(array![expected_0, expected_1, expected_2].span());
+
+    assert(res == array![expected].span(), 'Wrong value');
+}
+
+#[test]
+#[available_gas(99999999999)]
+fn test_rlp_decode_multi_list() {
+    let mut arr = array![
+        0xc6,
+        0x82,
+        0x7a,
+        0x77,
+        0xc1,
+        0x04,
+        0x01,
+    ];
+
+    let res = RLPTrait::decode(arr.span()).unwrap();
+
+    let mut expected_0 = RLPItem::String(array![0x7a, 0x77].span());
+    let mut expected_1 = RLPItem::String(array![0x04].span());
+    let mut expected_1 = RLPItem::List(array![expected_1].span());
+    let mut expected_2 = RLPItem::String(array![0x01].span());
+    let mut expected = RLPItem::List(array![expected_0, expected_1, expected_2].span());
 
     assert(res == array![expected].span(), 'Wrong value');
 }
