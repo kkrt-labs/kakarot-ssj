@@ -1,5 +1,11 @@
+use contracts::kakarot_core::kakarot::KakarotCore::{
+    eoa_class_hashContractMemberStateTrait, eoa_address_registryContractMemberStateTrait,
+    ContractStateEventEmitter, EOADeployed
+};
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
+use evm::model::account::{Account, AccountTrait};
+use evm::model::{AccountType};
 use integer::BoundedInt;
 use openzeppelin::token::erc20::interface::{
     IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
@@ -13,35 +19,53 @@ struct EOA {
     starknet_address: ContractAddress
 }
 
-const EOA_CLASS_HASH: felt252 = '123';
-
 #[generate_trait]
 impl EOAImpl of EOATrait {
     /// Deploys a new EOA contract.
     fn deploy(evm_address: EthAddress) -> Result<EOA, EVMError> {
-        //TODO finish in another PR(I started but realised it's out of scope)
-        // let maybe_eoa = EOATrait::at(evm_address)?;
-        // if maybe_eoa.is_some() {
-        //     return Result::Err(EVMError::DeployError(EOA_EXISTS));
-        // }
+        let mut maybe_acc = AccountTrait::account_type_at(evm_address)?;
+        if maybe_acc.is_some() {
+            return Result::Err(EVMError::DeployError(EOA_EXISTS));
+        }
 
-        // let kakarot_address = get_contract_address();
-        // let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
+        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let eoa_class_hash = kakarot_state.eoa_class_hash.read();
+        let kakarot_address = get_contract_address();
+        let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
 
-        // let maybe_address = deploy_syscall(
-        //     EOA_CLASS_HASH.try_into().unwrap(), evm_address.into(), calldata, false
-        // );
+        let maybe_address = deploy_syscall(eoa_class_hash, evm_address.into(), calldata, false);
+        // Panic with err as syscall failure can't be caught, so we can't manage
+        // the error
+        match maybe_address {
+            Result::Ok((
+                starknet_address, _
+            )) => {
+                kakarot_state.eoa_address_registry.write(evm_address, starknet_address);
+                kakarot_state.emit(EOADeployed { evm_address, starknet_address });
+                Result::Ok(EOA { evm_address, starknet_address })
+            },
+            Result::Err(err) => panic(err)
+        }
+    }
 
-        // // Panic with err as syscall failure can't be caught, so we can't manage
-        // // the error
-        // match maybe_address {
-        //     Result::Ok((
-        //         contract_address, _
-        //     )) => {
-        //         Result::Ok(EOA { evm_address, starknet_address: contract_address }) },
-        //     Result::Err(err) => panic(err)
-        // }
-        panic_with_felt252('unimplemented')
+    /// Retrieves the EOA content stored at address `evm_address`.
+    /// There is no way to access the nonce of an EOA currently But putting 1
+    /// shouldn't have any impact and is safer than 0 since has_code_or_nonce is
+    /// used in some places to trigger collision
+    /// # Arguments
+    /// * `evm_address` - The EVM address of the eoa
+    /// # Returns
+    /// * The corresponding Account instance
+    fn fetch(self: @EOA) -> Result<Account, EVMError> {
+        Result::Ok(
+            Account {
+                account_type: AccountType::EOA(*self),
+                code: Default::default().span(),
+                storage: Default::default(),
+                nonce: 1,
+                selfdestruct: false
+            }
+        )
     }
 
     fn at(evm_address: EthAddress) -> Result<Option<EOA>, EVMError> {

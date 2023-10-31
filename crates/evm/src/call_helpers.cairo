@@ -7,7 +7,7 @@ use evm::context::{
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::AccountTrait;
+use evm::model::account::AccountTrait;
 use evm::stack::StackTrait;
 use starknet::{EthAddress};
 use utils::traits::{BoolIntoNumeric, U256TryIntoResult};
@@ -70,7 +70,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         // Case 2: `to` address is not a precompile
         // We enter the standard flow
-        let maybe_account = AccountTrait::account_at(call_args.to)?;
+        let maybe_account = AccountTrait::account_type_at(call_args.to)?;
         let bytecode = match maybe_account {
             Option::Some(acc) => acc.bytecode()?,
             Option::None => Default::default().span(),

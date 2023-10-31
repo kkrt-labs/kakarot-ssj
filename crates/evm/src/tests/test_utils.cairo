@@ -61,6 +61,18 @@ fn eoa_address() -> EthAddress {
     evm_address
 }
 
+fn gas_limit() -> u128 {
+    0x100000000000000000
+}
+
+fn gas_price() -> u128 {
+    0xf00000000000000000
+}
+
+fn value() -> u256 {
+    0xffffffffffffffffffffffffffffffff
+}
+
 fn setup_call_context() -> CallContext {
     let bytecode: Span<u8> = array![1, 2, 3].span();
     let calldata: Span<u8> = array![4, 5, 6].span();

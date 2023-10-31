@@ -26,20 +26,22 @@ use starknet::{EthAddress, ContractAddress};
 /// *   The created contracts
 /// *   The events emitted
 fn execute(
+    origin: EthAddress,
     evm_address: EthAddress,
     bytecode: Span<u8>,
     calldata: Span<u8>,
     value: u256,
     gas_price: u128,
     gas_limit: u128,
+    read_only: bool,
 ) -> ExecutionResult {
     // Create a new root execution context.
     let call_ctx = CallContextTrait::new(
-        caller: evm_address,
+        caller: origin,
         :bytecode,
         :calldata,
         :value,
-        read_only: false,
+        :read_only,
         :gas_limit,
         :gas_price,
         ret_offset: 0,

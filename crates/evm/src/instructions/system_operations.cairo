@@ -5,7 +5,7 @@ use evm::call_helpers::MachineCallHelpers;
 use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::AccountTrait;
+use evm::model::account::AccountTrait;
 use evm::stack::StackTrait;
 use utils::math::Exponentiation;
 
@@ -50,7 +50,17 @@ impl SystemOperations of SystemOperationsTrait {
     /// REVERT
     /// # Specification: https://www.evm.codes/#fd?fork=shanghai
     fn exec_revert(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        let offset = self.stack.pop_usize()?;
+        let size = self.stack.pop_usize()?;
+
+        let mut return_data = Default::default();
+        self.memory.load_n(size, ref return_data, offset);
+
+        // Set the memory data to the parent context return data
+        // and halt the context.
+        self.set_return_data(return_data.span());
+        self.set_reverted();
+        Result::Ok(())
     }
 
     /// CALL
@@ -68,7 +78,7 @@ impl SystemOperations of SystemOperationsTrait {
         // If sender_balance < value, return early, pushing
         // 0 on the stack to indicate call failure.
         let caller_address = self.evm_address();
-        let maybe_account = AccountTrait::account_at(caller_address)?;
+        let maybe_account = AccountTrait::account_type_at(caller_address)?;
         let sender_balance = match maybe_account {
             Option::Some(account) => account.balance()?,
             Option::None => 0,

@@ -1,7 +1,7 @@
 use alexandria_storage::list::{List, ListTrait};
 use contracts::kakarot_core::KakarotCore;
-use contracts::tests::utils as contract_utils;
-use contracts::tests::utils::constants::EVM_ADDRESS;
+use contracts::tests::test_utils as contract_utils;
+use contracts::tests::test_utils::constants::EVM_ADDRESS;
 use evm::errors::EVMErrorTrait;
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::tests::test_utils;
@@ -22,8 +22,8 @@ fn test_contract_account_deploy() {
     let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
     testing::set_contract_address(kakarot_core.contract_address);
     let bytecode = array![0x01, 0x02, 0x03].span();
-    let ca = ContractAccountTrait::deploy(test_utils::evm_address(), bytecode);
-    let ca = match ca {
+    let maybe_ca = ContractAccountTrait::deploy(test_utils::evm_address(), bytecode);
+    let ca = match maybe_ca {
         Result::Ok(ca) => ca,
         Result::Err(err) => panic_with_felt252(err.to_string())
     };

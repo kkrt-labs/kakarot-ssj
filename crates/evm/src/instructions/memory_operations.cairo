@@ -110,7 +110,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// This doesn't have any affect on execution state, so we don't have
     /// to do anything here. It's a NO-OP.
     fn exec_jumpdest(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        Result::Ok(())
     }
 
     /// 0x50 - POP operation.

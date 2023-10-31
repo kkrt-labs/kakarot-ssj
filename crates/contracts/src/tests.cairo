@@ -11,4 +11,4 @@ mod test_ownable;
 mod test_upgradeable;
 
 #[cfg(test)]
-mod utils;
+mod test_utils;

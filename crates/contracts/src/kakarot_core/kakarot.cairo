@@ -10,13 +10,17 @@ mod KakarotCore {
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
     use core::hash::{HashStateExTrait, HashStateTrait};
+    use core::option::OptionTrait;
     use core::pedersen::{HashState, PedersenTrait};
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
     use evm::context::Status;
     use evm::errors::{EVMError, EVMErrorTrait};
+    use evm::execution::execute;
+    use evm::model::ExecutionResult;
+    use evm::model::account::{Account, AccountTrait};
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
-    use evm::model::{Account, AccountTrait};
+    use evm::model::eoa::{EOA, EOATrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
@@ -185,7 +189,7 @@ mod KakarotCore {
 
         /// Gets the balance associated to a contract account
         fn account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
-            let maybe_account = AccountTrait::account_at(evm_address).unwrap();
+            let maybe_account = AccountTrait::account_type_at(evm_address).unwrap();
             match maybe_account {
                 Option::Some(account) => account.balance().unwrap(),
                 Option::None => 0
@@ -217,42 +221,7 @@ mod KakarotCore {
 
         /// Deploys an EOA for a particular EVM address
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
-            // First let's check that the EOA is not already deployed
-            let eoa_starknet_address = self.eoa_address_registry.read(evm_address);
-            if eoa_starknet_address.is_non_zero() {
-                panic_with_felt252('EOA already deployed');
-            }
-
-            // Get the class hash of the EOA to deploy it
-            let eoa_class_hash = self.eoa_class_hash.read();
-
-            // Prepare the deployments arguments
-            // Salt
-            let salt: felt252 = evm_address.into();
-            // Constructor calldata
-            let constructor_calldata: Span<felt252> = array![
-                get_contract_address().into(), evm_address.into()
-            ]
-                .span();
-
-            // We do not want to deploy from zero, but with Kakarot Core as deployer
-            let deploy_from_zero = false;
-
-            // The syscall should only return an error for unexpected problems
-            // As we've previously checked that the EOA is not deployed yet
-            let (starknet_address, _) = deploy_syscall(
-                eoa_class_hash, salt, constructor_calldata, deploy_from_zero
-            )
-                .unwrap_syscall();
-
-            // We write in the eoa address mapping the address of the EOA
-            // This enables Kakarot to be aware that this EOA was already deployed
-            self.eoa_address_registry.write(evm_address, starknet_address);
-
-            // Emit an event
-            self.emit(EOADeployed { evm_address, starknet_address });
-
-            starknet_address
+            EOATrait::deploy(evm_address).unwrap().starknet_address
         }
 
         /// View entrypoint into the EVM
@@ -261,14 +230,22 @@ mod KakarotCore {
         fn eth_call(
             self: @ContractState,
             from: EthAddress,
-            to: EthAddress,
+            to: Option<EthAddress>,
             gas_limit: u128,
             gas_price: u128,
-            value: u128,
+            value: u256,
             data: Span<u8>
         ) -> Span<u8> {
-            self.assert_view();
-            array![].span()
+            if !self.is_view() {
+                panic_with_felt252('fn must be called, not invoked');
+            };
+            let result = self.handle_call(:from, :to, :gas_limit, :gas_price, :value, :data);
+            match result {
+                Result::Ok(result) => result.return_data,
+                // TODO: Return the error message as Bytes in the response
+                // Eliminate all paths of possible panic in logic with relations to the EVM itself.
+                Result::Err(err) => panic_with_felt252(err.to_string()),
+            }
         }
 
         /// Transaction entrypoint into the EVM
@@ -278,7 +255,7 @@ mod KakarotCore {
             to: EthAddress,
             gas_limit: u128,
             gas_price: u128,
-            value: u128,
+            value: u256,
             data: Span<u8>
         ) -> Span<u8> {
             array![].span()
@@ -294,16 +271,52 @@ mod KakarotCore {
 
     #[generate_trait]
     impl KakarotCoreInternalImpl of KakarotCoreInternal {
-        fn assert_view(self: @ContractState) -> Result<(), EVMError> {
+        fn is_view(self: @ContractState) -> bool {
             let tx_info = get_tx_info().unbox();
 
             // If the account that originated the transaction is not zero, this means we
             // are in an invoke transaction instead of a call; therefore, `eth_call` is being wrongly called
             // For invoke transactions, `eth_send_transaction` must be used
-            if tx_info.account_contract_address.is_zero() {
-                return Result::Err(EVMError::WriteInStaticContext(INVOKE_ETH_CALL_FORBIDDEN));
+            if !tx_info.account_contract_address.is_zero() {
+                return false;
             }
-            Result::Ok(())
+            true
+        }
+
+        fn handle_call(
+            self: @ContractState,
+            from: EthAddress,
+            to: Option<EthAddress>,
+            gas_limit: u128,
+            gas_price: u128,
+            value: u256,
+            data: Span<u8>
+        ) -> Result<ExecutionResult, EVMError> {
+            match to {
+                Option::Some(to) => {
+                    let bytecode = match AccountTrait::account_type_at(to)? {
+                        Option::Some(account) => account.bytecode()?,
+                        Option::None => Default::default().span(),
+                    };
+                    let execution_result = execute(
+                        from,
+                        to,
+                        :bytecode,
+                        calldata: data,
+                        :value,
+                        :gas_price,
+                        :gas_limit,
+                        read_only: false,
+                    );
+                    return Result::Ok(execution_result);
+                },
+                Option::None => {
+                    let bytecode = data;
+                    // TODO: compute_evm_address
+                    // HASH(RLP(deployer_address, deployer_nonce))[0..20]
+                    panic_with_felt252('unimplemented')
+                },
+            }
         }
     }
 }

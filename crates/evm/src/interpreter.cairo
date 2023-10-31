@@ -68,6 +68,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
                 // Currently, revert reason is a Span<u8>.
                 machine.set_reverted();
                 self.finalize_revert(ref machine);
+                machine.set_error(error);
             }
         }
     }
@@ -75,6 +76,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
     fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError> {
         // Retrieve the current program counter.
         let pc = machine.pc();
+
         let bytecode = machine.call_ctx().bytecode();
         let bytecode_len = bytecode.len();
 
