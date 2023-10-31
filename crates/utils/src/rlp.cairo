@@ -97,9 +97,13 @@ impl RLPImpl of RLPTrait {
     /// as described in https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp/
     ///
     /// # Arguments
-    ///
-    /// * `input` - RLP encoded bytes
-    /// Return result with RLPItem and size of the decoded item
+    /// * `input` - ByteArray to encode
+    /// # Returns
+    /// * `Span<RLPItem>` - Span of RLPItem
+    /// # Errors
+    /// * RLPError::RlpEmptyInput - if the input is empty
+    /// * RLPError::RlpInputTooShort - if the input is too short for a given 
+    /// Return an array of RLPItem
     fn decode(input: Span<u8>) -> Result<Span<RLPItem>, RLPError> {
         let mut output: Array<RLPItem> = Default::default();
         let input_len = input.len();
