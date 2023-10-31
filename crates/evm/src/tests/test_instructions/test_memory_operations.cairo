@@ -512,7 +512,7 @@ fn test_exec_sload_from_state() {
     let key: u256 = 0x100000000000000000000000000000001;
     let value = 0x02;
     // `evm_address` must match the one used to instantiate the machine
-    machine.state.write_storage(machine.evm_address(), key, value);
+    machine.state.write_state(machine.evm_address(), key, value);
 
     machine.stack.push(key.into());
 
@@ -563,7 +563,7 @@ fn test_exec_sstore_from_state() {
     let result = machine.exec_sstore();
 
     // Then
-    assert(machine.state.read_storage(evm_address(), key).unwrap() == value, 'wrong value in state')
+    assert(machine.state.read_state(evm_address(), key).unwrap() == value, 'wrong value in state')
 }
 #[test]
 #[available_gas(2000000)]

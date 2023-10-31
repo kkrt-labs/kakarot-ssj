@@ -268,20 +268,20 @@ impl StateImpl of StateTrait {
     }
 
     #[inline(always)]
-    fn read_storage(ref self: State, evm_address: EthAddress, key: u256) -> Result<u256, EVMError> {
+    fn read_state(ref self: State, evm_address: EthAddress, key: u256) -> Result<u256, EVMError> {
         let internal_key = compute_state_key(evm_address, key);
         let maybe_entry = self.accounts_storage.read(internal_key);
         match maybe_entry {
             Option::Some((_, key, value)) => { return Result::Ok(value); },
             Option::None => {
                 let account = AccountTrait::fetch_or_create(evm_address)?;
-                return account.read(key);
+                return account.read_storage(key);
             }
         }
     }
 
     #[inline(always)]
-    fn write_storage(ref self: State, evm_address: EthAddress, key: u256, value: u256) {
+    fn write_state(ref self: State, evm_address: EthAddress, key: u256, value: u256) {
         let internal_key = compute_state_key(evm_address, key);
         self.accounts_storage.write(internal_key.into(), (evm_address, key, value));
     }

@@ -283,8 +283,8 @@ mod test_state {
         let key = 10;
         let value = 100;
 
-        state.write_storage(evm_address, key, value);
-        let read_value = state.read_storage(evm_address, key).unwrap();
+        state.write_state(evm_address, key, value);
+        let read_value = state.read_state(evm_address, key).unwrap();
 
         assert(value == read_value, 'Storage mismatch');
     }
@@ -299,7 +299,7 @@ mod test_state {
         let key = 10;
         let value = 100;
 
-        let read_value = state.read_storage(evm_address, key).unwrap();
+        let read_value = state.read_state(evm_address, key).unwrap();
 
         assert(value == read_value, 'Storage mismatch');
     }
@@ -399,7 +399,7 @@ mod test_state {
         let key = 100;
         let value = 1000;
 
-        state.write_storage(evm_address, key, value);
+        state.write_state(evm_address, key, value);
         state.commit_context();
 
         assert(

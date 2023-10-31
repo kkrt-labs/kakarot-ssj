@@ -8,8 +8,6 @@ use evm::execution::Status;
 use evm::model::account::{Account, AccountTrait};
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::model::eoa::{EOA, EOATrait};
-use evm::state::StateChangeLog;
-use evm::state::compute_state_key;
 use starknet::{EthAddress, get_contract_address, ContractAddress};
 use utils::helpers::ByteArrayExTrait;
 

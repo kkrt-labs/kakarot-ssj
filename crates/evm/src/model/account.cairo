@@ -136,8 +136,7 @@ impl AccountImpl of AccountTrait {
     /// # Returns
     ///
     /// A `Result` containing the value stored at the given key or an `EVMError` if there was an error.
-    fn read(self: @Account, key: u256) -> Result<u256, EVMError> {
-        //TODO start by reading in local state
+    fn read_storage(self: @Account, key: u256) -> Result<u256, EVMError> {
         match self.account_type {
             AccountType::EOA(eoa) => Result::Ok(0),
             AccountType::ContractAccount(ca) => ca.storage_at(key),
@@ -149,8 +148,7 @@ impl AccountImpl of AccountTrait {
     /// * `self` The Account to update
     /// * `key` The storage key to modify
     /// * `value` The value to write
-    fn write(ref self: Account, key: u256, value: u256) {
-        //TODO write to local state
+    fn write_storage(ref self: Account, key: u256, value: u256) {
         panic_with_felt252('unimplemented')
     }
 

@@ -8,7 +8,6 @@ use contracts::uninitialized_account::interface::{
 };
 use contracts::uninitialized_account::uninitialized_account::UninitializedAccount;
 
-use debug::PrintTrait;
 use eoa::externally_owned_account::{ExternallyOwnedAccount};
 use evm::tests::test_utils::{deploy_fee, ca_address, other_starknet_address, chain_id};
 use openzeppelin::token::erc20::ERC20;
