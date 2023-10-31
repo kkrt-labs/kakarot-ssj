@@ -41,13 +41,12 @@ mod ContractAccount {
         UpgradeableEvent: upgradeable_component::Event,
     }
 
-    #[abi(per_item)]
+    #[abi(embed_v0)]
     impl ContractAccount of IContractAccount<ContractState> {
-        #[external(v0)]
         fn kakarot_core_address(self: @ContractState) -> ContractAddress {
             self.kakarot_core_address.read()
         }
-        #[external(v0)]
+
         fn evm_address(self: @ContractState) -> EthAddress {
             self.evm_address.read()
         }
@@ -57,7 +56,6 @@ mod ContractAccount {
         // BYTECODE
         // ***
         /// Getter for CA bytecode
-        #[external(v0)]
         fn bytecode(self: @ContractState) -> Span<u8> {
             let data_address = storage_base_address_from_felt252(
                 selector!("contract_account_bytecode")
@@ -93,7 +91,6 @@ mod ContractAccount {
         }
 
         /// Set the bytecode of a contract account
-        #[external(v0)]
         fn set_bytecode(ref self: ContractState, bytecode: Span<u8>) {
             let packed_bytecode: ByteArray = ByteArrayExTrait::from_bytes(bytecode);
             // data_address is h(h(sn_keccak("contract_account_bytecode")), evm_address)
@@ -139,7 +136,6 @@ mod ContractAccount {
         // STORAGE
         // ***
         /// Getter for a specific EVM storage slot (key: bytes32, value: bytes32)
-        #[external(v0)]
         fn storage_at(self: @ContractState, key: u256) -> u256 {
             let storage_address = compute_storage_base_address(
                 selector!("contract_account_storage_keys"),
@@ -149,7 +145,6 @@ mod ContractAccount {
         }
 
         /// Setter for a specific EVM storage slot  (key: bytes32, value: bytes32)
-        #[external(v0)]
         fn set_storage_at(ref self: ContractState, key: u256, value: u256) {
             let storage_address = compute_storage_base_address(
                 selector!("contract_account_storage_keys"),
@@ -164,7 +159,6 @@ mod ContractAccount {
         // In Starknet context, the protocol handles ONLY the nonce of wallets (so called `accounts` - AA equivalent of EVM EOAs)
         // Therefore, we account for the nonce directly as a storage variable
         // ***
-        #[external(v0)]
         fn nonce(self: @ContractState) -> u64 {
             let storage_address: StorageBaseAddress = storage_base_address_from_felt252(
                 selector!("contract_account_nonce")
@@ -172,7 +166,7 @@ mod ContractAccount {
             Store::<u64>::read(0, storage_address).expect(NONCE_READ_ERROR)
         }
 
-        #[external(v0)]
+
         fn set_nonce(ref self: ContractState, new_nonce: u64) {
             let storage_address: StorageBaseAddress = storage_base_address_from_felt252(
                 selector!("contract_account_nonce")
@@ -180,7 +174,7 @@ mod ContractAccount {
             Store::<u64>::write(0, storage_address, new_nonce).expect(NONCE_WRITE_ERROR)
         }
 
-        #[external(v0)]
+
         fn increment_nonce(ref self: ContractState) {
             let storage_address: StorageBaseAddress = storage_base_address_from_felt252(
                 selector!("contract_account_nonce")
@@ -197,18 +191,16 @@ mod ContractAccount {
 
         /// Checks if for a specific offset, i.e. if  bytecode at index `offset`, bytecode[offset] == 0x5B && is part of a PUSH opcode input.
         /// Prevents false positive checks in JUMP opcode of the type: jump destination opcode == JUMPDEST in appearance, but is a PUSH opcode bytecode slice.
-        #[external(v0)]
         fn is_false_jumpdest(self: @ContractState, offset: usize) -> bool {
             panic_with_felt252('unimplemented')
         }
 
-        #[external(v0)]
+
         fn set_false_jumpdest(ref self: ContractState, offset: usize) {
             panic_with_felt252('unimplemented')
         }
 
 
-        #[external(v0)]
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
             assert(
                 get_caller_address() == self.kakarot_core_address.read(),
