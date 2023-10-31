@@ -4,9 +4,6 @@ use contracts::kakarot_core::{IKakarotCore, KakarotCore};
 use contracts::uninitialized_account::interface::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
-use contracts::uninitialized_account::interface::{
-    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
-};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
 use evm::model::account::{Account, AccountTrait};
 use evm::model::{AccountType};
