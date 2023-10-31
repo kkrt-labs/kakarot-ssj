@@ -37,7 +37,7 @@ impl StoredAccountTypeStorePacking of StorePacking<StoredAccountType, felt252> {
         let address: ContractAddress = value
             .shr(8)
             .try_into()
-            .expect('Address should fit in 251 bytes');
+            .expect('Address should fit in 251 bits');
         if discriminant == 1 {
             return StoredAccountType::EOA(address);
         }
