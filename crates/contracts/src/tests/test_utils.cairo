@@ -1,4 +1,5 @@
 use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcher, KakarotCore};
+use contracts::uninitialized_account::uninitialized_account::UninitializedAccount;
 
 use debug::PrintTrait;
 use eoa::externally_owned_account::{ExternallyOwnedAccount};
@@ -76,6 +77,7 @@ fn deploy_kakarot_core(native_token: ContractAddress) -> IExtendedKakarotCoreDis
     let calldata: Array<felt252> = array![
         native_token.into(),
         deploy_fee().into(),
+        UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(),
         ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(),
         other_starknet_address().into(),
         chain_id().into()
