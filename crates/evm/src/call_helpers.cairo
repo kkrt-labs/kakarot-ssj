@@ -127,7 +127,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
         self.stack.push(success)?;
 
         // Get the return_data of the parent context.
-        let return_data = self.parent_ctx_return_data();
+        let return_data = self.return_data();
 
         // Get the min between len(return_data) and call_ctx.ret_size.
         let call_ctx = self.call_ctx();

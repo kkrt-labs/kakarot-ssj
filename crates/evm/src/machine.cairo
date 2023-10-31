@@ -66,6 +66,14 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
         }
     }
 
+    #[inline(always)]
+    fn id(ref self: Machine) -> usize {
+        let current_execution_ctx = self.current_ctx.unbox();
+        let id = current_execution_ctx.id();
+        self.current_ctx = BoxTrait::new(current_execution_ctx);
+        id
+    }
+
     /// Sets the current execution context being executed by the machine.
     /// This is an implementation-specific concept that is used
     /// to divide a unique Stack/Memory simulated by a dict into
@@ -146,15 +154,19 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     #[inline(always)]
     fn return_to_parent_ctx(ref self: Machine) -> Result<(), EVMError> {
         let mut current_ctx = self.current_ctx.unbox();
+        let return_data = current_ctx.return_data();
         let maybe_parent_ctx = current_ctx.parent_ctx;
         match match_nullable(maybe_parent_ctx) {
             FromNullableResult::Null => {
+                // These two lines are used to satisfy the compiler,
+                // otherwise we get a `Value Was Previously Moved` Error
                 current_ctx.parent_ctx = Default::default();
                 self.current_ctx = BoxTrait::new(current_ctx);
                 return Result::Err(EVMError::InvalidMachineState(MISSING_PARENT_CONTEXT));
             },
             FromNullableResult::NotNull(parent_ctx) => {
-                let parent_ctx = parent_ctx.unbox();
+                let mut parent_ctx = parent_ctx.unbox();
+                parent_ctx.return_data = return_data;
                 current_ctx = parent_ctx;
             },
         };
@@ -325,41 +337,7 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
     #[inline(always)]
     fn set_return_data(ref self: Machine, value: Span<u8>) {
         let mut current_ctx = self.current_ctx.unbox();
-        let maybe_parent_ctx = current_ctx.parent_ctx;
-        match match_nullable(maybe_parent_ctx) {
-            // Due to ownership mechanism, both branches need to explicitly re-bind the parent_ctx.
-            FromNullableResult::Null => {
-                current_ctx.return_data = value;
-                current_ctx.parent_ctx = Default::default();
-            },
-            FromNullableResult::NotNull(parent_ctx) => {
-                let mut parent_ctx = parent_ctx.unbox();
-                parent_ctx.return_data = value;
-                current_ctx.parent_ctx = NullableTrait::new(parent_ctx);
-            }
-        }
+        current_ctx.return_data = value;
         self.current_ctx = BoxTrait::new(current_ctx);
-    }
-
-    /// Gets the parent context return data if any, or returns an empty Span
-    #[inline(always)]
-    fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
-        let mut current_ctx = self.current_ctx.unbox();
-        let maybe_parent_ctx = current_ctx.parent_ctx;
-        let return_data = match match_nullable(maybe_parent_ctx) {
-            // Due to ownership mechanism, both branches need to explicitly re-bind the parent_ctx.
-            FromNullableResult::Null => {
-                current_ctx.parent_ctx = Default::default();
-                Default::default().span()
-            },
-            FromNullableResult::NotNull(parent_ctx) => {
-                let mut parent_ctx = parent_ctx.unbox();
-                let return_data = parent_ctx.return_data;
-                current_ctx.parent_ctx = NullableTrait::new(parent_ctx);
-                return_data
-            }
-        };
-        self.current_ctx = BoxTrait::new(current_ctx);
-        return_data
     }
 }
