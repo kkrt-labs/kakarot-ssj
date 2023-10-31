@@ -2,7 +2,7 @@
 
 use box::BoxTrait;
 use evm::call_helpers::MachineCallHelpers;
-use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL};
+use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL, WRITE_IN_STATIC_CONTEXT};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::AccountTrait;
@@ -15,6 +15,9 @@ impl SystemOperations of SystemOperationsTrait {
     /// CREATE
     /// # Specification: https://www.evm.codes/#f0?fork=shanghai
     fn exec_create(ref self: Machine) -> Result<(), EVMError> {
+        if self.read_only() {
+            return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
+        }
         Result::Err(EVMError::NotImplemented)
     }
 
@@ -22,6 +25,9 @@ impl SystemOperations of SystemOperationsTrait {
     /// CREATE2
     /// # Specification: https://www.evm.codes/#f5?fork=shanghai
     fn exec_create2(ref self: Machine) -> Result<(), EVMError> {
+        if self.read_only() {
+            return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
+        }
         Result::Err(EVMError::NotImplemented)
     }
 
@@ -113,6 +119,9 @@ impl SystemOperations of SystemOperationsTrait {
     /// SELFDESTRUCT
     /// # Specification: https://www.evm.codes/#ff?fork=shanghai
     fn exec_selfdestruct(ref self: Machine) -> Result<(), EVMError> {
+        if self.read_only() {
+            return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
+        }
         Result::Err(EVMError::NotImplemented)
     }
 }

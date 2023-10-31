@@ -1,8 +1,11 @@
+use evm::call_helpers::MachineCallHelpers;
+use evm::call_helpers::MachineCallHelpersImpl;
 use evm::context::{ExecutionContext, ExecutionContextTrait,};
 use evm::instructions::MemoryOperationTrait;
 use evm::instructions::SystemOperationsTrait;
 use evm::interpreter::EVMInterpreterTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine_with_nested_execution_context, setup_machine, setup_machine_with_bytecode,
@@ -26,8 +29,16 @@ fn test_exec_return() {
     assert(machine.exec_return().is_ok(), 'Exec return failed');
 
     // Then
-    assert(1000 == load_word(32, parent_ctx_return_data(ref machine)), 'Wrong return_data');
-    assert(machine.stopped(), 'machine should be stopped')
+    assert(1000 == load_word(32, machine.return_data()), 'Wrong return_data');
+    assert(machine.stopped(), 'machine should be stopped');
+    assert(machine.id() == 1, 'wrong ctx id');
+
+    // And
+    machine.finalize_calling_context();
+
+    // Then
+    assert(machine.id() == 0, 'should be parent id');
+    assert(1000 == load_word(32, machine.return_data()), 'Wrong return_data');
 }
 
 
@@ -65,7 +76,7 @@ fn test_exec_revert_nested() {
     assert(machine.exec_revert().is_ok(), 'Exec revert failed');
 
     // Then
-    assert(1000 == load_word(32, parent_ctx_return_data(ref machine)), 'Wrong return_data');
+    assert(1000 == load_word(32, machine.return_data()), 'Wrong return_data');
     assert(machine.stopped(), 'machine should be stopped')
 }
 
@@ -85,8 +96,16 @@ fn test_exec_return_with_offset() {
     assert(machine.exec_return().is_ok(), 'Exec return failed');
 
     // Then
-    assert(256 == load_word(32, parent_ctx_return_data(ref machine)), 'Wrong return_data');
-    assert(machine.stopped(), 'machine should be stopped')
+    assert(256 == load_word(32, machine.return_data()), 'Wrong return_data');
+    assert(machine.stopped(), 'machine should be stopped');
+    assert(machine.id() == 1, 'wrong ctx id');
+
+    // And
+    machine.finalize_calling_context();
+
+    // Then
+    assert(machine.id() == 0, 'should be parent id');
+    assert(256 == load_word(32, machine.return_data()), 'Wrong return_data');
 }
 
 #[test]

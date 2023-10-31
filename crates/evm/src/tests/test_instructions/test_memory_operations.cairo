@@ -1,4 +1,5 @@
-use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION};
+use core::result::ResultTrait;
+use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION, WRITE_IN_STATIC_CONTEXT};
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
@@ -6,7 +7,8 @@ use evm::stack::StackTrait;
 use evm::storage::compute_storage_address;
 use evm::storage_journal::{JournalTrait};
 use evm::tests::test_utils::{
-    setup_machine, setup_machine_with_bytecode, setup_machine_with_calldata, evm_address, callvalue
+    setup_machine, setup_machine_with_bytecode, setup_machine_with_calldata, evm_address, callvalue,
+    setup_static_machine
 };
 use integer::BoundedInt;
 
@@ -561,6 +563,28 @@ fn test_exec_sstore() {
     assert(
         machine.storage_journal.read(storage_address).unwrap() == value, 'wrong value in journal'
     )
+}
+
+#[test]
+#[available_gas(2000000)]
+fn test_exec_sstore_static_call() {
+    // Given
+    let mut machine = setup_static_machine();
+    let key: u256 = 0x100000000000000000000000000000001;
+    let value: u256 = 0xABDE1E11A5;
+    machine.stack.push(value);
+    machine.stack.push(key);
+    let storage_address = compute_storage_address(machine.evm_address(), key);
+
+    // When
+    let result = machine.exec_sstore();
+
+    // Then
+    assert(result.is_err(), 'should have errored');
+    assert(
+        result.unwrap_err() == EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT),
+        'wrong error variant'
+    );
 }
 
 #[test]
