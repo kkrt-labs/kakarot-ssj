@@ -4,10 +4,10 @@ mod contract_account;
 // Kakarot Externally Owned Account
 mod eoa;
 
-mod errors;
-
 // Kakarot external owned account
 mod eoa;
+
+mod errors;
 
 // Kakarot smart contract
 mod kakarot_core;
