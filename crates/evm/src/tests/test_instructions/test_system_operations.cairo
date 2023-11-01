@@ -1,3 +1,4 @@
+use contracts::tests::test_utils as contracts_utils;
 use evm::call_helpers::MachineCallHelpers;
 use evm::call_helpers::MachineCallHelpersImpl;
 use evm::context::{ExecutionContext, ExecutionContextTrait,};
@@ -9,9 +10,9 @@ use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine_with_nested_execution_context, setup_machine, setup_machine_with_bytecode,
-    parent_ctx_return_data, initialize_contract_account
+    parent_ctx_return_data, initialize_contract_account, native_token,
 };
-use starknet::EthAddress;
+use starknet::{EthAddress, testing};
 use utils::helpers::load_word;
 
 #[test]
@@ -113,6 +114,8 @@ fn test_exec_return_with_offset() {
 fn test_exec_call() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
+    let kakarot_core = contracts_utils::deploy_kakarot_core(native_token());
+    testing::set_contract_address(kakarot_core.contract_address);
 
     // Set machine bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -163,6 +166,8 @@ fn test_exec_call() {
 fn test_exec_call_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
+    let kakarot_core = contracts_utils::deploy_kakarot_core(native_token());
+    testing::set_contract_address(kakarot_core.contract_address);
 
     // Set machine bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)

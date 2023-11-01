@@ -4,9 +4,6 @@ mod test_external_owned_account {
         IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
         MockContractUpgradeableV1
     };
-    use core::debug::PrintTrait;
-    use core::option::OptionTrait;
-    use core::traits::TryInto;
     use eoa::externally_owned_account::{
         IExternallyOwnedAccount, ExternallyOwnedAccount, IExternallyOwnedAccountDispatcher,
         IExternallyOwnedAccountDispatcherTrait
