@@ -1,5 +1,6 @@
 mod components;
 
+// Kakarot external owned account
 mod eoa;
 
 // Kakarot smart contract
