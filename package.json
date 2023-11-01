@@ -1,0 +1,14 @@
+{
+  "name": "kakarot-ssj",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "readline": "^1.3.0",
+    "starknet": "^5.19.5"
+  }
+}
