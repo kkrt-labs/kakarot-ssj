@@ -3,22 +3,33 @@
 //! KakarotCore's storage.
 
 use alexandria_storage::list::{List, ListTrait};
+use contracts::contract_account::interface::{
+    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount
+};
+use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
-    KakarotCore, KakarotCore::ContractStateEventEmitter, KakarotCore::ContractAccountDeployed
+    KakarotCore, IKakarotCore, KakarotCore::ContractStateEventEmitter,
+    KakarotCore::ContractAccountDeployed
+};
+use contracts::uninitialized_account::interface::{
+    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
 use evm::context::Status;
 use evm::errors::{
-    EVMError, READ_SYSCALL_FAILED, WRITE_SYSCALL_FAILED, ACCOUNT_EXISTS, DEPLOYMENT_FAILED
+    EVMError, READ_SYSCALL_FAILED, WRITE_SYSCALL_FAILED, ACCOUNT_EXISTS, DEPLOYMENT_FAILED,
+    CONTRACT_ACCOUNT_EXISTS, CONTRACT_SYSCALL_FAILED
 };
 use evm::execution::execute;
 use evm::model::account::{Account, AccountTrait};
 use evm::model::{AccountType};
 use hash::{HashStateTrait, HashStateExTrait};
+use openzeppelin::token::erc20::interface::{
+    IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
+};
 use poseidon::PoseidonTrait;
 use starknet::{
-    StorageBaseAddress, storage_base_address_from_felt252, Store, EthAddress, SyscallResult,
-    get_contract_address, storage_write_syscall, storage_address_from_base, storage_read_syscall,
-    storage_address_from_base_and_offset, ContractAddress
+    deploy_syscall, StorageBaseAddress, storage_base_address_from_felt252, Store, EthAddress,
+    SyscallResult, get_contract_address, ContractAddress
 };
 use utils::helpers::{ByteArrayExTrait, ResultExTrait};
 use utils::storage::{compute_storage_base_address};
@@ -50,34 +61,54 @@ impl ContractAccountImpl of ContractAccountTrait {
     fn deploy(evm_address: EthAddress, bytecode: Span<u8>) -> Result<ContractAccount, EVMError> {
         let mut maybe_acc = AccountTrait::account_type_at(evm_address)?;
         if maybe_acc.is_some() {
-            return Result::Err(EVMError::DeployError(ACCOUNT_EXISTS));
+            return Result::Err(EVMError::DeployError(CONTRACT_ACCOUNT_EXISTS));
         }
-        let mut ca = ContractAccount {
-            evm_address: evm_address, starknet_address: get_contract_address()
-        };
-        ca.set_nonce(1);
+
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        //TODO delay emission of this event when commiting context changes.
-        kakarot_state.emit(ContractAccountDeployed { evm_address });
-        ca.store_bytecode(bytecode)?;
-        return Result::Ok(
-            ContractAccount { evm_address: evm_address, starknet_address: get_contract_address() }
-        );
+        let account_class_hash = kakarot_state.account_class_hash();
+        let kakarot_address = get_contract_address();
+        let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
+
+        let maybe_address = deploy_syscall(account_class_hash, evm_address.into(), calldata, false);
+        // Panic with err as syscall failure can't be caught, so we can't manage
+        // the error
+        match maybe_address {
+            Result::Ok((
+                starknet_address, _
+            )) => {
+                IUninitializedAccountDispatcher { contract_address: starknet_address }
+                    .initialize(kakarot_state.ca_class_hash());
+
+                // Initialize the account
+                let account = IContractAccountDispatcher { contract_address: starknet_address };
+                account.set_nonce(1);
+                account.set_bytecode(bytecode);
+
+                // Kakarot Core logic
+                kakarot_state
+                    .set_address_registry(
+                        evm_address, StoredAccountType::ContractAccount(starknet_address)
+                    );
+                kakarot_state.emit(ContractAccountDeployed { evm_address, starknet_address });
+                Result::Ok(ContractAccount { evm_address, starknet_address })
+            },
+            Result::Err(err) => panic(err)
+        }
     }
+
     /// Returns a ContractAccount instance from the given `evm_address`.
-    /// This assumes that the contract deployed at `evm_address` is a ContractAccount.
-    /// starknet_address is `get_contract_address`, since ContractAccounts
-    /// are embedded into KakarotCore.
     #[inline(always)]
     fn at(evm_address: EthAddress) -> Result<Option<ContractAccount>, EVMError> {
-        let ca = ContractAccount {
-            evm_address: evm_address, starknet_address: get_contract_address()
-        };
-        let nonce = ca.nonce()?;
-        if nonce != 0 {
-            return Result::Ok(Option::Some(ca));
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let account = kakarot_state.address_registry(evm_address);
+
+        match account {
+            StoredAccountType::UninitializedAccount => Result::Ok(Option::None),
+            StoredAccountType::EOA(_) => Result::Ok(Option::None),
+            StoredAccountType::ContractAccount(ca_starknet_address) => Result::Ok(
+                Option::Some(ContractAccount { evm_address, starknet_address: ca_starknet_address })
+            ),
         }
-        return Result::Ok(Option::None);
     }
 
     /// Retrieves the contract account content stored at address `evm_address`.
@@ -89,7 +120,7 @@ impl ContractAccountImpl of ContractAccountTrait {
         Result::Ok(
             Account {
                 account_type: AccountType::ContractAccount(*self),
-                code: ByteArrayExTrait::into_bytes(self.load_bytecode()?),
+                code: self.load_bytecode()?,
                 storage: Default::default(),
                 nonce: self.nonce()?,
                 selfdestruct: false
@@ -102,10 +133,10 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `self` - The contract account instance
     #[inline(always)]
     fn nonce(self: @ContractAccount) -> Result<u64, EVMError> {
-        let storage_address = compute_storage_base_address(
-            selector!("contract_account_nonce"), array![(*self.evm_address).into()].span()
-        );
-        Store::<u64>::read(0, storage_address).map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))
+        let contract_account = IContractAccountDispatcher {
+            contract_address: *self.starknet_address
+        };
+        Result::Ok(contract_account.nonce())
     }
 
     /// Sets the nonce of a contract account.
@@ -115,11 +146,11 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `self` - The contract account instance
     #[inline(always)]
     fn set_nonce(ref self: ContractAccount, nonce: u64) -> Result<(), EVMError> {
-        let storage_address = compute_storage_base_address(
-            selector!("contract_account_nonce"), array![self.evm_address.into()].span()
-        );
-        Store::<u64>::write(0, storage_address, nonce)
-            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))
+        let mut contract_account = IContractAccountDispatcher {
+            contract_address: self.starknet_address
+        };
+        contract_account.set_nonce(nonce);
+        Result::Ok(())
     }
 
     /// Increments the nonce of a contract account.
@@ -129,39 +160,28 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `self` - The contract account instance
     #[inline(always)]
     fn increment_nonce(ref self: ContractAccount) -> Result<(), EVMError> {
-        let storage_address = compute_storage_base_address(
-            selector!("contract_account_nonce"), array![self.evm_address.into()].span()
-        );
-        let nonce: u64 = Store::<u64>::read(0, storage_address)
-            .map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))?;
-        Store::<u64>::write(0, storage_address, nonce + 1)
-            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))
+        let mut contract_account = IContractAccountDispatcher {
+            contract_address: self.starknet_address
+        };
+        contract_account.increment_nonce();
+        Result::Ok(())
     }
 
     /// Returns the balance of a contract account.
     /// * `self` - The contract account instance
     #[inline(always)]
     fn balance(self: @ContractAccount) -> Result<u256, EVMError> {
-        let storage_address = compute_storage_base_address(
-            selector!("contract_account_balance"), array![(*self.evm_address).into()].span()
-        );
-        Store::<u256>::read(0, storage_address)
-            .map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))
-    }
-
-    /// Sets the balance of a contract account.
-    /// The new balance is written in Kakarot Core's contract storage.
-    /// The storage address used is h(sn_keccak("contract_account_balance"), evm_address), where `h` is the poseidon hash function.
-    /// # Arguments
-    /// * `self` - The contract account instance
-    /// * `balance` - The new balance
-    #[inline(always)]
-    fn set_balance(ref self: ContractAccount, balance: u256) -> Result<(), EVMError> {
-        let storage_address = compute_storage_base_address(
-            selector!("contract_account_balance"), array![self.evm_address.into()].span()
-        );
-        Store::<u256>::write(0, storage_address, balance)
-            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let native_token_address = kakarot_state.native_token();
+        // TODO: make sure this part of the codebase is upgradable
+        // As native_token might become a snake_case implementation
+        // instead of camelCase
+        let native_token = IERC20CamelSafeDispatcher { contract_address: native_token_address };
+        //Note: Starknet OS doesn't allow error management of failed syscalls yet.
+        // If this call fails, the entire transaction will revert.
+        native_token
+            .balanceOf(*self.starknet_address)
+            .map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
     }
 
     /// Returns the value stored at a `u256` key inside the Contract Account storage.
@@ -169,12 +189,10 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// The storage address used is h(sn_keccak("contract_account_storage_keys"), evm_address, key), where `h` is the poseidon hash function.
     #[inline(always)]
     fn storage_at(self: @ContractAccount, key: u256) -> Result<u256, EVMError> {
-        let storage_address = compute_storage_base_address(
-            selector!("contract_account_storage_keys"),
-            array![(*self.evm_address).into(), key.low.into(), key.high.into()].span()
-        );
-        Store::<u256>::read(0, storage_address)
-            .map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))
+        let contract_account = IContractAccountDispatcher {
+            contract_address: *self.starknet_address
+        };
+        Result::Ok(contract_account.storage_at(key))
     }
 
     /// Sets the value stored at a `u256` key inside the Contract Account storage.
@@ -186,12 +204,11 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `value` - The value to set
     #[inline(always)]
     fn set_storage_at(ref self: ContractAccount, key: u256, value: u256) -> Result<(), EVMError> {
-        let storage_address = compute_storage_base_address(
-            selector!("contract_account_storage_keys"),
-            array![self.evm_address.into(), key.low.into(), key.high.into()].span()
-        );
-        Store::<u256>::write(0, storage_address, value)
-            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))
+        let mut contract_account = IContractAccountDispatcher {
+            contract_address: self.starknet_address
+        };
+        contract_account.set_storage_at(key, value);
+        Result::Ok(())
     }
 
     /// Stores the EVM bytecode of a contract account in Kakarot Core's contract storage.  The bytecode is first packed
@@ -200,38 +217,10 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `evm_address` - The EVM address of the contract account
     /// * `bytecode` - The bytecode to store
     fn store_bytecode(ref self: ContractAccount, bytecode: Span<u8>) -> Result<(), EVMError> {
-        let packed_bytecode: ByteArray = ByteArrayExTrait::from_bytes(bytecode);
-        // data_address is h(h(sn_keccak("contract_account_bytecode")), evm_address)
-        let data_address = compute_storage_base_address(
-            selector!("contract_account_bytecode"), array![self.evm_address.into()].span()
-        );
-        // We start storing the full 31-byte words of bytecode data at address
-        // `data_address`.  The `pending_word` and `pending_word_len` are stored at
-        // address `data_address-2` and `data_address-1` respectively.
-        //TODO(eni) replace with ListTrait::new() once merged in alexandria
-        let mut stored_list: List<bytes31> = List {
-            address_domain: 0, base: data_address, len: 0, storage_size: Store::<bytes31>::size()
+        let mut contract_account = IContractAccountDispatcher {
+            contract_address: self.starknet_address
         };
-        let pending_word_addr: felt252 = data_address.into() - 2;
-        let pending_word_len_addr: felt252 = pending_word_addr + 1;
-
-        // Store the `ByteArray` in the contract storage.
-        Store::<
-            felt252
-        >::write(
-            0, storage_base_address_from_felt252(pending_word_addr), packed_bytecode.pending_word
-        )
-            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))?;
-        Store::<
-            usize
-        >::write(
-            0,
-            storage_base_address_from_felt252(pending_word_len_addr),
-            packed_bytecode.pending_word_len
-        )
-            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))?;
-        //TODO(eni) PR Alexandria so that from_span returns SyscallResult
-        stored_list.from_span(packed_bytecode.data.span());
+        contract_account.set_bytecode(bytecode);
         Result::Ok(())
     }
 
@@ -240,38 +229,11 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `self` - The Contract Account to load the bytecode from
     /// # Returns
     /// * The bytecode of the Contract Account as a ByteArray
-    fn load_bytecode(self: @ContractAccount) -> Result<ByteArray, EVMError> {
-        let data_address = compute_storage_base_address(
-            selector!("contract_account_bytecode"), array![(*self.evm_address).into()].span()
-        );
-        // We start loading the full 31-byte words of bytecode data at address
-        // `data_address`.  The `pending_word` and `pending_word_len` are stored at
-        // address `data_address-2` and `data_address-1` respectively.
-        //TODO(eni) replace with ListTrait::new() once merged in alexandria
-        let list_len = Store::<usize>::read(0, data_address)
-            .map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))?;
-        let mut stored_list: List<bytes31> = List {
-            address_domain: 0,
-            base: data_address,
-            len: list_len,
-            storage_size: Store::<bytes31>::size()
+    fn load_bytecode(self: @ContractAccount) -> Result<Span<u8>, EVMError> {
+        let contract_account = IContractAccountDispatcher {
+            contract_address: *self.starknet_address
         };
-        let pending_word_addr: felt252 = data_address.into() - 2;
-        let pending_word_len_addr: felt252 = pending_word_addr + 1;
-
-        // Read the `ByteArray` in the contract storage.
-        let bytecode = ByteArray {
-            //TODO(eni) PR alexandria to make List methods return SyscallResult
-            data: stored_list.array(),
-            pending_word: Store::<
-                felt252
-            >::read(0, storage_base_address_from_felt252(pending_word_addr))
-                .map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))?,
-            pending_word_len: Store::<
-                usize
-            >::read(0, storage_base_address_from_felt252(pending_word_len_addr))
-                .map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))?
-        };
+        let bytecode = contract_account.bytecode();
         Result::Ok(bytecode)
     }
 
@@ -283,12 +245,12 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `true` - If the offset is a valid jump destination
     /// * `false` - Otherwise
     #[inline(always)]
-    fn is_valid_jump(self: @ContractAccount, offset: usize) -> Result<bool, EVMError> {
-        let data_address = compute_storage_base_address(
-            selector!("contract_account_valid_jumps"),
-            array![(*self.evm_address).into(), offset.into()].span()
-        );
-        Store::<bool>::read(0, data_address).map_err(EVMError::SyscallFailed(READ_SYSCALL_FAILED))
+    fn is_false_positive_jumpdest(self: @ContractAccount, offset: usize) -> Result<bool, EVMError> {
+        let contract_account = IContractAccountDispatcher {
+            contract_address: *self.starknet_address
+        };
+        let is_false_jumpdest = contract_account.is_false_jumpdest(offset);
+        Result::Ok(is_false_jumpdest)
     }
 
     /// Sets the given `offset` as a valid jump destination in the bytecode.
@@ -297,13 +259,14 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `self` - The ContractAccount
     /// * `offset` - The offset to set as a valid jump destination
     #[inline(always)]
-    fn set_valid_jump(ref self: ContractAccount, offset: usize) -> Result<(), EVMError> {
-        let data_address = compute_storage_base_address(
-            selector!("contract_account_valid_jumps"),
-            array![self.evm_address.into(), offset.into()].span()
-        );
-        Store::<bool>::write(0, data_address, true)
-            .map_err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED))
+    fn set_false_positive_jumpdest(
+        ref self: ContractAccount, offset: usize
+    ) -> Result<(), EVMError> {
+        let mut contract_account = IContractAccountDispatcher {
+            contract_address: self.starknet_address
+        };
+        contract_account.set_false_positive_jumpdest(offset);
+        Result::Ok(())
     }
 }
 

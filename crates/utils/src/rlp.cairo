@@ -1,47 +1,66 @@
-use array::{Array, ArrayTrait, Span, SpanTrait};
-use clone::Clone;
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
-use utils::helpers::{U32Trait, ByteArrayExTrait};
+use utils::helpers::{U32Trait, ByteArrayExTrait, ArrayExtension};
 
-// All possible RLP types
+// Possible RLP types
 #[derive(Drop, PartialEq)]
 enum RLPType {
     String,
-    StringShort,
-    StringLong,
-    ListShort,
-    ListLong,
+    List
 }
 
-#[derive(Drop, PartialEq)]
+#[derive(Drop, Copy, PartialEq)]
 enum RLPItem {
-    Bytes: Span<u8>,
-    // Should be Span<RLPItem> to allow for any depth/recursion, not yet supported by the compiler
-    List: Span<Span<u8>>
+    String: Span<u8>,
+    List: Span<RLPItem>
 }
 
 #[generate_trait]
 impl RLPImpl of RLPTrait {
-    /// Returns RLPType from the leading byte
+    /// Returns RLPType from the leading byte with
+    /// its offset in the array as well as its size.
     ///
     /// # Arguments
-    ///
-    /// * `byte` - Leading byte of the RLP encoded data
-    /// Return result with RLPType
-    fn decode_type(byte: u8) -> RLPType {
-        if byte < 0x80 {
-            RLPType::String
-        } else if byte < 0xb8 {
-            RLPType::StringShort
-        } else if byte < 0xc0 {
-            RLPType::StringLong
-        } else if byte < 0xf8 {
-            RLPType::ListShort
-        } else {
-            RLPType::ListLong
+    /// * `input` - Array of byte to decode
+    /// # Returns
+    /// * `(RLPType, offset, size)` - A tuple containing the RLPType
+    /// the offset and the size of the RLPItem to decode
+    /// # Errors
+    /// * RLPError::EmptyInput - if the input is empty
+    /// * RLPError::InputTooShort - if the input is too short for a given 
+    fn decode_type(input: Span<u8>) -> Result<(RLPType, u32, u32), RLPError> {
+        let input_len = input.len();
+        if input_len == 0 {
+            return Result::Err(RLPError::EmptyInput(RLP_EMPTY_INPUT));
+        }
+
+        let prefix_byte = *input[0];
+
+        if prefix_byte < 0x80 { // Char
+            Result::Ok((RLPType::String, 0, 1))
+        } else if prefix_byte < 0xb8 { // Short String
+            Result::Ok((RLPType::String, 1, prefix_byte.into() - 0x80))
+        } else if prefix_byte < 0xc0 { // Long String
+            let len_bytes_count: u32 = (prefix_byte - 0xb7).into();
+            if input_len <= len_bytes_count {
+                return Result::Err(RLPError::InputTooShort(RLP_INPUT_TOO_SHORT));
+            }
+            let string_len_bytes = input.slice(1, len_bytes_count);
+            let string_len: u32 = U32Trait::from_bytes(string_len_bytes).unwrap();
+
+            Result::Ok((RLPType::String, 1 + len_bytes_count, string_len))
+        } else if prefix_byte < 0xf8 { // Short List
+            Result::Ok((RLPType::List, 1, prefix_byte.into() - 0xc0))
+        } else { // Long List
+            let len_bytes_count = prefix_byte.into() - 0xf7;
+            if input.len() <= len_bytes_count {
+                return Result::Err(RLPError::InputTooShort(RLP_INPUT_TOO_SHORT));
+            }
+
+            let list_len_bytes = input.slice(1, len_bytes_count);
+            let list_len: u32 = U32Trait::from_bytes(list_len_bytes).unwrap();
+            Result::Ok((RLPType::List, 1 + len_bytes_count, list_len))
         }
     }
-
 
     /// RLP encodes a ByteArray, which is the underlying type used to represent
     /// string data in Cairo.  Since RLP encoding is only used for eth_address
@@ -82,104 +101,40 @@ impl RLPImpl of RLPTrait {
     /// as described in https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp/
     ///
     /// # Arguments
-    ///
-    /// * `input` - RLP encoded bytes
-    /// Return result with RLPItem and size of the decoded item
-    fn decode(input: Span<u8>) -> Result<(RLPItem, usize), RLPError> {
-        if input.len() == 0 {
-            return Result::Err(RLPError::RlpEmptyInput(RLP_EMPTY_INPUT));
-        }
-        let prefix = *input.at(0);
+    /// * `input` - Array of bytes to decode
+    /// # Returns
+    /// * `Span<RLPItem>` - Span of RLPItem
+    /// # Errors
+    /// * RLPError::InputTooShort - if the input is too short for a given 
+    fn decode(input: Span<u8>) -> Result<Span<RLPItem>, RLPError> {
+        let mut output: Array<RLPItem> = Default::default();
+        let input_len = input.len();
 
-        let rlp_type = RLPTrait::decode_type(prefix);
+        let (rlp_type, offset, len) = RLPTrait::decode_type(input)?;
+
+        if input_len < offset + len {
+            return Result::Err(RLPError::InputTooShort(RLP_INPUT_TOO_SHORT));
+        }
+
         match rlp_type {
-            RLPType::String => {
-                let mut arr = array![prefix];
-                Result::Ok((RLPItem::Bytes(arr.span()), 1))
-            },
-            RLPType::StringShort => {
-                let len = prefix.into() - 0x80;
-                if input.len() <= len {
-                    return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
+            RLPType::String => { output.append(RLPItem::String(input.slice(offset, len))); },
+            RLPType::List => {
+                if len > 0 {
+                    let res = RLPTrait::decode(input.slice(offset, len))?;
+                    output.append(RLPItem::List(res));
+                } else {
+                    output.append(RLPItem::List(array![].span()));
                 }
-                let decoded_string = input.slice(1, len);
-
-                Result::Ok((RLPItem::Bytes(decoded_string), 1 + len))
-            },
-            RLPType::StringLong => {
-                let len_bytes_count = prefix.into() - 0xb7;
-                if input.len() <= len_bytes_count {
-                    return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
-                }
-
-                let string_len_bytes = input.slice(1, len_bytes_count);
-                let string_len: u32 = U32Trait::from_bytes(string_len_bytes).unwrap();
-                if input.len() <= string_len + len_bytes_count {
-                    return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
-                }
-
-                let decoded_string = input.slice(1 + len_bytes_count, string_len);
-
-                Result::Ok((RLPItem::Bytes(decoded_string), 1 + len_bytes_count + string_len))
-            },
-            RLPType::ListShort => {
-                let len = prefix.into() - 0xc0;
-                if input.len() <= len {
-                    return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
-                }
-
-                let mut list_input = input.slice(1, len);
-                let decoded_list = rlp_decode_list(ref list_input)?;
-                Result::Ok((RLPItem::List(decoded_list), 1 + len))
-            },
-            RLPType::ListLong => {
-                let len_bytes_count = prefix.into() - 0xf7;
-                if input.len() <= len_bytes_count {
-                    return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
-                }
-
-                let list_len_bytes = input.slice(1, len_bytes_count);
-                let list_len: u32 = U32Trait::from_bytes(list_len_bytes).unwrap();
-                if input.len() < list_len + len_bytes_count + 1 {
-                    return Result::Err(RLPError::RlpInputTooShort(RLP_INPUT_TOO_SHORT));
-                }
-
-                let mut list_input = input.slice(1 + len_bytes_count, list_len);
-                let decoded_list = rlp_decode_list(ref list_input)?;
-                Result::Ok((RLPItem::List(decoded_list), 1 + len_bytes_count + list_len))
             }
-        }
-    }
-}
-
-
-fn rlp_decode_list(ref input: Span<u8>) -> Result<Span<Span<u8>>, RLPError> {
-    let mut i = 0;
-    let len = input.len();
-    let mut output = ArrayTrait::new();
-
-    let mut decode_error: Option<RLPError> = loop {
-        if i >= len {
-            break Option::None;
-        }
-
-        let res = RLPTrait::decode(input);
-
-        let (decoded, decoded_len) = match res {
-            Result::Ok(res_dec) => { res_dec },
-            Result::Err(err) => { break Option::Some(err); }
         };
-        match decoded {
-            RLPItem::Bytes(b) => {
-                output.append(b);
-                input = input.slice(decoded_len, input.len() - decoded_len);
-            },
-            RLPItem::List(_) => { panic_with_felt252('Recursive list not supported'); }
+
+        let total_item_len = len + offset;
+        if total_item_len < input_len {
+            output
+                .concat(RLPTrait::decode(input.slice(total_item_len, input_len - total_item_len))?);
         }
-        i += decoded_len;
-    };
-    if decode_error.is_some() {
-        return Result::Err(decode_error.unwrap());
+
+        Result::Ok(output.span())
     }
-    Result::Ok(output.span())
 }
+

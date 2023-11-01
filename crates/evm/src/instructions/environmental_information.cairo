@@ -217,7 +217,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
                 let bytecode_len = bytecode.len();
                 let bytecode_slice = if offset < bytecode_len {
-                    bytecode.into_bytes().slice(offset, bytecode_len - offset)
+                    bytecode.slice(offset, bytecode_len - offset)
                 } else {
                     Default::default().span()
                 };
@@ -286,6 +286,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
                 if bytecode.is_empty() {
                     return self.stack.push(EMPTY_KECCAK);
                 }
+
+                let mut bytecode: ByteArray = ByteArrayExTrait::from_bytes(bytecode);
+
                 // `cairo_keccak` takes in an array of little-endian u64s
                 let (mut keccak_input, last_input_word, last_input_num_bytes) = bytecode
                     .to_u64_words();
