@@ -4,7 +4,7 @@ version = 1
 [[package]]
 name = "alexandria_storage"
 version = "0.2.0"
-source = "git+https://github.com/keep-starknet-strange/alexandria.git?rev=3356bf0c5c1a089167d7d3c28d543e195325e596#3356bf0c5c1a089167d7d3c28d543e195325e596"
+source = "git+https://github.com/keep-starknet-strange/alexandria.git?rev=0682b1e096fe40b2bbab69863e63f2c88ca06c77#0682b1e096fe40b2bbab69863e63f2c88ca06c77"
 
 [[package]]
 name = "contracts"
