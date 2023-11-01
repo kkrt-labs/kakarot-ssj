@@ -6,6 +6,8 @@ mod eoa;
 
 mod errors;
 
+mod eoa;
+
 // Kakarot smart contract
 mod kakarot_core;
 
