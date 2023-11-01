@@ -1,5 +1,9 @@
-use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
-use utils::helpers::{U32Trait, ByteArrayExTrait, ArrayExtension};
+use core::array::ArrayTrait;
+use core::array::SpanTrait;
+use core::option::OptionTrait;
+
+use utils::errors::{RLPError, RLPHelpersError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
+use utils::helpers::{U32Trait, U256Impl, U128Impl, ByteArrayExTrait, ArrayExtension};
 
 // Possible RLP types
 #[derive(Drop, PartialEq)]
@@ -142,5 +146,52 @@ impl RLPImpl of RLPTrait {
         }
 
         Result::Ok(output.span())
+    }
+}
+
+#[generate_trait]
+impl RLPHelpersImpl of RLPHelpersTrait {
+    fn parse_u128_from_string(rlp_item: RLPItem) -> Result<u128, RLPHelpersError> {
+        match rlp_item {
+            RLPItem::String(bytes) => {
+                let value = U128Impl::from_bytes(bytes).ok_or(RLPHelpersError::FailedParsingU128)?;
+                Result::Ok(value)
+            },
+            RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
+        }
+    }
+
+    fn parse_u256_from_string(rlp_item: RLPItem) -> Result<u256, RLPHelpersError> {
+        match rlp_item {
+            RLPItem::String(bytes) => {
+                let value = U256Impl::from_bytes(bytes).ok_or(RLPHelpersError::FailedParsingU256)?;
+                Result::Ok(value)
+            },
+            RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
+        }
+    }
+
+
+    fn parse_bytes_felt252_from_string(
+        rlp_item: RLPItem
+    ) -> Result<Span<felt252>, RLPHelpersError> {
+        match rlp_item {
+            RLPItem::String(bytes) => {
+                let mut result: Array<felt252> = array![];
+                let len = bytes.len();
+
+                let mut i = 0;
+                loop {
+                    if (i >= len) {
+                        break ();
+                    }
+                    result.append((*bytes.at(i)).into());
+                    i += 1;
+                };
+
+                Result::Ok(result.span())
+            },
+            RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
+        }
     }
 }

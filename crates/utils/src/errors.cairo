@@ -17,3 +17,11 @@ impl RLPErrorIntoU256 of Into<RLPError, u256> {
         }
     }
 }
+
+#[derive(Drop, Copy, PartialEq)]
+enum RLPHelpersError {
+    NotAString,
+    FailedParsingU128,
+    FailedParsingU256,
+    NotAList
+}
