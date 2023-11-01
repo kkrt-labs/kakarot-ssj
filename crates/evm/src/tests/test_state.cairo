@@ -7,8 +7,8 @@ fn test_compute_state_key() {
     let key = 100;
     let evm_address = test_utils::evm_address();
 
+    // The values can be computed externally by running a Rust program using the `starknet_crypto` crate and `poseidon_hash_many`.
     let address = compute_state_key(evm_address, key);
-    // TODO: compute values externally and assert equality
     assert(
         address == 0x1b0f25b79b18f8734761533714f234825f965d6215cebdc391ceb3b964dd36,
         'hash not expected value'
@@ -225,7 +225,7 @@ mod test_state {
         // let starknet_address = compute_starknet_address(
         //     deployer.into(),
         //     evm_address,
-        //     ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap()
+        //     ContractAccount::TEST_CLASS_HASH.try_into().unwrap()
         // );
         let expected_type = AccountType::ContractAccount(
             ContractAccount { evm_address, starknet_address: get_contract_address() }
@@ -330,7 +330,7 @@ mod test_state {
             sender_evm_address,
             ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap()
         );
-        let sender = Address { evm: test_utils::evm_address(), starknet: sender_starknet_address };
+        let sender = Address { evm: sender_evm_address, starknet: sender_starknet_address };
         let recipient_evm_address = test_utils::other_evm_address();
         let recipient_starknet_address = compute_starknet_address(
             deployer.into(),
@@ -342,18 +342,18 @@ mod test_state {
         };
         let transfer = Transfer { sender, recipient, amount: 100 };
         // Write user balances in cache to avoid fetching from SN storage
-        state.write_balance(sender, 200);
+        state.write_balance(sender, 300);
         state.write_balance(recipient, 0);
 
         // When
-        state.add_transfer(transfer.clone()).unwrap();
+        state.add_transfer(transfer).unwrap();
 
         // Then, transfer appended to log and cached balances updated
         assert(state.transfers.contextual_logs.len() == 1, 'Transfer not added');
-        assert(state.transfers.contextual_logs[0].clone() == transfer, 'Transfer mismatch');
+        assert(*state.transfers.contextual_logs[0] == transfer, 'Transfer mismatch');
 
-        assert(state.read_balance(sender).unwrap() == 100, 'Sender balance mismatch');
-        assert(state.read_balance(sender).unwrap() == 100, 'Recipient balance mismatch');
+        assert(state.read_balance(sender).unwrap() == 200, 'Sender balance mismatch');
+        assert(state.read_balance(recipient).unwrap() == 100, 'Recipient balance mismatch');
     }
 
     #[test]

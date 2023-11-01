@@ -1,8 +1,10 @@
 # Local State
 
 A challenge with the implementation of Kakarot is that since it lives as a
-contract deployed on chain, it cannot manipulate the underlying state of the
-blockchain once it has performed modifications on it to revert the changes made.
+contract deployed on chain, it cannot always manipulate the underlying state of
+the blockchain once it has performed modifications on it to revert the changes
+made. For example, a deployed contract cannot delete itself from the blockchain,
+and emitted events cannot be deleted.
 
 This means that before committing any changes to the blockchain, Kakarot must
 ensure that the changes are valid. This is done by maintaining a local state
@@ -12,13 +14,14 @@ The machine is created along with a default empty state. The state is a struct
 that wraps dictionaries holding the values stored in the blockchain storage
 modified locally.
 
-Because of technical limitations around the usage of dictionaries, instead of
-having one state per execution context that we could merge into the parent state
-if the context exits successfully or discard if the context reverts, we have one
-global `State` structs that achieves the same behavior by tracking transactional
-changes, which refers to the changes made inside the current transaction as a
-whole, and a contextual changes, which refers to changes made inside the current
-execution context.
+Because of technical limitations around the usage of dictionaries preventing us
+from using dicts in self-referring data structures, instead of having one state
+per execution context that we could merge into the parent state if the context
+exits successfully or discard if the context reverts, we have one global `State`
+structs that achieves the same behavior by tracking transactional changes, which
+refers to the changes made inside the current transaction as a whole, and a
+contextual changes, which refers to changes made inside the current execution
+context.
 
 The local state is updated as the code is executed, and when an execution
 context is finished, we merge the contextual state updates into the
@@ -47,10 +50,10 @@ perform actual token transfers.
 
 ## Implementation design
 
-The ideal implementation would be fairly simple: A single `StateChangeLog` field
-holding the account updates, and an `Array` field holding the emitted events.
-
-However, we decided to implement it as follows:
+The state is implemented as a struct composed by `StateChangeLog` - for objects
+that need to be overriden in the State - and `SimpleLog` data structures, for
+objects that only need to be appended to a list. They are implemented as
+follows:
 
 ```rust
 struct State {

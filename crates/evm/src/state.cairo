@@ -1,6 +1,6 @@
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
 use evm::errors::{
-    EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, BALANCE_UNDERFLOW, BALANCE_OVERFLOW
+    EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, INSUFFICIENT_BALANCE, BALANCE_OVERFLOW
 };
 use evm::model::account::AccountTrait;
 use evm::model::contract_account::ContractAccountTrait;
@@ -98,6 +98,7 @@ impl StateChangeLogImpl<T, +Drop<T>, +Copy<T>> of StateChangeLogTrait<T> {
         self.contextual_keyset.append_unique(key);
     }
 
+    #[inline(always)]
     fn transactional_keyset(self: @StateChangeLog<T>) -> Span<felt252> {
         self.transactional_keyset.span()
     }
@@ -119,10 +120,10 @@ impl StateChangeLogImpl<T, +Drop<T>, +Copy<T>> of StateChangeLogTrait<T> {
                 Option::None => { break; }
             }
         };
-        self.contextual_changes = Default::default();
-        self.contextual_keyset = Default::default();
+        self.clear_context();
     }
 
+    #[inline(always)]
     fn clear_context(ref self: StateChangeLog<T>) {
         self.contextual_changes = Default::default();
         self.contextual_keyset = Default::default();
@@ -188,36 +189,6 @@ impl TSimpleLogImpl<T, +Drop<T>, +Clone<T>> of SimpleLogTrait<T> {
     }
 }
 
-// impl EventLogImpl of SimpleLogTrait<Event> {
-//     fn append(ref self: SimpleLog<Event>, value: Event) {
-//         self.contextual_logs.append(value)
-//     }
-
-//     fn commit_context(ref self: SimpleLog<Event>) {
-//         self.transactional_logs.append_span(self.contextual_logs.span());
-//         self.contextual_logs = Default::default();
-//     }
-
-//     fn clear_context(ref self: SimpleLog<Event>) {
-//         self.contextual_logs = Default::default();
-//     }
-// }
-
-// impl TransferLogImpl of SimpleLogTrait<Transfer> {
-//     fn append(ref self: SimpleLog<Transfer>, value: Transfer) {
-//         self.contextual_logs.append(value)
-//     }
-
-//     fn commit_context(ref self: SimpleLog<Transfer>) {
-//         self.transactional_logs.append_span(self.contextual_logs.span());
-//         self.contextual_logs = Default::default();
-//     }
-
-//     fn clear_context(ref self: SimpleLog<Transfer>) {
-//         self.contextual_logs = Default::default();
-//     }
-// }
-
 #[derive(Default, Destruct)]
 struct State {
     /// Accounts states - without storage and balances, which are handled separately.
@@ -236,15 +207,6 @@ struct State {
     balances: StateChangeLog<u256>,
     /// Pending transfers
     transfers: SimpleLog<Transfer>,
-}
-
-impl DestructNullableAccount of Destruct<Nullable<Account>> {
-    fn destruct(self: Nullable<Account>) nopanic {
-        match match_nullable(self) {
-            FromNullableResult::Null => {},
-            FromNullableResult::NotNull(account) => { account.unbox().destruct(); },
-        }
-    }
 }
 
 #[generate_trait]
@@ -298,7 +260,7 @@ impl StateImpl of StateTrait {
 
         let (new_sender_balance, underflow) = u256_overflow_sub(sender_balance, transfer.amount);
         if underflow {
-            return Result::Err(EVMError::NumericOperations(BALANCE_UNDERFLOW));
+            return Result::Err(EVMError::NumericOperations(INSUFFICIENT_BALANCE));
         }
         let (new_recipient_balance, overflow) = u256_overflowing_add(
             recipient_balance, transfer.amount
@@ -340,8 +302,7 @@ impl StateImpl of StateTrait {
         self.balances.clear_context();
     }
 
-    fn commit_state(ref self: State) {
-        //TODO(state) implement this
+    fn commit_state(ref self: State) { //TODO(state) implement this
     }
 }
 #[generate_trait]

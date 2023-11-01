@@ -139,6 +139,12 @@ impl ContractAccountImpl of ContractAccountTrait {
     }
 
     #[inline(always)]
+    fn starknet_address(self: @ContractAccount) -> EthAddress {
+        *self.starknet_address
+    }
+
+
+    #[inline(always)]
     fn evm_address(self: @ContractAccount) -> EthAddress {
         *self.evm_address
     }

@@ -9,7 +9,7 @@ const PC_OUT_OF_BOUNDS: felt252 = 'KKT: pc >= bytecode length';
 const TYPE_CONVERSION_ERROR: felt252 = 'KKT: type conversion error';
 
 // NUMERIC OPERATIONS
-const BALANCE_UNDERFLOW: felt252 = 'KKT: balance underflow';
+const INSUFFICIENT_BALANCE: felt252 = 'KKT: insufficient balance';
 const BALANCE_OVERFLOW: felt252 = 'KKT: balance overflow';
 
 // RETURNDATA

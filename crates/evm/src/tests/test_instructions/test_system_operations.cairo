@@ -154,7 +154,6 @@ fn test_exec_call() {
         .expect('set code failed');
 
     // When
-    //TODO(state) debug this test
     interpreter.run(ref machine);
 
     // Then
