@@ -8,6 +8,21 @@ fn test_compute_state_key() {
     let evm_address = test_utils::evm_address();
 
     // The values can be computed externally by running a Rust program using the `starknet_crypto` crate and `poseidon_hash_many`.
+    // ```rust
+    //     use starknet_crypto::{FieldElement,poseidon_hash_many};
+    // use crypto_bigint::{U256};
+
+    // fn main() {
+    //     let keys: Vec<FieldElement> = vec![
+    //         FieldElement::from_hex_be("0x65766d5f61646472657373").unwrap(),
+    //         FieldElement::from_hex_be("0x64").unwrap(),
+    //         FieldElement::from_hex_be("0x00").unwrap(),
+    //         ];
+    //     let values_to_hash = [keys[0],keys[1],keys[2]];
+    //     let hash = poseidon_hash_many(&values_to_hash);
+    //     println!("hash: {}", hash);
+    // }
+    //
     let address = compute_state_key(evm_address, key);
     assert(
         address == 0x1b0f25b79b18f8734761533714f234825f965d6215cebdc391ceb3b964dd36,

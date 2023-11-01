@@ -764,29 +764,29 @@ fn compute_starknet_address(
     deployer: ContractAddress, evm_address: EthAddress, class_hash: ClassHash
 ) -> ContractAddress {
     // Deployer is always Kakarot Core
-        // pedersen(a1, a2, a3) is defined as:
-        // pedersen(pedersen(pedersen(a1, a2), a3), len([a1, a2, a3]))
-        // https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/hash_state.py#L6
-        // https://github.com/xJonathanLEI/starknet-rs/blob/master/starknet-core/src/crypto.rs#L49
-        // Constructor Calldata
-        // For an Account, the constructor calldata is:
-        // [kakarot_address, evm_address]
-        let constructor_calldata_hash = PedersenTrait::new(0)
-            .update_with(deployer)
-            .update_with(evm_address)
-            .update(2)
-            .finalize();
+    // pedersen(a1, a2, a3) is defined as:
+    // pedersen(pedersen(pedersen(a1, a2), a3), len([a1, a2, a3]))
+    // https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/hash_state.py#L6
+    // https://github.com/xJonathanLEI/starknet-rs/blob/master/starknet-core/src/crypto.rs#L49
+    // Constructor Calldata
+    // For an Account, the constructor calldata is:
+    // [kakarot_address, evm_address]
+    let constructor_calldata_hash = PedersenTrait::new(0)
+        .update_with(deployer)
+        .update_with(evm_address)
+        .update(2)
+        .finalize();
 
-        let hash = PedersenTrait::new(0)
-            .update_with(CONTRACT_ADDRESS_PREFIX)
-            .update_with(deployer)
-            .update_with(evm_address)
-            .update_with(class_hash)
-            .update_with(constructor_calldata_hash)
-            .update(5)
-            .finalize();
+    let hash = PedersenTrait::new(0)
+        .update_with(CONTRACT_ADDRESS_PREFIX)
+        .update_with(deployer)
+        .update_with(evm_address)
+        .update_with(class_hash)
+        .update_with(constructor_calldata_hash)
+        .update(5)
+        .finalize();
 
-        let normalized_address: ContractAddress = (hash.into() & MAX_ADDRESS).try_into().unwrap();
-        // We know this unwrap is safe, because of the above bitwise AND on 2 ** 251
-        normalized_address
+    let normalized_address: ContractAddress = (hash.into() & MAX_ADDRESS).try_into().unwrap();
+    // We know this unwrap is safe, because of the above bitwise AND on 2 ** 251
+    normalized_address
 }
