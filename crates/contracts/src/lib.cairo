@@ -6,6 +6,7 @@ mod eoa;
 
 mod errors;
 
+// Kakarot external owned account
 mod eoa;
 
 // Kakarot smart contract
