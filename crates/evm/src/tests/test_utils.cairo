@@ -251,7 +251,7 @@ fn setup_static_machine() -> Machine {
         ctx_count: 1,
         stack: Default::default(),
         memory: Default::default(),
-        storage_journal: Default::default(),
+        state: Default::default(),
         error: Option::None
     }
 }

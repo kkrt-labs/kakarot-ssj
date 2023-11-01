@@ -3,7 +3,7 @@ use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION, WRITE_IN_STATI
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
-use evm::model::contract_account::ContractAccountTrait;
+use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, StateInternalTrait, compute_state_key, compute_storage_address};
 use evm::tests::test_utils::{
@@ -530,13 +530,10 @@ fn test_exec_sload_from_state() {
 fn test_exec_sload_from_storage() {
     // Given
     let mut machine = setup_machine();
+    let mut ca = ContractAccountTrait::deploy(machine.evm_address(), array![].span()).unwrap();
     let key: u256 = 0x100000000000000000000000000000001;
-    let storage_address = compute_storage_base_address(
-        selector!("contract_account_storage_keys"),
-        array![machine.evm_address().into(), key.low.into(), key.high.into()].span()
-    );
-    let value = 0x02;
-    Store::<u256>::write(0, storage_address, value);
+    let value: u256 = 0xABDE1E11A5;
+    ca.set_storage_at(key, value);
 
     machine.stack.push(key.into());
 
@@ -574,7 +571,7 @@ fn test_exec_sstore_static_call() {
     let value: u256 = 0xABDE1E11A5;
     machine.stack.push(value);
     machine.stack.push(key);
-    let storage_address = compute_storage_address(machine.evm_address(), key);
+    let storage_address = compute_storage_address(key);
 
     // When
     let result = machine.exec_sstore();
@@ -593,25 +590,19 @@ fn test_exec_sstore_finalized() {
     // Given
     let mut machine = setup_machine();
     // Deploys the contract account to be able to commit storage changes.
-    ContractAccountTrait::deploy(machine.evm_address(), array![].span());
+    let ca = ContractAccountTrait::deploy(machine.evm_address(), array![].span()).unwrap();
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
     machine.stack.push(value);
     machine.stack.push(key);
-    //TODO(CA-migration: read from CA storage instead of using internal Store::write)
-    let storage_address = compute_storage_base_address(
-        selector!("contract_account_storage_keys"),
-        array![machine.evm_address().into(), key.low.into(), key.high.into()].span()
-    );
 
     // When
     let result = machine.exec_sstore();
-
     machine.state.commit_context();
     machine.state.commit_storage();
 
     // Then
-    assert(Store::<u256>::read(0, storage_address).unwrap() == value, 'wrong value in journal')
+    assert(ca.storage_at(key).unwrap() == value, 'wrong value in journal')
 }
 
 #[test]

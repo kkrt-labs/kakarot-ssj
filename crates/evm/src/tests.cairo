@@ -9,6 +9,7 @@ mod test_machine;
 
 #[cfg(test)]
 mod test_memory;
+
 #[cfg(test)]
 mod test_model;
 

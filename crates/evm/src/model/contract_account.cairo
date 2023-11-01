@@ -120,7 +120,7 @@ impl ContractAccountImpl of ContractAccountTrait {
         Result::Ok(
             Account {
                 account_type: AccountType::ContractAccount(*self),
-                code: ByteArrayExTrait::into_bytes(self.load_bytecode()?),
+                code: self.load_bytecode()?,
                 nonce: self.nonce()?,
                 selfdestruct: false
             }
