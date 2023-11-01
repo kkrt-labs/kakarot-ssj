@@ -1,5 +1,7 @@
 mod components;
 
+mod eoa;
+
 // Kakarot smart contract
 mod kakarot_core;
 

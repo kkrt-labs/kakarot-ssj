@@ -1,4 +1,5 @@
 use contracts::components::ownable::ownable_component;
+use contracts::eoa::externally_owned_account::ExternallyOwnedAccount;
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::KakarotCoreInternal
 };
@@ -12,7 +13,6 @@ use contracts::tests::test_utils::{
 };
 use core::result::ResultTrait;
 use debug::PrintTrait;
-use eoa::externally_owned_account::ExternallyOwnedAccount;
 use evm::errors::EVMErrorTrait;
 use evm::machine::Status;
 use evm::model::contract_account::ContractAccountTrait;

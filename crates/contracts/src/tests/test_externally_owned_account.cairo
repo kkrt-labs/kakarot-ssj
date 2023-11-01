@@ -1,5 +1,9 @@
 #[cfg(test)]
 mod test_external_owned_account {
+    use contracts::eoa::externally_owned_account::{
+        IExternallyOwnedAccount, ExternallyOwnedAccount, IExternallyOwnedAccountDispatcher,
+        IExternallyOwnedAccountDispatcherTrait
+    };
     use contracts::tests::test_upgradeable::{
         IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
         MockContractUpgradeableV1
@@ -7,10 +11,6 @@ mod test_external_owned_account {
     use core::debug::PrintTrait;
     use core::option::OptionTrait;
     use core::traits::TryInto;
-    use eoa::externally_owned_account::{
-        IExternallyOwnedAccount, ExternallyOwnedAccount, IExternallyOwnedAccountDispatcher,
-        IExternallyOwnedAccountDispatcherTrait
-    };
     use evm::tests::test_utils::{kakarot_address, eoa_address};
     use starknet::class_hash::Felt252TryIntoClassHash;
     use starknet::testing::{set_caller_address, set_contract_address};

@@ -2,6 +2,8 @@
 mod test_data;
 
 #[cfg(test)]
+mod test_externally_owned_account;
+#[cfg(test)]
 mod test_kakarot_core;
 
 #[cfg(test)]
