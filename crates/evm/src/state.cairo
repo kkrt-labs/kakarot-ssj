@@ -128,7 +128,6 @@ impl StateChangeLogImpl<T, +Drop<T>, +Copy<T>> of StateChangeLogTrait<T> {
         self.contextual_changes = Default::default();
         self.contextual_keyset = Default::default();
     }
-//TODO(state) implement storage commitments
 }
 
 
@@ -255,8 +254,8 @@ impl StateImpl of StateTrait {
 
     #[inline(always)]
     fn add_transfer(ref self: State, transfer: Transfer) -> Result<(), EVMError> {
-        let sender_balance = self.read_balance(transfer.sender)?;
-        let recipient_balance = self.read_balance(transfer.recipient)?;
+        let sender_balance = self.read_balance(transfer.sender.evm)?;
+        let recipient_balance = self.read_balance(transfer.recipient.evm)?;
 
         let (new_sender_balance, underflow) = u256_overflow_sub(sender_balance, transfer.amount);
         if underflow {
@@ -269,21 +268,22 @@ impl StateImpl of StateTrait {
             return Result::Err(EVMError::NumericOperations(BALANCE_OVERFLOW));
         }
 
-        self.write_balance(transfer.sender, new_sender_balance);
-        self.write_balance(transfer.recipient, new_recipient_balance);
+        self.write_balance(transfer.sender.evm, new_sender_balance);
+        self.write_balance(transfer.recipient.evm, new_recipient_balance);
 
         self.transfers.append(transfer);
         Result::Ok(())
     }
 
     #[inline(always)]
-    //TODO fetch account from SN storage
-    fn read_balance(ref self: State, address: Address) -> Result<u256, EVMError> {
-        match self.balances.read(address.evm.into()) {
+    fn read_balance(ref self: State, evm_address: EthAddress) -> Result<u256, EVMError> {
+        match self.balances.read(evm_address.into()) {
             Option::Some(value) => { Result::Ok(value) },
             Option::None => {
-                let account = AccountTrait::fetch_or_create(address.evm)?;
-                account.account_type.balance()
+                let account = AccountTrait::fetch_or_create(evm_address)?;
+                let balance = account.account_type.balance()?;
+                self.write_balance(evm_address.into(), balance);
+                Result::Ok(balance)
             }
         }
     }
@@ -321,8 +321,8 @@ impl StateInternalImpl of StateInternalTrait {
     /// * `value` - The new balance to write.
 
     #[inline(always)]
-    fn write_balance(ref self: State, address: Address, value: u256) {
-        self.balances.write(address.evm.into(), value)
+    fn write_balance(ref self: State, evm_address: EthAddress, value: u256) {
+        self.balances.write(evm_address.into(), value)
     }
 
     /// Commits storage changes to the KakarotCore contract by writing pending

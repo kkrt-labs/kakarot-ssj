@@ -9,6 +9,7 @@ use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::model::Account;
 use evm::model::account::AccountTrait;
 use evm::stack::StackTrait;
+use evm::state::StateTrait;
 
 // Corelib imports
 use starknet::info::{get_block_number, get_block_timestamp, get_block_info};
@@ -103,11 +104,9 @@ impl BlockInformation of BlockInformationTrait {
     /// Get balance of currently executing contract
     /// # Specification: https://www.evm.codes/#47?fork=shanghai
     fn exec_selfbalance(ref self: Machine) -> Result<(), EVMError> {
-        let maybe_account = AccountTrait::account_type_at(self.address().evm)?;
-        let balance: u256 = match maybe_account {
-            Option::Some(acc) => acc.balance()?,
-            Option::None => 0
-        };
+        let evm_address = self.address().evm;
+
+        let balance = self.state.read_balance(evm_address)?;
 
         self.stack.push(balance)
     }

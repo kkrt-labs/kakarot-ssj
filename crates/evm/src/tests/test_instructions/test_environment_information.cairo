@@ -1003,6 +1003,7 @@ fn test_exec_extcodehash_ca_uninitialized() {
     assert(machine.stack.peek().unwrap() == 0, 'expected stack top to be 0');
 }
 
+//TODO test extcodehash precompile
 #[test]
 #[available_gas(20000000000)]
 fn test_exec_extcodehash_ca_with_bytecode() {

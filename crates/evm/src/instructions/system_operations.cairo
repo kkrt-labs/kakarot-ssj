@@ -5,8 +5,8 @@ use evm::call_helpers::{MachineCallHelpers, CallType};
 use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL, WRITE_IN_STATIC_CONTEXT};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::account::AccountTrait;
 use evm::stack::StackTrait;
+use evm::state::StateTrait;
 use utils::math::Exponentiation;
 
 
@@ -84,15 +84,9 @@ impl SystemOperations of SystemOperationsTrait {
         // If sender_balance < value, return early, pushing
         // 0 on the stack to indicate call failure.
         let caller_address = self.address();
-        let maybe_account = AccountTrait::account_type_at(caller_address.evm)?;
-
-        let sender_balance = match maybe_account {
-            Option::Some(account) => account.balance()?,
-            Option::None => 0,
-        };
+        let sender_balance = self.state.read_balance(caller_address.evm)?;
         if sender_balance < value {
-            self.stack.push(0)?;
-            return Result::Ok(());
+            return self.stack.push(0);
         }
 
         // Initialize the sub context.

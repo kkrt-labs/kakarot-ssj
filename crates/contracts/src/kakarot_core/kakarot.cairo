@@ -316,10 +316,7 @@ mod KakarotCore {
             match to {
                 //TODO we can optimize this by doing this one step later, when we load the account from the state. This way we can avoid loading the account bytecode twice.
                 Option::Some(to) => {
-                    let bytecode = match AccountTrait::account_type_at(to)? {
-                        Option::Some(account) => account.bytecode()?,
-                        Option::None => Default::default().span(),
-                    };
+                    let bytecode = AccountTrait::fetch_or_create(to)?.code;
 
                     let target_starknet_address = self.compute_starknet_address(to);
                     let to = Address { evm: to, starknet: target_starknet_address };
