@@ -161,7 +161,7 @@ fn test_kakarot_core_compute_starknet_address() {
 
     let class_hash = UninitializedAccount::TEST_CLASS_HASH; // used to get the hash using the LSP
     let expected_starknet_address: ContractAddress = contract_address_const::<
-        0x67d4c5a877c8ac1d50ab104771caa8c8835ca9eed25fbb244117a9b18e5169c
+        0x3e11d847f1b0cde4d03be7ddce8e4cb825e51a4a85aeda91d5add37aa8ff142
     >();
 
     let eoa_starknet_address = kakarot_core.compute_starknet_address(evm_address);
