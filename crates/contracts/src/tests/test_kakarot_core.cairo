@@ -11,6 +11,9 @@ use contracts::tests::test_upgradeable::{
     IMockContractUpgradeableDispatcherTrait
 };
 use contracts::tests::test_utils as contract_utils;
+use contracts::uninitialized_account::interface::{
+    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
+};
 use contracts::uninitialized_account::uninitialized_account::UninitializedAccount;
 use core::result::ResultTrait;
 use debug::PrintTrait;
@@ -21,10 +24,6 @@ use evm::model::contract_account::ContractAccountTrait;
 use evm::tests::test_utils;
 use starknet::{get_caller_address, testing, contract_address_const, ContractAddress, ClassHash};
 use utils::helpers::{U32Trait, ByteArrayExTrait, u256_to_bytes_array};
-use contracts::uninitialized_account::interface::{
-    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
-};
-use contracts::uninitialized_account::uninitialized_account::UninitializedAccount;
 
 #[test]
 #[available_gas(20000000)]
