@@ -1,3 +1,7 @@
+use core::array::SpanTrait;
+use core::option::OptionTrait;
+use core::traits::Into;
+
 use result::ResultTrait;
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use utils::rlp::{RLPType, RLPTrait, RLPItem};
@@ -222,6 +226,19 @@ fn test_rlp_encode_large_bytearray_inputs() {
         i += 1;
     }
 }
+
+#[test]
+#[available_gas(99999999)]
+fn test_rlp_decode_string_default_value() {
+    let mut arr = array![0x80];
+
+    let rlp_item = RLPTrait::decode(arr.span()).unwrap();
+    let expected = RLPItem::String(array![0].span());
+
+    assert(rlp_item.len() == 1, 'item length not 1');
+    assert(*rlp_item[0] == expected, 'default value not 0');
+}
+
 
 #[test]
 #[available_gas(99999999)]
@@ -1956,7 +1973,8 @@ fn test_rlp_decode_long_list() {
         ]
             .span()
     );
-    let mut expected_16 = RLPItem::String(ArrayTrait::new().span());
+
+    let mut expected_16 = RLPItem::String(array![0].span());
 
     let mut expected = array![
         expected_0,
@@ -1977,6 +1995,7 @@ fn test_rlp_decode_long_list() {
         expected_15,
         expected_16
     ];
+
     let expected_item = RLPItem::List(expected.span());
 
     assert(res == array![expected_item].span(), 'Wrong value');
