@@ -1,6 +1,6 @@
-use core::option::OptionTrait;
-use contracts::tests::test_utils as contract_utils;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::tests::test_utils as contract_utils;
+use core::option::OptionTrait;
 use evm::call_helpers::MachineCallHelpers;
 use evm::call_helpers::MachineCallHelpersImpl;
 use evm::context::{ExecutionContext, ExecutionContextTrait,};

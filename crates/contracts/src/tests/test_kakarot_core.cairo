@@ -1,8 +1,8 @@
-use contracts::kakarot_core::interface::IKakarotCore;
 use contracts::components::ownable::ownable_component;
 use contracts::contract_account::ContractAccount;
 use contracts::eoa::ExternallyOwnedAccount;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::kakarot_core::interface::IKakarotCore;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
