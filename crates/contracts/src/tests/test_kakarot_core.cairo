@@ -22,7 +22,6 @@ use evm::tests::test_utils;
 use starknet::{get_caller_address, testing, contract_address_const, ContractAddress, ClassHash};
 use utils::helpers::{U32Trait, ByteArrayExTrait, u256_to_bytes_array};
 
-
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_owner() {
@@ -149,9 +148,11 @@ fn test_kakarot_core_compute_starknet_address() {
     let evm_address = test_utils::evm_address();
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
 
-    // Precomputed Starknet address with starknet-rs and starknetjs
+    // Precomputed Starknet address with the script compute_starknet_address.ts
     // With arguments:
     // ['STARKNET_CONTRACT_ADDRESS', kakarot_address: 0x01, salt: evm_address, class_hash: UninitializedAccount::TEST_CLASS_HASH, constructor_calldata: hash([kakarot_address, evm_address]), ]
+
+    let class_hash = UninitializedAccount::TEST_CLASS_HASH; // used to get the hash using the LSP
     let expected_starknet_address: ContractAddress = contract_address_const::<
         0x7797f53c076db7fa38536bea011a393d0aedb8b17754aa3f5f82dd645364da4
     >();
