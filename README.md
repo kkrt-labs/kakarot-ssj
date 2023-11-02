@@ -61,6 +61,8 @@ This repository is a rewrite of
   always matches the one used by Kakarot, you can install Scarb
   [via asdf](https://docs.swmansion.com/scarb/download#install-via-asdf).
 
+- Install [Bun](https://bun.sh/docs/installation) to run the JavaScipt scripts to compute the Starknet address.
+
 - [Fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) the
   repository and clone your fork
   (`git clone https://github.com/<YOUR_USERNAME>/kakarot-ssj`)
