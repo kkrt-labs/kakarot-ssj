@@ -1,7 +1,7 @@
 //! System operations.
 
 use box::BoxTrait;
-use evm::call_helpers::MachineCallHelpers;
+use evm::call_helpers::{MachineCallHelpers, ValueOrigin};
 use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL, WRITE_IN_STATIC_CONTEXT};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
@@ -72,7 +72,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// CALL
     /// # Specification: https://www.evm.codes/#f1?fork=shanghai
     fn exec_call(ref self: Machine) -> Result<(), EVMError> {
-        let call_args = self.prepare_call(true)?;
+        let call_args = self.prepare_call(ValueOrigin::FromStack)?;
         let read_only = self.read_only();
         let value = call_args.value;
 
@@ -101,7 +101,11 @@ impl SystemOperations of SystemOperationsTrait {
     /// STATICCALL
     /// # Specification: https://www.evm.codes/#fa?fork=shanghai
     fn exec_staticcall(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        let call_args = self.prepare_call(ValueOrigin::Zero)?;
+        let read_only = self.read_only();
+
+        // Initialize the sub context.
+        self.init_sub_ctx(call_args, read_only)
     }
 
     /// CALLCODE
