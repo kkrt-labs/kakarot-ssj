@@ -92,7 +92,9 @@ fn test_kakarot_core_set_native_token() {
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_deploy_eoa() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let native_token = contract_utils::deploy_native_token();
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
+    testing::set_contract_address(kakarot_core.contract_address);
     let eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
     // triggerred in the constructor
@@ -108,7 +110,9 @@ fn test_kakarot_core_deploy_eoa() {
 #[available_gas(20000000)]
 fn test_kakarot_core_eoa_mapping() {
     // Given
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let native_token = contract_utils::deploy_native_token();
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
+    testing::set_contract_address(kakarot_core.contract_address);
     assert(
         kakarot_core
             .address_registry(test_utils::evm_address()) == StoredAccountType::UninitializedAccount,
@@ -188,7 +192,8 @@ fn test_kakarot_contract_account() {}
 #[available_gas(2000000000000)]
 fn test_eth_call() {
     // Given
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let native_token = contract_utils::deploy_native_token();
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
     testing::set_contract_address(kakarot_core.contract_address);
 
     let account = ContractAccountTrait::deploy(
@@ -217,7 +222,8 @@ fn test_eth_call() {
 #[available_gas(2000000000)]
 fn test_handle_call() {
     // Given
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let native_token = contract_utils::deploy_native_token();
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
     testing::set_contract_address(kakarot_core.contract_address);
     let kakarot_core = KakarotCore::unsafe_new_contract_state();
 
