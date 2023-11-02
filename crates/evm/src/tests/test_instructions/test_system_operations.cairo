@@ -114,7 +114,8 @@ fn test_exec_return_with_offset() {
 fn test_exec_call() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let kakarot_core = contracts_utils::deploy_kakarot_core(native_token());
+    let native_token = contracts_utils::deploy_native_token();
+    let kakarot_core = contracts_utils::deploy_kakarot_core(native_token.contract_address);
     testing::set_contract_address(kakarot_core.contract_address);
 
     // Set machine bytecode
@@ -166,7 +167,8 @@ fn test_exec_call() {
 fn test_exec_call_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let kakarot_core = contracts_utils::deploy_kakarot_core(native_token());
+    let native_token = contracts_utils::deploy_native_token();
+    let kakarot_core = contracts_utils::deploy_kakarot_core(native_token.contract_address);
     testing::set_contract_address(kakarot_core.contract_address);
 
     // Set machine bytecode

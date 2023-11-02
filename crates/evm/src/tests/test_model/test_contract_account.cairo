@@ -18,7 +18,9 @@ use utils::traits::{StoreBytes31, StorageBaseAddressIntoFelt252};
 #[test]
 #[available_gas(200000000)]
 fn test_contract_account_deploy() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let native_token = contract_utils::deploy_native_token();
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
+    testing::set_contract_address(kakarot_core.contract_address);
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
     // triggerred in the constructor
     contract_utils::drop_event(kakarot_core.contract_address);
@@ -42,7 +44,8 @@ fn test_contract_account_deploy() {
 #[available_gas(2000000000)]
 fn test_at_contract_account_deployed() {
     let evm_address = test_utils::evm_address();
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let native_token = contract_utils::deploy_native_token();
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
     testing::set_contract_address(kakarot_core.contract_address);
 
     let ca = ContractAccountTrait::deploy(evm_address, Default::default().span()).unwrap();
