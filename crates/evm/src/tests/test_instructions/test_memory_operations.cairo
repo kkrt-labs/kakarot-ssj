@@ -1,4 +1,6 @@
-use core::result::ResultTrait;
+use contracts::tests::test_utils::{
+    deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
+};
 use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION, WRITE_IN_STATIC_CONTEXT};
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
 use evm::machine::{Machine, MachineCurrentContextTrait};
@@ -11,6 +13,7 @@ use evm::tests::test_utils::{
     setup_static_machine
 };
 use integer::BoundedInt;
+use starknet::testing::set_contract_address;
 
 use starknet::{EthAddressIntoFelt252, storage_base_address_const, Store, get_contract_address};
 use utils::helpers::{u256_to_bytes_array};
@@ -529,6 +532,9 @@ fn test_exec_sload_from_state() {
 #[available_gas(20000000)]
 fn test_exec_sload_from_storage() {
     // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    set_contract_address(kakarot_core.contract_address);
     let mut machine = setup_machine();
     let mut ca = ContractAccountTrait::deploy(machine.evm_address(), array![].span()).unwrap();
     let key: u256 = 0x100000000000000000000000000000001;
@@ -588,6 +594,10 @@ fn test_exec_sstore_static_call() {
 #[available_gas(200000000)]
 fn test_exec_sstore_finalized() {
     // Given
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    // Setting the contract address is required so that `get_contract_address` in `CA::deploy` returns the kakarot address
+    set_contract_address(kakarot_core.contract_address);
     let mut machine = setup_machine();
     // Deploys the contract account to be able to commit storage changes.
     let ca = ContractAccountTrait::deploy(machine.evm_address(), array![].span()).unwrap();
