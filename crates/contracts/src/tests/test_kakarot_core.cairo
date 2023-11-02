@@ -198,7 +198,8 @@ fn test_eth_call() {
     let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
     testing::set_contract_address(kakarot_core.contract_address);
 
-    let eoa = EOATrait::deploy(test_utils::evm_address()).unwrap().evm_address;
+    let evm_address = test_utils::evm_address();
+    let eoa = kakarot_core.deploy_eoa(evm_address);
 
     let account = ContractAccountTrait::deploy(
         test_utils::other_evm_address(), counter_evm_bytecode()
@@ -214,7 +215,8 @@ fn test_eth_call() {
 
     // When
 
-    let return_data = kakarot_core.eth_call(from: eoa, :to, :gas_limit, :gas_price, :value, :data);
+    let return_data = kakarot_core
+        .eth_call(from: evm_address, :to, :gas_limit, :gas_price, :value, :data);
 
     // Then
     assert(return_data == u256_to_bytes_array(0).span(), 'wrong result');
