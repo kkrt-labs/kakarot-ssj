@@ -1,4 +1,5 @@
 use evm::memory::{Memory, MemoryTrait};
+use evm::model::Address;
 use evm::model::Event;
 use evm::stack::{Stack, StackTrait};
 use starknet::get_caller_address;
@@ -24,7 +25,7 @@ enum Status {
 /// The call context.
 #[derive(Drop, Copy, Default)]
 struct CallContext {
-    caller: EthAddress,
+    caller: Address,
     /// The bytecode to execute.
     bytecode: Span<u8>,
     /// The call data.
@@ -47,7 +48,7 @@ struct CallContext {
 impl CallContextImpl of CallContextTrait {
     #[inline(always)]
     fn new(
-        caller: EthAddress,
+        caller: Address,
         bytecode: Span<u8>,
         calldata: Span<u8>,
         value: u256,
@@ -64,7 +65,7 @@ impl CallContextImpl of CallContextTrait {
 
 
     #[inline(always)]
-    fn caller(self: @CallContext) -> EthAddress {
+    fn caller(self: @CallContext) -> Address {
         *self.caller
     }
 
@@ -123,7 +124,7 @@ impl DefaultOptionSpanU8 of Default<Option<Span<u8>>> {
 #[derive(Drop, Default)]
 struct ExecutionContext {
     ctx_type: ExecutionContextType,
-    evm_address: EthAddress,
+    address: Address,
     program_counter: u32,
     status: Status,
     call_ctx: Box<CallContext>,
@@ -163,14 +164,14 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn new(
         ctx_type: ExecutionContextType,
-        evm_address: EthAddress,
+        address: Address,
         call_ctx: CallContext,
         parent_ctx: Nullable<ExecutionContext>,
         return_data: Span<u8>,
     ) -> ExecutionContext {
         ExecutionContext {
             ctx_type,
-            evm_address,
+            address,
             program_counter: Default::default(),
             status: Default::default(),
             call_ctx: BoxTrait::new(call_ctx),
@@ -253,9 +254,10 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     //                        StaticExecutionContext getters
     // *************************************************************************
 
+    /// Getter for the currently executing account address
     #[inline(always)]
-    fn evm_address(self: @ExecutionContext) -> EthAddress {
-        *self.evm_address
+    fn address(self: @ExecutionContext) -> Address {
+        *self.address
     }
 
     // *************************************************************************
@@ -340,7 +342,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         self.events.append(event);
     }
 
-    fn origin(ref self: ExecutionContext) -> EthAddress {
+    fn origin(ref self: ExecutionContext) -> Address {
         if (self.is_root()) {
             return self.call_ctx().caller();
         }

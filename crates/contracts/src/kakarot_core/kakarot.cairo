@@ -23,18 +23,18 @@ mod KakarotCore {
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
     use evm::context::Status;
-    use evm::errors::{EVMError, EVMErrorTrait};
+    use evm::errors::{EVMError, EVMErrorTrait, CALLING_FROM_CA, CALLING_FROM_UNDEPLOYED_ACCOUNT};
     use evm::execution::execute;
-    use evm::model::ExecutionResult;
     use evm::model::account::{Account, AccountTrait};
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
     use evm::model::eoa::{EOA, EOATrait};
+    use evm::model::{ExecutionResult, Address};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use super::{StoredAccountType};
-    use utils::helpers;
+    use utils::helpers::{compute_starknet_address};
     use utils::traits::{ByteArraySerde};
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
@@ -164,7 +164,7 @@ mod KakarotCore {
         ) -> ContractAddress {
             // Deployer is always Kakarot Core
             let deployer = get_contract_address();
-            helpers::compute_starknet_address(deployer, evm_address, self.account_class_hash.read())
+            compute_starknet_address(deployer, evm_address, self.account_class_hash.read())
         }
 
         fn address_registry(self: @ContractState, evm_address: EthAddress) -> StoredAccountType {
@@ -317,6 +317,27 @@ mod KakarotCore {
                         Option::Some(account) => account.bytecode()?,
                         Option::None => Default::default().span(),
                     };
+
+                    // `from` address should be an EOA, i.e. a deployed Starknet account
+                    // checking invariants here:
+                    // - `from` MUST not be an uninitialized account
+                    // - `from` MUST not be a contract account
+                    let from_starknet_address = match self.address_registry(from) {
+                        StoredAccountType::UninitializedAccount => {
+                            return Result::Err(
+                                EVMError::DeployError(CALLING_FROM_UNDEPLOYED_ACCOUNT)
+                            );
+                        },
+                        StoredAccountType::EOA(starknet_address) => starknet_address,
+                        StoredAccountType::ContractAccount(_) => {
+                            return Result::Err(EVMError::OriginError(CALLING_FROM_CA));
+                        }
+                    };
+                    let from = Address { evm: from, starknet: from_starknet_address };
+
+                    let to_starknet_address = self.compute_starknet_address(to);
+                    let to = Address { evm: to, starknet: to_starknet_address };
+
                     let execution_result = execute(
                         from,
                         to,
@@ -333,7 +354,7 @@ mod KakarotCore {
                     let bytecode = data;
                     // TODO: compute_evm_address
                     // HASH(RLP(deployer_address, deployer_nonce))[0..20]
-                    panic_with_felt252('unimplemented')
+                    panic_with_felt252('deploy tx flow unimplemented')
                 },
             }
         }

@@ -6,6 +6,7 @@ use starknet::{
 };
 use utils::math::{Zero, One, Bitshift};
 
+
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
     #[inline(always)]
     fn default() -> Span<T> {

@@ -1,4 +1,6 @@
-use contracts::tests::test_utils as contracts_utils;
+use core::option::OptionTrait;
+use contracts::tests::test_utils as contract_utils;
+use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use evm::call_helpers::MachineCallHelpers;
 use evm::call_helpers::MachineCallHelpersImpl;
 use evm::context::{ExecutionContext, ExecutionContextTrait,};
@@ -10,7 +12,7 @@ use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine_with_nested_execution_context, setup_machine, setup_machine_with_bytecode,
-    parent_ctx_return_data, initialize_contract_account, native_token,
+    parent_ctx_return_data, initialize_contract_account, native_token, evm_address
 };
 use starknet::{EthAddress, testing};
 use utils::helpers::load_word;
@@ -110,13 +112,16 @@ fn test_exec_return_with_offset() {
 }
 
 #[test]
-#[available_gas(40000000)]
+#[available_gas(4_000_000_000)]
 fn test_exec_call() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let native_token = contracts_utils::deploy_native_token();
-    let kakarot_core = contracts_utils::deploy_kakarot_core(native_token.contract_address);
+    let native_token = contract_utils::deploy_native_token();
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
     testing::set_contract_address(kakarot_core.contract_address);
+
+    let evm_address = evm_address();
+    let eoa = kakarot_core.deploy_eoa(evm_address);
 
     // Set machine bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -144,7 +149,6 @@ fn test_exec_call() {
     ]
         .span();
     let mut machine = setup_machine_with_bytecode(bytecode);
-
     // Deploy bytecode at 0x100
     // ret (+ 0x1 0x1)
     let deployed_bytecode = array![
@@ -159,8 +163,9 @@ fn test_exec_call() {
     interpreter.run(ref machine);
 
     // Then
+    assert(machine.error.is_none(), 'run should be success');
     assert(2 == load_word(1, machine.return_data()), 'Wrong return_data');
-    assert(machine.stopped(), 'machine should be stopped')
+    assert(machine.stopped(), 'machine should be stopped');
 }
 
 #[test]
@@ -168,8 +173,7 @@ fn test_exec_call() {
 fn test_exec_call_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let native_token = contracts_utils::deploy_native_token();
-    let kakarot_core = contracts_utils::deploy_kakarot_core(native_token.contract_address);
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token());
     testing::set_contract_address(kakarot_core.contract_address);
 
     // Set machine bytecode
@@ -210,6 +214,7 @@ fn test_exec_call_no_return() {
     interpreter.run(ref machine);
 
     // Then
+    assert(machine.error.is_none(), 'run should be success');
     assert(machine.return_data().is_empty(), 'Wrong return_data len');
     assert(machine.stopped(), 'machine should be stopped')
 }
@@ -220,7 +225,7 @@ fn test_exec_call_no_return() {
 fn test_exec_staticcall() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let kakarot_core = contracts_utils::deploy_kakarot_core(native_token());
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token());
     testing::set_contract_address(kakarot_core.contract_address);
 
     // Set machine bytecode
@@ -272,7 +277,7 @@ fn test_exec_staticcall() {
 fn test_exec_staticcall_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let kakarot_core = contracts_utils::deploy_kakarot_core(native_token());
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token());
     testing::set_contract_address(kakarot_core.contract_address);
 
     // Set machine bytecode

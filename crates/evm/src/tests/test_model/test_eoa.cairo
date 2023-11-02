@@ -22,7 +22,6 @@ fn test_eoa_deploy() {
     testing::set_contract_address(kakarot_core.contract_address);
     contract_utils::drop_event(kakarot_core.contract_address);
 
-    let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
     let maybe_eoa = EOATrait::deploy(test_utils::evm_address());
     let eoa = match maybe_eoa {
         Result::Ok(eoa) => eoa,

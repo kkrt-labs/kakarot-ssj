@@ -12,7 +12,7 @@ use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_calldata, setup_machine_with_bytecode, evm_address, callvalue,
     setup_machine_with_nested_execution_context, other_evm_address, return_from_subcontext,
-    native_token
+    native_token, other_address
 };
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
@@ -154,7 +154,7 @@ fn test_origin() {
     assert(machine.stack.peek().unwrap() == evm_address().into(), 'should be `evm_address`');
 
     // And
-    assert(machine.caller() == other_evm_address(), 'should be another_evm_address');
+    assert(machine.caller() == other_address(), 'should be another_evm_address');
 }
 
 #[test]

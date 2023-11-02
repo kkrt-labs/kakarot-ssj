@@ -31,8 +31,8 @@ use utils::helpers::compute_starknet_address;
 /// *   The created contracts
 /// *   The events emitted
 fn execute(
-    origin: EthAddress,
-    target: EthAddress,
+    origin: Address,
+    address: Address,
     bytecode: Span<u8>,
     calldata: Span<u8>,
     value: u256,
@@ -54,7 +54,7 @@ fn execute(
     );
     let ctx = ExecutionContextTrait::new(
         ctx_type: Default::default(),
-        evm_address: target,
+        :address,
         :call_ctx,
         parent_ctx: Default::default(),
         return_data: Default::default().span()

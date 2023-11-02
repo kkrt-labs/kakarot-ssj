@@ -40,6 +40,11 @@ const EOA_EXISTS: felt252 = 'KKT: EOA already exists';
 const ACCOUNT_EXISTS: felt252 = 'KKT: Account already exists';
 const DEPLOYMENT_FAILED: felt252 = 'KKT: deployment failed';
 
+// TRANSACTION ORIGIN
+const CALLING_FROM_UNDEPLOYED_ACCOUNT: felt252 = 'EOA: from is undeployed EOA';
+const CALLING_FROM_CA: felt252 = 'EOA: from is a contract account';
+
+
 #[derive(Drop, Copy, PartialEq)]
 enum EVMError {
     StackError: felt252,
@@ -54,6 +59,7 @@ enum EVMError {
     WriteInStaticContext: felt252,
     InvalidMachineState: felt252,
     DeployError: felt252,
+    OriginError: felt252,
 }
 
 #[generate_trait]
@@ -73,6 +79,7 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::WriteInStaticContext(error_message) => error_message.into(),
             EVMError::InvalidMachineState(error_message) => error_message.into(),
             EVMError::DeployError(error_message) => error_message,
+            EVMError::OriginError(error_message) => error_message,
         }
     }
 }

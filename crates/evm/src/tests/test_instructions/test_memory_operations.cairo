@@ -515,7 +515,7 @@ fn test_exec_sload_from_state() {
     let key: u256 = 0x100000000000000000000000000000001;
     let value = 0x02;
     // `evm_address` must match the one used to instantiate the machine
-    machine.state.write_state(machine.evm_address(), key, value);
+    machine.state.write_state(machine.address().evm, key, value);
 
     machine.stack.push(key.into());
 
@@ -536,7 +536,7 @@ fn test_exec_sload_from_storage() {
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
     set_contract_address(kakarot_core.contract_address);
     let mut machine = setup_machine();
-    let mut ca = ContractAccountTrait::deploy(machine.evm_address(), array![].span()).unwrap();
+    let mut ca = ContractAccountTrait::deploy(machine.address().evm, array![].span()).unwrap();
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
     ca.set_storage_at(key, value);
@@ -600,7 +600,7 @@ fn test_exec_sstore_finalized() {
     set_contract_address(kakarot_core.contract_address);
     let mut machine = setup_machine();
     // Deploys the contract account to be able to commit storage changes.
-    let ca = ContractAccountTrait::deploy(machine.evm_address(), array![].span()).unwrap();
+    let ca = ContractAccountTrait::deploy(machine.address().evm, array![].span()).unwrap();
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
     machine.stack.push(value);
