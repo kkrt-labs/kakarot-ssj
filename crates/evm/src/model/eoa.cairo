@@ -15,7 +15,7 @@ use starknet::{EthAddress, ContractAddress, get_contract_address, deploy_syscall
 use utils::helpers::ResultExTrait;
 
 
-#[derive(Copy, Drop)]
+#[derive(Copy, Drop, PartialEq)]
 struct EOA {
     evm_address: EthAddress,
     starknet_address: ContractAddress
@@ -69,7 +69,6 @@ impl EOAImpl of EOATrait {
             Account {
                 account_type: AccountType::EOA(*self),
                 code: Default::default().span(),
-                storage: Default::default(),
                 nonce: 1,
                 selfdestruct: false
             }
@@ -102,5 +101,13 @@ impl EOAImpl of EOATrait {
         native_token
             .balanceOf(*self.starknet_address)
             .map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
+    }
+
+    fn evm_address(self: @EOA) -> EthAddress {
+        *self.evm_address
+    }
+
+    fn starknet_address(self: @EOA) -> ContractAddress {
+        *self.starknet_address
     }
 }

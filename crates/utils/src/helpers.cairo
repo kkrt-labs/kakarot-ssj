@@ -1,16 +1,20 @@
 use cmp::min;
+use core::hash::{HashStateExTrait, HashStateTrait};
+use core::pedersen::{HashState, PedersenTrait};
 use integer::U32TryIntoNonZero;
 use integer::u32_as_non_zero;
 use keccak::u128_split;
-use starknet::{EthAddress, EthAddressIntoFelt252};
+use starknet::{EthAddress, EthAddressIntoFelt252, ContractAddress, ClassHash};
 use traits::DivRem;
 use utils::constants::{
     POW_256_0, POW_256_1, POW_256_2, POW_256_3, POW_256_4, POW_256_5, POW_256_6, POW_256_7,
     POW_256_8, POW_256_9, POW_256_10, POW_256_11, POW_256_12, POW_256_13, POW_256_14, POW_256_15,
     POW_256_16,
 };
+use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 use utils::math::Bitshift;
 use utils::num::{Zero, One, SizeOf};
+use utils::traits::U256TryIntoContractAddress;
 
 
 /// Ceils a number of bits to the next word (32 bytes)
@@ -446,9 +450,9 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
 }
 
 #[generate_trait]
-impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtTrait<T> {
+impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
     // Concatenates two arrays by adding the elements of arr2 to arr1.
-    fn concat(ref self: Array<T>, mut arr2: Span<T>) {
+    fn concat<+Copy<T>>(ref self: Array<T>, mut arr2: Span<T>) {
         loop {
             match arr2.pop_front() {
                 Option::Some(elem) => self.append(*elem),
@@ -458,7 +462,7 @@ impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtTrai
     }
 
     /// Reverses an array
-    fn reverse(self: Span<T>) -> Array<T> {
+    fn reverse<+Copy<T>>(self: Span<T>) -> Array<T> {
         let mut counter = self.len();
         let mut dst: Array<T> = ArrayTrait::new();
         loop {
@@ -472,7 +476,7 @@ impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtTrai
     }
 
     // Appends n time value to the Array
-    fn append_n(ref self: Array<T>, value: T, mut n: usize) {
+    fn append_n<+Copy<T>>(ref self: Array<T>, value: T, mut n: usize) {
         loop {
             if n == 0 {
                 break;
@@ -485,11 +489,20 @@ impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtTrai
     }
 
     // Appends an item only if it is not already in the array.
-    fn append_unique<+PartialEq<T>>(ref self: Array<T>, value: T) {
+    fn append_unique<+Copy<T>, +PartialEq<T>>(ref self: Array<T>, value: T) {
         if self.span().contains(value) {
             return ();
         }
         self.append(value);
+    }
+
+    fn append_span<+Clone<T>>(ref self: Array<T>, mut span: Span<T>) {
+        loop {
+            match span.pop_front() {
+                Option::Some(current) => { self.append(current.clone()); },
+                Option::None => { break; }
+            };
+        }
     }
 }
 
@@ -745,4 +758,35 @@ impl ResultExImpl<T, E, +Drop<T>, +Drop<E>> of ResultExTrait<T, E> {
             Result::Err(_) => Result::Err(err)
         }
     }
+}
+
+fn compute_starknet_address(
+    deployer: ContractAddress, evm_address: EthAddress, class_hash: ClassHash
+) -> ContractAddress {
+    // Deployer is always Kakarot Core
+    // pedersen(a1, a2, a3) is defined as:
+    // pedersen(pedersen(pedersen(a1, a2), a3), len([a1, a2, a3]))
+    // https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/hash_state.py#L6
+    // https://github.com/xJonathanLEI/starknet-rs/blob/master/starknet-core/src/crypto.rs#L49
+    // Constructor Calldata
+    // For an Account, the constructor calldata is:
+    // [kakarot_address, evm_address]
+    let constructor_calldata_hash = PedersenTrait::new(0)
+        .update_with(deployer)
+        .update_with(evm_address)
+        .update(2)
+        .finalize();
+
+    let hash = PedersenTrait::new(0)
+        .update_with(CONTRACT_ADDRESS_PREFIX)
+        .update_with(deployer)
+        .update_with(evm_address)
+        .update_with(class_hash)
+        .update_with(constructor_calldata_hash)
+        .update(5)
+        .finalize();
+
+    let normalized_address: ContractAddress = (hash.into() & MAX_ADDRESS).try_into().unwrap();
+    // We know this unwrap is safe, because of the above bitwise AND on 2 ** 251
+    normalized_address
 }

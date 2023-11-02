@@ -1,5 +1,5 @@
 use evm::errors::{EVMError, MISSING_PARENT_CONTEXT};
-use evm::storage_journal::Journal;
+use evm::state::State;
 use evm::{
     context::{
         ExecutionContext, ExecutionContextType, ExecutionContextTrait, DefaultBoxExecutionContext,
@@ -17,7 +17,7 @@ struct Machine {
     ctx_count: usize,
     stack: Stack,
     memory: Memory,
-    storage_journal: Journal,
+    state: State,
     error: Option<EVMError>
 }
 
@@ -28,7 +28,7 @@ impl DefaultMachine of Default<Machine> {
             ctx_count: 1,
             stack: Default::default(),
             memory: Default::default(),
-            storage_journal: Default::default(),
+            state: Default::default(),
             error: Option::None
         }
     }
@@ -61,7 +61,7 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
             ctx_count: 1,
             stack: Default::default(),
             memory: Default::default(),
-            storage_journal: Default::default(),
+            state: Default::default(),
             error: Option::None
         }
     }

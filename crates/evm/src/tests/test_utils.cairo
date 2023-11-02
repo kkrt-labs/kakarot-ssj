@@ -239,7 +239,7 @@ fn setup_machine() -> Machine {
         ctx_count: 1,
         stack: Default::default(),
         memory: Default::default(),
-        storage_journal: Default::default(),
+        state: Default::default(),
         error: Option::None
     }
 }
@@ -251,7 +251,7 @@ fn setup_static_machine() -> Machine {
         ctx_count: 1,
         stack: Default::default(),
         memory: Default::default(),
-        storage_journal: Default::default(),
+        state: Default::default(),
         error: Option::None
     }
 }
@@ -264,7 +264,7 @@ fn setup_machine_with_bytecode(bytecode: Span<u8>) -> Machine {
         ctx_count: 1,
         stack: Default::default(),
         memory: Default::default(),
-        storage_journal: Default::default(),
+        state: Default::default(),
         error: Option::None
     }
 }
@@ -276,7 +276,7 @@ fn setup_machine_with_calldata(calldata: Span<u8>) -> Machine {
         ctx_count: 1,
         stack: Default::default(),
         memory: Default::default(),
-        storage_journal: Default::default(),
+        state: Default::default(),
         error: Option::None
     }
 }
@@ -298,7 +298,7 @@ fn setup_machine_with_nested_execution_context() -> Machine {
         ctx_count: 2,
         stack: Default::default(),
         memory: Default::default(),
-        storage_journal: Default::default(),
+        state: Default::default(),
         error: Option::None
     }
 }

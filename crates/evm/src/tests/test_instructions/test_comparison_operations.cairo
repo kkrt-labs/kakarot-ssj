@@ -1259,7 +1259,7 @@ fn assert_shr(a: u256, b: u256, expected: u256) {
 }
 
 #[test]
-#[available_gas(35000000)]
+#[available_gas(50000000)]
 fn test_exec_sar() {
     // https://github.com/ethereum/go-ethereum/blob/master/core/vm/testdata/testcases_sar.json
     assert_sar(

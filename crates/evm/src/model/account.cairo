@@ -1,16 +1,14 @@
 use evm::errors::{EVMError};
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
-use evm::model::eoa::EOATrait;
-use evm::model::{AccountType, EOA};
-use evm::storage_journal::{Journal, JournalTrait};
+use evm::model::eoa::{EOA, EOATrait};
+use evm::model::{AccountType};
 use starknet::{ContractAddress, EthAddress, get_contract_address};
 use utils::helpers::ByteArrayExTrait;
 
-#[derive(Destruct)]
+#[derive(Copy, Drop, PartialEq)]
 struct Account {
     account_type: AccountType,
     code: Span<u8>,
-    storage: Journal,
     nonce: u64,
     selfdestruct: bool,
 }
@@ -45,7 +43,6 @@ impl AccountImpl of AccountTrait {
                             }
                         ),
                         code: Default::default().span(),
-                        storage: Default::default(),
                         nonce: 0,
                         selfdestruct: false,
                     }
@@ -100,6 +97,14 @@ impl AccountImpl of AccountTrait {
         }
     }
 
+    #[inline(always)]
+    fn evm_address(self: @Account) -> EthAddress {
+        match self.account_type {
+            AccountType::EOA(eoa) => { eoa.evm_address() },
+            AccountType::ContractAccount(ca) => { ca.evm_address() }
+        }
+    }
+
     /// Returns the balance in native token for a given EVM account (EOA or CA)
     /// This is equivalent to checking the balance in native coin, i.e. ETHER of an account in Ethereum
     #[inline(always)]
@@ -122,15 +127,16 @@ impl AccountImpl of AccountTrait {
     }
 
     /// Reads the value stored at the given key for the corresponding account.
-    ///TODO Fetch in local state
     /// If not there, reads the contract storage and cache the result.
-    // @param self The pointer to the execution Account.
-    // @param address The pointer to the Address.
-    // @param key The pointer to the storage key
-    // @return The updated Account
-    // @return The read value
-    fn read_storage(ref self: Account, key: u256) -> Result<u256, EVMError> {
-        //TODO start by reading in local state
+    /// # Arguments
+    ///
+    /// * `self` The account to read from.
+    /// * `key` The key to read.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the value stored at the given key or an `EVMError` if there was an error.
+    fn read_storage(self: @Account, key: u256) -> Result<u256, EVMError> {
         match self.account_type {
             AccountType::EOA(eoa) => Result::Ok(0),
             AccountType::ContractAccount(ca) => ca.storage_at(key),
@@ -143,7 +149,6 @@ impl AccountImpl of AccountTrait {
     /// * `key` The storage key to modify
     /// * `value` The value to write
     fn write_storage(ref self: Account, key: u256, value: u256) {
-        //TODO write to local state
         panic_with_felt252('unimplemented')
     }
 
