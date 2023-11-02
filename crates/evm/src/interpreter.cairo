@@ -670,7 +670,6 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         match machine.ctx_type() {
             ExecutionContextType::Root => {
                 // TODO: error handling
-                machine.state.commit_state();
             },
             ExecutionContextType::Call(_) => {
                 machine.finalize_calling_context(); // TODO: error handling

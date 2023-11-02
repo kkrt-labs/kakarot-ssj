@@ -1,4 +1,3 @@
-use debug::PrintTrait;
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::Event;
 use evm::stack::{Stack, StackTrait};
@@ -321,10 +320,8 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     // TODO: Implement print_debug
     /// Debug print the execution context.
     #[inline(always)]
-    fn print_debug(ref self: ExecutionContext) {
-        // debug::print_felt252('gas used');
-        // self.gas_used.print();
-        'print debug'.print();
+    fn print_debug(ref self: ExecutionContext) {// debug::print_felt252('gas used');
+    // self.gas_used.print();
     }
 
     #[inline(always)]

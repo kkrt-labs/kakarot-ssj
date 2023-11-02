@@ -1,7 +1,7 @@
 use evm::errors::{EVMError};
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::model::eoa::{EOA, EOATrait};
-use evm::model::{AccountType};
+use evm::model::{Address, AccountType};
 use starknet::{ContractAddress, EthAddress, get_contract_address};
 use utils::helpers::ByteArrayExTrait;
 
@@ -48,6 +48,46 @@ impl AccountImpl of AccountTrait {
                     }
                 );
             }
+        }
+    }
+
+    fn commit(self: @Account) -> Result<(), EVMError> {
+        // Case account exists
+        let maybe_acc = AccountImpl::account_type_at(self.addresses().evm)?;
+
+        match maybe_acc {
+            Option::Some(account_type) => {
+                match account_type {
+                    AccountType::EOA(eoa) => {
+                        // no - op
+                        Result::Ok(())
+                    },
+                    AccountType::ContractAccount(mut ca) => {
+                        if *self.selfdestruct {
+                            return ca.selfdestruct();
+                        }
+                        ca.set_nonce(*self.nonce)
+                    //Storage is handled outside of the account and must be commited after all accounts are commited.
+                    }
+                }
+            },
+            Option::None => {
+                //Case new account
+                // If SELFDESTRUCT, just do nothing
+                if (*self.selfdestruct == true) {
+                    return Result::Ok(());
+                }
+                ContractAccountTrait::deploy(self.addresses().evm, *self.code);
+                Result::Ok(())
+            //Storage is handled outside of the account and must be commited after all accounts are commited.
+            }
+        }
+    }
+
+    fn addresses(self: @Account) -> Address {
+        match self.account_type {
+            AccountType::EOA(eoa) => { eoa.addresses() },
+            AccountType::ContractAccount(ca) => { ca.addresses() }
         }
     }
 

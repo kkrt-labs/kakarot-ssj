@@ -282,7 +282,10 @@ impl StateImpl of StateTrait {
         match self.balances.read(address.evm.into()) {
             Option::Some(value) => { Result::Ok(value) },
             //TODO(state) - implement this post CA-rebase
-            Option::None => { panic_with_felt252('unimplemented') }
+            Option::None => {
+                let account = AccountTrait::fetch_or_create(address.evm)?;
+                account.account_type.balance()
+            }
         }
     }
 
@@ -302,7 +305,11 @@ impl StateImpl of StateTrait {
         self.balances.clear_context();
     }
 
-    fn commit_state(ref self: State) { //TODO(state) implement this
+    fn commit_state(ref self: State) -> Result<(), EVMError> {
+        self.commit_accounts()?;
+        self.transfer_native_token()?;
+        self.commit_storage()?;
+        self.emit_events()
     }
 }
 #[generate_trait]
@@ -321,6 +328,7 @@ impl StateInternalImpl of StateInternalTrait {
 
     /// Commits storage changes to the KakarotCore contract by writing pending
     /// state changes to Starknet Storage.
+    /// commit_storage MUST be called after commit_accounts.
     fn commit_storage(ref self: State) -> Result<(), EVMError> {
         let result = loop {
             match self.accounts_storage.transactional_keyset.pop_front() {
@@ -388,6 +396,18 @@ impl StateInternalImpl of StateInternalTrait {
             }
         };
         Result::Ok(())
+    }
+
+    fn commit_accounts(ref self: State) -> Result<(), EVMError> {
+        loop {
+            match self.accounts.transactional_keyset.pop_front() {
+                Option::Some(evm_address) => {
+                    let account = self.accounts.transactional_changes.get(evm_address).deref();
+                    account.commit()
+                },
+                Option::None => { break Result::Ok(()); }
+            };
+        }
     }
 }
 

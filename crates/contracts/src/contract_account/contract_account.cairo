@@ -174,6 +174,15 @@ mod ContractAccount {
             panic_with_felt252('unimplemented')
         }
 
+        fn selfdestruct(ref self: ContractState) {
+            //TODO add access control
+            self.set_nonce(0);
+            self.evm_address.write(0.try_into().unwrap());
+            self.set_bytecode(array![].span());
+        // TODO: clean also the storage
+
+        }
+
 
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
             assert(
