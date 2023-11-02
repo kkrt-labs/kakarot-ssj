@@ -1,4 +1,3 @@
-use utils::helpers::ArrayExtTrait;
 //! CREATE, CREATE2 opcode helpers
 use cmp::min;
 use evm::context::{
@@ -10,10 +9,11 @@ use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::AccountTrait;
 use evm::stack::StackTrait;
-use starknet::{EthAddress, get_tx_info};
-use utils::traits::{BoolIntoNumeric, U256TryIntoResult, SpanU8TryIntoResultEthAddress};
-use utils::helpers::{ByteArrayExTrait, ResultExTrait, EthAddressExt, U256Trait};
 use keccak::cairo_keccak;
+use starknet::{EthAddress, get_tx_info};
+use utils::helpers::ArrayExtTrait;
+use utils::helpers::{ByteArrayExTrait, ResultExTrait, EthAddressExt, U256Trait};
+use utils::traits::{BoolIntoNumeric, U256TryIntoResult, SpanU8TryIntoResultEthAddress};
 
 /// CallArgs is a subset of CallContext
 /// Created in order to simplify setting up the call opcodes
