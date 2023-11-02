@@ -26,7 +26,7 @@ impl RLPImpl of RLPTrait {
     /// the offset and the size of the RLPItem to decode
     /// # Errors
     /// * RLPError::EmptyInput - if the input is empty
-    /// * RLPError::InputTooShort - if the input is too short for a given 
+    /// * RLPError::InputTooShort - if the input is too short for a given
     fn decode_type(input: Span<u8>) -> Result<(RLPType, u32, u32), RLPError> {
         let input_len = input.len();
         if input_len == 0 {
@@ -105,7 +105,7 @@ impl RLPImpl of RLPTrait {
     /// # Returns
     /// * `Span<RLPItem>` - Span of RLPItem
     /// # Errors
-    /// * RLPError::InputTooShort - if the input is too short for a given 
+    /// * RLPError::InputTooShort - if the input is too short for a given
     fn decode(input: Span<u8>) -> Result<Span<RLPItem>, RLPError> {
         let mut output: Array<RLPItem> = Default::default();
         let input_len = input.len();
@@ -117,7 +117,13 @@ impl RLPImpl of RLPTrait {
         }
 
         match rlp_type {
-            RLPType::String => { output.append(RLPItem::String(input.slice(offset, len))); },
+            RLPType::String => {
+                // checking for default value `0`
+                if (*input[0] == 0x80) {
+                    output.append(RLPItem::String(array![0].span()));
+                }
+                output.append(RLPItem::String(input.slice(offset, len)));
+            },
             RLPType::List => {
                 if len > 0 {
                     let res = RLPTrait::decode(input.slice(offset, len))?;
@@ -137,4 +143,3 @@ impl RLPImpl of RLPTrait {
         Result::Ok(output.span())
     }
 }
-

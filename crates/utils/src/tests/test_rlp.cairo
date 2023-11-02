@@ -19,6 +19,17 @@ fn test_rlp_decode_type_byte() {
 
 #[test]
 #[available_gas(99999999)]
+fn test_rlp_decode_string_default_value() {
+    let mut arr = array![0x80];
+
+    let rlp_item = RLPTrait::decode(arr.span()).unwrap();
+    let expected = RLPItem::String(array![0].span());
+
+    assert(*rlp_item[0] == expected, 'default value not 0');
+}
+
+#[test]
+#[available_gas(99999999)]
 fn test_rlp_decode_type_short_string() {
     let mut arr = array![0x82];
 
