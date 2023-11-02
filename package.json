@@ -1,0 +1,16 @@
+{
+  "name": "kakarot-ssj",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "starknet": "^5.19.5"
+  },
+  "scripts": {
+    "compute_starknet_address": "bun run scripts/compute_starknet_address.ts"
+  }
+}
