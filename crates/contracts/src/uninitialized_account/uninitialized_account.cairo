@@ -41,11 +41,13 @@ mod UninitializedAccount {
                 get_caller_address() == self.kakarot_core_address.read(),
                 'Caller not Kakarot Core address'
             );
-            let kkt_address = self.kakarot_core_address.read();
-            let native_token = IKakarotCoreDispatcher { contract_address: kkt_address }
-                .native_token();
+            let kakarot = self.kakarot_core_address.read();
+            let native_token = IKakarotCoreDispatcher { contract_address: kakarot }.native_token();
+            // To internally perform value transfer of the network's native
+            // token (which conforms to the ERC20 standard), we need to give the
+            // KakarotCore contract infinite allowance
             IERC20CamelDispatcher { contract_address: native_token }
-                .approve(kkt_address, integer::BoundedInt::<u256>::max());
+                .approve(kakarot, integer::BoundedInt::<u256>::max());
 
             self.upgradeable.upgrade_contract(new_class_hash);
         }
