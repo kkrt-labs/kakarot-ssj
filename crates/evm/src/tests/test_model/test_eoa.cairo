@@ -17,9 +17,10 @@ use starknet::{
 #[test]
 #[available_gas(200000000)]
 fn test_eoa_deploy() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
-    contract_utils::drop_event(kakarot_core.contract_address);
+    let native_token = contract_utils::deploy_native_token();
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
     testing::set_contract_address(kakarot_core.contract_address);
+    contract_utils::drop_event(kakarot_core.contract_address);
 
     let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
     let maybe_eoa = EOATrait::deploy(test_utils::evm_address());
