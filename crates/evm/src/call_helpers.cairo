@@ -24,11 +24,22 @@ struct CallArgs {
     ret_size: usize,
 }
 
+/// An enum to differentiate where to grab `value` from
+/// FromStack: in CALL and CALLCODE, grab `value` from the Stack
+/// Zero: in STATICCALL, `value` is 0
+/// FromCallingContext: in DELEGATECALL, `value` is derived from the calling context (parent)
+#[derive(Drop)]
+enum ValueOrigin {
+    Zero,
+    FromStack,
+    FromCallingContext,
+}
+
 #[generate_trait]
 impl MachineCallHelpersImpl of MachineCallHelpers {
     ///  Prepare the initialization of a new child or so-called sub-context
     /// As part of the CALL family of opcodes.
-    fn prepare_call(ref self: Machine, with_value: bool) -> Result<CallArgs, EVMError> {
+    fn prepare_call(ref self: Machine, value_origin: ValueOrigin) -> Result<CallArgs, EVMError> {
         // For CALL and CALLCODE, we pop 5 items off of the stack
         // For STATICCALL and DELEGATECALL, we pop 4 items off of the stack
         // The difference being the "value" parameter in CALL and CALLCODE.
@@ -37,10 +48,10 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         // CALL and CALLCODE expect value to be on the stack
         // for STATICCALL and DELEGATECALL, the value is the calling call context's value
-        let value = if with_value {
-            self.stack.pop()?
-        } else {
-            self.value()
+        let value = match value_origin {
+            ValueOrigin::Zero => 0,
+            ValueOrigin::FromStack => self.stack.pop()?,
+            ValueOrigin::FromCallingContext => self.value(),
         };
 
         let args_offset = self.stack.pop_usize()?;
