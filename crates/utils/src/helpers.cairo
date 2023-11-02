@@ -12,9 +12,9 @@ use utils::constants::{
     POW_256_16,
 };
 use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
-use utils::math::Bitshift;
+use utils::math::{Bitshift, WrappingBitshift};
 use utils::num::{Zero, One, SizeOf};
-use utils::traits::U256TryIntoContractAddress;
+use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256};
 
 
 /// Ceils a number of bits to the next word (32 bytes)
@@ -613,6 +613,23 @@ impl U256Impl of U256Trait {
         let new_high = integer::u128_byte_reverse(self.low);
         u256 { low: new_low, high: new_high }
     }
+
+    fn to_bytes(self: u256) -> Span<u8> {
+        let bytes_used: u256 = 32;
+        let mut value: u256 = self;
+        let mut bytes: Array<u8> = Default::default();
+        let mut i = 0;
+        loop {
+            if i == bytes_used {
+                break ();
+            }
+            let val = value.wrapping_shr(8 * (bytes_used - i - 1));
+            bytes.append((val & 0xFF).try_into().unwrap());
+            i += 1;
+        };
+
+        bytes.span()
+    }
 }
 #[generate_trait]
 impl ByteArrayExt of ByteArrayExTrait {
@@ -789,4 +806,24 @@ fn compute_starknet_address(
     let normalized_address: ContractAddress = (hash.into() & MAX_ADDRESS).try_into().unwrap();
     // We know this unwrap is safe, because of the above bitwise AND on 2 ** 251
     normalized_address
+}
+
+#[generate_trait]
+impl EthAddressExtTrait of EthAddressExt {
+    fn to_bytes(self: EthAddress) -> Span<u8> {
+        let bytes_used: u256 = 20;
+        let mut value: u256 = self.into();
+        let mut bytes: Array<u8> = Default::default();
+        let mut i = 0;
+        loop {
+            if i == bytes_used {
+                break ();
+            }
+            let val = value.wrapping_shr(8 * (bytes_used - i - 1));
+            bytes.append((val & 0xFF).try_into().unwrap());
+            i += 1;
+        };
+
+        bytes.span()
+    }
 }

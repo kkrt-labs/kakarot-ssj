@@ -1,3 +1,4 @@
+use core::array::SpanTrait;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use starknet::{
     StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
@@ -83,6 +84,33 @@ impl StorageBaseAddressPartialEq of PartialEq<StorageBaseAddress> {
 
 trait TryIntoResult<T, U> {
     fn try_into_result(self: T) -> Result<U, EVMError>;
+}
+
+impl SpanU8TryIntoResultEthAddress of TryIntoResult<Span<u8>, EthAddress> {
+    fn try_into_result(mut self: Span<u8>) -> Result<EthAddress, EVMError> {
+        if self.len() == 0 {
+            return Result::Ok(EthAddress { address: 0 });
+        }
+        if self.len() > 20 {
+            return Result::Err(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR));
+        }
+
+        let mut current: felt252 = 0;
+        let mut counter: usize = 0;
+
+        loop {
+            if self.len() == 0 {
+                break;
+            }
+            let loaded: u8 = *self.at(counter);
+            let tmp = current * 256;
+            current = tmp + loaded.into();
+            self.pop_front();
+            counter += 1;
+        };
+
+        Result::Ok(EthAddress { address: current })
+    }
 }
 
 impl EthAddressTryIntoResultContractAddress of TryIntoResult<ContractAddress, EthAddress> {

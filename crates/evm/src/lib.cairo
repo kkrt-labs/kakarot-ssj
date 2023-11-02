@@ -1,6 +1,10 @@
 // Call opcodes helpers
 mod call_helpers;
 
+// Create opcodes helpers
+mod create_helpers;
+
+
 // Context module
 mod context;
 
