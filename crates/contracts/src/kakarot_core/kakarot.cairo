@@ -20,9 +20,6 @@ mod KakarotCore {
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
-    use core::hash::{HashStateExTrait, HashStateTrait};
-    use core::option::OptionTrait;
-    use core::pedersen::{HashState, PedersenTrait};
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
     use evm::context::Status;
@@ -37,8 +34,8 @@ mod KakarotCore {
     };
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use super::{StoredAccountType};
-    use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
-    use utils::traits::{U256TryIntoContractAddress, ByteArraySerde};
+    use utils::helpers;
+    use utils::traits::{ByteArraySerde};
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
@@ -167,34 +164,7 @@ mod KakarotCore {
         ) -> ContractAddress {
             // Deployer is always Kakarot Core
             let deployer = get_contract_address();
-
-            // pedersen(a1, a2, a3) is defined as:
-            // pedersen(pedersen(pedersen(a1, a2), a3), len([a1, a2, a3]))
-            // https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/hash_state.py#L6
-            // https://github.com/xJonathanLEI/starknet-rs/blob/master/starknet-core/src/crypto.rs#L49
-            // Constructor Calldata
-            // For an Account, the constructor calldata is:
-            // [kakarot_address, evm_address]
-            let constructor_calldata_hash = PedersenTrait::new(0)
-                .update_with(deployer)
-                .update_with(evm_address)
-                .update(2)
-                .finalize();
-
-            let hash = PedersenTrait::new(0)
-                .update_with(CONTRACT_ADDRESS_PREFIX)
-                .update_with(deployer)
-                .update_with(evm_address)
-                .update_with(self.account_class_hash.read())
-                .update_with(constructor_calldata_hash)
-                .update(5)
-                .finalize();
-
-            let normalized_address: ContractAddress = (hash.into() & MAX_ADDRESS)
-                .try_into()
-                .unwrap();
-            // We know this unwrap is safe, because of the above bitwise AND on 2 ** 251
-            normalized_address
+            helpers::compute_starknet_address(deployer, evm_address, self.account_class_hash.read())
         }
 
         fn address_registry(self: @ContractState, evm_address: EthAddress) -> StoredAccountType {
