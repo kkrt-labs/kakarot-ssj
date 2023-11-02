@@ -1,3 +1,7 @@
+use core::array::SpanTrait;
+use core::option::OptionTrait;
+use core::traits::Into;
+
 use result::ResultTrait;
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use utils::rlp::{RLPType, RLPTrait, RLPItem};
@@ -1967,7 +1971,8 @@ fn test_rlp_decode_long_list() {
         ]
             .span()
     );
-    let mut expected_16 = RLPItem::String(ArrayTrait::new().span());
+
+    let mut expected_16 = RLPItem::String(array![0].span());
 
     let mut expected = array![
         expected_0,
@@ -1988,6 +1993,7 @@ fn test_rlp_decode_long_list() {
         expected_15,
         expected_16
     ];
+
     let expected_item = RLPItem::List(expected.span());
 
     assert(res == array![expected_item].span(), 'Wrong value');
