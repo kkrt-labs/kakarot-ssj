@@ -1,4 +1,6 @@
 #[cfg(test)]
+mod test_execution;
+#[cfg(test)]
 mod test_execution_context;
 
 #[cfg(test)]
@@ -18,9 +20,6 @@ mod test_stack;
 
 #[cfg(test)]
 mod test_state;
-
-#[cfg(test)]
-mod test_execution;
 
 #[cfg(test)]
 mod test_utils;
