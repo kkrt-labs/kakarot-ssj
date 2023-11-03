@@ -3,7 +3,7 @@ use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
     Status
 };
-use evm::errors::EVMErrorTrait;
+use evm::errors::{EVMError, EVMErrorTrait};
 use evm::interpreter::EVMInterpreterTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::model::account::{AccountTrait};
@@ -64,16 +64,36 @@ fn execute(
     let mut machine: Machine = MachineCurrentContextTrait::new(ctx);
 
     // Handle value transfers
-    let sender: Address = machine
-        .state
-        .get_account(origin)
-        .expect('couldnt fetch sender acc')
-        .address();
-    let recipient: Address = machine
-        .state
-        .get_account(target)
-        .expect('couldnt fetch recipient acc')
-        .address();
+    let result_sender = machine.state.get_account(origin);
+    let sender = match result_sender {
+        Result::Ok(sender) => sender.address(),
+        Result::Err(err) => {
+            return ExecutionResult {
+                status: Status::Reverted,
+                return_data: Default::default().span(),
+                destroyed_contracts: Default::default().span(),
+                create_addresses: Default::default().span(),
+                events: Default::default().span(),
+                state: machine.state,
+                error: Option::Some(err)
+            };
+        }
+    };
+    let result_recipient = machine.state.get_account(target);
+    let recipient = match result_recipient {
+        Result::Ok(recipient) => recipient.address(),
+        Result::Err(err) => {
+            return ExecutionResult {
+                status: Status::Reverted,
+                return_data: Default::default().span(),
+                destroyed_contracts: Default::default().span(),
+                create_addresses: Default::default().span(),
+                events: Default::default().span(),
+                state: machine.state,
+                error: Option::Some(err)
+            };
+        }
+    };
     let transfer = Transfer { sender, recipient, amount: value };
     match machine.state.add_transfer(transfer) {
         Result::Ok(x) => x,
