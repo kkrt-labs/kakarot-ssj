@@ -17,12 +17,7 @@ fn test_execute_value_transfer() {
     let sender = EOATrait::deploy(evm_address()).expect('sender deploy failed');
     let recipient = EOATrait::deploy(other_evm_address()).expect('recipient deploy failed');
     // Transfer native tokens to sender
-    let native_token_dispatcher = IERC20CamelDispatcher {
-        contract_address: native_token.contract_address
-    };
-    contract_utils::fund_account_with_native_token(
-        sender.starknet_address, native_token_dispatcher, 10000
-    );
+    contract_utils::fund_account_with_native_token(sender.starknet_address, native_token, 10000);
     // When
     let mut exec_result = execute(
         origin: sender.evm_address,
@@ -37,12 +32,8 @@ fn test_execute_value_transfer() {
     // `commit_state` is applied in `eth_send_tx` only - to test that `execute` worked correctly, we manually apply it here.
     exec_result.state.commit_state();
 
-    let sender_balance = IERC20CamelDispatcher { contract_address: native_token.contract_address }
-        .balanceOf(sender.starknet_address);
-    let recipient_balance = IERC20CamelDispatcher {
-        contract_address: native_token.contract_address
-    }
-        .balanceOf(recipient.starknet_address);
+    let sender_balance = native_token.balanceOf(sender.starknet_address);
+    let recipient_balance = native_token.balanceOf(recipient.starknet_address);
 
     assert(sender_balance == 8000, 'wrong sender balance');
     assert(recipient_balance == 2000, 'wrong recipient balance');

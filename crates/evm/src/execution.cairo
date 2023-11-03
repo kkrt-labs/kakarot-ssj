@@ -96,7 +96,7 @@ fn execute(
     };
     let transfer = Transfer { sender, recipient, amount: value };
     match machine.state.add_transfer(transfer) {
-        Result::Ok(x) => x,
+        Result::Ok(x) => {},
         Result::Err(err) => {
             return ExecutionResult {
                 status: Status::Reverted,
