@@ -8,6 +8,8 @@ use core::traits::TryInto;
 
 use keccak::cairo_keccak;
 use starknet::EthAddress;
+
+use utils::errors::EthTransactionError;
 use utils::helpers::ByteArrayExTrait;
 use utils::helpers::U256Trait;
 
@@ -58,14 +60,15 @@ impl EthTransactionImpl of EthTransaction {
     /// # Arguments
     /// tx_data The raw transaction data
     /// tx_data is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data, v, r, s]
-    fn decode_legacy_tx(tx_data: Span<u8>) -> EthereumTransaction {
+    fn decode_legacy_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
         let decoded_data = RLPImpl::decode(tx_data).expect('rlp decoding failed');
         let decoded_data = *decoded_data.at(0);
 
-        let result: EthereumTransaction = match decoded_data {
+        let result: Result<EthereumTransaction, EthTransactionError> = match decoded_data {
             RLPItem::String => {
                 panic(array!['Item not List']);
-                DefaultEthereumTransaction::default()
+                //todo(harsh): should be replaced with an error variant
+                Result::Ok(DefaultEthereumTransaction::default())
             },
             RLPItem::List(val) => {
                 let len = val.len();
@@ -109,20 +112,22 @@ impl EthTransactionImpl of EthTransaction {
                 )
                     .reverse_endianness();
 
-                EthereumTransaction {
-                    nonce: nonce,
-                    gas_price: gas_price,
-                    gas_limit: gas_limit,
-                    destination: EthAddress {
-                        address: to.try_into().expect('conversion to felt252 failed')
-                    },
-                    amount: value,
-                    payload: data,
-                    v: v,
-                    r: r,
-                    s: s,
-                    tx_hash: tx_hash
-                }
+                Result::Ok(
+                    EthereumTransaction {
+                        nonce: nonce,
+                        gas_price: gas_price,
+                        gas_limit: gas_limit,
+                        destination: EthAddress {
+                            address: to.try_into().expect('conversion to felt252 failed')
+                        },
+                        amount: value,
+                        payload: data,
+                        v: v,
+                        r: r,
+                        s: s,
+                        tx_hash: tx_hash
+                    }
+                )
             }
         };
 
@@ -136,9 +141,9 @@ impl EthTransactionImpl of EthTransaction {
     /// transaction data, which includes the chain ID as part of the transaction data itself.
     /// # Arguments
     /// tx_data The raw transaction data
-    fn decode_tx(tx_data: Span<u8>) -> EthereumTransaction {
+    fn decode_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
         // todo
-        Default::default()
+        Result::Ok(Default::default())
     }
 
     /// Check if a raw transaction is a legacy Ethereum transaction
@@ -146,9 +151,9 @@ impl EthTransactionImpl of EthTransaction {
     /// according to EIP-2718. If the transaction type is less than or equal to 0xc0, it's a legacy transaction.
     /// # Arguments
     /// - `tx_data` The raw transaction data
-    fn is_legacy_tx(tx_data: Span<u8>) -> bool {
+    fn is_legacy_tx(tx_data: Span<u8>) -> Result<bool, EthTransactionError> {
         // todo
-        false
+        Result::Ok(false)
     }
 
     /// Decode a raw Ethereum transaction
@@ -157,9 +162,9 @@ impl EthTransactionImpl of EthTransaction {
     /// resp. `decode_legacy_tx` or `decode_tx` based on the result.
     /// # Arguments
     /// - `tx_data` The raw transaction data
-    fn decode(tx_data: Span<u8>) -> EthereumTransaction {
+    fn decode(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
         // todo
-        Default::default()
+        Result::Ok(Default::default())
     }
 
     /// Validate an Ethereum transaction
@@ -172,8 +177,10 @@ impl EthTransactionImpl of EthTransaction {
     /// - `address` The ethereum address that is supposed to have signed the transaction
     /// - `account_nonce` The nonce of the account
     /// - `param tx_data` The raw transaction data
-    fn validate_eth_tx(address: EthAddress, account_nonce: u128, tx_data: Span<u8>) -> bool {
+    fn validate_eth_tx(
+        address: EthAddress, account_nonce: u128, tx_data: Span<u8>
+    ) -> Result<bool, EthTransactionError> {
         // todo
-        false
+        Result::Ok(false)
     }
 }

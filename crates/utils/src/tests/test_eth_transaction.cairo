@@ -119,7 +119,7 @@ fn test_decode_legacy_tx() {
     ]
         .span();
 
-    let tx = EthTransactionImpl::decode_legacy_tx(data);
+    let tx = EthTransactionImpl::decode_legacy_tx(data).unwrap();
 
     assert(tx.nonce == 0, 'nonce is not 0');
     assert(tx.gas_price == 0x3b9aca00, 'gas_price is not 0x3b9aca00');

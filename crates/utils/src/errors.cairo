@@ -25,3 +25,6 @@ enum RLPHelpersError {
     FailedParsingU256,
     NotAList
 }
+
+#[derive(Drop, Copy, PartialEq)]
+enum EthTransactionError {}
