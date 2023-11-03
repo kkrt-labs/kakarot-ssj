@@ -6,7 +6,7 @@ use contracts::uninitialized_account::{
 };
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
 use evm::model::account::{Account, AccountTrait};
-use evm::model::{AccountType};
+use evm::model::{AccountType, Address};
 use integer::BoundedInt;
 use openzeppelin::token::erc20::interface::{
     IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
@@ -56,6 +56,7 @@ impl EOAImpl of EOATrait {
         }
     }
 
+
     /// Retrieves the EOA content stored at address `evm_address`.
     /// There is no way to access the nonce of an EOA currently But putting 1
     /// shouldn't have any impact and is safer than 0 since has_code_or_nonce is
@@ -73,6 +74,10 @@ impl EOAImpl of EOATrait {
                 selfdestruct: false
             }
         )
+    }
+
+    fn address(self: @EOA) -> Address {
+        Address { evm: *self.evm_address, starknet: *self.starknet_address }
     }
 
     /// Returns an EOA instance from the given `evm_address`.

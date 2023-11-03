@@ -8,6 +8,7 @@ use evm::execution::Status;
 use evm::model::account::{Account, AccountTrait};
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::model::eoa::{EOA, EOATrait};
+use evm::state::State;
 use starknet::{EthAddress, get_contract_address, ContractAddress};
 use utils::helpers::ByteArrayExTrait;
 
@@ -34,12 +35,14 @@ struct Transfer {
     amount: u256
 }
 
+#[derive(Destruct)]
 struct ExecutionResult {
     status: Status,
     return_data: Span<u8>,
     create_addresses: Span<EthAddress>,
     destroyed_contracts: Span<EthAddress>,
     events: Span<Event>,
+    state: State,
     error: Option<EVMError>,
 }
 

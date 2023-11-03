@@ -3,8 +3,9 @@
 //! KakarotCore's storage.
 
 use alexandria_storage::list::{List, ListTrait};
-use contracts::contract_account::{
-    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount
+use contracts::contract_account::interface::{
+    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount,
+    IContractAccountSafeDispatcher, IContractAccountSafeDispatcherTrait
 };
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
@@ -20,7 +21,7 @@ use evm::errors::{
     CONTRACT_ACCOUNT_EXISTS, CONTRACT_SYSCALL_FAILED
 };
 use evm::execution::execute;
-use evm::model::account::{Account, AccountTrait};
+use evm::model::account::{Address, Account, AccountTrait};
 use evm::model::{AccountType};
 use hash::{HashStateTrait, HashStateExTrait};
 use openzeppelin::token::erc20::interface::{
@@ -94,6 +95,19 @@ impl ContractAccountImpl of ContractAccountTrait {
             },
             Result::Err(err) => panic(err)
         }
+    }
+
+    #[inline(always)]
+    fn address(self: @ContractAccount) -> Address {
+        Address { evm: *self.evm_address, starknet: *self.starknet_address }
+    }
+
+    #[inline(always)]
+    fn selfdestruct(self: @ContractAccount) -> Result<(), EVMError> {
+        let contract_account = IContractAccountSafeDispatcher {
+            contract_address: *self.starknet_address
+        };
+        contract_account.selfdestruct().map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
     }
 
     /// Returns a ContractAccount instance from the given `evm_address`.

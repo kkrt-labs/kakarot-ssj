@@ -1,7 +1,7 @@
 use evm::errors::{EVMError};
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::model::eoa::{EOA, EOATrait};
-use evm::model::{AccountType};
+use evm::model::{Address, AccountType};
 use starknet::{ContractAddress, EthAddress, get_contract_address};
 use utils::helpers::ByteArrayExTrait;
 
@@ -48,6 +48,47 @@ impl AccountImpl of AccountTrait {
                     }
                 );
             }
+        }
+    }
+
+    fn commit(self: @Account) -> Result<(), EVMError> {
+        // Case account exists
+        let maybe_acc = AccountImpl::account_type_at(self.address().evm)?;
+
+        match maybe_acc {
+            Option::Some(account_type) => {
+                match account_type {
+                    AccountType::EOA(eoa) => {
+                        // no - op
+                        Result::Ok(())
+                    },
+                    AccountType::ContractAccount(mut ca) => {
+                        if *self.selfdestruct {
+                            return ca.selfdestruct();
+                        }
+                        ca.set_nonce(*self.nonce)
+                    //Storage is handled outside of the account and must be commited after all accounts are commited.
+                    }
+                }
+            },
+            Option::None => {
+                //Case new account
+                // If SELFDESTRUCT, just do nothing
+                if (*self.selfdestruct == true) {
+                    return Result::Ok(());
+                }
+                let mut ca = ContractAccountTrait::deploy(self.address().evm, *self.code)?;
+                ca.set_nonce(*self.nonce);
+                Result::Ok(())
+            //Storage is handled outside of the account and must be commited after all accounts are commited.
+            }
+        }
+    }
+
+    fn address(self: @Account) -> Address {
+        match self.account_type {
+            AccountType::EOA(eoa) => { eoa.address() },
+            AccountType::ContractAccount(ca) => { ca.address() }
         }
     }
 
