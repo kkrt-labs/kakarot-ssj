@@ -176,11 +176,8 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
             .reverse_endianness()
             .to_bytes();
 
-        // Since cairo_keccak returns a little endian result
-        // We take a slice from 0 to 20th element
         let address: EthAddress = address_hash.slice(12, 20).try_into_result()?;
 
-        // Result::Ok(address)
         Result::Ok(address)
     }
 }
