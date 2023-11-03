@@ -64,10 +64,14 @@ fn execute(
     let mut machine: Machine = MachineCurrentContextTrait::new(ctx);
 
     // Handle value transfers
-    let sender: Address = AccountTrait::fetch_or_create(origin)
+    let sender: Address = machine
+        .state
+        .get_account(origin)
         .expect('couldnt fetch sender acc')
         .address();
-    let recipient: Address = AccountTrait::fetch_or_create(target)
+    let recipient: Address = machine
+        .state
+        .get_account(target)
         .expect('couldnt fetch recipient acc')
         .address();
     let transfer = Transfer { sender, recipient, amount: value };
