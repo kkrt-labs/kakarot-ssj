@@ -9,8 +9,9 @@ use core::traits::TryInto;
 use keccak::cairo_keccak;
 use starknet::EthAddress;
 
-use utils::errors::EthTransactionError;
+use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl, RLPHelpersErrorTrait};
 use utils::helpers::ByteArrayExTrait;
+use utils::helpers::ResultExTrait;
 use utils::helpers::U256Trait;
 
 use utils::helpers::{U256Impl, ByteArrayExt};
@@ -61,15 +62,13 @@ impl EthTransactionImpl of EthTransaction {
     /// tx_data The raw transaction data
     /// tx_data is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data, v, r, s]
     fn decode_legacy_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
-        let decoded_data = RLPImpl::decode(tx_data).expect('rlp decoding failed');
+        let decoded_data = RLPImpl::decode(tx_data);
+        let decoded_data = RLPErrorImpl::map_err(decoded_data)?;
+
         let decoded_data = *decoded_data.at(0);
 
         let result: Result<EthereumTransaction, EthTransactionError> = match decoded_data {
-            RLPItem::String => {
-                panic(array!['Item not List']);
-                //todo(harsh): should be replaced with an error variant
-                Result::Ok(DefaultEthereumTransaction::default())
-            },
+            RLPItem::String => { Result::Err(EthTransactionError::ExpectedRLPItemToBeList) },
             RLPItem::List(val) => {
                 let len = val.len();
                 assert(len == 9, 'Length is not 9');
@@ -84,24 +83,33 @@ impl EthTransactionImpl of EthTransaction {
                 let r_idx = 7;
                 let s_idx = 8;
 
-                let nonce = RLPHelpersImpl::parse_u128_from_string(*val.at(nonce_idx))
-                    .expect('nonce parsing failed');
-                let gas_price = RLPHelpersImpl::parse_u128_from_string(*val.at(gas_price_idx))
-                    .expect('gas_price parsing failed');
-                let gas_limit = RLPHelpersImpl::parse_u128_from_string(*val.at(gas_limit_idx))
-                    .expect('gas_limit parsing failed');
-                let to = RLPHelpersImpl::parse_u256_from_string(*val.at(to_idx))
-                    .expect('to_parsing_failed');
-                let value = RLPHelpersImpl::parse_u256_from_string(*val.at(value_idx))
-                    .expect('value_parsing_failed');
-                let data = RLPHelpersImpl::parse_bytes_felt252_from_string(*val.at(data_idx))
-                    .expect('data parsing failed');
-                let v = RLPHelpersImpl::parse_u128_from_string(*val.at(v_idx))
-                    .expect('v parsing failed');
-                let r = RLPHelpersImpl::parse_u256_from_string(*val.at(r_idx))
-                    .expect('r parsing failed');
-                let s = RLPHelpersImpl::parse_u256_from_string(*val.at(s_idx))
-                    .expect('s parsing failed');
+                let nonce = RLPHelpersErrorImpl::map_err(
+                    RLPHelpersImpl::parse_u128_from_string(*val.at(nonce_idx))
+                )?;
+                let gas_price = RLPHelpersErrorImpl::map_err(
+                    RLPHelpersImpl::parse_u128_from_string(*val.at(gas_price_idx))
+                )?;
+                let gas_limit = RLPHelpersErrorImpl::map_err(
+                    RLPHelpersImpl::parse_u128_from_string(*val.at(gas_limit_idx))
+                )?;
+                let to = RLPHelpersErrorImpl::map_err(
+                    RLPHelpersImpl::parse_u256_from_string(*val.at(to_idx))
+                )?;
+                let value = RLPHelpersErrorImpl::map_err(
+                    RLPHelpersImpl::parse_u256_from_string(*val.at(value_idx))
+                )?;
+                let data = RLPHelpersErrorImpl::map_err(
+                    RLPHelpersImpl::parse_bytes_felt252_from_string(*val.at(data_idx))
+                )?;
+                let v = RLPHelpersErrorImpl::map_err(
+                    RLPHelpersImpl::parse_u128_from_string(*val.at(v_idx))
+                )?;
+                let r = RLPHelpersErrorImpl::map_err(
+                    RLPHelpersImpl::parse_u256_from_string(*val.at(r_idx))
+                )?;
+                let s = RLPHelpersErrorImpl::map_err(
+                    RLPHelpersImpl::parse_u256_from_string(*val.at(s_idx))
+                )?;
 
                 let mut transaction_data_byte_array = ByteArrayExt::from_bytes(tx_data);
                 let (mut keccak_input, last_input_word, last_input_num_bytes) =
@@ -118,7 +126,19 @@ impl EthTransactionImpl of EthTransaction {
                         gas_price: gas_price,
                         gas_limit: gas_limit,
                         destination: EthAddress {
-                            address: to.try_into().expect('conversion to felt252 failed')
+                            address: {
+                                let address: Option<felt252> = to.try_into();
+                                match address {
+                                    Option::Some(address) => { Result::Ok(address) },
+                                    Option::None => {
+                                        Result::Err(
+                                            EthTransactionError::Other(
+                                                'conversion to felt252 failed'
+                                            )
+                                        )
+                                    }
+                                }
+                            }?
                         },
                         amount: value,
                         payload: data,
