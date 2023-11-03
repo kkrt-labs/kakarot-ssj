@@ -98,7 +98,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     }
 
     #[inline(always)]
-    fn addresses(self: @ContractAccount) -> Address {
+    fn address(self: @ContractAccount) -> Address {
         Address { evm: *self.evm_address, starknet: *self.starknet_address }
     }
 

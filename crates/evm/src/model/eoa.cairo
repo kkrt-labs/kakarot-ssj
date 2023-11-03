@@ -76,7 +76,7 @@ impl EOAImpl of EOATrait {
         )
     }
 
-    fn addresses(self: @EOA) -> Address {
+    fn address(self: @EOA) -> Address {
         Address { evm: *self.evm_address, starknet: *self.starknet_address }
     }
 

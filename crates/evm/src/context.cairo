@@ -320,7 +320,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     // TODO: Implement print_debug
     /// Debug print the execution context.
     #[inline(always)]
-    fn print_debug(ref self: ExecutionContext) {// debug::print_felt252('gas used');
+    fn print_debug(ref self: ExecutionContext) { // debug::print_felt252('gas used');
     // self.gas_used.print();
     }
 

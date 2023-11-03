@@ -281,7 +281,6 @@ impl StateImpl of StateTrait {
     fn read_balance(ref self: State, address: Address) -> Result<u256, EVMError> {
         match self.balances.read(address.evm.into()) {
             Option::Some(value) => { Result::Ok(value) },
-            //TODO(state) - implement this post CA-rebase
             Option::None => {
                 let account = AccountTrait::fetch_or_create(address.evm)?;
                 account.account_type.balance()

@@ -66,10 +66,10 @@ fn execute(
     // Handle value transfers
     let sender: Address = AccountTrait::fetch_or_create(origin)
         .expect('couldnt fetch sender acc')
-        .addresses();
+        .address();
     let recipient: Address = AccountTrait::fetch_or_create(target)
         .expect('couldnt fetch recipient acc')
-        .addresses();
+        .address();
     let transfer = Transfer { sender, recipient, amount: value };
     match machine.state.add_transfer(transfer) {
         Result::Ok(x) => x,

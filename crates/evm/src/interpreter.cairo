@@ -668,8 +668,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
     fn finalize_context(ref self: EVMInterpreter, ref machine: Machine) {
         machine.state.commit_context();
         match machine.ctx_type() {
-            ExecutionContextType::Root => {
-                // TODO: error handling
+            ExecutionContextType::Root => {// TODO: error handling
             },
             ExecutionContextType::Call(_) => {
                 machine.finalize_calling_context(); // TODO: error handling

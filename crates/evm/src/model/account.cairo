@@ -53,7 +53,7 @@ impl AccountImpl of AccountTrait {
 
     fn commit(self: @Account) -> Result<(), EVMError> {
         // Case account exists
-        let maybe_acc = AccountImpl::account_type_at(self.addresses().evm)?;
+        let maybe_acc = AccountImpl::account_type_at(self.address().evm)?;
 
         match maybe_acc {
             Option::Some(account_type) => {
@@ -77,17 +77,17 @@ impl AccountImpl of AccountTrait {
                 if (*self.selfdestruct == true) {
                     return Result::Ok(());
                 }
-                ContractAccountTrait::deploy(self.addresses().evm, *self.code);
+                ContractAccountTrait::deploy(self.address().evm, *self.code);
                 Result::Ok(())
             //Storage is handled outside of the account and must be commited after all accounts are commited.
             }
         }
     }
 
-    fn addresses(self: @Account) -> Address {
+    fn address(self: @Account) -> Address {
         match self.account_type {
-            AccountType::EOA(eoa) => { eoa.addresses() },
-            AccountType::ContractAccount(ca) => { ca.addresses() }
+            AccountType::EOA(eoa) => { eoa.address() },
+            AccountType::ContractAccount(ca) => { ca.address() }
         }
     }
 
