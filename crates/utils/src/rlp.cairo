@@ -77,45 +77,60 @@ impl RLPImpl of RLPTrait {
                 RLPTrait::encode_string(ByteArrayExTrait::from_bytes(string))
             },
             RLPItem::List(list) => {
-                let mut nbr_item = list.len();
-                let mut payload_len = 0;
-                let mut encoded_items: ByteArray = Default::default();
+                RLPTrait::encode_list(list)
+            }
+        }
+    }
 
-                let mut i = 0;
-                let error: Option<RLPError> = loop {
-                    if i == nbr_item {
-                        break Option::None;
-                    }
+    /// RLP encodes a list of RLPItems.
+    /// # Arguments
+    /// * `input` - List to encode
+    /// # Returns
+    /// * `ByteArray - RLP encoded ByteArray
+    /// # Errors
+    /// * RLPError::RlpEmptyInput - if the input is empty
+    fn encode_list(mut input: Span<RLPItem>) -> Result<ByteArray, RLPError> {
+        let mut payload: ByteArray = Default::default();
+        
+        // Early return for empty list.
+        if input.len() == 0 {
+            return Result::Ok(
+                ByteArray { data: Default::default(), pending_word: 0xc0, pending_word_len: 1 }
+            );
+        }
 
-                    let res_encode = RLPTrait::encode(*list[i]);
+        // Encode each list items.
+        let error: Option<RLPError> = loop {
+            match input.pop_front() {
+                Option::Some(item) => {
+                    let res_encode = RLPTrait::encode(*item);
                     if res_encode.is_err() {
                         break Option::Some(res_encode.unwrap_err());
                     }
                     let encoded_item = res_encode.unwrap();
-
-                    payload_len += encoded_item.len();
-                    encoded_items.append(@encoded_item);
-
-                    i += 1;
-                };
-
-                if error != Option::None {
-                    return Result::Err(error.unwrap());
-                }
-
-                let mut output: ByteArray = Default::default();
-                if payload_len < 56 { 
-                    output.append_byte(0xc0 + payload_len.try_into().unwrap());
-                } else {
-                    let bytes_len = (payload_len/256)+1;
-                    output.append_byte(0xf7 + bytes_len.try_into().unwrap());
-                    output.append_span_bytes(payload_len.to_bytes());
-                }
-                output.append(@encoded_items);
-
-                Result::Ok(output)
+                    payload.append(@encoded_item);
+                },
+                Option::None => { break Option::None; }
             }
+        };
+        
+        if error != Option::None {
+            return Result::Err(error.unwrap());
         }
+
+        // Compute and add list prefixe.
+        let mut output: ByteArray = Default::default();
+        let payload_len = payload.len();
+        if payload_len < 56 { 
+            output.append_byte(0xc0 + payload_len.try_into().unwrap());
+        } else {
+            let bytes_len = (payload_len/256)+1;
+            output.append_byte(0xf7 + bytes_len.try_into().unwrap());
+            output.append_span_bytes(payload_len.to_bytes());
+        }
+        output.append(@payload);
+
+        Result::Ok(output)
     }
 
     /// RLP encodes a ByteArray, which is the underlying type used to represent

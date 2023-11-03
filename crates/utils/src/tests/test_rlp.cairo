@@ -2,6 +2,8 @@ use result::ResultTrait;
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use utils::rlp::{RLPType, RLPTrait, RLPItem};
 
+use debug::PrintTrait;
+
 // Tests source : https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
 //                https://github.com/ethereum/tests/blob/develop/RLPTests/rlptest.json
 
@@ -282,7 +284,7 @@ fn test_rlp_encode_long_list() {
     input.append(RLPItem::String(array![0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45].span()));
     
     let res = RLPTrait::encode(RLPItem::List(input.span())).unwrap();
-
+    
     assert(res.len() == 67, 'wrong len');
     assert(res[0] == 0xf8, 'wrong encoded value');
     assert(res[1] == 65, 'wrong encoded value');
