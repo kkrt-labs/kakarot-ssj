@@ -16,12 +16,13 @@ fn test_execute_value_transfer() {
     set_contract_address(kakarot_core.contract_address);
     let sender = EOATrait::deploy(evm_address()).expect('sender deploy failed');
     let recipient = EOATrait::deploy(other_evm_address()).expect('recipient deploy failed');
-    // Transfer native tokens to sender - we need to set the contract address for this
-    set_contract_address(contract_utils::constants::ETH_BANK());
-    IERC20CamelDispatcher { contract_address: native_token.contract_address }
-        .transfer(sender.starknet_address, 10000);
-    // Revert back to contract_address = kakarot for the test
-    set_contract_address(kakarot_core.contract_address);
+    // Transfer native tokens to sender
+    let native_token_dispatcher = IERC20CamelDispatcher {
+        contract_address: native_token.contract_address
+    };
+    contract_utils::fund_account_with_native_token(
+        sender.starknet_address, native_token_dispatcher, 10000
+    );
     // When
     let mut exec_result = execute(
         origin: sender.evm_address,
@@ -34,12 +35,6 @@ fn test_execute_value_transfer() {
         read_only: false,
     );
     // `commit_state` is applied in `eth_send_tx` only - to test that `execute` worked correctly, we manually apply it here.
-    let sender_balance = IERC20CamelDispatcher { contract_address: native_token.contract_address }
-        .balanceOf(sender.starknet_address);
-    let recipient_balance = IERC20CamelDispatcher {
-        contract_address: native_token.contract_address
-    }
-        .balanceOf(recipient.starknet_address);
     exec_result.state.commit_state();
 
     let sender_balance = IERC20CamelDispatcher { contract_address: native_token.contract_address }

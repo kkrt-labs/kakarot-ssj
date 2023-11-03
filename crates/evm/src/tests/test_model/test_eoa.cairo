@@ -45,7 +45,7 @@ fn test_eoa_balance() {
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
     let sn_address = kakarot_core.deploy_eoa(test_utils::evm_address());
 
-    fund_account_with_native_token(sn_address, native_token);
+    fund_account_with_native_token(sn_address, native_token, 0x1);
 
     // When
     set_contract_address(kakarot_core.contract_address);

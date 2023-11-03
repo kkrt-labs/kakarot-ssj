@@ -62,7 +62,7 @@ fn test_exec_balance_eoa() {
     testing::set_contract_address(kakarot_core.contract_address);
     let eoa = kakarot_core.deploy_eoa(evm_address());
 
-    fund_account_with_native_token(eoa, native_token);
+    fund_account_with_native_token(eoa, native_token, 0x1);
 
     // And
     let mut machine = setup_machine();
