@@ -65,6 +65,9 @@ impl EthTransactionImpl of EthTransaction {
         let decoded_data = RLPImpl::decode(tx_data);
         let decoded_data = RLPErrorImpl::map_err(decoded_data)?;
 
+        let len = decoded_data.len();
+        assert(len == 1, 'Length is not 1');
+
         let decoded_data = *decoded_data.at(0);
 
         let result: Result<EthereumTransaction, EthTransactionError> = match decoded_data {
