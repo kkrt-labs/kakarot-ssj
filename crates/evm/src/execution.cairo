@@ -63,38 +63,7 @@ fn execute(
     // Initiate the Machine with the root context
     let mut machine: Machine = MachineCurrentContextTrait::new(ctx);
 
-    // Handle value transfers
-    let result_sender = machine.state.get_account(origin);
-    let sender = match result_sender {
-        Result::Ok(sender) => sender.address(),
-        Result::Err(err) => {
-            return ExecutionResult {
-                status: Status::Reverted,
-                return_data: Default::default().span(),
-                destroyed_contracts: Default::default().span(),
-                create_addresses: Default::default().span(),
-                events: Default::default().span(),
-                state: machine.state,
-                error: Option::Some(err)
-            };
-        }
-    };
-    let result_recipient = machine.state.get_account(target);
-    let recipient = match result_recipient {
-        Result::Ok(recipient) => recipient.address(),
-        Result::Err(err) => {
-            return ExecutionResult {
-                status: Status::Reverted,
-                return_data: Default::default().span(),
-                destroyed_contracts: Default::default().span(),
-                create_addresses: Default::default().span(),
-                events: Default::default().span(),
-                state: machine.state,
-                error: Option::Some(err)
-            };
-        }
-    };
-    let transfer = Transfer { sender, recipient, amount: value };
+    let transfer = Transfer { sender: origin, recipient: address, amount: value };
     match machine.state.add_transfer(transfer) {
         Result::Ok(x) => {},
         Result::Err(err) => {

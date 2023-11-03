@@ -173,8 +173,12 @@ fn test_exec_call() {
 fn test_exec_call_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token());
+    let native_token = contract_utils::deploy_native_token();
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
     testing::set_contract_address(kakarot_core.contract_address);
+
+    let evm_address = evm_address();
+    let eoa = kakarot_core.deploy_eoa(evm_address);
 
     // Set machine bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -225,8 +229,12 @@ fn test_exec_call_no_return() {
 fn test_exec_staticcall() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token());
+    let native_token = contract_utils::deploy_native_token();
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
     testing::set_contract_address(kakarot_core.contract_address);
+
+    let evm_address = evm_address();
+    let eoa = kakarot_core.deploy_eoa(evm_address);
 
     // Set machine bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -277,8 +285,12 @@ fn test_exec_staticcall() {
 fn test_exec_staticcall_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token());
+    let native_token = contract_utils::deploy_native_token();
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
     testing::set_contract_address(kakarot_core.contract_address);
+
+    let evm_address = evm_address();
+    let eoa = kakarot_core.deploy_eoa(evm_address);
 
     // Set machine bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)

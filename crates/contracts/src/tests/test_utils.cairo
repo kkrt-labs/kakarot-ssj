@@ -124,7 +124,7 @@ fn deploy_contract_account(
 
 
 fn fund_account_with_native_token(
-    amount: u256, contract_address: ContractAddress, native_token: IERC20CamelDispatcher
+    contract_address: ContractAddress, native_token: IERC20CamelDispatcher, amount: u256,
 ) {
     let current_contract = get_contract_address();
     testing::set_contract_address(constants::ETH_BANK());
