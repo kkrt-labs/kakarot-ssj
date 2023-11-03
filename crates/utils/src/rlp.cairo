@@ -1,3 +1,5 @@
+use core::byte_array::ByteArrayTrait;
+use core::result::ResultTrait;
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use utils::helpers::{U32Trait, ByteArrayExTrait, ArrayExtension};
 
@@ -59,6 +61,60 @@ impl RLPImpl of RLPTrait {
             let list_len_bytes = input.slice(1, len_bytes_count);
             let list_len: u32 = U32Trait::from_bytes(list_len_bytes).unwrap();
             Result::Ok((RLPType::List, 1 + len_bytes_count, list_len))
+        }
+    }
+
+    /// RLP encodes a RLPItem
+    /// # Arguments
+    /// * `input` - RLPItem to encode
+    /// # Returns
+    /// * `ByteArray - RLP encoded ByteArray
+    /// # Errors
+    /// * RLPError::RlpEmptyInput - if the input is empty
+    fn encode(input: RLPItem) -> Result<ByteArray, RLPError> {
+        match input {
+            RLPItem::String(string) => { 
+                RLPTrait::encode_string(ByteArrayExTrait::from_bytes(string))
+            },
+            RLPItem::List(list) => {
+                let mut nbr_item = list.len();
+                let mut payload_len = 0;
+                let mut encoded_items: ByteArray = Default::default();
+
+                let mut i = 0;
+                let error: Option<RLPError> = loop {
+                    if i == nbr_item {
+                        break Option::None;
+                    }
+
+                    let res_encode = RLPTrait::encode(*list[i]);
+                    if res_encode.is_err() {
+                        break Option::Some(res_encode.unwrap_err());
+                    }
+                    let encoded_item = res_encode.unwrap();
+
+                    payload_len += encoded_item.len();
+                    encoded_items.append(@encoded_item);
+
+                    i += 1;
+                };
+
+                if error != Option::None {
+                    return Result::Err(error.unwrap());
+                }
+
+                let mut output: ByteArray = Default::default();
+                if payload_len < 56 { 
+                    output.append_byte(0xc0 + payload_len.try_into().unwrap());
+                } else {
+                    let bytes_len = (payload_len/256)+1;
+                    output.append_byte(0xf7 + bytes_len.try_into().unwrap());
+                    output.append_span_bytes(payload_len.to_bytes());
+                }
+                output.append(@encoded_items);
+
+                Result::Ok(output)
+            }
         }
     }
 

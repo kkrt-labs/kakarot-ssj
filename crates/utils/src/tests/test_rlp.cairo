@@ -100,11 +100,33 @@ fn test_rlp_encode_string_empty_input() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_rlp_encode_single_byte_lt_0x80() {
+fn test_rlp_encode_empty_input() {
+    let mut input = array![];
+
+    let res = RLPTrait::encode(RLPItem::String(input.span())).unwrap();
+
+    assert(res.len() == 1, 'wrong len');
+    assert(res[0] == 0x80, 'wrong encoded value');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_rlp_encode_string_single_byte_lt_0x80() {
     let mut input: ByteArray = Default::default();
     input.append_byte(0x40);
 
     let res = RLPTrait::encode_string(input).unwrap();
+
+    assert(res.len() == 1, 'wrong len');
+    assert(res[0] == 0x40, 'wrong encoded value');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_rlp_encode_single_byte_lt_0x80() {
+    let mut input = array![0x40];
+
+    let res = RLPTrait::encode(RLPItem::String(input.span())).unwrap();
 
     assert(res.len() == 1, 'wrong len');
     assert(res[0] == 0x40, 'wrong encoded value');
@@ -221,6 +243,68 @@ fn test_rlp_encode_large_bytearray_inputs() {
         assert(res[i] == 0x70, 'wrong value in sequence');
         i += 1;
     }
+}
+
+#[test]
+#[available_gas(99999999)]
+fn test_rlp_encode_list_empty() {
+    let mut input = array![];
+    
+    let res = RLPTrait::encode(RLPItem::List(input.span())).unwrap();
+
+    assert(res.len() == 1, 'wrong len');
+    assert(res[0] == 0xc0, 'wrong encoded value');
+}
+
+#[test]
+#[available_gas(99999999)]
+fn test_rlp_encode_short_list() {
+    let mut input = array![];
+    input.append(RLPItem::String(array![0x45].span()));
+    input.append(RLPItem::String(array![0x45].span()));
+    input.append(RLPItem::String(array![0x45].span()));
+    input.append(RLPItem::String(array![0x45].span()));
+    
+    let res = RLPTrait::encode(RLPItem::List(input.span())).unwrap();
+
+    assert(res.len() == 5, 'wrong len');
+    assert(res[0] == 0xc4, 'wrong encoded value');
+}
+
+#[test]
+#[available_gas(99999999)]
+fn test_rlp_encode_long_list() {
+    let mut input = array![];
+    input.append(RLPItem::String(array![0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45].span()));
+    input.append(RLPItem::String(array![0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45].span()));
+    input.append(RLPItem::String(array![0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45].span()));
+    input.append(RLPItem::String(array![0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45].span()));
+    input.append(RLPItem::String(array![0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45,0x45].span()));
+    
+    let res = RLPTrait::encode(RLPItem::List(input.span())).unwrap();
+
+    assert(res.len() == 67, 'wrong len');
+    assert(res[0] == 0xf8, 'wrong encoded value');
+    assert(res[1] == 65, 'wrong encoded value');
+}
+
+#[test]
+#[available_gas(99999999999)]
+fn test_rlp_encode_short_nested_list() {
+    let mut arr = array![0xc7, 0xc0, 0xc1, 0xc0, 0xc3, 0xc0, 0xc1, 0xc0];
+    let res = RLPTrait::decode(arr.span()).unwrap();
+
+    let mut expected_0 = RLPItem::List(array![].span());
+    let mut expected_1 = RLPItem::List(array![expected_0].span());
+    let mut expected_2 = RLPItem::List(array![expected_0, expected_1].span());
+
+    let expected = RLPItem::List(array![expected_0, expected_1, expected_2].span());
+
+    let res = RLPTrait::encode(expected).unwrap();
+
+    assert(res.len() == 8, 'wrong len');
+    assert(res[0] == 0xc7, 'wrong encoded value');
+    assert(res[1] == 0xc0, 'wrong encoded value');
 }
 
 #[test]
