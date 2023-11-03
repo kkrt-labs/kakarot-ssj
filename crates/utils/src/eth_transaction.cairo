@@ -17,7 +17,7 @@ use utils::helpers::U256Trait;
 use utils::helpers::{U256Impl, ByteArrayExt};
 
 use utils::rlp::RLPItem;
-use utils::rlp::{RLPImpl, RLPHelpersImpl};
+use utils::rlp::{RLPImpl, RLPHelpersTrait};
 
 #[derive(Drop)]
 struct EthereumTransaction {
@@ -84,32 +84,24 @@ impl EthTransactionImpl of EthTransaction {
                 let s_idx = 8;
 
                 let nonce = RLPHelpersErrorImpl::map_err(
-                    RLPHelpersImpl::parse_u128_from_string(*val.at(nonce_idx))
+                    (*val.at(nonce_idx)).parse_u128_from_string()
                 )?;
                 let gas_price = RLPHelpersErrorImpl::map_err(
-                    RLPHelpersImpl::parse_u128_from_string(*val.at(gas_price_idx))
+                    (*val.at(gas_price_idx)).parse_u128_from_string()
                 )?;
                 let gas_limit = RLPHelpersErrorImpl::map_err(
-                    RLPHelpersImpl::parse_u128_from_string(*val.at(gas_limit_idx))
+                    (*val.at(gas_limit_idx)).parse_u128_from_string()
                 )?;
-                let to = RLPHelpersErrorImpl::map_err(
-                    RLPHelpersImpl::parse_u256_from_string(*val.at(to_idx))
-                )?;
+                let to = RLPHelpersErrorImpl::map_err((*val.at(to_idx)).parse_u256_from_string())?;
                 let value = RLPHelpersErrorImpl::map_err(
-                    RLPHelpersImpl::parse_u256_from_string(*val.at(value_idx))
+                    (*val.at(value_idx)).parse_u256_from_string()
                 )?;
                 let data = RLPHelpersErrorImpl::map_err(
-                    RLPHelpersImpl::parse_bytes_felt252_from_string(*val.at(data_idx))
+                    (*val.at(data_idx)).parse_bytes_felt252_from_string()
                 )?;
-                let v = RLPHelpersErrorImpl::map_err(
-                    RLPHelpersImpl::parse_u128_from_string(*val.at(v_idx))
-                )?;
-                let r = RLPHelpersErrorImpl::map_err(
-                    RLPHelpersImpl::parse_u256_from_string(*val.at(r_idx))
-                )?;
-                let s = RLPHelpersErrorImpl::map_err(
-                    RLPHelpersImpl::parse_u256_from_string(*val.at(s_idx))
-                )?;
+                let v = RLPHelpersErrorImpl::map_err((*val.at(v_idx)).parse_u128_from_string())?;
+                let r = RLPHelpersErrorImpl::map_err((*val.at(r_idx)).parse_u256_from_string())?;
+                let s = RLPHelpersErrorImpl::map_err((*val.at(s_idx)).parse_u256_from_string())?;
 
                 let mut transaction_data_byte_array = ByteArrayExt::from_bytes(tx_data);
                 let (mut keccak_input, last_input_word, last_input_num_bytes) =

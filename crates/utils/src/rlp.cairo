@@ -151,8 +151,8 @@ impl RLPImpl of RLPTrait {
 
 #[generate_trait]
 impl RLPHelpersImpl of RLPHelpersTrait {
-    fn parse_u128_from_string(rlp_item: RLPItem) -> Result<u128, RLPHelpersError> {
-        match rlp_item {
+    fn parse_u128_from_string(self: RLPItem) -> Result<u128, RLPHelpersError> {
+        match self {
             RLPItem::String(bytes) => {
                 let value = U128Impl::from_bytes(bytes).ok_or(RLPHelpersError::FailedParsingU128)?;
                 Result::Ok(value)
@@ -161,8 +161,8 @@ impl RLPHelpersImpl of RLPHelpersTrait {
         }
     }
 
-    fn parse_u256_from_string(rlp_item: RLPItem) -> Result<u256, RLPHelpersError> {
-        match rlp_item {
+    fn parse_u256_from_string(self: RLPItem) -> Result<u256, RLPHelpersError> {
+        match self {
             RLPItem::String(bytes) => {
                 let value = U256Impl::from_bytes(bytes).ok_or(RLPHelpersError::FailedParsingU256)?;
                 Result::Ok(value)
@@ -172,10 +172,8 @@ impl RLPHelpersImpl of RLPHelpersTrait {
     }
 
 
-    fn parse_bytes_felt252_from_string(
-        rlp_item: RLPItem
-    ) -> Result<Span<felt252>, RLPHelpersError> {
-        match rlp_item {
+    fn parse_bytes_felt252_from_string(self: RLPItem) -> Result<Span<felt252>, RLPHelpersError> {
+        match self {
             RLPItem::String(bytes) => {
                 let mut result: Array<felt252> = array![];
                 let len = bytes.len();
