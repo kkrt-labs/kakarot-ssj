@@ -77,7 +77,8 @@ impl AccountImpl of AccountTrait {
                 if (*self.selfdestruct == true) {
                     return Result::Ok(());
                 }
-                ContractAccountTrait::deploy(self.address().evm, *self.code);
+                let mut ca = ContractAccountTrait::deploy(self.address().evm, *self.code)?;
+                ca.set_nonce(*self.nonce);
                 Result::Ok(())
             //Storage is handled outside of the account and must be commited after all accounts are commited.
             }
