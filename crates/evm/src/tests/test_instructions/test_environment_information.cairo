@@ -3,7 +3,6 @@ use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
-use debug::PrintTrait;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
@@ -63,7 +62,7 @@ fn test_exec_balance_eoa() {
     testing::set_contract_address(kakarot_core.contract_address);
     let eoa = kakarot_core.deploy_eoa(evm_address());
 
-    fund_account_with_native_token(eoa, native_token);
+    fund_account_with_native_token(eoa, native_token, 0x1);
 
     // And
     let mut machine = setup_machine();

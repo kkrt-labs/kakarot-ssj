@@ -311,6 +311,7 @@ mod KakarotCore {
             data: Span<u8>
         ) -> Result<ExecutionResult, EVMError> {
             match to {
+                //TODO we can optimize this by doing this one step later, when we load the account from the state. This way we can avoid loading the account bytecode twice.
                 Option::Some(to) => {
                     let bytecode = match AccountTrait::account_type_at(to)? {
                         Option::Some(account) => account.bytecode()?,

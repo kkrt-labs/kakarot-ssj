@@ -16,7 +16,6 @@ use contracts::uninitialized_account::interface::{
 };
 use contracts::uninitialized_account::uninitialized_account::UninitializedAccount;
 use core::result::ResultTrait;
-use debug::PrintTrait;
 use eoa::externally_owned_account::ExternallyOwnedAccount;
 use evm::errors::EVMErrorTrait;
 use evm::machine::Status;

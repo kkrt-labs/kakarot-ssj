@@ -82,7 +82,7 @@ fn test_balance() {
     let mut ca = ContractAccountTrait::deploy(test_utils::evm_address(), array![].span()).unwrap();
     assert(ca.balance().expect('failed to get balance') == 0, 'initial balance not 0');
 
-    contract_utils::fund_account_with_native_token(ca.starknet_address, native_token);
+    contract_utils::fund_account_with_native_token(ca.starknet_address, native_token, 0x1);
 
     assert(ca.balance().expect('failed to get new balance') == 1, 'balance not incremented');
 }
