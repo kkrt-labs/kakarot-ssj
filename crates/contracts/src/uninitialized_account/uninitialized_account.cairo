@@ -4,9 +4,10 @@
 mod UninitializedAccount {
     use contracts::components::upgradeable::IUpgradeable;
     use contracts::components::upgradeable::upgradeable_component;
+    use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use contracts::uninitialized_account::interface::IUninitializedAccount;
+    use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use starknet::{ContractAddress, EthAddress, ClassHash, get_caller_address};
-
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
     impl UpgradeableImpl = upgradeable_component::Upgradeable<ContractState>;
@@ -40,6 +41,14 @@ mod UninitializedAccount {
                 get_caller_address() == self.kakarot_core_address.read(),
                 'Caller not Kakarot Core address'
             );
+            let kakarot = self.kakarot_core_address.read();
+            let native_token = IKakarotCoreDispatcher { contract_address: kakarot }.native_token();
+            // To internally perform value transfer of the network's native
+            // token (which conforms to the ERC20 standard), we need to give the
+            // KakarotCore contract infinite allowance
+            IERC20CamelDispatcher { contract_address: native_token }
+                .approve(kakarot, integer::BoundedInt::<u256>::max());
+
             self.upgradeable.upgrade_contract(new_class_hash);
         }
     }
