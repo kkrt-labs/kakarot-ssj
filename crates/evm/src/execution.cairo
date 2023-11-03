@@ -97,7 +97,17 @@ fn execute(
     let transfer = Transfer { sender, recipient, amount: value };
     match machine.state.add_transfer(transfer) {
         Result::Ok(x) => x,
-        Result::Err(revert_reason) => machine.set_error(revert_reason),
+        Result::Err(err) => {
+            return ExecutionResult {
+                status: Status::Reverted,
+                return_data: Default::default().span(),
+                destroyed_contracts: Default::default().span(),
+                create_addresses: Default::default().span(),
+                events: Default::default().span(),
+                state: machine.state,
+                error: Option::Some(err)
+            };
+        }
     }
 
     let mut interpreter = EVMInterpreterTrait::new();
