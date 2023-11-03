@@ -151,15 +151,18 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
 
 
     fn get_create2_address(
-        ref self: Machine, sender_address: EthAddress, salt: u256, bytecode: Span<u8>
+        self: @Machine, sender_address: EthAddress, salt: u256, bytecode: Span<u8>
     ) -> Result<EthAddress, EVMError> {
         let mut bytecode = ByteArrayExTrait::from_bytes(bytecode);
         let (mut keccak_input, last_input_word, last_input_num_bytes) = bytecode.to_u64_words();
         let hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes)
             .reverse_endianness()
             .to_bytes();
+
         let sender_address = sender_address.to_bytes();
+
         let salt = salt.to_bytes();
+
         let mut preimage: Array<u8> = array![];
 
         preimage.concat(array![0xff].span());
@@ -170,12 +173,14 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         let mut preimage = ByteArrayExTrait::from_bytes(preimage.span());
         let (mut keccak_input, last_input_word, last_input_num_bytes) = preimage.to_u64_words();
         let address_hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes)
+            .reverse_endianness()
             .to_bytes();
 
         // Since cairo_keccak returns a little endian result
         // We take a slice from 0 to 20th element
-        let address: EthAddress = address_hash.slice(0, 20).try_into_result()?;
+        let address: EthAddress = address_hash.slice(12, 20).try_into_result()?;
 
+        // Result::Ok(address)
         Result::Ok(address)
     }
 }

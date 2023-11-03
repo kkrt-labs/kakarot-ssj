@@ -4,7 +4,7 @@ use starknet::{
     StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
     ContractAddress, Store, SyscallResult
 };
-use utils::math::{Zero, One};
+use utils::math::{Zero, One, Bitshift};
 
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
     #[inline(always)]
@@ -88,28 +88,28 @@ trait TryIntoResult<T, U> {
 
 impl SpanU8TryIntoResultEthAddress of TryIntoResult<Span<u8>, EthAddress> {
     fn try_into_result(mut self: Span<u8>) -> Result<EthAddress, EVMError> {
-        if self.len() == 0 {
+        let len = self.len();
+        if len == 0 {
             return Result::Ok(EthAddress { address: 0 });
         }
-        if self.len() > 20 {
+        if len > 20 {
             return Result::Err(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR));
         }
-
-        let mut current: felt252 = 0;
-        let mut counter: usize = 0;
-
+        let offset: u32 = len.into() - 1;
+        let mut result: u256 = 0;
+        let mut i: u32 = 0;
         loop {
-            if self.len() == 0 {
-                break;
+            if i == len {
+                break ();
             }
-            let loaded: u8 = *self.at(counter);
-            let tmp = current * 256;
-            current = tmp + loaded.into();
-            self.pop_front();
-            counter += 1;
-        };
+            let byte: u256 = (*self.at(i)).into();
+            result += byte.shl(8 * (offset - i).into());
 
-        Result::Ok(EthAddress { address: current })
+            i += 1;
+        };
+        let address: felt252 = result.try_into_result()?;
+
+        Result::Ok(EthAddress { address })
     }
 }
 

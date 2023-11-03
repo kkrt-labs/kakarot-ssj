@@ -614,16 +614,17 @@ impl U256Impl of U256Trait {
         u256 { low: new_low, high: new_high }
     }
 
+    // Returns a u256 representation as bytes: &[u8; 32]
+    // This slice is padded of zeros if the u256 representation does not take up to 32 bytes
     fn to_bytes(self: u256) -> Span<u8> {
         let bytes_used: u256 = 32;
-        let mut value: u256 = self;
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
         loop {
             if i == bytes_used {
                 break ();
             }
-            let val = value.wrapping_shr(8 * (bytes_used - i - 1));
+            let val = self.shr(8 * (bytes_used - i - 1));
             bytes.append((val & 0xFF).try_into().unwrap());
             i += 1;
         };
@@ -631,6 +632,7 @@ impl U256Impl of U256Trait {
         bytes.span()
     }
 }
+
 #[generate_trait]
 impl ByteArrayExt of ByteArrayExTrait {
     fn append_span_bytes(ref self: ByteArray, mut bytes: Span<u8>) {
