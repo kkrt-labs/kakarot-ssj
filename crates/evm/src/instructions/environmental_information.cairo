@@ -5,6 +5,7 @@ use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
+use evm::model::AccountTrait;
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use integer::u32_as_non_zero;
@@ -237,7 +238,14 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_extcodehash(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        let bytecode = self.state.get_account(evm_address)?.code;
+        let account = self.state.get_account(evm_address)?;
+        if (account.is_precompile()
+            || (account.account_type.is_ca() && account.nonce == 0)
+            || account.is_selfdestruct()) {
+            return self.stack.push(0);
+        }
+        let bytecode = account.code;
+
         if bytecode.is_empty() {
             return self.stack.push(EMPTY_KECCAK);
         }

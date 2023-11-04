@@ -195,6 +195,7 @@ mod test_simple_log {
 mod test_state {
     use contracts::eoa::ExternallyOwnedAccount;
     use contracts::tests::test_utils as contract_utils;
+    use contracts::uninitialized_account::UninitializedAccount;
     use evm::model::account::{Account, AccountType};
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
     use evm::model::eoa::EOATrait;
@@ -212,18 +213,19 @@ mod test_state {
     #[available_gas(200000000)]
     fn test_get_account_when_not_present() {
         let mut state: State = Default::default();
-        let deployer = test_utils::kakarot_address();
-        set_contract_address(deployer);
+        let native_token = contract_utils::deploy_native_token();
+        // Transfer native tokens to sender
+        let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
+        set_contract_address(kakarot_core.contract_address);
 
         let evm_address: EthAddress = test_utils::evm_address();
-        //TODO(CA-migration: compute SN address with this)
-        // let starknet_address = compute_starknet_address(
-        //     deployer.into(),
-        //     evm_address,
-        //     ContractAccount::TEST_CLASS_HASH.try_into().unwrap()
-        // );
+        let starknet_address = compute_starknet_address(
+            kakarot_core.contract_address.into(),
+            evm_address,
+            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
+        );
         let expected_type = AccountType::ContractAccount(
-            ContractAccount { evm_address, starknet_address: get_contract_address() }
+            ContractAccount { evm_address, starknet_address }
         );
         let expected_account = Account {
             account_type: expected_type,
@@ -247,14 +249,11 @@ mod test_state {
         set_contract_address(deployer);
 
         let evm_address: EthAddress = test_utils::evm_address();
-        //TODO(CA-migration: compute SN address with this)
-        // let starknet_address = compute_starknet_address(
-        //     deployer.into(),
-        //     evm_address,
-        //     ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap()
-        // );
+        let starknet_address = compute_starknet_address(
+            deployer.into(), evm_address, UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
+        );
         let expected_type = AccountType::ContractAccount(
-            ContractAccount { evm_address, starknet_address: get_contract_address() }
+            ContractAccount { evm_address, starknet_address }
         );
         let expected_account = Account {
             account_type: expected_type,
@@ -329,14 +328,14 @@ mod test_state {
         let sender_starknet_address = compute_starknet_address(
             deployer.into(),
             sender_evm_address,
-            ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap()
+            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
         );
         let sender = Address { evm: sender_evm_address, starknet: sender_starknet_address };
         let recipient_evm_address = test_utils::other_evm_address();
         let recipient_starknet_address = compute_starknet_address(
             deployer.into(),
             recipient_evm_address,
-            ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap()
+            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
         );
         let recipient = Address {
             evm: recipient_evm_address, starknet: recipient_starknet_address
@@ -364,9 +363,7 @@ mod test_state {
         let deployer = test_utils::kakarot_address();
         let evm_address: EthAddress = test_utils::evm_address();
         let starknet_address = compute_starknet_address(
-            deployer.into(),
-            evm_address,
-            ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap()
+            deployer.into(), evm_address, UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
         );
         let address = Address { evm: evm_address, starknet: starknet_address };
 
