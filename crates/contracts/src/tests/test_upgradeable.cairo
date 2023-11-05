@@ -59,7 +59,7 @@ mod MockContractUpgradeableV1 {
         upgradeableEvent: upgradeable_component::Event
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl MockContractUpgradeableImpl of IMockContractUpgradeable<ContractState> {
         fn version(self: @ContractState) -> felt252 {
             1

@@ -48,7 +48,7 @@ mod ExternallyOwnedAccount {
         self.evm_address.write(evm_address);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ExternallyOwnedAccount of super::IExternallyOwnedAccount<ContractState> {
         fn kakarot_core_address(self: @ContractState) -> ContractAddress {
             self.kakarot_core_address.read()
@@ -65,7 +65,7 @@ mod ExternallyOwnedAccount {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl AccountContractImpl of AccountContract<ContractState> {
         fn __validate__(ref self: ContractState, calls: Array<Call>) -> felt252 {
             assert(get_caller_address().is_zero(), 'Caller not zero');
