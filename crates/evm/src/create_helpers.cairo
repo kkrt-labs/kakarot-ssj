@@ -1,6 +1,5 @@
 //! CREATE, CREATE2 opcode helpers
 use cmp::min;
-use contracts::tests::test_data::storage_evm_bytecode;
 use evm::context::{
     ExecutionContext, Status, CallContext, CallContextTrait, ExecutionContextType,
     ExecutionContextTrait
