@@ -3,9 +3,8 @@
 //! KakarotCore's storage.
 
 use alexandria_storage::list::{List, ListTrait};
-use contracts::contract_account::interface::{
-    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount,
-    IContractAccountSafeDispatcher, IContractAccountSafeDispatcherTrait
+use contracts::contract_account::{
+    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount
 };
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
