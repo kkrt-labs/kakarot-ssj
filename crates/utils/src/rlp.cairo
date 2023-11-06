@@ -176,7 +176,7 @@ impl RLPHelpersImpl of RLPHelpersTrait {
 
                 let mut i = 0;
                 loop {
-                    if (i >= len) {
+                    if (i == len) {
                         break ();
                     }
                     result.append((*bytes.at(i)).into());
