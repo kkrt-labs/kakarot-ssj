@@ -2,10 +2,10 @@ use core::traits::TryInto;
 
 use keccak::cairo_keccak;
 use starknet::EthAddress;
+use utils::errors::RLPErrorTrait;
 
 use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl, RLPHelpersErrorTrait};
 use utils::helpers::ByteArrayExTrait;
-use utils::helpers::ResultExTrait;
 use utils::helpers::U256Trait;
 
 use utils::helpers::{U256Impl, ByteArrayExt};
@@ -39,7 +39,7 @@ impl EthTransactionImpl of EthTransaction {
     /// tx_data is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data, v, r, s]
     fn decode_legacy_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
         let decoded_data = RLPTrait::decode(tx_data);
-        let decoded_data = RLPErrorImpl::map_err(decoded_data)?;
+        let decoded_data = decoded_data.map_err()?;
 
         if (decoded_data.len() != 1) {
             return Result::Err(EthTransactionError::Other('Length is not 1'));
@@ -65,25 +65,15 @@ impl EthTransactionImpl of EthTransaction {
                 let r_idx = 7;
                 let s_idx = 8;
 
-                let nonce = RLPHelpersErrorImpl::map_err(
-                    (*val.at(nonce_idx)).parse_u128_from_string()
-                )?;
-                let gas_price = RLPHelpersErrorImpl::map_err(
-                    (*val.at(gas_price_idx)).parse_u128_from_string()
-                )?;
-                let gas_limit = RLPHelpersErrorImpl::map_err(
-                    (*val.at(gas_limit_idx)).parse_u128_from_string()
-                )?;
-                let to = RLPHelpersErrorImpl::map_err((*val.at(to_idx)).parse_u256_from_string())?;
-                let value = RLPHelpersErrorImpl::map_err(
-                    (*val.at(value_idx)).parse_u256_from_string()
-                )?;
-                let data = RLPHelpersErrorImpl::map_err(
-                    (*val.at(data_idx)).parse_bytes_felt252_from_string()
-                )?;
-                let v = RLPHelpersErrorImpl::map_err((*val.at(v_idx)).parse_u128_from_string())?;
-                let r = RLPHelpersErrorImpl::map_err((*val.at(r_idx)).parse_u256_from_string())?;
-                let s = RLPHelpersErrorImpl::map_err((*val.at(s_idx)).parse_u256_from_string())?;
+                let nonce = (*val.at(nonce_idx)).parse_u128_from_string().map_err()?;
+                let gas_price = (*val.at(gas_price_idx)).parse_u128_from_string().map_err()?;
+                let gas_limit = (*val.at(gas_limit_idx)).parse_u128_from_string().map_err()?;
+                let to = (*val.at(to_idx)).parse_u256_from_string().map_err()?;
+                let value = (*val.at(value_idx)).parse_u256_from_string().map_err()?;
+                let data = (*val.at(data_idx)).parse_bytes_felt252_from_string().map_err()?;
+                let v = (*val.at(v_idx)).parse_u128_from_string().map_err()?;
+                let r = (*val.at(r_idx)).parse_u256_from_string().map_err()?;
+                let s = (*val.at(s_idx)).parse_u256_from_string().map_err()?;
 
                 let mut transaction_data_byte_array = ByteArrayExt::from_bytes(tx_data);
                 let (mut keccak_input, last_input_word, last_input_num_bytes) =
