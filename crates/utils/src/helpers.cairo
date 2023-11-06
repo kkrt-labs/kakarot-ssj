@@ -614,7 +614,7 @@ impl U256Impl of U256Trait {
         u256 { low: new_low, high: new_high }
     }
 
-    // Returns a u256 representation as bytes: &[u8; 32]
+    // Returns a u256 representation as bytes: `Span<u8>`
     // This slice is padded of zeros if the u256 representation does not take up to 32 bytes
     fn to_bytes(self: u256) -> Span<u8> {
         let bytes_used: u256 = 32;
