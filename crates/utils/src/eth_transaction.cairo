@@ -11,7 +11,7 @@ use utils::helpers::U256Trait;
 use utils::helpers::{U256Impl, ByteArrayExt};
 
 use utils::rlp::RLPItem;
-use utils::rlp::{RLPImpl, RLPHelpersTrait};
+use utils::rlp::{RLPTrait, RLPHelpersTrait};
 
 #[derive(Drop)]
 struct EthereumTransaction {
@@ -56,7 +56,7 @@ impl EthTransactionImpl of EthTransaction {
     /// tx_data The raw transaction data
     /// tx_data is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data, v, r, s]
     fn decode_legacy_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
-        let decoded_data = RLPImpl::decode(tx_data);
+        let decoded_data = RLPTrait::decode(tx_data);
         let decoded_data = RLPErrorImpl::map_err(decoded_data)?;
 
         let len = decoded_data.len();
