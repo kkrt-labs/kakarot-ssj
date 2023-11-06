@@ -103,9 +103,7 @@ impl BlockInformation of BlockInformationTrait {
     /// Get balance of currently executing contract
     /// # Specification: https://www.evm.codes/#47?fork=shanghai
     fn exec_selfbalance(ref self: Machine) -> Result<(), EVMError> {
-        let evm_address = self.evm_address();
-
-        let maybe_account = AccountTrait::account_type_at(evm_address)?;
+        let maybe_account = AccountTrait::account_type_at(self.address().evm)?;
         let balance: u256 = match maybe_account {
             Option::Some(acc) => acc.balance()?,
             Option::None => 0

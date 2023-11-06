@@ -4,7 +4,7 @@ use evm::context::{
 };
 use evm::errors::{EVMError};
 use evm::machine::{Machine, MachineCurrentContextTrait};
-use evm::model::{ContractAccountTrait};
+use evm::model::{ContractAccountTrait, Address};
 use nullable::{match_nullable, FromNullableResult};
 use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
@@ -19,12 +19,20 @@ fn evm_address() -> EthAddress {
     'evm_address'.try_into().unwrap()
 }
 
+fn test_address() -> Address {
+    Address { evm: evm_address(), starknet: starknet_address() }
+}
+
 fn other_evm_address() -> EthAddress {
     0xabde1.try_into().unwrap()
 }
 
 fn other_starknet_address() -> ContractAddress {
     contract_address_const::<'other_starknet_address'>()
+}
+
+fn other_address() -> Address {
+    Address { evm: other_evm_address(), starknet: other_starknet_address() }
 }
 
 fn storage_base_address() -> StorageBaseAddress {
@@ -82,7 +90,7 @@ fn setup_call_context() -> CallContext {
     let bytecode: Span<u8> = array![1, 2, 3].span();
     let calldata: Span<u8> = array![4, 5, 6].span();
     let value: u256 = callvalue();
-    let address = evm_address();
+    let address = test_address();
     let read_only = false;
     let gas_price = 0xaaaaaa;
     let gas_limit = 0xffffff;
@@ -106,7 +114,7 @@ fn setup_static_call_context() -> CallContext {
     let bytecode: Span<u8> = array![1, 2, 3].span();
     let calldata: Span<u8> = array![4, 5, 6].span();
     let value: u256 = callvalue();
-    let address = evm_address();
+    let address = test_address();
     let read_only = true;
     let gas_price = 0xaaaaaa;
     let gas_limit = 0xffffff;
@@ -129,19 +137,19 @@ fn setup_static_call_context() -> CallContext {
 fn setup_execution_context() -> ExecutionContext {
     let context_id = ExecutionContextType::Root;
     let call_ctx = setup_call_context();
-    let evm_address: EthAddress = evm_address();
+    let address = test_address();
     let return_data = array![1, 2, 3].span();
 
-    ExecutionContextTrait::new(context_id, evm_address, call_ctx, Default::default(), return_data,)
+    ExecutionContextTrait::new(context_id, address, call_ctx, Default::default(), return_data,)
 }
 
 fn setup_static_execution_context() -> ExecutionContext {
     let context_id = ExecutionContextType::Root;
     let call_ctx = setup_static_call_context();
-    let evm_address: EthAddress = evm_address();
+    let address = test_address();
     let return_data = array![1, 2, 3].span();
 
-    ExecutionContextTrait::new(context_id, evm_address, call_ctx, Default::default(), return_data,)
+    ExecutionContextTrait::new(context_id, address, call_ctx, Default::default(), return_data,)
 }
 
 fn setup_nested_execution_context() -> ExecutionContext {
@@ -153,7 +161,7 @@ fn setup_nested_execution_context() -> ExecutionContext {
     child_context.ctx_type = context_id;
     child_context.parent_ctx = NullableTrait::new(parent_context);
     let mut call_ctx = child_context.call_ctx.unbox();
-    call_ctx.caller = other_evm_address();
+    call_ctx.caller = other_address();
     child_context.call_ctx = BoxTrait::new(call_ctx);
 
     return child_context;
@@ -162,7 +170,7 @@ fn setup_nested_execution_context() -> ExecutionContext {
 fn setup_call_context_with_bytecode(bytecode: Span<u8>) -> CallContext {
     let calldata: Span<u8> = array![4, 5, 6].span();
     let value: u256 = callvalue();
-    let address = evm_address();
+    let address = test_address();
     let read_only = false;
     let gas_price = 0xaaaaaa;
     let gas_limit = 0xffffff;
@@ -185,17 +193,17 @@ fn setup_call_context_with_bytecode(bytecode: Span<u8>) -> CallContext {
 fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext {
     let context_id = ExecutionContextType::Root;
     let call_ctx = setup_call_context_with_bytecode(bytecode);
-    let evm_address: EthAddress = evm_address();
+    let address = test_address();
     let return_data = Default::default().span();
 
-    ExecutionContextTrait::new(context_id, evm_address, call_ctx, Default::default(), return_data,)
+    ExecutionContextTrait::new(context_id, address, call_ctx, Default::default(), return_data,)
 }
 
 
 fn setup_call_context_with_calldata(calldata: Span<u8>) -> CallContext {
     let bytecode: Span<u8> = array![1, 2, 3].span();
     let value: u256 = callvalue();
-    let address = evm_address();
+    let address = test_address();
     let read_only = false;
     let gas_price = 0xffffff;
     let gas_limit = 0xffffff;
@@ -218,10 +226,10 @@ fn setup_call_context_with_calldata(calldata: Span<u8>) -> CallContext {
 fn setup_execution_context_with_calldata(calldata: Span<u8>) -> ExecutionContext {
     let context_id = ExecutionContextType::Root;
     let call_ctx = setup_call_context_with_calldata(calldata);
-    let evm_address: EthAddress = evm_address();
+    let address = test_address();
     let return_data = Default::default().span();
 
-    ExecutionContextTrait::new(context_id, evm_address, call_ctx, Default::default(), return_data,)
+    ExecutionContextTrait::new(context_id, address, call_ctx, Default::default(), return_data,)
 }
 
 impl CallContextPartialEq of PartialEq<CallContext> {

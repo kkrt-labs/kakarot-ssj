@@ -23,18 +23,18 @@ mod KakarotCore {
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
     use evm::context::Status;
-    use evm::errors::{EVMError, EVMErrorTrait};
+    use evm::errors::{EVMError, EVMErrorTrait, CALLING_FROM_CA, CALLING_FROM_UNDEPLOYED_ACCOUNT};
     use evm::execution::execute;
-    use evm::model::ExecutionResult;
     use evm::model::account::{Account, AccountTrait};
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
     use evm::model::eoa::{EOA, EOATrait};
+    use evm::model::{ExecutionResult, Address};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use super::{StoredAccountType};
-    use utils::helpers;
+    use utils::helpers::{compute_starknet_address};
     use utils::traits::{ByteArraySerde};
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
@@ -164,7 +164,7 @@ mod KakarotCore {
         ) -> ContractAddress {
             // Deployer is always Kakarot Core
             let deployer = get_contract_address();
-            helpers::compute_starknet_address(deployer, evm_address, self.account_class_hash.read())
+            compute_starknet_address(deployer, evm_address, self.account_class_hash.read())
         }
 
         fn address_registry(self: @ContractState, evm_address: EthAddress) -> StoredAccountType {
@@ -231,6 +231,9 @@ mod KakarotCore {
             if !self.is_view() {
                 panic_with_felt252('fn must be called, not invoked');
             };
+
+            let from = Address { evm: from, starknet: self.compute_starknet_address(from) };
+
             let result = self.handle_call(:from, :to, :gas_limit, :gas_price, :value, :data);
             match result {
                 Result::Ok(result) => result.return_data,
@@ -303,7 +306,7 @@ mod KakarotCore {
 
         fn handle_call(
             self: @ContractState,
-            from: EthAddress,
+            from: Address,
             to: Option<EthAddress>,
             gas_limit: u128,
             gas_price: u128,
@@ -317,6 +320,10 @@ mod KakarotCore {
                         Option::Some(account) => account.bytecode()?,
                         Option::None => Default::default().span(),
                     };
+
+                    let target_starknet_address = self.compute_starknet_address(to);
+                    let to = Address { evm: to, starknet: target_starknet_address };
+
                     let execution_result = execute(
                         from,
                         to,
@@ -333,7 +340,7 @@ mod KakarotCore {
                     let bytecode = data;
                     // TODO: compute_evm_address
                     // HASH(RLP(deployer_address, deployer_nonce))[0..20]
-                    panic_with_felt252('unimplemented')
+                    panic_with_felt252('deploy tx flow unimplemented')
                 },
             }
         }

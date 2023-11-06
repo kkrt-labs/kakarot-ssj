@@ -20,8 +20,8 @@ fn test_execute_value_transfer() {
     contract_utils::fund_account_with_native_token(sender.starknet_address, native_token, 10000);
     // When
     let mut exec_result = execute(
-        origin: sender.evm_address,
-        target: recipient.evm_address,
+        origin: sender.address(),
+        target: recipient.address(),
         bytecode: Default::default().span(),
         calldata: Default::default().span(),
         value: 2000,

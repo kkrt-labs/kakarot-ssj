@@ -11,6 +11,7 @@ use evm::model::eoa::{EOA, EOATrait};
 use evm::state::State;
 use starknet::{EthAddress, get_contract_address, ContractAddress};
 use utils::helpers::ByteArrayExTrait;
+use utils::traits::{EthAddressDefault, ContractAddressDefault};
 
 /// The struct representing an EVM event.
 #[derive(Drop, Clone, Default, PartialEq)]
@@ -19,7 +20,7 @@ struct Event {
     data: Array<u8>,
 }
 
-#[derive(Copy, Drop, PartialEq)]
+#[derive(Copy, Drop, PartialEq, Default)]
 struct Address {
     evm: EthAddress,
     starknet: ContractAddress,

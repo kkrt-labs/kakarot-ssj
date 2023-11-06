@@ -49,10 +49,10 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
 
         let to = match create_type {
             CreateType::CreateOrDeployTx => self
-                .get_create_address(self.evm_address(), sender_nounce)?,
+                .get_create_address(self.address().evm, sender_nounce)?,
             CreateType::Create2 => self
                 .get_create2_address(
-                    self.evm_address(), salt: self.stack.pop()?, bytecode: bytecode.span()
+                    self.address().evm, salt: self.stack.pop()?, bytecode: bytecode.span()
                 )?,
         };
 

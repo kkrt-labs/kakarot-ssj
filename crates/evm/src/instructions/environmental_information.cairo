@@ -26,7 +26,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get address of currently executing account.
     /// # Specification: https://www.evm.codes/#30?fork=shanghai
     fn exec_address(ref self: Machine) -> Result<(), EVMError> {
-        self.stack.push(self.evm_address().into())
+        self.stack.push(self.address().evm.into())
     }
 
     /// 0x31 - BALANCE opcode.
@@ -48,14 +48,14 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get execution origination address.
     /// # Specification: https://www.evm.codes/#32?fork=shanghai
     fn exec_origin(ref self: Machine) -> Result<(), EVMError> {
-        self.stack.push(self.origin().into())
+        self.stack.push(self.origin().evm.into())
     }
 
     /// 0x33 - CALLER
     /// Get caller address.
     /// # Specification: https://www.evm.codes/#33?fork=shanghai
     fn exec_caller(ref self: Machine) -> Result<(), EVMError> {
-        self.stack.push(self.caller().into())
+        self.stack.push(self.caller().evm.into())
     }
 
     /// 0x34 - CALLVALUE

@@ -2,6 +2,7 @@ use contracts::components::ownable::ownable_component;
 use contracts::contract_account::ContractAccount;
 use contracts::eoa::ExternallyOwnedAccount;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::kakarot_core::interface::IKakarotCore;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
@@ -18,7 +19,9 @@ use contracts::uninitialized_account::{
 use core::result::ResultTrait;
 use evm::errors::EVMErrorTrait;
 use evm::machine::Status;
+use evm::model::Address;
 use evm::model::contract_account::ContractAccountTrait;
+use evm::model::eoa::EOATrait;
 use evm::tests::test_utils;
 use starknet::{get_caller_address, testing, contract_address_const, ContractAddress, ClassHash};
 use utils::helpers::{U32Trait, ByteArrayExTrait, u256_to_bytes_array};
@@ -196,12 +199,14 @@ fn test_eth_call() {
     let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
     testing::set_contract_address(kakarot_core.contract_address);
 
+    let evm_address = test_utils::evm_address();
+    let eoa = kakarot_core.deploy_eoa(evm_address);
+
     let account = ContractAccountTrait::deploy(
         test_utils::other_evm_address(), counter_evm_bytecode()
     )
         .unwrap();
 
-    let from = test_utils::evm_address();
     let to = Option::Some(test_utils::other_evm_address());
     let gas_limit = test_utils::gas_limit();
     let gas_price = test_utils::gas_price();
@@ -211,7 +216,8 @@ fn test_eth_call() {
 
     // When
 
-    let return_data = kakarot_core.eth_call(:from, :to, :gas_limit, :gas_price, :value, :data);
+    let return_data = kakarot_core
+        .eth_call(from: evm_address, :to, :gas_limit, :gas_price, :value, :data);
 
     // Then
     assert(return_data == u256_to_bytes_array(0).span(), 'wrong result');
@@ -225,14 +231,14 @@ fn test_handle_call() {
     let native_token = contract_utils::deploy_native_token();
     let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
     testing::set_contract_address(kakarot_core.contract_address);
-    let kakarot_core = KakarotCore::unsafe_new_contract_state();
 
+    let evm_address = test_utils::evm_address();
+    let eoa = kakarot_core.deploy_eoa(evm_address);
     let account = ContractAccountTrait::deploy(
         test_utils::other_evm_address(), counter_evm_bytecode()
     )
         .unwrap();
 
-    let from = test_utils::evm_address();
     let to = Option::Some(test_utils::other_evm_address());
     let gas_limit = test_utils::gas_limit();
     let gas_price = test_utils::gas_price();
@@ -242,8 +248,16 @@ fn test_handle_call() {
 
     // When
 
+    let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
     let result = kakarot_core
-        .handle_call(:from, :to, :gas_limit, :gas_price, :value, :data)
+        .handle_call(
+            from: Address { evm: evm_address, starknet: eoa },
+            :to,
+            :gas_limit,
+            :gas_price,
+            :value,
+            :data
+        )
         .expect('handle_call failed');
     let return_data = result.return_data;
 

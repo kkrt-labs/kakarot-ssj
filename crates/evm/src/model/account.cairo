@@ -190,7 +190,7 @@ impl AccountImpl of AccountTrait {
     /// * `key` The storage key to modify
     /// * `value` The value to write
     fn write_storage(ref self: Account, key: u256, value: u256) {
-        panic_with_felt252('unimplemented')
+        panic_with_felt252('write storage unimplemented')
     }
 
     /// Sets the nonce of the Account

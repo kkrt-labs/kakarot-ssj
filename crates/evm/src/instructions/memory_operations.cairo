@@ -142,7 +142,7 @@ impl MemoryOperation of MemoryOperationTrait {
         }
         let key = self.stack.pop()?;
         let value = self.stack.pop()?;
-        let evm_address = self.evm_address();
+        let evm_address = self.address().evm;
         self.state.write_state(:evm_address, :key, :value);
         Result::Ok(())
     }
@@ -152,7 +152,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// # Specification: https://www.evm.codes/#54?fork=shanghai
     fn exec_sload(ref self: Machine) -> Result<(), EVMError> {
         let key = self.stack.pop()?;
-        let evm_address = self.evm_address();
+        let evm_address = self.address().evm;
 
         let value = self.state.read_state(evm_address, key)?;
         self.stack.push(value)

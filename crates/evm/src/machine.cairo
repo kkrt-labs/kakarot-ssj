@@ -1,4 +1,5 @@
 use evm::errors::{EVMError, MISSING_PARENT_CONTEXT};
+use evm::model::Address;
 use evm::state::State;
 use evm::{
     context::{
@@ -7,6 +8,7 @@ use evm::{
     },
     stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}
 };
+
 use nullable::{match_nullable, FromNullableResult};
 
 use starknet::{EthAddress, ContractAddress};
@@ -216,21 +218,21 @@ impl MachineCurrentContextImpl of MachineCurrentContextTrait {
 
 
     #[inline(always)]
-    fn evm_address(ref self: Machine) -> EthAddress {
+    fn address(ref self: Machine) -> Address {
         let current_execution_ctx = self.current_ctx.unbox();
-        let evm_address = current_execution_ctx.evm_address();
+        let evm_address = current_execution_ctx.address();
         self.current_ctx = BoxTrait::new(current_execution_ctx);
         evm_address
     }
 
     #[inline(always)]
-    fn caller(ref self: Machine) -> EthAddress {
+    fn caller(ref self: Machine) -> Address {
         let current_call_ctx = self.call_ctx();
         current_call_ctx.caller()
     }
 
     #[inline(always)]
-    fn origin(ref self: Machine) -> EthAddress {
+    fn origin(ref self: Machine) -> Address {
         let mut current_execution_ctx = self.current_ctx.unbox();
         let origin = current_execution_ctx.origin();
         self.current_ctx = BoxTrait::new(current_execution_ctx);

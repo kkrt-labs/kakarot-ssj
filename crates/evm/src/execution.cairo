@@ -31,8 +31,8 @@ use utils::helpers::compute_starknet_address;
 /// *   The created contracts
 /// *   The events emitted
 fn execute(
-    origin: EthAddress,
-    target: EthAddress,
+    origin: Address,
+    target: Address,
     bytecode: Span<u8>,
     calldata: Span<u8>,
     value: u256,
@@ -54,7 +54,7 @@ fn execute(
     );
     let ctx = ExecutionContextTrait::new(
         ctx_type: Default::default(),
-        evm_address: target,
+        address: target,
         :call_ctx,
         parent_ctx: Default::default(),
         return_data: Default::default().span()
@@ -63,38 +63,7 @@ fn execute(
     // Initiate the Machine with the root context
     let mut machine: Machine = MachineCurrentContextTrait::new(ctx);
 
-    // Handle value transfers
-    let result_sender = machine.state.get_account(origin);
-    let sender = match result_sender {
-        Result::Ok(sender) => sender.address(),
-        Result::Err(err) => {
-            return ExecutionResult {
-                status: Status::Reverted,
-                return_data: Default::default().span(),
-                destroyed_contracts: Default::default().span(),
-                create_addresses: Default::default().span(),
-                events: Default::default().span(),
-                state: machine.state,
-                error: Option::Some(err)
-            };
-        }
-    };
-    let result_recipient = machine.state.get_account(target);
-    let recipient = match result_recipient {
-        Result::Ok(recipient) => recipient.address(),
-        Result::Err(err) => {
-            return ExecutionResult {
-                status: Status::Reverted,
-                return_data: Default::default().span(),
-                destroyed_contracts: Default::default().span(),
-                create_addresses: Default::default().span(),
-                events: Default::default().span(),
-                state: machine.state,
-                error: Option::Some(err)
-            };
-        }
-    };
-    let transfer = Transfer { sender, recipient, amount: value };
+    let transfer = Transfer { sender: origin, recipient: target, amount: value };
     match machine.state.add_transfer(transfer) {
         Result::Ok(x) => {},
         Result::Err(err) => {
