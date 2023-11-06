@@ -2,7 +2,7 @@ use core::option::OptionTrait;
 use core::traits::TryInto;
 
 use keccak::cairo_keccak;
-use starknet::EthAddress;
+use starknet::{EthAddress};
 use utils::errors::RLPErrorTrait;
 
 use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl, RLPHelpersErrorTrait};
@@ -84,16 +84,14 @@ impl EthTransactionImpl of EthTransaction {
                 )
                     .reverse_endianness();
 
-                let address: felt252 = to
-                    .try_into()
-                    .ok_or(EthTransactionError::Other('invalid eth address'))?;
+                let address: EthAddress = to.into();
 
                 Result::Ok(
                     EthereumTransaction {
                         nonce: nonce,
                         gas_price: gas_price,
                         gas_limit: gas_limit,
-                        destination: EthAddress { address: address },
+                        destination: address,
                         amount: value,
                         payload: data,
                         v: v,
