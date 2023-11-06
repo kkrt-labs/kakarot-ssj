@@ -1,7 +1,6 @@
 //! CREATE, CREATE2 opcode helpers
 use cmp::min;
 use contracts::tests::test_data::storage_evm_bytecode;
-use debug::PrintTrait;
 use evm::context::{
     ExecutionContext, Status, CallContext, CallContextTrait, ExecutionContextType,
     ExecutionContextTrait
@@ -9,9 +8,9 @@ use evm::context::{
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::AccountType;
 use evm::model::account::{AccountTrait, AccountTypeTrait};
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
+use evm::model::{AccountType, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use keccak::cairo_keccak;
@@ -72,6 +71,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
     /// Then, the EVM execution loop will start on this new execution context.
     fn init_create_sub_ctx(ref self: Machine, create_args: CreateArgs) -> Result<(), EVMError> {
         let mut account = self.state.get_account(create_args.to)?;
+        let account_address = account.address();
 
         // The caller in the subcontext is the calling context's current address
         let caller = self.address();
@@ -81,6 +81,16 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         if caller_balance < create_args.value
             || account.nonce() == integer::BoundedInt::<u64>::max() {
             return self.stack.push(0);
+        }
+
+        if create_args.value > 0 {
+            let transfer = Transfer {
+                sender: self.address(), recipient: account_address, amount: create_args.value,
+            };
+            let result = self.state.add_transfer(transfer);
+            if result.is_err() {
+                return self.stack.push(0);
+            }
         }
 
         caller_account.set_nonce(caller_current_nonce + 1);
@@ -97,7 +107,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
             .account_type =
                 AccountType::ContractAccount(
                     ContractAccount {
-                        evm_address: create_args.to, starknet_address: account.address().starknet
+                        evm_address: account_address.evm, starknet_address: account_address.starknet
                     }
                 );
         self.state.set_account(account);
