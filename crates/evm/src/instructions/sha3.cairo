@@ -45,7 +45,6 @@ impl Sha3Impl of Sha3Trait {
         };
         // Properly set the memory length in case we skipped reading zeroes
         self.memory.ensure_length(size + offset);
-
         let mut hash = cairo_keccak(ref to_hash, last_input, size % 8);
         self.stack.push(hash.reverse_endianness())
     }

@@ -1,6 +1,7 @@
 use cmp::min;
 use core::hash::{HashStateExTrait, HashStateTrait};
 use core::pedersen::{HashState, PedersenTrait};
+
 use integer::U32TryIntoNonZero;
 use integer::u32_as_non_zero;
 use keccak::u128_split;
@@ -15,8 +16,6 @@ use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 use utils::math::{Bitshift, WrappingBitshift};
 use utils::num::{Zero, One, SizeOf};
 use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256};
-
-
 /// Ceils a number of bits to the next word (32 bytes)
 ///
 /// # Arguments
@@ -598,6 +597,38 @@ impl U32Impl of U32Trait {
 }
 
 #[generate_trait]
+impl U128Impl of U128Trait {
+    /// Packs 16 bytes into a u128
+    /// # Arguments
+    /// * `input` a Span<u8> of len <=16
+    /// # Returns
+    /// * Option::Some(u128) if the operation succeeds
+    /// * Option::None otherwise
+    fn from_bytes(input: Span<u8>) -> Option<u128> {
+        let len = input.len();
+        if len == 0 {
+            return Option::None;
+        }
+        if len > 16 {
+            return Option::None;
+        }
+        let offset: u32 = len - 1;
+        let mut result: u128 = 0;
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: u128 = (*input.at(i)).into();
+            result += byte.shl((8 * (offset - i)).into());
+
+            i += 1;
+        };
+        Option::Some(result)
+    }
+}
+
+#[generate_trait]
 impl U256Impl of U256Trait {
     /// Splits an u256 into 4 little endian u64.
     /// Returns ((high_high, high_low),(low_high, low_low))
@@ -630,6 +661,35 @@ impl U256Impl of U256Trait {
         };
 
         bytes.span()
+    }
+
+    /// Packs 32 bytes into a u128
+    /// # Arguments
+    /// * `input` a Span<u8> of len <=32
+    /// # Returns
+    /// * Option::Some(u128) if the operation succeeds
+    /// * Option::None otherwise
+    fn from_bytes(input: Span<u8>) -> Option<u256> {
+        let len = input.len();
+        if len == 0 {
+            return Option::None;
+        }
+        if len > 32 {
+            return Option::None;
+        }
+        let offset: u32 = len - 1;
+        let mut result: u256 = 0;
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: u256 = (*input.at(i)).into();
+            result += byte.shl((8 * (offset - i)).into());
+
+            i += 1;
+        };
+        Option::Some(result)
     }
 }
 
