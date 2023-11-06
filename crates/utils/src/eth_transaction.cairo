@@ -36,7 +36,7 @@ impl DefaultEthereumTransaction of Default<EthereumTransaction> {
             gas_limit: 0,
             destination: EthAddress { address: 0 },
             amount: 0,
-            payload: array![0].span(),
+            payload: array![].span(),
             tx_hash: 0,
             v: 0,
             r: 0,
