@@ -27,24 +27,6 @@ struct EthereumTransaction {
     s: u256,
 }
 
-// todo(harsh): this default implementation can be removed later on
-impl DefaultEthereumTransaction of Default<EthereumTransaction> {
-    fn default() -> EthereumTransaction {
-        EthereumTransaction {
-            nonce: 0,
-            gas_price: 0,
-            gas_limit: 0,
-            destination: EthAddress { address: 0 },
-            amount: 0,
-            payload: array![].span(),
-            tx_hash: 0,
-            v: 0,
-            r: 0,
-            s: 0
-        }
-    }
-}
-
 #[generate_trait]
 impl EthTransactionImpl of EthTransaction {
     /// Decode a legacy Ethereum transaction
@@ -155,7 +137,7 @@ impl EthTransactionImpl of EthTransaction {
     /// tx_data The raw transaction data
     fn decode_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
         // todo
-        Result::Ok(Default::default())
+        panic_with_felt252('decode_tx unimplemented')
     }
 
     /// Check if a raw transaction is a legacy Ethereum transaction
@@ -165,7 +147,7 @@ impl EthTransactionImpl of EthTransaction {
     /// - `tx_data` The raw transaction data
     fn is_legacy_tx(tx_data: Span<u8>) -> Result<bool, EthTransactionError> {
         // todo
-        Result::Ok(false)
+        panic_with_felt252('is_legacy_tx unimplemented')
     }
 
     /// Decode a raw Ethereum transaction
@@ -176,7 +158,7 @@ impl EthTransactionImpl of EthTransaction {
     /// - `tx_data` The raw transaction data
     fn decode(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
         // todo
-        Result::Ok(Default::default())
+        panic_with_felt252('decode unimplemented')
     }
 
     /// Validate an Ethereum transaction
@@ -193,6 +175,6 @@ impl EthTransactionImpl of EthTransaction {
         address: EthAddress, account_nonce: u128, tx_data: Span<u8>
     ) -> Result<bool, EthTransactionError> {
         // todo
-        Result::Ok(false)
+        panic_with_felt252('validate_eth_tx unimplemented')
     }
 }
