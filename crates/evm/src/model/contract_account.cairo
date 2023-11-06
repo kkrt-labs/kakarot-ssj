@@ -4,7 +4,8 @@
 
 use alexandria_storage::list::{List, ListTrait};
 use contracts::contract_account::{
-    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount
+    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount,
+    IContractAccountSafeDispatcher, IContractAccountSafeDispatcherTrait
 };
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{

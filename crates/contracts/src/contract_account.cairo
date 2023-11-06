@@ -49,6 +49,12 @@ trait IContractAccount<TContractState> {
 
     fn set_false_positive_jumpdest(ref self: TContractState, offset: usize);
 
+
+    /// Selfdestruct whatever can be
+    /// It's not possible to remove a contract in Starknet
+    fn selfdestruct(ref self: TContractState);
+
+
     /// Upgrade the ExternallyOwnedAccount smart contract
     /// Using replace_class_syscall
     fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
@@ -218,6 +224,16 @@ mod ContractAccount {
             let nonce = Store::<u64>::read(0, storage_address).expect(NONCE_READ_ERROR);
             Store::<u64>::write(0, storage_address, nonce + 1).expect(NONCE_WRITE_ERROR)
         }
+
+
+        fn selfdestruct(ref self: ContractState) {
+            //TODO add access control
+            self.set_nonce(0);
+            self.evm_address.write(0.try_into().unwrap());
+            self.set_bytecode(array![].span());
+        // TODO: clean also the storage
+        }
+
 
         fn is_false_jumpdest(self: @ContractState, offset: usize) -> bool {
             panic_with_felt252('unimplemented')

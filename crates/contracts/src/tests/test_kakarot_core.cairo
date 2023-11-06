@@ -14,7 +14,6 @@ use contracts::tests::test_upgradeable::{
 use contracts::tests::test_utils as contract_utils;
 use contracts::uninitialized_account::UninitializedAccount;
 use core::result::ResultTrait;
-use debug::PrintTrait;
 use evm::errors::EVMErrorTrait;
 use evm::machine::Status;
 use evm::model::contract_account::ContractAccountTrait;
@@ -148,15 +147,16 @@ fn test_kakarot_core_eoa_mapping() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_kakarot_core_compute_starknet_address() {
+fn test_compute_starknet_address() {
     let evm_address = test_utils::evm_address();
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
 
     // Precomputed Starknet address with the script compute_starknet_address.ts
     // With arguments:
     // ['STARKNET_CONTRACT_ADDRESS', kakarot_address: 0x01, salt: evm_address, class_hash: UninitializedAccount::TEST_CLASS_HASH, constructor_calldata: hash([kakarot_address, evm_address]), ]
-
-    let class_hash = UninitializedAccount::TEST_CLASS_HASH; // used to get the hash using the LSP
+    let class_hash = UninitializedAccount::TEST_CLASS_HASH;
+    // To compute a new expected_starknet_address, run `bun run compute_starknet_address` (pre-requisite: `bun install`)
+    // And enter the class hash situated in UninitializedAccount::TEST_CLASS_HASH
     let expected_starknet_address: ContractAddress = contract_address_const::<
         0x7797f53c076db7fa38536bea011a393d0aedb8b17754aa3f5f82dd645364da4
     >();

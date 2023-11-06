@@ -217,7 +217,7 @@ mod test_simple_log {
 }
 
 mod test_state {
-    use eoa::externally_owned_account::ExternallyOwnedAccount;
+    use contracts::eoa::ExternallyOwnedAccount;
     use evm::model::account::{Account, AccountType};
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
     use evm::model::{Event, Transfer, Address};
