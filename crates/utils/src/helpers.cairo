@@ -662,6 +662,35 @@ impl U256Impl of U256Trait {
 
         bytes.span()
     }
+
+    /// Packs 32 bytes into a u128
+    /// # Arguments
+    /// * `input` a Span<u8> of len <=32
+    /// # Returns
+    /// * Option::Some(u128) if the operation succeeds
+    /// * Option::None otherwise
+    fn from_bytes(input: Span<u8>) -> Option<u256> {
+        let len = input.len();
+        if len == 0 {
+            return Option::None;
+        }
+        if len > 32 {
+            return Option::None;
+        }
+        let offset: u32 = len - 1;
+        let mut result: u256 = 0;
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: u256 = (*input.at(i)).into();
+            result += byte.shl((8 * (offset - i)).into());
+
+            i += 1;
+        };
+        Option::Some(result)
+    }
 }
 
 #[generate_trait]
