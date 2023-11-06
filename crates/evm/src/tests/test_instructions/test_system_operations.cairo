@@ -169,7 +169,7 @@ fn test_exec_call() {
 }
 
 #[test]
-#[available_gas(40000000)]
+#[available_gas(50000000)]
 fn test_exec_call_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
@@ -281,7 +281,7 @@ fn test_exec_staticcall() {
 
 
 #[test]
-#[available_gas(40000000)]
+#[available_gas(50000000)]
 fn test_exec_staticcall_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();

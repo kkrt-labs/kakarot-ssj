@@ -281,6 +281,7 @@ fn test_contract_account_class_hash() {
     assert(class_hash == ContractAccount::TEST_CLASS_HASH.try_into().unwrap(), 'wrong class hash');
 
     let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
+    testing::set_contract_address(test_utils::other_starknet_address());
     kakarot_core.set_ca_class_hash(new_class_hash);
 
     assert(kakarot_core.ca_class_hash() == new_class_hash, 'wrong class hash');
@@ -307,6 +308,7 @@ fn test_account_class_hash() {
     );
 
     let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
+    testing::set_contract_address(test_utils::other_starknet_address());
     kakarot_core.set_account_class_hash(new_class_hash);
 
     assert(kakarot_core.account_class_hash() == new_class_hash, 'wrong class hash');
@@ -335,6 +337,7 @@ fn test_eoa_class_hash() {
     );
 
     let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
+    testing::set_contract_address(test_utils::other_starknet_address());
     kakarot_core.set_eoa_class_hash(new_class_hash);
 
     assert(kakarot_core.eoa_class_hash() == new_class_hash, 'wrong class hash');
