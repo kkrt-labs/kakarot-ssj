@@ -1,8 +1,6 @@
 use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore};
 use contracts::tests::test_data::counter_evm_bytecode;
-use contracts::tests::test_utils::{
-    deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
-};
+use contracts::tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
@@ -16,7 +14,6 @@ use evm::tests::test_utils::{
 };
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-use starknet::testing;
 
 use starknet::{EthAddressIntoFelt252, contract_address_const, testing::set_contract_address};
 use utils::helpers::{
@@ -57,9 +54,7 @@ fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls
 #[available_gas(5000000)]
 fn test_exec_balance_eoa() {
     // Given
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
     let eoa = kakarot_core.deploy_eoa(evm_address());
 
     fund_account_with_native_token(eoa, native_token, 0x1);
@@ -80,8 +75,7 @@ fn test_exec_balance_eoa() {
 #[available_gas(5000000)]
 fn test_exec_balance_zero() {
     // Given
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: false);
 
     // And
     let mut machine = setup_machine();
@@ -101,8 +95,7 @@ fn test_exec_balance_zero() {
 #[available_gas(5000000)]
 fn test_exec_balance_contract_account() {
     // Given
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: false);
     // TODO: deploy contract account
     // and fund it
 
@@ -566,12 +559,9 @@ fn test_exec_extcodesize_eoa() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
     machine.stack.push(evm_address.into());
-    set_contract_address(kakarot_core.contract_address);
 
     // When
     machine.exec_extcodesize().unwrap();
@@ -587,9 +577,7 @@ fn test_exec_extcodesize_ca_empty() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
 
     // The bytecode remains empty, and we expect the empty hash in return
     let mut ca = ContractAccountTrait::deploy(evm_address(), array![].span());
@@ -610,9 +598,7 @@ fn test_exec_extcodesize_ca_with_bytecode() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
     let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
@@ -636,10 +622,7 @@ fn test_exec_extcodecopy_ca() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
-    set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
     let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
@@ -670,10 +653,7 @@ fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
-    set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
     let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
@@ -685,8 +665,6 @@ fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
     // destOffset
     machine.stack.push(20);
     machine.stack.push(evm_address.into());
-
-    set_contract_address(kakarot_core.contract_address);
 
     // When
     machine.exec_extcodecopy().unwrap();
@@ -700,9 +678,7 @@ fn test_exec_extcodecopy_eoa() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
 
     // size
@@ -712,8 +688,6 @@ fn test_exec_extcodecopy_eoa() {
     // destOffset
     machine.stack.push(20);
     machine.stack.push(evm_address.into());
-
-    set_contract_address(kakarot_core.contract_address);
 
     // When
     machine.exec_extcodecopy().unwrap();
@@ -729,9 +703,7 @@ fn test_exec_extcodecopy_account_none() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
 
     // size
     machine.stack.push(5);
@@ -740,8 +712,6 @@ fn test_exec_extcodecopy_account_none() {
     // destOffset
     machine.stack.push(20);
     machine.stack.push(evm_address.into());
-
-    set_contract_address(kakarot_core.contract_address);
 
     // When
     machine.exec_extcodecopy().unwrap();
@@ -935,9 +905,7 @@ fn test_exec_extcodehash_precompile() {
     // Given
     let evm_address = 0x05.try_into().unwrap();
     let mut machine = setup_machine();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
     machine.stack.push(evm_address.into());
     set_contract_address(kakarot_core.contract_address);
@@ -955,9 +923,7 @@ fn test_exec_extcodehash_selfdestructed() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
 
     // The bytecode remains empty, and we expect the empty hash in return
     let mut ca = ContractAccountTrait::deploy(evm_address(), array![].span())
@@ -979,12 +945,9 @@ fn test_exec_extcodehash_eoa() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
     machine.stack.push(evm_address.into());
-    set_contract_address(kakarot_core.contract_address);
 
     // When
     machine.exec_extcodehash().unwrap();
@@ -1005,10 +968,7 @@ fn test_exec_extcodehash_ca_empty() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    set_contract_address(kakarot_core.contract_address);
-
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
     // The bytecode remains empty, and we expect the empty hash in return
     let mut ca = ContractAccountTrait::deploy(evm_address(), array![].span());
 
@@ -1033,12 +993,9 @@ fn test_exec_extcodehash_ca_uninitialized() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
 
     machine.stack.push(evm_address.into());
-    set_contract_address(kakarot_core.contract_address);
 
     // When
     machine.exec_extcodehash().unwrap();
@@ -1054,10 +1011,7 @@ fn test_exec_extcodehash_ca_with_bytecode() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
-    set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
     let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());

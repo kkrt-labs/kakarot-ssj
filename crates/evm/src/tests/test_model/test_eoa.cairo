@@ -1,9 +1,7 @@
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_utils as contract_utils;
-use contracts::tests::test_utils::{
-    deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
-};
+use contracts::tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
 use evm::errors::EVMErrorTrait;
 use evm::model::eoa::{EOA, EOATrait};
 use evm::tests::test_utils;
@@ -17,9 +15,7 @@ use starknet::{
 #[test]
 #[available_gas(200000000)]
 fn test_eoa_deploy() {
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
     contract_utils::drop_event(kakarot_core.contract_address);
 
     let maybe_eoa = EOATrait::deploy(test_utils::evm_address());
@@ -40,8 +36,7 @@ fn test_eoa_deploy() {
 #[available_gas(5000000)]
 fn test_eoa_balance() {
     // Given
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: false);
     let sn_address = kakarot_core.deploy_eoa(test_utils::evm_address());
 
     fund_account_with_native_token(sn_address, native_token, 0x1);

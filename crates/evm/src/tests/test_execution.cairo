@@ -10,10 +10,10 @@ use starknet::testing::{set_caller_address, set_contract_address};
 #[test]
 #[available_gas(20000000)]
 fn test_execute_value_transfer() {
-    let native_token = contract_utils::deploy_native_token();
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing(
+        and_set_contract_address: true
+    );
     // Transfer native tokens to sender
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    set_contract_address(kakarot_core.contract_address);
     let sender = EOATrait::deploy(evm_address()).expect('sender deploy failed');
     let recipient = EOATrait::deploy(other_evm_address()).expect('recipient deploy failed');
     // Transfer native tokens to sender
