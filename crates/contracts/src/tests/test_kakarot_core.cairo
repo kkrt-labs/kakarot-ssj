@@ -136,7 +136,8 @@ fn test_kakarot_core_eoa_mapping() {
 
     let another_sn_address: ContractAddress = 0xbeef.try_into().unwrap();
 
-    kakarot_core
+    let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
+    kakarot_state
         .set_address_registry(
             test_utils::evm_address(), StoredAccountType::EOA(another_sn_address)
         );

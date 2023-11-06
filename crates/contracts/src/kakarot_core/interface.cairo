@@ -33,11 +33,8 @@ trait IKakarotCore<TContractState> {
     /// particular EVM address and if so, returns its corresponding Starknet Address.
     /// Otherwise, returns 0
     fn address_registry(self: @TContractState, evm_address: EthAddress) -> StoredAccountType;
-    /// Maps an EVM address to a Starknet address
-    /// Triggerred when deployment of an EOA or CA is successful
-    fn set_address_registry(
-        ref self: TContractState, evm_address: EthAddress, account: StoredAccountType
-    );
+
+
 
     /// Gets the nonce associated to a contract account
     fn contract_account_nonce(self: @TContractState, evm_address: EthAddress) -> u64;
@@ -61,11 +58,6 @@ trait IKakarotCore<TContractState> {
 
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
-
-    /// Deploys a Contract Account for a particular EVM address
-    fn deploy_ca(
-        ref self: TContractState, evm_address: EthAddress, bytecode: Span<u8>
-    ) -> ContractAddress;
 
     /// View entrypoint into the EVM
     /// Performs view calls into the blockchain
@@ -141,12 +133,6 @@ trait IExtendedKakarotCore<TContractState> {
     /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
     /// particular EVM address and if so, returns its corresponding Starknet Address
     fn address_registry(self: @TContractState, evm_address: EthAddress) -> StoredAccountType;
-    /// Maps an EVM address to a Starknet address
-    /// Triggerred when deployment of an EOA or CA is successful
-    fn set_address_registry(
-        ref self: TContractState, evm_address: EthAddress, account: StoredAccountType
-    );
-
 
     /// Gets the nonce associated to a contract account
     fn contract_account_nonce(self: @TContractState, evm_address: EthAddress) -> u64;
@@ -171,10 +157,6 @@ trait IExtendedKakarotCore<TContractState> {
 
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
-    /// Deploys a Contract Account for a particular EVM address
-    fn deploy_ca(
-        ref self: TContractState, evm_address: EthAddress, bytecode: Span<u8>
-    ) -> ContractAddress;
 
     /// View entrypoint into the EVM
     /// Performs view calls into the blockchain

@@ -1,6 +1,6 @@
 use contracts::kakarot_core::kakarot::KakarotCore::{ContractStateEventEmitter, EOADeployed};
 use contracts::kakarot_core::kakarot::StoredAccountType;
-use contracts::kakarot_core::{IKakarotCore, KakarotCore};
+use contracts::kakarot_core::{IKakarotCore, KakarotCore, KakarotCore::KakarotCoreInternal};
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
@@ -24,7 +24,12 @@ struct EOA {
 #[generate_trait]
 impl EOAImpl of EOATrait {
     /// Deploys a new EOA contract.
+    ///
+    /// # Arguments
+    ///
+    /// * `evm_address` - The EVM address of the EOA to deploy.
     fn deploy(evm_address: EthAddress) -> Result<EOA, EVMError> {
+        // Unlike CAs, there is not check for the existence of an EOA prealably to calling `EOATrait::deploy` - therefore, we need to check that there is no collision.
         let mut maybe_acc = AccountTrait::account_type_at(evm_address)?;
         if maybe_acc.is_some() {
             return Result::Err(EVMError::DeployError(EOA_EXISTS));

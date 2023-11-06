@@ -10,7 +10,7 @@ use contracts::contract_account::{
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     KakarotCore, IKakarotCore, KakarotCore::ContractStateEventEmitter,
-    KakarotCore::ContractAccountDeployed
+    KakarotCore::ContractAccountDeployed, KakarotCore::KakarotCoreInternal
 };
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
@@ -51,6 +51,9 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// contract account for a particular EVM address, setting the nonce to 1,
     /// storing the contract bytecode and emitting a ContractAccountDeployed
     /// event.
+    ///
+    /// `deploy` is only called when commiting a transaction. We already
+    /// checked that no account exists at this address prealably.
     /// # Arguments
     /// * `origin` - The EVM address of the transaction sender
     /// * `evm_address` - The EVM address of the contract account
@@ -60,10 +63,6 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// # Errors
     /// * `ACCOUNT_EXISTS` - If a contract account already exists at the given `evm_address`
     fn deploy(evm_address: EthAddress, bytecode: Span<u8>) -> Result<ContractAccount, EVMError> {
-        let mut maybe_acc = AccountTrait::account_type_at(evm_address)?;
-        if maybe_acc.is_some() {
-            return Result::Err(EVMError::DeployError(CONTRACT_ACCOUNT_EXISTS));
-        }
 
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
         let account_class_hash = kakarot_state.account_class_hash();

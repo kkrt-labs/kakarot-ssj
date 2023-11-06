@@ -58,6 +58,17 @@ impl AccountImpl of AccountTrait {
         }
     }
 
+    /// Commits the account to Starknet by updating the account state if it
+    /// exists, or deploying a new account if it doesn't.
+    ///
+    /// Only Contract Accounts can be modified.
+    ///
+    /// # Arguments
+    /// * `self` - The account to commit
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
     fn commit(self: @Account) -> Result<(), EVMError> {
         // Case account exists
         let maybe_acc = AccountImpl::account_type_at(self.address().evm)?;

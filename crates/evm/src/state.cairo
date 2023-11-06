@@ -342,7 +342,7 @@ impl StateInternalImpl of StateInternalTrait {
                         Result::Ok(maybe_account_type) => {
                             let account_type = maybe_account_type.expect('Account should exist');
                             match account_type {
-                                //TODO(state) this shouldn't happen - handle this beforehand
+                                //this shouldn't ever happen
                                 AccountType::EOA(_) => { panic_with_felt252('EOA storagechange') },
                                 AccountType::ContractAccount(mut ca) => {
                                     ca.set_storage_at(key, value);
