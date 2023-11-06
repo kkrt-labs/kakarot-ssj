@@ -135,7 +135,7 @@ mod KakarotCore {
         self.chain_id.write(chain_id);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl KakarotCoreImpl of interface::IKakarotCore<ContractState> {
         fn set_native_token(ref self: ContractState, native_token: ContractAddress) {
             self.ownable.assert_only_owner();

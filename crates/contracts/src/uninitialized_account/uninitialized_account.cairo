@@ -34,7 +34,7 @@ mod UninitializedAccount {
         self.evm_address.write(evm_address);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl UninitializedAccountImpl of IUninitializedAccount<ContractState> {
         fn initialize(ref self: ContractState, new_class_hash: ClassHash) {
             assert(
