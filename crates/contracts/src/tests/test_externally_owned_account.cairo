@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod test_external_owned_account {
-    use contracts::eoa::externally_owned_account::{
+    use contracts::eoa::{
         IExternallyOwnedAccount, ExternallyOwnedAccount, IExternallyOwnedAccountDispatcher,
         IExternallyOwnedAccountDispatcherTrait
     };

@@ -3,7 +3,7 @@
 //! KakarotCore's storage.
 
 use alexandria_storage::list::{List, ListTrait};
-use contracts::contract_account::interface::{
+use contracts::contract_account::{
     IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount
 };
 use contracts::kakarot_core::kakarot::StoredAccountType;
@@ -11,7 +11,7 @@ use contracts::kakarot_core::{
     KakarotCore, IKakarotCore, KakarotCore::ContractStateEventEmitter,
     KakarotCore::ContractAccountDeployed
 };
-use contracts::uninitialized_account::interface::{
+use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
 use evm::context::Status;

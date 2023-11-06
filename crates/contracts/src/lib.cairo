@@ -1,7 +1,7 @@
 mod components;
+// Kakarot Contract Account
 mod contract_account;
-
-// Kakarot external owned account
+// Kakarot Externally Owned Account
 mod eoa;
 
 mod errors;

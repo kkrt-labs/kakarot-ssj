@@ -3,10 +3,10 @@ use contracts::tests::test_upgradeable::{
     MockContractUpgradeableV1
 };
 
-use contracts::uninitialized_account::interface::{
+use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
-use contracts::uninitialized_account::uninitialized_account::UninitializedAccount;
+use contracts::uninitialized_account::UninitializedAccount;
 use evm::tests::test_utils::{kakarot_address, eoa_address};
 use starknet::class_hash::Felt252TryIntoClassHash;
 use starknet::testing::{set_caller_address, set_contract_address};

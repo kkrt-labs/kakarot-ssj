@@ -1,6 +1,6 @@
 use contracts::components::ownable::ownable_component;
-use contracts::contract_account::contract_account::ContractAccount;
-use contracts::eoa::externally_owned_account::ExternallyOwnedAccount;
+use contracts::contract_account::ContractAccount;
+use contracts::eoa::ExternallyOwnedAccount;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
@@ -12,7 +12,7 @@ use contracts::tests::test_upgradeable::{
     IMockContractUpgradeableDispatcherTrait
 };
 use contracts::tests::test_utils as contract_utils;
-use contracts::uninitialized_account::uninitialized_account::UninitializedAccount;
+use contracts::uninitialized_account::UninitializedAccount;
 use core::result::ResultTrait;
 use debug::PrintTrait;
 use evm::errors::EVMErrorTrait;
@@ -151,9 +151,9 @@ fn test_kakarot_core_compute_starknet_address() {
 
     // Precomputed Starknet address with starknet-rs and starknetjs
     // With arguments:
-    // ['STARKNET_CONTRACT_ADDRESS', kakarot_address: 0x01, salt: evm_address, class_hash: ExternallyOwnedAccount::TEST_CLASS_HASH, constructor_calldata: hash([kakarot_address, evm_address]), ]
+    // ['STARKNET_CONTRACT_ADDRESS', kakarot_address: 0x01, salt: evm_address, class_hash: UninitializedAccount::TEST_CLASS_HASH, constructor_calldata: hash([kakarot_address, evm_address]), ]
     let expected_starknet_address: ContractAddress = contract_address_const::<
-        0x47850e72c60f80d98a4232bdfc3a586ef64f41f3f3eb250ba476261294ea741
+        0x7797f53c076db7fa38536bea011a393d0aedb8b17754aa3f5f82dd645364da4
     >();
 
     let eoa_starknet_address = kakarot_core.compute_starknet_address(evm_address);
