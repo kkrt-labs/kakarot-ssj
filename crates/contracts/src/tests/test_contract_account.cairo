@@ -1,6 +1,4 @@
-use contracts::contract_account::interface::{
-    IContractAccountDispatcherTrait, IContractAccountDispatcher
-};
+use contracts::contract_account::{IContractAccountDispatcherTrait, IContractAccountDispatcher};
 use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_utils as contract_utils;
 use evm::tests::test_utils::{ca_address, native_token};

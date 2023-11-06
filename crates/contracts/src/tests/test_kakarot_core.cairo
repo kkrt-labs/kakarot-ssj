@@ -1,5 +1,6 @@
 use contracts::components::ownable::ownable_component;
-use contracts::contract_account::contract_account::ContractAccount;
+use contracts::contract_account::ContractAccount;
+use contracts::eoa::ExternallyOwnedAccount;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
@@ -11,12 +12,10 @@ use contracts::tests::test_upgradeable::{
     IMockContractUpgradeableDispatcherTrait
 };
 use contracts::tests::test_utils as contract_utils;
-use contracts::uninitialized_account::interface::{
-    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
+use contracts::uninitialized_account::{
+    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount
 };
-use contracts::uninitialized_account::uninitialized_account::UninitializedAccount;
 use core::result::ResultTrait;
-use eoa::externally_owned_account::ExternallyOwnedAccount;
 use evm::errors::EVMErrorTrait;
 use evm::machine::Status;
 use evm::model::contract_account::ContractAccountTrait;
@@ -160,7 +159,7 @@ fn test_kakarot_core_compute_starknet_address() {
 
     let class_hash = UninitializedAccount::TEST_CLASS_HASH; // used to get the hash using the LSP
     let expected_starknet_address: ContractAddress = contract_address_const::<
-        0x681ab6ad6ed3fd3f3b6b82588dcd7bb928aa636bf2e0ed536379ef712786f4a
+        0x50f2821ed90360ac0508d52f8db1f87e541811773bce3dbcaf863c572cd696f
     >();
 
     let eoa_starknet_address = kakarot_core.compute_starknet_address(evm_address);
