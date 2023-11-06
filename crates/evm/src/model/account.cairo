@@ -1,4 +1,4 @@
-use contracts::kakarot_core::{KakarotCore, KakarotCore::account_class_hashContractMemberStateTrait};
+use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError};
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::model::eoa::{EOA, EOATrait};
@@ -35,11 +35,8 @@ impl AccountImpl of AccountTrait {
             },
             Option::None => {
                 let kakarot_state = KakarotCore::unsafe_new_contract_state();
-                let starknet_address = compute_starknet_address(
-                    get_contract_address(),
-                    evm_address: address,
-                    class_hash: kakarot_state.account_class_hash.read()
-                );
+                let starknet_address = kakarot_state
+                    .compute_starknet_address(evm_address: address,);
                 return Result::Ok(
                     // If no account exists at `address`, then
                     // we are trying to access an undeployed contract account
@@ -90,6 +87,11 @@ impl AccountImpl of AccountTrait {
                 }
             },
             Option::None => {
+                // If the nonce is 0, the account is just "touched" (e.g.
+                // balance transfer) and is not set for deployment.
+                if (*self.nonce == 0) {
+                    return Result::Ok(());
+                }
                 //Case new account
                 // If SELFDESTRUCT, just do nothing
                 if (*self.selfdestruct == true) {

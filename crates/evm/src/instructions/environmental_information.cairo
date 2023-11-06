@@ -239,9 +239,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let evm_address = self.stack.pop_eth_address()?;
 
         let account = self.state.get_account(evm_address)?;
-        if (account.is_precompile()
-            || (account.account_type.is_ca() && account.nonce == 0)
-            || account.is_selfdestruct()) {
+        if (account.is_precompile() || (account.account_type.is_ca() && account.nonce == 0)) {
             return self.stack.push(0);
         }
         let bytecode = account.code;

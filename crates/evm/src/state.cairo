@@ -282,7 +282,7 @@ impl StateImpl of StateTrait {
             Option::None => {
                 let account = AccountTrait::fetch_or_create(evm_address)?;
                 let balance = account.account_type.balance()?;
-                self.write_balance(evm_address.into(), balance);
+                self.write_balance(evm_address, balance);
                 Result::Ok(balance)
             }
         }

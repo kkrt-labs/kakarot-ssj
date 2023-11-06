@@ -41,7 +41,6 @@ impl EOAImpl of EOATrait {
         let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
 
         let maybe_address = deploy_syscall(account_class_hash, evm_address.into(), calldata, false);
-        let maybe_address = deploy_syscall(account_class_hash, evm_address.into(), calldata, false);
         // Panic with err as syscall failure can't be caught, so we can't manage
         // the error
         match maybe_address {
