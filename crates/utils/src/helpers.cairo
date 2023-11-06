@@ -611,7 +611,7 @@ impl ByteArrayExt of ByteArrayExTrait {
             }
         }
     }
-    
+
     fn from_bytes(mut bytes: Span<u8>) -> ByteArray {
         let mut arr: ByteArray = Default::default();
         let (nb_full_words, pending_word_len) = DivRem::div_rem(

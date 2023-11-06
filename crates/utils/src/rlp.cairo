@@ -73,12 +73,10 @@ impl RLPImpl of RLPTrait {
     /// * RLPError::RlpEmptyInput - if the input is empty
     fn encode(input: RLPItem) -> Result<ByteArray, RLPError> {
         match input {
-            RLPItem::String(string) => { 
+            RLPItem::String(string) => {
                 RLPTrait::encode_string(ByteArrayExTrait::from_bytes(string))
             },
-            RLPItem::List(list) => {
-                RLPTrait::encode_list(list)
-            }
+            RLPItem::List(list) => { RLPTrait::encode_list(list) }
         }
     }
 
@@ -91,7 +89,7 @@ impl RLPImpl of RLPTrait {
     /// * RLPError::RlpEmptyInput - if the input is empty
     fn encode_list(mut input: Span<RLPItem>) -> Result<ByteArray, RLPError> {
         let mut payload: ByteArray = Default::default();
-        
+
         // Early return for empty list.
         if input.len() == 0 {
             return Result::Ok(
@@ -113,7 +111,7 @@ impl RLPImpl of RLPTrait {
                 Option::None => { break Option::None; }
             }
         };
-        
+
         if error != Option::None {
             return Result::Err(error.unwrap());
         }
@@ -121,12 +119,13 @@ impl RLPImpl of RLPTrait {
         // Compute and add list prefixe.
         let mut output: ByteArray = Default::default();
         let payload_len = payload.len();
-        if payload_len < 56 { 
+        if payload_len < 56 {
             output.append_byte(0xc0 + payload_len.try_into().unwrap());
         } else {
-            let bytes_len = (payload_len/256)+1;
-            output.append_byte(0xf7 + bytes_len.try_into().unwrap());
-            output.append_span_bytes(payload_len.to_bytes());
+            let len_as_bytes = payload_len.to_bytes();
+            let len_bytes_count = len_as_bytes.len();
+            output.append_byte(0xf7 + len_bytes_count.try_into().unwrap());
+            output.append_span_bytes(len_as_bytes);
         }
         output.append(@payload);
 
