@@ -1,7 +1,3 @@
-use core::array::ArrayTrait;
-use core::array::SpanTrait;
-use core::option::OptionTrait;
-
 use utils::errors::{RLPError, RLPHelpersError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use utils::helpers::{U32Trait, U256Impl, U128Impl, ByteArrayExTrait, ArrayExtension};
 
