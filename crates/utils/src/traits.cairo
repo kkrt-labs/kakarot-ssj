@@ -1,9 +1,10 @@
+use core::array::SpanTrait;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use starknet::{
     StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
     ContractAddress, Store, SyscallResult
 };
-use utils::math::{Zero, One};
+use utils::math::{Zero, One, Bitshift};
 
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
     #[inline(always)]
@@ -83,6 +84,33 @@ impl StorageBaseAddressPartialEq of PartialEq<StorageBaseAddress> {
 
 trait TryIntoResult<T, U> {
     fn try_into_result(self: T) -> Result<U, EVMError>;
+}
+
+impl SpanU8TryIntoResultEthAddress of TryIntoResult<Span<u8>, EthAddress> {
+    fn try_into_result(mut self: Span<u8>) -> Result<EthAddress, EVMError> {
+        let len = self.len();
+        if len == 0 {
+            return Result::Ok(EthAddress { address: 0 });
+        }
+        if len > 20 {
+            return Result::Err(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR));
+        }
+        let offset: u32 = len.into() - 1;
+        let mut result: u256 = 0;
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: u256 = (*self.at(i)).into();
+            result += byte.shl(8 * (offset - i).into());
+
+            i += 1;
+        };
+        let address: felt252 = result.try_into_result()?;
+
+        Result::Ok(EthAddress { address })
+    }
 }
 
 impl EthAddressTryIntoResultContractAddress of TryIntoResult<ContractAddress, EthAddress> {
