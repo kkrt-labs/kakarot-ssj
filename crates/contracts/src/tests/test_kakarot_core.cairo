@@ -162,7 +162,6 @@ fn test_kakarot_core_compute_starknet_address() {
     >();
 
     let eoa_starknet_address = kakarot_core.compute_starknet_address(evm_address);
-
     assert(eoa_starknet_address == expected_starknet_address, 'wrong starknet address');
 }
 
