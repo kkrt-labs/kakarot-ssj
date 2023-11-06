@@ -63,7 +63,6 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// # Errors
     /// * `ACCOUNT_EXISTS` - If a contract account already exists at the given `evm_address`
     fn deploy(evm_address: EthAddress, bytecode: Span<u8>) -> Result<ContractAccount, EVMError> {
-
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
         let account_class_hash = kakarot_state.account_class_hash();
         let kakarot_address = get_contract_address();

@@ -35,7 +35,6 @@ trait IKakarotCore<TContractState> {
     fn address_registry(self: @TContractState, evm_address: EthAddress) -> StoredAccountType;
 
 
-
     /// Gets the nonce associated to a contract account
     fn contract_account_nonce(self: @TContractState, evm_address: EthAddress) -> u64;
 
