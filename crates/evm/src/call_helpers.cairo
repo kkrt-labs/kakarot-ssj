@@ -76,7 +76,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
     /// The Machine will change its `current_ctx` to point to the
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
-    fn init_sub_ctx(
+    fn init_call_sub_ctx(
         ref self: Machine, call_args: CallArgs, read_only: bool
     ) -> Result<(), EVMError> {
         if call_args.should_transfer && call_args.value > 0 {

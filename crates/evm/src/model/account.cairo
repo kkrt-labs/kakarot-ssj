@@ -160,14 +160,8 @@ impl AccountImpl of AccountTrait {
 
 
     /// Returns the bytecode of the EVM account (EOA or CA)
-    fn bytecode(self: @Account) -> Result<Span<u8>, EVMError> {
-        match self.account_type {
-            AccountType::EOA(_) => Result::Ok(Default::default().span()),
-            AccountType::ContractAccount(ca) => {
-                let bytecode = ca.load_bytecode()?;
-                Result::Ok(bytecode)
-            }
-        }
+    fn bytecode(self: @Account) -> Span<u8> {
+        *self.code
     }
 
     /// Reads the value stored at the given key for the corresponding account.

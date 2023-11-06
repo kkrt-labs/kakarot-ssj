@@ -6,13 +6,17 @@ use evm::instructions::MemoryOperationTrait;
 use evm::instructions::SystemOperationsTrait;
 use evm::interpreter::EVMInterpreterTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::memory::MemoryTrait;
+use evm::model::AccountTrait;
 use evm::stack::StackTrait;
+use evm::state::StateTrait;
 use evm::tests::test_utils::{
     setup_machine_with_nested_execution_context, setup_machine, setup_machine_with_bytecode,
     initialize_contract_account, native_token, evm_address
 };
 use starknet::EthAddress;
 use utils::helpers::load_word;
+use utils::traits::EthAddressIntoU256;
 
 #[test]
 #[available_gas(20000000)]
@@ -377,4 +381,55 @@ fn test_exec_delegatecall() {
     assert(machine.error.is_none(), 'run should be success');
     assert(2 == load_word(1, machine.return_data()), 'Wrong return_data');
     assert(machine.stopped(), 'machine should be stopped');
+}
+
+
+#[test]
+#[available_gas(4_000_000_000)]
+fn test_exec_create2() {
+    // Given
+    let native_token = contract_utils::deploy_native_token();
+    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
+    testing::set_contract_address(kakarot_core.contract_address);
+
+    let evm_address = evm_address();
+    let eoa = kakarot_core.deploy_eoa(evm_address);
+
+    let mut machine = setup_machine_with_nested_execution_context();
+    let mut interpreter = EVMInterpreterTrait::new();
+
+    let deployed_bytecode = array![0xff].span();
+    let eth_address: EthAddress = 0x00000000000000000075766d5f61646472657373_u256.into();
+    let contract_address = initialize_contract_account(
+        eth_address, deployed_bytecode, Default::default().span()
+    )
+        .expect('set code failed');
+
+    let mut ctx = machine.current_ctx.unbox();
+    ctx.address = contract_address;
+    ctx.ctx_type = ExecutionContextType::Create(ctx.id());
+    machine.current_ctx = BoxTrait::new(ctx);
+
+    // Load into memory the bytecode of Storage.sol
+    let storage_initcode = storage_evm_initcode();
+    machine.memory.store_n(storage_initcode, 0);
+
+    machine.stack.push(0).unwrap();
+    machine.stack.push(storage_initcode.len().into()).unwrap();
+    machine.stack.push(0).unwrap();
+    machine.stack.push(0).unwrap();
+
+    // When
+    machine.exec_create2().unwrap();
+    interpreter.run(ref machine);
+
+    assert(machine.error.is_none(), 'run should be success');
+
+    let account = machine
+        .state
+        .get_account(0xeea3a85A7497e74d85b46E987B8E05152A183892.try_into().unwrap())
+        .expect('cannot retrieve account');
+
+    assert(account.nonce() == 1, 'wrong nonce');
+    assert(account.bytecode() == storage_evm_bytecode(), 'wrong bytecode');
 }
