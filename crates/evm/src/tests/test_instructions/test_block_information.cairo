@@ -113,7 +113,7 @@ fn test_gaslimit() {
 #[available_gas(5000000)]
 fn test_exec_selfbalance_eoa() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: false);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let eoa = kakarot_core.deploy_eoa(evm_address());
 
     fund_account_with_native_token(eoa, native_token, 0x1);
@@ -133,7 +133,7 @@ fn test_exec_selfbalance_eoa() {
 #[available_gas(5000000)]
 fn test_exec_selfbalance_zero() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: false);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // And
     let mut machine = setup_machine();
@@ -152,7 +152,7 @@ fn test_exec_selfbalance_zero() {
 #[available_gas(5000000)]
 fn test_exec_selfbalance_contract_account() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: false);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     // TODO: deploy contract account
     // and fund it
 
@@ -184,7 +184,7 @@ fn test_basefee() {
 #[test]
 #[available_gas(20000000)]
 fn test_chainid_should_push_chain_id_to_stack() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // Given
     let mut machine = setup_machine();

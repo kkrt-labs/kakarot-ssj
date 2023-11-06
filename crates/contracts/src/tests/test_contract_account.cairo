@@ -6,7 +6,7 @@ use evm::tests::test_utils::{ca_address, native_token};
 #[test]
 #[available_gas(3000000000)]
 fn test_ca_deploy() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let contract_account = deploy_contract_account(
         kakarot_core.contract_address, Default::default().span()
     );
@@ -22,7 +22,7 @@ fn test_ca_deploy() {
 #[test]
 #[available_gas(3000000000)]
 fn test_ca_bytecode() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let bytecode = counter_evm_bytecode();
     let contract_account = deploy_contract_account(kakarot_core.contract_address, bytecode);
 
@@ -34,7 +34,7 @@ fn test_ca_bytecode() {
 #[test]
 #[available_gas(3000000000)]
 fn test_ca_nonce() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let contract_account = deploy_contract_account(
         kakarot_core.contract_address, Default::default().span()
     );
@@ -54,7 +54,7 @@ fn test_ca_nonce() {
 #[test]
 #[available_gas(3000000000)]
 fn test_ca_storage() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: false);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let contract_account = deploy_contract_account(
         kakarot_core.contract_address, Default::default().span()
     );

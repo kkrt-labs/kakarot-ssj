@@ -12,7 +12,7 @@ use starknet::testing::set_contract_address;
 #[test]
 #[available_gas(200000000)]
 fn test_eoa_deploy() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     contract_utils::drop_event(kakarot_core.contract_address);
 
     let maybe_eoa = EOATrait::deploy(test_utils::evm_address());
@@ -33,7 +33,7 @@ fn test_eoa_deploy() {
 #[available_gas(5000000)]
 fn test_eoa_balance() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: false);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let sn_address = kakarot_core.deploy_eoa(test_utils::evm_address());
 
     fund_account_with_native_token(sn_address, native_token, 0x1);

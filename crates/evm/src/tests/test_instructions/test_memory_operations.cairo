@@ -523,7 +523,7 @@ fn test_exec_sload_from_state() {
 #[available_gas(20000000)]
 fn test_exec_sload_from_storage() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let mut machine = setup_machine();
     let mut ca = ContractAccountTrait::deploy(machine.address().evm, array![].span()).unwrap();
     let key: u256 = 0x100000000000000000000000000000001;
@@ -585,7 +585,7 @@ fn test_exec_sstore_finalized() {
     // Given
     // Setting the contract address is required so that `get_contract_address` in
     // `CA::deploy` returns the kakarot address
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let mut machine = setup_machine();
     // Deploys the contract account to be able to commit storage changes.
     let ca = ContractAccountTrait::deploy(machine.address().evm, array![].span()).unwrap();

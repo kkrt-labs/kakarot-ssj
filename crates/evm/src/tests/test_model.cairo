@@ -12,7 +12,7 @@ use starknet::testing::set_contract_address;
 #[available_gas(20000000)]
 fn test_account_at_eoa() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: false);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let eoa = kakarot_core.deploy_eoa(evm_address());
 
     // When
@@ -27,13 +27,11 @@ fn test_account_at_eoa() {
 #[available_gas(20000000)]
 fn test_account_at_ca_exists() {
     // Given
-    let (native_token, kakarot_core) =
-        setup_contracts_for_testing( // We need to set_contract_address as the nonce is stored inside the contract
-        // that calls this function - here, it's the test contract by default.
-        // By mocking the contract address, we make sure that the nonce is stored in
-        // the KakarotCore contract.
-        and_set_contract_address: true
-    );
+    // We need to set_contract_address as the nonce is stored inside the contract
+    // that calls this function - here, it's the test contract by default.
+    // By mocking the contract address, we make sure that the nonce is stored in
+    // the KakarotCore contract.
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     ContractAccountTrait::deploy(evm_address(), array![].span())
         .expect('failed deploy contract account',);
 
@@ -49,7 +47,7 @@ fn test_account_at_ca_exists() {
 #[available_gas(20000000)]
 fn test_account_at_undeployed() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: false);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // When
     set_contract_address(kakarot_core.contract_address);
@@ -64,7 +62,7 @@ fn test_account_at_undeployed() {
 #[available_gas(5000000)]
 fn test_account_balance_eoa() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: false);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let eoa = kakarot_core.deploy_eoa(evm_address());
 
     fund_account_with_native_token(eoa, native_token, 0x1);
@@ -84,7 +82,7 @@ fn test_account_balance_eoa() {
 #[available_gas(5000000)]
 fn test_account_balance_contract_account() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     // TODO: deploy contract account
     // and fund it
 

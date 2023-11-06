@@ -113,7 +113,7 @@ fn test_exec_return_with_offset() {
 fn test_exec_call() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -168,7 +168,7 @@ fn test_exec_call() {
 fn test_exec_call_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -222,7 +222,7 @@ fn test_exec_call_no_return() {
 fn test_exec_staticcall() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -276,7 +276,7 @@ fn test_exec_staticcall() {
 fn test_exec_staticcall_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -329,7 +329,7 @@ fn test_exec_staticcall_no_return() {
 fn test_exec_delegatecall() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let (native_token, kakarot_core) = setup_contracts_for_testing(and_set_contract_address: true);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
