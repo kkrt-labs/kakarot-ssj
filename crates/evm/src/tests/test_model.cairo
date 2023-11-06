@@ -1,12 +1,12 @@
 mod test_contract_account;
 mod test_eoa;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
-use contracts::tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token,};
+use contracts::tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
 use evm::model::account::AccountTrait;
 use evm::model::{Account, ContractAccountTrait};
-use evm::tests::test_utils::{evm_address, other_evm_address};
+use evm::tests::test_utils::{evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-use starknet::testing::{set_contract_address};
+use starknet::testing::set_contract_address;
 
 #[test]
 #[available_gas(20000000)]

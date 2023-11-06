@@ -1,12 +1,10 @@
-use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_utils as contract_utils;
 use evm::execution::execute;
-use evm::model::Transfer;
 use evm::model::eoa::EOATrait;
 use evm::state::StateTrait;
-use evm::tests::test_utils::{ca_address, evm_address, other_evm_address};
+use evm::tests::test_utils::{evm_address, other_evm_address};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use starknet::testing::{set_caller_address, set_contract_address};
+
 #[test]
 #[available_gas(20000000)]
 fn test_execute_value_transfer() {

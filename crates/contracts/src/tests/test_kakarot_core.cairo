@@ -1,8 +1,5 @@
-use contracts::components::ownable::ownable_component;
 use contracts::contract_account::ContractAccount;
 use contracts::eoa::ExternallyOwnedAccount;
-use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
-use contracts::kakarot_core::interface::IKakarotCore;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
@@ -13,18 +10,13 @@ use contracts::tests::test_upgradeable::{
     IMockContractUpgradeableDispatcherTrait
 };
 use contracts::tests::test_utils as contract_utils;
-use contracts::uninitialized_account::{
-    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount
-};
-use core::result::ResultTrait;
-use evm::errors::EVMErrorTrait;
+use contracts::uninitialized_account::UninitializedAccount;
 use evm::machine::Status;
 use evm::model::Address;
 use evm::model::contract_account::ContractAccountTrait;
-use evm::model::eoa::EOATrait;
 use evm::tests::test_utils;
-use starknet::{get_caller_address, testing, contract_address_const, ContractAddress, ClassHash};
-use utils::helpers::{U32Trait, ByteArrayExTrait, u256_to_bytes_array};
+use starknet::{testing, contract_address_const, ContractAddress, ClassHash};
+use utils::helpers::u256_to_bytes_array;
 
 #[test]
 #[available_gas(20000000)]

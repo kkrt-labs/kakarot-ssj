@@ -1,9 +1,7 @@
 use contracts::contract_account::{IContractAccountDispatcherTrait, IContractAccountDispatcher};
-use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcher, KakarotCore};
 use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_utils::{setup_contracts_for_testing, deploy_contract_account};
 use evm::tests::test_utils::{ca_address, native_token};
-use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 
 #[test]
 #[available_gas(3000000000)]

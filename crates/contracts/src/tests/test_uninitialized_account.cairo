@@ -2,19 +2,15 @@ use contracts::tests::test_upgradeable::{
     IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
     MockContractUpgradeableV1
 };
-use contracts::tests::test_utils::{fund_account_with_native_token, setup_contracts_for_testing};
+use contracts::tests::test_utils::setup_contracts_for_testing;
 
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount
 };
 use evm::tests::test_utils::{kakarot_address, eoa_address};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use starknet::class_hash::Felt252TryIntoClassHash;
-use starknet::testing::{set_caller_address, set_contract_address};
-use starknet::{
-    deploy_syscall, ContractAddress, ClassHash, get_contract_address, contract_address_const,
-    EthAddress
-};
+use starknet::testing::set_contract_address;
+use starknet::{deploy_syscall, ContractAddress, ClassHash};
 
 fn deploy_account(kakarot_core: ContractAddress) -> IUninitializedAccountDispatcher {
     let calldata: Span<felt252> = array![kakarot_core.into(), eoa_address().into()].span();

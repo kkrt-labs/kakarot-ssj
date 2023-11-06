@@ -9,16 +9,13 @@ use evm::model::contract_account::ContractAccountTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_calldata, setup_machine_with_bytecode, evm_address, callvalue,
-    setup_machine_with_nested_execution_context, other_evm_address, return_from_subcontext,
-    native_token, other_address
+    setup_machine_with_nested_execution_context, return_from_subcontext, native_token, other_address
 };
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 
-use starknet::{EthAddressIntoFelt252, contract_address_const, testing::set_contract_address};
-use utils::helpers::{
-    u256_to_bytes_array, load_word, ArrayExtension, ArrayExtTrait, SpanExtension, SpanExtTrait
-};
+use starknet::testing::set_contract_address;
+use utils::helpers::{u256_to_bytes_array, ArrayExtTrait};
 use utils::traits::{EthAddressIntoU256};
 
 // *************************************************************************

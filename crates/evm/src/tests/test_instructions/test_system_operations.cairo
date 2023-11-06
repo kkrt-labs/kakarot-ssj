@@ -1,20 +1,17 @@
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_utils::setup_contracts_for_testing;
-use core::option::OptionTrait;
-use evm::call_helpers::MachineCallHelpers;
-use evm::call_helpers::MachineCallHelpersImpl;
+use evm::call_helpers::{MachineCallHelpers, MachineCallHelpersImpl};
 use evm::context::{ExecutionContext, ExecutionContextTrait};
 use evm::instructions::MemoryOperationTrait;
 use evm::instructions::SystemOperationsTrait;
 use evm::interpreter::EVMInterpreterTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
-use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{
     setup_machine_with_nested_execution_context, setup_machine, setup_machine_with_bytecode,
-    parent_ctx_return_data, initialize_contract_account, native_token, evm_address
+    initialize_contract_account, native_token, evm_address
 };
-use starknet::{EthAddress};
+use starknet::EthAddress;
 use utils::helpers::load_word;
 
 #[test]

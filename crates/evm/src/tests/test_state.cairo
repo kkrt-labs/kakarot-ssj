@@ -136,8 +136,7 @@ mod test_state_changelog {
 
 mod test_simple_log {
     use evm::state::{SimpleLog, SimpleLogTrait};
-    use evm::tests::test_utils;
-    use utils::traits::StorageBaseAddressIntoFelt252;
+
     #[test]
     #[available_gas(200000000)]
     fn test_append_to_contextual_logs() {
@@ -193,7 +192,6 @@ mod test_simple_log {
 }
 
 mod test_state {
-    use contracts::eoa::ExternallyOwnedAccount;
     use contracts::tests::test_utils as contract_utils;
     use contracts::uninitialized_account::UninitializedAccount;
     use evm::model::account::{Account, AccountType};
@@ -203,11 +201,9 @@ mod test_state {
     use evm::state::{State, StateTrait, StateInternalTrait};
     use evm::tests::test_utils;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+    use starknet::EthAddress;
     use starknet::testing::set_contract_address;
-    use starknet::{EthAddress, get_contract_address};
     use utils::helpers::compute_starknet_address;
-    use utils::traits::StorageBaseAddressIntoFelt252;
-
 
     #[test]
     #[available_gas(200000000)]

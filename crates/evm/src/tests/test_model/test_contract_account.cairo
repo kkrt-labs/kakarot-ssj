@@ -1,18 +1,12 @@
-use alexandria_storage::list::{List, ListTrait};
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_utils as contract_utils;
 use contracts::tests::test_utils::constants::EVM_ADDRESS;
-use evm::errors::EVMErrorTrait;
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::tests::test_utils;
-use starknet::testing;
-use starknet::{storage_base_address_from_felt252, Store, get_contract_address};
-use utils::helpers::ByteArrayExTrait;
-use utils::storage::{compute_storage_base_address};
-use utils::traits::{StoreBytes31, StorageBaseAddressIntoFelt252};
+use starknet::testing::set_contract_address;
 
 
 #[test]
@@ -26,7 +20,7 @@ fn test_contract_account_deploy() {
     contract_utils::drop_event(kakarot_core.contract_address);
 
     let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-    testing::set_contract_address(kakarot_core.contract_address);
+    set_contract_address(kakarot_core.contract_address);
 
     let bytecode = counter_evm_bytecode();
     let ca = ContractAccountTrait::deploy(test_utils::evm_address(), bytecode).unwrap();

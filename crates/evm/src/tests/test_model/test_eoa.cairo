@@ -6,10 +6,7 @@ use evm::errors::EVMErrorTrait;
 use evm::model::eoa::{EOA, EOATrait};
 use evm::tests::test_utils;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-use starknet::{
-    testing, testing::set_contract_address, ContractAddress, contract_address_const,
-    storage_base_address_from_felt252, Store, get_contract_address
-};
+use starknet::testing::set_contract_address;
 
 
 #[test]

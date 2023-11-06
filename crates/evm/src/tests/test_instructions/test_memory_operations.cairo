@@ -1,22 +1,16 @@
-use contracts::tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
+use contracts::tests::test_utils::setup_contracts_for_testing;
 use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION, WRITE_IN_STATIC_CONTEXT};
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::stack::StackTrait;
-use evm::state::{StateTrait, StateInternalTrait, compute_state_key, compute_storage_address};
+use evm::state::{StateTrait, StateInternalTrait, compute_storage_address};
 use evm::tests::test_utils::{
-    setup_machine, setup_machine_with_bytecode, setup_machine_with_calldata, evm_address, callvalue,
-    setup_static_machine
+    setup_machine, setup_machine_with_bytecode, evm_address, setup_static_machine
 };
 use integer::BoundedInt;
-
-use starknet::{EthAddressIntoFelt252, storage_base_address_const, Store, get_contract_address};
-use utils::helpers::{u256_to_bytes_array};
-use utils::storage::{compute_storage_base_address};
-use utils::traits::{EthAddressIntoU256, StorageBaseAddressIntoU256};
-
+use starknet::get_contract_address;
 
 #[test]
 #[available_gas(20000000)]
