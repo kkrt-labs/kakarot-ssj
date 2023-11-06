@@ -21,7 +21,7 @@ fn test_execute_value_transfer() {
     // When
     let mut exec_result = execute(
         origin: sender.address(),
-        address: recipient.address(),
+        target: recipient.address(),
         bytecode: Default::default().span(),
         calldata: Default::default().span(),
         value: 2000,

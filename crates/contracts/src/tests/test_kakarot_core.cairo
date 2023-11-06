@@ -19,6 +19,7 @@ use contracts::uninitialized_account::{
 use core::result::ResultTrait;
 use evm::errors::EVMErrorTrait;
 use evm::machine::Status;
+use evm::model::Address;
 use evm::model::contract_account::ContractAccountTrait;
 use evm::model::eoa::EOATrait;
 use evm::tests::test_utils;
@@ -249,7 +250,14 @@ fn test_handle_call() {
 
     let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
     let result = kakarot_core
-        .handle_call(from: evm_address, :to, :gas_limit, :gas_price, :value, :data)
+        .handle_call(
+            from: Address { evm: evm_address, starknet: eoa },
+            :to,
+            :gas_limit,
+            :gas_price,
+            :value,
+            :data
+        )
         .expect('handle_call failed');
     let return_data = result.return_data;
 

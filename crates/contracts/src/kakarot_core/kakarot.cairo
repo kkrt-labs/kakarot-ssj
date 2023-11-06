@@ -231,6 +231,9 @@ mod KakarotCore {
             if !self.is_view() {
                 panic_with_felt252('fn must be called, not invoked');
             };
+
+            let from = Address { evm: from, starknet: self.compute_starknet_address(from) };
+
             let result = self.handle_call(:from, :to, :gas_limit, :gas_price, :value, :data);
             match result {
                 Result::Ok(result) => result.return_data,
@@ -303,7 +306,7 @@ mod KakarotCore {
 
         fn handle_call(
             self: @ContractState,
-            from: EthAddress,
+            from: Address,
             to: Option<EthAddress>,
             gas_limit: u128,
             gas_price: u128,
@@ -318,25 +321,8 @@ mod KakarotCore {
                         Option::None => Default::default().span(),
                     };
 
-                    // `from` address should be an EOA, i.e. a deployed Starknet account
-                    // checking invariants here:
-                    // - `from` MUST not be an uninitialized account
-                    // - `from` MUST not be a contract account
-                    let from_starknet_address = match self.address_registry(from) {
-                        StoredAccountType::UninitializedAccount => {
-                            return Result::Err(
-                                EVMError::DeployError(CALLING_FROM_UNDEPLOYED_ACCOUNT)
-                            );
-                        },
-                        StoredAccountType::EOA(starknet_address) => starknet_address,
-                        StoredAccountType::ContractAccount(_) => {
-                            return Result::Err(EVMError::OriginError(CALLING_FROM_CA));
-                        }
-                    };
-                    let from = Address { evm: from, starknet: from_starknet_address };
-
-                    let to_starknet_address = self.compute_starknet_address(to);
-                    let to = Address { evm: to, starknet: to_starknet_address };
+                    let target_starknet_address = self.compute_starknet_address(to);
+                    let to = Address { evm: to, starknet: target_starknet_address };
 
                     let execution_result = execute(
                         from,

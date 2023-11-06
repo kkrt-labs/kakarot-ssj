@@ -32,7 +32,7 @@ use utils::helpers::compute_starknet_address;
 /// *   The events emitted
 fn execute(
     origin: Address,
-    address: Address,
+    target: Address,
     bytecode: Span<u8>,
     calldata: Span<u8>,
     value: u256,
@@ -54,7 +54,7 @@ fn execute(
     );
     let ctx = ExecutionContextTrait::new(
         ctx_type: Default::default(),
-        :address,
+        address: target,
         :call_ctx,
         parent_ctx: Default::default(),
         return_data: Default::default().span()
@@ -63,7 +63,7 @@ fn execute(
     // Initiate the Machine with the root context
     let mut machine: Machine = MachineCurrentContextTrait::new(ctx);
 
-    let transfer = Transfer { sender: origin, recipient: address, amount: value };
+    let transfer = Transfer { sender: origin, recipient: target, amount: value };
     match machine.state.add_transfer(transfer) {
         Result::Ok(x) => {},
         Result::Err(err) => {
