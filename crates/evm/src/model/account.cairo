@@ -149,23 +149,6 @@ impl AccountImpl of AccountTrait {
         }
     }
 
-    /// Returns `true` if the account is an Externally Owned Account (EOA).
-    #[inline(always)]
-    fn is_eoa(self: @AccountType) -> bool {
-        match self {
-            AccountType::EOA => true,
-            AccountType::ContractAccount => false
-        }
-    }
-
-    /// Returns `true` if the account is a Contract Account (CA).
-    #[inline(always)]
-    fn is_ca(self: @AccountType) -> bool {
-        match self {
-            AccountType::EOA => false,
-            AccountType::ContractAccount => true
-        }
-    }
 
     #[inline(always)]
     fn evm_address(self: @Account) -> EthAddress {
@@ -175,19 +158,10 @@ impl AccountImpl of AccountTrait {
         }
     }
 
-    /// Returns the balance in native token for a given EVM account (EOA or CA)
-    /// This is equivalent to checking the balance in native coin, i.e. ETHER of an account in Ethereum
-    #[inline(always)]
-    fn balance(self: @AccountType) -> Result<u256, EVMError> {
-        match self {
-            AccountType::EOA(eoa) => { eoa.balance() },
-            AccountType::ContractAccount(ca) => { ca.balance() }
-        }
-    }
 
     /// Returns the bytecode of the EVM account (EOA or CA)
-    fn bytecode(self: @AccountType) -> Result<Span<u8>, EVMError> {
-        match self {
+    fn bytecode(self: @Account) -> Result<Span<u8>, EVMError> {
+        match self.account_type {
             AccountType::EOA(_) => Result::Ok(Default::default().span()),
             AccountType::ContractAccount(ca) => {
                 let bytecode = ca.load_bytecode()?;
@@ -231,6 +205,11 @@ impl AccountImpl of AccountTrait {
         self.nonce = nonce;
     }
 
+    #[inline(always)]
+    fn nonce(self: @Account) -> u64 {
+        *self.nonce
+    }
+
     /// Sets the code of the Account
     /// # Arguments
     /// * `self` The Account to set the code on
@@ -250,5 +229,46 @@ impl AccountImpl of AccountTrait {
     /// `true` means that the account will be erased at the end of the transaction
     fn is_selfdestruct(self: @Account) -> bool {
         *self.selfdestruct
+    }
+}
+
+#[generate_trait]
+impl AccountTypeImpl of AccountTypeTrait {
+    /// Returns the balance in native token for a given EVM account (EOA or CA)
+    /// This is equivalent to checking the balance in native coin, i.e. ETHER of an account in Ethereum
+    #[inline(always)]
+    fn balance(self: @AccountType) -> Result<u256, EVMError> {
+        match self {
+            AccountType::EOA(eoa) => { eoa.balance() },
+            AccountType::ContractAccount(ca) => { ca.balance() }
+        }
+    }
+
+    /// Returns `true` if the account is an Externally Owned Account (EOA).
+    #[inline(always)]
+    fn is_eoa(self: @AccountType) -> bool {
+        match self {
+            AccountType::EOA => true,
+            AccountType::ContractAccount => false
+        }
+    }
+
+    /// Returns `true` if the account is a Contract Account (CA).
+    #[inline(always)]
+    fn is_ca(self: @AccountType) -> bool {
+        match self {
+            AccountType::EOA => false,
+            AccountType::ContractAccount => true
+        }
+    }
+    /// Returns the bytecode of the EVM account (EOA or CA)
+    fn bytecode(self: @AccountType) -> Result<Span<u8>, EVMError> {
+        match self {
+            AccountType::EOA(_) => Result::Ok(Default::default().span()),
+            AccountType::ContractAccount(ca) => {
+                let bytecode = ca.load_bytecode()?;
+                Result::Ok(bytecode)
+            }
+        }
     }
 }

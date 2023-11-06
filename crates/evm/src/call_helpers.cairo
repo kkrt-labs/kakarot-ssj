@@ -9,7 +9,7 @@ use evm::context::{
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::account::AccountTrait;
+use evm::model::account::{AccountTrait, AccountTypeTrait};
 use evm::model::{Transfer, Address};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
@@ -135,7 +135,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
     /// - Pushing the execution status to the Stack
     /// - Set the return data of the parent context
     /// - Store the return data in Memory
-    /// - Return to parent context and decrease the ctx_count.
+    /// - Return to parent context.
     fn finalize_calling_context(ref self: Machine) -> Result<(), EVMError> {
         // Put the status of the call on the stack.
         let status = self.status();

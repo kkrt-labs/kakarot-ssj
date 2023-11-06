@@ -7,21 +7,23 @@ use evm::context::{
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::account::AccountTrait;
+use evm::model::account::{AccountTrait, AccountTypeTrait};
 use evm::stack::StackTrait;
+use evm::state::StateTrait;
 use keccak::cairo_keccak;
 use starknet::{EthAddress, get_tx_info};
 use utils::helpers::ArrayExtTrait;
 use utils::helpers::{ByteArrayExTrait, ResultExTrait, EthAddressExt, U256Trait};
-use utils::traits::{BoolIntoNumeric, U256TryIntoResult, SpanU8TryIntoResultEthAddress};
+use utils::traits::{
+    BoolIntoNumeric, EthAddressIntoU256, U256TryIntoResult, SpanU8TryIntoResultEthAddress
+};
+
 
 /// Helper struct to prepare CREATE and CREATE2 opcodes
 #[derive(Drop)]
 struct CreateArgs {
     to: EthAddress,
     value: u256,
-    offset: usize,
-    size: usize,
     bytecode: Span<u8>,
 }
 
@@ -56,7 +58,90 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
                 )?,
         };
 
-        Result::Ok(CreateArgs { to, value, offset, size, bytecode: bytecode.span() })
+        Result::Ok(CreateArgs { to, value, bytecode: bytecode.span() })
+    }
+
+
+    /// Initializes and enters into a new sub-context
+    /// The Machine will change its `current_ctx` to point to the
+    /// newly created sub-context.
+    /// Then, the EVM execution loop will start on this new execution context.
+    fn init_sub_ctx(ref self: Machine, create_args: CreateArgs) -> Result<(), EVMError> {
+        let mut account = self.state.get_account(create_args.to)?;
+
+        // The caller in the subcontext is the calling context's current address
+        let caller = self.address();
+        let mut caller_account = self.state.get_account(caller.evm)?;
+        let caller_current_nonce = caller_account.nonce();
+        caller_account.set_nonce(caller_current_nonce + 1);
+        self.state.set_account(caller_account);
+
+        // Check collision
+        let is_collision = account.nonce() != 0 || !account.bytecode()?.is_empty();
+        if is_collision {
+            self.stack.push(0)?;
+            return Result::Ok(());
+        }
+
+        account.set_nonce(1);
+        self.state.set_account(account);
+
+        let call_ctx = CallContextTrait::new(
+            caller,
+            create_args.bytecode,
+            calldata: Default::default().span(),
+            value: create_args.value,
+            read_only: false,
+            gas_limit: self.gas_limit(),
+            gas_price: self.gas_price(),
+            ret_offset: 0,
+            ret_size: 0
+        );
+
+        let parent_ctx = NullableTrait::new(self.current_ctx.unbox());
+        let child_ctx = ExecutionContextTrait::new(
+            ExecutionContextType::Create(self.ctx_count),
+            account.address(),
+            call_ctx,
+            parent_ctx,
+            Default::default().span()
+        );
+
+        // Machine logic
+        self.ctx_count += 1;
+        self.current_ctx = BoxTrait::new(child_ctx);
+
+        Result::Ok(())
+    }
+
+    /// Finalize the create context by:
+    /// - Pushing the deployed contract's address (success) to the Stack or 0 (failure)
+    /// - Set the return data of the parent context
+    /// - Store the bytecode (subcontext's return data) of the newly deployed contract account
+    /// - Return to parent context.
+    fn finalize_create_context(ref self: Machine) -> Result<(), EVMError> {
+        // Put the status of the call on the stack.
+        let status = self.status();
+        let account_address = self.address().evm;
+        let success = match status {
+            Status::Active => {
+                return Result::Err(
+                    EVMError::InvalidMachineState(ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION)
+                );
+            },
+            Status::Stopped => account_address.into(),
+            Status::Reverted => 0,
+        };
+        self.stack.push(success)?;
+
+        let return_data = self.return_data();
+        let mut account = self.state.get_account(account_address)?;
+        account.set_code(return_data);
+        self.state.set_account(account);
+
+        // Return from the current sub ctx by setting the execution context
+        // to the parent context.
+        self.return_to_parent_ctx()
     }
 
     fn get_create_address(
