@@ -64,7 +64,6 @@ trait IContractAccount<TContractState> {
 mod ContractAccount {
     use alexandria_storage::list::{List, ListTrait};
     use contracts::components::upgradeable::{upgradeable_component, IUpgradeable};
-    use super::IContractAccount;
     use contracts::errors::{
         BYTECODE_READ_ERROR, BYTECODE_WRITE_ERROR, STORAGE_READ_ERROR, STORAGE_WRITE_ERROR,
         NONCE_READ_ERROR, NONCE_WRITE_ERROR
@@ -76,6 +75,7 @@ mod ContractAccount {
         ContractAddress, EthAddress, ClassHash, get_caller_address, Store,
         storage_base_address_from_felt252, StorageBaseAddress
     };
+    use super::IContractAccount;
     use utils::helpers::{ByteArrayExTrait, ResultExTrait};
     use utils::storage::{compute_storage_base_address};
     use utils::traits::{StorageBaseAddressIntoFelt252, StoreBytes31};

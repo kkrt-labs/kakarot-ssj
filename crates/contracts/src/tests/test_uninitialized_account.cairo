@@ -5,11 +5,11 @@ use contracts::tests::test_upgradeable::{
 use contracts::tests::test_utils::{
     deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
 };
+use contracts::uninitialized_account::UninitializedAccount;
 
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
-use contracts::uninitialized_account::UninitializedAccount;
 use evm::tests::test_utils::{kakarot_address, eoa_address};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::class_hash::Felt252TryIntoClassHash;

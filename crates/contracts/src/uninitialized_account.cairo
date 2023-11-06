@@ -13,10 +13,10 @@ trait IUninitializedAccount<TContractState> {
 mod UninitializedAccount {
     use contracts::components::upgradeable::IUpgradeable;
     use contracts::components::upgradeable::upgradeable_component;
-    use contracts::uninitialized_account::IUninitializedAccount;
-    use starknet::{ContractAddress, EthAddress, ClassHash, get_caller_address};
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
+    use contracts::uninitialized_account::IUninitializedAccount;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+    use starknet::{ContractAddress, EthAddress, ClassHash, get_caller_address};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 

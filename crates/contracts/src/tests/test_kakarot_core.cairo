@@ -158,7 +158,7 @@ fn test_compute_starknet_address() {
     // To compute a new expected_starknet_address, run `bun run compute_starknet_address` (pre-requisite: `bun install`)
     // And enter the class hash situated in UninitializedAccount::TEST_CLASS_HASH
     let expected_starknet_address: ContractAddress = contract_address_const::<
-        0x7797f53c076db7fa38536bea011a393d0aedb8b17754aa3f5f82dd645364da4
+        0x11f7fcbe9bbe9357fa40721ffc117f7dfc2fa5f491e0dca5278b1db277548c9
     >();
 
     let eoa_starknet_address = kakarot_core.compute_starknet_address(evm_address);

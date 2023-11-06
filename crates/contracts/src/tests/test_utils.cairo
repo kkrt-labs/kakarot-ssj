@@ -2,10 +2,10 @@ use contracts::contract_account::ContractAccount;
 use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
 use contracts::eoa::{ExternallyOwnedAccount};
 use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcher, KakarotCore};
+use contracts::uninitialized_account::UninitializedAccount;
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
-use contracts::uninitialized_account::UninitializedAccount;
 
 use evm::tests::test_utils::{deploy_fee, ca_address, other_starknet_address, chain_id};
 use openzeppelin::token::erc20::ERC20;

@@ -16,11 +16,11 @@ mod ExternallyOwnedAccount {
     use contracts::components::upgradeable::IUpgradeable;
     use contracts::components::upgradeable::upgradeable_component;
     use starknet::account::{Call, AccountContract};
-    use super::IExternallyOwnedAccount;
 
     use starknet::{
         ContractAddress, EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address
     };
+    use super::IExternallyOwnedAccount;
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
