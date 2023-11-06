@@ -1,9 +1,3 @@
-use core::array::ArrayTrait;
-use core::array::SpanTrait;
-use core::clone::Clone;
-use core::option::OptionTrait;
-use core::result::ResultTrait;
-use core::serde::Serde;
 use core::traits::TryInto;
 
 use keccak::cairo_keccak;
