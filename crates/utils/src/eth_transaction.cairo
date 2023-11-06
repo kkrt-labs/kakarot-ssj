@@ -59,8 +59,9 @@ impl EthTransactionImpl of EthTransaction {
         let decoded_data = RLPTrait::decode(tx_data);
         let decoded_data = RLPErrorImpl::map_err(decoded_data)?;
 
-        let len = decoded_data.len();
-        assert(len == 1, 'Length is not 1');
+        if (decoded_data.len() != 1) {
+            return Result::Err(EthTransactionError::Other('Length is not 1'));
+        }
 
         let decoded_data = *decoded_data.at(0);
 
@@ -68,7 +69,9 @@ impl EthTransactionImpl of EthTransaction {
             RLPItem::String => { Result::Err(EthTransactionError::ExpectedRLPItemToBeList) },
             RLPItem::List(val) => {
                 let len = val.len();
-                assert(len == 9, 'Length is not 9');
+                if (val.len() != 9) {
+                    return Result::Err(EthTransactionError::Other('Length is not 9'));
+                }
 
                 let nonce_idx = 0;
                 let gas_price_idx = 1;
