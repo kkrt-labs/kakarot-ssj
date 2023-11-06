@@ -1,3 +1,4 @@
+use core::option::OptionTrait;
 use core::traits::TryInto;
 
 use keccak::cairo_keccak;
@@ -84,26 +85,16 @@ impl EthTransactionImpl of EthTransaction {
                 )
                     .reverse_endianness();
 
+                let address: felt252 = to
+                    .try_into()
+                    .ok_or(EthTransactionError::Other('invalid eth address'))?;
+
                 Result::Ok(
                     EthereumTransaction {
                         nonce: nonce,
                         gas_price: gas_price,
                         gas_limit: gas_limit,
-                        destination: EthAddress {
-                            address: {
-                                let address: Option<felt252> = to.try_into();
-                                match address {
-                                    Option::Some(address) => { Result::Ok(address) },
-                                    Option::None => {
-                                        Result::Err(
-                                            EthTransactionError::Other(
-                                                'conversion to felt252 failed'
-                                            )
-                                        )
-                                    }
-                                }
-                            }?
-                        },
+                        destination: EthAddress { address: address },
                         amount: value,
                         payload: data,
                         v: v,
