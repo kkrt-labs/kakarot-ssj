@@ -1,9 +1,10 @@
+use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError};
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::model::eoa::{EOA, EOATrait};
 use evm::model::{Address, AccountType};
 use starknet::{ContractAddress, EthAddress, get_contract_address};
-use utils::helpers::ByteArrayExTrait;
+use utils::helpers::{ByteArrayExTrait, compute_starknet_address};
 
 #[derive(Copy, Drop, PartialEq)]
 struct Account {
@@ -33,13 +34,16 @@ impl AccountImpl of AccountTrait {
                 }
             },
             Option::None => {
+                let kakarot_state = KakarotCore::unsafe_new_contract_state();
+                let starknet_address = kakarot_state
+                    .compute_starknet_address(evm_address: address,);
                 return Result::Ok(
                     // If no account exists at `address`, then
                     // we are trying to access an undeployed contract account
                     Account {
                         account_type: AccountType::ContractAccount(
                             ContractAccount {
-                                evm_address: address, starknet_address: get_contract_address()
+                                evm_address: address, starknet_address: starknet_address
                             }
                         ),
                         code: Default::default().span(),
@@ -51,6 +55,17 @@ impl AccountImpl of AccountTrait {
         }
     }
 
+    /// Commits the account to Starknet by updating the account state if it
+    /// exists, or deploying a new account if it doesn't.
+    ///
+    /// Only Contract Accounts can be modified.
+    ///
+    /// # Arguments
+    /// * `self` - The account to commit
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
     fn commit(self: @Account) -> Result<(), EVMError> {
         // Case account exists
         let maybe_acc = AccountImpl::account_type_at(self.address().evm)?;
@@ -72,6 +87,11 @@ impl AccountImpl of AccountTrait {
                 }
             },
             Option::None => {
+                // If the nonce is 0, the account is just "touched" (e.g.
+                // balance transfer) and is not set for deployment.
+                if (*self.nonce == 0) {
+                    return Result::Ok(());
+                }
                 //Case new account
                 // If SELFDESTRUCT, just do nothing
                 if (*self.selfdestruct == true) {
@@ -85,6 +105,7 @@ impl AccountImpl of AccountTrait {
         }
     }
 
+    #[inline(always)]
     fn address(self: @Account) -> Address {
         match self.account_type {
             AccountType::EOA(eoa) => { eoa.address() },
@@ -92,6 +113,14 @@ impl AccountImpl of AccountTrait {
         }
     }
 
+    #[inline(always)]
+    fn is_precompile(self: @Account) -> bool {
+        let evm_address: felt252 = self.address().evm.into();
+        if evm_address.into() < 0x10_u256 {
+            return true;
+        }
+        false
+    }
 
     /// Returns the AccountType corresponding to an Ethereum address.
     /// If the address is not an EOA or a Contract Account (meaning that it is not deployed), returns None.
@@ -212,8 +241,14 @@ impl AccountImpl of AccountTrait {
     }
 
     /// Registers an account for SELFDESTRUCT
-    /// `true` means that the account will be erased at the end of the transaction
+    /// This will cause the account to be erased at the end of the transaction
     fn selfdestruct(ref self: Account) {
         self.selfdestruct = true;
+    }
+
+    /// Returns whether the account is registered for SELFDESTRUCT
+    /// `true` means that the account will be erased at the end of the transaction
+    fn is_selfdestruct(self: @Account) -> bool {
+        *self.selfdestruct
     }
 }

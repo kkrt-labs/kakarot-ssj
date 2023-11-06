@@ -7,6 +7,7 @@ use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcher, Kakarot
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount
 };
+
 use evm::tests::test_utils::{deploy_fee, ca_address, other_starknet_address, chain_id};
 use openzeppelin::token::erc20::ERC20;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};

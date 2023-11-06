@@ -98,11 +98,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         // Case 2: `to` address is not a precompile
         // We enter the standard flow
-        let maybe_account = AccountTrait::account_type_at(call_args.to.evm)?;
-        let bytecode = match maybe_account {
-            Option::Some(acc) => acc.bytecode()?,
-            Option::None => Default::default().span(),
-        };
+        let bytecode = self.state.get_account(call_args.to.evm)?.code;
 
         // The caller in the subcontext is the current context's current address
         let caller = self.address();

@@ -931,6 +931,50 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
 // *************************************************************************
 #[test]
 #[available_gas(20000000)]
+fn test_exec_extcodehash_precompile() {
+    // Given
+    let evm_address = 0x05.try_into().unwrap();
+    let mut machine = setup_machine();
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    testing::set_contract_address(kakarot_core.contract_address);
+    let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
+    machine.stack.push(evm_address.into());
+    set_contract_address(kakarot_core.contract_address);
+
+    // When
+    machine.exec_extcodehash().unwrap();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'expected 0');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_exec_extcodehash_selfdestructed() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = setup_machine();
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    set_contract_address(kakarot_core.contract_address);
+
+    // The bytecode remains empty, and we expect the empty hash in return
+    let mut ca = ContractAccountTrait::deploy(evm_address(), array![].span())
+        .expect('CA deployment failed');
+    ca.selfdestruct().expect('CA selfdestruct failed');
+
+    machine.stack.push(evm_address.into());
+
+    // When
+    machine.exec_extcodehash().unwrap();
+
+    // Then
+    assert(machine.stack.peek().unwrap() == 0, 'expected 0');
+}
+
+#[test]
+#[available_gas(20000000)]
 fn test_exec_extcodehash_eoa() {
     // Given
     let evm_address = evm_address();
@@ -1003,6 +1047,7 @@ fn test_exec_extcodehash_ca_uninitialized() {
     assert(machine.stack.peek().unwrap() == 0, 'expected stack top to be 0');
 }
 
+//TODO test extcodehash precompile
 #[test]
 #[available_gas(20000000000)]
 fn test_exec_extcodehash_ca_with_bytecode() {

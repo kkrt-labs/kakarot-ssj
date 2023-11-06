@@ -171,19 +171,17 @@ mod KakarotCore {
             self.address_registry.read(evm_address)
         }
 
-        fn set_address_registry(
-            ref self: ContractState, evm_address: EthAddress, account: StoredAccountType
-        ) {
-            self.address_registry.write(evm_address, account);
-        }
 
         fn contract_account_nonce(self: @ContractState, evm_address: EthAddress) -> u64 {
-            let ca = ContractAccountTrait::at(evm_address).unwrap().unwrap();
+            let ca = ContractAccountTrait::at(evm_address)
+                .expect('Fetching CA failed')
+                .expect('No CA found');
             ca.nonce().unwrap()
         }
 
         fn account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
-            let maybe_account = AccountTrait::account_type_at(evm_address).unwrap();
+            let maybe_account = AccountTrait::account_type_at(evm_address)
+                .expect('Fetching account failed');
             match maybe_account {
                 Option::Some(account) => account.balance().unwrap(),
                 Option::None => 0
@@ -193,30 +191,30 @@ mod KakarotCore {
         fn contract_account_storage_at(
             self: @ContractState, evm_address: EthAddress, key: u256
         ) -> u256 {
-            let ca = ContractAccountTrait::at(evm_address).unwrap().unwrap();
+            let ca = ContractAccountTrait::at(evm_address)
+                .expect('Fetching CA failed')
+                .expect('No CA found');
             ca.storage_at(key).unwrap()
         }
 
         fn contract_account_bytecode(self: @ContractState, evm_address: EthAddress) -> Span<u8> {
-            let ca = ContractAccountTrait::at(evm_address).unwrap().unwrap();
+            let ca = ContractAccountTrait::at(evm_address)
+                .expect('Fetching CA failed')
+                .expect('No CA found');
             ca.load_bytecode().unwrap()
         }
 
         fn contract_account_false_positive_jumpdest(
             self: @ContractState, evm_address: EthAddress, offset: usize
         ) -> bool {
-            let ca = ContractAccountTrait::at(evm_address).unwrap().unwrap();
+            let ca = ContractAccountTrait::at(evm_address)
+                .expect('Fetching CA failed')
+                .expect('No CA found');
             ca.is_false_positive_jumpdest(offset).unwrap()
         }
 
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
-            EOATrait::deploy(evm_address).unwrap().starknet_address
-        }
-
-        fn deploy_ca(
-            ref self: ContractState, evm_address: EthAddress, bytecode: Span<u8>
-        ) -> ContractAddress {
-            ContractAccountTrait::deploy(evm_address, bytecode).unwrap().starknet_address
+            EOATrait::deploy(evm_address).expect('EOA Deployment failed').starknet_address
         }
 
         fn eth_call(
@@ -264,6 +262,7 @@ mod KakarotCore {
         }
 
         fn set_eoa_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
+            self.ownable.assert_only_owner();
             let old_class_hash = self.eoa_class_hash.read();
             self.eoa_class_hash.write(new_class_hash);
             self.emit(EOAClassHashChange { old_class_hash, new_class_hash });
@@ -274,6 +273,7 @@ mod KakarotCore {
         }
 
         fn set_ca_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
+            self.ownable.assert_only_owner();
             let old_class_hash = self.ca_class_hash.read();
             self.ca_class_hash.write(new_class_hash);
             self.emit(CAClassHashChange { old_class_hash, new_class_hash });
@@ -284,6 +284,7 @@ mod KakarotCore {
         }
 
         fn set_account_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
+            self.ownable.assert_only_owner();
             let old_class_hash = self.account_class_hash.read();
             self.account_class_hash.write(new_class_hash);
             self.emit(AccountClassHashChange { old_class_hash, new_class_hash });
@@ -304,6 +305,14 @@ mod KakarotCore {
             true
         }
 
+        /// Maps an EVM address to a Starknet address
+        /// Triggerred when deployment of an EOA or CA is successful
+        fn set_address_registry(
+            ref self: ContractState, evm_address: EthAddress, account: StoredAccountType
+        ) {
+            self.address_registry.write(evm_address, account);
+        }
+
         fn handle_call(
             self: @ContractState,
             from: Address,
@@ -316,10 +325,7 @@ mod KakarotCore {
             match to {
                 //TODO we can optimize this by doing this one step later, when we load the account from the state. This way we can avoid loading the account bytecode twice.
                 Option::Some(to) => {
-                    let bytecode = match AccountTrait::account_type_at(to)? {
-                        Option::Some(account) => account.bytecode()?,
-                        Option::None => Default::default().span(),
-                    };
+                    let bytecode = AccountTrait::fetch_or_create(to)?.code;
 
                     let target_starknet_address = self.compute_starknet_address(to);
                     let to = Address { evm: to, starknet: target_starknet_address };

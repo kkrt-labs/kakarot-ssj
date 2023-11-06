@@ -1,4 +1,3 @@
-use core::result::ResultTrait;
 use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
     Status

@@ -5,9 +5,9 @@ use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::account::{AccountTrait};
-use evm::model::{AccountType, ContractAccountTrait};
+use evm::model::AccountTrait;
 use evm::stack::StackTrait;
+use evm::state::StateTrait;
 use integer::u32_as_non_zero;
 use integer::u32_overflowing_add;
 use keccak::cairo_keccak;
@@ -35,13 +35,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_balance(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        let maybe_account = AccountTrait::account_type_at(evm_address)?;
-        let balance: u256 = match maybe_account {
-            Option::Some(acc) => acc.balance()?,
-            Option::None => 0
-        };
+        let balance = self.state.read_balance(evm_address)?;
 
-        return self.stack.push(balance);
+        self.stack.push(balance)
     }
 
     /// 0x32 - ORIGIN
@@ -173,19 +169,8 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_extcodesize(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        let maybe_account = AccountTrait::account_type_at(evm_address)?;
-        let account_type = match maybe_account {
-            Option::Some(account) => account,
-            Option::None => { return self.stack.push(0); },
-        };
-
-        match account_type {
-            AccountType::EOA(eoa) => { return self.stack.push(0); },
-            AccountType::ContractAccount(ca) => {
-                let mut bytecode = ca.load_bytecode()?;
-                self.stack.push(bytecode.len().into())
-            }
-        }
+        let account = self.state.get_account(evm_address)?;
+        self.stack.push(account.code.len().into())
     }
 
     /// 0x3C - EXTCODECOPY
@@ -197,35 +182,15 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
-        let maybe_account = AccountTrait::account_type_at(evm_address)?;
-        let account_type = match maybe_account {
-            Option::Some(account) => account,
-            Option::None => {
-                self.memory.store_padded_segment(dest_offset, size, Default::default().span());
-                return Result::Ok(());
-            },
+        let bytecode = self.state.get_account(evm_address)?.code;
+        let bytecode_len = bytecode.len();
+        let bytecode_slice = if offset < bytecode_len {
+            bytecode.slice(offset, bytecode_len - offset)
+        } else {
+            Default::default().span()
         };
-
-        match account_type {
-            AccountType::EOA(eoa) => {
-                self.memory.store_padded_segment(dest_offset, size, Default::default().span());
-                return Result::Ok(());
-            },
-            AccountType::ContractAccount(ca) => {
-                let mut bytecode = ca.load_bytecode()?;
-                // `cairo_keccak` takes in an array of little-endian u64s
-
-                let bytecode_len = bytecode.len();
-                let bytecode_slice = if offset < bytecode_len {
-                    bytecode.slice(offset, bytecode_len - offset)
-                } else {
-                    Default::default().span()
-                };
-
-                self.memory.store_padded_segment(dest_offset, size, bytecode_slice);
-                Result::Ok(())
-            }
-        }
+        self.memory.store_padded_segment(dest_offset, size, bytecode_slice);
+        Result::Ok(())
     }
 
     /// 0x3D - RETURNDATASIZE
@@ -273,28 +238,21 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_extcodehash(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        let maybe_account = AccountTrait::account_type_at(evm_address)?;
-        let account_type = match maybe_account {
-            Option::Some(account) => account,
-            Option::None => { return self.stack.push(0); },
-        };
-
-        match account_type {
-            AccountType::EOA(eoa) => { return self.stack.push(EMPTY_KECCAK); },
-            AccountType::ContractAccount(ca) => {
-                let mut bytecode = ca.load_bytecode()?;
-                if bytecode.is_empty() {
-                    return self.stack.push(EMPTY_KECCAK);
-                }
-
-                let mut bytecode: ByteArray = ByteArrayExTrait::from_bytes(bytecode);
-
-                // `cairo_keccak` takes in an array of little-endian u64s
-                let (mut keccak_input, last_input_word, last_input_num_bytes) = bytecode
-                    .to_u64_words();
-                let hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes);
-                self.stack.push(hash.reverse_endianness())
-            }
+        let account = self.state.get_account(evm_address)?;
+        if (account.is_precompile() || (account.account_type.is_ca() && account.nonce == 0)) {
+            return self.stack.push(0);
         }
+        let bytecode = account.code;
+
+        if bytecode.is_empty() {
+            return self.stack.push(EMPTY_KECCAK);
+        }
+        //TODO optimize this by avoiding a ByteArray -> Span<u64> conversion
+        let mut bytecode: ByteArray = ByteArrayExTrait::from_bytes(bytecode);
+
+        // `cairo_keccak` takes in an array of little-endian u64s
+        let (mut keccak_input, last_input_word, last_input_num_bytes) = bytecode.to_u64_words();
+        let hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes);
+        self.stack.push(hash.reverse_endianness())
     }
 }
