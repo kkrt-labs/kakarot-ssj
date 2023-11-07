@@ -14,7 +14,6 @@ use openzeppelin::token::erc20::interface::{
 use starknet::{EthAddress, ContractAddress, get_contract_address, deploy_syscall};
 use utils::helpers::ResultExTrait;
 
-
 #[derive(Copy, Drop, PartialEq, Serde)]
 struct EOA {
     evm_address: EthAddress,
@@ -61,10 +60,6 @@ impl EOAImpl of EOATrait {
     }
 
 
-    /// Retrieves the EOA content stored at address `evm_address`.
-    /// There is no way to access the nonce of an EOA currently But putting 1
-    /// shouldn't have any impact and is safer than 0 since has_code_or_nonce is
-    /// used in some places to trigger collision
     /// # Arguments
     /// * `evm_address` - The EVM address of the eoa
     /// # Returns

@@ -1,4 +1,3 @@
-use core::debug::PrintTrait;
 use utils::eth_transaction::{EthTransactionImpl};
 
 #[test]

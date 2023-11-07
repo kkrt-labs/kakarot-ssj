@@ -1,4 +1,5 @@
 use contracts::tests::test_utils as contract_utils;
+use evm::errors::EVMErrorTrait;
 use evm::execution::execute;
 use evm::model::eoa::EOATrait;
 use evm::state::StateTrait;
@@ -25,6 +26,10 @@ fn test_execute_value_transfer() {
         gas_limit: 0,
         read_only: false,
     );
+    match exec_result.error {
+        Option::Some(error) => panic_with_felt252(error.to_string()),
+        Option::None => {}
+    }
     // `commit_state` is applied in `eth_send_tx` only - to test that `execute` worked correctly, we manually apply it here.
     exec_result.state.commit_state();
 

@@ -12,8 +12,8 @@ use contracts::tests::test_upgradeable::{
 use contracts::tests::test_utils as contract_utils;
 use contracts::uninitialized_account::UninitializedAccount;
 use evm::machine::Status;
-use evm::model::{AccountType, Address, EOA, ContractAccount};
 use evm::model::contract_account::ContractAccountTrait;
+use evm::model::{AccountType, Address, EOA, ContractAccount};
 use evm::tests::test_utils;
 use starknet::{testing, contract_address_const, ContractAddress, ClassHash};
 use utils::helpers::u256_to_bytes_array;

@@ -188,8 +188,7 @@ mod KakarotCore {
         }
 
         fn account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
-            let maybe_account = AccountTrait::fetch(evm_address)
-                .expect('Fetching account failed');
+            let maybe_account = AccountTrait::fetch(evm_address).expect('Fetching account failed');
             match maybe_account {
                 Option::Some(account) => account.balance().unwrap(),
                 Option::None => 0

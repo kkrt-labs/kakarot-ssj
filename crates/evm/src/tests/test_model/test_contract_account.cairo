@@ -45,7 +45,8 @@ fn test_at_contract_account_deployed() {
     assert(maybe_ca.is_some(), 'contract account should exist');
     let mut ca = maybe_ca.unwrap();
     assert(ca.evm_address == evm_address, 'evm_address incorrect');
-    let registered_ca = match kakarot_core.address_registry(evm_address).expect('should be in registry') {
+    let registered_ca =
+        match kakarot_core.address_registry(evm_address).expect('should be in registry') {
         AccountType::EOA(_) => panic_with_felt252('should no be EOA'),
         AccountType::ContractAccount(address) => address,
     };

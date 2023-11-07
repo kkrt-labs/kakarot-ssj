@@ -33,8 +33,11 @@ impl AccountImpl of AccountTrait {
                 let kakarot_state = KakarotCore::unsafe_new_contract_state();
                 let starknet_address = kakarot_state.compute_starknet_address(evm_address);
                 Result::Ok(
-                    // If no account exists at `address`, then
-                    // we are trying to access an undeployed contract account
+                    // If no account exists at `address`, then we are trying to
+                    // access an undeployed contract account.  Simple value
+                    // transfers between EOAs don't call this function -
+                    // Therefore, we're sure that only contract accounts are
+                    // undeployed.
                     Account {
                         account_type: AccountType::ContractAccount(
                             ContractAccount { evm_address, starknet_address }
@@ -49,6 +52,10 @@ impl AccountImpl of AccountTrait {
     }
 
     /// Fetches an account from Starknet
+    ///
+    /// There is no way to access the nonce of an EOA currently but putting 1
+    /// shouldn't have any impact and is safer than 0 since has_code_or_nonce is
+    /// used in some places to check collision
     /// # Arguments
     /// * `address` - The address of the account to fetch`
     ///
@@ -64,18 +71,16 @@ impl AccountImpl of AccountTrait {
                         Account {
                             account_type: AccountType::EOA(eoa),
                             code: Default::default().span(),
-                            nonce: 0,
+                            nonce: 1,
                             selfdestruct: false,
                         }
                     ),
                     AccountType::ContractAccount(ca) => {
-                        let code = ca.load_bytecode()?;
-                        let nonce = ca.nonce()?;
                         Option::Some(
                             Account {
                                 account_type: AccountType::ContractAccount(ca),
-                                code,
-                                nonce,
+                                code: ca.load_bytecode()?,
+                                nonce: ca.nonce()?,
                                 selfdestruct: false,
                             }
                         )
@@ -85,6 +90,19 @@ impl AccountImpl of AccountTrait {
             Option::None => Option::None,
         };
         Result::Ok(account)
+    }
+
+    /// Returns whether an account should be deployed or not.  If the nonce is
+    /// not 0, the account should be deployed - provided it's not already
+    /// deployed yet.
+    // If the nonce is 0, the account is just "touched" (e.g.
+    // balance transfer) and is not set for deployment.
+    #[inline(always)]
+    fn should_deploy(self: @Account) -> bool {
+        if (self.is_ca() && *self.nonce != 0) {
+            return true;
+        };
+        false
     }
 
     /// Commits the account to Starknet by updating the account state if it
@@ -117,21 +135,17 @@ impl AccountImpl of AccountTrait {
                 //Storage is handled outside of the account and must be commited after all accounts are commited.
                 }
             }
-        } else {
-            // If the nonce is 0, the account is just "touched" (e.g.
-            // balance transfer) and is not set for deployment.
-            if (*self.nonce == 0) {
-                return Result::Ok(());
-            }
+        } else if self.should_deploy() {
             //Case new account
             // If SELFDESTRUCT, just do nothing
             if (*self.selfdestruct == true) {
                 return Result::Ok(());
-            }
+            };
             let mut ca = ContractAccountTrait::deploy(self.address().evm, *self.code)?;
-            ca.set_nonce(*self.nonce);
-            Result::Ok(())
+            ca.set_nonce(*self.nonce)
         //Storage is handled outside of the account and must be commited after all accounts are commited.
+        } else {
+            Result::Ok(())
         }
     }
 
@@ -237,15 +251,6 @@ impl AccountImpl of AccountTrait {
         }
     }
 
-    /// Update a storage key in the account with the given value
-    /// # Arguments
-    /// * `self` The Account to update
-    /// * `key` The storage key to modify
-    /// * `value` The value to write
-    fn write_storage(ref self: Account, key: u256, value: u256) {
-        panic_with_felt252('write storage unimplemented')
-    }
-
     /// Sets the nonce of the Account
     /// # Arguments
     /// * `self` The Account to set the nonce on
@@ -271,12 +276,14 @@ impl AccountImpl of AccountTrait {
 
     /// Registers an account for SELFDESTRUCT
     /// This will cause the account to be erased at the end of the transaction
+    #[inline(always)]
     fn selfdestruct(ref self: Account) {
         self.selfdestruct = true;
     }
 
     /// Returns whether the account is registered for SELFDESTRUCT
     /// `true` means that the account will be erased at the end of the transaction
+    #[inline(always)]
     fn is_selfdestruct(self: @Account) -> bool {
         *self.selfdestruct
     }

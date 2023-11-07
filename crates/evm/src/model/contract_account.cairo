@@ -124,22 +124,6 @@ impl ContractAccountImpl of ContractAccountTrait {
         }
     }
 
-    /// Retrieves the contract account content stored at address `evm_address`.
-    /// # Arguments
-    /// * `evm_address` - The EVM address of the contract account
-    /// # Returns
-    /// * The corresponding Account instance
-    fn fetch(self: @ContractAccount) -> Result<Account, EVMError> {
-        Result::Ok(
-            Account {
-                account_type: AccountType::ContractAccount(*self),
-                code: self.load_bytecode()?,
-                nonce: self.nonce()?,
-                selfdestruct: false
-            }
-        )
-    }
-
     /// Returns the nonce of a contract account.
     /// # Arguments
     /// * `self` - The contract account instance

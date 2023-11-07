@@ -1,7 +1,7 @@
 use contracts::kakarot_core::kakarot::StoredAccountType;
+use evm::model::AccountType;
 use starknet::{ContractAddress, EthAddress, ClassHash};
 use utils::traits::ByteArraySerde;
-use evm::model::AccountType;
 
 #[starknet::interface]
 trait IKakarotCore<TContractState> {
