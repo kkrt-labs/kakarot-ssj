@@ -13,7 +13,7 @@ use evm::instructions::{
     MemoryOperationTrait
 };
 use evm::machine::{Machine, MachineCurrentContextTrait};
-use evm::storage_journal::JournalTrait;
+use evm::state::StateTrait;
 use utils::{helpers::u256_to_bytes_array};
 
 #[derive(Drop, Copy)]
@@ -26,7 +26,8 @@ trait EVMInterpreterTrait {
     fn run(ref self: EVMInterpreter, ref machine: Machine);
     /// Decodes the opcode at `pc` and executes the associated function.
     fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError>;
-    fn finalize_revert(ref self: EVMInterpreter, ref machine: Machine);
+    fn finalize_revert(ref self: Machine);
+    fn finalize_context(ref self: EVMInterpreter, ref machine: Machine);
 }
 
 
@@ -47,27 +48,15 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
                         // execute the next opcode
                         self.run(ref machine);
                     },
-                    Status::Stopped => {
-                        machine.storage_journal.finalize_local();
-                        match machine.ctx_type() {
-                            ExecutionContextType::Root => {
-                                machine.storage_journal.finalize_global(); // TODO: error handling
-                            },
-                            ExecutionContextType::Call(_) => {
-                                machine.finalize_calling_context(); // TODO: error handling
-                                self.run(ref machine);
-                            },
-                            ExecutionContextType::Create(_) => {} // TODO(greg): finalize the create context
-                        }
-                    },
-                    Status::Reverted => { self.finalize_revert(ref machine); }
+                    Status::Stopped => { self.finalize_context(ref machine); },
+                    Status::Reverted => { machine.finalize_revert(); }
                 }
             },
             Result::Err(error) => {
                 // If an error occurred, revert execution machine.
                 // Currently, revert reason is a Span<u8>.
                 machine.set_reverted();
-                self.finalize_revert(ref machine);
+                machine.finalize_revert();
                 machine.set_error(error);
             }
         }
@@ -670,8 +659,22 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
 
     /// Finalizes the revert of an execution context.
     /// Clears all pending journal entries, not finalizing the pending state changes applied inside this context.
-    fn finalize_revert(ref self: EVMInterpreter, ref machine: Machine) {
-        machine.storage_journal.clear_local();
-    //TODO add the rest of the revert handling.
+    fn finalize_revert(ref self: Machine) { //TODO add the rest of the revert handling.
+        self.state.clear_context();
+    }
+
+    /// Finalizes the changes performed during a context by applying them to the
+    /// transactional changes.
+    fn finalize_context(ref self: EVMInterpreter, ref machine: Machine) {
+        machine.state.commit_context();
+        match machine.ctx_type() {
+            ExecutionContextType::Root => { // TODO: error handling
+            },
+            ExecutionContextType::Call(_) => {
+                machine.finalize_calling_context(); // TODO: error handling
+                self.run(ref machine);
+            },
+            ExecutionContextType::Create(_) => {} // TODO(greg): finalize the create context
+        }
     }
 }

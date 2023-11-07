@@ -1,16 +1,15 @@
+use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError};
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
-use evm::model::eoa::EOATrait;
-use evm::model::{AccountType, EOA};
-use evm::storage_journal::{Journal, JournalTrait};
+use evm::model::eoa::{EOA, EOATrait};
+use evm::model::{Address, AccountType};
 use starknet::{ContractAddress, EthAddress, get_contract_address};
-use utils::helpers::ByteArrayExTrait;
+use utils::helpers::{ByteArrayExTrait, compute_starknet_address};
 
-#[derive(Destruct)]
+#[derive(Copy, Drop, PartialEq)]
 struct Account {
     account_type: AccountType,
     code: Span<u8>,
-    storage: Journal,
     nonce: u64,
     selfdestruct: bool,
 }
@@ -35,17 +34,19 @@ impl AccountImpl of AccountTrait {
                 }
             },
             Option::None => {
+                let kakarot_state = KakarotCore::unsafe_new_contract_state();
+                let starknet_address = kakarot_state
+                    .compute_starknet_address(evm_address: address,);
                 return Result::Ok(
                     // If no account exists at `address`, then
                     // we are trying to access an undeployed contract account
                     Account {
                         account_type: AccountType::ContractAccount(
                             ContractAccount {
-                                evm_address: address, starknet_address: get_contract_address()
+                                evm_address: address, starknet_address: starknet_address
                             }
                         ),
                         code: Default::default().span(),
-                        storage: Default::default(),
                         nonce: 0,
                         selfdestruct: false,
                     }
@@ -54,6 +55,72 @@ impl AccountImpl of AccountTrait {
         }
     }
 
+    /// Commits the account to Starknet by updating the account state if it
+    /// exists, or deploying a new account if it doesn't.
+    ///
+    /// Only Contract Accounts can be modified.
+    ///
+    /// # Arguments
+    /// * `self` - The account to commit
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
+    fn commit(self: @Account) -> Result<(), EVMError> {
+        // Case account exists
+        let maybe_acc = AccountImpl::account_type_at(self.address().evm)?;
+
+        match maybe_acc {
+            Option::Some(account_type) => {
+                match account_type {
+                    AccountType::EOA(eoa) => {
+                        // no - op
+                        Result::Ok(())
+                    },
+                    AccountType::ContractAccount(mut ca) => {
+                        if *self.selfdestruct {
+                            return ca.selfdestruct();
+                        }
+                        ca.set_nonce(*self.nonce)
+                    //Storage is handled outside of the account and must be commited after all accounts are commited.
+                    }
+                }
+            },
+            Option::None => {
+                // If the nonce is 0, the account is just "touched" (e.g.
+                // balance transfer) and is not set for deployment.
+                if (*self.nonce == 0) {
+                    return Result::Ok(());
+                }
+                //Case new account
+                // If SELFDESTRUCT, just do nothing
+                if (*self.selfdestruct == true) {
+                    return Result::Ok(());
+                }
+                let mut ca = ContractAccountTrait::deploy(self.address().evm, *self.code)?;
+                ca.set_nonce(*self.nonce);
+                Result::Ok(())
+            //Storage is handled outside of the account and must be commited after all accounts are commited.
+            }
+        }
+    }
+
+    #[inline(always)]
+    fn address(self: @Account) -> Address {
+        match self.account_type {
+            AccountType::EOA(eoa) => { eoa.address() },
+            AccountType::ContractAccount(ca) => { ca.address() }
+        }
+    }
+
+    #[inline(always)]
+    fn is_precompile(self: @Account) -> bool {
+        let evm_address: felt252 = self.address().evm.into();
+        if evm_address.into() < 0x10_u256 {
+            return true;
+        }
+        false
+    }
 
     /// Returns the AccountType corresponding to an Ethereum address.
     /// If the address is not an EOA or a Contract Account (meaning that it is not deployed), returns None.
@@ -100,6 +167,14 @@ impl AccountImpl of AccountTrait {
         }
     }
 
+    #[inline(always)]
+    fn evm_address(self: @Account) -> EthAddress {
+        match self.account_type {
+            AccountType::EOA(eoa) => { eoa.evm_address() },
+            AccountType::ContractAccount(ca) => { ca.evm_address() }
+        }
+    }
+
     /// Returns the balance in native token for a given EVM account (EOA or CA)
     /// This is equivalent to checking the balance in native coin, i.e. ETHER of an account in Ethereum
     #[inline(always)]
@@ -122,15 +197,16 @@ impl AccountImpl of AccountTrait {
     }
 
     /// Reads the value stored at the given key for the corresponding account.
-    ///TODO Fetch in local state
     /// If not there, reads the contract storage and cache the result.
-    // @param self The pointer to the execution Account.
-    // @param address The pointer to the Address.
-    // @param key The pointer to the storage key
-    // @return The updated Account
-    // @return The read value
-    fn read_storage(ref self: Account, key: u256) -> Result<u256, EVMError> {
-        //TODO start by reading in local state
+    /// # Arguments
+    ///
+    /// * `self` The account to read from.
+    /// * `key` The key to read.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the value stored at the given key or an `EVMError` if there was an error.
+    fn read_storage(self: @Account, key: u256) -> Result<u256, EVMError> {
         match self.account_type {
             AccountType::EOA(eoa) => Result::Ok(0),
             AccountType::ContractAccount(ca) => ca.storage_at(key),
@@ -143,8 +219,7 @@ impl AccountImpl of AccountTrait {
     /// * `key` The storage key to modify
     /// * `value` The value to write
     fn write_storage(ref self: Account, key: u256, value: u256) {
-        //TODO write to local state
-        panic_with_felt252('unimplemented')
+        panic_with_felt252('write storage unimplemented')
     }
 
     /// Sets the nonce of the Account
@@ -166,8 +241,14 @@ impl AccountImpl of AccountTrait {
     }
 
     /// Registers an account for SELFDESTRUCT
-    /// `true` means that the account will be erased at the end of the transaction
+    /// This will cause the account to be erased at the end of the transaction
     fn selfdestruct(ref self: Account) {
         self.selfdestruct = true;
+    }
+
+    /// Returns whether the account is registered for SELFDESTRUCT
+    /// `true` means that the account will be erased at the end of the transaction
+    fn is_selfdestruct(self: @Account) -> bool {
+        *self.selfdestruct
     }
 }

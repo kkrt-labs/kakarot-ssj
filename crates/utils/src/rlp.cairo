@@ -1,7 +1,7 @@
 use core::byte_array::ByteArrayTrait;
 use core::result::ResultTrait;
-use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
-use utils::helpers::{U32Trait, ByteArrayExTrait, ArrayExtension};
+use utils::errors::{RLPError, RLPHelpersError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
+use utils::helpers::{U32Trait, U256Impl, U128Impl, ByteArrayExTrait, ArrayExtension};
 
 // Possible RLP types
 #[derive(Drop, PartialEq)]
@@ -28,7 +28,7 @@ impl RLPImpl of RLPTrait {
     /// the offset and the size of the RLPItem to decode
     /// # Errors
     /// * RLPError::EmptyInput - if the input is empty
-    /// * RLPError::InputTooShort - if the input is too short for a given 
+    /// * RLPError::InputTooShort - if the input is too short for a given
     fn decode_type(input: Span<u8>) -> Result<(RLPType, u32, u32), RLPError> {
         let input_len = input.len();
         if input_len == 0 {
@@ -175,7 +175,7 @@ impl RLPImpl of RLPTrait {
     /// # Returns
     /// * `Span<RLPItem>` - Span of RLPItem
     /// # Errors
-    /// * RLPError::InputTooShort - if the input is too short for a given 
+    /// * RLPError::InputTooShort - if the input is too short for a given
     fn decode(input: Span<u8>) -> Result<Span<RLPItem>, RLPError> {
         let mut output: Array<RLPItem> = Default::default();
         let input_len = input.len();
@@ -187,7 +187,14 @@ impl RLPImpl of RLPTrait {
         }
 
         match rlp_type {
-            RLPType::String => { output.append(RLPItem::String(input.slice(offset, len))); },
+            RLPType::String => {
+                // checking for default value `0`
+                if (len == 0) {
+                    output.append(RLPItem::String(array![0].span()));
+                } else {
+                    output.append(RLPItem::String(input.slice(offset, len)));
+                }
+            },
             RLPType::List => {
                 if len > 0 {
                     let res = RLPTrait::decode(input.slice(offset, len))?;
@@ -208,3 +215,47 @@ impl RLPImpl of RLPTrait {
     }
 }
 
+#[generate_trait]
+impl RLPHelpersImpl of RLPHelpersTrait {
+    fn parse_u128_from_string(self: RLPItem) -> Result<u128, RLPHelpersError> {
+        match self {
+            RLPItem::String(bytes) => {
+                let value = U128Impl::from_bytes(bytes).ok_or(RLPHelpersError::FailedParsingU128)?;
+                Result::Ok(value)
+            },
+            RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
+        }
+    }
+
+    fn parse_u256_from_string(self: RLPItem) -> Result<u256, RLPHelpersError> {
+        match self {
+            RLPItem::String(bytes) => {
+                let value = U256Impl::from_bytes(bytes).ok_or(RLPHelpersError::FailedParsingU256)?;
+                Result::Ok(value)
+            },
+            RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
+        }
+    }
+
+
+    fn parse_bytes_felt252_from_string(self: RLPItem) -> Result<Span<felt252>, RLPHelpersError> {
+        match self {
+            RLPItem::String(bytes) => {
+                let mut result: Array<felt252> = array![];
+                let len = bytes.len();
+
+                let mut i = 0;
+                loop {
+                    if (i == len) {
+                        break ();
+                    }
+                    result.append((*bytes.at(i)).into());
+                    i += 1;
+                };
+
+                Result::Ok(result.span())
+            },
+            RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
+        }
+    }
+}

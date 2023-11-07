@@ -17,18 +17,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "eoa"
-version = "0.1.0"
-dependencies = [
- "evm",
-]
-
-[[package]]
 name = "evm"
 version = "0.1.0"
 dependencies = [
  "contracts",
- "eoa",
  "openzeppelin",
  "utils",
 ]

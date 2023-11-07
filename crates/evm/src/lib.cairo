@@ -1,8 +1,12 @@
 // Call opcodes helpers
 mod call_helpers;
 
+
 // Context module
 mod context;
+
+// Create opcodes helpers
+mod create_helpers;
 
 // Errors module
 mod errors;
@@ -16,7 +20,6 @@ mod instructions;
 // interpreter module
 mod interpreter;
 
-
 // Machine module
 mod machine;
 
@@ -29,11 +32,8 @@ mod model;
 // Stack module
 mod stack;
 
-// Storage module
-mod storage;
-
-// Storage journal module
-mod storage_journal;
+// Local state
+mod state;
 
 // tests
 #[cfg(test)]

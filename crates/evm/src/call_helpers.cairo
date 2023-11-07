@@ -1,5 +1,7 @@
 //! CALL, CALLCODE, DELEGATECALL, STATICCALL opcode helpers
 use cmp::min;
+use contracts::kakarot_core::KakarotCore;
+use contracts::kakarot_core::interface::IKakarotCore;
 use evm::context::{
     ExecutionContext, Status, CallContext, CallContextTrait, ExecutionContextType,
     ExecutionContextTrait
@@ -8,39 +10,50 @@ use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::AccountTrait;
+use evm::model::{Transfer, Address};
 use evm::stack::StackTrait;
-use starknet::{EthAddress};
+use evm::state::StateTrait;
+use starknet::{EthAddress, get_contract_address};
+use utils::helpers::compute_starknet_address;
 use utils::traits::{BoolIntoNumeric, U256TryIntoResult};
 
 /// CallArgs is a subset of CallContext
 /// Created in order to simplify setting up the call opcodes
 #[derive(Drop)]
 struct CallArgs {
-    to: EthAddress,
+    to: Address,
     gas: u128,
     value: u256,
     calldata: Span<u8>,
     ret_offset: usize,
     ret_size: usize,
+    should_transfer: bool,
+}
+
+#[derive(Drop)]
+enum CallType {
+    Call,
+    DelegateCall,
+    CallCode,
+    StaticCall,
 }
 
 #[generate_trait]
 impl MachineCallHelpersImpl of MachineCallHelpers {
     ///  Prepare the initialization of a new child or so-called sub-context
     /// As part of the CALL family of opcodes.
-    fn prepare_call(ref self: Machine, with_value: bool) -> Result<CallArgs, EVMError> {
-        // For CALL and CALLCODE, we pop 5 items off of the stack
-        // For STATICCALL and DELEGATECALL, we pop 4 items off of the stack
-        // The difference being the "value" parameter in CALL and CALLCODE.
+    fn prepare_call(ref self: Machine, call_type: CallType) -> Result<CallArgs, EVMError> {
         let gas = self.stack.pop_u128()?;
         let to = self.stack.pop_eth_address()?;
 
-        // CALL and CALLCODE expect value to be on the stack
-        // for STATICCALL and DELEGATECALL, the value is the calling call context's value
-        let value = if with_value {
-            self.stack.pop()?
-        } else {
-            self.value()
+        let kakarot_core = KakarotCore::unsafe_new_contract_state();
+        let to = Address { evm: to, starknet: kakarot_core.compute_starknet_address(to), };
+
+        let (value, should_transfer) = match call_type {
+            CallType::Call => (self.stack.pop()?, true),
+            CallType::DelegateCall => (self.value(), false),
+            CallType::CallCode => (self.stack.pop()?, false),
+            CallType::StaticCall => (0, false),
         };
 
         let args_offset = self.stack.pop_usize()?;
@@ -52,7 +65,11 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
         let mut calldata = Default::default();
         self.memory.load_n(args_size, ref calldata, args_offset);
 
-        Result::Ok(CallArgs { to, value, gas, calldata: calldata.span(), ret_offset, ret_size })
+        Result::Ok(
+            CallArgs {
+                to, value, gas, calldata: calldata.span(), ret_offset, ret_size, should_transfer
+            }
+        )
     }
 
     /// Initializes and enters into a new sub-context
@@ -62,22 +79,29 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
     fn init_sub_ctx(
         ref self: Machine, call_args: CallArgs, read_only: bool
     ) -> Result<(), EVMError> {
+        if call_args.should_transfer && call_args.value > 0 {
+            let transfer = Transfer {
+                sender: self.address(), recipient: call_args.to, amount: call_args.value,
+            };
+            let result = self.state.add_transfer(transfer);
+            if result.is_err() {
+                self.stack.push(0)?;
+                return Result::Ok(());
+            }
+        }
+
         // Case 1: `to` address is a precompile
         // Handle precompile logic
-        if is_precompile(call_args.to) {
-            panic_with_felt252('not implemented');
+        if is_precompile(call_args.to.evm) {
+            panic_with_felt252('precompiles not implemented');
         }
 
         // Case 2: `to` address is not a precompile
         // We enter the standard flow
-        let maybe_account = AccountTrait::account_type_at(call_args.to)?;
-        let bytecode = match maybe_account {
-            Option::Some(acc) => acc.bytecode()?,
-            Option::None => Default::default().span(),
-        };
+        let bytecode = self.state.get_account(call_args.to.evm)?.code;
 
         // The caller in the subcontext is the current context's current address
-        let caller = self.evm_address();
+        let caller = self.address();
 
         let call_ctx = CallContextTrait::new(
             caller,

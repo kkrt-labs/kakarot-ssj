@@ -4,7 +4,7 @@ use evm::context::{
     DefaultOptionSpanU8
 };
 use evm::memory::{Memory, MemoryTrait};
-use evm::model::Event;
+use evm::model::{Event, Address};
 use evm::stack::{Stack, StackTrait};
 use evm::tests::test_utils::{
     setup_call_context, setup_execution_context, setup_nested_execution_context,
@@ -15,7 +15,7 @@ use starknet::testing::{set_contract_address, set_caller_address};
 use starknet::{EthAddress, ContractAddress};
 
 
-use test_utils::{callvalue, evm_address};
+use test_utils::{callvalue, test_address};
 use traits::PartialEq;
 
 // TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)
@@ -30,7 +30,7 @@ fn test_call_context_new() {
     let bytecode: Span<u8> = array![1, 2, 3].span();
     let calldata: Span<u8> = array![4, 5, 6].span();
     let value: u256 = callvalue();
-    let address = evm_address();
+    let address = test_address();
     let gas_price = 0xabde1;
     let gas_limit = 0xe11a5;
     let read_only = false;
@@ -69,7 +69,7 @@ fn test_execution_context_new() {
     let stopped: bool = false;
     let return_data: Array<u8> = ArrayTrait::new();
 
-    let evm_address: EthAddress = 0.try_into().unwrap();
+    let address: Address = Default::default();
     let destroyed_contracts: Array<EthAddress> = Default::default();
     let events: Array<Event> = Default::default();
     let create_addresses: Array<EthAddress> = Default::default();
@@ -81,16 +81,15 @@ fn test_execution_context_new() {
 
     // When
     let mut execution_context = ExecutionContextTrait::new(
-        context_id, evm_address, call_ctx, parent_ctx, return_data.span()
+        context_id, address, call_ctx, parent_ctx, return_data.span()
     );
 
     // Then
-    let call_ctx = setup_call_context();
     assert(execution_context.call_ctx() == call_ctx, 'wrong call_ctx');
     assert(execution_context.program_counter == program_counter, 'wrong program_counter');
     assert(execution_context.stopped() == stopped, 'wrong stopped');
     assert(execution_context.return_data() == Default::default().span(), 'wrong return_data');
-    assert(execution_context.evm_address() == evm_address, 'wrong evm_address');
+    assert(execution_context.address() == address, 'wrong evm_address');
     assert(
         execution_context.destroyed_contracts() == destroyed_contracts.span(),
         'wrong destroyed_contracts'
@@ -168,5 +167,5 @@ fn test_origin() {
     let origin = execution_context.origin();
 
     // Then
-    assert(origin == evm_address(), 'wrong origin');
+    assert(origin == test_address(), 'wrong origin');
 }

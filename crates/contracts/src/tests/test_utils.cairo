@@ -1,15 +1,13 @@
-use contracts::contract_account::contract_account::ContractAccount;
-use contracts::contract_account::interface::{
-    IContractAccountDispatcher, IContractAccountDispatcherTrait
+use contracts::contract_account::{
+    ContractAccount, IContractAccountDispatcher, IContractAccountDispatcherTrait
 };
-use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcher, KakarotCore};
-use contracts::uninitialized_account::interface::{
-    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
-};
-use contracts::uninitialized_account::uninitialized_account::UninitializedAccount;
 
-use debug::PrintTrait;
-use eoa::externally_owned_account::{ExternallyOwnedAccount};
+use contracts::eoa::{ExternallyOwnedAccount};
+use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcher, KakarotCore};
+use contracts::uninitialized_account::{
+    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount
+};
+
 use evm::tests::test_utils::{deploy_fee, ca_address, other_starknet_address, chain_id};
 use openzeppelin::token::erc20::ERC20;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
@@ -127,10 +125,9 @@ fn deploy_contract_account(
 
 
 fn fund_account_with_native_token(
-    contract_address: ContractAddress, native_token: IERC20CamelDispatcher
+    contract_address: ContractAddress, native_token: IERC20CamelDispatcher, amount: u256,
 ) {
     let current_contract = get_contract_address();
-    let amount: u256 = 0x01;
     testing::set_contract_address(constants::ETH_BANK());
     native_token.transfer(contract_address, amount);
     testing::set_contract_address(current_contract);

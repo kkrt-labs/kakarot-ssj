@@ -8,6 +8,10 @@ const PC_OUT_OF_BOUNDS: felt252 = 'KKT: pc >= bytecode length';
 // TYPE CONVERSION
 const TYPE_CONVERSION_ERROR: felt252 = 'KKT: type conversion error';
 
+// NUMERIC OPERATIONS
+const INSUFFICIENT_BALANCE: felt252 = 'KKT: insufficient balance';
+const BALANCE_OVERFLOW: felt252 = 'KKT: balance overflow';
+
 // RETURNDATA
 const RETURNDATA_OUT_OF_BOUNDS_ERROR: felt252 = 'KKT: ReturnDataOutOfBounds';
 
@@ -36,11 +40,17 @@ const EOA_EXISTS: felt252 = 'KKT: EOA already exists';
 const ACCOUNT_EXISTS: felt252 = 'KKT: Account already exists';
 const DEPLOYMENT_FAILED: felt252 = 'KKT: deployment failed';
 
+// TRANSACTION ORIGIN
+const CALLING_FROM_UNDEPLOYED_ACCOUNT: felt252 = 'EOA: from is undeployed EOA';
+const CALLING_FROM_CA: felt252 = 'EOA: from is a contract account';
+
+
 #[derive(Drop, Copy, PartialEq)]
 enum EVMError {
     StackError: felt252,
     InvalidProgramCounter: felt252,
     TypeConversionError: felt252,
+    NumericOperations: felt252,
     ReturnDataError: felt252,
     JumpError: felt252,
     NotImplemented,
@@ -49,6 +59,7 @@ enum EVMError {
     WriteInStaticContext: felt252,
     InvalidMachineState: felt252,
     DeployError: felt252,
+    OriginError: felt252,
 }
 
 #[generate_trait]
@@ -58,6 +69,7 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::StackError(error_message) => error_message,
             EVMError::InvalidProgramCounter(error_message) => error_message,
             EVMError::TypeConversionError(error_message) => error_message,
+            EVMError::NumericOperations(error_message) => error_message,
             EVMError::ReturnDataError(error_message) => error_message,
             EVMError::JumpError(error_message) => error_message,
             EVMError::NotImplemented => 'NotImplemented',
@@ -67,6 +79,7 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::WriteInStaticContext(error_message) => error_message.into(),
             EVMError::InvalidMachineState(error_message) => error_message.into(),
             EVMError::DeployError(error_message) => error_message,
+            EVMError::OriginError(error_message) => error_message,
         }
     }
 }

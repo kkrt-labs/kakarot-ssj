@@ -1,12 +1,12 @@
 use contracts::kakarot_core::kakarot::KakarotCore::{ContractStateEventEmitter, EOADeployed};
 use contracts::kakarot_core::kakarot::StoredAccountType;
-use contracts::kakarot_core::{IKakarotCore, KakarotCore};
-use contracts::uninitialized_account::interface::{
+use contracts::kakarot_core::{IKakarotCore, KakarotCore, KakarotCore::KakarotCoreInternal};
+use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
 use evm::model::account::{Account, AccountTrait};
-use evm::model::{AccountType};
+use evm::model::{AccountType, Address};
 use integer::BoundedInt;
 use openzeppelin::token::erc20::interface::{
     IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
@@ -15,7 +15,7 @@ use starknet::{EthAddress, ContractAddress, get_contract_address, deploy_syscall
 use utils::helpers::ResultExTrait;
 
 
-#[derive(Copy, Drop)]
+#[derive(Copy, Drop, PartialEq)]
 struct EOA {
     evm_address: EthAddress,
     starknet_address: ContractAddress
@@ -24,7 +24,12 @@ struct EOA {
 #[generate_trait]
 impl EOAImpl of EOATrait {
     /// Deploys a new EOA contract.
+    ///
+    /// # Arguments
+    ///
+    /// * `evm_address` - The EVM address of the EOA to deploy.
     fn deploy(evm_address: EthAddress) -> Result<EOA, EVMError> {
+        // Unlike CAs, there is not check for the existence of an EOA prealably to calling `EOATrait::deploy` - therefore, we need to check that there is no collision.
         let mut maybe_acc = AccountTrait::account_type_at(evm_address)?;
         if maybe_acc.is_some() {
             return Result::Err(EVMError::DeployError(EOA_EXISTS));
@@ -35,7 +40,6 @@ impl EOAImpl of EOATrait {
         let kakarot_address = get_contract_address();
         let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
 
-        let maybe_address = deploy_syscall(account_class_hash, evm_address.into(), calldata, false);
         let maybe_address = deploy_syscall(account_class_hash, evm_address.into(), calldata, false);
         // Panic with err as syscall failure can't be caught, so we can't manage
         // the error
@@ -56,6 +60,7 @@ impl EOAImpl of EOATrait {
         }
     }
 
+
     /// Retrieves the EOA content stored at address `evm_address`.
     /// There is no way to access the nonce of an EOA currently But putting 1
     /// shouldn't have any impact and is safer than 0 since has_code_or_nonce is
@@ -69,11 +74,14 @@ impl EOAImpl of EOATrait {
             Account {
                 account_type: AccountType::EOA(*self),
                 code: Default::default().span(),
-                storage: Default::default(),
                 nonce: 1,
                 selfdestruct: false
             }
         )
+    }
+
+    fn address(self: @EOA) -> Address {
+        Address { evm: *self.evm_address, starknet: *self.starknet_address }
     }
 
     /// Returns an EOA instance from the given `evm_address`.
@@ -102,5 +110,13 @@ impl EOAImpl of EOATrait {
         native_token
             .balanceOf(*self.starknet_address)
             .map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
+    }
+
+    fn evm_address(self: @EOA) -> EthAddress {
+        *self.evm_address
+    }
+
+    fn starknet_address(self: @EOA) -> ContractAddress {
+        *self.starknet_address
     }
 }

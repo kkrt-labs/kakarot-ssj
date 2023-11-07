@@ -1,18 +1,21 @@
 use cmp::min;
+use core::hash::{HashStateExTrait, HashStateTrait};
+use core::pedersen::{HashState, PedersenTrait};
+
 use integer::U32TryIntoNonZero;
 use integer::u32_as_non_zero;
 use keccak::u128_split;
-use starknet::{EthAddress, EthAddressIntoFelt252};
+use starknet::{EthAddress, EthAddressIntoFelt252, ContractAddress, ClassHash};
 use traits::DivRem;
 use utils::constants::{
     POW_256_0, POW_256_1, POW_256_2, POW_256_3, POW_256_4, POW_256_5, POW_256_6, POW_256_7,
     POW_256_8, POW_256_9, POW_256_10, POW_256_11, POW_256_12, POW_256_13, POW_256_14, POW_256_15,
     POW_256_16,
 };
-use utils::math::Bitshift;
+use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
+use utils::math::{Bitshift, WrappingBitshift};
 use utils::num::{Zero, One, SizeOf};
-
-
+use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256};
 /// Ceils a number of bits to the next word (32 bytes)
 ///
 /// # Arguments
@@ -446,9 +449,9 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
 }
 
 #[generate_trait]
-impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtTrait<T> {
+impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
     // Concatenates two arrays by adding the elements of arr2 to arr1.
-    fn concat(ref self: Array<T>, mut arr2: Span<T>) {
+    fn concat<+Copy<T>>(ref self: Array<T>, mut arr2: Span<T>) {
         loop {
             match arr2.pop_front() {
                 Option::Some(elem) => self.append(*elem),
@@ -458,7 +461,7 @@ impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtTrai
     }
 
     /// Reverses an array
-    fn reverse(self: Span<T>) -> Array<T> {
+    fn reverse<+Copy<T>>(self: Span<T>) -> Array<T> {
         let mut counter = self.len();
         let mut dst: Array<T> = ArrayTrait::new();
         loop {
@@ -472,7 +475,7 @@ impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtTrai
     }
 
     // Appends n time value to the Array
-    fn append_n(ref self: Array<T>, value: T, mut n: usize) {
+    fn append_n<+Copy<T>>(ref self: Array<T>, value: T, mut n: usize) {
         loop {
             if n == 0 {
                 break;
@@ -485,11 +488,20 @@ impl ArrayExtension<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of ArrayExtTrai
     }
 
     // Appends an item only if it is not already in the array.
-    fn append_unique<+PartialEq<T>>(ref self: Array<T>, value: T) {
+    fn append_unique<+Copy<T>, +PartialEq<T>>(ref self: Array<T>, value: T) {
         if self.span().contains(value) {
             return ();
         }
         self.append(value);
+    }
+
+    fn append_span<+Clone<T>>(ref self: Array<T>, mut span: Span<T>) {
+        loop {
+            match span.pop_front() {
+                Option::Some(current) => { self.append(current.clone()); },
+                Option::None => { break; }
+            };
+        }
     }
 }
 
@@ -585,6 +597,38 @@ impl U32Impl of U32Trait {
 }
 
 #[generate_trait]
+impl U128Impl of U128Trait {
+    /// Packs 16 bytes into a u128
+    /// # Arguments
+    /// * `input` a Span<u8> of len <=16
+    /// # Returns
+    /// * Option::Some(u128) if the operation succeeds
+    /// * Option::None otherwise
+    fn from_bytes(input: Span<u8>) -> Option<u128> {
+        let len = input.len();
+        if len == 0 {
+            return Option::None;
+        }
+        if len > 16 {
+            return Option::None;
+        }
+        let offset: u32 = len - 1;
+        let mut result: u128 = 0;
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: u128 = (*input.at(i)).into();
+            result += byte.shl((8 * (offset - i)).into());
+
+            i += 1;
+        };
+        Option::Some(result)
+    }
+}
+
+#[generate_trait]
 impl U256Impl of U256Trait {
     /// Splits an u256 into 4 little endian u64.
     /// Returns ((high_high, high_low),(low_high, low_low))
@@ -600,7 +644,55 @@ impl U256Impl of U256Trait {
         let new_high = integer::u128_byte_reverse(self.low);
         u256 { low: new_low, high: new_high }
     }
+
+    // Returns a u256 representation as bytes: `Span<u8>`
+    // This slice is padded of zeros if the u256 representation does not take up to 32 bytes
+    fn to_bytes(self: u256) -> Span<u8> {
+        let bytes_used: u256 = 32;
+        let mut bytes: Array<u8> = Default::default();
+        let mut i = 0;
+        loop {
+            if i == bytes_used {
+                break ();
+            }
+            let val = self.shr(8 * (bytes_used - i - 1));
+            bytes.append((val & 0xFF).try_into().unwrap());
+            i += 1;
+        };
+
+        bytes.span()
+    }
+
+    /// Packs 32 bytes into a u128
+    /// # Arguments
+    /// * `input` a Span<u8> of len <=32
+    /// # Returns
+    /// * Option::Some(u128) if the operation succeeds
+    /// * Option::None otherwise
+    fn from_bytes(input: Span<u8>) -> Option<u256> {
+        let len = input.len();
+        if len == 0 {
+            return Option::None;
+        }
+        if len > 32 {
+            return Option::None;
+        }
+        let offset: u32 = len - 1;
+        let mut result: u256 = 0;
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: u256 = (*input.at(i)).into();
+            result += byte.shl((8 * (offset - i)).into());
+
+            i += 1;
+        };
+        Option::Some(result)
+    }
 }
+
 #[generate_trait]
 impl ByteArrayExt of ByteArrayExTrait {
     fn append_span_bytes(ref self: ByteArray, mut bytes: Span<u8>) {
@@ -744,5 +836,56 @@ impl ResultExImpl<T, E, +Drop<T>, +Drop<E>> of ResultExTrait<T, E> {
             Result::Ok(val) => Result::Ok(val),
             Result::Err(_) => Result::Err(err)
         }
+    }
+}
+
+fn compute_starknet_address(
+    deployer: ContractAddress, evm_address: EthAddress, class_hash: ClassHash
+) -> ContractAddress {
+    // Deployer is always Kakarot Core
+    // pedersen(a1, a2, a3) is defined as:
+    // pedersen(pedersen(pedersen(a1, a2), a3), len([a1, a2, a3]))
+    // https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/hash_state.py#L6
+    // https://github.com/xJonathanLEI/starknet-rs/blob/master/starknet-core/src/crypto.rs#L49
+    // Constructor Calldata
+    // For an Account, the constructor calldata is:
+    // [kakarot_address, evm_address]
+    let constructor_calldata_hash = PedersenTrait::new(0)
+        .update_with(deployer)
+        .update_with(evm_address)
+        .update(2)
+        .finalize();
+
+    let hash = PedersenTrait::new(0)
+        .update_with(CONTRACT_ADDRESS_PREFIX)
+        .update_with(deployer)
+        .update_with(evm_address)
+        .update_with(class_hash)
+        .update_with(constructor_calldata_hash)
+        .update(5)
+        .finalize();
+
+    let normalized_address: ContractAddress = (hash.into() & MAX_ADDRESS).try_into().unwrap();
+    // We know this unwrap is safe, because of the above bitwise AND on 2 ** 251
+    normalized_address
+}
+
+#[generate_trait]
+impl EthAddressExtTrait of EthAddressExt {
+    fn to_bytes(self: EthAddress) -> Span<u8> {
+        let bytes_used: u256 = 20;
+        let mut value: u256 = self.into();
+        let mut bytes: Array<u8> = Default::default();
+        let mut i = 0;
+        loop {
+            if i == bytes_used {
+                break ();
+            }
+            let val = value.wrapping_shr(8 * (bytes_used - i - 1));
+            bytes.append((val & 0xFF).try_into().unwrap());
+            i += 1;
+        };
+
+        bytes.span()
     }
 }

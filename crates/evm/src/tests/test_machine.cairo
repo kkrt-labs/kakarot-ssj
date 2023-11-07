@@ -3,7 +3,7 @@ use evm::errors::{EVMError, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::tests::test_utils::{
     evm_address, setup_machine_with_bytecode, setup_machine, starknet_address,
-    setup_execution_context, setup_machine_with_nested_execution_context
+    setup_execution_context, setup_machine_with_nested_execution_context, test_address
 };
 
 
@@ -131,11 +131,11 @@ fn test_call_context_properties() {
 #[test]
 #[available_gas(20000000)]
 fn test_addresses() {
-    let evm_address_expected = evm_address();
+    let expected_address = test_address();
     let mut machine: Machine = setup_machine();
 
-    let evm_address = machine.evm_address();
-    assert(evm_address == evm_address_expected, 'wrong evm address');
+    let evm_address = machine.address();
+    assert(evm_address == expected_address, 'wrong evm address');
 }
 
 #[test]

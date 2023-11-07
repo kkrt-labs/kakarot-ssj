@@ -1,4 +1,10 @@
 #[cfg(test)]
+mod test_create_helpers;
+
+#[cfg(test)]
+mod test_execution;
+
+#[cfg(test)]
 mod test_execution_context;
 
 #[cfg(test)]
@@ -9,6 +15,7 @@ mod test_machine;
 
 #[cfg(test)]
 mod test_memory;
+
 #[cfg(test)]
 mod test_model;
 
@@ -16,10 +23,7 @@ mod test_model;
 mod test_stack;
 
 #[cfg(test)]
-mod test_storage;
-
-#[cfg(test)]
-mod test_storage_journal;
+mod test_state;
 
 #[cfg(test)]
 mod test_utils;

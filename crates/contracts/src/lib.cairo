@@ -1,5 +1,6 @@
 mod components;
 mod contract_account;
+mod eoa;
 
 mod errors;
 
@@ -8,5 +9,6 @@ mod kakarot_core;
 
 #[cfg(test)]
 mod tests;
+
 // Account transparent proxy
 mod uninitialized_account;

@@ -3,15 +3,16 @@
 //! KakarotCore's storage.
 
 use alexandria_storage::list::{List, ListTrait};
-use contracts::contract_account::interface::{
-    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount
+use contracts::contract_account::{
+    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount,
+    IContractAccountSafeDispatcher, IContractAccountSafeDispatcherTrait
 };
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     KakarotCore, IKakarotCore, KakarotCore::ContractStateEventEmitter,
-    KakarotCore::ContractAccountDeployed
+    KakarotCore::ContractAccountDeployed, KakarotCore::KakarotCoreInternal
 };
-use contracts::uninitialized_account::interface::{
+use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
 use evm::context::Status;
@@ -20,7 +21,7 @@ use evm::errors::{
     CONTRACT_ACCOUNT_EXISTS, CONTRACT_SYSCALL_FAILED
 };
 use evm::execution::execute;
-use evm::model::account::{Account, AccountTrait};
+use evm::model::account::{Address, Account, AccountTrait};
 use evm::model::{AccountType};
 use hash::{HashStateTrait, HashStateExTrait};
 use openzeppelin::token::erc20::interface::{
@@ -37,7 +38,7 @@ use utils::traits::{StorageBaseAddressIntoFelt252, StoreBytes31};
 
 
 /// Wrapper struct around an evm_address corresponding to a ContractAccount
-#[derive(Copy, Drop)]
+#[derive(Copy, Drop, PartialEq)]
 struct ContractAccount {
     evm_address: EthAddress,
     starknet_address: ContractAddress
@@ -50,6 +51,9 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// contract account for a particular EVM address, setting the nonce to 1,
     /// storing the contract bytecode and emitting a ContractAccountDeployed
     /// event.
+    ///
+    /// `deploy` is only called when commiting a transaction. We already
+    /// checked that no account exists at this address prealably.
     /// # Arguments
     /// * `origin` - The EVM address of the transaction sender
     /// * `evm_address` - The EVM address of the contract account
@@ -59,11 +63,6 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// # Errors
     /// * `ACCOUNT_EXISTS` - If a contract account already exists at the given `evm_address`
     fn deploy(evm_address: EthAddress, bytecode: Span<u8>) -> Result<ContractAccount, EVMError> {
-        let mut maybe_acc = AccountTrait::account_type_at(evm_address)?;
-        if maybe_acc.is_some() {
-            return Result::Err(EVMError::DeployError(CONTRACT_ACCOUNT_EXISTS));
-        }
-
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
         let account_class_hash = kakarot_state.account_class_hash();
         let kakarot_address = get_contract_address();
@@ -96,6 +95,19 @@ impl ContractAccountImpl of ContractAccountTrait {
         }
     }
 
+    #[inline(always)]
+    fn address(self: @ContractAccount) -> Address {
+        Address { evm: *self.evm_address, starknet: *self.starknet_address }
+    }
+
+    #[inline(always)]
+    fn selfdestruct(self: @ContractAccount) -> Result<(), EVMError> {
+        let contract_account = IContractAccountSafeDispatcher {
+            contract_address: *self.starknet_address
+        };
+        contract_account.selfdestruct().map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
+    }
+
     /// Returns a ContractAccount instance from the given `evm_address`.
     #[inline(always)]
     fn at(evm_address: EthAddress) -> Result<Option<ContractAccount>, EVMError> {
@@ -121,7 +133,6 @@ impl ContractAccountImpl of ContractAccountTrait {
             Account {
                 account_type: AccountType::ContractAccount(*self),
                 code: self.load_bytecode()?,
-                storage: Default::default(),
                 nonce: self.nonce()?,
                 selfdestruct: false
             }
@@ -137,6 +148,17 @@ impl ContractAccountImpl of ContractAccountTrait {
             contract_address: *self.starknet_address
         };
         Result::Ok(contract_account.nonce())
+    }
+
+    #[inline(always)]
+    fn starknet_address(self: @ContractAccount) -> ContractAddress {
+        *self.starknet_address
+    }
+
+
+    #[inline(always)]
+    fn evm_address(self: @ContractAccount) -> EthAddress {
+        *self.evm_address
     }
 
     /// Sets the nonce of a contract account.
@@ -269,4 +291,3 @@ impl ContractAccountImpl of ContractAccountTrait {
         Result::Ok(())
     }
 }
-
