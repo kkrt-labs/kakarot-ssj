@@ -280,8 +280,9 @@ impl StateImpl of StateTrait {
         match self.balances.read(evm_address.into()) {
             Option::Some(value) => { Result::Ok(value) },
             Option::None => {
+                //TODO(optimize): Don't fetch an account's bytecode just to read an account's balance.
                 let account = AccountTrait::fetch_or_create(evm_address)?;
-                let balance = account.account_type.balance()?;
+                let balance = account.balance()?;
                 self.write_balance(evm_address, balance);
                 Result::Ok(balance)
             }
@@ -337,10 +338,10 @@ impl StateInternalImpl of StateInternalTrait {
                         .transactional_changes
                         .get(state_key)
                         .deref();
-                    let res_maybe_account_type = AccountTrait::account_type_at(evm_address);
-                    match res_maybe_account_type {
-                        Result::Ok(maybe_account_type) => {
-                            let account_type = maybe_account_type.expect('Account should exist');
+                    let res_account = self.get_account(evm_address);
+                    match res_account {
+                        Result::Ok(account) => {
+                            let account_type = account.account_type;
                             match account_type {
                                 //this shouldn't ever happen
                                 AccountType::EOA(_) => { panic_with_felt252('EOA storagechange') },

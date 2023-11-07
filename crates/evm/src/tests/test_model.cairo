@@ -2,59 +2,57 @@ mod test_contract_account;
 mod test_eoa;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
-use evm::model::account::{AccountTrait};
-use evm::model::{Account, ContractAccountTrait};
+use evm::model::account::AccountTrait;
+use evm::model::{Account, ContractAccountTrait, AccountType, EOA, ContractAccount, EOATrait};
 use evm::tests::test_utils::{evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::set_contract_address;
 
 #[test]
 #[available_gas(20000000)]
-fn test_account_at_eoa() {
+fn test_is_deployed_eoa_exists() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let eoa = kakarot_core.deploy_eoa(evm_address());
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let eoa = EOATrait::deploy(evm_address()).expect('failed deploy contract account',);
+
+    // When
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    let account = AccountTrait::account_type_at(evm_address()).unwrap().unwrap();
+    let is_deployed = AccountTrait::is_deployed(evm_address());
 
     // Then
-    assert(account.is_eoa(), 'wrong account type');
+    assert(is_deployed, 'account should be deployed');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_account_at_ca_exists() {
+fn test_is_deployed_ca_exists() {
     // Given
-    // We need to set_contract_address as the nonce is stored inside the contract
-    // that calls this function - here, it's the test contract by default.
-    // By mocking the contract address, we make sure that the nonce is stored in
-    // the KakarotCore contract.
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    ContractAccountTrait::deploy(evm_address(), array![].span())
+    let ca = ContractAccountTrait::deploy(evm_address(), array![].span())
         .expect('failed deploy contract account',);
 
     // When
-    let account = AccountTrait::account_type_at(evm_address()).unwrap().unwrap();
+    let is_deployed = AccountTrait::is_deployed(evm_address());
 
     // Then
-    assert(account.is_ca(), 'wrong account type');
+    assert(is_deployed, 'account should be deployed');
 }
-
 
 #[test]
 #[available_gas(20000000)]
-fn test_account_at_undeployed() {
+fn test_is_deployed_undeployed() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    let maybe_account = AccountTrait::account_type_at(evm_address()).unwrap();
+    let is_deployed = AccountTrait::is_deployed(evm_address());
 
     // Then
-    assert(maybe_account.is_none(), 'account should be None');
+    assert(!is_deployed, 'account should be undeployed');
 }
 
 
@@ -69,7 +67,7 @@ fn test_account_balance_eoa() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    let account = AccountTrait::account_type_at(evm_address()).unwrap().unwrap();
+    let account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
     let balance = account.balance().unwrap();
 
     // Then
@@ -87,7 +85,7 @@ fn test_account_balance_contract_account() {
     // and fund it
 
     // When
-    let account = AccountTrait::account_type_at(evm_address()).unwrap().unwrap();
+    let account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
     let balance = account.balance().unwrap();
 
     // Then

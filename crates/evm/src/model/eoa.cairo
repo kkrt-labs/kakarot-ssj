@@ -30,8 +30,8 @@ impl EOAImpl of EOATrait {
     /// * `evm_address` - The EVM address of the EOA to deploy.
     fn deploy(evm_address: EthAddress) -> Result<EOA, EVMError> {
         // Unlike CAs, there is not check for the existence of an EOA prealably to calling `EOATrait::deploy` - therefore, we need to check that there is no collision.
-        let mut maybe_acc = AccountTrait::account_type_at(evm_address)?;
-        if maybe_acc.is_some() {
+        let mut is_deployed = AccountTrait::is_deployed(evm_address);
+        if is_deployed {
             return Result::Err(EVMError::DeployError(EOA_EXISTS));
         }
 
