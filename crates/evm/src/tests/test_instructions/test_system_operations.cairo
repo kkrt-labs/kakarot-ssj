@@ -1,13 +1,15 @@
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::tests::test_data::{storage_evm_bytecode, storage_evm_initcode};
 use contracts::tests::test_utils::setup_contracts_for_testing;
 use evm::call_helpers::{MachineCallHelpers, MachineCallHelpersImpl};
-use evm::context::{ExecutionContext, ExecutionContextTrait};
+use evm::context::{ExecutionContext, ExecutionContextTrait, ExecutionContextType};
 use evm::instructions::MemoryOperationTrait;
 use evm::instructions::SystemOperationsTrait;
 use evm::interpreter::EVMInterpreterTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::AccountTrait;
+use evm::model::contract_account::ContractAccountTrait;
+use evm::model::{AccountTrait, Address};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
@@ -388,9 +390,7 @@ fn test_exec_delegatecall() {
 #[available_gas(4_000_000_000)]
 fn test_exec_create2() {
     // Given
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -400,13 +400,11 @@ fn test_exec_create2() {
 
     let deployed_bytecode = array![0xff].span();
     let eth_address: EthAddress = 0x00000000000000000075766d5f61646472657373_u256.into();
-    let contract_address = initialize_contract_account(
-        eth_address, deployed_bytecode, Default::default().span()
-    )
-        .expect('set code failed');
+    let contract_address = ContractAccountTrait::deploy(eth_address, deployed_bytecode)
+        .expect('failed deploying CA');
 
     let mut ctx = machine.current_ctx.unbox();
-    ctx.address = contract_address;
+    ctx.address = contract_address.address();
     ctx.ctx_type = ExecutionContextType::Create(ctx.id());
     machine.current_ctx = BoxTrait::new(ctx);
 
