@@ -51,7 +51,7 @@ struct ExecutionResult {
 /// account is identified by an Ethereum address.  It has a corresponding
 /// Starknet Address - The corresponding Starknet Contract for EOAs, and the
 /// KakarotCore address for ContractAccounts.
-#[derive(Copy, Drop, PartialEq)]
+#[derive(Copy, Drop, PartialEq, Serde)]
 enum AccountType {
     EOA: EOA,
     ContractAccount: ContractAccount,

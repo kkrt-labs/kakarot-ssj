@@ -1,4 +1,4 @@
-use contracts::contract_account::ContractAccount;
+use contracts::contract_account::ContractAccount::TEST_CLASS_HASH as ContractAccountTestClassHash;
 use contracts::eoa::ExternallyOwnedAccount;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
@@ -12,7 +12,7 @@ use contracts::tests::test_upgradeable::{
 use contracts::tests::test_utils as contract_utils;
 use contracts::uninitialized_account::UninitializedAccount;
 use evm::machine::Status;
-use evm::model::Address;
+use evm::model::{AccountType, Address, EOA, ContractAccount};
 use evm::model::contract_account::ContractAccountTrait;
 use evm::tests::test_utils;
 use starknet::{testing, contract_address_const, ContractAddress, ClassHash};
@@ -106,8 +106,7 @@ fn test_kakarot_core_eoa_mapping() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
     assert(
-        kakarot_core
-            .address_registry(test_utils::evm_address()) == StoredAccountType::UninitializedAccount,
+        kakarot_core.address_registry(test_utils::evm_address()).is_none(),
         'should be uninitialized'
     );
 
@@ -118,7 +117,15 @@ fn test_kakarot_core_eoa_mapping() {
 
     // Then
     assert(
-        eoa_starknet_address == StoredAccountType::EOA(expected_eoa_starknet_address),
+        eoa_starknet_address
+            .expect(
+                'should be in registry'
+            ) == AccountType::EOA(
+                EOA {
+                    evm_address: test_utils::evm_address(),
+                    starknet_address: expected_eoa_starknet_address
+                }
+            ),
         'wrong starknet address'
     );
 
@@ -132,9 +139,12 @@ fn test_kakarot_core_eoa_mapping() {
 
     assert(
         kakarot_core
-            .address_registry(
-                test_utils::evm_address()
-            ) == StoredAccountType::EOA(another_sn_address),
+            .address_registry(test_utils::evm_address())
+            .expect(
+                'should be in registry'
+            ) == AccountType::EOA(
+                EOA { evm_address: test_utils::evm_address(), starknet_address: another_sn_address }
+            ),
         'wrong registry address'
     );
 }
@@ -262,7 +272,7 @@ fn test_contract_account_class_hash() {
 
     let class_hash = kakarot_core.ca_class_hash();
 
-    assert(class_hash == ContractAccount::TEST_CLASS_HASH.try_into().unwrap(), 'wrong class hash');
+    assert(class_hash == ContractAccountTestClassHash.try_into().unwrap(), 'wrong class hash');
 
     let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
     testing::set_contract_address(test_utils::other_starknet_address());

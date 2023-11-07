@@ -5,6 +5,7 @@ use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_utils as contract_utils;
 use contracts::tests::test_utils::constants::EVM_ADDRESS;
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
+use evm::model::{AccountType};
 use evm::tests::test_utils;
 use starknet::testing::set_contract_address;
 
@@ -44,12 +45,11 @@ fn test_at_contract_account_deployed() {
     assert(maybe_ca.is_some(), 'contract account should exist');
     let mut ca = maybe_ca.unwrap();
     assert(ca.evm_address == evm_address, 'evm_address incorrect');
-    let sn_address = match kakarot_core.address_registry(evm_address) {
-        StoredAccountType::UninitializedAccount => panic_with_felt252('should be initialized'),
-        StoredAccountType::EOA(_) => panic_with_felt252('should no be EOA'),
-        StoredAccountType::ContractAccount(address) => address,
+    let registered_ca = match kakarot_core.address_registry(evm_address).expect('should be in registry') {
+        AccountType::EOA(_) => panic_with_felt252('should no be EOA'),
+        AccountType::ContractAccount(address) => address,
     };
-    assert(ca.starknet_address == sn_address, 'starknet_address mismatch');
+    assert(ca == registered_ca, 'starknet_address mismatch');
 }
 
 

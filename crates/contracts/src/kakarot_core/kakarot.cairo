@@ -9,7 +9,7 @@ const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 #[derive(Drop, starknet::Store, Serde, PartialEq, Default)]
 enum StoredAccountType {
     #[default]
-    UninitializedAccount,
+    UnexistingAccount,
     EOA: ContractAddress,
     ContractAccount: ContractAddress,
 }
@@ -25,7 +25,7 @@ mod KakarotCore {
     use evm::context::Status;
     use evm::errors::{EVMError, EVMErrorTrait, CALLING_FROM_CA, CALLING_FROM_UNDEPLOYED_ACCOUNT};
     use evm::execution::execute;
-    use evm::model::account::{Account, AccountTrait};
+    use evm::model::account::{Account, AccountType, AccountTrait};
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
     use evm::model::eoa::{EOA, EOATrait};
     use evm::model::{ExecutionResult, Address};
@@ -167,8 +167,16 @@ mod KakarotCore {
             compute_starknet_address(deployer, evm_address, self.account_class_hash.read())
         }
 
-        fn address_registry(self: @ContractState, evm_address: EthAddress) -> StoredAccountType {
-            self.address_registry.read(evm_address)
+        fn address_registry(self: @ContractState, evm_address: EthAddress) -> Option<AccountType> {
+            match self.address_registry.read(evm_address) {
+                StoredAccountType::UnexistingAccount => Option::None,
+                StoredAccountType::EOA(starknet_address) => Option::Some(
+                    AccountType::EOA(EOA { evm_address, starknet_address })
+                ),
+                StoredAccountType::ContractAccount(starknet_address) => Option::Some(
+                    AccountType::ContractAccount(ContractAccount { evm_address, starknet_address })
+                ),
+            }
         }
 
 

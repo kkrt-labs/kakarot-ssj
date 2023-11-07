@@ -38,7 +38,7 @@ use utils::traits::{StorageBaseAddressIntoFelt252, StoreBytes31};
 
 
 /// Wrapper struct around an evm_address corresponding to a ContractAccount
-#[derive(Copy, Drop, PartialEq)]
+#[derive(Copy, Drop, PartialEq, Serde)]
 struct ContractAccount {
     evm_address: EthAddress,
     starknet_address: ContractAddress
@@ -111,15 +111,16 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// Returns a ContractAccount instance from the given `evm_address`.
     #[inline(always)]
     fn at(evm_address: EthAddress) -> Result<Option<ContractAccount>, EVMError> {
-        let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let account = kakarot_state.address_registry(evm_address);
-
-        match account {
-            StoredAccountType::UninitializedAccount => Result::Ok(Option::None),
-            StoredAccountType::EOA(_) => Result::Ok(Option::None),
-            StoredAccountType::ContractAccount(ca_starknet_address) => Result::Ok(
-                Option::Some(ContractAccount { evm_address, starknet_address: ca_starknet_address })
-            ),
+        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let maybe_account = kakarot_state.address_registry(evm_address);
+        match maybe_account {
+            Option::Some(account) => {
+                match account {
+                    AccountType::EOA(_) => Result::Ok(Option::None),
+                    AccountType::ContractAccount(ca) => Result::Ok(Option::Some(ca)),
+                }
+            },
+            Option::None => Result::Ok(Option::None)
         }
     }
 

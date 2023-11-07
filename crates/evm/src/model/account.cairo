@@ -1,3 +1,4 @@
+use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError};
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
@@ -23,36 +24,61 @@ impl AccountImpl of AccountTrait {
     ///
     /// # Returns
     /// The fetched account if it existed, otherwise a new empty account.
-    fn fetch_or_create(address: EthAddress) -> Result<Account, EVMError> {
-        let maybe_acc = AccountImpl::account_type_at(address)?;
+    fn fetch_or_create(evm_address: EthAddress) -> Result<Account, EVMError> {
+        let maybe_acc = AccountTrait::fetch(evm_address)?;
 
         match maybe_acc {
-            Option::Some(account_type) => {
-                match account_type {
-                    AccountType::EOA(eoa) => { eoa.fetch() },
-                    AccountType::ContractAccount(ca) => { ca.fetch() },
-                }
-            },
+            Option::Some(account) => Result::Ok(account),
             Option::None => {
                 let kakarot_state = KakarotCore::unsafe_new_contract_state();
-                let starknet_address = kakarot_state
-                    .compute_starknet_address(evm_address: address,);
-                return Result::Ok(
+                let starknet_address = kakarot_state.compute_starknet_address(evm_address);
+                Result::Ok(
                     // If no account exists at `address`, then
                     // we are trying to access an undeployed contract account
                     Account {
                         account_type: AccountType::ContractAccount(
-                            ContractAccount {
-                                evm_address: address, starknet_address: starknet_address
-                            }
+                            ContractAccount { evm_address, starknet_address }
                         ),
                         code: Default::default().span(),
                         nonce: 0,
                         selfdestruct: false,
                     }
-                );
+                )
             }
         }
+    }
+
+    fn fetch(evm_address: EthAddress) -> Result<Option<Account>, EVMError> {
+        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let maybe_stored_account = kakarot_state.address_registry(evm_address);
+        let mut account = match maybe_stored_account {
+            Option::Some(account_type) => {
+                match account_type {
+                    AccountType::EOA(eoa) => Option::Some(
+                        Account {
+                            account_type: AccountType::EOA(eoa),
+                            code: Default::default().span(),
+                            nonce: 0,
+                            selfdestruct: false,
+                        }
+                    ),
+                    AccountType::ContractAccount(ca) => {
+                        let code = ca.load_bytecode()?;
+                        let nonce = ca.nonce()?;
+                        Option::Some(
+                            Account {
+                                account_type: AccountType::ContractAccount(ca),
+                                code,
+                                nonce,
+                                selfdestruct: false,
+                            }
+                        )
+                    }
+                }
+            },
+            Option::None => Option::None,
+        };
+        Result::Ok(account)
     }
 
     /// Commits the account to Starknet by updating the account state if it
@@ -136,6 +162,7 @@ impl AccountImpl of AccountTrait {
     /// # Errors
     ///
     /// Returns an `EVMError` if there was an error while retrieving the nonce account of the account contract using the read_syscall.
+    //TODO(acc-ref) delete
     fn account_type_at(address: EthAddress) -> Result<Option<AccountType>, EVMError> {
         let maybe_eoa = EOATrait::at(address)?;
         if maybe_eoa.is_some() {
