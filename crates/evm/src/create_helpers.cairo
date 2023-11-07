@@ -48,8 +48,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
 
         // TODO(state): when the tx starts, 
         // store get_tx_info().unbox().nonce inside the sender account nonce
-        // let sender_nonce = get_tx_info().unbox().nonce;
-        let sender_nonce = 0;
+        let sender_nonce = get_tx_info().unbox().nonce;
 
         let to = match create_type {
             CreateType::CreateOrDeployTx => self
@@ -69,8 +68,8 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
     fn init_create_sub_ctx(ref self: Machine, create_args: CreateArgs) -> Result<(), EVMError> {
-        let mut account = self.state.get_account(create_args.to)?;
-        let account_address = account.address();
+        let mut target_account = self.state.get_account(create_args.to)?;
+        let target_address = target_account.address();
 
         // The caller in the subcontext is the calling context's current address
         let caller = self.address();
@@ -78,13 +77,13 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         let caller_current_nonce = caller_account.nonce();
         let caller_balance = self.state.read_balance(caller.evm)?;
         if caller_balance < create_args.value
-            || account.nonce() == integer::BoundedInt::<u64>::max() {
+            || target_account.nonce() == integer::BoundedInt::<u64>::max() {
             return self.stack.push(0);
         }
 
         if create_args.value > 0 {
             let transfer = Transfer {
-                sender: self.address(), recipient: account_address, amount: create_args.value,
+                sender: self.address(), recipient: target_address, amount: create_args.value,
             };
             let result = self.state.add_transfer(transfer);
             if result.is_err() {
@@ -96,20 +95,20 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         self.state.set_account(caller_account);
 
         // Check collision
-        let is_collision = account.nonce() != 0 || !account.bytecode().is_empty();
+        let is_collision = target_account.nonce() != 0 || !target_account.bytecode().is_empty();
         if is_collision {
             return self.stack.push(0);
         }
 
-        account.set_nonce(1);
-        account
+        target_account.set_nonce(1);
+        target_account
             .account_type =
                 AccountType::ContractAccount(
                     ContractAccount {
-                        evm_address: account_address.evm, starknet_address: account_address.starknet
+                        evm_address: target_address.evm, starknet_address: target_address.starknet
                     }
                 );
-        self.state.set_account(account);
+        self.state.set_account(target_account);
 
         let call_ctx = CallContextTrait::new(
             caller,
@@ -126,7 +125,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         let parent_ctx = NullableTrait::new(self.current_ctx.unbox());
         let child_ctx = ExecutionContextTrait::new(
             ExecutionContextType::Create(self.ctx_count),
-            account.address(),
+            target_address,
             call_ctx,
             parent_ctx,
             Default::default().span()
