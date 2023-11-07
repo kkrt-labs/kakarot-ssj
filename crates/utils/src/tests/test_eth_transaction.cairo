@@ -6,7 +6,7 @@ use utils::helpers::{U32Trait, bytes_to_felt252_array};
 fn test_decode_legacy_tx() {
     // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0, 0]
     // expected rlp decoding:  [ '0x', '0x3b9aca00', '0x1e8480', '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984', '0x016345785d8a0000', '0xabcdef', '0x01', '0x', '0x' ]
-    // transaction_hash: 0x89d3071d2bcc98141b16317ec8d912a76271ec052c2884674ddcd752b5ea91fe
+    // message_hash: 0x89d3071d2bcc98141b16317ec8d912a76271ec052c2884674ddcd752b5ea91fe
     // chain id used: 0x1
     let data = array![
         239,
@@ -77,7 +77,7 @@ fn test_decode_legacy_tx() {
     assert(tx.chain_id == 0x1, 'chain id is not 0x1');
 
     assert(
-        tx.tx_hash == 0x89d3071d2bcc98141b16317ec8d912a76271ec052c2884674ddcd752b5ea91fe,
-        'transaction hash it not 0x89...'
+        tx.msg_hash == 0x89d3071d2bcc98141b16317ec8d912a76271ec052c2884674ddcd752b5ea91fe,
+        'message hash it not 0x89d3...'
     );
 }

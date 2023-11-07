@@ -23,7 +23,7 @@ struct EthereumTransaction {
     amount: u256,
     payload: Span<felt252>,
     chain_id: u128,
-    tx_hash: u256,
+    msg_hash: u256,
 }
 
 #[generate_trait]
@@ -31,7 +31,7 @@ impl EthTransactionImpl of EthTransaction {
     /// Decode a legacy Ethereum transaction
     /// This function decodes a legacy Ethereum transaction in accordance with EIP-155.
     /// It returns transaction details including nonce, gas price, gas limit, destination address, amount, payload,
-    /// transaction hash, chain id. The transaction hash is computed by keccak hashing the signed
+    /// message hash, chain id. The transaction hash is computed by keccak hashing the signed
     /// transaction data, which includes the chain ID in accordance with EIP-155.
     /// # Arguments
     /// tx_data The raw transaction data
@@ -73,7 +73,7 @@ impl EthTransactionImpl of EthTransaction {
                 let (mut keccak_input, last_input_word, last_input_num_bytes) =
                     transaction_data_byte_array
                     .to_u64_words();
-                let tx_hash = cairo_keccak(
+                let msg_hash = cairo_keccak(
                     ref keccak_input, :last_input_word, :last_input_num_bytes
                 )
                     .reverse_endianness();
@@ -88,7 +88,7 @@ impl EthTransactionImpl of EthTransaction {
                         destination: address,
                         amount: value,
                         payload: data,
-                        tx_hash: tx_hash,
+                        msg_hash: msg_hash,
                         chain_id: chain_id
                     }
                 )
@@ -101,7 +101,7 @@ impl EthTransactionImpl of EthTransaction {
     /// Decode a modern Ethereum transaction
     /// This function decodes a modern Ethereum transaction in accordance with EIP-2718.
     /// It returns transaction details including nonce, gas price, gas limit, destination address, amount, payload,
-    /// transaction hash, and chain id. The transaction hash is computed by keccak hashing the signed
+    /// message hash, and chain id. The transaction hash is computed by keccak hashing the signed
     /// transaction data, which includes the chain ID as part of the transaction data itself.
     /// # Arguments
     /// tx_data The raw transaction data
