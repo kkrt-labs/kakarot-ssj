@@ -28,7 +28,7 @@ mod KakarotCore {
     use evm::model::account::{Account, AccountType, AccountTrait};
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
     use evm::model::eoa::{EOA, EOATrait};
-    use evm::model::{ExecutionResult, Address};
+    use evm::model::{ExecutionResult, Address, AddressTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
     };
@@ -188,11 +188,10 @@ mod KakarotCore {
         }
 
         fn account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
-            let maybe_account = AccountTrait::fetch(evm_address).expect('Fetching account failed');
-            match maybe_account {
-                Option::Some(account) => account.balance().unwrap(),
-                Option::None => 0
-            }
+            let address = Address {
+                evm: evm_address, starknet: self.compute_starknet_address(evm_address)
+            };
+            address.balance().unwrap()
         }
 
         fn contract_account_storage_at(
