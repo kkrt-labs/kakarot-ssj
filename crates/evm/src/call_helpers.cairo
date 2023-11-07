@@ -9,7 +9,7 @@ use evm::context::{
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::account::{AccountTrait, AccountTypeTrait};
+use evm::model::account::{AccountTrait};
 use evm::model::{Transfer, Address};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;

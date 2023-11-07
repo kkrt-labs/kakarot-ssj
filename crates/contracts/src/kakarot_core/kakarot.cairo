@@ -25,7 +25,7 @@ mod KakarotCore {
     use evm::context::Status;
     use evm::errors::{EVMError, EVMErrorTrait, CALLING_FROM_CA, CALLING_FROM_UNDEPLOYED_ACCOUNT};
     use evm::execution::execute;
-    use evm::model::account::{Account, AccountTrait, AccountTypeTrait};
+    use evm::model::account::{Account, AccountTrait};
     use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
     use evm::model::eoa::{EOA, EOATrait};
     use evm::model::{ExecutionResult, Address};

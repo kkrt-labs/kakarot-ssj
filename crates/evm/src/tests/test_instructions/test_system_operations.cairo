@@ -439,5 +439,5 @@ fn test_exec_create2() {
         .expect('cannot retrieve account');
 
     assert(account.nonce() == 1, 'wrong nonce');
-    assert(account.bytecode() == storage_evm_bytecode(), 'wrong bytecode');
+    assert(account.code == storage_evm_bytecode(), 'wrong bytecode');
 }

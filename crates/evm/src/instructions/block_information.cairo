@@ -7,7 +7,7 @@ use evm::errors::{
 };
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::model::Account;
-use evm::model::account::{AccountTrait, AccountTypeTrait};
+use evm::model::account::{AccountTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 

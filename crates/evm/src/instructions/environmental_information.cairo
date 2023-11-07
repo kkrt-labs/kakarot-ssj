@@ -5,7 +5,7 @@ use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::account::{AccountTrait, AccountTypeTrait};
+use evm::model::account::{AccountTrait};
 use evm::model::{AccountType, ContractAccountTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;

@@ -2,7 +2,7 @@ use contracts::kakarot_core::{IKakarotCore, KakarotCore};
 use evm::errors::{
     EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, INSUFFICIENT_BALANCE, BALANCE_OVERFLOW
 };
-use evm::model::account::{AccountTrait, AccountTypeTrait};
+use evm::model::account::{AccountTrait};
 use evm::model::contract_account::ContractAccountTrait;
 use evm::model::{Event, Transfer, Account, ContractAccount, EOA, AccountType, Address};
 use hash::{HashStateTrait, HashStateExTrait};

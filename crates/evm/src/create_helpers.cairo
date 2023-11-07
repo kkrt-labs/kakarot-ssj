@@ -7,7 +7,7 @@ use evm::context::{
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::account::{AccountTrait, AccountTypeTrait};
+use evm::model::account::{AccountTrait};
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::model::{AccountType, Transfer};
 use evm::stack::StackTrait;
@@ -95,7 +95,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         self.state.set_account(caller_account);
 
         // Check collision
-        let is_collision = target_account.nonce() != 0 || !target_account.bytecode().is_empty();
+        let is_collision = target_account.nonce() != 0 || !target_account.code.is_empty();
         if is_collision {
             return self.stack.push(0);
         }
