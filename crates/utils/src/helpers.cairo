@@ -874,7 +874,7 @@ fn compute_starknet_address(
 impl EthAddressExtTrait of EthAddressExt {
     fn to_bytes(self: EthAddress) -> Span<u8> {
         let bytes_used: u256 = 20;
-        let mut value: u256 = self.into();
+        let value: u256 = self.into();
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
         loop {

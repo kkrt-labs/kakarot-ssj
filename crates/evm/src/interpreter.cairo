@@ -4,6 +4,7 @@
 use evm::call_helpers::MachineCallHelpers;
 use evm::context::{CallContextTrait, Status};
 use evm::context::{ExecutionContextTrait, ExecutionContext, ExecutionContextType};
+use evm::create_helpers::MachineCreateHelpers;
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
     duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
@@ -674,7 +675,10 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
                 machine.finalize_calling_context(); // TODO: error handling
                 self.run(ref machine);
             },
-            ExecutionContextType::Create(_) => {} // TODO(greg): finalize the create context
+            ExecutionContextType::Create(_) => {
+                machine.finalize_create_context(); // TODO: error handling
+                self.run(ref machine);
+            }
         }
     }
 }

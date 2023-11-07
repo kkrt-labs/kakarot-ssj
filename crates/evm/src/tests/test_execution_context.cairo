@@ -8,7 +8,7 @@ use evm::model::{Event, Address};
 use evm::stack::{Stack, StackTrait};
 use evm::tests::test_utils::{
     setup_call_context, setup_execution_context, setup_nested_execution_context,
-    CallContextPartialEq
+    setup_execution_context_with_bytecode, CallContextPartialEq
 };
 use evm::tests::test_utils;
 use starknet::testing::{set_contract_address, set_caller_address};
@@ -132,7 +132,7 @@ fn test_execution_context_revert() {
 #[available_gas(300000)]
 fn test_execution_context_read_code() {
     // Given
-    let mut execution_context = setup_execution_context();
+    let mut execution_context = setup_execution_context_with_bytecode(array![1, 2, 3].span());
 
     // When
     let len = 2;
