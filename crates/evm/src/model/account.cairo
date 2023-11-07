@@ -93,13 +93,13 @@ impl AccountImpl of AccountTrait {
     }
 
     /// Returns whether an account should be deployed or not.  If the nonce is
-    /// not 0, the account should be deployed - provided it's not already
+    /// not 0 and it has code, the account should be deployed - provided it's not already
     /// deployed yet.
     // If the nonce is 0, the account is just "touched" (e.g.
     // balance transfer) and is not set for deployment.
     #[inline(always)]
     fn should_deploy(self: @Account) -> bool {
-        if (self.is_ca() && *self.nonce != 0) {
+        if self.is_ca() && (*self.nonce != 0 || !(*self.code).is_empty()) {
             return true;
         };
         false
