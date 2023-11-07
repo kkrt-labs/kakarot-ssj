@@ -136,8 +136,7 @@ mod test_state_changelog {
 
 mod test_simple_log {
     use evm::state::{SimpleLog, SimpleLogTrait};
-    use evm::tests::test_utils;
-    use utils::traits::StorageBaseAddressIntoFelt252;
+
     #[test]
     #[available_gas(200000000)]
     fn test_append_to_contextual_logs() {
@@ -193,7 +192,6 @@ mod test_simple_log {
 }
 
 mod test_state {
-    use contracts::eoa::ExternallyOwnedAccount;
     use contracts::tests::test_utils as contract_utils;
     use contracts::uninitialized_account::UninitializedAccount;
     use evm::model::account::{Account, AccountType};
@@ -203,21 +201,16 @@ mod test_state {
     use evm::state::{State, StateTrait, StateInternalTrait};
     use evm::tests::test_utils;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+    use starknet::EthAddress;
     use starknet::testing::set_contract_address;
-    use starknet::{EthAddress, get_contract_address};
     use utils::helpers::compute_starknet_address;
-    use utils::traits::StorageBaseAddressIntoFelt252;
-
 
     #[test]
     #[available_gas(200000000)]
     fn test_get_account_when_not_present() {
         let mut state: State = Default::default();
-        let native_token = contract_utils::deploy_native_token();
         // Transfer native tokens to sender
-        let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-        set_contract_address(kakarot_core.contract_address);
-
+        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
         let evm_address: EthAddress = test_utils::evm_address();
         let starknet_address = compute_starknet_address(
             kakarot_core.contract_address.into(),
@@ -286,10 +279,8 @@ mod test_state {
     #[test]
     #[available_gas(200000000)]
     fn test_read_state_from_sn_storage() {
-        let native_token = contract_utils::deploy_native_token();
         // Transfer native tokens to sender
-        let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-        set_contract_address(kakarot_core.contract_address);
+        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
         let evm_address: EthAddress = test_utils::evm_address();
         let mut ca = ContractAccountTrait::deploy(evm_address, array![].span())
             .expect('sender deploy failed');
@@ -379,10 +370,8 @@ mod test_state {
     #[test]
     #[available_gas(200000000)]
     fn test_read_balance_from_storage() {
-        let native_token = contract_utils::deploy_native_token();
         // Transfer native tokens to sender
-        let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-        set_contract_address(kakarot_core.contract_address);
+        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
         let evm_address: EthAddress = test_utils::evm_address();
         let eoa_account = EOATrait::deploy(evm_address).expect('sender deploy failed');
         // Transfer native tokens to sender - we need to set the contract address for this

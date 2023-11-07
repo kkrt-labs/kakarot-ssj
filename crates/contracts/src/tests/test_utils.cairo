@@ -132,3 +132,10 @@ fn fund_account_with_native_token(
     native_token.transfer(contract_address, amount);
     testing::set_contract_address(current_contract);
 }
+
+fn setup_contracts_for_testing() -> (IERC20CamelDispatcher, IExtendedKakarotCoreDispatcher) {
+    let native_token = deploy_native_token();
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    testing::set_contract_address(kakarot_core.contract_address);
+    return (native_token, kakarot_core);
+}

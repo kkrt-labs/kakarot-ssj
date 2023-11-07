@@ -2,9 +2,7 @@ use contracts::kakarot_core::interface::{
     IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
 
-use contracts::tests::test_utils::{
-    deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
-};
+use contracts::tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
 use evm::instructions::BlockInformationTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{setup_machine, evm_address};
@@ -115,8 +113,7 @@ fn test_gaslimit() {
 #[available_gas(5000000)]
 fn test_exec_selfbalance_eoa() {
     // Given
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let eoa = kakarot_core.deploy_eoa(evm_address());
 
     fund_account_with_native_token(eoa, native_token, 0x1);
@@ -136,8 +133,7 @@ fn test_exec_selfbalance_eoa() {
 #[available_gas(5000000)]
 fn test_exec_selfbalance_zero() {
     // Given
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // And
     let mut machine = setup_machine();
@@ -156,8 +152,7 @@ fn test_exec_selfbalance_zero() {
 #[available_gas(5000000)]
 fn test_exec_selfbalance_contract_account() {
     // Given
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     // TODO: deploy contract account
     // and fund it
 
@@ -189,16 +184,13 @@ fn test_basefee() {
 #[test]
 #[available_gas(20000000)]
 fn test_chainid_should_push_chain_id_to_stack() {
-    let native_token = deploy_native_token();
-    let kakarot = deploy_kakarot_core(native_token.contract_address);
-
-    set_contract_address(kakarot.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // Given
     let mut machine = setup_machine();
 
     let chain_id: u256 = IExtendedKakarotCoreDispatcher {
-        contract_address: kakarot.contract_address
+        contract_address: kakarot_core.contract_address
     }
         .chain_id()
         .into();

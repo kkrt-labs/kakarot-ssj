@@ -1,8 +1,5 @@
-use contracts::components::ownable::ownable_component;
 use contracts::contract_account::ContractAccount;
 use contracts::eoa::ExternallyOwnedAccount;
-use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
-use contracts::kakarot_core::interface::IKakarotCore;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
@@ -13,18 +10,13 @@ use contracts::tests::test_upgradeable::{
     IMockContractUpgradeableDispatcherTrait
 };
 use contracts::tests::test_utils as contract_utils;
-use contracts::uninitialized_account::{
-    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount
-};
-use core::result::ResultTrait;
-use evm::errors::EVMErrorTrait;
+use contracts::uninitialized_account::UninitializedAccount;
 use evm::machine::Status;
 use evm::model::Address;
 use evm::model::contract_account::ContractAccountTrait;
-use evm::model::eoa::EOATrait;
 use evm::tests::test_utils;
-use starknet::{get_caller_address, testing, contract_address_const, ContractAddress, ClassHash};
-use utils::helpers::{U32Trait, ByteArrayExTrait, u256_to_bytes_array};
+use starknet::{testing, contract_address_const, ContractAddress, ClassHash};
+use utils::helpers::u256_to_bytes_array;
 
 #[test]
 #[available_gas(20000000)]
@@ -96,9 +88,7 @@ fn test_kakarot_core_set_native_token() {
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_deploy_eoa() {
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
     // triggerred in the constructor
@@ -114,9 +104,7 @@ fn test_kakarot_core_deploy_eoa() {
 #[available_gas(20000000)]
 fn test_kakarot_core_eoa_mapping() {
     // Given
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
     assert(
         kakarot_core
             .address_registry(test_utils::evm_address()) == StoredAccountType::UninitializedAccount,
@@ -196,9 +184,7 @@ fn test_kakarot_contract_account() {}
 #[available_gas(2000000000000)]
 fn test_eth_call() {
     // Given
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -229,9 +215,7 @@ fn test_eth_call() {
 #[available_gas(2000000000)]
 fn test_handle_call() {
     // Given
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
