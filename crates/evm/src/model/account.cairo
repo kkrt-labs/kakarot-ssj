@@ -1,15 +1,19 @@
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
-use evm::errors::{EVMError};
-use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
+use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
+use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::eoa::{EOA, EOATrait};
 use evm::model::{Address, AccountType};
 use starknet::{ContractAddress, EthAddress, get_contract_address};
-use utils::helpers::{ByteArrayExTrait, compute_starknet_address};
+use utils::helpers::{ResultExTrait, ByteArrayExTrait, compute_starknet_address};
+use openzeppelin::token::erc20::interface::{
+    IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
+};
 
 #[derive(Copy, Drop, PartialEq)]
 struct Account {
     account_type: AccountType,
+    address: Address,
     code: Span<u8>,
     nonce: u64,
     selfdestruct: bool,
@@ -39,9 +43,8 @@ impl AccountImpl of AccountTrait {
                     // Therefore, we're sure that only contract accounts are
                     // undeployed.
                     Account {
-                        account_type: AccountType::ContractAccount(
-                            ContractAccount { evm_address, starknet_address }
-                        ),
+                        account_type: AccountType::Unknown,
+                        address: Address { starknet: starknet_address, evm: evm_address, },
                         code: Default::default().span(),
                         nonce: 0,
                         selfdestruct: false,
@@ -65,26 +68,32 @@ impl AccountImpl of AccountTrait {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
         let maybe_stored_account = kakarot_state.address_registry(evm_address);
         let mut account = match maybe_stored_account {
-            Option::Some(account_type) => {
+            Option::Some((
+                account_type, starknet_address
+            )) => {
                 match account_type {
-                    AccountType::EOA(eoa) => Option::Some(
+                    AccountType::EOA => Option::Some(
                         Account {
-                            account_type: AccountType::EOA(eoa),
+                            account_type: AccountType::EOA,
+                            address: Address { evm: evm_address, starknet: starknet_address },
                             code: Default::default().span(),
                             nonce: 1,
                             selfdestruct: false,
                         }
                     ),
-                    AccountType::ContractAccount(ca) => {
+                    AccountType::ContractAccount => {
+                        let address = Address { evm: evm_address, starknet: starknet_address };
                         Option::Some(
                             Account {
-                                account_type: AccountType::ContractAccount(ca),
-                                code: ca.load_bytecode()?,
-                                nonce: ca.nonce()?,
+                                account_type: AccountType::ContractAccount,
+                                address,
+                                code: ContractAccountTrait::fetch_bytecode(@address)?,
+                                nonce: ContractAccountTrait::fetch_nonce(@address)?,
                                 selfdestruct: false,
                             }
                         )
-                    }
+                    },
+                    AccountType::Unknown(_) => Option::None,
                 }
             },
             Option::None => Option::None,
@@ -126,14 +135,15 @@ impl AccountImpl of AccountTrait {
                     // no - op
                     Result::Ok(())
                 },
-                AccountType::ContractAccount(ca) => {
-                    let mut ca = *ca;
+                AccountType::ContractAccount => {
+                    let mut ca_address = self.address();
                     if *self.selfdestruct {
-                        return ca.selfdestruct();
+                        return ca_address.selfdestruct();
                     }
-                    ca.set_nonce(*self.nonce)
+                    ca_address.store_nonce(*self.nonce)
                 //Storage is handled outside of the account and must be commited after all accounts are commited.
-                }
+                },
+                AccountType::Unknown => { Result::Ok(()) }
             }
         } else if self.should_deploy() {
             //Case new account
@@ -141,8 +151,8 @@ impl AccountImpl of AccountTrait {
             if (*self.selfdestruct == true) {
                 return Result::Ok(());
             };
-            let mut ca = ContractAccountTrait::deploy(self.address().evm, *self.code)?;
-            ca.set_nonce(*self.nonce)
+            let mut ca_address = ContractAccountTrait::deploy(self.address().evm, *self.code)?;
+            ca_address.store_nonce(*self.nonce)
         //Storage is handled outside of the account and must be commited after all accounts are commited.
         } else {
             Result::Ok(())
@@ -151,10 +161,7 @@ impl AccountImpl of AccountTrait {
 
     #[inline(always)]
     fn address(self: @Account) -> Address {
-        match self.account_type {
-            AccountType::EOA(eoa) => { eoa.address() },
-            AccountType::ContractAccount(ca) => { ca.address() }
-        }
+        *self.address
     }
 
     #[inline(always)]
@@ -185,40 +192,33 @@ impl AccountImpl of AccountTrait {
         }
     }
 
-    /// Returns `true` if the account is an Externally Owned Account (EOA).
-    #[inline(always)]
-    fn is_eoa(self: @Account) -> bool {
-        match self.account_type {
-            AccountType::EOA => true,
-            AccountType::ContractAccount => false
-        }
-    }
-
     /// Returns `true` if the account is a Contract Account (CA).
     #[inline(always)]
     fn is_ca(self: @Account) -> bool {
         match self.account_type {
             AccountType::EOA => false,
-            AccountType::ContractAccount => true
+            AccountType::ContractAccount => true,
+            AccountType::Unknown => false
         }
     }
 
     #[inline(always)]
     fn evm_address(self: @Account) -> EthAddress {
-        match self.account_type {
-            AccountType::EOA(eoa) => { eoa.evm_address() },
-            AccountType::ContractAccount(ca) => { ca.evm_address() }
-        }
+        self.address().evm
     }
 
     /// Returns the balance in native token for a given EVM account (EOA or CA)
     /// This is equivalent to checking the balance in native coin, i.e. ETHER of an account in Ethereum
     #[inline(always)]
     fn balance(self: @Account) -> Result<u256, EVMError> {
-        match self.account_type {
-            AccountType::EOA(eoa) => { eoa.balance() },
-            AccountType::ContractAccount(ca) => { ca.balance() }
-        }
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let native_token_address = kakarot_state.native_token();
+        let native_token = IERC20CamelSafeDispatcher { contract_address: native_token_address };
+        //Note: Starknet OS doesn't allow error management of failed syscalls yet.
+        // If this call fails, the entire transaction will revert.
+        native_token
+            .balanceOf(self.address().starknet)
+            .map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
     }
 
     /// Returns the bytecode of the EVM account (EOA or CA)
@@ -240,9 +240,15 @@ impl AccountImpl of AccountTrait {
     #[inline(always)]
     fn read_storage(self: @Account, key: u256) -> Result<u256, EVMError> {
         match self.account_type {
-            AccountType::EOA(eoa) => Result::Ok(0),
-            AccountType::ContractAccount(ca) => ca.storage_at(key),
+            AccountType::EOA => Result::Ok(0),
+            AccountType::ContractAccount => self.address().fetch_storage(key),
+            AccountType::Unknown(_) => Result::Ok(0),
         }
+    }
+
+    #[inline(always)]
+    fn set_type(ref self: Account, account_type: AccountType) {
+        self.account_type = account_type;
     }
 
     /// Sets the nonce of the Account

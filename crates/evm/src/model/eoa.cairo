@@ -8,11 +8,7 @@ use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
 use evm::model::account::{Account, AccountTrait};
 use evm::model::{AccountType, Address};
 use integer::BoundedInt;
-use openzeppelin::token::erc20::interface::{
-    IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
-};
 use starknet::{EthAddress, ContractAddress, get_contract_address, deploy_syscall};
-use utils::helpers::ResultExTrait;
 
 #[derive(Copy, Drop, PartialEq, Serde)]
 struct EOA {
@@ -59,54 +55,8 @@ impl EOAImpl of EOATrait {
         }
     }
 
-
-    /// # Arguments
-    /// * `evm_address` - The EVM address of the eoa
-    /// # Returns
-    /// * The corresponding Account instance
-    fn fetch(self: @EOA) -> Result<Account, EVMError> {
-        Result::Ok(
-            Account {
-                account_type: AccountType::EOA(*self),
-                code: Default::default().span(),
-                nonce: 1,
-                selfdestruct: false
-            }
-        )
-    }
-
     fn address(self: @EOA) -> Address {
         Address { evm: *self.evm_address, starknet: *self.starknet_address }
-    }
-
-    /// Returns an EOA instance from the given `evm_address`.
-    fn at(evm_address: EthAddress) -> Result<Option<EOA>, EVMError> {
-        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let maybe_account = kakarot_state.address_registry(evm_address);
-        match maybe_account {
-            Option::Some(account) => {
-                match account {
-                    AccountType::EOA(eoa) => Result::Ok(Option::Some(eoa)),
-                    AccountType::ContractAccount(_) => Result::Ok(Option::None),
-                }
-            },
-            Option::None => Result::Ok(Option::None)
-        }
-    }
-
-
-    fn balance(self: @EOA) -> Result<u256, EVMError> {
-        let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let native_token_address = kakarot_state.native_token();
-        // TODO: make sure this part of the codebase is upgradable
-        // As native_token might become a snake_case implementation
-        // instead of camelCase
-        let native_token = IERC20CamelSafeDispatcher { contract_address: native_token_address };
-        //Note: Starknet OS doesn't allow error management of failed syscalls yet.
-        // If this call fails, the entire transaction will revert.
-        native_token
-            .balanceOf(*self.starknet_address)
-            .map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
     }
 
     fn evm_address(self: @EOA) -> EthAddress {

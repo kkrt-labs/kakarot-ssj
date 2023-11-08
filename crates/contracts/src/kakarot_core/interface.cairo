@@ -32,7 +32,7 @@ trait IKakarotCore<TContractState> {
     /// Checks into KakarotCore storage if an EOA or a CA has been deployed for
     /// a particular EVM address and if so, returns its corresponding type with
     /// its starknet address.  Otherwise, returns Option::None.
-    fn address_registry(self: @TContractState, evm_address: EthAddress) -> Option<AccountType>;
+    fn address_registry(self: @TContractState, evm_address: EthAddress) -> Option<(AccountType, ContractAddress)>;
 
 
     /// Gets the nonce associated to a contract account
@@ -131,7 +131,7 @@ trait IExtendedKakarotCore<TContractState> {
     /// Checks into KakarotCore storage if an EOA or a CA has been deployed for
     /// a particular EVM address and if so, returns its corresponding type with
     /// its starknet address.  Otherwise, returns Option::None.
-    fn address_registry(self: @TContractState, evm_address: EthAddress) -> Option<AccountType>;
+    fn address_registry(self: @TContractState, evm_address: EthAddress) -> Option<(AccountType, ContractAddress)>;
 
     /// Gets the nonce associated to a contract account
     fn contract_account_nonce(self: @TContractState, evm_address: EthAddress) -> u64;

@@ -27,22 +27,3 @@ fn test_eoa_deploy() {
     assert(event.evm_address == test_utils::evm_address(), 'wrong evm address');
     assert(event.starknet_address.into() == eoa.starknet_address, 'wrong starknet address');
 }
-
-
-#[test]
-#[available_gas(5000000)]
-fn test_eoa_balance() {
-    // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let sn_address = kakarot_core.deploy_eoa(test_utils::evm_address());
-
-    fund_account_with_native_token(sn_address, native_token, 0x1);
-
-    // When
-    set_contract_address(kakarot_core.contract_address);
-    let eoa = EOATrait::at(test_utils::evm_address()).unwrap().unwrap();
-    let balance = eoa.balance().unwrap();
-
-    // Then
-    assert(balance == native_token.balanceOf(eoa.starknet_address), 'wrong balance');
-}

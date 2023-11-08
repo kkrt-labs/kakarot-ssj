@@ -3,9 +3,7 @@ mod test_eoa;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
 use evm::model::account::AccountTrait;
-use evm::model::{
-    Account, ContractAccountTrait, AccountType, EOA, ContractAccount, EOATrait, AddressTrait
-};
+use evm::model::{Account, ContractAccountTrait, AccountType, EOA, EOATrait, AddressTrait};
 use evm::tests::test_utils::{evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::set_contract_address;
@@ -32,7 +30,7 @@ fn test_is_deployed_eoa_exists() {
 fn test_is_deployed_ca_exists() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let ca = ContractAccountTrait::deploy(evm_address(), array![].span())
+    ContractAccountTrait::deploy(evm_address(), array![].span())
         .expect('failed deploy contract account',);
 
     // When
@@ -100,17 +98,17 @@ fn test_address_balance_eoa() {
 fn test_account_balance_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let mut ca = ContractAccountTrait::deploy(evm_address(), array![].span())
+    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span())
         .expect('failed deploy contract account',);
 
-    fund_account_with_native_token(ca.starknet_address, native_token, 0x1);
+    fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
 
     // When
     let account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
     let balance = account.balance().unwrap();
 
     // Then
-    assert(balance == native_token.balanceOf(ca.starknet_address), 'wrong balance');
+    assert(balance == native_token.balanceOf(ca_address.starknet), 'wrong balance');
 }
 
 #[ignore]
@@ -119,10 +117,10 @@ fn test_account_balance_contract_account() {
 fn test_address_balance_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let mut ca = ContractAccountTrait::deploy(evm_address(), array![].span())
+    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span())
         .expect('failed deploy contract account',);
 
-    fund_account_with_native_token(ca.starknet_address, native_token, 0x1);
+    fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
 
     // When
     let account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
@@ -130,5 +128,5 @@ fn test_address_balance_contract_account() {
 
     // Then
     // Then
-    assert(balance == native_token.balanceOf(ca.starknet_address), 'wrong balance');
+    assert(balance == native_token.balanceOf(ca_address.starknet), 'wrong balance');
 }

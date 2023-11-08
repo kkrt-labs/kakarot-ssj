@@ -6,7 +6,7 @@ use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
 use evm::execution::Status;
 use evm::model::account::{Account, AccountTrait};
-use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
+use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::eoa::{EOA, EOATrait};
 use evm::state::State;
 use openzeppelin::token::erc20::interface::{
@@ -67,6 +67,7 @@ struct ExecutionResult {
 /// KakarotCore address for ContractAccounts.
 #[derive(Copy, Drop, PartialEq, Serde)]
 enum AccountType {
-    EOA: EOA,
-    ContractAccount: ContractAccount,
+    EOA,
+    ContractAccount,
+    Unknown
 }

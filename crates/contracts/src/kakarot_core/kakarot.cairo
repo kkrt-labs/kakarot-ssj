@@ -26,7 +26,7 @@ mod KakarotCore {
     use evm::errors::{EVMError, EVMErrorTrait, CALLING_FROM_CA, CALLING_FROM_UNDEPLOYED_ACCOUNT};
     use evm::execution::execute;
     use evm::model::account::{Account, AccountType, AccountTrait};
-    use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
+    use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::{EOA, EOATrait};
     use evm::model::{ExecutionResult, Address, AddressTrait};
     use starknet::{
@@ -167,24 +167,26 @@ mod KakarotCore {
             compute_starknet_address(deployer, evm_address, self.account_class_hash.read())
         }
 
-        fn address_registry(self: @ContractState, evm_address: EthAddress) -> Option<AccountType> {
+        fn address_registry(
+            self: @ContractState, evm_address: EthAddress
+        ) -> Option<(AccountType, ContractAddress)> {
             match self.address_registry.read(evm_address) {
                 StoredAccountType::UnexistingAccount => Option::None,
                 StoredAccountType::EOA(starknet_address) => Option::Some(
-                    AccountType::EOA(EOA { evm_address, starknet_address })
+                    (AccountType::EOA, starknet_address)
                 ),
                 StoredAccountType::ContractAccount(starknet_address) => Option::Some(
-                    AccountType::ContractAccount(ContractAccount { evm_address, starknet_address })
+                    (AccountType::ContractAccount, starknet_address)
                 ),
             }
         }
 
 
         fn contract_account_nonce(self: @ContractState, evm_address: EthAddress) -> u64 {
-            let ca = ContractAccountTrait::at(evm_address)
+            let ca_address = ContractAccountTrait::at(evm_address)
                 .expect('Fetching CA failed')
                 .expect('No CA found');
-            ca.nonce().unwrap()
+            ca_address.fetch_nonce().unwrap()
         }
 
         fn account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
@@ -197,26 +199,26 @@ mod KakarotCore {
         fn contract_account_storage_at(
             self: @ContractState, evm_address: EthAddress, key: u256
         ) -> u256 {
-            let ca = ContractAccountTrait::at(evm_address)
+            let ca_address = ContractAccountTrait::at(evm_address)
                 .expect('Fetching CA failed')
                 .expect('No CA found');
-            ca.storage_at(key).unwrap()
+            ca_address.fetch_storage(key).unwrap()
         }
 
         fn contract_account_bytecode(self: @ContractState, evm_address: EthAddress) -> Span<u8> {
-            let ca = ContractAccountTrait::at(evm_address)
+            let ca_address = ContractAccountTrait::at(evm_address)
                 .expect('Fetching CA failed')
                 .expect('No CA found');
-            ca.load_bytecode().unwrap()
+            ca_address.fetch_bytecode().unwrap()
         }
 
         fn contract_account_false_positive_jumpdest(
             self: @ContractState, evm_address: EthAddress, offset: usize
         ) -> bool {
-            let ca = ContractAccountTrait::at(evm_address)
+            let ca_address = ContractAccountTrait::at(evm_address)
                 .expect('Fetching CA failed')
                 .expect('No CA found');
-            ca.is_false_positive_jumpdest(offset).unwrap()
+            ca_address.is_false_positive_jumpdest(offset).unwrap()
         }
 
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {

@@ -37,14 +37,6 @@ use utils::storage::{compute_storage_base_address};
 use utils::traits::{StorageBaseAddressIntoFelt252, StoreBytes31};
 
 
-/// Wrapper struct around an evm_address corresponding to a ContractAccount
-#[derive(Copy, Drop, PartialEq, Serde)]
-struct ContractAccount {
-    evm_address: EthAddress,
-    starknet_address: ContractAddress
-}
-
-
 #[generate_trait]
 impl ContractAccountImpl of ContractAccountTrait {
     /// Deploys a contract account by setting up the storage associated to a
@@ -62,7 +54,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * The evm_address and starknet_address the CA is deployed at - which is KakarotCore
     /// # Errors
     /// * `ACCOUNT_EXISTS` - If a contract account already exists at the given `evm_address`
-    fn deploy(evm_address: EthAddress, bytecode: Span<u8>) -> Result<ContractAccount, EVMError> {
+    fn deploy(evm_address: EthAddress, bytecode: Span<u8>) -> Result<Address, EVMError> {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
         let account_class_hash = kakarot_state.account_class_hash();
         let kakarot_address = get_contract_address();
@@ -89,35 +81,33 @@ impl ContractAccountImpl of ContractAccountTrait {
                         evm_address, StoredAccountType::ContractAccount(starknet_address)
                     );
                 kakarot_state.emit(ContractAccountDeployed { evm_address, starknet_address });
-                Result::Ok(ContractAccount { evm_address, starknet_address })
+                Result::Ok(Address { evm: evm_address, starknet: starknet_address })
             },
             Result::Err(err) => panic(err)
         }
     }
 
     #[inline(always)]
-    fn address(self: @ContractAccount) -> Address {
-        Address { evm: *self.evm_address, starknet: *self.starknet_address }
-    }
-
-    #[inline(always)]
-    fn selfdestruct(self: @ContractAccount) -> Result<(), EVMError> {
-        let contract_account = IContractAccountSafeDispatcher {
-            contract_address: *self.starknet_address
-        };
+    fn selfdestruct(self: @Address) -> Result<(), EVMError> {
+        let contract_account = IContractAccountSafeDispatcher { contract_address: *self.starknet };
         contract_account.selfdestruct().map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
     }
 
-    /// Returns a ContractAccount instance from the given `evm_address`.
+    /// Returns the addresses of a CA at the given `evm_address`.
     #[inline(always)]
-    fn at(evm_address: EthAddress) -> Result<Option<ContractAccount>, EVMError> {
+    fn at(evm_address: EthAddress) -> Result<Option<Address>, EVMError> {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
         let maybe_account = kakarot_state.address_registry(evm_address);
         match maybe_account {
-            Option::Some(account) => {
+            Option::Some((
+                account, sn_address
+            )) => {
                 match account {
-                    AccountType::EOA(_) => Result::Ok(Option::None),
-                    AccountType::ContractAccount(ca) => Result::Ok(Option::Some(ca)),
+                    AccountType::EOA => Result::Ok(Option::None),
+                    AccountType::ContractAccount => Result::Ok(
+                        Option::Some(Address { evm: evm_address, starknet: sn_address })
+                    ),
+                    AccountType::Unknown => Result::Ok(Option::None)
                 }
             },
             Option::None => Result::Ok(Option::None)
@@ -126,79 +116,31 @@ impl ContractAccountImpl of ContractAccountTrait {
 
     /// Returns the nonce of a contract account.
     /// # Arguments
-    /// * `self` - The contract account instance
+    /// * `self` - The address of the Contract Account
     #[inline(always)]
-    fn nonce(self: @ContractAccount) -> Result<u64, EVMError> {
-        let contract_account = IContractAccountDispatcher {
-            contract_address: *self.starknet_address
-        };
+    fn fetch_nonce(self: @Address) -> Result<u64, EVMError> {
+        let contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
         Result::Ok(contract_account.nonce())
-    }
-
-    #[inline(always)]
-    fn starknet_address(self: @ContractAccount) -> ContractAddress {
-        *self.starknet_address
-    }
-
-
-    #[inline(always)]
-    fn evm_address(self: @ContractAccount) -> EthAddress {
-        *self.evm_address
     }
 
     /// Sets the nonce of a contract account.
     /// The new nonce is written in Kakarot Core's contract storage.
     /// The storage address used is h(sn_keccak("contract_account_nonce"), evm_address), where `h` is the poseidon hash function.
     /// # Arguments
-    /// * `self` - The contract account instance
+    /// * `self` - The address of the Contract Account
     #[inline(always)]
-    fn set_nonce(ref self: ContractAccount, nonce: u64) -> Result<(), EVMError> {
-        let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.starknet_address
-        };
+    fn store_nonce(self: @Address, nonce: u64) -> Result<(), EVMError> {
+        let mut contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
         contract_account.set_nonce(nonce);
         Result::Ok(())
-    }
-
-    /// Increments the nonce of a contract account.
-    /// The new nonce is written in Kakarot Core's contract storage.
-    /// The storage address used is h(sn_keccak("contract_account_nonce"), evm_address), where `h` is the poseidon hash function.
-    /// # Arguments
-    /// * `self` - The contract account instance
-    #[inline(always)]
-    fn increment_nonce(ref self: ContractAccount) -> Result<(), EVMError> {
-        let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.starknet_address
-        };
-        contract_account.increment_nonce();
-        Result::Ok(())
-    }
-
-    /// Returns the balance of a contract account.
-    /// * `self` - The contract account instance
-    #[inline(always)]
-    fn balance(self: @ContractAccount) -> Result<u256, EVMError> {
-        let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let native_token_address = kakarot_state.native_token();
-        // TODO: make sure this part of the codebase is upgradable
-        // As native_token might become a snake_case implementation
-        // instead of camelCase
-        let native_token = IERC20CamelSafeDispatcher { contract_address: native_token_address };
-        //Note: Starknet OS doesn't allow error management of failed syscalls yet.
-        // If this call fails, the entire transaction will revert.
-        native_token
-            .balanceOf(*self.starknet_address)
-            .map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
     }
 
     /// Returns the value stored at a `u256` key inside the Contract Account storage.
     /// The new value is written in Kakarot Core's contract storage.
     /// The storage address used is h(sn_keccak("contract_account_storage_keys"), evm_address, key), where `h` is the poseidon hash function.
     #[inline(always)]
-    fn storage_at(self: @ContractAccount, key: u256) -> Result<u256, EVMError> {
-        let contract_account = IContractAccountDispatcher {
-            contract_address: *self.starknet_address
-        };
+    fn fetch_storage(self: @Address, key: u256) -> Result<u256, EVMError> {
+        let contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
         Result::Ok(contract_account.storage_at(key))
     }
 
@@ -206,14 +148,12 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// The new value is written in Kakarot Core's contract storage.
     /// The storage address used is h(sn_keccak("contract_account_storage_keys"), evm_address, key), where `h` is the poseidon hash function.
     /// # Arguments
-    /// * `self` - The contract account instance
+    /// * `self` - The address of the Contract Account
     /// * `key` - The key to set
     /// * `value` - The value to set
     #[inline(always)]
-    fn set_storage_at(ref self: ContractAccount, key: u256, value: u256) -> Result<(), EVMError> {
-        let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.starknet_address
-        };
+    fn store_storage(self: @Address, key: u256, value: u256) -> Result<(), EVMError> {
+        let mut contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
         contract_account.set_storage_at(key, value);
         Result::Ok(())
     }
@@ -223,23 +163,19 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// # Arguments
     /// * `evm_address` - The EVM address of the contract account
     /// * `bytecode` - The bytecode to store
-    fn store_bytecode(ref self: ContractAccount, bytecode: Span<u8>) -> Result<(), EVMError> {
-        let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.starknet_address
-        };
+    fn store_bytecode(self: @Address, bytecode: Span<u8>) -> Result<(), EVMError> {
+        let mut contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
         contract_account.set_bytecode(bytecode);
         Result::Ok(())
     }
 
     /// Loads the bytecode of a ContractAccount from Kakarot Core's contract storage into a ByteArray.
     /// # Arguments
-    /// * `self` - The Contract Account to load the bytecode from
+    /// * `self` - The address of the Contract Account to load the bytecode from
     /// # Returns
     /// * The bytecode of the Contract Account as a ByteArray
-    fn load_bytecode(self: @ContractAccount) -> Result<Span<u8>, EVMError> {
-        let contract_account = IContractAccountDispatcher {
-            contract_address: *self.starknet_address
-        };
+    fn fetch_bytecode(self: @Address) -> Result<Span<u8>, EVMError> {
+        let contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
         let bytecode = contract_account.bytecode();
         Result::Ok(bytecode)
     }
@@ -252,10 +188,8 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `true` - If the offset is a valid jump destination
     /// * `false` - Otherwise
     #[inline(always)]
-    fn is_false_positive_jumpdest(self: @ContractAccount, offset: usize) -> Result<bool, EVMError> {
-        let contract_account = IContractAccountDispatcher {
-            contract_address: *self.starknet_address
-        };
+    fn is_false_positive_jumpdest(self: @Address, offset: usize) -> Result<bool, EVMError> {
+        let contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
         let is_false_jumpdest = contract_account.is_false_jumpdest(offset);
         Result::Ok(is_false_jumpdest)
     }
@@ -263,15 +197,11 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// Sets the given `offset` as a valid jump destination in the bytecode.
     /// The valid jump destinations are stored in Kakarot Core's contract storage.
     /// # Arguments
-    /// * `self` - The ContractAccount
+    /// * `self` - The address of the ContractAccount
     /// * `offset` - The offset to set as a valid jump destination
     #[inline(always)]
-    fn set_false_positive_jumpdest(
-        ref self: ContractAccount, offset: usize
-    ) -> Result<(), EVMError> {
-        let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.starknet_address
-        };
+    fn set_false_positive_jumpdest(self: @Address, offset: usize) -> Result<(), EVMError> {
+        let mut contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
         contract_account.set_false_positive_jumpdest(offset);
         Result::Ok(())
     }

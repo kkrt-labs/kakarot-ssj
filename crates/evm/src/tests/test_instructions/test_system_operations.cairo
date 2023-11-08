@@ -404,7 +404,7 @@ fn test_exec_create2() {
         .expect('failed deploying CA');
 
     let mut ctx = machine.current_ctx.unbox();
-    ctx.address = contract_address.address();
+    ctx.address = contract_address;
     ctx.ctx_type = ExecutionContextType::Create(ctx.id());
     machine.current_ctx = BoxTrait::new(ctx);
 

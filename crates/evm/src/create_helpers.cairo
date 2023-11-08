@@ -8,8 +8,8 @@ use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
-use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
-use evm::model::{AccountType, Transfer};
+use evm::model::contract_account::{ContractAccountTrait};
+use evm::model::{Address, AccountType, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use keccak::cairo_keccak;
@@ -46,7 +46,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         let mut bytecode = Default::default();
         self.memory.load_n(size, ref bytecode, offset);
 
-        // TODO(state): when the tx starts, 
+        // TODO(state): when the tx starts,
         // store get_tx_info().unbox().nonce inside the sender account nonce
         let sender_nonce = get_tx_info().unbox().nonce;
 
@@ -101,13 +101,9 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         }
 
         target_account.set_nonce(1);
+        target_account.account_type = AccountType::ContractAccount;
         target_account
-            .account_type =
-                AccountType::ContractAccount(
-                    ContractAccount {
-                        evm_address: target_address.evm, starknet_address: target_address.starknet
-                    }
-                );
+            .address = Address { evm: target_address.evm, starknet: target_address.starknet };
         self.state.set_account(target_account);
 
         let call_ctx = CallContextTrait::new(
@@ -160,6 +156,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
 
                 let mut account = self.state.get_account(account_address)?;
                 account.set_code(return_data);
+                account.set_type(AccountType::ContractAccount);
                 self.state.set_account(account);
                 self.return_to_parent_ctx();
                 self.stack.push(account_address.into())
