@@ -58,15 +58,15 @@ impl EthTransactionImpl of EthTransaction {
                 let gas_limit_idx = 2;
                 let to_idx = 3;
                 let value_idx = 4;
-                let data_idx = 5;
+                let calldata_idx = 5;
                 let chain_id_idx = 6;
 
                 let nonce = (*val.at(nonce_idx)).parse_u128_from_string().map_err()?;
                 let gas_price = (*val.at(gas_price_idx)).parse_u128_from_string().map_err()?;
                 let gas_limit = (*val.at(gas_limit_idx)).parse_u128_from_string().map_err()?;
                 let to = (*val.at(to_idx)).parse_u256_from_string().map_err()?;
-                let value = (*val.at(value_idx)).parse_u256_from_string().map_err()?;
-                let data = (*val.at(data_idx)).parse_bytes_felt252_from_string().map_err()?;
+                let amount = (*val.at(value_idx)).parse_u256_from_string().map_err()?;
+                let calldata = (*val.at(calldata_idx)).parse_bytes_felt252_from_string().map_err()?;
                 let chain_id = (*val.at(chain_id_idx)).parse_u128_from_string().map_err()?;
 
                 let mut transaction_data_byte_array = ByteArrayExt::from_bytes(tx_data);
@@ -78,18 +78,18 @@ impl EthTransactionImpl of EthTransaction {
                 )
                     .reverse_endianness();
 
-                let address: EthAddress = to.into();
+                let destination: EthAddress = to.into();
 
                 Result::Ok(
                     EthereumTransaction {
-                        nonce: nonce,
-                        gas_price: gas_price,
-                        gas_limit: gas_limit,
-                        destination: address,
-                        amount: value,
-                        calldata: data,
-                        msg_hash: msg_hash,
-                        chain_id: chain_id
+                        nonce,
+                        gas_price,
+                        gas_limit,
+                        destination,
+                        amount,
+                        calldata,
+                        msg_hash,
+                        chain_id
                     }
                 )
             }
