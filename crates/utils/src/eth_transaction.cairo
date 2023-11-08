@@ -53,13 +53,18 @@ impl EthTransactionImpl of EthTransaction {
                     return Result::Err(EthTransactionError::Other('Length is not 9'));
                 }
 
-                let nonce_idx = 0;
-                let gas_price_idx = 1;
-                let gas_limit_idx = 2;
-                let to_idx = 3;
-                let value_idx = 4;
-                let calldata_idx = 5;
-                let chain_id_idx = 6;
+                let (
+                    nonce_idx,
+                    gas_price_idx,
+                    gas_limit_idx,
+                    to_idx,
+                    value_idx,
+                    calldata_idx,
+                    chain_id_idx
+                ) =
+                    (
+                    0, 1, 2, 3, 4, 5, 6
+                );
 
                 let nonce = (*val.at(nonce_idx)).parse_u128_from_string().map_err()?;
                 let gas_price = (*val.at(gas_price_idx)).parse_u128_from_string().map_err()?;
