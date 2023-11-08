@@ -1,3 +1,4 @@
+mod test_data;
 mod test_eth_transaction;
 mod test_helpers;
 mod test_i256;

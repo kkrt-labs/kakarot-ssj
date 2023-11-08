@@ -21,11 +21,9 @@ struct EthereumTransaction {
     gas_limit: u128,
     destination: EthAddress,
     amount: u256,
-    payload: Span<felt252>,
-    tx_hash: u256,
-    v: u128,
-    r: u256,
-    s: u256,
+    calldata: Span<u8>,
+    chain_id: u128,
+    msg_hash: u256,
 }
 
 #[generate_trait]
@@ -33,11 +31,11 @@ impl EthTransactionImpl of EthTransaction {
     /// Decode a legacy Ethereum transaction
     /// This function decodes a legacy Ethereum transaction in accordance with EIP-155.
     /// It returns transaction details including nonce, gas price, gas limit, destination address, amount, payload,
-    /// transaction hash, and signature (v, r, s). The transaction hash is computed by keccak hashing the signed
+    /// message hash, chain id. The transaction hash is computed by keccak hashing the signed
     /// transaction data, which includes the chain ID in accordance with EIP-155.
     /// # Arguments
     /// tx_data The raw transaction data
-    /// tx_data is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data, v, r, s]
+    /// tx_data is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data, chainId, 0, 0]
     fn decode_legacy_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
         let decoded_data = RLPTrait::decode(tx_data);
         let decoded_data = decoded_data.map_err()?;
@@ -55,49 +53,48 @@ impl EthTransactionImpl of EthTransaction {
                     return Result::Err(EthTransactionError::Other('Length is not 9'));
                 }
 
-                let nonce_idx = 0;
-                let gas_price_idx = 1;
-                let gas_limit_idx = 2;
-                let to_idx = 3;
-                let value_idx = 4;
-                let data_idx = 5;
-                let v_idx = 6;
-                let r_idx = 7;
-                let s_idx = 8;
+                let (
+                    nonce_idx,
+                    gas_price_idx,
+                    gas_limit_idx,
+                    to_idx,
+                    value_idx,
+                    calldata_idx,
+                    chain_id_idx
+                ) =
+                    (
+                    0, 1, 2, 3, 4, 5, 6
+                );
 
                 let nonce = (*val.at(nonce_idx)).parse_u128_from_string().map_err()?;
                 let gas_price = (*val.at(gas_price_idx)).parse_u128_from_string().map_err()?;
                 let gas_limit = (*val.at(gas_limit_idx)).parse_u128_from_string().map_err()?;
                 let to = (*val.at(to_idx)).parse_u256_from_string().map_err()?;
-                let value = (*val.at(value_idx)).parse_u256_from_string().map_err()?;
-                let data = (*val.at(data_idx)).parse_bytes_felt252_from_string().map_err()?;
-                let v = (*val.at(v_idx)).parse_u128_from_string().map_err()?;
-                let r = (*val.at(r_idx)).parse_u256_from_string().map_err()?;
-                let s = (*val.at(s_idx)).parse_u256_from_string().map_err()?;
+                let amount = (*val.at(value_idx)).parse_u256_from_string().map_err()?;
+                let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
+                let chain_id = (*val.at(chain_id_idx)).parse_u128_from_string().map_err()?;
 
                 let mut transaction_data_byte_array = ByteArrayExt::from_bytes(tx_data);
                 let (mut keccak_input, last_input_word, last_input_num_bytes) =
                     transaction_data_byte_array
                     .to_u64_words();
-                let tx_hash = cairo_keccak(
+                let msg_hash = cairo_keccak(
                     ref keccak_input, :last_input_word, :last_input_num_bytes
                 )
                     .reverse_endianness();
 
-                let address: EthAddress = to.into();
+                let destination: EthAddress = to.into();
 
                 Result::Ok(
                     EthereumTransaction {
-                        nonce: nonce,
-                        gas_price: gas_price,
-                        gas_limit: gas_limit,
-                        destination: address,
-                        amount: value,
-                        payload: data,
-                        v: v,
-                        r: r,
-                        s: s,
-                        tx_hash: tx_hash
+                        nonce,
+                        gas_price,
+                        gas_limit,
+                        destination,
+                        amount,
+                        calldata,
+                        msg_hash,
+                        chain_id
                     }
                 )
             }
@@ -109,7 +106,7 @@ impl EthTransactionImpl of EthTransaction {
     /// Decode a modern Ethereum transaction
     /// This function decodes a modern Ethereum transaction in accordance with EIP-2718.
     /// It returns transaction details including nonce, gas price, gas limit, destination address, amount, payload,
-    /// transaction hash, and signature (v, r, s). The transaction hash is computed by keccak hashing the signed
+    /// message hash, and chain id. The transaction hash is computed by keccak hashing the signed
     /// transaction data, which includes the chain ID as part of the transaction data itself.
     /// # Arguments
     /// tx_data The raw transaction data
