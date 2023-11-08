@@ -217,7 +217,7 @@ mod test_state {
             evm_address,
             UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
         );
-        let expected_type = AccountType::ContractAccount;
+        let expected_type = AccountType::Unknown;
         let expected_account = Account {
             account_type: expected_type,
             address: Address { evm: evm_address, starknet: starknet_address },

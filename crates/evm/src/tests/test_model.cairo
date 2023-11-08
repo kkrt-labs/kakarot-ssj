@@ -92,7 +92,6 @@ fn test_address_balance_eoa() {
 }
 
 
-#[ignore]
 #[test]
 #[available_gas(5000000)]
 fn test_account_balance_contract_account() {
@@ -111,7 +110,6 @@ fn test_account_balance_contract_account() {
     assert(balance == native_token.balanceOf(ca_address.starknet), 'wrong balance');
 }
 
-#[ignore]
 #[test]
 #[available_gas(5000000)]
 fn test_address_balance_contract_account() {
