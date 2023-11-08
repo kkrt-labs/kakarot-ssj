@@ -15,7 +15,6 @@ use starknet::testing::set_contract_address;
 fn test_is_deployed_eoa_exists() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let eoa = EOATrait::deploy(evm_address()).expect('failed deploy contract account',);
 
     // When
