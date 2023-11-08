@@ -6,4 +6,3 @@ mod test_math;
 mod test_num;
 mod test_rlp;
 mod test_traits;
-mod test_utils;

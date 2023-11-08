@@ -168,23 +168,9 @@ impl RLPHelpersImpl of RLPHelpersTrait {
     }
 
 
-    fn parse_bytes_felt252_from_string(self: RLPItem) -> Result<Span<felt252>, RLPHelpersError> {
+    fn parse_bytes_from_string(self: RLPItem) -> Result<Span<u8>, RLPHelpersError> {
         match self {
-            RLPItem::String(bytes) => {
-                let mut result: Array<felt252> = array![];
-                let len = bytes.len();
-
-                let mut i = 0;
-                loop {
-                    if (i == len) {
-                        break ();
-                    }
-                    result.append((*bytes.at(i)).into());
-                    i += 1;
-                };
-
-                Result::Ok(result.span())
-            },
+            RLPItem::String(bytes) => { Result::Ok(bytes) },
             RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
         }
     }

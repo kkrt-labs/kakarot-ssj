@@ -21,7 +21,7 @@ struct EthereumTransaction {
     gas_limit: u128,
     destination: EthAddress,
     amount: u256,
-    calldata: Span<felt252>,
+    calldata: Span<u8>,
     chain_id: u128,
     msg_hash: u256,
 }
@@ -66,7 +66,7 @@ impl EthTransactionImpl of EthTransaction {
                 let gas_limit = (*val.at(gas_limit_idx)).parse_u128_from_string().map_err()?;
                 let to = (*val.at(to_idx)).parse_u256_from_string().map_err()?;
                 let amount = (*val.at(value_idx)).parse_u256_from_string().map_err()?;
-                let calldata = (*val.at(calldata_idx)).parse_bytes_felt252_from_string().map_err()?;
+                let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
                 let chain_id = (*val.at(chain_id_idx)).parse_u128_from_string().map_err()?;
 
                 let mut transaction_data_byte_array = ByteArrayExt::from_bytes(tx_data);
