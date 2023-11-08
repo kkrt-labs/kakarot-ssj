@@ -1,6 +1,7 @@
 use utils::eth_transaction::{EthTransactionImpl};
-use utils::helpers::{U32Trait, bytes_to_felt252_array};
+use utils::helpers::{U32Trait};
 use utils::tests::test_data::legacy_rlp_encoded_tx;
+use utils::tests::test_utils::bytes_to_felt252_array;
 
 #[test]
 #[available_gas(200000000)]
