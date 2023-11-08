@@ -172,7 +172,7 @@ committed to Ethereum. This solution is the most secure one, as it relies on
 Ethereum as a DA Layer, and thus inherits from Ethereum's security guarantees,
 ensuring that the bytecode of the deployed contract is always available.
 
-A `deploy` transaction is identified by an unexistant `to` address
+A `deploy` transaction is identified by a null `to` address
 (`Option::None`). The data sent to the KakarotCore contract when deploying a new
 contract will be passed as an `Array<u8>` to the entrypoint
 `eth_send_transaction` of the KakarotCore contract. This bytecode will then be
