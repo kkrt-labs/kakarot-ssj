@@ -14,8 +14,7 @@ use openzeppelin::token::erc20::interface::{
 use starknet::{EthAddress, ContractAddress, get_contract_address, deploy_syscall};
 use utils::helpers::ResultExTrait;
 
-
-#[derive(Copy, Drop, PartialEq)]
+#[derive(Copy, Drop, PartialEq, Serde)]
 struct EOA {
     evm_address: EthAddress,
     starknet_address: ContractAddress
@@ -30,8 +29,8 @@ impl EOAImpl of EOATrait {
     /// * `evm_address` - The EVM address of the EOA to deploy.
     fn deploy(evm_address: EthAddress) -> Result<EOA, EVMError> {
         // Unlike CAs, there is not check for the existence of an EOA prealably to calling `EOATrait::deploy` - therefore, we need to check that there is no collision.
-        let mut maybe_acc = AccountTrait::account_type_at(evm_address)?;
-        if maybe_acc.is_some() {
+        let mut is_deployed = AccountTrait::is_deployed(evm_address);
+        if is_deployed {
             return Result::Err(EVMError::DeployError(EOA_EXISTS));
         }
 
@@ -61,10 +60,6 @@ impl EOAImpl of EOATrait {
     }
 
 
-    /// Retrieves the EOA content stored at address `evm_address`.
-    /// There is no way to access the nonce of an EOA currently But putting 1
-    /// shouldn't have any impact and is safer than 0 since has_code_or_nonce is
-    /// used in some places to trigger collision
     /// # Arguments
     /// * `evm_address` - The EVM address of the eoa
     /// # Returns
@@ -87,13 +82,15 @@ impl EOAImpl of EOATrait {
     /// Returns an EOA instance from the given `evm_address`.
     fn at(evm_address: EthAddress) -> Result<Option<EOA>, EVMError> {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let account = kakarot_state.address_registry(evm_address);
-        match account {
-            StoredAccountType::UninitializedAccount => Result::Ok(Option::None),
-            StoredAccountType::EOA(eoa_starknet_address) => Result::Ok(
-                Option::Some(EOA { evm_address, starknet_address: eoa_starknet_address })
-            ),
-            StoredAccountType::ContractAccount(_) => Result::Ok(Option::None),
+        let maybe_account = kakarot_state.address_registry(evm_address);
+        match maybe_account {
+            Option::Some(account) => {
+                match account {
+                    AccountType::EOA(eoa) => Result::Ok(Option::Some(eoa)),
+                    AccountType::ContractAccount(_) => Result::Ok(Option::None),
+                }
+            },
+            Option::None => Result::Ok(Option::None)
         }
     }
 

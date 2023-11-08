@@ -1,10 +1,13 @@
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
+use debug::PrintTrait;
 use evm::errors::{
     EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, INSUFFICIENT_BALANCE, BALANCE_OVERFLOW
 };
 use evm::model::account::{AccountTrait};
 use evm::model::contract_account::ContractAccountTrait;
-use evm::model::{Event, Transfer, Account, ContractAccount, EOA, AccountType, Address};
+use evm::model::{
+    Event, Transfer, Account, ContractAccount, EOA, AccountType, Address, AddressTrait
+};
 use hash::{HashStateTrait, HashStateExTrait};
 use integer::{u256_overflow_sub, u256_overflowing_add};
 use nullable::{match_nullable, FromNullableResult};
@@ -280,8 +283,11 @@ impl StateImpl of StateTrait {
         match self.balances.read(evm_address.into()) {
             Option::Some(value) => { Result::Ok(value) },
             Option::None => {
+                //TODO this function should compute the deterministic address of the evm_address's corresponding starknet contract to perform value transfers. However, the test runner doesn't deterministically calculate the starknet address from the evm address, so we can't test this yet. In the meantime, we'll use `fetch_or_create` - which is unoptimized as we don't want to load a CA's bytecode to perform value transfers.
+                // let kakarot_state = KakarotCore::unsafe_new_contract_state();
+                // let starknet_address = kakarot_state.compute_starknet_address(evm_address);
                 let account = AccountTrait::fetch_or_create(evm_address)?;
-                let balance = account.account_type.balance()?;
+                let balance = account.balance()?;
                 self.write_balance(evm_address, balance);
                 Result::Ok(balance)
             }
@@ -337,10 +343,10 @@ impl StateInternalImpl of StateInternalTrait {
                         .transactional_changes
                         .get(state_key)
                         .deref();
-                    let res_maybe_account_type = AccountTrait::account_type_at(evm_address);
-                    match res_maybe_account_type {
-                        Result::Ok(maybe_account_type) => {
-                            let account_type = maybe_account_type.expect('Account should exist');
+                    let res_account = self.get_account(evm_address);
+                    match res_account {
+                        Result::Ok(account) => {
+                            let account_type = account.account_type;
                             match account_type {
                                 //this shouldn't ever happen
                                 AccountType::EOA(_) => { panic_with_felt252('EOA storagechange') },
