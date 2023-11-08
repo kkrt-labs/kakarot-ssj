@@ -224,7 +224,7 @@ impl AccountImpl of AccountTrait {
     /// Returns the bytecode of the EVM account (EOA or CA)
     #[inline(always)]
     fn bytecode(self: @Account) -> Span<u8> {
-       *self.code
+        *self.code
     }
 
     /// Reads the value stored at the given key for the corresponding account.
