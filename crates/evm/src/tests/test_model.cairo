@@ -3,7 +3,7 @@ mod test_eoa;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
 use evm::model::account::AccountTrait;
-use evm::model::{Account, ContractAccountTrait, AccountType, EOA, EOATrait, AddressTrait};
+use evm::model::{Account, ContractAccountTrait, AccountType, EOATrait, AddressTrait};
 use evm::tests::test_utils::{evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::set_contract_address;
@@ -13,7 +13,7 @@ use starknet::testing::set_contract_address;
 fn test_is_deployed_eoa_exists() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let eoa = EOATrait::deploy(evm_address()).expect('failed deploy contract account',);
+    let eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy contract account',);
 
     // When
 
@@ -60,9 +60,9 @@ fn test_is_deployed_undeployed() {
 fn test_account_balance_eoa() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let eoa = EOATrait::deploy(evm_address()).expect('failed deploy contract account',);
+    let eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy contract account',);
 
-    fund_account_with_native_token(eoa.starknet_address, native_token, 0x1);
+    fund_account_with_native_token(eoa_address.starknet, native_token, 0x1);
 
     // When
     set_contract_address(kakarot_core.contract_address);
@@ -70,7 +70,7 @@ fn test_account_balance_eoa() {
     let balance = account.balance().unwrap();
 
     // Then
-    assert(balance == native_token.balanceOf(eoa.starknet_address), 'wrong balance');
+    assert(balance == native_token.balanceOf(eoa_address.starknet), 'wrong balance');
 }
 
 #[test]
@@ -78,9 +78,9 @@ fn test_account_balance_eoa() {
 fn test_address_balance_eoa() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let eoa = EOATrait::deploy(evm_address()).expect('failed deploy contract account',);
+    let eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy contract account',);
 
-    fund_account_with_native_token(eoa.starknet_address, native_token, 0x1);
+    fund_account_with_native_token(eoa_address.starknet, native_token, 0x1);
 
     // When
     set_contract_address(kakarot_core.contract_address);
@@ -88,7 +88,7 @@ fn test_address_balance_eoa() {
     let balance = account.address().balance().unwrap();
 
     // Then
-    assert(balance == native_token.balanceOf(eoa.starknet_address), 'wrong balance');
+    assert(balance == native_token.balanceOf(eoa_address.starknet), 'wrong balance');
 }
 
 

@@ -27,7 +27,7 @@ mod KakarotCore {
     use evm::execution::execute;
     use evm::model::account::{Account, AccountType, AccountTrait};
     use evm::model::contract_account::{ContractAccountTrait};
-    use evm::model::eoa::{EOA, EOATrait};
+    use evm::model::eoa::{EOATrait};
     use evm::model::{ExecutionResult, Address, AddressTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
@@ -222,7 +222,7 @@ mod KakarotCore {
         }
 
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
-            EOATrait::deploy(evm_address).expect('EOA Deployment failed').starknet_address
+            EOATrait::deploy(evm_address).expect('EOA Deployment failed').starknet
         }
 
         fn eth_call(

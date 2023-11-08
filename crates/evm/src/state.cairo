@@ -5,7 +5,7 @@ use evm::errors::{
 };
 use evm::model::account::{AccountTrait};
 use evm::model::contract_account::ContractAccountTrait;
-use evm::model::{Event, Transfer, Account, EOA, AccountType, Address, AddressTrait};
+use evm::model::{Event, Transfer, Account, AccountType, Address, AddressTrait};
 use hash::{HashStateTrait, HashStateExTrait};
 use integer::{u256_overflow_sub, u256_overflowing_add};
 use nullable::{match_nullable, FromNullableResult};

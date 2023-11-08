@@ -101,7 +101,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         }
 
         target_account.set_nonce(1);
-        target_account.account_type = AccountType::ContractAccount;
+        target_account.set_type(AccountType::ContractAccount);
         target_account
             .address = Address { evm: target_address.evm, starknet: target_address.starknet };
         self.state.set_account(target_account);

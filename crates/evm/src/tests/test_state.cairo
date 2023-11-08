@@ -375,7 +375,7 @@ mod test_state {
         // Transfer native tokens to sender - we need to set the contract address for this
         set_contract_address(contract_utils::constants::ETH_BANK());
         IERC20CamelDispatcher { contract_address: native_token.contract_address }
-            .transfer(eoa_account.starknet_address, 10000);
+            .transfer(eoa_account.starknet, 10000);
         // Revert back to contract_address = kakarot for the test
         set_contract_address(kakarot_core.contract_address);
         let mut state: State = Default::default();

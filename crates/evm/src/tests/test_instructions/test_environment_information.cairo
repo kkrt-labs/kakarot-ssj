@@ -7,6 +7,7 @@ use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::model::contract_account::ContractAccountTrait;
 use evm::stack::StackTrait;
+use evm::state::StateTrait;
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_calldata, setup_machine_with_bytecode, evm_address, callvalue,
     setup_machine_with_nested_execution_context, return_from_subcontext, native_token, other_address
@@ -959,6 +960,7 @@ fn test_exec_extcodehash_eoa() {
     );
 }
 
+
 #[test]
 #[available_gas(20000000)]
 fn test_exec_extcodehash_ca_empty() {
@@ -986,7 +988,7 @@ fn test_exec_extcodehash_ca_empty() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_exec_extcodehash_ca_uninitialized() {
+fn test_exec_extcodehash_unknown_account() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();

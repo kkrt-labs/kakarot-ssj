@@ -2,13 +2,12 @@ use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
 use evm::model::contract_account::{ContractAccountTrait};
-use evm::model::eoa::{EOA, EOATrait};
 use evm::model::{Address, AccountType};
-use starknet::{ContractAddress, EthAddress, get_contract_address};
-use utils::helpers::{ResultExTrait, ByteArrayExTrait, compute_starknet_address};
 use openzeppelin::token::erc20::interface::{
     IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
 };
+use starknet::{ContractAddress, EthAddress, get_contract_address};
+use utils::helpers::{ResultExTrait, ByteArrayExTrait, compute_starknet_address};
 
 #[derive(Copy, Drop, PartialEq)]
 struct Account {

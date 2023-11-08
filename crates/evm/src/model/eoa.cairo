@@ -10,12 +10,6 @@ use evm::model::{AccountType, Address};
 use integer::BoundedInt;
 use starknet::{EthAddress, ContractAddress, get_contract_address, deploy_syscall};
 
-#[derive(Copy, Drop, PartialEq, Serde)]
-struct EOA {
-    evm_address: EthAddress,
-    starknet_address: ContractAddress
-}
-
 #[generate_trait]
 impl EOAImpl of EOATrait {
     /// Deploys a new EOA contract.
@@ -23,7 +17,7 @@ impl EOAImpl of EOATrait {
     /// # Arguments
     ///
     /// * `evm_address` - The EVM address of the EOA to deploy.
-    fn deploy(evm_address: EthAddress) -> Result<EOA, EVMError> {
+    fn deploy(evm_address: EthAddress) -> Result<Address, EVMError> {
         // Unlike CAs, there is not check for the existence of an EOA prealably to calling `EOATrait::deploy` - therefore, we need to check that there is no collision.
         let mut is_deployed = AccountTrait::is_deployed(evm_address);
         if is_deployed {
@@ -49,21 +43,9 @@ impl EOAImpl of EOATrait {
                 kakarot_state
                     .set_address_registry(evm_address, StoredAccountType::EOA(starknet_address));
                 kakarot_state.emit(EOADeployed { evm_address, starknet_address });
-                Result::Ok(EOA { evm_address, starknet_address })
+                Result::Ok(Address { evm: evm_address, starknet: starknet_address })
             },
             Result::Err(err) => panic(err)
         }
-    }
-
-    fn address(self: @EOA) -> Address {
-        Address { evm: *self.evm_address, starknet: *self.starknet_address }
-    }
-
-    fn evm_address(self: @EOA) -> EthAddress {
-        *self.evm_address
-    }
-
-    fn starknet_address(self: @EOA) -> ContractAddress {
-        *self.starknet_address
     }
 }
