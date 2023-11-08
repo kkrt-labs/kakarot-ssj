@@ -392,9 +392,6 @@ fn test_exec_create2() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
-    let evm_address = evm_address();
-    let eoa = kakarot_core.deploy_eoa(evm_address);
-
     let mut machine = setup_machine_with_nested_execution_context();
     let mut interpreter = EVMInterpreterTrait::new();
 

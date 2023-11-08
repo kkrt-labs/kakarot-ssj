@@ -21,8 +21,7 @@ use evm::errors::{
     CONTRACT_ACCOUNT_EXISTS, CONTRACT_SYSCALL_FAILED
 };
 use evm::execution::execute;
-use evm::model::account::{Address, Account, AccountTrait};
-use evm::model::{AccountType};
+use evm::model::{Address, AccountType};
 use hash::{HashStateTrait, HashStateExTrait};
 use openzeppelin::token::erc20::interface::{
     IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait

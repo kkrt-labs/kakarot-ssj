@@ -94,11 +94,13 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         caller_account.set_nonce(caller_current_nonce + 1);
         self.state.set_account(caller_account);
 
-        // Check collision
-        let is_collision = target_account.nonce() != 0 || !target_account.code.is_empty();
-        if is_collision {
+        // Collision happens if a
+        // - contract is already deployed at this location (type fetched from storage)
+        // - Contract has been scheduled for deployment (type set in cache)
+        // If the AccountType is unknown, then there's no collision.
+        if target_account.is_deployed() {
             return self.stack.push(0);
-        }
+        };
 
         target_account.set_nonce(1);
         target_account.set_type(AccountType::ContractAccount);
@@ -163,6 +165,13 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
             },
             // Failure
             Status::Reverted => {
+                //TODO(accounts) (ENSURE THIS IS CORRECT)
+                // Reverts changes brought to cache in `init_create_sub_ctx`
+                // by reverting the nonce and the type
+                let mut account = self.state.get_account(account_address)?;
+                account.set_nonce(0);
+                account.set_type(AccountType::Unknown);
+                self.state.set_account(account);
                 self.return_to_parent_ctx();
                 self.stack.push(0)
             },

@@ -2,7 +2,7 @@ use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
 use evm::model::contract_account::{ContractAccountTrait};
-use evm::model::{Address, AccountType};
+use evm::model::{Address, AddressTrait, AccountType};
 use openzeppelin::token::erc20::interface::{
     IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
 };
@@ -100,14 +100,13 @@ impl AccountImpl of AccountTrait {
         Result::Ok(account)
     }
 
-    /// Returns whether an account should be deployed or not.  If the nonce is
-    /// not 0 and it has code, the account should be deployed - provided it's not already
-    /// deployed yet.
-    // If the nonce is 0, the account is just "touched" (e.g.
-    // balance transfer) and is not set for deployment.
+    /// Returns whether an account should be deployed or not.
+    /// To be deployed, the type must have been resolved to be a CA - must not
+    /// be registered already, and the nonce must not be 0 or the code must not
+    /// be empty
     #[inline(always)]
-    fn should_deploy(self: @Account) -> bool {
-        if self.is_ca() && (*self.nonce != 0 || !(*self.code).is_empty()) {
+    fn should_deploy(self: @Account, is_registered: bool) -> bool {
+        if !is_registered && self.is_ca() && (*self.nonce != 0 || !(*self.code).is_empty()) {
             return true;
         };
         false
@@ -125,10 +124,10 @@ impl AccountImpl of AccountTrait {
     ///
     /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
     fn commit(self: @Account) -> Result<(), EVMError> {
-        // Case account exists
-        let is_deployed = AccountTrait::is_deployed(self.address().evm);
+        // Case account exists and is already on chain
+        let is_registered = AddressTrait::is_registered(self.address().evm);
 
-        if is_deployed {
+        if is_registered {
             match self.account_type {
                 AccountType::EOA(eoa) => {
                     // no - op
@@ -144,7 +143,7 @@ impl AccountImpl of AccountTrait {
                 },
                 AccountType::Unknown => { Result::Ok(()) }
             }
-        } else if self.should_deploy() {
+        } else if self.should_deploy(is_registered) {
             //Case new account
             // If SELFDESTRUCT, just do nothing
             if (*self.selfdestruct == true) {
@@ -174,6 +173,8 @@ impl AccountImpl of AccountTrait {
 
     /// Returns whether an accound is deployed at the given address.
     ///
+    /// Based on the state of the account in the cache - the account can
+    /// not be commited on-chain, but already be deployed in the KakarotState.
     /// # Arguments
     ///
     /// * `address` - The Ethereum address to look up.
@@ -182,13 +183,16 @@ impl AccountImpl of AccountTrait {
     ///
     /// `true` if an account is deployed at this address, `false` otherwise.
     #[inline(always)]
-    fn is_deployed(address: EthAddress) -> bool {
-        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let maybe_account = kakarot_state.address_registry(address);
-        match maybe_account {
-            Option::Some(_) => true,
-            Option::None => false
+    fn is_deployed(self: @Account) -> bool {
+        let is_known = *self.account_type != AccountType::Unknown;
+
+        //TODO(account) verify whether is_known is a sufficient condition
+        // as if an account's nonce != 0 or its code is not empty,
+        // its type is necessarily known
+        if (is_known || *self.nonce != 0 || !(*self.code).is_empty()) {
+            return true;
         }
+        return false;
     }
 
     /// Returns `true` if the account is a Contract Account (CA).

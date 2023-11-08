@@ -1,5 +1,4 @@
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
-use debug::PrintTrait;
 use evm::errors::{
     EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, INSUFFICIENT_BALANCE, BALANCE_OVERFLOW
 };
