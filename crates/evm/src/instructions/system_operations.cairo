@@ -2,9 +2,11 @@
 
 use box::BoxTrait;
 use evm::call_helpers::{MachineCallHelpers, CallType};
+use evm::create_helpers::{MachineCreateHelpers, CreateType};
 use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL, WRITE_IN_STATIC_CONTEXT};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
+use evm::model::account::{AccountTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use utils::math::Exponentiation;
@@ -18,7 +20,9 @@ impl SystemOperations of SystemOperationsTrait {
         if self.read_only() {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
-        Result::Err(EVMError::NotImplemented)
+        let create_args = self.prepare_create(CreateType::CreateOrDeployTx)?;
+
+        self.init_create_sub_ctx(create_args)
     }
 
 
@@ -28,7 +32,9 @@ impl SystemOperations of SystemOperationsTrait {
         if self.read_only() {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
-        Result::Err(EVMError::NotImplemented)
+        let create_args = self.prepare_create(CreateType::Create2)?;
+
+        self.init_create_sub_ctx(create_args)
     }
 
     /// INVALID
@@ -90,7 +96,7 @@ impl SystemOperations of SystemOperationsTrait {
         }
 
         // Initialize the sub context.
-        self.init_sub_ctx(call_args, read_only)
+        self.init_call_sub_ctx(call_args, read_only)
     }
 
     /// STATICCALL
@@ -100,7 +106,7 @@ impl SystemOperations of SystemOperationsTrait {
         let read_only = self.read_only();
 
         // Initialize the sub context.
-        self.init_sub_ctx(call_args, read_only)
+        self.init_call_sub_ctx(call_args, read_only)
     }
 
     /// CALLCODE
@@ -116,7 +122,7 @@ impl SystemOperations of SystemOperationsTrait {
         let read_only = self.read_only();
 
         // Initialize the sub context.
-        self.init_sub_ctx(call_args, read_only)
+        self.init_call_sub_ctx(call_args, read_only)
     }
 
     /// SELFDESTRUCT

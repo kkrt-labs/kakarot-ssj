@@ -1,16 +1,13 @@
 use contracts::contract_account::{IContractAccountDispatcherTrait, IContractAccountDispatcher};
 use contracts::tests::test_data::counter_evm_bytecode;
-use contracts::tests::test_utils as contract_utils;
+use contracts::tests::test_utils::{setup_contracts_for_testing, deploy_contract_account};
 use evm::tests::test_utils::{ca_address, native_token};
-use starknet::testing::set_contract_address;
 
 #[test]
 #[available_gas(3000000000)]
 fn test_ca_deploy() {
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    set_contract_address(kakarot_core.contract_address);
-    let contract_account = contract_utils::deploy_contract_account(
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let contract_account = deploy_contract_account(
         kakarot_core.contract_address, Default::default().span()
     );
 
@@ -25,13 +22,9 @@ fn test_ca_deploy() {
 #[test]
 #[available_gas(3000000000)]
 fn test_ca_bytecode() {
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let bytecode = counter_evm_bytecode();
-    let contract_account = contract_utils::deploy_contract_account(
-        kakarot_core.contract_address, bytecode
-    );
+    let contract_account = deploy_contract_account(kakarot_core.contract_address, bytecode);
 
     let contract_bytecode = contract_account.bytecode();
     assert(contract_bytecode == bytecode, 'wrong contract bytecode');
@@ -41,10 +34,8 @@ fn test_ca_bytecode() {
 #[test]
 #[available_gas(3000000000)]
 fn test_ca_nonce() {
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    set_contract_address(kakarot_core.contract_address);
-    let contract_account = contract_utils::deploy_contract_account(
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let contract_account = deploy_contract_account(
         kakarot_core.contract_address, Default::default().span()
     );
 
@@ -63,9 +54,8 @@ fn test_ca_nonce() {
 #[test]
 #[available_gas(3000000000)]
 fn test_ca_storage() {
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    let contract_account = contract_utils::deploy_contract_account(
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let contract_account = deploy_contract_account(
         kakarot_core.contract_address, Default::default().span()
     );
 

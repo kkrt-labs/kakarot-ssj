@@ -9,7 +9,7 @@ use evm::context::{
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
-use evm::model::account::AccountTrait;
+use evm::model::account::{AccountTrait};
 use evm::model::{Transfer, Address};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
@@ -76,7 +76,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
     /// The Machine will change its `current_ctx` to point to the
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
-    fn init_sub_ctx(
+    fn init_call_sub_ctx(
         ref self: Machine, call_args: CallArgs, read_only: bool
     ) -> Result<(), EVMError> {
         if call_args.should_transfer && call_args.value > 0 {
@@ -135,7 +135,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
     /// - Pushing the execution status to the Stack
     /// - Set the return data of the parent context
     /// - Store the return data in Memory
-    /// - Return to parent context and decrease the ctx_count.
+    /// - Return to parent context.
     fn finalize_calling_context(ref self: Machine) -> Result<(), EVMError> {
         // Put the status of the call on the stack.
         let status = self.status();

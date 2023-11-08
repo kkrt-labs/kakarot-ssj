@@ -87,7 +87,7 @@ fn ca_address() -> EthAddress {
 }
 
 fn setup_call_context() -> CallContext {
-    let bytecode: Span<u8> = array![1, 2, 3].span();
+    let bytecode: Span<u8> = array![0x00].span();
     let calldata: Span<u8> = array![4, 5, 6].span();
     let value: u256 = callvalue();
     let address = test_address();
@@ -346,7 +346,7 @@ fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
 /// and incrementing the nonce to 1.
 fn initialize_contract_account(
     eth_address: EthAddress, bytecode: Span<u8>, storage: Span<(u256, u256)>
-) -> Result<(), EVMError> {
+) -> Result<Address, EVMError> {
     let mut ca = ContractAccountTrait::deploy(eth_address, bytecode).expect('failed deploying CA');
     // Set the storage of the contract account
     let mut i = 0;
@@ -359,5 +359,5 @@ fn initialize_contract_account(
         i += 1;
     };
 
-    Result::Ok(())
+    Result::Ok(Address { evm: eth_address, starknet: ca.starknet_address() })
 }

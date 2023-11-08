@@ -149,6 +149,26 @@ impl AccountImpl of AccountTrait {
         }
     }
 
+
+    #[inline(always)]
+    fn evm_address(self: @Account) -> EthAddress {
+        match self.account_type {
+            AccountType::EOA(eoa) => { eoa.evm_address() },
+            AccountType::ContractAccount(ca) => { ca.evm_address() }
+        }
+    }
+
+
+    /// Returns the balance in native token for a given EVM account (EOA or CA)
+    /// This is equivalent to checking the balance in native coin, i.e. ETHER of an account in Ethereum
+    #[inline(always)]
+    fn balance(self: @AccountType) -> Result<u256, EVMError> {
+        match self {
+            AccountType::EOA(eoa) => { eoa.balance() },
+            AccountType::ContractAccount(ca) => { ca.balance() }
+        }
+    }
+
     /// Returns `true` if the account is an Externally Owned Account (EOA).
     #[inline(always)]
     fn is_eoa(self: @AccountType) -> bool {
@@ -164,24 +184,6 @@ impl AccountImpl of AccountTrait {
         match self {
             AccountType::EOA => false,
             AccountType::ContractAccount => true
-        }
-    }
-
-    #[inline(always)]
-    fn evm_address(self: @Account) -> EthAddress {
-        match self.account_type {
-            AccountType::EOA(eoa) => { eoa.evm_address() },
-            AccountType::ContractAccount(ca) => { ca.evm_address() }
-        }
-    }
-
-    /// Returns the balance in native token for a given EVM account (EOA or CA)
-    /// This is equivalent to checking the balance in native coin, i.e. ETHER of an account in Ethereum
-    #[inline(always)]
-    fn balance(self: @AccountType) -> Result<u256, EVMError> {
-        match self {
-            AccountType::EOA(eoa) => { eoa.balance() },
-            AccountType::ContractAccount(ca) => { ca.balance() }
         }
     }
 
@@ -229,6 +231,11 @@ impl AccountImpl of AccountTrait {
     #[inline(always)]
     fn set_nonce(ref self: Account, nonce: u64) {
         self.nonce = nonce;
+    }
+
+    #[inline(always)]
+    fn nonce(self: @Account) -> u64 {
+        *self.nonce
     }
 
     /// Sets the code of the Account

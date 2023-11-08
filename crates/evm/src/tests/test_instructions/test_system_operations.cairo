@@ -1,21 +1,24 @@
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
-use contracts::tests::test_utils as contract_utils;
-use core::option::OptionTrait;
-use evm::call_helpers::MachineCallHelpers;
-use evm::call_helpers::MachineCallHelpersImpl;
-use evm::context::{ExecutionContext, ExecutionContextTrait,};
+use contracts::tests::test_data::{storage_evm_bytecode, storage_evm_initcode};
+use contracts::tests::test_utils::setup_contracts_for_testing;
+use evm::call_helpers::{MachineCallHelpers, MachineCallHelpersImpl};
+use evm::context::{ExecutionContext, ExecutionContextTrait, ExecutionContextType};
 use evm::instructions::MemoryOperationTrait;
 use evm::instructions::SystemOperationsTrait;
 use evm::interpreter::EVMInterpreterTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
+use evm::model::contract_account::ContractAccountTrait;
+use evm::model::{AccountTrait, Address};
 use evm::stack::StackTrait;
+use evm::state::StateTrait;
 use evm::tests::test_utils::{
     setup_machine_with_nested_execution_context, setup_machine, setup_machine_with_bytecode,
-    parent_ctx_return_data, initialize_contract_account, native_token, evm_address
+    initialize_contract_account, native_token, evm_address
 };
-use starknet::{EthAddress, testing};
+use starknet::EthAddress;
 use utils::helpers::load_word;
+use utils::traits::EthAddressIntoU256;
 
 #[test]
 #[available_gas(20000000)]
@@ -116,9 +119,7 @@ fn test_exec_return_with_offset() {
 fn test_exec_call() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -173,9 +174,7 @@ fn test_exec_call() {
 fn test_exec_call_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -229,9 +228,7 @@ fn test_exec_call_no_return() {
 fn test_exec_staticcall() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -285,9 +282,7 @@ fn test_exec_staticcall() {
 fn test_exec_staticcall_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -340,9 +335,7 @@ fn test_exec_staticcall_no_return() {
 fn test_exec_delegatecall() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let native_token = contract_utils::deploy_native_token();
-    let kakarot_core = contract_utils::deploy_kakarot_core(native_token.contract_address);
-    testing::set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -390,4 +383,61 @@ fn test_exec_delegatecall() {
     assert(machine.error.is_none(), 'run should be success');
     assert(2 == load_word(1, machine.return_data()), 'Wrong return_data');
     assert(machine.stopped(), 'machine should be stopped');
+}
+
+
+#[test]
+#[available_gas(4_000_000_000)]
+fn test_exec_create2() {
+    // Given
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+
+    let evm_address = evm_address();
+    let eoa = kakarot_core.deploy_eoa(evm_address);
+
+    let mut machine = setup_machine_with_nested_execution_context();
+    let mut interpreter = EVMInterpreterTrait::new();
+
+    let deployed_bytecode = array![0xff].span();
+    let eth_address: EthAddress = 0x00000000000000000075766d5f61646472657373_u256.into();
+    let contract_address = ContractAccountTrait::deploy(eth_address, deployed_bytecode)
+        .expect('failed deploying CA');
+
+    let mut ctx = machine.current_ctx.unbox();
+    ctx.address = contract_address.address();
+    ctx.ctx_type = ExecutionContextType::Create(ctx.id());
+    machine.current_ctx = BoxTrait::new(ctx);
+
+    // Load into memory the bytecode of Storage.sol
+    let storage_initcode = storage_evm_initcode();
+    machine.memory.store_n(storage_initcode, 0);
+
+    machine.stack.push(0).unwrap();
+    machine.stack.push(storage_initcode.len().into()).unwrap();
+    machine.stack.push(0).unwrap();
+    machine.stack.push(0).unwrap();
+
+    // When
+    machine.exec_create2().unwrap();
+    interpreter.run(ref machine);
+
+    assert(machine.error.is_none(), 'run should be success');
+
+    // Add SNJS script to precompute the address of the Storage.sol contract
+    //     import { getContractAddress } from 'viem'
+
+    // const address = getContractAddress({
+    //   bytecode: '0x608060405234801561000f575f80fd5b506101438061001d5f395ff3fe608060405234801561000f575f80fd5b5060043610610034575f3560e01c80632e64cec1146100385780636057361d14610056575b5f80fd5b610040610072565b60405161004d919061009b565b60405180910390f35b610070600480360381019061006b91906100e2565b61007a565b005b5f8054905090565b805f8190555050565b5f819050919050565b61009581610083565b82525050565b5f6020820190506100ae5f83018461008c565b92915050565b5f80fd5b6100c181610083565b81146100cb575f80fd5b50565b5f813590506100dc816100b8565b92915050565b5f602082840312156100f7576100f66100b4565b5b5f610104848285016100ce565b9150509291505056fea2646970667358221220b5c3075f2f2034d039a227fac6dd314b052ffb2b3da52c7b6f5bc374d528ed3664736f6c63430008140033',
+    //   from: '0x00000000000000000075766d5f61646472657373',
+    //   opcode: 'CREATE2',
+    //   salt: '0x00',
+    // });
+    // console.log(address)
+    let account = machine
+        .state
+        .get_account(0xeea3a85A7497e74d85b46E987B8E05152A183892.try_into().unwrap())
+        .expect('cannot retrieve account');
+
+    assert(account.nonce() == 1, 'wrong nonce');
+    assert(account.code == storage_evm_bytecode(), 'wrong bytecode');
 }

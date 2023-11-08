@@ -2,21 +2,15 @@ use contracts::tests::test_upgradeable::{
     IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
     MockContractUpgradeableV1
 };
-use contracts::tests::test_utils::{
-    deploy_kakarot_core, deploy_native_token, fund_account_with_native_token
-};
+use contracts::tests::test_utils::setup_contracts_for_testing;
 
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount
 };
 use evm::tests::test_utils::{kakarot_address, eoa_address};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use starknet::class_hash::Felt252TryIntoClassHash;
-use starknet::testing::{set_caller_address, set_contract_address};
-use starknet::{
-    deploy_syscall, ContractAddress, ClassHash, get_contract_address, contract_address_const,
-    EthAddress
-};
+use starknet::testing::set_contract_address;
+use starknet::{deploy_syscall, ContractAddress, ClassHash};
 
 fn deploy_account(kakarot_core: ContractAddress) -> IUninitializedAccountDispatcher {
     let calldata: Span<felt252> = array![kakarot_core.into(), eoa_address().into()].span();
@@ -36,9 +30,7 @@ fn deploy_account(kakarot_core: ContractAddress) -> IUninitializedAccountDispatc
 #[available_gas(2000000000)]
 fn test_account_initialize() {
     let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
-    set_contract_address(kakarot_core.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let account = deploy_account(kakarot_core.contract_address);
 
     account.initialize(new_class_hash);
@@ -56,8 +48,7 @@ fn test_account_initialize() {
 #[available_gas(2000000000)]
 #[should_panic(expected: ('Caller not Kakarot Core address', 'ENTRYPOINT_FAILED'))]
 fn test_eoa_upgrade_from_nonkakarot() {
-    let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
     let account = deploy_account(kakarot_core.contract_address);
     set_contract_address(kakarot_address());
     let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
