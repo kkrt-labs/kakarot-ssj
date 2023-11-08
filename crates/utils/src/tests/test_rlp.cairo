@@ -255,7 +255,7 @@ fn test_rlp_encode_mutilple_string() {
 
 #[test]
 #[available_gas(99999999)]
-#[should_panic(expected: ('list encoding unimplemented',))]
+#[should_panic(expected: ('List encoding unimplemented',))]
 fn test_rlp_encode_list() {
     let mut input = array![RLPItem::List(array![].span())];
 
