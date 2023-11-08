@@ -32,6 +32,46 @@ This design allows us to simulate reverting the changes made to the blockchain
 storage by simply discarding the contextual state updates, and to commit the
 changes by applying the transactional state updates.
 
+The sequence diagram below illustrates how Kakarot interacts with both Starknet
+storage and its local cached state.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant KakarotCore
+    participant LocalState
+    participant Machine
+    participant Starknet
+
+    User->>+KakarotCore:Sends transaction
+    KakarotCore->>+Machine: Instanciates machine with bytecode to run
+    Machine->>LocalState: Initialize local state
+    Machine->>+LocalState: Start execution
+
+    loop Executes EVM bytecode
+        Machine->>LocalState: Record contextual changes
+    end
+
+    alt Execution Context Stops Successfully
+
+        Machine->>LocalState: Merge contextual changes into transactional state
+    else Execution Context Reverts
+        Machine->>LocalState: Discard contextual changes
+    end
+
+    Machine-->>-Machine: Execution ended
+
+    alt Execution terminated sucessfully
+        KakarotCore->>Starknet: Apply transactional state diffs to Starknet
+
+    else Execution failed
+        KakarotCore->>LocalState: Discard transactional changes
+    end
+
+    KakarotCore-->>-User: Transaction result
+
+```
+
 ## Implementation
 
 We need to be able to store in the local state the current information:
@@ -134,7 +174,3 @@ The reason for this implementations are that:
   address to update, and the value is the updated value. However, we can't
   create nested dictionaries in Cairo - so we have to separate the accounts
   storage updates from the account updates themselves.
-- However, this last point can be abstracted from the user by ensuring that
-  account storage updates can only be performed by providing the related Account
-  as a parameter. This way, we can derive the storage address from the account
-  address and the storage key.
