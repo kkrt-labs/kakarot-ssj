@@ -172,12 +172,12 @@ committed to Ethereum. This solution is the most secure one, as it relies on
 Ethereum as a DA Layer, and thus inherits from Ethereum's security guarantees,
 ensuring that the bytecode of the deployed contract is always available.
 
-A `deploy` transaction is identified by a null `to` address
-(`Option::None`). The data sent to the KakarotCore contract when deploying a new
-contract will be passed as an `Array<u8>` to the entrypoint
-`eth_send_transaction` of the KakarotCore contract. This bytecode will then be
-packed 31 bytes at a time, reducing by 31 the size of the bytecode stored in
-storage, which is the most expensive part of the transaction.
+A `deploy` transaction is identified by a null `to` address (`Option::None`).
+The data sent to the KakarotCore contract when deploying a new contract will be
+passed as an `Array<u8>` to the entrypoint `eth_send_transaction` of the
+KakarotCore contract. This bytecode will then be packed 31 bytes at a time,
+reducing by 31 the size of the bytecode stored in storage, which is the most
+expensive part of the transaction.
 
 The contract storage related to a deployed contract is organized as:
 
