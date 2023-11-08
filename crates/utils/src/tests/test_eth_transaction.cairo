@@ -71,8 +71,8 @@ fn test_decode_legacy_tx() {
     );
     assert(tx.amount == 0x016345785d8a0000, 'amount is not 0x016345785d8...');
 
-    let expected_payload = bytes_to_felt252_array(0xabcdef_u32.to_bytes());
-    assert(tx.payload == expected_payload, 'payload is not 0xabcdef');
+    let expected_calldata = bytes_to_felt252_array(0xabcdef_u32.to_bytes());
+    assert(tx.calldata == expected_calldata, 'payload is not 0xabcdef');
 
     assert(tx.chain_id == 0x1, 'chain id is not 0x1');
 

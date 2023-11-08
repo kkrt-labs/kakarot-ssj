@@ -21,7 +21,7 @@ struct EthereumTransaction {
     gas_limit: u128,
     destination: EthAddress,
     amount: u256,
-    payload: Span<felt252>,
+    calldata: Span<felt252>,
     chain_id: u128,
     msg_hash: u256,
 }
@@ -87,7 +87,7 @@ impl EthTransactionImpl of EthTransaction {
                         gas_limit: gas_limit,
                         destination: address,
                         amount: value,
-                        payload: data,
+                        calldata: data,
                         msg_hash: msg_hash,
                         chain_id: chain_id
                     }
