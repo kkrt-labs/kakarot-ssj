@@ -1,3 +1,4 @@
+use core::array::SpanTrait;
 use core::option::OptionTrait;
 use core::traits::TryInto;
 
@@ -23,7 +24,6 @@ struct EthereumTransaction {
     amount: u256,
     calldata: Span<u8>,
     chain_id: u128,
-    msg_hash: u256,
 }
 
 #[generate_trait]
@@ -74,27 +74,11 @@ impl EthTransactionImpl of EthTransaction {
                 let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
                 let chain_id = (*val.at(chain_id_idx)).parse_u128_from_string().map_err()?;
 
-                let mut transaction_data_byte_array = ByteArrayExt::from_bytes(tx_data);
-                let (mut keccak_input, last_input_word, last_input_num_bytes) =
-                    transaction_data_byte_array
-                    .to_u64_words();
-                let msg_hash = cairo_keccak(
-                    ref keccak_input, :last_input_word, :last_input_num_bytes
-                )
-                    .reverse_endianness();
-
                 let destination: EthAddress = to.into();
 
                 Result::Ok(
                     EthereumTransaction {
-                        nonce,
-                        gas_price,
-                        gas_limit,
-                        destination,
-                        amount,
-                        calldata,
-                        msg_hash,
-                        chain_id
+                        nonce, gas_price, gas_limit, destination, amount, calldata, chain_id
                     }
                 )
             }
@@ -110,9 +94,74 @@ impl EthTransactionImpl of EthTransaction {
     /// transaction data, which includes the chain ID as part of the transaction data itself.
     /// # Arguments
     /// tx_data The raw transaction data
-    fn decode_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
-        // todo
-        panic_with_felt252('decode_tx unimplemented')
+    fn decode_typed_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
+        let tx_type: u32 = (*tx_data.at(0)).into();
+        let rlp_encoded_data = tx_data.slice(1, tx_data.len() - 1);
+
+        // EIP 2718:
+        // TransactionType is a positive unsigned 8-bit number between 0 and 0x7f
+        if (tx_type == 0 || tx_type >= 0x7f) {
+            return Result::Err(EthTransactionError::Other('Not EIP-2718 transaction'));
+        }
+        // Only EIP-1559 and EIP 2930 are supported
+        if (tx_type != 1 && tx_type != 2) {
+            return Result::Err(EthTransactionError::Other('transaction type not supported'));
+        }
+
+        // tx_format (EIP-2930, unsiged):  0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList])
+        // tx_format (EIP-1559, unsiged):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, destination, amount, data, access_list])
+        let chain_idx = 0;
+        let nonce_idx = 1;
+        let gas_price_idx = tx_type + nonce_idx;
+        let gas_limit_idx = gas_price_idx + 1;
+        let to_idx = gas_limit_idx + 1;
+        let value_idx = to_idx + 1;
+        let calldata_idx = value_idx + 1;
+
+        let decoded_data = RLPTrait::decode(rlp_encoded_data).map_err()?;
+        if (decoded_data.len() != 1) {
+            return Result::Err(EthTransactionError::Other('Length is not 1'));
+        }
+
+        let decoded_data = *decoded_data.at(0);
+
+        let result: Result<EthereumTransaction, EthTransactionError> = match decoded_data {
+            RLPItem::String => { Result::Err(EthTransactionError::ExpectedRLPItemToBeList) },
+            RLPItem::List(val) => {
+                // total items in EIP 2930 (unsigned): 8
+                if (tx_type == 1 && val.len() != 8) {
+                    return Result::Err(EthTransactionError::Other('Length is not 8'));
+                }
+                // total items in EIP 1559 (unsigned): 9
+                if (tx_type == 2 && val.len() != 9) {
+                    return Result::Err(EthTransactionError::Other('Length is not 9'));
+                }
+
+                let chain_id = (*val.at(chain_idx)).parse_u128_from_string().map_err()?;
+                let nonce = (*val.at(nonce_idx)).parse_u128_from_string().map_err()?;
+                let gas_price = (*val.at(gas_price_idx)).parse_u128_from_string().map_err()?;
+                let gas_limit = (*val.at(gas_limit_idx)).parse_u128_from_string().map_err()?;
+                let to = (*val.at(to_idx)).parse_u256_from_string().map_err()?;
+                let amount = (*val.at(value_idx)).parse_u256_from_string().map_err()?;
+                let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
+
+                let destination: EthAddress = to.into();
+
+                Result::Ok(
+                    EthereumTransaction {
+                        chain_id,
+                        nonce: nonce,
+                        gas_price: gas_price,
+                        gas_limit: gas_limit,
+                        destination,
+                        amount,
+                        calldata,
+                    }
+                )
+            }
+        };
+
+        result
     }
 
     /// Check if a raw transaction is a legacy Ethereum transaction
