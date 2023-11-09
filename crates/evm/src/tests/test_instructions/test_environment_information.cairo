@@ -924,7 +924,7 @@ fn test_exec_extcodehash_selfdestructed() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode remains empty, and we expect the empty hash in return
-    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span())
+    let mut ca_address = ContractAccountTrait::deploy(evm_address, array![].span())
         .expect('CA deployment failed');
     ca_address.selfdestruct().expect('CA selfdestruct failed');
 
@@ -934,7 +934,13 @@ fn test_exec_extcodehash_selfdestructed() {
     machine.exec_extcodehash().unwrap();
 
     // Then
-    assert(machine.stack.peek().unwrap() == 0, 'expected 0');
+    assert(
+        machine
+            .stack
+            .peek()
+            .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
+        'expected empty hash'
+    );
 }
 
 #[test]

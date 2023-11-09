@@ -165,13 +165,6 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
             },
             // Failure
             Status::Reverted => {
-                //TODO(accounts) (ENSURE THIS IS CORRECT)
-                // Reverts changes brought to cache in `init_create_sub_ctx`
-                // by reverting the nonce and the type
-                let mut account = self.state.get_account(account_address)?;
-                account.set_nonce(0);
-                account.set_type(AccountType::Unknown);
-                self.state.set_account(account);
                 self.return_to_parent_ctx();
                 self.stack.push(0)
             },

@@ -354,6 +354,7 @@ mod KakarotCore {
                     let bytecode = data;
                     // TODO: compute_evm_address
                     // HASH(RLP(deployer_address, deployer_nonce))[0..20]
+                    //TODO manually set target account type to CA in state
                     panic_with_felt252('deploy tx flow unimplemented')
                 },
             }

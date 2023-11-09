@@ -242,12 +242,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let account = self.state.get_account(evm_address)?;
         // UnknownAccount can either be
         // -> Undeployed CAs that might be deployed later, but currently don't
-        // exist
+        // exist and have only been touched for value transfers
         // -> Undeployed EOAs
-        // If a CA has a nonce equal to 0, it means that it has been selfdestructed in the same transaction.
-        if account.is_precompile()
-            || (account.account_type == AccountType::Unknown)
-            || (account.is_ca() && account.nonce == 0) {
+        if account.is_precompile() || (account.account_type == AccountType::Unknown) {
             return self.stack.push(0);
         }
         let bytecode = account.code;

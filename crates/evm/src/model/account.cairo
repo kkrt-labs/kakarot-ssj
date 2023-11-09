@@ -1,3 +1,4 @@
+use contracts::kakarot_core::kakarot::KakarotCore::KakarotCoreInternal;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
@@ -136,6 +137,11 @@ impl AccountImpl of AccountTrait {
                 AccountType::ContractAccount => {
                     let mut ca_address = self.address();
                     if *self.selfdestruct {
+                        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
+                        kakarot_state
+                            .set_address_registry(
+                                ca_address.evm, StoredAccountType::UnexistingAccount
+                            );
                         return ca_address.selfdestruct();
                     }
                     ca_address.store_nonce(*self.nonce)
