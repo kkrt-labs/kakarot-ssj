@@ -1,5 +1,6 @@
 use utils::helpers::{
-    SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, U32Trait, BytesTrait
+    SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, U32Trait, U8SpanExTrait,
+    BytesTrait
 };
 use utils::helpers::{ByteArrayExTrait};
 use utils::helpers;
@@ -446,4 +447,72 @@ fn test_compute_msg_hash() {
     let hash = msg.compute_keccak256_hash();
 
     assert(hash == expected_hash, 'msg_hash is incorrect');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_bytearray_to_64_words_partial() {
+    let input = ByteArrayExTrait::from_bytes(array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span());
+    let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
+    assert(pending_word == 6618611909121, 'wrong pending word');
+    assert(pending_word_len == 6, 'wrong pending word length');
+    assert(u64_words.len() == 0, 'wrong u64 words length');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_bytearray_to_64_words_full() {
+    let input = ByteArrayExTrait::from_bytes(
+        array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span()
+    );
+    let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
+
+    assert(pending_word == 0, 'wrong pending word');
+    assert(pending_word_len == 0, 'wrong pending word length');
+    assert(u64_words.len() == 1, 'wrong u64 words length');
+    assert(*u64_words[0] == 578437695752307201, 'wrong u64 words length');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_span_u8_to_64_words_partial() {
+    let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span();
+    let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
+    assert(pending_word == 6618611909121, 'wrong pending word');
+    assert(pending_word_len == 6, 'wrong pending word length');
+    assert(u64_words.len() == 0, 'wrong u64 words length');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_span_u8_to_64_words_full() {
+    let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span();
+    let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
+
+    assert(pending_word == 0, 'wrong pending word');
+    assert(pending_word_len == 0, 'wrong pending word length');
+    assert(u64_words.len() == 1, 'wrong u64 words length');
+    assert(*u64_words[0] == 578437695752307201, 'wrong u64 words length');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_span_u8_to_64_words_partial() {
+    let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span();
+    let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
+    assert(pending_word == 6618611909121, 'wrong pending word');
+    assert(pending_word_len == 6, 'wrong pending word length');
+    assert(u64_words.len() == 0, 'wrong u64 words length');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_span_u8_to_64_words_full() {
+    let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span();
+    let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
+
+    assert(pending_word == 0, 'wrong pending word');
+    assert(pending_word_len == 0, 'wrong pending word length');
+    assert(u64_words.len() == 1, 'wrong u64 words length');
+    assert(*u64_words[0] == 578437695752307201, 'wrong u64 words length');
 }

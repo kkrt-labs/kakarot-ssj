@@ -521,12 +521,71 @@ impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
 }
 
 #[generate_trait]
+impl U8SpanExImpl of U8SpanExTrait {
+    /// Transforms a Span<u8> into an Array of u64 full words, a pending u64 word and its length in bytes
+    fn to_u64_words(self: Span<u8>) -> (Array<u64>, u64, usize) {
+        let (full_u64_word_count, last_input_num_bytes) = DivRem::div_rem(
+            self.len(), u32_as_non_zero(8)
+        );
+
+        let mut u64_words: Array<u64> = Default::default();
+        let mut byte_counter: u8 = 0;
+        let mut pending_word: u64 = 0;
+        let mut u64_word_counter: usize = 0;
+
+        loop {
+            if u64_word_counter == full_u64_word_count {
+                break self;
+            }
+            if byte_counter == 8 {
+                u64_words.append(pending_word);
+                byte_counter = 0;
+                pending_word = 0;
+                u64_word_counter += 1;
+            }
+            pending_word += match self.get(u64_word_counter * 8 + byte_counter.into()) {
+                Option::Some(byte) => {
+                    let byte: u64 = (*byte.unbox()).into();
+                    // Accumulate pending_word in a little endian manner
+                    byte.shl(8_u64 * byte_counter.into())
+                },
+                Option::None => { break self; },
+            };
+            byte_counter += 1;
+        };
+
+        // Fill the last input word
+        let mut last_input_word: u64 = 0;
+        let mut byte_counter: u8 = 0;
+
+        // We enter a second loop for clarity.
+        // O(2n) should be okay
+        // We might want to regroup every computation into a single loop with appropriate `if` branching
+        // For optimisation
+        loop {
+            if byte_counter.into() == last_input_num_bytes {
+                break self;
+            }
+            last_input_word += match self.get(full_u64_word_count * 8 + byte_counter.into()) {
+                Option::Some(byte) => {
+                    let byte: u64 = (*byte.unbox()).into();
+                    byte.shl(8_u64 * byte_counter.into())
+                },
+                Option::None => { break self; },
+            };
+            byte_counter += 1;
+        };
+
+        (u64_words, last_input_word, last_input_num_bytes)
+    }
+}
+
+
+#[generate_trait]
 impl BytesImpl of BytesTrait {
     // keccack256 on a bytes message
     fn compute_keccak256_hash(self: Span<u8>) -> u256 {
-        let mut msg_byte_array = ByteArrayExt::from_bytes(self);
-        let (mut keccak_input, last_input_word, last_input_num_bytes) = msg_byte_array
-            .to_u64_words();
+        let (mut keccak_input, last_input_word, last_input_num_bytes) = self.to_u64_words();
         let msg_hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes)
             .reverse_endianness();
 
@@ -780,7 +839,11 @@ impl ByteArrayExt of ByteArrayExTrait {
 
 
     /// Transforms a ByteArray into an Array of u64 full words, a pending u64 word and its length in bytes
-    fn to_u64_words(ref self: ByteArray) -> (Array<u64>, u64, usize) {
+    fn to_u64_words(self: ByteArray) -> (Array<u64>, u64, usize) {
+        // We pass it by value because we want to take ownership, but we snap it
+        // because `at` takes a snap and if this snap is automatically done by
+        // the compiler in the loop, it won't compile
+        let self = @self;
         let (full_u64_word_count, last_input_num_bytes) = DivRem::div_rem(
             self.len(), u32_as_non_zero(8)
         );
@@ -790,30 +853,26 @@ impl ByteArrayExt of ByteArrayExTrait {
         let mut pending_word: u64 = 0;
         let mut u64_word_counter: usize = 0;
 
-        // We need to return self at the end of the loop
-        // To restore ownership of the self ByteArray to self.
-        // Otherwise, we'll get a `X Was Previously Moved` error
-        self =
-            loop {
-                if u64_word_counter == full_u64_word_count {
-                    break self;
-                }
-                if byte_counter == 8 {
-                    u64_words.append(pending_word);
-                    byte_counter = 0;
-                    pending_word = 0;
-                    u64_word_counter += 1;
-                }
-                pending_word += match self.at(u64_word_counter * 8 + byte_counter.into()) {
-                    Option::Some(byte) => {
-                        let byte: u64 = byte.into();
-                        // Accumulate pending_word in a little endian manner
-                        byte.shl(8_u64 * byte_counter.into())
-                    },
-                    Option::None => { break self; },
-                };
-                byte_counter += 1;
+        loop {
+            if u64_word_counter == full_u64_word_count {
+                break;
+            }
+            if byte_counter == 8 {
+                u64_words.append(pending_word);
+                byte_counter = 0;
+                pending_word = 0;
+                u64_word_counter += 1;
+            }
+            pending_word += match self.at(u64_word_counter * 8 + byte_counter.into()) {
+                Option::Some(byte) => {
+                    let byte: u64 = byte.into();
+                    // Accumulate pending_word in a little endian manner
+                    byte.shl(8_u64 * byte_counter.into())
+                },
+                Option::None => { break; },
             };
+            byte_counter += 1;
+        };
 
         // Fill the last input word
         let mut last_input_word: u64 = 0;
@@ -823,20 +882,19 @@ impl ByteArrayExt of ByteArrayExTrait {
         // O(2n) should be okay
         // We might want to regroup every computation into a single loop with appropriate `if` branching
         // For optimisation
-        self =
-            loop {
-                if byte_counter.into() == last_input_num_bytes {
-                    break self;
-                }
-                last_input_word += match self.at(full_u64_word_count * 8 + byte_counter.into()) {
-                    Option::Some(byte) => {
-                        let byte: u64 = byte.into();
-                        byte.shl(8_u64 * byte_counter.into())
-                    },
-                    Option::None => { break self; },
-                };
-                byte_counter += 1;
+        loop {
+            if byte_counter.into() == last_input_num_bytes {
+                break;
+            }
+            last_input_word += match self.at(full_u64_word_count * 8 + byte_counter.into()) {
+                Option::Some(byte) => {
+                    let byte: u64 = byte.into();
+                    byte.shl(8_u64 * byte_counter.into())
+                },
+                Option::None => { break; },
             };
+            byte_counter += 1;
+        };
 
         (u64_words, last_input_word, last_input_num_bytes)
     }

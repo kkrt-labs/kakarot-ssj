@@ -16,7 +16,7 @@ use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDi
 use pedersen::{PedersenTrait, HashState};
 use starknet::{Store, storage_base_address_from_felt252, ContractAddress, get_contract_address};
 use utils::constants::EMPTY_KECCAK;
-use utils::helpers::{load_word, U256Trait, ByteArrayExTrait};
+use utils::helpers::{load_word, U256Trait, U8SpanExTrait};
 use utils::math::BitshiftImpl;
 use utils::traits::{EthAddressIntoU256};
 
@@ -252,8 +252,6 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         if bytecode.is_empty() {
             return self.stack.push(EMPTY_KECCAK);
         }
-        //TODO optimize this by avoiding a ByteArray -> Span<u64> conversion
-        let mut bytecode: ByteArray = ByteArrayExTrait::from_bytes(bytecode);
 
         // `cairo_keccak` takes in an array of little-endian u64s
         let (mut keccak_input, last_input_word, last_input_num_bytes) = bytecode.to_u64_words();

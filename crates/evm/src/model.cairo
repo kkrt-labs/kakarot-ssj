@@ -13,7 +13,7 @@ use openzeppelin::token::erc20::interface::{
     IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
 };
 use starknet::{EthAddress, get_contract_address, ContractAddress};
-use utils::helpers::{ResultExTrait, ByteArrayExTrait};
+use utils::helpers::{ResultExTrait};
 use utils::traits::{EthAddressDefault, ContractAddressDefault};
 
 /// The struct representing an EVM event.

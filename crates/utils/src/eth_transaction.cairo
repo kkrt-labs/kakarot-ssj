@@ -7,10 +7,7 @@ use starknet::{EthAddress};
 use utils::errors::RLPErrorTrait;
 
 use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl, RLPHelpersErrorTrait};
-use utils::helpers::ByteArrayExTrait;
-use utils::helpers::U256Trait;
-
-use utils::helpers::{U256Impl, ByteArrayExt};
+use utils::helpers::{U256Trait, U256Impl, ByteArrayExt, U8SpanExTrait};
 
 use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
@@ -117,6 +114,13 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
                 let amount = (*val.at(value_idx)).parse_u256_from_string().map_err()?;
                 let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
                 let chain_id = (*val.at(chain_id_idx)).parse_u128_from_string().map_err()?;
+
+                let (mut keccak_input, last_input_word, last_input_num_bytes) = tx_data
+                    .to_u64_words();
+                let msg_hash = cairo_keccak(
+                    ref keccak_input, :last_input_word, :last_input_num_bytes
+                )
+                    .reverse_endianness();
 
                 let destination: EthAddress = to.into();
 
