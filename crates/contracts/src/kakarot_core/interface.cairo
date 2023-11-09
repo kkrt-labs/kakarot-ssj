@@ -1,4 +1,5 @@
 use contracts::kakarot_core::kakarot::StoredAccountType;
+use evm::model::AccountType;
 use starknet::{ContractAddress, EthAddress, ClassHash};
 use utils::traits::ByteArraySerde;
 
@@ -28,11 +29,10 @@ trait IKakarotCore<TContractState> {
     /// Using its EVM address as salt, and KakarotCore as deployer.
     fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
-    /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
-    /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
-    /// particular EVM address and if so, returns its corresponding Starknet Address.
-    /// Otherwise, returns 0
-    fn address_registry(self: @TContractState, evm_address: EthAddress) -> StoredAccountType;
+    /// Checks into KakarotCore storage if an EOA or a CA has been deployed for
+    /// a particular EVM address and if so, returns its corresponding type with
+    /// its starknet address.  Otherwise, returns Option::None.
+    fn address_registry(self: @TContractState, evm_address: EthAddress) -> Option<AccountType>;
 
 
     /// Gets the nonce associated to a contract account
@@ -128,10 +128,10 @@ trait IExtendedKakarotCore<TContractState> {
     /// Using its EVM address as salt, and KakarotCore as deployer.
     fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
-    /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
-    /// Checks into KakarotCore storage if an EOA or a CA has been deployed for a
-    /// particular EVM address and if so, returns its corresponding Starknet Address
-    fn address_registry(self: @TContractState, evm_address: EthAddress) -> StoredAccountType;
+    /// Checks into KakarotCore storage if an EOA or a CA has been deployed for
+    /// a particular EVM address and if so, returns its corresponding type with
+    /// its starknet address.  Otherwise, returns Option::None.
+    fn address_registry(self: @TContractState, evm_address: EthAddress) -> Option<AccountType>;
 
     /// Gets the nonce associated to a contract account
     fn contract_account_nonce(self: @TContractState, evm_address: EthAddress) -> u64;

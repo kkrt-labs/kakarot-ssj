@@ -4,9 +4,11 @@ The bytecode is the compiled version of a contract, and it is what the Kakarot
 EVM will execute when a contract is called. As Kakarot's state is embedded into
 the Starknet chain it is deployed on, contracts are not actually "deployed" on
 Kakarot: instead, the EVM bytecode of the deployed contract is first executed,
-and the returned data is then stored on-chain at a particular storage address in
-the KakarotCore contract storage. The Kakarot EVM will be able to load this
-bytecode by querying its own storage when a user interacts with this contract.
+and the returned data is then stored on-chain at a particular storage address
+inside the starknet contract corresponding to the contract's EVM address, whose
+address is deterministically computed. The Kakarot EVM will be able to load this
+bytecode by querying the storage of this Starknet contract when a user interacts
+with its associated EVM address.
 
 ```mermaid
 flowchart TD
@@ -24,9 +26,9 @@ document will provide a quick overview of the different options, to choose the
 most optimized one for this use case. The three main ways of handling contract
 bytecode that were considered are:
 
-- Storing the bytecode inside a storage variable, using Ethereum as an L1 data
+- Storing the bytecode inside a contract's storage, using Ethereum as an L1 data
   availability layer.
-- Storing the bytecode inside a storage variable, using another data
+- Storing the bytecode inside a contract's storage, using another data
   availability layer.
 - Storing the bytecode directly in the contract code, not as a part of the
   contract's storage.
@@ -66,10 +68,6 @@ significant price, as the publication of state diffs on Ethereum accounted for
 
 The first choice when storing contract bytecode is to store it as a regular
 storage variable, with its state diff posted on Ethereum acting as the DA Layer.
-As outlined in our [Contract Storage](./contract_storage.md) design, deploying a
-new contract on Kakarot would not result in the deployment of a contract on
-Starknet, but rather in the storage of the contract bytecode in a storage
-variable of the KakarotCore contract.
 
 In this case, the following data would reach L1:
 
@@ -85,8 +83,9 @@ $$ gas\ price \cdot c_w \cdot (2n + 2m) $$
 
 where $c_w$ is the calldata cost (in gas) per 32-byte word.
 
-In this case, one single contract (KakarotCore) would be updated, with $m$ keys,
-where $m = (B / 31) + 2$ and $B$ is the size of the bytecode to store (see
+In this case, one single contract (the Starknet contract corresponding to the
+ContractAccount) would be updated, with $m$ keys, where $m = (B / 31) + 2$ and
+$B$ is the size of the bytecode to store (see
 [implementation details](./contract_bytecode.md#implementation-details)).
 
 Considering a gas price of 34 gwei (average gas price in 2023, according to
@@ -97,7 +96,7 @@ $m = 72$. The associated storage update fee would be:
 $$ fee = 34 \cdot (16 \cdot 32) \cdot (2 + 144) = 2,541,468 \text{ gwei}$$
 
 This is the solution that was chosen for Kakarot; but there are other options
-that could be considered.
+that could be considered presented thereafter.
 
 ### Using Starknet's volition mechanism
 
@@ -159,11 +158,12 @@ part of the Starknet State Commitment, which is verified on Ethereum during
 state updates. The class itself is stored in the nodes (both sequencers and full
 nodes) of Starknet.
 
-To implement this, a new class would need to be declared each time a Kakarot
-contract is deployed. This class would contain the contract's EVM bytecode,
-exposed via a view function returning the bytecode. To do this, the RPC would
-need to craft a custom Starknet contract containing the EVM bytecode in its
-source code, and declare it on Starknet - not ideal for security.
+To implement this, a new class would need to be declared each time a
+ContractAccount is deployed. This class would contain the contract's EVM
+bytecode, exposed via a view function returning the bytecode. To do this, the
+RPC would need to craft a custom Starknet contract containing the EVM bytecode
+in its source code, and declare it on Starknet - not ideal for security and
+practicality.
 
 ## Implementation details
 
@@ -172,31 +172,29 @@ committed to Ethereum. This solution is the most secure one, as it relies on
 Ethereum as a DA Layer, and thus inherits from Ethereum's security guarantees,
 ensuring that the bytecode of the deployed contract is always available.
 
-A `deploy` transaction is identified by an empty `to` address. The data sent to
-the KakarotCore contract when deploying a new contract will be formatted by the
-RPC to pack the bytecode into 31-bytes values, and passed as an `Array<felt252>`
-to the entrypoint `eth_send_transaction` of the KakarotCore contract. This
-allows us to save on computation costs required to pack all byte values into the
-31-bytes values that we will store in the contract storage.
+A `deploy` transaction is identified by a null `to` address (`Option::None`).
+The data sent to the KakarotCore contract when deploying a new contract will be
+passed as an `Array<u8>` to the entrypoint `eth_send_transaction` of the
+KakarotCore contract. This bytecode will then be packed 31 bytes at a time,
+reducing by 31 the size of the bytecode stored in storage, which is the most
+expensive part of the transaction.
 
 The contract storage related to a deployed contract is organized as:
 
 ```rust
 struct Storage {
-    bytecode: LegacyMap<EthAddress, List<bytes31>>,
-    pending_word: LegacyMap<EthAddress, felt252>,
-    pending_word_len: LegacyMap<EthAddress, usize>,
+    bytecode: List<bytes31>,
+    pending_word: felt252,
+    pending_word_len: usize,
 }
 ```
 
-Each deployed contract has it's own EVM address used as a key in a `LegacyMap`
-type when computing the address of each storage variable. We use the `List` type
-from
+We use the `List` type from the
 [Alexandria](https://github.com/keep-starknet-strange/alexandria/blob/main/src/storage/src/list.cairo)
-to store the bytecode, allowing us to store up to 255 31-bytes values per
-`StorageBaseAddress`. For bytecode containing more than 255 31-bytes values, the
-`List` type abstracts the calculations of the next storage address used, which
-is calculated by using poseidon hashes applied on `previous_address+1`.
+library to store the bytecode, allowing us to store up to 255 31-bytes values
+per `StorageBaseAddress`. For bytecode containing more than 255 31-bytes values,
+the `List` type abstracts the calculations of the next storage address used,
+which is calculated by using poseidon hashes applied on `previous_address+1`.
 
 The logic behind this storage design is to make it very easy to load the
 bytecode in the EVM when we want to execute a program. We will rely on the
@@ -225,9 +223,9 @@ Once our bytecode is written in storage, we can simply load it by doing so:
 
 ```rust
  let bytecode = ByteArray {
-    data: self.bytecode.read(address).array(),
-    pending_word: self.pending_word.read(address),
-    pending_word_len: self.pending_word_len.read(address)
+    data: self.bytecode.read().array(),
+    pending_word: self.pending_word.read(),
+    pending_word_len: self.pending_word_len.read()
 };
 ```
 

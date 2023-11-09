@@ -1,5 +1,5 @@
 use utils::helpers::{
-    SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, U32Trait
+    SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, U32Trait, BytesTrait
 };
 use utils::helpers::{ByteArrayExTrait};
 use utils::helpers;
@@ -440,23 +440,10 @@ fn test_bytearray_deserialize() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_bytearray_serialize() {
-    let byte_arr = ByteArray {
-        data: array![
-            0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff.try_into().unwrap()
-        ],
-        pending_word_len: 3,
-        pending_word: 0xabcdef
-    };
-    let mut serialized: Array<felt252> = Default::default();
-    byte_arr.serialize(ref serialized);
+fn test_compute_msg_hash() {
+    let msg = 0xabcdef_u32.to_bytes();
+    let expected_hash = 0x800d501693feda2226878e1ec7869eef8919dbc5bd10c2bcd031b94d73492860_u256;
+    let hash = msg.compute_keccak256_hash();
 
-    // One extra element encodes the length of the pending word
-    assert(serialized.len() == 3, 'len mismatch');
-    assert(*serialized[0] == 3, 'pending_word_len mismatch');
-    assert(*serialized[1] == 0xabcdef, 'pending_word mismatch');
-    assert(
-        *serialized[2] == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-        'full_word mismatch'
-    );
+    assert(hash == expected_hash, 'msg_hash is incorrect');
 }

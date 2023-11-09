@@ -3,14 +3,17 @@ mod contract_account;
 mod eoa;
 
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
-use evm::errors::EVMError;
+use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
 use evm::execution::Status;
 use evm::model::account::{Account, AccountTrait};
 use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
 use evm::model::eoa::{EOA, EOATrait};
 use evm::state::State;
+use openzeppelin::token::erc20::interface::{
+    IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
+};
 use starknet::{EthAddress, get_contract_address, ContractAddress};
-use utils::helpers::ByteArrayExTrait;
+use utils::helpers::{ResultExTrait, ByteArrayExTrait};
 use utils::traits::{EthAddressDefault, ContractAddressDefault};
 
 /// The struct representing an EVM event.
@@ -26,6 +29,17 @@ struct Address {
     starknet: ContractAddress,
 }
 
+#[generate_trait]
+impl AddressImpl of AddressTrait {
+    fn balance(self: @Address) -> Result<u256, EVMError> {
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let native_token_address = kakarot_state.native_token();
+        let native_token = IERC20CamelSafeDispatcher { contract_address: native_token_address };
+        native_token
+            .balanceOf(*self.starknet)
+            .map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
+    }
+}
 
 /// A struct to save native token transfers to be made when finalizing
 /// a tx
@@ -51,7 +65,7 @@ struct ExecutionResult {
 /// account is identified by an Ethereum address.  It has a corresponding
 /// Starknet Address - The corresponding Starknet Contract for EOAs, and the
 /// KakarotCore address for ContractAccounts.
-#[derive(Copy, Drop, PartialEq)]
+#[derive(Copy, Drop, PartialEq, Serde)]
 enum AccountType {
     EOA: EOA,
     ContractAccount: ContractAccount,
