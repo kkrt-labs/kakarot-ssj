@@ -37,7 +37,7 @@ fn test_decode_eip_2930_tx() {
     // chain id used: 0x1
     let data = eip_2930_encoded_tx();
 
-    let tx = EthTransactionImpl::decode_tx(data).unwrap();
+    let tx = EthTransactionImpl::decode_typed_tx(data).unwrap();
 
     assert(tx.chain_id == 0x1, 'chain id is not 0x1');
     assert(tx.nonce == 0, 'nonce is not 0');
@@ -63,7 +63,7 @@ fn test_decode_eip_1559_tx() {
     // chain id used: 0x1
     let data = eip_1559_encoded_tx();
 
-    let tx = EthTransactionImpl::decode_tx(data).unwrap();
+    let tx = EthTransactionImpl::decode_typed_tx(data).unwrap();
 
     assert(tx.chain_id == 0x1, 'chain id is not 0x1');
     assert(tx.nonce == 0, 'nonce is not 0');

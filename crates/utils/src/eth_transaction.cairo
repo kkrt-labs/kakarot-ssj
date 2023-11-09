@@ -93,7 +93,7 @@ impl EthTransactionImpl of EthTransaction {
     /// transaction data, which includes the chain ID as part of the transaction data itself.
     /// # Arguments
     /// tx_data The raw transaction data
-    fn decode_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
+    fn decode_typed_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
         let tx_type: u32 = (*tx_data.at(0)).into();
         let rlp_encoded_data = tx_data.slice(1, tx_data.len() - 1);
 
