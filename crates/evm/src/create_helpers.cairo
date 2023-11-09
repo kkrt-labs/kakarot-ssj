@@ -161,7 +161,6 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
                     account.account_type == AccountType::ContractAccount,
                     'type should be CA in finalize'
                 );
-                account.set_type(AccountType::ContractAccount);
                 self.state.set_account(account);
                 self.return_to_parent_ctx();
                 self.stack.push(account_address.into())
