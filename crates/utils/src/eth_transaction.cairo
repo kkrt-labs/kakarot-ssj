@@ -112,7 +112,7 @@ impl EthTransactionImpl of EthTransaction {
     /// tx_data The raw transaction data
     fn decode_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
         let tx_type: u32 = (*tx_data.at(0)).into();
-        let tx_data = tx_data.slice(1, tx_data.len() - 1);
+        let rlp_encoded_data = tx_data.slice(1, tx_data.len() - 1);
 
         // EIP 2718:
         // TransactionType is a positive unsigned 8-bit number between 0 and 0x7f
@@ -132,7 +132,7 @@ impl EthTransactionImpl of EthTransaction {
         let value_idx = to_idx + 1;
         let calldata_idx = value_idx + 1;
 
-        let decoded_data = RLPTrait::decode(tx_data).map_err()?;
+        let decoded_data = RLPTrait::decode(rlp_encoded_data).map_err()?;
         if (decoded_data.len() != 1) {
             return Result::Err(EthTransactionError::Other('Length is not 1'));
         }
