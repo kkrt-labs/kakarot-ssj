@@ -2,7 +2,7 @@ use core::option::OptionTrait;
 use core::traits::TryInto;
 
 use keccak::cairo_keccak;
-use starknet::{EthAddress};
+use starknet::{EthAddress, eth_signature::{Signature, verify_eth_signature}};
 use utils::errors::RLPErrorTrait;
 
 use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl, RLPHelpersErrorTrait};
@@ -13,6 +13,15 @@ use utils::helpers::{U256Impl, ByteArrayExt};
 
 use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
+
+#[derive(Drop)]
+struct ValidateTxParam {
+    address: EthAddress,
+    account_nonce: u128,
+    chain_id: u128,
+    tx_data: Span<u8>,
+    signature: Signature,
+}
 
 #[derive(Drop)]
 struct EthereumTransaction {
@@ -37,6 +46,10 @@ impl EthTransactionImpl of EthTransaction {
     /// tx_data The raw transaction data
     /// tx_data is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data, chainId, 0, 0]
     fn decode_legacy_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
+        if (!EthTransaction::is_legacy_tx(tx_data)) {
+            return Result::Err(EthTransactionError::Other('Not legacy transaction'));
+        }
+
         let decoded_data = RLPTrait::decode(tx_data);
         let decoded_data = decoded_data.map_err()?;
 
@@ -111,14 +124,13 @@ impl EthTransactionImpl of EthTransaction {
     /// # Arguments
     /// tx_data The raw transaction data
     fn decode_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
+        if (EthTransaction::is_legacy_tx(tx_data)) {
+            return Result::Err(EthTransactionError::Other('Not EIP-2718 transaction'));
+        }
+
         let tx_type: u32 = (*tx_data.at(0)).into();
         let rlp_encoded_data = tx_data.slice(1, tx_data.len() - 1);
 
-        // EIP 2718:
-        // TransactionType is a positive unsigned 8-bit number between 0 and 0x7f
-        if (tx_type == 0 || tx_type >= 0x7f) {
-            return Result::Err(EthTransactionError::Other('Not EIP-2718 transaction'));
-        }
         // Only EIP-1559 and EIP 2930 are supported
         if (tx_type != 1 && tx_type != 2) {
             return Result::Err(EthTransactionError::Other('transaction type not supported'));
@@ -190,9 +202,15 @@ impl EthTransactionImpl of EthTransaction {
     /// according to EIP-2718. If the transaction type is less than or equal to 0xc0, it's a legacy transaction.
     /// # Arguments
     /// - `tx_data` The raw transaction data
-    fn is_legacy_tx(tx_data: Span<u8>) -> Result<bool, EthTransactionError> {
-        // todo
-        panic_with_felt252('is_legacy_tx unimplemented')
+    fn is_legacy_tx(tx_data: Span<u8>) -> bool {
+        let tx_type = *tx_data[0];
+
+        // TransactionType for EIP-2718 txns is a positive unsigned 8-bit number between 0 and 0x7f
+        if (tx_type >= 0x7f) {
+            return true;
+        }
+
+        return false;
     }
 
     /// Decode a raw Ethereum transaction
@@ -202,8 +220,11 @@ impl EthTransactionImpl of EthTransaction {
     /// # Arguments
     /// - `tx_data` The raw transaction data
     fn decode(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
-        // todo
-        panic_with_felt252('decode unimplemented')
+        if (EthTransaction::is_legacy_tx(tx_data)) {
+            EthTransaction::decode_legacy_tx(tx_data)
+        } else {
+            EthTransaction::decode_tx(tx_data)
+        }
     }
 
     /// Validate an Ethereum transaction
@@ -216,10 +237,19 @@ impl EthTransactionImpl of EthTransaction {
     /// - `address` The ethereum address that is supposed to have signed the transaction
     /// - `account_nonce` The nonce of the account
     /// - `param tx_data` The raw transaction data
-    fn validate_eth_tx(
-        address: EthAddress, account_nonce: u128, tx_data: Span<u8>
-    ) -> Result<bool, EthTransactionError> {
-        // todo
-        panic_with_felt252('validate_eth_tx unimplemented')
+    fn validate_eth_tx(param: ValidateTxParam) -> Result<bool, EthTransactionError> {
+        let decoded_tx = EthTransaction::decode(param.tx_data)?;
+
+        if (decoded_tx.nonce != param.account_nonce) {
+            return Result::Err(EthTransactionError::Other('account nonce mismatch'));
+        }
+        if (decoded_tx.chain_id != param.chain_id) {
+            return Result::Err(EthTransactionError::Other('chain id mismatch'));
+        }
+
+        // this will panic if verification fails
+        verify_eth_signature(decoded_tx.msg_hash, param.signature, param.address);
+
+        Result::Ok(true)
     }
 }
