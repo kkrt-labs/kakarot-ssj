@@ -124,6 +124,8 @@ impl EthTransactionImpl of EthTransaction {
             return Result::Err(EthTransactionError::Other('transaction type not supported'));
         }
 
+        // tx_format (EIP-2930, unsiged):  0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList])
+        // tx_format (EIP-1559, unsiged):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, destination, amount, data, access_list])
         let chain_idx = 0;
         let nonce_idx = 1;
         let gas_price_idx = tx_type + nonce_idx;
