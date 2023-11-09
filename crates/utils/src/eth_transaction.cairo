@@ -1,3 +1,4 @@
+use core::array::SpanTrait;
 use core::option::OptionTrait;
 use core::traits::TryInto;
 
@@ -128,9 +129,12 @@ impl EthTransactionImpl of EthTransaction {
             RLPItem::String => { Result::Err(EthTransactionError::ExpectedRLPItemToBeList) },
             RLPItem::List(val) => {
                 // total items in EIP 2930 (unsigned): 8
+                if (tx_type == 1 && val.len() != 8) {
+                    return Result::Err(EthTransactionError::Other('Length is not 8'));
+                }
                 // total items in EIP 1559 (unsigned): 9
-                if (val.len() != 8 && val.len() != 9) {
-                    return Result::Err(EthTransactionError::Other('Length is not 8 or 9'));
+                if (tx_type == 2 && val.len() != 9) {
+                    return Result::Err(EthTransactionError::Other('Length is not 9'));
                 }
 
                 let chain_id = (*val.at(chain_idx)).parse_u128_from_string().map_err()?;
