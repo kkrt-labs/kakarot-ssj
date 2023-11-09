@@ -53,6 +53,8 @@ enum EthTransactionError {
     RLPError: RLPError,
     ExpectedRLPItemToBeList,
     ExpectedRLPItemToBeString,
+    ChainIdIsIncoorect,
+    AccountNonceIsIncorrect,
     RlpHelpersError: RLPHelpersError,
     Other: felt252
 }

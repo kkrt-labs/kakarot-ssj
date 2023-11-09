@@ -238,17 +238,19 @@ impl EthTransactionImpl of EthTransaction {
     /// - `account_nonce` The nonce of the account
     /// - `param tx_data` The raw transaction data
     fn validate_eth_tx(param: ValidateTxParam) -> Result<bool, EthTransactionError> {
-        let decoded_tx = EthTransaction::decode(param.tx_data)?;
+        let ValidateTxParam{address, account_nonce, chain_id, tx_data, signature } = param;
 
-        if (decoded_tx.nonce != param.account_nonce) {
-            return Result::Err(EthTransactionError::Other('account nonce mismatch'));
+        let decoded_tx = EthTransaction::decode(tx_data)?;
+
+        if (decoded_tx.nonce != account_nonce) {
+            return Result::Err(EthTransactionError::AccountNonceIsIncorrect);
         }
-        if (decoded_tx.chain_id != param.chain_id) {
-            return Result::Err(EthTransactionError::Other('chain id mismatch'));
+        if (decoded_tx.chain_id != chain_id) {
+            return Result::Err(EthTransactionError::ChainIdIsIncoorect);
         }
 
         // this will panic if verification fails
-        verify_eth_signature(decoded_tx.msg_hash, param.signature, param.address);
+        verify_eth_signature(decoded_tx.msg_hash, signature, address);
 
         Result::Ok(true)
     }
