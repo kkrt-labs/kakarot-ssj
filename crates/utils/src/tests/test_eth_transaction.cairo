@@ -25,11 +25,6 @@ fn test_decode_legacy_tx() {
 
     let expected_calldata = 0xabcdef_u32.to_bytes();
     assert(tx.calldata == expected_calldata, 'calldata is not 0xabcdef');
-
-    assert(
-        tx.msg_hash == 0x89d3071d2bcc98141b16317ec8d912a76271ec052c2884674ddcd752b5ea91fe,
-        'message hash it not 0x89d3...'
-    );
 }
 
 
@@ -56,11 +51,6 @@ fn test_decode_eip_2930_tx() {
 
     let expected_calldata = 0xabcdef_u32.to_bytes();
     assert(tx.calldata == expected_calldata, 'calldata is not 0xabcdef');
-
-    assert(
-        tx.msg_hash == 0xacc506973edb7b4024d1698a4e7b066728f9ebcee1af4d8ec93d4382e79a62f0,
-        'message hash it not 0xacc...'
-    );
 }
 
 
@@ -87,9 +77,4 @@ fn test_decode_eip_1559_tx() {
 
     let expected_calldata = 0xabcdef_u32.to_bytes();
     assert(tx.calldata == expected_calldata, 'calldata is not 0xabcdef');
-
-    assert(
-        tx.msg_hash == 0x598035333ab961ee2ff00db3f21703926c911a42f53222a1fc1757bd1e3c15f5,
-        'message hash it not 0x59...'
-    );
 }

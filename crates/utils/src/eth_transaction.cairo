@@ -23,7 +23,6 @@ struct EthereumTransaction {
     amount: u256,
     calldata: Span<u8>,
     chain_id: u128,
-    msg_hash: u256,
 }
 
 #[generate_trait]
@@ -74,20 +73,11 @@ impl EthTransactionImpl of EthTransaction {
                 let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
                 let chain_id = (*val.at(chain_id_idx)).parse_u128_from_string().map_err()?;
 
-                let msg_hash = compute_msg_hash(tx_data);
-
                 let destination: EthAddress = to.into();
 
                 Result::Ok(
                     EthereumTransaction {
-                        nonce,
-                        gas_price,
-                        gas_limit,
-                        destination,
-                        amount,
-                        calldata,
-                        msg_hash,
-                        chain_id
+                        nonce, gas_price, gas_limit, destination, amount, calldata, chain_id
                     }
                 )
             }
@@ -151,7 +141,6 @@ impl EthTransactionImpl of EthTransaction {
                 let amount = (*val.at(value_idx)).parse_u256_from_string().map_err()?;
                 let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
 
-                let msg_hash = compute_msg_hash(tx_data);
                 let destination: EthAddress = to.into();
 
                 Result::Ok(
@@ -163,7 +152,6 @@ impl EthTransactionImpl of EthTransaction {
                         destination,
                         amount,
                         calldata,
-                        msg_hash
                     }
                 )
             }
