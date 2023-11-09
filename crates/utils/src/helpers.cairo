@@ -521,6 +521,20 @@ impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
 }
 
 #[generate_trait]
+impl BytesImpl of BytesTrait {
+    // keccack256 on a bytes message
+    fn compute_keccak256_hash(self: Span<u8>) -> u256 {
+        let mut msg_byte_array = ByteArrayExt::from_bytes(self);
+        let (mut keccak_input, last_input_word, last_input_num_bytes) = msg_byte_array
+            .to_u64_words();
+        let msg_hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes)
+            .reverse_endianness();
+
+        msg_hash
+    }
+}
+
+#[generate_trait]
 impl U32Impl of U32Trait {
     /// Packs 4 bytes into a u32
     /// # Arguments
@@ -870,15 +884,6 @@ fn compute_starknet_address(
     normalized_address
 }
 
-// keccack256 on a bytes message
-fn compute_msg_hash(msg: Span<u8>) -> u256 {
-    let mut msg_byte_array = ByteArrayExt::from_bytes(msg);
-    let (mut keccak_input, last_input_word, last_input_num_bytes) = msg_byte_array.to_u64_words();
-    let msg_hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes)
-        .reverse_endianness();
-
-    msg_hash
-}
 
 #[generate_trait]
 impl EthAddressExtTrait of EthAddressExt {
