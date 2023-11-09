@@ -37,6 +37,10 @@ impl EthTransactionImpl of EthTransaction {
     /// tx_data The raw transaction data
     /// tx_data is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data, chainId, 0, 0]
     fn decode_legacy_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
+        if (!EthTransaction::is_legacy_tx(tx_data)) {
+            return Result::Err(EthTransactionError::Other('Not legacy transaction'));
+        }
+
         let decoded_data = RLPTrait::decode(tx_data);
         let decoded_data = decoded_data.map_err()?;
 
@@ -98,11 +102,6 @@ impl EthTransactionImpl of EthTransaction {
         let tx_type: u32 = (*tx_data.at(0)).into();
         let rlp_encoded_data = tx_data.slice(1, tx_data.len() - 1);
 
-        // EIP 2718:
-        // TransactionType is a positive unsigned 8-bit number between 0 and 0x7f
-        if (tx_type == 0 || tx_type >= 0x7f) {
-            return Result::Err(EthTransactionError::Other('Not EIP-2718 transaction'));
-        }
         // Only EIP-1559 and EIP 2930 are supported
         if (tx_type != 1 && tx_type != 2) {
             return Result::Err(EthTransactionError::Other('transaction type not supported'));
@@ -169,9 +168,15 @@ impl EthTransactionImpl of EthTransaction {
     /// according to EIP-2718. If the transaction type is less than or equal to 0xc0, it's a legacy transaction.
     /// # Arguments
     /// - `tx_data` The raw transaction data
-    fn is_legacy_tx(tx_data: Span<u8>) -> Result<bool, EthTransactionError> {
-        // todo
-        panic_with_felt252('is_legacy_tx unimplemented')
+    fn is_legacy_tx(tx_data: Span<u8>) -> bool {
+        let tx_type = *tx_data[0];
+
+        // TransactionType for EIP-2718 txns is a positive unsigned 8-bit number between 0 and 0x7f
+        if (tx_type >= 0x7f) {
+            return true;
+        }
+
+        return false;
     }
 
     /// Decode a raw Ethereum transaction
@@ -181,8 +186,11 @@ impl EthTransactionImpl of EthTransaction {
     /// # Arguments
     /// - `tx_data` The raw transaction data
     fn decode(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
-        // todo
-        panic_with_felt252('decode unimplemented')
+        if (EthTransaction::is_legacy_tx(tx_data)) {
+            EthTransaction::decode_legacy_tx(tx_data)
+        } else {
+            EthTransaction::decode_typed_tx(tx_data)
+        }
     }
 
     /// Validate an Ethereum transaction
