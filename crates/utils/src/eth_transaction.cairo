@@ -144,7 +144,7 @@ impl EthTransactionImpl of EthTransaction {
         let result: Result<EthereumTransaction, EthTransactionError> = match decoded_data {
             RLPItem::String => { Result::Err(EthTransactionError::ExpectedRLPItemToBeList) },
             RLPItem::List(val) => {
-                // total items in EIP 2930 (unsgined): 8
+                // total items in EIP 2930 (unsigned): 8
                 // total items in EIP 1559 (unsigned): 9
                 if (val.len() != 8 && val.len() != 9) {
                     return Result::Err(EthTransactionError::Other('Length is not 8 or 9'));
