@@ -1,3 +1,6 @@
+use contracts::contract_account::{
+    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount,
+};
 use contracts::kakarot_core::kakarot::KakarotCore::KakarotCoreInternal;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
@@ -17,6 +20,62 @@ struct Account {
     code: Span<u8>,
     nonce: u64,
     selfdestruct: bool,
+}
+
+#[derive(Drop)]
+struct ContractAccountBuilder {
+    account_type: AccountType,
+    address: Address,
+    code: Span<u8>,
+    nonce: u64,
+    selfdestruct: bool,
+}
+
+#[generate_trait]
+impl ContractAccountBuilderImpl of ContractAccountBuilderTrait {
+    fn new(address: Address) -> ContractAccountBuilder {
+        ContractAccountBuilder {
+            account_type: AccountType::ContractAccount,
+            address: address,
+            code: Default::default().span(),
+            nonce: 0,
+            selfdestruct: false,
+        }
+    }
+
+    #[inline(always)]
+    fn fetch_nonce(mut self: ContractAccountBuilder) -> ContractAccountBuilder {
+        let contract_account = IContractAccountDispatcher {
+            contract_address: self.address.starknet
+        };
+        self.nonce = contract_account.nonce();
+        self
+    }
+
+    /// Loads the bytecode of a ContractAccount from Kakarot Core's contract storage into a Span<u8>.
+    /// # Arguments
+    /// * `self` - The address of the Contract Account to load the bytecode from
+    /// # Returns
+    /// * The bytecode of the Contract Account as a ByteArray
+    fn fetch_bytecode(mut self: ContractAccountBuilder) -> ContractAccountBuilder {
+        let contract_account = IContractAccountDispatcher {
+            contract_address: self.address.starknet
+        };
+        let bytecode = contract_account.bytecode();
+        self.code = bytecode;
+        self
+    }
+
+    #[inline(always)]
+    fn build(self: ContractAccountBuilder) -> Account {
+        Account {
+            account_type: self.account_type,
+            address: self.address,
+            code: self.code,
+            nonce: self.nonce,
+            selfdestruct: self.selfdestruct,
+        }
+    }
 }
 
 #[generate_trait]
@@ -83,15 +142,11 @@ impl AccountImpl of AccountTrait {
                     ),
                     AccountType::ContractAccount => {
                         let address = Address { evm: evm_address, starknet: starknet_address };
-                        Option::Some(
-                            Account {
-                                account_type: AccountType::ContractAccount,
-                                address,
-                                code: ContractAccountTrait::fetch_bytecode(@address)?,
-                                nonce: ContractAccountTrait::fetch_nonce(@address)?,
-                                selfdestruct: false,
-                            }
-                        )
+                        let account = ContractAccountBuilderTrait::new(address)
+                            .fetch_nonce()
+                            .fetch_bytecode()
+                            .build();
+                        Option::Some(account)
                     },
                     AccountType::Unknown => Option::None,
                 }
@@ -135,16 +190,15 @@ impl AccountImpl of AccountTrait {
                     Result::Ok(())
                 },
                 AccountType::ContractAccount => {
-                    let mut ca_address = self.address();
                     if *self.selfdestruct {
                         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
                         kakarot_state
                             .set_address_registry(
-                                ca_address.evm, StoredAccountType::UnexistingAccount
+                                self.address().evm, StoredAccountType::UnexistingAccount
                             );
-                        return ca_address.selfdestruct();
+                        return self.selfdestruct();
                     }
-                    ca_address.store_nonce(*self.nonce)
+                    self.store_nonce(*self.nonce)
                 //Storage is handled outside of the account and must be commited after all accounts are commited.
                 },
                 AccountType::Unknown => { Result::Ok(()) }
@@ -156,7 +210,7 @@ impl AccountImpl of AccountTrait {
                 return Result::Ok(());
             };
             let mut ca_address = ContractAccountTrait::deploy(self.address().evm, *self.code)?;
-            ca_address.store_nonce(*self.nonce)
+            self.store_nonce(*self.nonce)
         //Storage is handled outside of the account and must be commited after all accounts are commited.
         } else {
             Result::Ok(())
@@ -250,7 +304,7 @@ impl AccountImpl of AccountTrait {
     fn read_storage(self: @Account, key: u256) -> Result<u256, EVMError> {
         match self.account_type {
             AccountType::EOA => Result::Ok(0),
-            AccountType::ContractAccount => self.address().fetch_storage(key),
+            AccountType::ContractAccount => self.fetch_storage(key),
             AccountType::Unknown(_) => Result::Ok(0),
         }
     }

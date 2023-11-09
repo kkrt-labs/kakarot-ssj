@@ -350,7 +350,7 @@ impl StateInternalImpl of StateInternalTrait {
                                     panic_with_felt252('EOA account commitment')
                                 },
                                 AccountType::ContractAccount => {
-                                    account.address().store_storage(key, value);
+                                    account.store_storage(key, value);
                                 },
                                 AccountType::Unknown(_) => {
                                     panic_with_felt252('Unknown account commitment')

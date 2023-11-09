@@ -18,6 +18,7 @@ enum StoredAccountType {
 mod KakarotCore {
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
+    use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
     use core::starknet::SyscallResultTrait;
@@ -186,7 +187,10 @@ mod KakarotCore {
             let ca_address = ContractAccountTrait::at(evm_address)
                 .expect('Fetching CA failed')
                 .expect('No CA found');
-            ca_address.fetch_nonce().unwrap()
+            let contract_account = IContractAccountDispatcher {
+                contract_address: ca_address.starknet
+            };
+            contract_account.nonce()
         }
 
         fn account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
@@ -202,14 +206,20 @@ mod KakarotCore {
             let ca_address = ContractAccountTrait::at(evm_address)
                 .expect('Fetching CA failed')
                 .expect('No CA found');
-            ca_address.fetch_storage(key).unwrap()
+            let contract_account = IContractAccountDispatcher {
+                contract_address: ca_address.starknet
+            };
+            contract_account.storage_at(key)
         }
 
         fn contract_account_bytecode(self: @ContractState, evm_address: EthAddress) -> Span<u8> {
             let ca_address = ContractAccountTrait::at(evm_address)
                 .expect('Fetching CA failed')
                 .expect('No CA found');
-            ca_address.fetch_bytecode().unwrap()
+            let contract_account = IContractAccountDispatcher {
+                contract_address: ca_address.starknet
+            };
+            contract_account.bytecode()
         }
 
         fn contract_account_false_positive_jumpdest(
@@ -218,7 +228,10 @@ mod KakarotCore {
             let ca_address = ContractAccountTrait::at(evm_address)
                 .expect('Fetching CA failed')
                 .expect('No CA found');
-            ca_address.is_false_positive_jumpdest(offset).unwrap()
+            let contract_account = IContractAccountDispatcher {
+                contract_address: ca_address.starknet
+            };
+            contract_account.is_false_positive_jumpdest(offset)
         }
 
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {

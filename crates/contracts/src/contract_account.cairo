@@ -43,7 +43,7 @@ trait IContractAccount<TContractState> {
 
     /// Checks if for a specific offset, i.e. if  bytecode at index `offset`, bytecode[offset] == 0x5B && is part of a PUSH opcode input.
     /// Prevents false positive checks in JUMP opcode of the type: jump destination opcode == JUMPDEST in appearance, but is a PUSH opcode bytecode slice.
-    fn is_false_jumpdest(self: @TContractState, offset: usize) -> bool;
+    fn is_false_positive_jumpdest(self: @TContractState, offset: usize) -> bool;
 
     fn set_false_positive_jumpdest(ref self: TContractState, offset: usize);
 
@@ -223,7 +223,7 @@ mod ContractAccount {
             Store::<u64>::write(0, storage_address, nonce + 1).expect(NONCE_WRITE_ERROR)
         }
 
-        fn is_false_jumpdest(self: @ContractState, offset: usize) -> bool {
+        fn is_false_positive_jumpdest(self: @ContractState, offset: usize) -> bool {
             panic_with_felt252('unimplemented')
         }
 

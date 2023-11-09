@@ -21,7 +21,7 @@ use evm::errors::{
     CONTRACT_ACCOUNT_EXISTS, CONTRACT_SYSCALL_FAILED
 };
 use evm::execution::execute;
-use evm::model::{Address, AccountType};
+use evm::model::{Address, Account, AccountType, AccountTrait};
 use hash::{HashStateTrait, HashStateExTrait};
 use openzeppelin::token::erc20::interface::{
     IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
@@ -87,8 +87,10 @@ impl ContractAccountImpl of ContractAccountTrait {
     }
 
     #[inline(always)]
-    fn selfdestruct(self: @Address) -> Result<(), EVMError> {
-        let contract_account = IContractAccountSafeDispatcher { contract_address: *self.starknet };
+    fn selfdestruct(self: @Account) -> Result<(), EVMError> {
+        let contract_account = IContractAccountSafeDispatcher {
+            contract_address: self.address().starknet
+        };
         contract_account.selfdestruct().map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
     }
 
@@ -113,23 +115,16 @@ impl ContractAccountImpl of ContractAccountTrait {
         }
     }
 
-    /// Returns the nonce of a contract account.
-    /// # Arguments
-    /// * `self` - The address of the Contract Account
-    #[inline(always)]
-    fn fetch_nonce(self: @Address) -> Result<u64, EVMError> {
-        let contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
-        Result::Ok(contract_account.nonce())
-    }
-
     /// Sets the nonce of a contract account.
     /// The new nonce is written in Kakarot Core's contract storage.
     /// The storage address used is h(sn_keccak("contract_account_nonce"), evm_address), where `h` is the poseidon hash function.
     /// # Arguments
     /// * `self` - The address of the Contract Account
     #[inline(always)]
-    fn store_nonce(self: @Address, nonce: u64) -> Result<(), EVMError> {
-        let mut contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
+    fn store_nonce(self: @Account, nonce: u64) -> Result<(), EVMError> {
+        let mut contract_account = IContractAccountDispatcher {
+            contract_address: self.address().starknet
+        };
         contract_account.set_nonce(nonce);
         Result::Ok(())
     }
@@ -138,8 +133,10 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// The new value is written in Kakarot Core's contract storage.
     /// The storage address used is h(sn_keccak("contract_account_storage_keys"), evm_address, key), where `h` is the poseidon hash function.
     #[inline(always)]
-    fn fetch_storage(self: @Address, key: u256) -> Result<u256, EVMError> {
-        let contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
+    fn fetch_storage(self: @Account, key: u256) -> Result<u256, EVMError> {
+        let contract_account = IContractAccountDispatcher {
+            contract_address: self.address().starknet
+        };
         Result::Ok(contract_account.storage_at(key))
     }
 
@@ -151,8 +148,10 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `key` - The key to set
     /// * `value` - The value to set
     #[inline(always)]
-    fn store_storage(self: @Address, key: u256, value: u256) -> Result<(), EVMError> {
-        let mut contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
+    fn store_storage(self: @Account, key: u256, value: u256) -> Result<(), EVMError> {
+        let mut contract_account = IContractAccountDispatcher {
+            contract_address: self.address().starknet
+        };
         contract_account.set_storage_at(key, value);
         Result::Ok(())
     }
@@ -162,22 +161,14 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// # Arguments
     /// * `evm_address` - The EVM address of the contract account
     /// * `bytecode` - The bytecode to store
-    fn store_bytecode(self: @Address, bytecode: Span<u8>) -> Result<(), EVMError> {
-        let mut contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
+    fn store_bytecode(self: @Account, bytecode: Span<u8>) -> Result<(), EVMError> {
+        let mut contract_account = IContractAccountDispatcher {
+            contract_address: self.address().starknet
+        };
         contract_account.set_bytecode(bytecode);
         Result::Ok(())
     }
 
-    /// Loads the bytecode of a ContractAccount from Kakarot Core's contract storage into a ByteArray.
-    /// # Arguments
-    /// * `self` - The address of the Contract Account to load the bytecode from
-    /// # Returns
-    /// * The bytecode of the Contract Account as a ByteArray
-    fn fetch_bytecode(self: @Address) -> Result<Span<u8>, EVMError> {
-        let contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
-        let bytecode = contract_account.bytecode();
-        Result::Ok(bytecode)
-    }
 
     /// Returns true if the given `offset` is a valid jump destination in the bytecode.
     /// The valid jump destinations are stored in Kakarot Core's contract storage first.
@@ -187,10 +178,12 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `true` - If the offset is a valid jump destination
     /// * `false` - Otherwise
     #[inline(always)]
-    fn is_false_positive_jumpdest(self: @Address, offset: usize) -> Result<bool, EVMError> {
-        let contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
-        let is_false_jumpdest = contract_account.is_false_jumpdest(offset);
-        Result::Ok(is_false_jumpdest)
+    fn is_false_positive_jumpdest(self: @Account, offset: usize) -> Result<bool, EVMError> {
+        let contract_account = IContractAccountDispatcher {
+            contract_address: self.address().starknet
+        };
+        let is_false_positive_jumpdest = contract_account.is_false_positive_jumpdest(offset);
+        Result::Ok(is_false_positive_jumpdest)
     }
 
     /// Sets the given `offset` as a valid jump destination in the bytecode.
@@ -199,8 +192,10 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `self` - The address of the ContractAccount
     /// * `offset` - The offset to set as a valid jump destination
     #[inline(always)]
-    fn set_false_positive_jumpdest(self: @Address, offset: usize) -> Result<(), EVMError> {
-        let mut contract_account = IContractAccountDispatcher { contract_address: *self.starknet };
+    fn set_false_positive_jumpdest(self: @Account, offset: usize) -> Result<(), EVMError> {
+        let mut contract_account = IContractAccountDispatcher {
+            contract_address: self.address().starknet
+        };
         contract_account.set_false_positive_jumpdest(offset);
         Result::Ok(())
     }

@@ -4,6 +4,7 @@ use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_utils as contract_utils;
 use contracts::tests::test_utils::constants::EVM_ADDRESS;
+use evm::model::account::{Account, ContractAccountBuilderTrait};
 use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::{AccountType};
 use evm::tests::test_utils;
@@ -22,15 +23,20 @@ fn test_contract_account_deploy() {
     set_contract_address(kakarot_core.contract_address);
 
     let bytecode = counter_evm_bytecode();
-    let ca_address = ContractAccountTrait::deploy(test_utils::evm_address(), bytecode).unwrap();
+    let ca_address = ContractAccountTrait::deploy(test_utils::evm_address(), bytecode)
+        .expect('CA deployment failed');
+    let account = ContractAccountBuilderTrait::new(ca_address)
+        .fetch_nonce()
+        .fetch_bytecode()
+        .build();
     let event = contract_utils::pop_log::<
         KakarotCore::ContractAccountDeployed
     >(kakarot_core.contract_address)
         .unwrap();
     assert(ca_address.evm == event.evm_address, 'wrong evm address');
     assert(event.evm_address == test_utils::evm_address(), 'wrong event address');
-    assert(ca_address.fetch_nonce().unwrap() == 1, 'initial nonce not 1');
-    assert(ca_address.fetch_bytecode().unwrap() == bytecode, 'wrong bytecode');
+    assert(account.nonce == 1, 'initial nonce not 1');
+    assert(account.code == bytecode, 'wrong bytecode');
 }
 
 #[test]

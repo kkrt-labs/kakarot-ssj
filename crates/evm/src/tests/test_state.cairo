@@ -286,7 +286,14 @@ mod test_state {
         let mut state: State = Default::default();
         let key = 10;
         let value = 100;
-        ca_address.store_storage(key, value);
+        let account = Account {
+            account_type: AccountType::ContractAccount,
+            address: ca_address,
+            code: array![0xab, 0xcd, 0xef].span(),
+            nonce: 1,
+            selfdestruct: false
+        };
+        account.store_storage(key, value);
 
         let read_value = state.read_state(evm_address, key).unwrap();
 

@@ -6,6 +6,7 @@ use evm::instructions::EnvironmentInformationTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::model::contract_account::ContractAccountTrait;
+use evm::model::{Account, AccountType};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
@@ -926,7 +927,14 @@ fn test_exec_extcodehash_selfdestructed() {
     // The bytecode remains empty, and we expect the empty hash in return
     let mut ca_address = ContractAccountTrait::deploy(evm_address, array![].span())
         .expect('CA deployment failed');
-    ca_address.selfdestruct().expect('CA selfdestruct failed');
+    let account = Account {
+        account_type: AccountType::ContractAccount,
+        address: ca_address,
+        code: array![].span(),
+        nonce: 1,
+        selfdestruct: false
+    };
+    account.selfdestruct().expect('CA selfdestruct failed');
 
     machine.stack.push(evm_address.into());
 
