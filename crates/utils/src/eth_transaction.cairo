@@ -7,9 +7,9 @@ use utils::errors::RLPErrorTrait;
 
 use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl, RLPHelpersErrorTrait};
 use utils::helpers::ByteArrayExTrait;
-use utils::helpers::U256Trait;
 
 use utils::helpers::{U256Impl, ByteArrayExt};
+use utils::helpers::{U256Trait, compute_msg_hash};
 
 use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
@@ -74,14 +74,7 @@ impl EthTransactionImpl of EthTransaction {
                 let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
                 let chain_id = (*val.at(chain_id_idx)).parse_u128_from_string().map_err()?;
 
-                let mut transaction_data_byte_array = ByteArrayExt::from_bytes(tx_data);
-                let (mut keccak_input, last_input_word, last_input_num_bytes) =
-                    transaction_data_byte_array
-                    .to_u64_words();
-                let msg_hash = cairo_keccak(
-                    ref keccak_input, :last_input_word, :last_input_num_bytes
-                )
-                    .reverse_endianness();
+                let msg_hash = compute_msg_hash(tx_data);
 
                 let destination: EthAddress = to.into();
 
@@ -158,15 +151,7 @@ impl EthTransactionImpl of EthTransaction {
                 let amount = (*val.at(value_idx)).parse_u256_from_string().map_err()?;
                 let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
 
-                let mut transaction_data_byte_array = ByteArrayExt::from_bytes(tx_data);
-                let (mut keccak_input, last_input_word, last_input_num_bytes) =
-                    transaction_data_byte_array
-                    .to_u64_words();
-                let msg_hash = cairo_keccak(
-                    ref keccak_input, :last_input_word, :last_input_num_bytes
-                )
-                    .reverse_endianness();
-
+                let msg_hash = compute_msg_hash(tx_data);
                 let destination: EthAddress = to.into();
 
                 Result::Ok(

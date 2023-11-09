@@ -4,7 +4,7 @@ use core::pedersen::{HashState, PedersenTrait};
 
 use integer::U32TryIntoNonZero;
 use integer::u32_as_non_zero;
-use keccak::u128_split;
+use keccak::{cairo_keccak, u128_split};
 use starknet::{EthAddress, EthAddressIntoFelt252, ContractAddress, ClassHash};
 use traits::DivRem;
 use utils::constants::{
@@ -868,6 +868,16 @@ fn compute_starknet_address(
     let normalized_address: ContractAddress = (hash.into() & MAX_ADDRESS).try_into().unwrap();
     // We know this unwrap is safe, because of the above bitwise AND on 2 ** 251
     normalized_address
+}
+
+// keccack256 on a bytes message
+fn compute_msg_hash(msg: Span<u8>) -> u256 {
+    let mut msg_byte_array = ByteArrayExt::from_bytes(msg);
+    let (mut keccak_input, last_input_word, last_input_num_bytes) = msg_byte_array.to_u64_words();
+    let msg_hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes)
+        .reverse_endianness();
+
+    msg_hash
 }
 
 #[generate_trait]
