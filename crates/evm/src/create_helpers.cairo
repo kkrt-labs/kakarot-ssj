@@ -104,8 +104,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
 
         target_account.set_nonce(1);
         target_account.set_type(AccountType::ContractAccount);
-        target_account
-            .address = Address { evm: target_address.evm, starknet: target_address.starknet };
+        target_account.address = target_address;
         self.state.set_account(target_account);
 
         let call_ctx = CallContextTrait::new(
@@ -158,6 +157,10 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
 
                 let mut account = self.state.get_account(account_address)?;
                 account.set_code(return_data);
+                assert(
+                    account.account_type == AccountType::ContractAccount,
+                    'type should be CA in finalize'
+                );
                 account.set_type(AccountType::ContractAccount);
                 self.state.set_account(account);
                 self.return_to_parent_ctx();

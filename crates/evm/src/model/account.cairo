@@ -93,7 +93,7 @@ impl AccountImpl of AccountTrait {
                             }
                         )
                     },
-                    AccountType::Unknown(_) => Option::None,
+                    AccountType::Unknown => Option::None,
                 }
             },
             Option::None => Option::None,
