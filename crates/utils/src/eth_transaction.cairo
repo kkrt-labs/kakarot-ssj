@@ -49,7 +49,7 @@ impl EthTransactionImpl of EthTransaction {
         let decoded_data = decoded_data.map_err()?;
 
         if (decoded_data.len() != 1) {
-            return Result::Err(EthTransactionError::Other('Length is not 1'));
+            return Result::Err(EthTransactionError::TopLevelRlpListWrongLength(decoded_data.len()));
         }
 
         let decoded_data = *decoded_data.at(0);
@@ -58,7 +58,7 @@ impl EthTransactionImpl of EthTransaction {
             RLPItem::String => { Result::Err(EthTransactionError::ExpectedRLPItemToBeList) },
             RLPItem::List(val) => {
                 if (val.len() != 9) {
-                    return Result::Err(EthTransactionError::Other('Length is not 9'));
+                    return Result::Err(EthTransactionError::LegacyTxWrongPayloadLength(val.len()));
                 }
 
                 let (
@@ -125,7 +125,7 @@ impl EthTransactionImpl of EthTransaction {
 
         let decoded_data = RLPTrait::decode(rlp_encoded_data).map_err()?;
         if (decoded_data.len() != 1) {
-            return Result::Err(EthTransactionError::Other('Length is not 1'));
+            return Result::Err(EthTransactionError::TopLevelRlpListWrongLength(decoded_data.len()));
         }
 
         let decoded_data = *decoded_data.at(0);
@@ -135,11 +135,11 @@ impl EthTransactionImpl of EthTransaction {
             RLPItem::List(val) => {
                 // total items in EIP 2930 (unsigned): 8
                 if (tx_type == 1 && val.len() != 8) {
-                    return Result::Err(EthTransactionError::Other('Length is not 8'));
+                    return Result::Err(EthTransactionError::TypedTxWrongPayloadLength(val.len()));
                 }
                 // total items in EIP 1559 (unsigned): 9
                 if (tx_type == 2 && val.len() != 9) {
-                    return Result::Err(EthTransactionError::Other('Length is not 9'));
+                    return Result::Err(EthTransactionError::TypedTxWrongPayloadLength(val.len()));
                 }
 
                 let chain_id = (*val.at(chain_idx)).parse_u128_from_string().map_err()?;

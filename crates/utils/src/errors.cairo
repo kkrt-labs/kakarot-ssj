@@ -54,5 +54,11 @@ enum EthTransactionError {
     ExpectedRLPItemToBeList,
     ExpectedRLPItemToBeString,
     RlpHelpersError: RLPHelpersError,
+    // the usize represents the encountered length of payload
+    TopLevelRlpListWrongLength: usize,
+    // the usize represents the encountered length of payload
+    LegacyTxWrongPayloadLength: usize,
+    // the usize represents the encountered length of payload
+    TypedTxWrongPayloadLength: usize,
     Other: felt252
 }
