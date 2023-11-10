@@ -1,6 +1,7 @@
-use utils::eth_transaction::{EthTransactionImpl};
+use utils::eth_transaction::{EthTransaction, EncodedTransactionTrait, EncodedTransaction};
 use utils::helpers::{U32Trait};
 use utils::tests::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
+
 
 #[test]
 #[available_gas(200000000)]
@@ -11,7 +12,11 @@ fn test_decode_legacy_tx() {
     // chain id used: 0x1
     let data = legacy_rlp_encoded_tx();
 
-    let tx = EthTransactionImpl::decode_legacy_tx(data).unwrap();
+    let encoded_tx: Option<EncodedTransaction> = data.try_into();
+    let encoded_tx = encoded_tx.unwrap();
+    assert(encoded_tx == EncodedTransaction::Legacy(data), 'encoded_tx is not Legacy');
+
+    let tx = encoded_tx.decode().expect('decode failed');
 
     assert(tx.chain_id == 0x1, 'chain id is not 0x1');
     assert(tx.nonce == 0, 'nonce is not 0');
@@ -37,7 +42,11 @@ fn test_decode_eip_2930_tx() {
     // chain id used: 0x1
     let data = eip_2930_encoded_tx();
 
-    let tx = EthTransactionImpl::decode_typed_tx(data).unwrap();
+    let encoded_tx: Option<EncodedTransaction> = data.try_into();
+    let encoded_tx = encoded_tx.unwrap();
+    assert(encoded_tx == EncodedTransaction::EIP2930(data), 'encoded_tx is not Eip2930');
+
+    let tx = encoded_tx.decode().expect('decode failed');
 
     assert(tx.chain_id == 0x1, 'chain id is not 0x1');
     assert(tx.nonce == 0, 'nonce is not 0');
@@ -63,7 +72,11 @@ fn test_decode_eip_1559_tx() {
     // chain id used: 0x1
     let data = eip_1559_encoded_tx();
 
-    let tx = EthTransactionImpl::decode_typed_tx(data).unwrap();
+    let encoded_tx: Option<EncodedTransaction> = data.try_into();
+    let encoded_tx = encoded_tx.unwrap();
+    assert(encoded_tx == EncodedTransaction::EIP1559(data), 'encoded_tx is not EIP1559');
+
+    let tx = encoded_tx.decode().expect('decode failed');
 
     assert(tx.chain_id == 0x1, 'chain id is not 0x1');
     assert(tx.nonce == 0, 'nonce is not 0');
@@ -77,4 +90,31 @@ fn test_decode_eip_1559_tx() {
 
     let expected_calldata = 0xabcdef_u32.to_bytes();
     assert(tx.calldata == expected_calldata, 'calldata is not 0xabcdef');
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test_is_legacy_tx_eip_155_tx() {
+    let tx_data = legacy_rlp_encoded_tx();
+    let result = EncodedTransactionTrait::is_legacy_tx(tx_data);
+
+    assert(result == true, 'is_legacy_tx expected true');
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test_is_legacy_tx_eip_1559_tx() {
+    let tx_data = eip_1559_encoded_tx();
+    let result = EncodedTransactionTrait::is_legacy_tx(tx_data);
+
+    assert(result == false, 'is_legacy_tx expected false');
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test_is_legacy_tx_eip_2930_tx() {
+    let tx_data = eip_2930_encoded_tx();
+    let result = EncodedTransactionTrait::is_legacy_tx(tx_data);
+
+    assert(result == false, 'is_legacy_tx expected false');
 }
