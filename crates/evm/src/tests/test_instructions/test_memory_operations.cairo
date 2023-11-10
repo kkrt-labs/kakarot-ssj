@@ -3,7 +3,8 @@ use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION, WRITE_IN_STATI
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
-use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
+use evm::model::contract_account::{ContractAccountTrait};
+use evm::model::{Account, AccountType};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, StateInternalTrait, compute_storage_address};
 use evm::tests::test_utils::{
@@ -525,10 +526,18 @@ fn test_exec_sload_from_storage() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let mut machine = setup_machine();
-    let mut ca = ContractAccountTrait::deploy(machine.address().evm, array![].span()).unwrap();
+    let mut ca_address = ContractAccountTrait::deploy(machine.address().evm, array![].span())
+        .unwrap();
+    let account = Account {
+        account_type: AccountType::ContractAccount,
+        address: ca_address,
+        code: array![0xab, 0xcd, 0xef].span(),
+        nonce: 1,
+        selfdestruct: false
+    };
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
-    ca.set_storage_at(key, value);
+    account.store_storage(key, value);
 
     machine.stack.push(key.into());
 
@@ -588,7 +597,14 @@ fn test_exec_sstore_finalized() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let mut machine = setup_machine();
     // Deploys the contract account to be able to commit storage changes.
-    let ca = ContractAccountTrait::deploy(machine.address().evm, array![].span()).unwrap();
+    let ca_address = ContractAccountTrait::deploy(machine.address().evm, array![].span()).unwrap();
+    let account = Account {
+        account_type: AccountType::ContractAccount,
+        address: ca_address,
+        code: array![].span(),
+        nonce: 1,
+        selfdestruct: false
+    };
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
     machine.stack.push(value);
@@ -600,7 +616,7 @@ fn test_exec_sstore_finalized() {
     machine.state.commit_storage();
 
     // Then
-    assert(ca.storage_at(key).unwrap() == value, 'wrong value in journal')
+    assert(account.fetch_storage(key).unwrap() == value, 'wrong value in journal')
 }
 
 #[test]

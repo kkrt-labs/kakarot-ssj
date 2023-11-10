@@ -17,8 +17,8 @@ fn test_execute_load_origin_nonce() {
     set_nonce(1337);
     // When
     let mut exec_result = execute(
-        origin: sender.address(),
-        target: recipient.address(),
+        origin: sender,
+        target: recipient,
         bytecode: Default::default().span(),
         calldata: Default::default().span(),
         value: 0,
@@ -33,7 +33,7 @@ fn test_execute_load_origin_nonce() {
 
     let origin_account = exec_result
         .state
-        .get_account(sender.address().evm)
+        .get_account(sender.evm)
         .expect('couldnt get origin account');
 
     assert(origin_account.nonce == 1337, 'wrong origin nonce');
@@ -48,11 +48,11 @@ fn test_execute_value_transfer() {
     let sender = EOATrait::deploy(evm_address()).expect('sender deploy failed');
     let recipient = EOATrait::deploy(other_evm_address()).expect('recipient deploy failed');
     // Transfer native tokens to sender
-    contract_utils::fund_account_with_native_token(sender.starknet_address, native_token, 10000);
+    contract_utils::fund_account_with_native_token(sender.starknet, native_token, 10000);
     // When
     let mut exec_result = execute(
-        origin: sender.address(),
-        target: recipient.address(),
+        origin: sender,
+        target: recipient,
         bytecode: Default::default().span(),
         calldata: Default::default().span(),
         value: 2000,
@@ -67,8 +67,8 @@ fn test_execute_value_transfer() {
     // `commit_state` is applied in `eth_send_tx` only - to test that `execute` worked correctly, we manually apply it here.
     exec_result.state.commit_state();
 
-    let sender_balance = native_token.balanceOf(sender.starknet_address);
-    let recipient_balance = native_token.balanceOf(recipient.starknet_address);
+    let sender_balance = native_token.balanceOf(sender.starknet);
+    let recipient_balance = native_token.balanceOf(recipient.starknet);
 
     assert(sender_balance == 8000, 'wrong sender balance');
     assert(recipient_balance == 2000, 'wrong recipient balance');

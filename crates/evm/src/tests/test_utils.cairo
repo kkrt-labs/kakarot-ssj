@@ -4,7 +4,7 @@ use evm::context::{
 };
 use evm::errors::{EVMError};
 use evm::machine::{Machine, MachineCurrentContextTrait};
-use evm::model::{ContractAccountTrait, Address};
+use evm::model::{ContractAccountTrait, Address, Account, AccountType};
 use nullable::{match_nullable, FromNullableResult};
 use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
@@ -347,17 +347,25 @@ fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
 fn initialize_contract_account(
     eth_address: EthAddress, bytecode: Span<u8>, storage: Span<(u256, u256)>
 ) -> Result<Address, EVMError> {
-    let mut ca = ContractAccountTrait::deploy(eth_address, bytecode).expect('failed deploying CA');
+    let mut ca_address = ContractAccountTrait::deploy(eth_address, bytecode)
+        .expect('failed deploying CA');
     // Set the storage of the contract account
+    let account = Account {
+        account_type: AccountType::ContractAccount,
+        address: ca_address,
+        code: array![0xab, 0xcd, 0xef].span(),
+        nonce: 1,
+        selfdestruct: false
+    };
     let mut i = 0;
     loop {
         if i == storage.len() {
             break;
         };
         let (key, value) = storage.get(i).unwrap().unbox();
-        ca.set_storage_at(*key, *value);
+        account.store_storage(*key, *value);
         i += 1;
     };
 
-    Result::Ok(Address { evm: eth_address, starknet: ca.starknet_address() })
+    Result::Ok(ca_address)
 }

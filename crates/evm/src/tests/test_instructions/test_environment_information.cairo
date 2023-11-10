@@ -6,7 +6,9 @@ use evm::instructions::EnvironmentInformationTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::model::contract_account::ContractAccountTrait;
+use evm::model::{Account, AccountType};
 use evm::stack::StackTrait;
+use evm::state::StateTrait;
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_calldata, setup_machine_with_bytecode, evm_address, callvalue,
     setup_machine_with_nested_execution_context, return_from_subcontext, native_token, other_address
@@ -86,15 +88,15 @@ fn test_exec_balance_zero() {
     assert(machine.stack.peek().unwrap() == 0x00, 'wrong balance');
 }
 
-// TODO: implement balance once contracts accounts can be deployed
-#[ignore]
 #[test]
 #[available_gas(5000000)]
 fn test_exec_balance_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    // TODO: deploy contract account
-    // and fund it
+    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span())
+        .expect('failed deploy contract account',);
+
+    fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
 
     // And
     let mut machine = setup_machine();
@@ -105,7 +107,7 @@ fn test_exec_balance_contract_account() {
     machine.exec_balance();
 
     // Then
-    panic_with_felt252('Not implemented yet');
+    assert(machine.stack.peek().unwrap() == 0x1, 'wrong balance');
 }
 
 
@@ -577,7 +579,7 @@ fn test_exec_extcodesize_ca_empty() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode remains empty, and we expect the empty hash in return
-    let mut ca = ContractAccountTrait::deploy(evm_address(), array![].span());
+    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span());
 
     machine.stack.push(evm_address.into());
 
@@ -598,7 +600,7 @@ fn test_exec_extcodesize_ca_with_bytecode() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
+    ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
 
     machine.stack.push(evm_address.into());
     // When
@@ -622,7 +624,7 @@ fn test_exec_extcodecopy_ca() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
+    ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
 
     // size
     machine.stack.push(50).unwrap();
@@ -653,7 +655,7 @@ fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
+    ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
 
     // size
     machine.stack.push(5);
@@ -923,9 +925,16 @@ fn test_exec_extcodehash_selfdestructed() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode remains empty, and we expect the empty hash in return
-    let mut ca = ContractAccountTrait::deploy(evm_address(), array![].span())
+    let mut ca_address = ContractAccountTrait::deploy(evm_address, array![].span())
         .expect('CA deployment failed');
-    ca.selfdestruct().expect('CA selfdestruct failed');
+    let account = Account {
+        account_type: AccountType::ContractAccount,
+        address: ca_address,
+        code: array![].span(),
+        nonce: 1,
+        selfdestruct: false
+    };
+    account.selfdestruct().expect('CA selfdestruct failed');
 
     machine.stack.push(evm_address.into());
 
@@ -933,7 +942,13 @@ fn test_exec_extcodehash_selfdestructed() {
     machine.exec_extcodehash().unwrap();
 
     // Then
-    assert(machine.stack.peek().unwrap() == 0, 'expected 0');
+    assert(
+        machine
+            .stack
+            .peek()
+            .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
+        'expected empty hash'
+    );
 }
 
 #[test]
@@ -959,6 +974,7 @@ fn test_exec_extcodehash_eoa() {
     );
 }
 
+
 #[test]
 #[available_gas(20000000)]
 fn test_exec_extcodehash_ca_empty() {
@@ -967,7 +983,7 @@ fn test_exec_extcodehash_ca_empty() {
     let mut machine = setup_machine();
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     // The bytecode remains empty, and we expect the empty hash in return
-    let mut ca = ContractAccountTrait::deploy(evm_address(), array![].span());
+    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span());
 
     machine.stack.push(evm_address.into());
 
@@ -986,7 +1002,7 @@ fn test_exec_extcodehash_ca_empty() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_exec_extcodehash_ca_uninitialized() {
+fn test_exec_extcodehash_unknown_account() {
     // Given
     let evm_address = evm_address();
     let mut machine = setup_machine();
@@ -1011,7 +1027,7 @@ fn test_exec_extcodehash_ca_with_bytecode() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    let mut ca = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
+    let mut ca_address = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
 
     machine.stack.push(evm_address.into());
     // When

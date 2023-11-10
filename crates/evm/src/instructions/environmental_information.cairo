@@ -240,7 +240,11 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let evm_address = self.stack.pop_eth_address()?;
 
         let account = self.state.get_account(evm_address)?;
-        if (account.is_precompile() || (account.is_ca() && account.nonce == 0)) {
+        // UnknownAccount can either be
+        // -> Undeployed CAs that might be deployed later, but currently don't
+        // exist and have only been touched for value transfers
+        // -> Undeployed EOAs
+        if account.is_precompile() || (account.account_type == AccountType::Unknown) {
             return self.stack.push(0);
         }
         let bytecode = account.code;

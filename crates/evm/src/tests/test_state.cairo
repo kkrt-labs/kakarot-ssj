@@ -195,7 +195,7 @@ mod test_state {
     use contracts::tests::test_utils as contract_utils;
     use contracts::uninitialized_account::UninitializedAccount;
     use evm::model::account::{Account, AccountType};
-    use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
+    use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::EOATrait;
     use evm::model::{Event, Transfer, Address};
     use evm::state::{State, StateTrait, StateInternalTrait};
@@ -217,11 +217,10 @@ mod test_state {
             evm_address,
             UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
         );
-        let expected_type = AccountType::ContractAccount(
-            ContractAccount { evm_address, starknet_address }
-        );
+        let expected_type = AccountType::Unknown;
         let expected_account = Account {
             account_type: expected_type,
+            address: Address { evm: evm_address, starknet: starknet_address },
             code: Default::default().span(),
             nonce: 0,
             selfdestruct: false
@@ -245,11 +244,10 @@ mod test_state {
         let starknet_address = compute_starknet_address(
             deployer.into(), evm_address, UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
         );
-        let expected_type = AccountType::ContractAccount(
-            ContractAccount { evm_address, starknet_address }
-        );
+        let expected_type = AccountType::ContractAccount;
         let expected_account = Account {
             account_type: expected_type,
+            address: Address { evm: evm_address, starknet: starknet_address },
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,
             selfdestruct: false
@@ -282,13 +280,20 @@ mod test_state {
         // Transfer native tokens to sender
         let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
         let evm_address: EthAddress = test_utils::evm_address();
-        let mut ca = ContractAccountTrait::deploy(evm_address, array![].span())
+        let mut ca_address = ContractAccountTrait::deploy(evm_address, array![].span())
             .expect('sender deploy failed');
 
         let mut state: State = Default::default();
         let key = 10;
         let value = 100;
-        ca.set_storage_at(key, value);
+        let account = Account {
+            account_type: AccountType::ContractAccount,
+            address: ca_address,
+            code: array![0xab, 0xcd, 0xef].span(),
+            nonce: 1,
+            selfdestruct: false
+        };
+        account.store_storage(key, value);
 
         let read_value = state.read_state(evm_address, key).unwrap();
 
@@ -377,7 +382,7 @@ mod test_state {
         // Transfer native tokens to sender - we need to set the contract address for this
         set_contract_address(contract_utils::constants::ETH_BANK());
         IERC20CamelDispatcher { contract_address: native_token.contract_address }
-            .transfer(eoa_account.starknet_address, 10000);
+            .transfer(eoa_account.starknet, 10000);
         // Revert back to contract_address = kakarot for the test
         set_contract_address(kakarot_core.contract_address);
         let mut state: State = Default::default();

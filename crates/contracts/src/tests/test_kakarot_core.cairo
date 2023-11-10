@@ -13,7 +13,7 @@ use contracts::tests::test_utils as contract_utils;
 use contracts::uninitialized_account::UninitializedAccount;
 use evm::machine::Status;
 use evm::model::contract_account::ContractAccountTrait;
-use evm::model::{AccountType, Address, EOA, ContractAccount};
+use evm::model::{AccountType, Address};
 use evm::tests::test_utils;
 use starknet::{testing, contract_address_const, ContractAddress, ClassHash};
 use utils::helpers::u256_to_bytes_array;
@@ -113,21 +113,13 @@ fn test_kakarot_core_eoa_mapping() {
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
 
     // When
-    let eoa_starknet_address = kakarot_core.address_registry(test_utils::evm_address());
+    let (account_type, address) = kakarot_core
+        .address_registry(test_utils::evm_address())
+        .expect('should be in registry');
 
     // Then
-    assert(
-        eoa_starknet_address
-            .expect(
-                'should be in registry'
-            ) == AccountType::EOA(
-                EOA {
-                    evm_address: test_utils::evm_address(),
-                    starknet_address: expected_eoa_starknet_address
-                }
-            ),
-        'wrong starknet address'
-    );
+    assert(account_type == AccountType::EOA, 'wrong account_type address');
+    assert(address == expected_eoa_starknet_address, 'wrong address');
 
     let another_sn_address: ContractAddress = 0xbeef.try_into().unwrap();
 
@@ -137,16 +129,11 @@ fn test_kakarot_core_eoa_mapping() {
             test_utils::evm_address(), StoredAccountType::EOA(another_sn_address)
         );
 
-    assert(
-        kakarot_core
-            .address_registry(test_utils::evm_address())
-            .expect(
-                'should be in registry'
-            ) == AccountType::EOA(
-                EOA { evm_address: test_utils::evm_address(), starknet_address: another_sn_address }
-            ),
-        'wrong registry address'
-    );
+    let (account_type, address) = kakarot_core
+        .address_registry(test_utils::evm_address())
+        .expect('should be in registry');
+    assert(account_type == AccountType::EOA, 'wrong registry address2');
+    assert(address == another_sn_address, 'wrong address2');
 }
 
 #[test]

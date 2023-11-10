@@ -1,13 +1,10 @@
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
-use debug::PrintTrait;
 use evm::errors::{
     EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, INSUFFICIENT_BALANCE, BALANCE_OVERFLOW
 };
 use evm::model::account::{AccountTrait};
 use evm::model::contract_account::ContractAccountTrait;
-use evm::model::{
-    Event, Transfer, Account, ContractAccount, EOA, AccountType, Address, AddressTrait
-};
+use evm::model::{Event, Transfer, Account, AccountType, Address, AddressTrait};
 use hash::{HashStateTrait, HashStateExTrait};
 use integer::{u256_overflow_sub, u256_overflowing_add};
 use nullable::{match_nullable, FromNullableResult};
@@ -349,10 +346,15 @@ impl StateInternalImpl of StateInternalTrait {
                             let account_type = account.account_type;
                             match account_type {
                                 //this shouldn't ever happen
-                                AccountType::EOA(_) => { panic_with_felt252('EOA storagechange') },
-                                AccountType::ContractAccount(mut ca) => {
-                                    ca.set_storage_at(key, value);
+                                AccountType::EOA => {
+                                    panic_with_felt252('EOA account commitment')
                                 },
+                                AccountType::ContractAccount => {
+                                    account.store_storage(key, value);
+                                },
+                                AccountType::Unknown(_) => {
+                                    panic_with_felt252('Unknown account commitment')
+                                }
                             }
                         },
                         Result::Err(err) => { break Result::Err(err); }

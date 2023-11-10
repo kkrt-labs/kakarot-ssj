@@ -4,6 +4,7 @@ use contracts::kakarot_core::interface::{
 
 use contracts::tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
 use evm::instructions::BlockInformationTrait;
+use evm::model::contract_account::ContractAccountTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{setup_machine, evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
@@ -146,17 +147,15 @@ fn test_exec_selfbalance_zero() {
     assert(machine.stack.peek().unwrap() == 0x00, 'wrong balance');
 }
 
-// TODO: implement balance once contracts accounts can be deployed
-#[ignore]
 #[test]
 #[available_gas(5000000)]
 fn test_exec_selfbalance_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    // TODO: deploy contract account
-    // and fund it
+    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span())
+        .expect('failed deploy contract account',);
 
-    // And
+    fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
     let mut machine = setup_machine();
 
     // When
@@ -164,7 +163,7 @@ fn test_exec_selfbalance_contract_account() {
     machine.exec_selfbalance();
 
     // Then
-    panic_with_felt252('Not implemented yet');
+    assert(machine.stack.peek().unwrap() == 0x1, 'wrong balance');
 }
 
 

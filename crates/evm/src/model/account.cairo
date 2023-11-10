@@ -1,18 +1,81 @@
+use contracts::contract_account::{
+    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount,
+};
+use contracts::kakarot_core::kakarot::KakarotCore::KakarotCoreInternal;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
-use evm::errors::{EVMError};
-use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
-use evm::model::eoa::{EOA, EOATrait};
-use evm::model::{Address, AccountType};
+use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
+use evm::model::contract_account::{ContractAccountTrait};
+use evm::model::{Address, AddressTrait, AccountType};
+use openzeppelin::token::erc20::interface::{
+    IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
+};
 use starknet::{ContractAddress, EthAddress, get_contract_address};
-use utils::helpers::{ByteArrayExTrait, compute_starknet_address};
+use utils::helpers::{ResultExTrait, ByteArrayExTrait, compute_starknet_address};
 
 #[derive(Copy, Drop, PartialEq)]
 struct Account {
     account_type: AccountType,
+    address: Address,
     code: Span<u8>,
     nonce: u64,
     selfdestruct: bool,
+}
+
+#[derive(Drop)]
+struct ContractAccountBuilder {
+    account_type: AccountType,
+    address: Address,
+    code: Span<u8>,
+    nonce: u64,
+    selfdestruct: bool,
+}
+
+#[generate_trait]
+impl ContractAccountBuilderImpl of ContractAccountBuilderTrait {
+    fn new(address: Address) -> ContractAccountBuilder {
+        ContractAccountBuilder {
+            account_type: AccountType::ContractAccount,
+            address: address,
+            code: Default::default().span(),
+            nonce: 0,
+            selfdestruct: false,
+        }
+    }
+
+    #[inline(always)]
+    fn fetch_nonce(mut self: ContractAccountBuilder) -> ContractAccountBuilder {
+        let contract_account = IContractAccountDispatcher {
+            contract_address: self.address.starknet
+        };
+        self.nonce = contract_account.nonce();
+        self
+    }
+
+    /// Loads the bytecode of a ContractAccount from Kakarot Core's contract storage into a Span<u8>.
+    /// # Arguments
+    /// * `self` - The address of the Contract Account to load the bytecode from
+    /// # Returns
+    /// * The bytecode of the Contract Account as a ByteArray
+    fn fetch_bytecode(mut self: ContractAccountBuilder) -> ContractAccountBuilder {
+        let contract_account = IContractAccountDispatcher {
+            contract_address: self.address.starknet
+        };
+        let bytecode = contract_account.bytecode();
+        self.code = bytecode;
+        self
+    }
+
+    #[inline(always)]
+    fn build(self: ContractAccountBuilder) -> Account {
+        Account {
+            account_type: self.account_type,
+            address: self.address,
+            code: self.code,
+            nonce: self.nonce,
+            selfdestruct: self.selfdestruct,
+        }
+    }
 }
 
 #[generate_trait]
@@ -39,9 +102,8 @@ impl AccountImpl of AccountTrait {
                     // Therefore, we're sure that only contract accounts are
                     // undeployed.
                     Account {
-                        account_type: AccountType::ContractAccount(
-                            ContractAccount { evm_address, starknet_address }
-                        ),
+                        account_type: AccountType::Unknown,
+                        address: Address { starknet: starknet_address, evm: evm_address, },
                         code: Default::default().span(),
                         nonce: 0,
                         selfdestruct: false,
@@ -65,26 +127,28 @@ impl AccountImpl of AccountTrait {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
         let maybe_stored_account = kakarot_state.address_registry(evm_address);
         let mut account = match maybe_stored_account {
-            Option::Some(account_type) => {
+            Option::Some((
+                account_type, starknet_address
+            )) => {
                 match account_type {
-                    AccountType::EOA(eoa) => Option::Some(
+                    AccountType::EOA => Option::Some(
                         Account {
-                            account_type: AccountType::EOA(eoa),
+                            account_type: AccountType::EOA,
+                            address: Address { evm: evm_address, starknet: starknet_address },
                             code: Default::default().span(),
                             nonce: 1,
                             selfdestruct: false,
                         }
                     ),
-                    AccountType::ContractAccount(ca) => {
-                        Option::Some(
-                            Account {
-                                account_type: AccountType::ContractAccount(ca),
-                                code: ca.load_bytecode()?,
-                                nonce: ca.nonce()?,
-                                selfdestruct: false,
-                            }
-                        )
-                    }
+                    AccountType::ContractAccount => {
+                        let address = Address { evm: evm_address, starknet: starknet_address };
+                        let account = ContractAccountBuilderTrait::new(address)
+                            .fetch_nonce()
+                            .fetch_bytecode()
+                            .build();
+                        Option::Some(account)
+                    },
+                    AccountType::Unknown => Option::None,
                 }
             },
             Option::None => Option::None,
@@ -92,14 +156,13 @@ impl AccountImpl of AccountTrait {
         Result::Ok(account)
     }
 
-    /// Returns whether an account should be deployed or not.  If the nonce is
-    /// not 0 and it has code, the account should be deployed - provided it's not already
-    /// deployed yet.
-    // If the nonce is 0, the account is just "touched" (e.g.
-    // balance transfer) and is not set for deployment.
+    /// Returns whether an account should be deployed or not.
+    /// To be deployed, the type must have been resolved to be a CA - must not
+    /// be registered already, and the nonce must not be 0 or the code must not
+    /// be empty
     #[inline(always)]
-    fn should_deploy(self: @Account) -> bool {
-        if self.is_ca() && (*self.nonce != 0 || !(*self.code).is_empty()) {
+    fn should_deploy(self: @Account, is_registered: bool) -> bool {
+        if !is_registered && self.is_ca() && (*self.nonce != 0 || !(*self.code).is_empty()) {
             return true;
         };
         false
@@ -117,32 +180,37 @@ impl AccountImpl of AccountTrait {
     ///
     /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
     fn commit(self: @Account) -> Result<(), EVMError> {
-        // Case account exists
-        let is_deployed = AccountTrait::is_deployed(self.address().evm);
+        // Case account exists and is already on chain
+        let is_registered = AddressTrait::is_registered(self.address().evm);
 
-        if is_deployed {
+        if is_registered {
             match self.account_type {
                 AccountType::EOA(eoa) => {
                     // no - op
                     Result::Ok(())
                 },
-                AccountType::ContractAccount(ca) => {
-                    let mut ca = *ca;
+                AccountType::ContractAccount => {
                     if *self.selfdestruct {
-                        return ca.selfdestruct();
+                        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
+                        kakarot_state
+                            .set_address_registry(
+                                self.address().evm, StoredAccountType::UnexistingAccount
+                            );
+                        return self.selfdestruct();
                     }
-                    ca.set_nonce(*self.nonce)
+                    self.store_nonce(*self.nonce)
                 //Storage is handled outside of the account and must be commited after all accounts are commited.
-                }
+                },
+                AccountType::Unknown => { Result::Ok(()) }
             }
-        } else if self.should_deploy() {
+        } else if self.should_deploy(is_registered) {
             //Case new account
             // If SELFDESTRUCT, just do nothing
             if (*self.selfdestruct == true) {
                 return Result::Ok(());
             };
-            let mut ca = ContractAccountTrait::deploy(self.address().evm, *self.code)?;
-            ca.set_nonce(*self.nonce)
+            let mut ca_address = ContractAccountTrait::deploy(self.address().evm, *self.code)?;
+            self.store_nonce(*self.nonce)
         //Storage is handled outside of the account and must be commited after all accounts are commited.
         } else {
             Result::Ok(())
@@ -151,10 +219,7 @@ impl AccountImpl of AccountTrait {
 
     #[inline(always)]
     fn address(self: @Account) -> Address {
-        match self.account_type {
-            AccountType::EOA(eoa) => { eoa.address() },
-            AccountType::ContractAccount(ca) => { ca.address() }
-        }
+        *self.address
     }
 
     #[inline(always)]
@@ -168,6 +233,8 @@ impl AccountImpl of AccountTrait {
 
     /// Returns whether an accound is deployed at the given address.
     ///
+    /// Based on the state of the account in the cache - the account can
+    /// not be commited on-chain, but already be deployed in the KakarotState.
     /// # Arguments
     ///
     /// * `address` - The Ethereum address to look up.
@@ -176,22 +243,16 @@ impl AccountImpl of AccountTrait {
     ///
     /// `true` if an account is deployed at this address, `false` otherwise.
     #[inline(always)]
-    fn is_deployed(address: EthAddress) -> bool {
-        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let maybe_account = kakarot_state.address_registry(address);
-        match maybe_account {
-            Option::Some(_) => true,
-            Option::None => false
-        }
-    }
+    fn is_deployed(self: @Account) -> bool {
+        let is_known = *self.account_type != AccountType::Unknown;
 
-    /// Returns `true` if the account is an Externally Owned Account (EOA).
-    #[inline(always)]
-    fn is_eoa(self: @Account) -> bool {
-        match self.account_type {
-            AccountType::EOA => true,
-            AccountType::ContractAccount => false
+        //TODO(account) verify whether is_known is a sufficient condition
+        // as if an account's nonce != 0 or its code is not empty,
+        // its type is necessarily known
+        if (is_known || *self.nonce != 0 || !(*self.code).is_empty()) {
+            return true;
         }
+        return false;
     }
 
     /// Returns `true` if the account is a Contract Account (CA).
@@ -199,26 +260,28 @@ impl AccountImpl of AccountTrait {
     fn is_ca(self: @Account) -> bool {
         match self.account_type {
             AccountType::EOA => false,
-            AccountType::ContractAccount => true
+            AccountType::ContractAccount => true,
+            AccountType::Unknown => false
         }
     }
 
     #[inline(always)]
     fn evm_address(self: @Account) -> EthAddress {
-        match self.account_type {
-            AccountType::EOA(eoa) => { eoa.evm_address() },
-            AccountType::ContractAccount(ca) => { ca.evm_address() }
-        }
+        self.address().evm
     }
 
     /// Returns the balance in native token for a given EVM account (EOA or CA)
     /// This is equivalent to checking the balance in native coin, i.e. ETHER of an account in Ethereum
     #[inline(always)]
     fn balance(self: @Account) -> Result<u256, EVMError> {
-        match self.account_type {
-            AccountType::EOA(eoa) => { eoa.balance() },
-            AccountType::ContractAccount(ca) => { ca.balance() }
-        }
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let native_token_address = kakarot_state.native_token();
+        let native_token = IERC20CamelSafeDispatcher { contract_address: native_token_address };
+        //Note: Starknet OS doesn't allow error management of failed syscalls yet.
+        // If this call fails, the entire transaction will revert.
+        native_token
+            .balanceOf(self.address().starknet)
+            .map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
     }
 
     /// Returns the bytecode of the EVM account (EOA or CA)
@@ -240,9 +303,15 @@ impl AccountImpl of AccountTrait {
     #[inline(always)]
     fn read_storage(self: @Account, key: u256) -> Result<u256, EVMError> {
         match self.account_type {
-            AccountType::EOA(eoa) => Result::Ok(0),
-            AccountType::ContractAccount(ca) => ca.storage_at(key),
+            AccountType::EOA => Result::Ok(0),
+            AccountType::ContractAccount => self.fetch_storage(key),
+            AccountType::Unknown(_) => Result::Ok(0),
         }
+    }
+
+    #[inline(always)]
+    fn set_type(ref self: Account, account_type: AccountType) {
+        self.account_type = account_type;
     }
 
     /// Sets the nonce of the Account

@@ -18,6 +18,7 @@ enum StoredAccountType {
 mod KakarotCore {
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
+    use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
     use core::starknet::SyscallResultTrait;
@@ -26,8 +27,8 @@ mod KakarotCore {
     use evm::errors::{EVMError, EVMErrorTrait, CALLING_FROM_CA, CALLING_FROM_UNDEPLOYED_ACCOUNT};
     use evm::execution::execute;
     use evm::model::account::{Account, AccountType, AccountTrait};
-    use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
-    use evm::model::eoa::{EOA, EOATrait};
+    use evm::model::contract_account::{ContractAccountTrait};
+    use evm::model::eoa::{EOATrait};
     use evm::model::{ExecutionResult, Address, AddressTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
@@ -167,24 +168,29 @@ mod KakarotCore {
             compute_starknet_address(deployer, evm_address, self.account_class_hash.read())
         }
 
-        fn address_registry(self: @ContractState, evm_address: EthAddress) -> Option<AccountType> {
+        fn address_registry(
+            self: @ContractState, evm_address: EthAddress
+        ) -> Option<(AccountType, ContractAddress)> {
             match self.address_registry.read(evm_address) {
                 StoredAccountType::UnexistingAccount => Option::None,
                 StoredAccountType::EOA(starknet_address) => Option::Some(
-                    AccountType::EOA(EOA { evm_address, starknet_address })
+                    (AccountType::EOA, starknet_address)
                 ),
                 StoredAccountType::ContractAccount(starknet_address) => Option::Some(
-                    AccountType::ContractAccount(ContractAccount { evm_address, starknet_address })
+                    (AccountType::ContractAccount, starknet_address)
                 ),
             }
         }
 
 
         fn contract_account_nonce(self: @ContractState, evm_address: EthAddress) -> u64 {
-            let ca = ContractAccountTrait::at(evm_address)
+            let ca_address = ContractAccountTrait::at(evm_address)
                 .expect('Fetching CA failed')
                 .expect('No CA found');
-            ca.nonce().unwrap()
+            let contract_account = IContractAccountDispatcher {
+                contract_address: ca_address.starknet
+            };
+            contract_account.nonce()
         }
 
         fn account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
@@ -197,30 +203,39 @@ mod KakarotCore {
         fn contract_account_storage_at(
             self: @ContractState, evm_address: EthAddress, key: u256
         ) -> u256 {
-            let ca = ContractAccountTrait::at(evm_address)
+            let ca_address = ContractAccountTrait::at(evm_address)
                 .expect('Fetching CA failed')
                 .expect('No CA found');
-            ca.storage_at(key).unwrap()
+            let contract_account = IContractAccountDispatcher {
+                contract_address: ca_address.starknet
+            };
+            contract_account.storage_at(key)
         }
 
         fn contract_account_bytecode(self: @ContractState, evm_address: EthAddress) -> Span<u8> {
-            let ca = ContractAccountTrait::at(evm_address)
+            let ca_address = ContractAccountTrait::at(evm_address)
                 .expect('Fetching CA failed')
                 .expect('No CA found');
-            ca.load_bytecode().unwrap()
+            let contract_account = IContractAccountDispatcher {
+                contract_address: ca_address.starknet
+            };
+            contract_account.bytecode()
         }
 
         fn contract_account_false_positive_jumpdest(
             self: @ContractState, evm_address: EthAddress, offset: usize
         ) -> bool {
-            let ca = ContractAccountTrait::at(evm_address)
+            let ca_address = ContractAccountTrait::at(evm_address)
                 .expect('Fetching CA failed')
                 .expect('No CA found');
-            ca.is_false_positive_jumpdest(offset).unwrap()
+            let contract_account = IContractAccountDispatcher {
+                contract_address: ca_address.starknet
+            };
+            contract_account.is_false_positive_jumpdest(offset)
         }
 
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
-            EOATrait::deploy(evm_address).expect('EOA Deployment failed').starknet_address
+            EOATrait::deploy(evm_address).expect('EOA Deployment failed').starknet
         }
 
         fn eth_call(
@@ -352,6 +367,7 @@ mod KakarotCore {
                     let bytecode = data;
                     // TODO: compute_evm_address
                     // HASH(RLP(deployer_address, deployer_nonce))[0..20]
+                    //TODO manually set target account type to CA in state
                     panic_with_felt252('deploy tx flow unimplemented')
                 },
             }

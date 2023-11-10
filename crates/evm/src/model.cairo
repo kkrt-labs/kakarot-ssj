@@ -6,8 +6,8 @@ use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
 use evm::execution::Status;
 use evm::model::account::{Account, AccountTrait};
-use evm::model::contract_account::{ContractAccount, ContractAccountTrait};
-use evm::model::eoa::{EOA, EOATrait};
+use evm::model::contract_account::{ContractAccountTrait};
+use evm::model::eoa::EOATrait;
 use evm::state::State;
 use openzeppelin::token::erc20::interface::{
     IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
@@ -31,6 +31,15 @@ struct Address {
 
 #[generate_trait]
 impl AddressImpl of AddressTrait {
+    fn is_registered(evm_address: EthAddress) -> bool {
+        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let maybe_account = kakarot_state.address_registry(evm_address);
+        match maybe_account {
+            Option::Some(_) => true,
+            Option::None => false
+        }
+    }
+
     fn balance(self: @Address) -> Result<u256, EVMError> {
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
         let native_token_address = kakarot_state.native_token();
@@ -67,6 +76,7 @@ struct ExecutionResult {
 /// KakarotCore address for ContractAccounts.
 #[derive(Copy, Drop, PartialEq, Serde)]
 enum AccountType {
-    EOA: EOA,
-    ContractAccount: ContractAccount,
+    EOA,
+    ContractAccount,
+    Unknown
 }

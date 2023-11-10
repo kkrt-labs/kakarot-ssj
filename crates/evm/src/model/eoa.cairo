@@ -5,20 +5,8 @@ use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
-use evm::model::account::{Account, AccountTrait};
-use evm::model::{AccountType, Address};
-use integer::BoundedInt;
-use openzeppelin::token::erc20::interface::{
-    IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
-};
+use evm::model::{Address, AddressTrait};
 use starknet::{EthAddress, ContractAddress, get_contract_address, deploy_syscall};
-use utils::helpers::ResultExTrait;
-
-#[derive(Copy, Drop, PartialEq, Serde)]
-struct EOA {
-    evm_address: EthAddress,
-    starknet_address: ContractAddress
-}
 
 #[generate_trait]
 impl EOAImpl of EOATrait {
@@ -27,9 +15,9 @@ impl EOAImpl of EOATrait {
     /// # Arguments
     ///
     /// * `evm_address` - The EVM address of the EOA to deploy.
-    fn deploy(evm_address: EthAddress) -> Result<EOA, EVMError> {
+    fn deploy(evm_address: EthAddress) -> Result<Address, EVMError> {
         // Unlike CAs, there is not check for the existence of an EOA prealably to calling `EOATrait::deploy` - therefore, we need to check that there is no collision.
-        let mut is_deployed = AccountTrait::is_deployed(evm_address);
+        let mut is_deployed = AddressTrait::is_registered(evm_address);
         if is_deployed {
             return Result::Err(EVMError::DeployError(EOA_EXISTS));
         }
@@ -53,67 +41,9 @@ impl EOAImpl of EOATrait {
                 kakarot_state
                     .set_address_registry(evm_address, StoredAccountType::EOA(starknet_address));
                 kakarot_state.emit(EOADeployed { evm_address, starknet_address });
-                Result::Ok(EOA { evm_address, starknet_address })
+                Result::Ok(Address { evm: evm_address, starknet: starknet_address })
             },
             Result::Err(err) => panic(err)
         }
-    }
-
-
-    /// # Arguments
-    /// * `evm_address` - The EVM address of the eoa
-    /// # Returns
-    /// * The corresponding Account instance
-    fn fetch(self: @EOA) -> Result<Account, EVMError> {
-        Result::Ok(
-            Account {
-                account_type: AccountType::EOA(*self),
-                code: Default::default().span(),
-                nonce: 1,
-                selfdestruct: false
-            }
-        )
-    }
-
-    fn address(self: @EOA) -> Address {
-        Address { evm: *self.evm_address, starknet: *self.starknet_address }
-    }
-
-    /// Returns an EOA instance from the given `evm_address`.
-    fn at(evm_address: EthAddress) -> Result<Option<EOA>, EVMError> {
-        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let maybe_account = kakarot_state.address_registry(evm_address);
-        match maybe_account {
-            Option::Some(account) => {
-                match account {
-                    AccountType::EOA(eoa) => Result::Ok(Option::Some(eoa)),
-                    AccountType::ContractAccount(_) => Result::Ok(Option::None),
-                }
-            },
-            Option::None => Result::Ok(Option::None)
-        }
-    }
-
-
-    fn balance(self: @EOA) -> Result<u256, EVMError> {
-        let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let native_token_address = kakarot_state.native_token();
-        // TODO: make sure this part of the codebase is upgradable
-        // As native_token might become a snake_case implementation
-        // instead of camelCase
-        let native_token = IERC20CamelSafeDispatcher { contract_address: native_token_address };
-        //Note: Starknet OS doesn't allow error management of failed syscalls yet.
-        // If this call fails, the entire transaction will revert.
-        native_token
-            .balanceOf(*self.starknet_address)
-            .map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
-    }
-
-    fn evm_address(self: @EOA) -> EthAddress {
-        *self.evm_address
-    }
-
-    fn starknet_address(self: @EOA) -> ContractAddress {
-        *self.starknet_address
     }
 }
