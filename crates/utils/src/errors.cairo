@@ -53,6 +53,7 @@ enum EthTransactionError {
     RLPError: RLPError,
     ExpectedRLPItemToBeList,
     ExpectedRLPItemToBeString,
+    TransactionTypeError,
     RlpHelpersError: RLPHelpersError,
     // the usize represents the encountered length of payload
     TopLevelRlpListWrongLength: usize,
