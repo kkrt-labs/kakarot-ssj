@@ -93,7 +93,7 @@ fn test_rlp_empty() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_rlp_encode_empty_input() {
+fn test_rlp_encode_empty_input_should_fail() {
     let mut input = array![];
 
     let res = RLPTrait::encode(input.span());
@@ -101,6 +101,18 @@ fn test_rlp_encode_empty_input() {
     assert(res.is_err(), 'should return an error');
     assert(res.unwrap_err() == RLPError::EmptyInput(RLP_EMPTY_INPUT), 'err != EmptyInput');
 }
+
+#[test]
+#[available_gas(20000000)]
+fn test_rlp_encode_default_value() {
+    let mut input = RLPItem::String(array![].span());
+
+    let res = RLPTrait::encode(array![input].span()).unwrap();
+
+    assert(res.len() == 1, 'wrong len');
+    assert(res[0] == 0x80, 'wrong encoded value');
+}
+
 
 #[test]
 #[available_gas(20000000)]
