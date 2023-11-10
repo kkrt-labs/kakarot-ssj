@@ -26,6 +26,12 @@ struct EthereumTransaction {
     chain_id: u128,
 }
 
+
+/// represents an encoded legacy transaction, a Span<u8> should only best casted to this type if check for it being a legacy transaction has been done.
+type EncodedLegacyTransaction = Span<u8>;
+/// represents typed (EIP-2718) transaction, a Span<u8> should only best casted to this type if check for it being a typed transaction has been done.
+type EncodedTypedTransaction = Span<u8>;
+
 #[generate_trait]
 impl EthTransactionImpl of EthTransaction {
     /// Decode a legacy Ethereum transaction
@@ -36,11 +42,7 @@ impl EthTransactionImpl of EthTransaction {
     /// # Arguments
     /// tx_data The raw transaction data
     /// tx_data is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data, chainId, 0, 0]
-    fn decode_legacy_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
-        if (!EthTransaction::is_legacy_tx(tx_data)) {
-            return Result::Err(EthTransactionError::Other('Not legacy transaction'));
-        }
-
+    fn decode_legacy_tx(tx_data: EncodedLegacyTransaction) -> Result<EthereumTransaction, EthTransactionError> {
         let decoded_data = RLPTrait::decode(tx_data);
         let decoded_data = decoded_data.map_err()?;
 
@@ -98,7 +100,7 @@ impl EthTransactionImpl of EthTransaction {
     /// transaction data, which includes the chain ID as part of the transaction data itself.
     /// # Arguments
     /// tx_data The raw transaction data
-    fn decode_typed_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
+    fn decode_typed_tx(tx_data: EncodedTypedTransaction) -> Result<EthereumTransaction, EthTransactionError> {
         let tx_type: u32 = (*tx_data.at(0)).into();
         let rlp_encoded_data = tx_data.slice(1, tx_data.len() - 1);
 
