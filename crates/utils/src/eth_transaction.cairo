@@ -79,6 +79,7 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
     /// # Arguments
     /// * tx_data - The raw transaction data
     /// * tx_data - is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data, chainId, 0, 0]
+    /// Note: this function assumes that tx_type has been checked to make sure it is a legacy transaction
     fn decode_legacy_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
         let decoded_data = RLPTrait::decode(tx_data);
         let decoded_data = decoded_data.map_err()?;
@@ -137,6 +138,7 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
     /// transaction data, which includes the chain ID as part of the transaction data itself.
     /// # Arguments
     /// * `tx_data` - The raw transaction data
+    /// Note: this function assumes that tx_type has been checked to make sure it is either EIP-2930 or EIP-1559 transaction
     fn decode_typed_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
         let tx_type: u32 = (*tx_data.at(0)).into();
         let rlp_encoded_data = tx_data.slice(1, tx_data.len() - 1);
