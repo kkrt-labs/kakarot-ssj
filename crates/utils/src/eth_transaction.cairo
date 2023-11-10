@@ -39,7 +39,7 @@ impl IntoEncodedTransaction of TryInto<Span<u8>, EncodedTransaction> {
         if self.is_empty() {
             return Option::None;
         }
-        if (EthTransaction::is_legacy_tx(self)) {
+        if (EncodedTransactionTrait::is_legacy_tx(self)) {
             Option::Some(EncodedTransaction::Legacy(self))
         } else {
             let tx_type: u32 = (*self.at(0)).into();
@@ -59,16 +59,18 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
     #[inline(always)]
     fn decode(self: EncodedTransaction) -> Result<EthereumTransaction, EthTransactionError> {
         match self {
-            EncodedTransaction::Legacy(tx_data) => { EthTransaction::decode_legacy_tx(tx_data) },
-            EncodedTransaction::EIP1559(tx_data) => { EthTransaction::decode_typed_tx(tx_data) },
-            EncodedTransaction::EIP2930(tx_data) => { EthTransaction::decode_typed_tx(tx_data) },
+            EncodedTransaction::Legacy(tx_data) => {
+                EncodedTransactionTrait::decode_legacy_tx(tx_data)
+            },
+            EncodedTransaction::EIP1559(tx_data) => {
+                EncodedTransactionTrait::decode_typed_tx(tx_data)
+            },
+            EncodedTransaction::EIP2930(tx_data) => {
+                EncodedTransactionTrait::decode_typed_tx(tx_data)
+            },
         }
     }
-}
 
-
-#[generate_trait]
-impl EthTransactionImpl of EthTransaction {
     /// Decode a legacy Ethereum transaction
     /// This function decodes a legacy Ethereum transaction in accordance with EIP-155.
     /// It returns transaction details including nonce, gas price, gas limit, destination address, amount, payload,
@@ -197,21 +199,22 @@ impl EthTransactionImpl of EthTransaction {
 
     /// Check if a raw transaction is a legacy Ethereum transaction
     /// This function checks if a raw transaction is a legacy Ethereum transaction by checking the transaction type
-    /// according to EIP-2718. If the transaction type is less than or equal to 0xc0, it's a legacy transaction.
+    /// according to EIP-2718.
     /// # Arguments
     /// * `tx_data` - The raw transaction data
     #[inline(always)]
     fn is_legacy_tx(tx_data: Span<u8>) -> bool {
-        let tx_type = *tx_data[0];
-
-        // TransactionType for EIP-2718 txns is a positive unsigned 8-bit number between 0 and 0x7f
-        if (tx_type > 0x7f) {
+        // From EIP2718: if it starts with a value in the range [0xc0, 0xfe] then it is a legacy transaction type
+        if (*tx_data[0] > 0xbf && *tx_data[0] < 0xff) {
             return true;
         }
 
         return false;
     }
+}
 
+#[generate_trait]
+impl EthTransactionImpl of EthTransaction {
     /// Decode a raw Ethereum transaction
     /// This function decodes a raw Ethereum transaction. It checks if the transaction
     /// is a legacy transaction or a modern transaction, and calls the appropriate decode function
