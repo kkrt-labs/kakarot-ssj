@@ -196,12 +196,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         preimage.concat(salt);
         preimage.concat(hash);
 
-        let (mut keccak_input, last_input_word, last_input_num_bytes) = preimage
-            .span()
-            .to_u64_words();
-        let address_hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes)
-            .reverse_endianness()
-            .to_bytes();
+        let address_hash = preimage.span().compute_keccak256_hash().to_bytes();
 
         let address: EthAddress = address_hash.slice(12, 20).try_into_result()?;
 
