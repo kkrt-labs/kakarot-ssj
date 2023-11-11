@@ -183,10 +183,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
     fn get_create2_address(
         self: @Machine, sender_address: EthAddress, salt: u256, bytecode: Span<u8>
     ) -> Result<EthAddress, EVMError> {
-        let (mut keccak_input, last_input_word, last_input_num_bytes) = bytecode.to_u64_words();
-        let hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes)
-            .reverse_endianness()
-            .to_bytes();
+        let hash = bytecode.compute_keccak256_hash().to_bytes();
 
         let sender_address = sender_address.to_bytes();
 

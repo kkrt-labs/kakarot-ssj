@@ -522,6 +522,14 @@ impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
 
 #[generate_trait]
 impl U8SpanExImpl of U8SpanExTrait {
+    // keccack256 on a bytes message
+    fn compute_keccak256_hash(self: Span<u8>) -> u256 {
+        let (mut keccak_input, last_input_word, last_input_num_bytes) = self.to_u64_words();
+        let hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes)
+            .reverse_endianness();
+
+        hash
+    }
     /// Transforms a Span<u8> into an Array of u64 full words, a pending u64 word and its length in bytes
     fn to_u64_words(self: Span<u8>) -> (Array<u64>, u64, usize) {
         let (full_u64_word_count, last_input_num_bytes) = DivRem::div_rem(
@@ -577,19 +585,6 @@ impl U8SpanExImpl of U8SpanExTrait {
         };
 
         (u64_words, last_input_word, last_input_num_bytes)
-    }
-}
-
-
-#[generate_trait]
-impl BytesImpl of BytesTrait {
-    // keccack256 on a bytes message
-    fn compute_keccak256_hash(self: Span<u8>) -> u256 {
-        let (mut keccak_input, last_input_word, last_input_num_bytes) = self.to_u64_words();
-        let msg_hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes)
-            .reverse_endianness();
-
-        msg_hash
     }
 }
 

@@ -115,12 +115,7 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
                 let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
                 let chain_id = (*val.at(chain_id_idx)).parse_u128_from_string().map_err()?;
 
-                let (mut keccak_input, last_input_word, last_input_num_bytes) = tx_data
-                    .to_u64_words();
-                let msg_hash = cairo_keccak(
-                    ref keccak_input, :last_input_word, :last_input_num_bytes
-                )
-                    .reverse_endianness();
+                let msg_hash = tx_data.compute_keccak256_hash();
 
                 let destination: EthAddress = to.into();
 

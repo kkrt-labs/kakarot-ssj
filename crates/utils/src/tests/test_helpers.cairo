@@ -1,6 +1,5 @@
 use utils::helpers::{
     SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, U32Trait, U8SpanExTrait,
-    BytesTrait
 };
 use utils::helpers::{ByteArrayExTrait};
 use utils::helpers;

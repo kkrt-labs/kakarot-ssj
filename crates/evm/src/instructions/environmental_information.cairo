@@ -254,8 +254,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         }
 
         // `cairo_keccak` takes in an array of little-endian u64s
-        let (mut keccak_input, last_input_word, last_input_num_bytes) = bytecode.to_u64_words();
-        let hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes);
-        self.stack.push(hash.reverse_endianness())
+        let hash = bytecode.compute_keccak256_hash();
+        self.stack.push(hash)
     }
 }
