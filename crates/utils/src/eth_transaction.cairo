@@ -115,8 +115,6 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
                 let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
                 let chain_id = (*val.at(chain_id_idx)).parse_u128_from_string().map_err()?;
 
-                let msg_hash = tx_data.compute_keccak256_hash();
-
                 let destination: EthAddress = to.into();
 
                 Result::Ok(
