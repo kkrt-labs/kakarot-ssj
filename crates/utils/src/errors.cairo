@@ -61,5 +61,7 @@ enum EthTransactionError {
     LegacyTxWrongPayloadLength: usize,
     // the usize represents the encountered length of payload
     TypedTxWrongPayloadLength: usize,
+    ChainIdIsIncoorect,
+    AccountNonceIsIncorrect,
     Other: felt252
 }

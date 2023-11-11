@@ -3,7 +3,7 @@ use core::option::OptionTrait;
 use core::traits::TryInto;
 
 use keccak::cairo_keccak;
-use starknet::{EthAddress};
+use starknet::{EthAddress, eth_signature::{Signature, verify_eth_signature}};
 use utils::errors::RLPErrorTrait;
 
 use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl, RLPHelpersErrorTrait};
@@ -12,6 +12,14 @@ use utils::helpers::{U256Trait, U256Impl, ByteArrayExt, U8SpanExTrait};
 use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
 
+#[derive(Drop)]
+struct ValidateTxParam {
+    address: EthAddress,
+    account_nonce: u128,
+    chain_id: u128,
+    tx_data: Span<u8>,
+    signature: Signature,
+}
 
 #[derive(Drop)]
 struct EthereumTransaction {
@@ -239,10 +247,23 @@ impl EthTransactionImpl of EthTransaction {
     /// * `address` -The ethereum address that is supposed to have signed the transaction
     /// * `account_nonce` - The nonce of the account
     /// * `param tx_data` - The raw transaction data
-    fn validate_eth_tx(
-        address: EthAddress, account_nonce: u128, tx_data: Span<u8>
-    ) -> Result<bool, EthTransactionError> {
-        // todo
-        panic_with_felt252('validate_eth_tx unimplemented')
+    fn validate_eth_tx(param: ValidateTxParam) -> Result<bool, EthTransactionError> {
+        let ValidateTxParam{address, account_nonce, chain_id, tx_data, signature } = param;
+
+        let decoded_tx = EthTransaction::decode(tx_data)?;
+
+        if (decoded_tx.nonce != account_nonce) {
+            return Result::Err(EthTransactionError::AccountNonceIsIncorrect);
+        }
+        if (decoded_tx.chain_id != chain_id) {
+            return Result::Err(EthTransactionError::ChainIdIsIncoorect);
+        }
+
+        let msg_hash = tx_data.compute_keccak256_hash();
+
+        // this will panic if verification fails
+        verify_eth_signature(msg_hash, signature, address);
+
+        Result::Ok(true)
     }
 }
