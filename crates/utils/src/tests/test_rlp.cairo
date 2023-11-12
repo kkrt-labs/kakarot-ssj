@@ -110,85 +110,85 @@ fn test_rlp_encode_default_value() {
     let res = RLPTrait::encode(array![input].span()).unwrap();
 
     assert(res.len() == 1, 'wrong len');
-    assert(res[0] == 0x80, 'wrong encoded value');
+    assert(*res[0] == 0x80, 'wrong encoded value');
 }
 
 
 #[test]
 #[available_gas(20000000)]
 fn test_rlp_encode_string_empty_input() {
-    let mut input: ByteArray = Default::default();
+    let mut input: Array<u8> = Default::default();
 
-    let res = RLPTrait::encode_string(input).unwrap();
+    let res = RLPTrait::encode_string(input.span()).unwrap();
 
     assert(res.len() == 1, 'wrong len');
-    assert(res[0] == 0x80, 'wrong encoded value');
+    assert(*res[0] == 0x80, 'wrong encoded value');
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_rlp_encode_string_single_byte_lt_0x80() {
-    let mut input: ByteArray = Default::default();
-    input.append_byte(0x40);
+    let mut input: Array<u8> = Default::default();
+    input.append(0x40);
 
-    let res = RLPTrait::encode_string(input).unwrap();
+    let res = RLPTrait::encode_string(input.span()).unwrap();
 
     assert(res.len() == 1, 'wrong len');
-    assert(res[0] == 0x40, 'wrong encoded value');
+    assert(*res[0] == 0x40, 'wrong encoded value');
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_rlp_encode_string_single_byte_ge_0x80() {
-    let mut input: ByteArray = Default::default();
-    input.append_byte(0x80);
+    let mut input: Array<u8> = Default::default();
+    input.append(0x80);
 
-    let res = RLPTrait::encode_string(input).unwrap();
+    let res = RLPTrait::encode_string(input.span()).unwrap();
 
     assert(res.len() == 2, 'wrong len');
-    assert(res[0] == 0x81, 'wrong prefix');
-    assert(res[1] == 0x80, 'wrong encoded value');
+    assert(*res[0] == 0x81, 'wrong prefix');
+    assert(*res[1] == 0x80, 'wrong encoded value');
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_rlp_encode_string_length_between_2_and_55() {
-    let mut input: ByteArray = Default::default();
-    input.append_byte(0x40);
-    input.append_byte(0x50);
+    let mut input: Array<u8> = Default::default();
+    input.append(0x40);
+    input.append(0x50);
 
-    let res = RLPTrait::encode_string(input).unwrap();
+    let res = RLPTrait::encode_string(input.span()).unwrap();
 
     assert(res.len() == 3, 'wrong len');
-    assert(res[0] == 0x82, 'wrong prefix');
-    assert(res[1] == 0x40, 'wrong first value');
-    assert(res[2] == 0x50, 'wrong second value');
+    assert(*res[0] == 0x82, 'wrong prefix');
+    assert(*res[1] == 0x40, 'wrong first value');
+    assert(*res[2] == 0x50, 'wrong second value');
 }
 
 #[test]
 #[available_gas(20000000)]
 fn test_rlp_encode_string_length_exactly_56() {
-    let mut input: ByteArray = Default::default();
+    let mut input: Array<u8> = Default::default();
     let mut i = 0;
     loop {
         if i == 56 {
             break;
         }
-        input.append_byte(0x60);
+        input.append(0x60);
         i += 1;
     };
 
-    let res = RLPTrait::encode_string(input).unwrap();
+    let res = RLPTrait::encode_string(input.span()).unwrap();
 
     assert(res.len() == 58, 'wrong len');
-    assert(res[0] == 0xb8, 'wrong prefix');
-    assert(res[1] == 56, 'wrong string length');
+    assert(*res[0] == 0xb8, 'wrong prefix');
+    assert(*res[1] == 56, 'wrong string length');
     let mut i = 2;
     loop {
         if i == 58 {
             break;
         }
-        assert(res[i] == 0x60, 'wrong value in sequence');
+        assert(*res[i] == 0x60, 'wrong value in sequence');
         i += 1;
     };
 }
@@ -196,27 +196,27 @@ fn test_rlp_encode_string_length_exactly_56() {
 #[test]
 #[available_gas(20000000)]
 fn test_rlp_encode_string_length_greater_than_56() {
-    let mut input: ByteArray = Default::default();
+    let mut input: Array<u8> = Default::default();
     let mut i = 0;
     loop {
         if i == 60 {
             break;
         }
-        input.append_byte(0x70);
+        input.append(0x70);
         i += 1;
     };
 
-    let res = RLPTrait::encode_string(input).unwrap();
+    let res = RLPTrait::encode_string(input.span()).unwrap();
 
     assert(res.len() == 62, 'wrong len');
-    assert(res[0] == 0xb8, 'wrong prefix');
-    assert(res[1] == 60, 'wrong length byte');
+    assert(*res[0] == 0xb8, 'wrong prefix');
+    assert(*res[1] == 60, 'wrong length byte');
     let mut i = 2;
     loop {
         if i == 62 {
             break;
         }
-        assert(res[i] == 0x70, 'wrong value in sequence');
+        assert(*res[i] == 0x70, 'wrong value in sequence');
         i += 1;
     }
 }
@@ -224,28 +224,28 @@ fn test_rlp_encode_string_length_greater_than_56() {
 #[test]
 #[available_gas(200000000)]
 fn test_rlp_encode_string_large_bytearray_inputs() {
-    let mut input: ByteArray = Default::default();
+    let mut input: Array<u8> = Default::default();
     let mut i = 0;
     loop {
         if i == 500 {
             break;
         }
-        input.append_byte(0x70);
+        input.append(0x70);
         i += 1;
     };
 
-    let res = RLPTrait::encode_string(input).unwrap();
+    let res = RLPTrait::encode_string(input.span()).unwrap();
 
     assert(res.len() == 503, 'wrong len');
-    assert(res[0] == 0xb9, 'wrong prefix');
-    assert(res[1] == 0x01, 'wrong first length byte');
-    assert(res[2] == 0xF4, 'wrong second length byte');
+    assert(*res[0] == 0xb9, 'wrong prefix');
+    assert(*res[1] == 0x01, 'wrong first length byte');
+    assert(*res[2] == 0xF4, 'wrong second length byte');
     let mut i = 3;
     loop {
         if i == 503 {
             break;
         }
-        assert(res[i] == 0x70, 'wrong value in sequence');
+        assert(*res[i] == 0x70, 'wrong value in sequence');
         i += 1;
     }
 }
@@ -260,9 +260,9 @@ fn test_rlp_encode_mutilple_string() {
     let res = RLPTrait::encode(input.span()).unwrap();
 
     assert(res.len() == 10, 'wrong len');
-    assert(res[0] == 0x88, 'wrong prefix');
-    assert(res[1] == 0x40, 'wrong first value');
-    assert(res[2] == 0x53, 'wrong second value');
+    assert(*res[0] == 0x88, 'wrong prefix');
+    assert(*res[1] == 0x40, 'wrong first value');
+    assert(*res[2] == 0x53, 'wrong second value');
 }
 
 #[test]
@@ -832,7 +832,7 @@ fn test_rlp_decode_long_string_with_payload_len_too_short() {
 
 #[test]
 #[available_gas(99999999999)]
-fn test_rlp_decode_short_list1() {
+fn test_rlp_decode_short_list() {
     let mut arr = array![0xc9, 0x83, 0x35, 0x35, 0x35, 0x42, 0x83, 0x45, 0x38, 0x92];
     let res = RLPTrait::decode(arr.span()).unwrap();
 
