@@ -15,7 +15,7 @@ use evm::state::StateTrait;
 use keccak::cairo_keccak;
 use starknet::{EthAddress, get_tx_info};
 use utils::helpers::ArrayExtTrait;
-use utils::helpers::{ByteArrayExTrait, ResultExTrait, EthAddressExt, U256Trait};
+use utils::helpers::{ResultExTrait, EthAddressExt, U256Trait, U8SpanExTrait};
 use utils::traits::{
     BoolIntoNumeric, EthAddressIntoU256, U256TryIntoResult, SpanU8TryIntoResultEthAddress
 };
@@ -183,11 +183,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
     fn get_create2_address(
         self: @Machine, sender_address: EthAddress, salt: u256, bytecode: Span<u8>
     ) -> Result<EthAddress, EVMError> {
-        let mut bytecode = ByteArrayExTrait::from_bytes(bytecode);
-        let (mut keccak_input, last_input_word, last_input_num_bytes) = bytecode.to_u64_words();
-        let hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes)
-            .reverse_endianness()
-            .to_bytes();
+        let hash = bytecode.compute_keccak256_hash().to_bytes();
 
         let sender_address = sender_address.to_bytes();
 
@@ -200,11 +196,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         preimage.concat(salt);
         preimage.concat(hash);
 
-        let mut preimage = ByteArrayExTrait::from_bytes(preimage.span());
-        let (mut keccak_input, last_input_word, last_input_num_bytes) = preimage.to_u64_words();
-        let address_hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes)
-            .reverse_endianness()
-            .to_bytes();
+        let address_hash = preimage.span().compute_keccak256_hash().to_bytes();
 
         let address: EthAddress = address_hash.slice(12, 20).try_into_result()?;
 

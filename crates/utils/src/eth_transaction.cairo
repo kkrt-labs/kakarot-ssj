@@ -7,10 +7,7 @@ use starknet::{EthAddress};
 use utils::errors::RLPErrorTrait;
 
 use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl, RLPHelpersErrorTrait};
-use utils::helpers::ByteArrayExTrait;
-use utils::helpers::U256Trait;
-
-use utils::helpers::{U256Impl, ByteArrayExt};
+use utils::helpers::{U256Trait, U256Impl, ByteArrayExt, U8SpanExTrait};
 
 use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
