@@ -100,8 +100,8 @@ fn test_decode_eip_1559_tx() {
 #[test]
 #[available_gas(2000000000)]
 fn test_is_legacy_tx_eip_155_tx() {
-    let tx_data = legacy_rlp_encoded_tx();
-    let result = EncodedTransactionTrait::is_legacy_tx(tx_data);
+    let encoded_tx_data = legacy_rlp_encoded_tx();
+    let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
 
     assert(result == true, 'is_legacy_tx expected true');
 }
@@ -109,8 +109,8 @@ fn test_is_legacy_tx_eip_155_tx() {
 #[test]
 #[available_gas(2000000000)]
 fn test_is_legacy_tx_eip_1559_tx() {
-    let tx_data = eip_1559_encoded_tx();
-    let result = EncodedTransactionTrait::is_legacy_tx(tx_data);
+    let encoded_tx_data = eip_1559_encoded_tx();
+    let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
 
     assert(result == false, 'is_legacy_tx expected false');
 }
@@ -118,8 +118,8 @@ fn test_is_legacy_tx_eip_1559_tx() {
 #[test]
 #[available_gas(2000000000)]
 fn test_is_legacy_tx_eip_2930_tx() {
-    let tx_data = eip_2930_encoded_tx();
-    let result = EncodedTransactionTrait::is_legacy_tx(tx_data);
+    let encoded_tx_data = eip_2930_encoded_tx();
+    let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
 
     assert(result == false, 'is_legacy_tx expected false');
 }
@@ -128,7 +128,7 @@ fn test_is_legacy_tx_eip_2930_tx() {
 #[test]
 #[available_gas(200000000)]
 fn test_validate_legacy_tx() {
-    let tx_data = legacy_rlp_encoded_tx();
+    let encoded_tx_data = legacy_rlp_encoded_tx();
     let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
     let account_nonce = 0x0;
     let chain_id = 0x1;
@@ -141,7 +141,7 @@ fn test_validate_legacy_tx() {
 
     let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param, tx_data)
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
         .expect('signature verification failed');
     assert(result == true, 'result is not true');
 }
@@ -150,7 +150,7 @@ fn test_validate_legacy_tx() {
 #[test]
 #[available_gas(200000000)]
 fn test_validate_eip_2930_tx() {
-    let tx_data = eip_2930_encoded_tx();
+    let encoded_tx_data = eip_2930_encoded_tx();
     let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
     let account_nonce = 0x0;
     let chain_id = 0x1;
@@ -163,7 +163,7 @@ fn test_validate_eip_2930_tx() {
 
     let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param, tx_data)
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
         .expect('signature verification failed');
     assert(result == true, 'result is not true');
 }
@@ -172,7 +172,7 @@ fn test_validate_eip_2930_tx() {
 #[test]
 #[available_gas(200000000)]
 fn test_validate_eip_1559_tx() {
-    let tx_data = eip_1559_encoded_tx();
+    let encoded_tx_data = eip_1559_encoded_tx();
     let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
     let account_nonce = 0x0;
     let chain_id = 0x1;
@@ -185,7 +185,7 @@ fn test_validate_eip_1559_tx() {
 
     let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param, tx_data)
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
         .expect('signature verification failed');
     assert(result == true, 'result is not true');
 }
@@ -193,7 +193,7 @@ fn test_validate_eip_1559_tx() {
 #[test]
 #[available_gas(200000000)]
 fn test_validate_should_fail_for_wrong_account_id() {
-    let tx_data = eip_1559_encoded_tx();
+    let encoded_tx_data = eip_1559_encoded_tx();
     let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
     // the tx was signed for nonce 0x0
     let wrong_account_nonce = 0x1;
@@ -209,7 +209,7 @@ fn test_validate_should_fail_for_wrong_account_id() {
         address, account_nonce: wrong_account_nonce, chain_id, signature
     };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param, tx_data)
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
         .expect_err('expected to fail');
     assert(result == EthTransactionError::AccountNonceIsIncorrect, 'result is not true');
 }
@@ -217,7 +217,7 @@ fn test_validate_should_fail_for_wrong_account_id() {
 #[test]
 #[available_gas(200000000)]
 fn test_validate_should_fail_for_wrong_chain_id() {
-    let tx_data = eip_1559_encoded_tx();
+    let encoded_tx_data = eip_1559_encoded_tx();
     let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
     let account_nonce = 0x0;
     // the tx was signed for chain_id 0x1
@@ -233,7 +233,7 @@ fn test_validate_should_fail_for_wrong_chain_id() {
         address, account_nonce, chain_id: wrong_chain_id, signature
     };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param, tx_data)
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
         .expect_err('expected to fail');
     assert(result == EthTransactionError::ChainIdIsIncoorect, 'result is not true');
 }
