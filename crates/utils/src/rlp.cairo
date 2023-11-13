@@ -1,5 +1,7 @@
+use core::byte_array::ByteArrayTrait;
+use core::result::ResultTrait;
 use utils::errors::{RLPError, RLPHelpersError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
-use utils::helpers::{U32Trait, U256Impl, U128Impl, ByteArrayExTrait, ArrayExtension};
+use utils::helpers::{U32Trait, U256Impl, U128Impl, ArrayExtension};
 
 // Possible RLP types
 #[derive(Drop, PartialEq)]
@@ -62,6 +64,33 @@ impl RLPImpl of RLPTrait {
         }
     }
 
+    /// RLP encodes multiple RLPItem
+    /// # Arguments
+    /// * `input` - Span of RLPItem to encode
+    /// # Returns
+    /// * `ByteArray - RLP encoded ByteArray
+    /// # Errors
+    /// * RLPError::RlpEmptyInput - if the input is empty
+    fn encode(mut input: Span<RLPItem>) -> Result<Span<u8>, RLPError> {
+        if input.len() == 0 {
+            return Result::Err(RLPError::EmptyInput(RLP_EMPTY_INPUT));
+        }
+
+        let mut output: Array<u8> = Default::default();
+        let item = input.pop_front().unwrap();
+
+        match item {
+            RLPItem::String(string) => { output.concat(RLPTrait::encode_string(*string)?); },
+            RLPItem::List(list) => { panic_with_felt252('List encoding unimplemented') }
+        }
+
+        if input.len() > 0 {
+            output.concat(RLPTrait::encode(input)?);
+        }
+
+        Result::Ok(output.span())
+    }
+
     /// RLP encodes a ByteArray, which is the underlying type used to represent
     /// string data in Cairo.  Since RLP encoding is only used for eth_address
     /// computation by calculating the RLP::encode(deployer_address, deployer_nonce)
@@ -72,28 +101,26 @@ impl RLPImpl of RLPTrait {
     /// * `ByteArray - RLP encoded ByteArray
     /// # Errors
     /// * RLPError::RlpEmptyInput - if the input is empty
-    fn encode_string(input: ByteArray) -> Result<ByteArray, RLPError> {
+    fn encode_string(input: Span<u8>) -> Result<Span<u8>, RLPError> {
         let len = input.len();
         if len == 0 {
-            return Result::Ok(
-                ByteArray { data: Default::default(), pending_word: 0x80, pending_word_len: 1 }
-            );
-        } else if len == 1 && input[0] < 0x80 {
+            return Result::Ok(array![0x80].span());
+        } else if len == 1 && *input[0] < 0x80 {
             return Result::Ok(input);
         } else if len < 56 {
-            let mut prefixes: ByteArray = Default::default();
-            prefixes.append_byte(0x80 + len.try_into().unwrap());
-            let encoding = prefixes + input;
-            return Result::Ok(encoding);
+            let mut encoding: Array<u8> = Default::default();
+            encoding.append(0x80 + len.try_into().unwrap());
+            encoding.concat(input);
+            return Result::Ok(encoding.span());
         } else {
-            let mut prefixes: ByteArray = Default::default();
+            let mut encoding: Array<u8> = Default::default();
             let len_as_bytes = len.to_bytes();
             let len_bytes_count = len_as_bytes.len();
             let prefix = 0xb7 + len_bytes_count.try_into().unwrap();
-            prefixes.append_byte(prefix);
-            prefixes.append_span_bytes(len_as_bytes);
-            let encoding = prefixes + input;
-            return Result::Ok(encoding);
+            encoding.append(prefix);
+            encoding.concat(len_as_bytes);
+            encoding.concat(input);
+            return Result::Ok(encoding.span());
         }
     }
 
