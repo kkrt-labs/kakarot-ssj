@@ -1,7 +1,7 @@
 use core::starknet::eth_signature::{EthAddress, Signature};
 
 use utils::eth_transaction::{
-    EthTransaction, EncodedTransactionTrait, EncodedTransaction, ValidateTxParam,
+    EthTransaction, EncodedTransactionTrait, EncodedTransaction, TransactionMetadata,
     EthTransactionError
 };
 use utils::helpers::{U32Trait};
@@ -139,11 +139,9 @@ fn test_validate_legacy_tx() {
         y_parity: false
     };
 
-    let validate_tx_param = ValidateTxParam {
-        address, account_nonce, chain_id, signature, tx_data
-    };
+    let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param)
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, tx_data)
         .expect('signature verification failed');
     assert(result == true, 'result is not true');
 }
@@ -163,11 +161,9 @@ fn test_validate_eip_2930_tx() {
         y_parity: false
     };
 
-    let validate_tx_param = ValidateTxParam {
-        address, account_nonce, chain_id, signature, tx_data
-    };
+    let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param)
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, tx_data)
         .expect('signature verification failed');
     assert(result == true, 'result is not true');
 }
@@ -187,11 +183,9 @@ fn test_validate_eip_1559_tx() {
         y_parity: false
     };
 
-    let validate_tx_param = ValidateTxParam {
-        address, account_nonce, chain_id, signature, tx_data
-    };
+    let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param)
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, tx_data)
         .expect('signature verification failed');
     assert(result == true, 'result is not true');
 }
@@ -211,11 +205,12 @@ fn test_validate_should_fail_for_wrong_account_id() {
         y_parity: false
     };
 
-    let validate_tx_param = ValidateTxParam {
-        address, account_nonce: wrong_account_nonce, chain_id, signature, tx_data
+    let validate_tx_param = TransactionMetadata {
+        address, account_nonce: wrong_account_nonce, chain_id, signature
     };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param).expect_err('expected to fail');
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, tx_data)
+        .expect_err('expected to fail');
     assert(result == EthTransactionError::AccountNonceIsIncorrect, 'result is not true');
 }
 
@@ -234,10 +229,11 @@ fn test_validate_should_fail_for_wrong_chain_id() {
         y_parity: false
     };
 
-    let validate_tx_param = ValidateTxParam {
-        address, account_nonce, chain_id: wrong_chain_id, signature, tx_data
+    let validate_tx_param = TransactionMetadata {
+        address, account_nonce, chain_id: wrong_chain_id, signature
     };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param).expect_err('expected to fail');
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, tx_data)
+        .expect_err('expected to fail');
     assert(result == EthTransactionError::ChainIdIsIncoorect, 'result is not true');
 }

@@ -13,11 +13,10 @@ use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
 
 #[derive(Drop)]
-struct ValidateTxParam {
+struct TransactionMetadata {
     address: EthAddress,
     account_nonce: u128,
     chain_id: u128,
-    tx_data: Span<u8>,
     signature: Signature,
 }
 
@@ -247,8 +246,10 @@ impl EthTransactionImpl of EthTransaction {
     /// * `address` -The ethereum address that is supposed to have signed the transaction
     /// * `account_nonce` - The nonce of the account
     /// * `param tx_data` - The raw transaction data
-    fn validate_eth_tx(param: ValidateTxParam) -> Result<bool, EthTransactionError> {
-        let ValidateTxParam{address, account_nonce, chain_id, tx_data, signature } = param;
+    fn validate_eth_tx(
+        param: TransactionMetadata, tx_data: Span<u8>
+    ) -> Result<bool, EthTransactionError> {
+        let TransactionMetadata{address, account_nonce, chain_id, signature } = param;
 
         let decoded_tx = EthTransaction::decode(tx_data)?;
 
