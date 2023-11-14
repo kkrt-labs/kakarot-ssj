@@ -5,7 +5,7 @@ fn legacy_rlp_encoded_tx() -> Span<u8> {
     // chain id used: 0x1
     array![
         239,
-        128,
+        0,
         132,
         59,
         154,
@@ -50,8 +50,8 @@ fn legacy_rlp_encoded_tx() -> Span<u8> {
         205,
         239,
         1,
-        128,
-        128
+        0,
+        0
     ]
         .span()
 }
@@ -66,7 +66,7 @@ fn eip_2930_encoded_tx() -> Span<u8> {
         1,
         238,
         1,
-        128,
+        0,
         132,
         59,
         154,
@@ -124,8 +124,8 @@ fn eip_1559_encoded_tx() -> Span<u8> {
         2,
         239,
         1,
-        128,
-        128,
+        0,
+        0,
         132,
         59,
         154,
