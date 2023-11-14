@@ -258,10 +258,10 @@ impl EthTransactionImpl of EthTransaction {
         let decoded_tx = EthTransaction::decode(encoded_tx_data)?;
 
         if (decoded_tx.nonce != account_nonce) {
-            return Result::Err(EthTransactionError::AccountNonceIsIncorrect);
+            return Result::Err(EthTransactionError::IncorrectAccountNonce);
         }
         if (decoded_tx.chain_id != chain_id) {
-            return Result::Err(EthTransactionError::ChainIdIsIncoorect);
+            return Result::Err(EthTransactionError::IncoorectChainId);
         }
 
         let msg_hash = encoded_tx_data.compute_keccak256_hash();
