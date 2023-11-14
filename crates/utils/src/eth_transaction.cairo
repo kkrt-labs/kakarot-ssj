@@ -263,6 +263,8 @@ impl EthTransactionImpl of EthTransaction {
         if (decoded_tx.chain_id != chain_id) {
             return Result::Err(EthTransactionError::IncoorectChainId);
         }
+        //TODO: add check for max_fee = gas_price * gas_limit
+        // max_fee should be later provided by the RPC, and hence this check is neccessary
 
         let msg_hash = encoded_tx_data.compute_keccak256_hash();
 
