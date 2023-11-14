@@ -247,13 +247,12 @@ impl EthTransactionImpl of EthTransaction {
     /// It decodes the transaction using the decode function,
     /// and then verifies the Ethereum signature on the transaction hash.
     /// # Arguments
-    /// * `address` -The ethereum address that is supposed to have signed the transaction
-    /// * `account_nonce` - The nonce of the account
-    /// * `param encoded_tx_data` - The raw rlp encoded transaction data
+    /// * `tx_metadata` - The ethereum transaction metadata
+    /// * `encoded_tx_data` - The raw rlp encoded transaction data
     fn validate_eth_tx(
-        param: TransactionMetadata, encoded_tx_data: Span<u8>
+        tx_metadata: TransactionMetadata, encoded_tx_data: Span<u8>
     ) -> Result<bool, EthTransactionError> {
-        let TransactionMetadata{address, account_nonce, chain_id, signature } = param;
+        let TransactionMetadata{address, account_nonce, chain_id, signature } = tx_metadata;
 
         let decoded_tx = EthTransaction::decode(encoded_tx_data)?;
 
