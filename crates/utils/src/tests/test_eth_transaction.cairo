@@ -235,5 +235,5 @@ fn test_validate_should_fail_for_wrong_chain_id() {
 
     let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
         .expect_err('expected to fail');
-    assert(result == EthTransactionError::IncoorectChainId, 'result is not true');
+    assert(result == EthTransactionError::IncorrectChainId, 'result is not true');
 }
