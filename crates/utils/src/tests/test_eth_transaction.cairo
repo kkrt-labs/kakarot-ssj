@@ -1,4 +1,9 @@
-use utils::eth_transaction::{EthTransaction, EncodedTransactionTrait, EncodedTransaction};
+use core::starknet::eth_signature::{EthAddress, Signature};
+
+use utils::eth_transaction::{
+    EthTransaction, EncodedTransactionTrait, EncodedTransaction, TransactionMetadata,
+    EthTransactionError
+};
 use utils::helpers::{U32Trait};
 use utils::tests::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
 
@@ -95,8 +100,8 @@ fn test_decode_eip_1559_tx() {
 #[test]
 #[available_gas(2000000000)]
 fn test_is_legacy_tx_eip_155_tx() {
-    let tx_data = legacy_rlp_encoded_tx();
-    let result = EncodedTransactionTrait::is_legacy_tx(tx_data);
+    let encoded_tx_data = legacy_rlp_encoded_tx();
+    let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
 
     assert(result == true, 'is_legacy_tx expected true');
 }
@@ -104,8 +109,8 @@ fn test_is_legacy_tx_eip_155_tx() {
 #[test]
 #[available_gas(2000000000)]
 fn test_is_legacy_tx_eip_1559_tx() {
-    let tx_data = eip_1559_encoded_tx();
-    let result = EncodedTransactionTrait::is_legacy_tx(tx_data);
+    let encoded_tx_data = eip_1559_encoded_tx();
+    let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
 
     assert(result == false, 'is_legacy_tx expected false');
 }
@@ -113,8 +118,122 @@ fn test_is_legacy_tx_eip_1559_tx() {
 #[test]
 #[available_gas(2000000000)]
 fn test_is_legacy_tx_eip_2930_tx() {
-    let tx_data = eip_2930_encoded_tx();
-    let result = EncodedTransactionTrait::is_legacy_tx(tx_data);
+    let encoded_tx_data = eip_2930_encoded_tx();
+    let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
 
     assert(result == false, 'is_legacy_tx expected false');
+}
+
+
+#[test]
+#[available_gas(200000000)]
+fn test_validate_legacy_tx() {
+    let encoded_tx_data = legacy_rlp_encoded_tx();
+    let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
+    let account_nonce = 0x0;
+    let chain_id = 0x1;
+
+    let signature = Signature {
+        r: 0x9f0140cbb368e853402d4a06ff1f9d1c40f90055fcda4ad357c750685042e342,
+        s: 0x30da91d1bc8c89719bc4f22110f18ee9e79e60ab1bdfe8a3997a354670fb47bd,
+        y_parity: false
+    };
+
+    let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
+
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
+        .expect('signature verification failed');
+    assert(result == true, 'result is not true');
+}
+
+
+#[test]
+#[available_gas(200000000)]
+fn test_validate_eip_2930_tx() {
+    let encoded_tx_data = eip_2930_encoded_tx();
+    let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
+    let account_nonce = 0x0;
+    let chain_id = 0x1;
+
+    let signature = Signature {
+        r: 0x14a38ea5e92fe6831b2137226418d03db2ab8cefd6f62bdfc0078787afa63f83,
+        s: 0x6c89b2928b518445bef8d479167bb9aef73bab1871d1275fd8dcba3c1628a619,
+        y_parity: false
+    };
+
+    let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
+
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
+        .expect('signature verification failed');
+    assert(result == true, 'result is not true');
+}
+
+
+#[test]
+#[available_gas(200000000)]
+fn test_validate_eip_1559_tx() {
+    let encoded_tx_data = eip_1559_encoded_tx();
+    let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
+    let account_nonce = 0x0;
+    let chain_id = 0x1;
+
+    let signature = Signature {
+        r: 0x81f7eca8b0db688d69efa4283149b715b87714170d7e671b3d5ec449998fe30a,
+        s: 0x320c159d81ed83c26abbcfe428b4036dd6e1af778069437a9512bda223104b95,
+        y_parity: false
+    };
+
+    let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
+
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
+        .expect('signature verification failed');
+    assert(result == true, 'result is not true');
+}
+
+#[test]
+#[available_gas(200000000)]
+fn test_validate_should_fail_for_wrong_account_id() {
+    let encoded_tx_data = eip_1559_encoded_tx();
+    let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
+    // the tx was signed for nonce 0x0
+    let wrong_account_nonce = 0x1;
+    let chain_id = 0x1;
+
+    let signature = Signature {
+        r: 0x81f7eca8b0db688d69efa4283149b715b87714170d7e671b3d5ec449998fe30a,
+        s: 0x320c159d81ed83c26abbcfe428b4036dd6e1af778069437a9512bda223104b95,
+        y_parity: false
+    };
+
+    let validate_tx_param = TransactionMetadata {
+        address, account_nonce: wrong_account_nonce, chain_id, signature
+    };
+
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
+        .expect_err('expected to fail');
+    assert(result == EthTransactionError::IncorrectAccountNonce, 'result is not true');
+}
+
+#[test]
+#[available_gas(200000000)]
+fn test_validate_should_fail_for_wrong_chain_id() {
+    let encoded_tx_data = eip_1559_encoded_tx();
+    let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
+    let account_nonce = 0x0;
+    // the tx was signed for chain_id 0x1
+    let wrong_chain_id = 0x2;
+
+    let signature = Signature {
+        r: 0x81f7eca8b0db688d69efa4283149b715b87714170d7e671b3d5ec449998fe30a,
+        s: 0x320c159d81ed83c26abbcfe428b4036dd6e1af778069437a9512bda223104b95,
+        y_parity: false
+    };
+
+    let validate_tx_param = TransactionMetadata {
+        address, account_nonce, chain_id: wrong_chain_id, signature
+    };
+
+    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
+        .expect_err('expected to fail');
+    assert(result == EthTransactionError::IncorrectChainId, 'result is not true');
 }

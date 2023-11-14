@@ -3,7 +3,7 @@ use core::option::OptionTrait;
 use core::traits::TryInto;
 
 use keccak::cairo_keccak;
-use starknet::{EthAddress};
+use starknet::{EthAddress, eth_signature::{Signature, verify_eth_signature}};
 use utils::errors::RLPErrorTrait;
 
 use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl, RLPHelpersErrorTrait};
@@ -12,6 +12,13 @@ use utils::helpers::{U256Trait, U256Impl, ByteArrayExt, U8SpanExTrait};
 use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
 
+#[derive(Drop)]
+struct TransactionMetadata {
+    address: EthAddress,
+    account_nonce: u128,
+    chain_id: u128,
+    signature: Signature,
+}
 
 #[derive(Drop)]
 struct EthereumTransaction {
@@ -56,14 +63,14 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
     #[inline(always)]
     fn decode(self: EncodedTransaction) -> Result<EthereumTransaction, EthTransactionError> {
         match self {
-            EncodedTransaction::Legacy(tx_data) => {
-                EncodedTransactionTrait::decode_legacy_tx(tx_data)
+            EncodedTransaction::Legacy(encoded_tx_data) => {
+                EncodedTransactionTrait::decode_legacy_tx(encoded_tx_data)
             },
-            EncodedTransaction::EIP1559(tx_data) => {
-                EncodedTransactionTrait::decode_typed_tx(tx_data)
+            EncodedTransaction::EIP1559(encoded_tx_data) => {
+                EncodedTransactionTrait::decode_typed_tx(encoded_tx_data)
             },
-            EncodedTransaction::EIP2930(tx_data) => {
-                EncodedTransactionTrait::decode_typed_tx(tx_data)
+            EncodedTransaction::EIP2930(encoded_tx_data) => {
+                EncodedTransactionTrait::decode_typed_tx(encoded_tx_data)
             },
         }
     }
@@ -74,11 +81,13 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
     /// message hash, chain id. The transaction hash is computed by keccak hashing the signed
     /// transaction data, which includes the chain ID in accordance with EIP-155.
     /// # Arguments
-    /// * tx_data - The raw transaction data
-    /// * tx_data - is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data, chainId, 0, 0]
+    /// * encoded_tx_data - The raw rlp encoded transaction data
+    /// * encoded_tx_data - is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data, chainId, 0, 0]
     /// Note: this function assumes that tx_type has been checked to make sure it is a legacy transaction
-    fn decode_legacy_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
-        let decoded_data = RLPTrait::decode(tx_data);
+    fn decode_legacy_tx(
+        encoded_tx_data: Span<u8>
+    ) -> Result<EthereumTransaction, EthTransactionError> {
+        let decoded_data = RLPTrait::decode(encoded_tx_data);
         let decoded_data = decoded_data.map_err()?;
 
         if (decoded_data.len() != 1) {
@@ -134,11 +143,13 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
     /// message hash, and chain id. The transaction hash is computed by keccak hashing the signed
     /// transaction data, which includes the chain ID as part of the transaction data itself.
     /// # Arguments
-    /// * `tx_data` - The raw transaction data
+    /// * `encoded_tx_data` - The raw rlp encoded transaction data
     /// Note: this function assumes that tx_type has been checked to make sure it is either EIP-2930 or EIP-1559 transaction
-    fn decode_typed_tx(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
-        let tx_type: u32 = (*tx_data.at(0)).into();
-        let rlp_encoded_data = tx_data.slice(1, tx_data.len() - 1);
+    fn decode_typed_tx(
+        encoded_tx_data: Span<u8>
+    ) -> Result<EthereumTransaction, EthTransactionError> {
+        let tx_type: u32 = (*encoded_tx_data.at(0)).into();
+        let rlp_encoded_data = encoded_tx_data.slice(1, encoded_tx_data.len() - 1);
 
         // tx_format (EIP-2930, unsiged):  0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList])
         // tx_format (EIP-1559, unsiged):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, destination, amount, data, access_list])
@@ -200,11 +211,11 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
     /// This function checks if a raw transaction is a legacy Ethereum transaction by checking the transaction type
     /// according to EIP-2718.
     /// # Arguments
-    /// * `tx_data` - The raw transaction data
+    /// * `encoded_tx_data` - The raw rlp encoded transaction data
     #[inline(always)]
-    fn is_legacy_tx(tx_data: Span<u8>) -> bool {
+    fn is_legacy_tx(encoded_tx_data: Span<u8>) -> bool {
         // From EIP2718: if it starts with a value in the range [0xc0, 0xfe] then it is a legacy transaction type
-        if (*tx_data[0] > 0xbf && *tx_data[0] < 0xff) {
+        if (*encoded_tx_data[0] > 0xbf && *encoded_tx_data[0] < 0xff) {
             return true;
         }
 
@@ -219,10 +230,10 @@ impl EthTransactionImpl of EthTransaction {
     /// is a legacy transaction or a modern transaction, and calls the appropriate decode function
     /// resp. `decode_legacy_tx` or `decode_tx` based on the result.
     /// # Arguments
-    /// * `tx_data` - The raw transaction data
+    /// * `encoded_tx_data` - The raw transaction rlp encoded data
     #[inline(always)]
-    fn decode(tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
-        let encoded_tx: EncodedTransaction = tx_data
+    fn decode(encoded_tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
+        let encoded_tx: EncodedTransaction = encoded_tx_data
             .try_into()
             .ok_or(EthTransactionError::TransactionTypeError)?;
 
@@ -236,13 +247,29 @@ impl EthTransactionImpl of EthTransaction {
     /// It decodes the transaction using the decode function,
     /// and then verifies the Ethereum signature on the transaction hash.
     /// # Arguments
-    /// * `address` -The ethereum address that is supposed to have signed the transaction
-    /// * `account_nonce` - The nonce of the account
-    /// * `param tx_data` - The raw transaction data
+    /// * `tx_metadata` - The ethereum transaction metadata
+    /// * `encoded_tx_data` - The raw rlp encoded transaction data
     fn validate_eth_tx(
-        address: EthAddress, account_nonce: u128, tx_data: Span<u8>
+        tx_metadata: TransactionMetadata, encoded_tx_data: Span<u8>
     ) -> Result<bool, EthTransactionError> {
-        // todo
-        panic_with_felt252('validate_eth_tx unimplemented')
+        let TransactionMetadata{address, account_nonce, chain_id, signature } = tx_metadata;
+
+        let decoded_tx = EthTransaction::decode(encoded_tx_data)?;
+
+        if (decoded_tx.nonce != account_nonce) {
+            return Result::Err(EthTransactionError::IncorrectAccountNonce);
+        }
+        if (decoded_tx.chain_id != chain_id) {
+            return Result::Err(EthTransactionError::IncorrectChainId);
+        }
+        //TODO: add check for max_fee = gas_price * gas_limit
+        // max_fee should be later provided by the RPC, and hence this check is neccessary
+
+        let msg_hash = encoded_tx_data.compute_keccak256_hash();
+
+        // this will panic if verification fails
+        verify_eth_signature(msg_hash, signature, address);
+
+        Result::Ok(true)
     }
 }
