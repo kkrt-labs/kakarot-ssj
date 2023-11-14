@@ -280,7 +280,7 @@ fn test_rlp_decode_string_default_value() {
     let mut arr = array![0x80];
 
     let rlp_item = RLPTrait::decode(arr.span()).unwrap();
-    let expected = RLPItem::String(array![0].span());
+    let expected = RLPItem::String(array![].span());
 
     assert(rlp_item.len() == 1, 'item length not 1');
     assert(*rlp_item[0] == expected, 'default value not 0');
@@ -2020,7 +2020,7 @@ fn test_rlp_decode_long_list() {
             .span()
     );
 
-    let mut expected_16 = RLPItem::String(array![0].span());
+    let mut expected_16 = RLPItem::String(array![].span());
 
     let mut expected = array![
         expected_0,

@@ -147,7 +147,7 @@ impl RLPImpl of RLPTrait {
             RLPType::String => {
                 // checking for default value `0`
                 if (len == 0) {
-                    output.append(RLPItem::String(array![0].span()));
+                    output.append(RLPItem::String(array![].span()));
                 } else {
                     output.append(RLPItem::String(input.slice(offset, len)));
                 }
