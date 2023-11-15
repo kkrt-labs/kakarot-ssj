@@ -196,7 +196,7 @@ impl AccountImpl of AccountTrait {
                             .set_address_registry(
                                 self.address().evm, StoredAccountType::UnexistingAccount
                             );
-                        return self.selfdestruct();
+                        return ContractAccountTrait::selfdestruct(self);
                     }
                     self.store_nonce(*self.nonce)
                 //Storage is handled outside of the account and must be commited after all accounts are commited.
@@ -204,12 +204,12 @@ impl AccountImpl of AccountTrait {
                 AccountType::Unknown => { Result::Ok(()) }
             }
         } else if self.should_deploy(is_registered) {
-            //Case new account
-            // If SELFDESTRUCT, just do nothing
+            // If SELFDESTRUCT, deploy empty SN account
             if (*self.selfdestruct == true) {
+                ContractAccountTrait::deploy(self.address().evm, array![].span())?;
                 return Result::Ok(());
             };
-            let mut ca_address = ContractAccountTrait::deploy(self.address().evm, *self.code)?;
+            ContractAccountTrait::deploy(self.address().evm, *self.code)?;
             self.store_nonce(*self.nonce)
         //Storage is handled outside of the account and must be commited after all accounts are commited.
         } else {

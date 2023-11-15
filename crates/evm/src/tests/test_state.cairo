@@ -194,7 +194,7 @@ mod test_simple_log {
 mod test_state {
     use contracts::tests::test_utils as contract_utils;
     use contracts::uninitialized_account::UninitializedAccount;
-    use evm::model::account::{Account, AccountType};
+    use evm::model::account::{Account, AccountType, AccountTrait};
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::EOATrait;
     use evm::model::{Event, Transfer, Address};
@@ -351,6 +351,7 @@ mod test_state {
         assert(state.read_balance(sender.evm).unwrap() == 200, 'Sender balance mismatch');
         assert(state.read_balance(recipient.evm).unwrap() == 100, 'Recipient balance mismatch');
     }
+
 
     #[test]
     #[available_gas(200000000)]

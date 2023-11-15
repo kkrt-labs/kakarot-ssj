@@ -90,7 +90,7 @@ fn setup_call_context() -> CallContext {
     let bytecode: Span<u8> = array![0x00].span();
     let calldata: Span<u8> = array![4, 5, 6].span();
     let value: u256 = callvalue();
-    let address = test_address();
+    let caller = test_address();
     let read_only = false;
     let gas_price = 0xaaaaaa;
     let gas_limit = 0xffffff;
@@ -98,7 +98,7 @@ fn setup_call_context() -> CallContext {
     let output_size = 0;
 
     CallContextTrait::new(
-        address,
+        caller,
         bytecode,
         calldata,
         value,
@@ -141,6 +141,15 @@ fn setup_execution_context() -> ExecutionContext {
     let return_data = array![1, 2, 3].span();
 
     ExecutionContextTrait::new(context_id, address, call_ctx, Default::default(), return_data,)
+}
+
+
+fn setup_execution_context_with_target(target: Address) -> ExecutionContext {
+    let context_id = ExecutionContextType::Root;
+    let call_ctx = setup_call_context();
+    let return_data = array![1, 2, 3].span();
+
+    ExecutionContextTrait::new(context_id, target, call_ctx, Default::default(), return_data,)
 }
 
 fn setup_static_execution_context() -> ExecutionContext {
@@ -244,6 +253,17 @@ impl CallContextPartialEq of PartialEq<CallContext> {
 fn setup_machine() -> Machine {
     Machine {
         current_ctx: BoxTrait::new(setup_execution_context()),
+        ctx_count: 1,
+        stack: Default::default(),
+        memory: Default::default(),
+        state: Default::default(),
+        error: Option::None
+    }
+}
+
+fn setup_machine_with_target(target: Address) -> Machine {
+    Machine {
+        current_ctx: BoxTrait::new(setup_execution_context_with_target(target)),
         ctx_count: 1,
         stack: Default::default(),
         memory: Default::default(),
