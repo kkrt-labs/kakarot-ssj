@@ -11,7 +11,8 @@ use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_calldata, setup_machine_with_bytecode, evm_address, callvalue,
-    setup_machine_with_nested_execution_context, return_from_subcontext, native_token, other_address
+    setup_machine_with_nested_execution_context, return_from_subcontext, native_token,
+    other_address, initialize_contract_account
 };
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
@@ -93,8 +94,10 @@ fn test_exec_balance_zero() {
 fn test_exec_balance_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span())
-        .expect('failed deploy contract account',);
+    let mut ca_address = initialize_contract_account(
+        evm_address(), array![].span(), array![].span()
+    )
+        .unwrap();
 
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
 
@@ -579,7 +582,10 @@ fn test_exec_extcodesize_ca_empty() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode remains empty, and we expect the empty hash in return
-    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span());
+    let mut ca_address = initialize_contract_account(
+        evm_address(), array![].span(), array![].span()
+    )
+        .unwrap();
 
     machine.stack.push(evm_address.into());
 
@@ -600,7 +606,7 @@ fn test_exec_extcodesize_ca_with_bytecode() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
+    initialize_contract_account(evm_address(), counter_evm_bytecode(), array![].span()).unwrap();
 
     machine.stack.push(evm_address.into());
     // When
@@ -608,8 +614,8 @@ fn test_exec_extcodesize_ca_with_bytecode() {
 
     // Then
     assert(
-        machine.stack.peek() // extcodesize(Counter.sol) := 275 (source: remix)
-        .unwrap() == 275,
+        machine.stack.peek() // extcodesize(Counter.sol) := 487 (source: remix)
+        .unwrap() == 487,
         'expected counter SC code size'
     );
 }
@@ -624,7 +630,7 @@ fn test_exec_extcodecopy_ca() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
+    initialize_contract_account(evm_address(), counter_evm_bytecode(), array![].span()).unwrap();
 
     // size
     machine.stack.push(50).unwrap();
@@ -655,7 +661,7 @@ fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
+    initialize_contract_account(evm_address(), counter_evm_bytecode(), array![].span()).unwrap();
 
     // size
     machine.stack.push(5);
@@ -925,14 +931,17 @@ fn test_exec_extcodehash_selfdestructed() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode remains empty, and we expect the empty hash in return
-    let mut ca_address = ContractAccountTrait::deploy(evm_address, array![].span())
-        .expect('CA deployment failed');
+    let mut ca_address = initialize_contract_account(
+        evm_address(), array![].span(), array![].span()
+    )
+        .unwrap();
     let account = Account {
         account_type: AccountType::ContractAccount,
         address: ca_address,
         code: array![].span(),
         nonce: 1,
-        selfdestruct: false
+        selfdestruct: false,
+        false_positive_jumpdests: Option::None,
     };
     account.selfdestruct().expect('CA selfdestruct failed');
 
@@ -983,7 +992,10 @@ fn test_exec_extcodehash_ca_empty() {
     let mut machine = setup_machine();
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     // The bytecode remains empty, and we expect the empty hash in return
-    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span());
+    let mut ca_address = initialize_contract_account(
+        evm_address(), array![].span(), array![].span()
+    )
+        .unwrap();
 
     machine.stack.push(evm_address.into());
 
@@ -1027,7 +1039,10 @@ fn test_exec_extcodehash_ca_with_bytecode() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
-    let mut ca_address = ContractAccountTrait::deploy(evm_address(), counter_evm_bytecode());
+    let mut ca_address = initialize_contract_account(
+        evm_address(), counter_evm_bytecode(), array![].span()
+    )
+        .unwrap();
 
     machine.stack.push(evm_address.into());
     // When
@@ -1038,9 +1053,9 @@ fn test_exec_extcodehash_ca_with_bytecode() {
         machine
             .stack
             .peek()
-            // extcodehash(Counter.sol) := 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275 (source: remix)
-            // <https://emn178.github.io/online-tools/keccak_256.html?input=6080604052348015600f57600080fd5b506004361060465760003560e01c806306661abd14604b578063371303c01460655780636d4ce63c14606d578063b3bcfa82146074575b600080fd5b605360005481565b60405190815260200160405180910390f35b606b607a565b005b6000546053565b606b6091565b6001600080828254608a919060b7565b9091555050565b6001600080828254608a919060cd565b634e487b7160e01b600052601160045260246000fd5b8082018082111560c75760c760a1565b92915050565b8181038181111560c75760c760a156fea2646970667358221220f379b9089b70e8e00da8545f9a86f648441fdf27ece9ade2c71653b12fb80c7964736f6c63430008120033&input_type=hex>
-            .unwrap() == 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275,
+            // extcodehash(Counter.sol) := 0x43c3027fd9b9a3c00c505f91bcf080d213392ec18eeaf8d7edbe7c390bb17cf4
+            // https://emn178.github.io/online-tools/keccak_256.html?input_type=hex&input=608060405234801561001057600080fd5b506004361061004c5760003560e01c806306661abd14610051578063371303c01461006f5780636d4ce63c14610079578063b3bcfa8214610097575b600080fd5b6100596100a1565b60405161006691906100ff565b60405180910390f35b6100776100a7565b005b6100816100c2565b60405161008e91906100ff565b60405180910390f35b61009f6100cb565b005b60005481565b60016000808282546100b99190610149565b92505081905550565b60008054905090565b60016000808282546100dd919061017d565b92505081905550565b6000819050919050565b6100f9816100e6565b82525050565b600060208201905061011460008301846100f0565b92915050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052601160045260246000fd5b6000610154826100e6565b915061015f836100e6565b92508282019050808211156101775761017661011a565b5b92915050565b6000610188826100e6565b9150610193836100e6565b92508282039050818111156101ab576101aa61011a565b5b9291505056fea264697066735822122018871123a335b5801c062efe14be38b2432d02e2534e1c282c6f5e7bbef8c46464736f6c63430008130033
+            .unwrap() == 0x43c3027fd9b9a3c00c505f91bcf080d213392ec18eeaf8d7edbe7c390bb17cf4,
         'expected counter SC code hash'
     );
 }

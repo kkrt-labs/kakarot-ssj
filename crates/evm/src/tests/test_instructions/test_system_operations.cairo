@@ -1,6 +1,7 @@
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_data::{storage_evm_bytecode, storage_evm_initcode};
 use contracts::tests::test_utils::setup_contracts_for_testing;
+use debug::PrintTrait;
 use evm::call_helpers::{MachineCallHelpers, MachineCallHelpersImpl};
 use evm::context::{ExecutionContext, ExecutionContextTrait, ExecutionContextType};
 use evm::instructions::MemoryOperationTrait;
@@ -9,7 +10,7 @@ use evm::interpreter::EVMInterpreterTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::model::contract_account::ContractAccountTrait;
-use evm::model::{AccountTrait, Address};
+use evm::model::{AccountTrait, Address, AccountType};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
@@ -397,7 +398,9 @@ fn test_exec_create2() {
 
     let deployed_bytecode = array![0xff].span();
     let eth_address: EthAddress = 0x00000000000000000075766d5f61646472657373_u256.into();
-    let contract_address = ContractAccountTrait::deploy(eth_address, deployed_bytecode)
+    let contract_address = ContractAccountTrait::deploy(
+        eth_address, deployed_bytecode, Default::default().span()
+    )
         .expect('failed deploying CA');
 
     let mut ctx = machine.current_ctx.unbox();
@@ -416,6 +419,9 @@ fn test_exec_create2() {
 
     // When
     machine.exec_create2().unwrap();
+    assert(machine.bytecode() == storage_initcode, 'wrong bytecode');
+    'EVM ADDRESS:'.print();
+    machine.address().evm.print();
     interpreter.run(ref machine);
 
     assert(machine.error.is_none(), 'run should be success');
@@ -424,7 +430,7 @@ fn test_exec_create2() {
     //     import { getContractAddress } from 'viem'
 
     // const address = getContractAddress({
-    //   bytecode: '0x608060405234801561000f575f80fd5b506101438061001d5f395ff3fe608060405234801561000f575f80fd5b5060043610610034575f3560e01c80632e64cec1146100385780636057361d14610056575b5f80fd5b610040610072565b60405161004d919061009b565b60405180910390f35b610070600480360381019061006b91906100e2565b61007a565b005b5f8054905090565b805f8190555050565b5f819050919050565b61009581610083565b82525050565b5f6020820190506100ae5f83018461008c565b92915050565b5f80fd5b6100c181610083565b81146100cb575f80fd5b50565b5f813590506100dc816100b8565b92915050565b5f602082840312156100f7576100f66100b4565b5b5f610104848285016100ce565b9150509291505056fea2646970667358221220b5c3075f2f2034d039a227fac6dd314b052ffb2b3da52c7b6f5bc374d528ed3664736f6c63430008140033',
+    //   bytecode: '0x6080604052348015600f57600080fd5b5060ac8061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80632e64cec11460375780636057361d14604c575b600080fd5b60005460405190815260200160405180910390f35b605c6057366004605e565b600055565b005b600060208284031215606f57600080fd5b503591905056fea26469706673582212206757b185bacf99a4e559a82662511d555a86d906179b16109ef465b43399608764736f6c63430008130033',
     //   from: '0x00000000000000000075766d5f61646472657373',
     //   opcode: 'CREATE2',
     //   salt: '0x00',
@@ -432,9 +438,11 @@ fn test_exec_create2() {
     // console.log(address)
     let account = machine
         .state
-        .get_account(0xeea3a85A7497e74d85b46E987B8E05152A183892.try_into().unwrap())
+        .get_account(0xbD5653e9332571c4f8b76924EDa0dd242d2ccC29.try_into().unwrap())
         .expect('cannot retrieve account');
 
+    assert(account.bytecode() == storage_evm_bytecode(), 'wrong bytecode');
+    assert(account.account_type == AccountType::ContractAccount, 'wrong account type');
     assert(account.nonce() == 1, 'wrong nonce');
     assert(account.code == storage_evm_bytecode(), 'wrong bytecode');
 }

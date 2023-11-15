@@ -25,7 +25,7 @@ use utils::traits::{
 struct CreateArgs {
     to: EthAddress,
     value: u256,
-    bytecode: Span<u8>,
+    init_bytecode: Span<u8>,
 }
 
 #[derive(Drop)]
@@ -59,7 +59,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
                 )?,
         };
 
-        Result::Ok(CreateArgs { to, value, bytecode: bytecode.span() })
+        Result::Ok(CreateArgs { to, value, init_bytecode: bytecode.span() })
     }
 
 
@@ -105,11 +105,20 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         target_account.set_nonce(1);
         target_account.set_type(AccountType::ContractAccount);
         target_account.address = target_address;
+        // Set the false positive jumpdests of the contract account with init_bytecode
+        // When a CA is scheduled for deployment, we rely on this optional field to
+        // know which jumpdests are false positives (O(n)).
+        // When a CA is already deployed, we can use its storage (O(1))
+        target_account
+            .false_positive_jumpdests =
+                Option::Some(
+                    ContractAccountTrait::find_false_positive_jumpdests(create_args.init_bytecode)
+                );
         self.state.set_account(target_account);
 
         let call_ctx = CallContextTrait::new(
             caller,
-            create_args.bytecode,
+            create_args.init_bytecode,
             calldata: Default::default().span(),
             value: create_args.value,
             read_only: false,
@@ -157,6 +166,16 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
 
                 let mut account = self.state.get_account(account_address)?;
                 account.set_code(return_data);
+                // Set the false positive jumpdests of the contract account with deployed bytecode
+                // When a CA is scheduled for deployment, we rely on this optional field to
+                // know which jumpdests are false positives (O(n)).
+                // When a CA is already deployed, we can use its storage (O(1))
+                account
+                    .false_positive_jumpdests =
+                        Option::Some(
+                            ContractAccountTrait::find_false_positive_jumpdests(return_data)
+                        );
+
                 assert(
                     account.account_type == AccountType::ContractAccount,
                     'type should be CA in finalize'

@@ -20,6 +20,15 @@ struct Account {
     code: Span<u8>,
     nonce: u64,
     selfdestruct: bool,
+    // False positive jumpdests (bytes equal to 0x5b (JUMPDEST) but originating from a PUSH opcode)
+    // Are stored in the account struct before deployment.
+    // If the contract account is deployed, the false positive jumpdests are stored in the contract storage as a LegacyMap<usize, bool>.
+    // If the contract account is not deployed, the false positive jumpdests are stored in the account struct as a Span<usize>.
+    // i.e., possible values are:
+    // Option::None - If the account is deployed
+    // Option::None - If the account is not deployed nor scheduled for deployment yet; simply touched
+    // Option::Some(Span<usize>) - If the account is not deployed but scheduled for deployment
+    false_positive_jumpdests: Option<Span<usize>>,
 }
 
 #[derive(Drop)]
@@ -29,6 +38,7 @@ struct ContractAccountBuilder {
     code: Span<u8>,
     nonce: u64,
     selfdestruct: bool,
+    false_positive_jumpdests: Option<Span<usize>>,
 }
 
 #[generate_trait]
@@ -40,6 +50,7 @@ impl ContractAccountBuilderImpl of ContractAccountBuilderTrait {
             code: Default::default().span(),
             nonce: 0,
             selfdestruct: false,
+            false_positive_jumpdests: Option::None,
         }
     }
 
@@ -74,6 +85,7 @@ impl ContractAccountBuilderImpl of ContractAccountBuilderTrait {
             code: self.code,
             nonce: self.nonce,
             selfdestruct: self.selfdestruct,
+            false_positive_jumpdests: self.false_positive_jumpdests,
         }
     }
 }
@@ -107,6 +119,7 @@ impl AccountImpl of AccountTrait {
                         code: Default::default().span(),
                         nonce: 0,
                         selfdestruct: false,
+                        false_positive_jumpdests: Option::None,
                     }
                 )
             }
@@ -138,6 +151,7 @@ impl AccountImpl of AccountTrait {
                             code: Default::default().span(),
                             nonce: 1,
                             selfdestruct: false,
+                            false_positive_jumpdests: Option::None,
                         }
                     ),
                     AccountType::ContractAccount => {
@@ -209,7 +223,11 @@ impl AccountImpl of AccountTrait {
             if (*self.selfdestruct == true) {
                 return Result::Ok(());
             };
-            let mut ca_address = ContractAccountTrait::deploy(self.address().evm, *self.code)?;
+            let mut ca_address = ContractAccountTrait::deploy(
+                self.address().evm,
+                self.bytecode(),
+                self.false_positive_jumpdests().expect('INVARIANT: NONE F-P JUMPDESTS')
+            )?;
             self.store_nonce(*self.nonce)
         //Storage is handled outside of the account and must be commited after all accounts are commited.
         } else {
@@ -288,6 +306,12 @@ impl AccountImpl of AccountTrait {
     #[inline(always)]
     fn bytecode(self: @Account) -> Span<u8> {
         *self.code
+    }
+
+    /// Returns the false positive jumpdests of the EVM account (EOA or CA)
+    #[inline(always)]
+    fn false_positive_jumpdests(self: @Account) -> Option<Span<usize>> {
+        *self.false_positive_jumpdests
     }
 
     /// Reads the value stored at the given key for the corresponding account.

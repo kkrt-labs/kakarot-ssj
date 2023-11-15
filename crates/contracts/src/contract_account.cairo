@@ -45,7 +45,7 @@ trait IContractAccount<TContractState> {
     /// Prevents false positive checks in JUMP opcode of the type: jump destination opcode == JUMPDEST in appearance, but is a PUSH opcode bytecode slice.
     fn is_false_positive_jumpdest(self: @TContractState, offset: usize) -> bool;
 
-    fn set_false_positive_jumpdest(ref self: TContractState, offset: usize);
+    fn set_false_positive_jumpdests(ref self: TContractState, offsets: Span<usize>);
 
     /// Selfdestruct whatever can be
     /// It's not possible to remove a contract in Starknet
@@ -91,6 +91,7 @@ mod ContractAccount {
         kakarot_core_address: ContractAddress,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
+        false_positive_jumpdest: LegacyMap::<usize, bool>,
     }
 
     #[event]
@@ -224,12 +225,19 @@ mod ContractAccount {
         }
 
         fn is_false_positive_jumpdest(self: @ContractState, offset: usize) -> bool {
-            panic_with_felt252('unimplemented')
+            self.false_positive_jumpdest.read(offset)
         }
 
 
-        fn set_false_positive_jumpdest(ref self: ContractState, offset: usize) {
-            panic_with_felt252('unimplemented')
+        fn set_false_positive_jumpdests(ref self: ContractState, offsets: Span<usize>) {
+            let mut counter = 0;
+            loop {
+                if counter == offsets.len() {
+                    break;
+                }
+                self.false_positive_jumpdest.write(*offsets[counter], true);
+                counter += 1;
+            }
         }
 
         fn selfdestruct(ref self: ContractState) {

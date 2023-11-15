@@ -526,14 +526,17 @@ fn test_exec_sload_from_storage() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let mut machine = setup_machine();
-    let mut ca_address = ContractAccountTrait::deploy(machine.address().evm, array![].span())
+    let mut ca_address = ContractAccountTrait::deploy(
+        machine.address().evm, array![].span(), array![].span()
+    )
         .unwrap();
     let account = Account {
         account_type: AccountType::ContractAccount,
         address: ca_address,
         code: array![0xab, 0xcd, 0xef].span(),
         nonce: 1,
-        selfdestruct: false
+        selfdestruct: false,
+        false_positive_jumpdests: Option::Some(array![].span()),
     };
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
@@ -597,13 +600,17 @@ fn test_exec_sstore_finalized() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let mut machine = setup_machine();
     // Deploys the contract account to be able to commit storage changes.
-    let ca_address = ContractAccountTrait::deploy(machine.address().evm, array![].span()).unwrap();
+    let ca_address = ContractAccountTrait::deploy(
+        machine.address().evm, array![].span(), array![].span()
+    )
+        .unwrap();
     let account = Account {
         account_type: AccountType::ContractAccount,
         address: ca_address,
         code: array![].span(),
         nonce: 1,
-        selfdestruct: false
+        selfdestruct: false,
+        false_positive_jumpdests: Option::None,
     };
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;

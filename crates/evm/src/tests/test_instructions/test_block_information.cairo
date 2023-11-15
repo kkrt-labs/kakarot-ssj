@@ -6,7 +6,7 @@ use contracts::tests::test_utils::{setup_contracts_for_testing, fund_account_wit
 use evm::instructions::BlockInformationTrait;
 use evm::model::contract_account::ContractAccountTrait;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::{setup_machine, evm_address};
+use evm::tests::test_utils::{setup_machine, evm_address, initialize_contract_account};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::{set_block_timestamp, set_block_number, set_contract_address};
 
@@ -152,8 +152,10 @@ fn test_exec_selfbalance_zero() {
 fn test_exec_selfbalance_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span())
-        .expect('failed deploy contract account',);
+    let mut ca_address = initialize_contract_account(
+        evm_address(), array![].span(), array![].span()
+    )
+        .unwrap();
 
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
     let mut machine = setup_machine();

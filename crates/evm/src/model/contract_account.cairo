@@ -15,6 +15,8 @@ use contracts::kakarot_core::{
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
+use core::array::ArrayTrait;
+use debug::PrintTrait;
 use evm::context::Status;
 use evm::errors::{
     EVMError, READ_SYSCALL_FAILED, WRITE_SYSCALL_FAILED, ACCOUNT_EXISTS, DEPLOYMENT_FAILED,
@@ -31,6 +33,7 @@ use starknet::{
     deploy_syscall, StorageBaseAddress, storage_base_address_from_felt252, Store, EthAddress,
     SyscallResult, get_contract_address, ContractAddress
 };
+use utils::helpers::ArrayExtTrait;
 use utils::helpers::{ByteArrayExTrait, ResultExTrait};
 use utils::storage::{compute_storage_base_address};
 use utils::traits::{StorageBaseAddressIntoFelt252, StoreBytes31};
@@ -53,7 +56,9 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * The evm_address and starknet_address the CA is deployed at - which is KakarotCore
     /// # Errors
     /// * `ACCOUNT_EXISTS` - If a contract account already exists at the given `evm_address`
-    fn deploy(evm_address: EthAddress, bytecode: Span<u8>) -> Result<Address, EVMError> {
+    fn deploy(
+        evm_address: EthAddress, bytecode: Span<u8>, false_positive_jumpdests: Span<usize>
+    ) -> Result<Address, EVMError> {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
         let account_class_hash = kakarot_state.account_class_hash();
         let kakarot_address = get_contract_address();
@@ -73,7 +78,7 @@ impl ContractAccountImpl of ContractAccountTrait {
                 let account = IContractAccountDispatcher { contract_address: starknet_address };
                 account.set_nonce(1);
                 account.set_bytecode(bytecode);
-
+                account.set_false_positive_jumpdests(false_positive_jumpdests);
                 // Kakarot Core logic
                 kakarot_state
                     .set_address_registry(
@@ -186,17 +191,48 @@ impl ContractAccountImpl of ContractAccountTrait {
         Result::Ok(is_false_positive_jumpdest)
     }
 
-    /// Sets the given `offset` as a valid jump destination in the bytecode.
-    /// The valid jump destinations are stored in Kakarot Core's contract storage.
-    /// # Arguments
-    /// * `self` - The address of the ContractAccount
-    /// * `offset` - The offset to set as a valid jump destination
-    #[inline(always)]
-    fn set_false_positive_jumpdest(self: @Account, offset: usize) -> Result<(), EVMError> {
-        let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.address().starknet
+
+    ///  This function is used to find all the false positive JUMPDESTs in a given bytecode.
+    ///  It iterates over the bytecode, opcode by opcode.
+    ///  If the opcode is not a PUSH operation, it simply moves to the next opcode.
+    ///  If the opcode is a PUSH operation, it checks the bytes being pushed for equality with the JUMPDEST opcode (0x5b).
+    ///  If value `0x5b` is found within the bytes being pushed, it is considered a false positive.
+    ///  The offset of this false positive JUMPDEST is then added to the `offsets` array.
+    ///  The function returns the index of the next opcode to be checked.
+    fn find_false_positive_jumpdests(bytecode: Span<u8>) -> Span<usize> {
+        let mut offsets = array![];
+        let mut current_bytecode_index = 0;
+        loop {
+            if current_bytecode_index >= bytecode.len() {
+                break;
+            }
+            let opcode = *bytecode[current_bytecode_index];
+            if opcode < 0x60 || opcode > 0x7f {
+                current_bytecode_index += 1;
+            } else {
+                let remaining_length = bytecode.len() - current_bytecode_index;
+                let pushed_bytes = bytecode
+                    .slice(
+                        current_bytecode_index + 1,
+                        // We need this min because of some optimisations that the compiler does
+                        // that sometimes leaves a PUSH_X with X > remaining_length at the end of the bytecode
+                        cmp::min(opcode.into() - 0x5f, remaining_length - 1)
+                    );
+
+                let mut counter = 0;
+                loop {
+                    if counter == pushed_bytes.len() {
+                        break;
+                    }
+                    let byte = *pushed_bytes[counter];
+                    if byte == 0x5b {
+                        offsets.append(current_bytecode_index + 1 + counter);
+                    }
+                    counter += 1;
+                };
+                current_bytecode_index += 1 + opcode.into() - 0x5f;
+            }
         };
-        contract_account.set_false_positive_jumpdest(offset);
-        Result::Ok(())
+        offsets.span()
     }
 }

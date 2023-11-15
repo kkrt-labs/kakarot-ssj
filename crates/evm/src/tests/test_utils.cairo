@@ -347,15 +347,20 @@ fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
 fn initialize_contract_account(
     eth_address: EthAddress, bytecode: Span<u8>, storage: Span<(u256, u256)>
 ) -> Result<Address, EVMError> {
-    let mut ca_address = ContractAccountTrait::deploy(eth_address, bytecode)
+    let false_positive_jumpdests = ContractAccountTrait::find_false_positive_jumpdests(bytecode);
+    let mut ca_address = ContractAccountTrait::deploy(
+        eth_address, bytecode, false_positive_jumpdests
+    )
         .expect('failed deploying CA');
-    // Set the storage of the contract account
     let account = Account {
         account_type: AccountType::ContractAccount,
         address: ca_address,
-        code: array![0xab, 0xcd, 0xef].span(),
+        code: bytecode,
         nonce: 1,
-        selfdestruct: false
+        selfdestruct: false,
+        // False positive jumpdests is set to None to signify that we can check
+        // false positives in the storage rather than in cache.
+        false_positive_jumpdests: Option::None,
     };
     let mut i = 0;
     loop {

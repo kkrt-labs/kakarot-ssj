@@ -186,8 +186,8 @@ fn test_eth_call() {
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
 
-    let account = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), counter_evm_bytecode()
+    let account = test_utils::initialize_contract_account(
+        test_utils::other_evm_address(), counter_evm_bytecode(), array![].span()
     )
         .unwrap();
 
@@ -216,8 +216,8 @@ fn test_handle_call() {
 
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
-    let account = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), counter_evm_bytecode()
+    let account = test_utils::initialize_contract_account(
+        test_utils::other_evm_address(), counter_evm_bytecode(), array![].span()
     )
         .unwrap();
 

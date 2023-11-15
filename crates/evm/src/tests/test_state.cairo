@@ -223,7 +223,8 @@ mod test_state {
             address: Address { evm: evm_address, starknet: starknet_address },
             code: Default::default().span(),
             nonce: 0,
-            selfdestruct: false
+            selfdestruct: false,
+            false_positive_jumpdests: Option::None,
         };
 
         let account = state.get_account(evm_address).unwrap();
@@ -250,7 +251,8 @@ mod test_state {
             address: Address { evm: evm_address, starknet: starknet_address },
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,
-            selfdestruct: false
+            selfdestruct: false,
+            false_positive_jumpdests: Option::None,
         };
 
         state.set_account(expected_account);
@@ -280,7 +282,9 @@ mod test_state {
         // Transfer native tokens to sender
         let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
         let evm_address: EthAddress = test_utils::evm_address();
-        let mut ca_address = ContractAccountTrait::deploy(evm_address, array![].span())
+        let mut ca_address = ContractAccountTrait::deploy(
+            evm_address, array![].span(), array![].span()
+        )
             .expect('sender deploy failed');
 
         let mut state: State = Default::default();
@@ -291,7 +295,8 @@ mod test_state {
             address: ca_address,
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,
-            selfdestruct: false
+            selfdestruct: false,
+            false_positive_jumpdests: Option::Some(array![].span()),
         };
         account.store_storage(key, value);
 
