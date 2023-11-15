@@ -96,7 +96,7 @@ impl SystemOperations of SystemOperationsTrait {
         }
 
         // Initialize the sub context.
-        self.init_call_sub_ctx(call_args, read_only)
+        self.init_call_sub_ctx(call_args, read_only, false)
     }
 
     /// STATICCALL
@@ -106,7 +106,7 @@ impl SystemOperations of SystemOperationsTrait {
         let read_only = self.read_only();
 
         // Initialize the sub context.
-        self.init_call_sub_ctx(call_args, read_only)
+        self.init_call_sub_ctx(call_args, read_only, false)
     }
 
     /// CALLCODE
@@ -122,7 +122,7 @@ impl SystemOperations of SystemOperationsTrait {
         let read_only = self.read_only();
 
         // Initialize the sub context.
-        self.init_call_sub_ctx(call_args, read_only)
+        self.init_call_sub_ctx(call_args, read_only, true)
     }
 
     /// SELFDESTRUCT

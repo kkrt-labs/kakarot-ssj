@@ -77,7 +77,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
     fn init_call_sub_ctx(
-        ref self: Machine, call_args: CallArgs, read_only: bool
+        ref self: Machine, call_args: CallArgs, read_only: bool, self_call: bool
     ) -> Result<(), EVMError> {
         if call_args.should_transfer && call_args.value > 0 {
             let transfer = Transfer {
@@ -101,7 +101,11 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
         let bytecode = self.state.get_account(call_args.to.evm)?.code;
 
         // The caller in the subcontext is the current context's current address
-        let caller = self.address();
+        let caller = if self_call {
+            self.call_ctx().caller
+        } else {
+            self.address()
+        };
 
         let call_ctx = CallContextTrait::new(
             caller,
