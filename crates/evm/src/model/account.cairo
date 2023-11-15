@@ -11,6 +11,7 @@ use openzeppelin::token::erc20::interface::{
     IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
 };
 use starknet::{ContractAddress, EthAddress, get_contract_address};
+use utils::helpers::SpanExtTrait;
 use utils::helpers::{ResultExTrait, ByteArrayExTrait, compute_starknet_address};
 
 #[derive(Copy, Drop, PartialEq)]
@@ -313,6 +314,26 @@ impl AccountImpl of AccountTrait {
     fn false_positive_jumpdests(self: @Account) -> Option<Span<usize>> {
         *self.false_positive_jumpdests
     }
+
+    fn is_false_positive_jumpdest(self: @Account, offset: usize) -> bool {
+        match self.false_positive_jumpdests() {
+            Option::Some(false_positive_jumpdests) => { false_positive_jumpdests.contains(offset) },
+            Option::None => {
+                if !self.is_ca() {
+                    return false;
+                } else {
+                    if !self.is_deployed() {
+                        panic_with_felt252('INVARIANT: CA IS NOT DEPLOYED');
+                    }
+                    let contract_account = IContractAccountDispatcher {
+                        contract_address: self.address().starknet
+                    };
+                    return contract_account.is_false_positive_jumpdest(offset);
+                }
+            },
+        }
+    }
+
 
     /// Reads the value stored at the given key for the corresponding account.
     /// If not there, reads the contract storage and cache the result.

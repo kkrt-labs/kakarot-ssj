@@ -1,3 +1,7 @@
+use contracts::kakarot_core::{
+    interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
+};
+use contracts::tests::test_utils as contract_utils;
 use contracts::tests::test_utils::setup_contracts_for_testing;
 use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION, WRITE_IN_STATIC_CONTEXT};
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
@@ -10,6 +14,7 @@ use evm::state::{StateTrait, StateInternalTrait, compute_storage_address};
 use evm::tests::test_utils::{
     setup_machine, setup_machine_with_bytecode, evm_address, setup_static_machine
 };
+use evm::tests::test_utils;
 use integer::BoundedInt;
 use starknet::get_contract_address;
 
@@ -338,8 +343,8 @@ fn test_exec_jump_out_of_bounds() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
     let mut machine = setup_machine_with_bytecode(bytecode);
-    let counter = 0xFF;
-    machine.stack.push(counter);
+    let jump_index = 0xFF;
+    machine.stack.push(jump_index);
 
     // When
     let result = machine.exec_jump();
@@ -349,19 +354,21 @@ fn test_exec_jump_out_of_bounds() {
     assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
 }
 
-// TODO: This is third edge case in which `0x5B` is part of PUSHN instruction and hence
-// not a valid opcode to jump to
-//
-// Remove ignore once its handled
+
 #[test]
-#[available_gas(20000000)]
-#[ignore]
+#[available_gas(20_000_000)]
 fn test_exec_jump_inside_pushn() {
     // Given
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+
     let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
+    let account = test_utils::initialize_contract_account(
+        test_utils::evm_address(), bytecode, array![].span()
+    )
+        .unwrap();
     let mut machine = setup_machine_with_bytecode(bytecode);
-    let counter = 0x01;
-    machine.stack.push(counter);
+    let jump_index = 0x01;
+    machine.stack.push(jump_index);
 
     // When
     let result = machine.exec_jump();
@@ -379,9 +386,8 @@ fn test_exec_jumpi_valid_non_zero_1() {
     let mut machine = setup_machine_with_bytecode(bytecode);
     let b = 0x1;
     machine.stack.push(b);
-    let counter = 0x03;
-    machine.stack.push(counter);
-    let old_pc = machine.pc();
+    let jump_index = 0x03;
+    machine.stack.push(jump_index);
 
     // When
     machine.exec_jumpi();
@@ -399,9 +405,8 @@ fn test_exec_jumpi_valid_non_zero_2() {
     let mut machine = setup_machine_with_bytecode(bytecode);
     let b = 0x69;
     machine.stack.push(b);
-    let counter = 0x03;
-    machine.stack.push(counter);
-    let old_pc = machine.pc();
+    let jump_index = 0x03;
+    machine.stack.push(jump_index);
 
     // When
     machine.exec_jumpi();
@@ -419,8 +424,8 @@ fn test_exec_jumpi_valid_zero() {
     let mut machine = setup_machine_with_bytecode(bytecode);
     let b = 0x0;
     machine.stack.push(b);
-    let counter = 0x03;
-    machine.stack.push(counter);
+    let jump_index = 0x03;
+    machine.stack.push(jump_index);
     let old_pc = machine.pc();
 
     // When

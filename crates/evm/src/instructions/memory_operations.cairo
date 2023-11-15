@@ -2,6 +2,7 @@
 use evm::errors::{EVMError, INVALID_DESTINATION, READ_SYSCALL_FAILED, WRITE_IN_STATIC_CONTEXT};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
+use evm::model::account::AccountTrait;
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, compute_state_key};
 use hash::{HashStateTrait, HashStateExTrait};
@@ -60,17 +61,14 @@ impl MemoryOperation of MemoryOperationTrait {
     fn exec_jump(ref self: Machine) -> Result<(), EVMError> {
         let index = self.stack.pop_usize()?;
 
-        // TODO: Currently this doesn't check that byte is actually `JUMPDEST`
-        // and not `0x5B` that is a part of PUSHN instruction
-        //
-        // That can be done by storing all valid jump locations during contract deployment
-        // which would also simplify the logic because we would be just checking if idx is
-        // present in that list
-        //
-        // Check if idx in bytecode points to `JUMPDEST` opcode
         match self.bytecode().get(index) {
             Option::Some(opcode) => {
                 if *opcode.unbox() != 0x5B {
+                    return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
+                }
+                let account = self.state.get_account(self.address().evm)?;
+                let is_false_positive_jumpdest = account.is_false_positive_jumpdest(index);
+                if is_false_positive_jumpdest {
                     return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
                 }
             },
