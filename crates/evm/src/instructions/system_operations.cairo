@@ -78,7 +78,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// CALL
     /// # Specification: https://www.evm.codes/#f1?fork=shanghai
     fn exec_call(ref self: Machine) -> Result<(), EVMError> {
-        let call_args = self.prepare_call(CallType::Call)?;
+        let call_args = self.prepare_call(@CallType::Call)?;
         let read_only = self.read_only();
         let value = call_args.value;
 
@@ -102,7 +102,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// STATICCALL
     /// # Specification: https://www.evm.codes/#fa?fork=shanghai
     fn exec_staticcall(ref self: Machine) -> Result<(), EVMError> {
-        let call_args = self.prepare_call(CallType::StaticCall)?;
+        let call_args = self.prepare_call(@CallType::StaticCall)?;
         let read_only = self.read_only();
 
         // Initialize the sub context.
@@ -118,7 +118,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// DELEGATECALL
     /// # Specification: https://www.evm.codes/#f4?fork=shanghai
     fn exec_delegatecall(ref self: Machine) -> Result<(), EVMError> {
-        let call_args = self.prepare_call(CallType::DelegateCall)?;
+        let call_args = self.prepare_call(@CallType::DelegateCall)?;
         let read_only = self.read_only();
 
         // Initialize the sub context.
