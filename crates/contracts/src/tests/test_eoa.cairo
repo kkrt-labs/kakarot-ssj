@@ -42,7 +42,7 @@ mod test_external_owned_account {
                 let account = IUninitializedAccountDispatcher {
                     contract_address: starknet_address
                 };
-                account.initialize(kakarot_state.eoa_class_hash());
+                account.initialize(ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap());
                 let eoa = IExternallyOwnedAccountDispatcher { contract_address: starknet_address };
                 eoa.set_chain_id(kakarot_state.chain_id());
                 kakarot_state
