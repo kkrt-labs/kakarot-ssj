@@ -5,7 +5,7 @@ use starknet::{ContractAddress, EthAddress, ClassHash};
 trait IExternallyOwnedAccount<TContractState> {
     fn kakarot_core_address(self: @TContractState) -> ContractAddress;
     fn evm_address(self: @TContractState) -> EthAddress;
-    fn chain_id(self: @TContractState) -> u128;   
+    fn chain_id(self: @TContractState) -> u128;
 
     /// Upgrade the ExternallyOwnedAccount smart contract
     /// Using replace_class_syscall
@@ -63,8 +63,11 @@ mod ExternallyOwnedAccount {
             self.upgradeable.upgrade_contract(new_class_hash);
         }
 
-        fn set_chain_id(ref self: ContractState, chain_id: u128){
-            assert(get_caller_address() == self.kakarot_core_address.read(), 'Caller not kakarot address');
+        fn set_chain_id(ref self: ContractState, chain_id: u128) {
+            assert(
+                get_caller_address() == self.kakarot_core_address.read(),
+                'Caller not kakarot address'
+            );
             self.chain_id.write(chain_id);
         }
     }
