@@ -4,6 +4,9 @@ use contracts::kakarot_core::{IKakarotCore, KakarotCore, KakarotCore::KakarotCor
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
+use contracts::eoa::{
+    IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait
+};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
 use evm::model::{Address, AddressTrait};
 use starknet::{EthAddress, ContractAddress, get_contract_address, deploy_syscall};
@@ -38,6 +41,8 @@ impl EOAImpl of EOATrait {
                     contract_address: starknet_address
                 };
                 account.initialize(kakarot_state.eoa_class_hash());
+                let eoa = IExternallyOwnedAccountDispatcher { contract_address: starknet_address };
+                eoa.set_chain_id(kakarot_state.chain_id());
                 kakarot_state
                     .set_address_registry(evm_address, StoredAccountType::EOA(starknet_address));
                 kakarot_state.emit(EOADeployed { evm_address, starknet_address });

@@ -8,24 +8,47 @@ mod test_external_owned_account {
         IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
         MockContractUpgradeableV1
     };
-    use evm::tests::test_utils::{kakarot_address, eoa_address};
+    use contracts::uninitialized_account::{
+        IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
+    };
+    use evm::tests::test_utils::{kakarot_address, evm_address, eoa_address, chain_id};
     use starknet::class_hash::Felt252TryIntoClassHash;
     use starknet::testing::{set_caller_address, set_contract_address};
     use starknet::{
         deploy_syscall, ContractAddress, ClassHash, get_contract_address, contract_address_const,
         EthAddress
     };
+    use evm::model::{Address, AddressTrait};
+    use contracts::kakarot_core::{IKakarotCore, KakarotCore, KakarotCore::KakarotCoreInternal};
+    use contracts::kakarot_core::kakarot::StoredAccountType;
 
     fn deploy_eoa() -> IExternallyOwnedAccountDispatcher {
         let calldata: Span<felt252> = array![kakarot_address().into(), eoa_address().into()].span();
 
-        let maybe_address = deploy_syscall(
-            ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata, false
-        );
+        let evm_address = evm_address();
+        let mut is_deployed = AddressTrait::is_registered(evm_address);
+
+        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let account_class_hash = kakarot_state.account_class_hash();
+        let kakarot_address = get_contract_address();
+        let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
+
+        let maybe_address = deploy_syscall(account_class_hash, evm_address.into(), calldata, false);
+
         match maybe_address {
             Result::Ok((
-                contract_address, _
-            )) => { IExternallyOwnedAccountDispatcher { contract_address } },
+                starknet_address, _
+            )) => {
+                let account = IUninitializedAccountDispatcher {
+                    contract_address: starknet_address
+                };
+                account.initialize(kakarot_state.eoa_class_hash());
+                let eoa = IExternallyOwnedAccountDispatcher { contract_address: starknet_address };
+                eoa.set_chain_id(kakarot_state.chain_id());
+                kakarot_state
+                    .set_address_registry(evm_address, StoredAccountType::EOA(starknet_address));
+                return eoa;
+            },
             Result::Err(err) => panic(err)
         }
     }

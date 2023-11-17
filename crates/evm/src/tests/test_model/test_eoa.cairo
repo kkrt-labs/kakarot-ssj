@@ -7,6 +7,9 @@ use evm::model::eoa::{EOATrait};
 use evm::tests::test_utils;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::set_contract_address;
+use contracts::eoa::{
+    IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait
+};
 
 
 #[test]
@@ -23,4 +26,10 @@ fn test_eoa_deploy() {
 
     assert(event.evm_address == test_utils::evm_address(), 'wrong evm address');
     assert(event.starknet_address.into() == eoa_address.starknet, 'wrong starknet address');
+
+    let kakarot_chain_id = kakarot_core.chain_id();
+    let eoa = IExternallyOwnedAccountDispatcher { contract_address: eoa_address.starknet };
+    assert(eoa.chain_id() == kakarot_chain_id, 'wrong chain id');
+
+                
 }
