@@ -33,7 +33,7 @@ mod test_external_owned_account {
         let kakarot_address = get_contract_address();
         let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
 
-        let maybe_address = deploy_syscall(account_class_hash, evm_address.into(), calldata, false);
+        let starknet_address = deploy_syscall(account_class_hash, evm_address.into(), calldata, false).expect('failed to deploy EOA');
 
         match maybe_address {
             Result::Ok((
