@@ -76,7 +76,7 @@ mod ContractAccount {
     use super::IContractAccount;
     use utils::helpers::{ByteArrayExTrait, ResultExTrait};
     use utils::storage::{compute_storage_base_address};
-    use utils::traits::{StorageBaseAddressIntoFelt252, StoreBytes31};
+    use utils::traits::{StorageBaseAddressIntoFelt252};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
@@ -89,6 +89,7 @@ mod ContractAccount {
         // evm_address, kakarot_core_address will be set by account/account.cairo::constructor
         evm_address: EthAddress,
         kakarot_core_address: ContractAddress,
+        contract_account_bytecode: List<bytes31>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
     }
@@ -116,21 +117,14 @@ mod ContractAccount {
             // We start loading the full 31-byte words of bytecode data at address
             // `data_address`.  The `pending_word` and `pending_word_len` are stored at
             // address `data_address-2` and `data_address-1` respectively.
-            //TODO(eni) replace with ListTrait::new() once merged in alexandria
-            let list_len = Store::<usize>::read(0, data_address).expect(BYTECODE_READ_ERROR);
-            let mut stored_list: List<bytes31> = List {
-                address_domain: 0,
-                base: data_address,
-                len: list_len,
-                storage_size: Store::<bytes31>::size()
-            };
+            let mut stored_list: List<bytes31> = ListTrait::fetch(0, data_address)
+                .expect('failed to fetch bytecode');
             let pending_word_addr: felt252 = data_address.into() - 2;
             let pending_word_len_addr: felt252 = pending_word_addr + 1;
 
             // Read the `ByteArray` in the contract storage.
             let bytecode = ByteArray {
-                //TODO(eni) PR alexandria to make List methods return SyscallResult
-                data: stored_list.array(),
+                data: stored_list.array().expect('failed to fetch bytecode'),
                 pending_word: Store::<
                     felt252
                 >::read(0, storage_base_address_from_felt252(pending_word_addr))
@@ -145,20 +139,10 @@ mod ContractAccount {
 
         fn set_bytecode(ref self: ContractState, bytecode: Span<u8>) {
             let packed_bytecode: ByteArray = ByteArrayExTrait::from_bytes(bytecode);
-            // data_address is h(h(sn_keccak("contract_account_bytecode")), evm_address)
-            let data_address = storage_base_address_from_felt252(
-                selector!("contract_account_bytecode")
-            );
+            let data_address = self.contract_account_bytecode.address();
             // We start storing the full 31-byte words of bytecode data at address
             // `data_address`.  The `pending_word` and `pending_word_len` are stored at
             // address `data_address-2` and `data_address-1` respectively.
-            //TODO(eni) replace with ListTrait::new() once merged in alexandria
-            let mut stored_list: List<bytes31> = List {
-                address_domain: 0,
-                base: data_address,
-                len: 0,
-                storage_size: Store::<bytes31>::size()
-            };
             let pending_word_addr: felt252 = data_address.into() - 2;
             let pending_word_len_addr: felt252 = pending_word_addr + 1;
 
@@ -179,8 +163,8 @@ mod ContractAccount {
                 packed_bytecode.pending_word_len
             )
                 .expect(BYTECODE_WRITE_ERROR);
-            //TODO(eni) PR Alexandria so that from_span returns SyscallResult
-            stored_list.from_span(packed_bytecode.data.span());
+            let mut stored_list: List<bytes31> = ListTrait::new(0, data_address);
+            stored_list.append_span(packed_bytecode.data.span());
         }
 
         fn storage_at(self: @ContractState, key: u256) -> u256 {

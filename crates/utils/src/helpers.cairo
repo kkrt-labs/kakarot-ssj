@@ -495,14 +495,7 @@ impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
         self.append(value);
     }
 
-    fn append_span<+Clone<T>>(ref self: Array<T>, mut span: Span<T>) {
-        loop {
-            match span.pop_front() {
-                Option::Some(current) => { self.append(current.clone()); },
-                Option::None => { break; }
-            };
-        }
-    }
+
 }
 
 #[generate_trait]
