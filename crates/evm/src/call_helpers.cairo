@@ -21,6 +21,7 @@ use utils::traits::{BoolIntoNumeric, U256TryIntoResult};
 /// Created in order to simplify setting up the call opcodes
 #[derive(Drop)]
 struct CallArgs {
+    caller: Address,
     to: Address,
     gas: u128,
     value: u256,
@@ -42,7 +43,7 @@ enum CallType {
 impl MachineCallHelpersImpl of MachineCallHelpers {
     ///  Prepare the initialization of a new child or so-called sub-context
     /// As part of the CALL family of opcodes.
-    fn prepare_call(ref self: Machine, call_type: CallType) -> Result<CallArgs, EVMError> {
+    fn prepare_call(ref self: Machine, call_type: @CallType) -> Result<CallArgs, EVMError> {
         let gas = self.stack.pop_u128()?;
         let to = self.stack.pop_eth_address()?;
 
@@ -56,6 +57,13 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
             CallType::StaticCall => (0, false),
         };
 
+        let caller = match call_type {
+            CallType::Call => self.address(),
+            CallType::DelegateCall => self.call_ctx().caller,
+            CallType::CallCode => self.address(),
+            CallType::StaticCall => self.address(),
+        };
+
         let args_offset = self.stack.pop_usize()?;
         let args_size = self.stack.pop_usize()?;
 
@@ -67,7 +75,14 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         Result::Ok(
             CallArgs {
-                to, value, gas, calldata: calldata.span(), ret_offset, ret_size, should_transfer
+                caller,
+                to,
+                value,
+                gas,
+                calldata: calldata.span(),
+                ret_offset,
+                ret_size,
+                should_transfer
             }
         )
     }
@@ -77,7 +92,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
     fn init_call_sub_ctx(
-        ref self: Machine, call_args: CallArgs, read_only: bool, self_call: bool
+        ref self: Machine, call_args: CallArgs, read_only: bool
     ) -> Result<(), EVMError> {
         if call_args.should_transfer && call_args.value > 0 {
             let transfer = Transfer {
@@ -100,15 +115,8 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
         // We enter the standard flow
         let bytecode = self.state.get_account(call_args.to.evm)?.code;
 
-        // The caller in the subcontext is the current context's current address
-        let caller = if self_call {
-            self.call_ctx().caller
-        } else {
-            self.address()
-        };
-
         let call_ctx = CallContextTrait::new(
-            caller,
+            call_args.caller,
             bytecode,
             call_args.calldata,
             call_args.value,
