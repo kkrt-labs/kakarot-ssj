@@ -134,16 +134,20 @@ impl SystemOperations of SystemOperationsTrait {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let mut recipient_evm_address = self.stack.pop_eth_address()?;
+        let stack_address = self.stack.pop_eth_address()?;
+
+        //TODO Remove this when https://eips.ethereum.org/EIPS/eip-6780 is validated
+        let recipient_evm_address = if (stack_address == self.address().evm) {
+            0.try_into().unwrap()
+        } else {
+            stack_address
+        };
         let recipient_starknet_address = kakarot_state
             .compute_starknet_address(recipient_evm_address);
         let mut account = self.state.get_account(self.address().evm)?;
 
-        //TODO Remove this when https://eips.ethereum.org/EIPS/eip-6780 is validated
-        let recipient = if (recipient_evm_address == self.address().evm) {
-            Address { evm: 0.try_into().unwrap(), starknet: recipient_starknet_address }
-        } else {
-            Address { evm: recipient_evm_address, starknet: recipient_starknet_address }
+        let recipient = Address {
+            evm: recipient_evm_address, starknet: recipient_starknet_address
         };
 
         // Transfer balance
@@ -160,6 +164,7 @@ impl SystemOperations of SystemOperationsTrait {
         // Register for selfdestruct
         account.selfdestruct();
         self.state.set_account(account);
+        self.set_stopped();
         Result::Ok(())
     }
 }

@@ -367,7 +367,7 @@ fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
 fn initialize_contract_account(
     eth_address: EthAddress, bytecode: Span<u8>, storage: Span<(u256, u256)>
 ) -> Result<Address, EVMError> {
-    let mut ca_address = ContractAccountTrait::deploy(eth_address, bytecode)
+    let mut ca_address = ContractAccountTrait::deploy(eth_address, 1, bytecode)
         .expect('failed deploying CA');
     // Set the storage of the contract account
     let account = Account {

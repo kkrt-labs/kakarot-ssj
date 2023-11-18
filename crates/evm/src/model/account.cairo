@@ -205,12 +205,13 @@ impl AccountImpl of AccountTrait {
             }
         } else if self.should_deploy(is_registered) {
             // If SELFDESTRUCT, deploy empty SN account
-            if (*self.selfdestruct == true) {
-                ContractAccountTrait::deploy(self.address().evm, array![].span())?;
-                return Result::Ok(());
+            let initial_nonce = if (*self.selfdestruct == true) {
+                0
+            } else {
+                *self.nonce
             };
-            ContractAccountTrait::deploy(self.address().evm, *self.code)?;
-            self.store_nonce(*self.nonce)
+            ContractAccountTrait::deploy(self.address().evm, *self.nonce, *self.code)?;
+            Result::Ok(())
         //Storage is handled outside of the account and must be commited after all accounts are commited.
         } else {
             Result::Ok(())

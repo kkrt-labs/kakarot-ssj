@@ -280,7 +280,7 @@ mod test_state {
         // Transfer native tokens to sender
         let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
         let evm_address: EthAddress = test_utils::evm_address();
-        let mut ca_address = ContractAccountTrait::deploy(evm_address, array![].span())
+        let mut ca_address = ContractAccountTrait::deploy(evm_address, 1, array![].span())
             .expect('sender deploy failed');
 
         let mut state: State = Default::default();

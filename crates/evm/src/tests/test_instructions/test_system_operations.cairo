@@ -1,6 +1,7 @@
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_data::{storage_evm_bytecode, storage_evm_initcode};
 use contracts::tests::test_utils::{fund_account_with_native_token, setup_contracts_for_testing};
+use debug::PrintTrait;
 use evm::call_helpers::{MachineCallHelpers, MachineCallHelpersImpl};
 use evm::context::{ExecutionContext, ExecutionContextTrait, ExecutionContextType};
 use evm::errors::EVMErrorTrait;
@@ -403,7 +404,7 @@ fn test_exec_create2() {
 
     let deployed_bytecode = array![0xff].span();
     let eth_address: EthAddress = 0x00000000000000000075766d5f61646472657373_u256.into();
-    let contract_address = ContractAccountTrait::deploy(eth_address, deployed_bytecode)
+    let contract_address = ContractAccountTrait::deploy(eth_address, 1, deployed_bytecode)
         .expect('failed deploying CA');
 
     let mut ctx = machine.current_ctx.unbox();
@@ -451,7 +452,9 @@ fn test_exec_selfdestruct_existing_ca() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let destroyed_address = test_address().evm; // address in machine call context
-    let ca_address = ContractAccountTrait::deploy(destroyed_address, array![0x1, 0x2, 0x3].span())
+    let ca_address = ContractAccountTrait::deploy(
+        destroyed_address, 1, array![0x1, 0x2, 0x3].span()
+    )
         .expect('failed deploying CA');
     fund_account_with_native_token(ca_address.starknet, native_token, 1000);
     let recipient = EOATrait::deploy(other_evm_address()).expect('failed deploying eoa');
@@ -503,9 +506,10 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     // Deploy sender and recipiens EOAs, and CA that will be selfdestructed and funded with 100 tokens
     let sender = EOATrait::deploy(evm_address()).expect('failed deploy EOA',);
     let recipient = EOATrait::deploy(0xabde1.try_into().unwrap()).expect('failed deploy EOA',);
-    let ca_address = ContractAccountTrait::deploy(other_evm_address(), array![].span())
+    let ca_address = ContractAccountTrait::deploy(other_evm_address(), 1, array![].span())
         .expect('failed deploy CA');
     fund_account_with_native_token(sender.starknet, native_token, 100);
+    fund_account_with_native_token(ca_address.starknet, native_token, 100);
     let mut machine = setup_machine_with_target(ca_address);
 
     // Cache the CA into state
@@ -515,7 +519,7 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     machine.stack.push(recipient.evm.into());
     machine.exec_selfdestruct().expect('selfdestruct failed');
     // Add a transfer from sender to CA - after it was selfdestructed in local state. This transfer should go through.
-    let transfer = Transfer { sender, recipient: recipient, amount: 100 };
+    let transfer = Transfer { sender, recipient: ca_address, amount: 100 };
     machine.state.add_transfer(transfer).unwrap();
     machine.state.commit_context();
     machine.state.commit_state();
@@ -525,7 +529,8 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     let recipient_balance = native_token.balanceOf(recipient.starknet);
     let sender_balance = native_token.balanceOf(sender.starknet);
     let ca_balance = native_token.balanceOf(ca_address.starknet);
-    assert(recipient_balance == 100, 'recipient wrong balance');
+    //TODO: test fails, fix
+    assert(recipient_balance == 200, 'recipient wrong balance');
     assert(sender_balance == 0, 'sender wrong balance');
     assert(ca_balance == 0, 'ca wrong balance');
 }
