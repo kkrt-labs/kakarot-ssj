@@ -10,6 +10,7 @@ mod test_external_owned_account {
         IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
         MockContractUpgradeableV1
     };
+    use contracts::tests::test_utils::setup_contracts_for_testing;
     use contracts::uninitialized_account::{
         IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount,
         IUninitializedAccount
@@ -23,8 +24,9 @@ mod test_external_owned_account {
         EthAddress
     };
 
-    fn deploy_eoa() -> IExternallyOwnedAccountDispatcher {
-        let calldata: Span<felt252> = array![kakarot_address().into(), eoa_address().into()].span();
+    fn deploy_eoa(kakarot_address: ContractAddress) -> IExternallyOwnedAccountDispatcher {
+        set_contract_address(kakarot_address);
+        let calldata: Span<felt252> = array![kakarot_address.into(), eoa_address().into()].span();
 
         let (starknet_address, _) = deploy_syscall(
             UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(),
@@ -45,21 +47,23 @@ mod test_external_owned_account {
     #[test]
     #[available_gas(2000000000)]
     fn test_kakarot_address() {
-        let expected_address = kakarot_address();
+        let (_, kakarot) = setup_contracts_for_testing();
+        let kakarot_address = kakarot.contract_address;
 
-        let eoa_contract = deploy_eoa();
+        let eoa_contract = deploy_eoa(kakarot_address);
 
-        assert(eoa_contract.kakarot_core_address() == expected_address, 'wrong kakarot_address');
+        assert(eoa_contract.kakarot_core_address() == kakarot_address, 'wrong kakarot_address');
     }
 
     #[test]
     #[available_gas(2000000000)]
     fn test_evm_address() {
         let owner = contract_address_const::<1>();
-
         let expected_address: EthAddress = eoa_address();
+        let (_, kakarot) = setup_contracts_for_testing();
+        let kakarot_address = kakarot.contract_address;
 
-        let eoa_contract = deploy_eoa();
+        let eoa_contract = deploy_eoa(kakarot_address);
 
         assert(eoa_contract.evm_address() == expected_address, 'wrong evm_address');
     }
@@ -67,7 +71,10 @@ mod test_external_owned_account {
     #[test]
     #[available_gas(2000000000)]
     fn test_eoa_upgrade() {
-        let eoa_contract = deploy_eoa();
+        let (_, kakarot) = setup_contracts_for_testing();
+        let kakarot_address = kakarot.contract_address;
+        let eoa_contract = deploy_eoa(kakarot_address);
+
         let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH
             .try_into()
             .unwrap();
@@ -87,7 +94,9 @@ mod test_external_owned_account {
     #[available_gas(2000000000)]
     #[should_panic(expected: ('Caller not contract address', 'ENTRYPOINT_FAILED'))]
     fn test_eoa_upgrade_from_noncontractaddress() {
-        let eoa_contract = deploy_eoa();
+        let (_, kakarot) = setup_contracts_for_testing();
+        let kakarot_address = kakarot.contract_address;
+        let eoa_contract = deploy_eoa(kakarot_address);
         let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH
             .try_into()
             .unwrap();
