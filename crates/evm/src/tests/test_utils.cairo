@@ -24,7 +24,7 @@ fn test_address() -> Address {
 }
 
 fn other_evm_address() -> EthAddress {
-    0xabde1.try_into().unwrap()
+    'other_evm_address'.try_into().unwrap()
 }
 
 fn other_starknet_address() -> ContractAddress {
