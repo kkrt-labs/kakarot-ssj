@@ -92,7 +92,7 @@ mod test_external_owned_account {
 
     #[test]
     #[available_gas(2000000000)]
-    #[should_panic(expected: ('Caller not self', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(expected: ('Caller not contract address', 'ENTRYPOINT_FAILED'))]
     fn test_eoa_upgrade_from_noncontractaddress() {
         let (_, kakarot) = setup_contracts_for_testing();
         let kakarot_address = kakarot.contract_address;

@@ -1,12 +1,14 @@
 //! System operations.
 
 use box::BoxTrait;
+use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::call_helpers::{MachineCallHelpers, CallType};
 use evm::create_helpers::{MachineCreateHelpers, CreateType};
 use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL, WRITE_IN_STATIC_CONTEXT};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
+use evm::model::{Address, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use utils::math::Exponentiation;
@@ -131,6 +133,38 @@ impl SystemOperations of SystemOperationsTrait {
         if self.read_only() {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
-        Result::Err(EVMError::NotImplemented)
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let stack_address = self.stack.pop_eth_address()?;
+
+        //TODO Remove this when https://eips.ethereum.org/EIPS/eip-6780 is validated
+        let recipient_evm_address = if (stack_address == self.address().evm) {
+            0.try_into().unwrap()
+        } else {
+            stack_address
+        };
+        let recipient_starknet_address = kakarot_state
+            .compute_starknet_address(recipient_evm_address);
+        let mut account = self.state.get_account(self.address().evm)?;
+
+        let recipient = Address {
+            evm: recipient_evm_address, starknet: recipient_starknet_address
+        };
+
+        // Transfer balance
+        self
+            .state
+            .add_transfer(
+                Transfer {
+                    sender: account.address(),
+                    recipient,
+                    amount: self.state.read_balance(account.address().evm)?
+                }
+            );
+
+        // Register for selfdestruct
+        account.selfdestruct();
+        self.state.set_account(account);
+        self.set_stopped();
+        Result::Ok(())
     }
 }

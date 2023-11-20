@@ -45,6 +45,7 @@ fn test_exec_blockhash_above_bounds() {
 
 // TODO: implement exec_blockhash testing for block number within bounds
 // https://github.com/starkware-libs/cairo/blob/77a7e7bc36aa1c317bb8dd5f6f7a7e6eef0ab4f3/crates/cairo-lang-starknet/cairo_level_tests/interoperability.cairo#L173
+#[ignore]
 #[test]
 #[available_gas(20000000)]
 fn test_exec_blockhash_within_bounds() {
@@ -55,13 +56,9 @@ fn test_exec_blockhash_within_bounds() {
 
     // When
     machine.stack.push(244).unwrap();
-
-    //TODO the CASM runner used in tests doesn't implement
-    //`get_block_hash_syscall` yet. As such, this test should fail no if the
-    //queried block is within bounds
-    assert(machine.exec_blockhash().is_err(), 'CASM Runner cant blockhash');
-// Then
-// assert(machine.stack.peek().unwrap() == 0xF, 'stack top should be 0xF');
+    machine.exec_blockhash();
+    // Then
+    assert(machine.stack.peek().unwrap() == 0xF, 'stack top should be 0xF');
 }
 
 
@@ -155,7 +152,7 @@ fn test_exec_selfbalance_zero() {
 fn test_exec_selfbalance_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span())
+    let mut ca_address = ContractAccountTrait::deploy(evm_address(), 1, array![].span())
         .expect('failed deploy contract account',);
 
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);

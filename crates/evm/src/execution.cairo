@@ -65,14 +65,35 @@ fn execute(
     let transfer = Transfer { sender: origin, recipient: target, amount: value };
     match machine.state.add_transfer(transfer) {
         Result::Ok(x) => {},
-        Result::Err(err) => { return reverted_with_err(machine, err); }
+        Result::Err(err) => {
+            return ExecutionResult {
+                status: Status::Reverted,
+                return_data: Default::default().span(),
+                destroyed_contracts: Default::default().span(),
+                create_addresses: Default::default().span(),
+                events: Default::default().span(),
+                state: machine.state,
+                error: Option::Some(err)
+            };
+        }
     }
 
     // cache the EOA of origin inside the state, and set its nonce to get_tx_info().unbox().nonce.
     // This allows us to call create with the correct nonce as the salt.
     let mut origin_account = match machine.state.get_account(origin.evm) {
         Result::Ok(account) => { account },
-        Result::Err(err) => { return reverted_with_err(machine, err); }
+        //TODO create helper method to avoid this boilerplace
+        Result::Err(err) => {
+            return ExecutionResult {
+                status: Status::Reverted,
+                return_data: Default::default().span(),
+                destroyed_contracts: Default::default().span(),
+                create_addresses: Default::default().span(),
+                events: Default::default().span(),
+                state: machine.state,
+                error: Option::Some(err)
+            };
+        }
     };
     origin_account.nonce = starknet::get_tx_info().unbox().nonce.try_into().unwrap();
     machine.state.set_account(origin_account);
@@ -97,14 +118,3 @@ fn execute(
     }
 }
 
-fn reverted_with_err(self: Machine, error: EVMError) -> ExecutionResult {
-    ExecutionResult {
-        status: Status::Reverted,
-        return_data: Default::default().span(),
-        destroyed_contracts: Default::default().span(),
-        create_addresses: Default::default().span(),
-        events: Default::default().span(),
-        state: self.state,
-        error: Option::Some(error)
-    }
-}
