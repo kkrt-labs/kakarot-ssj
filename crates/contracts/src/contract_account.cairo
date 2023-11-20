@@ -34,7 +34,6 @@ trait IContractAccount<TContractState> {
 
     fn nonce(self: @TContractState) -> u64;
     fn set_nonce(ref self: TContractState, new_nonce: u64);
-    fn increment_nonce(ref self: TContractState);
     // ***
     // JUMP
     // Records of valid jumps in the context of jump opcodes
@@ -138,6 +137,7 @@ mod ContractAccount {
         }
 
         fn set_bytecode(ref self: ContractState, bytecode: Span<u8>) {
+            self.assert_only_kakarot_core();
             let packed_bytecode: ByteArray = ByteArrayExTrait::from_bytes(bytecode);
             let data_address = self.contract_account_bytecode.address();
             // We start storing the full 31-byte words of bytecode data at address
@@ -176,6 +176,7 @@ mod ContractAccount {
         }
 
         fn set_storage_at(ref self: ContractState, key: u256, value: u256) {
+            self.assert_only_kakarot_core();
             let storage_address = compute_storage_base_address(
                 selector!("contract_account_storage_keys"),
                 array![key.low.into(), key.high.into()].span()
@@ -192,6 +193,7 @@ mod ContractAccount {
 
 
         fn set_nonce(ref self: ContractState, new_nonce: u64) {
+            self.assert_only_kakarot_core();
             let storage_address: StorageBaseAddress = storage_base_address_from_felt252(
                 selector!("contract_account_nonce")
             );
@@ -199,25 +201,18 @@ mod ContractAccount {
         }
 
 
-        fn increment_nonce(ref self: ContractState) {
-            let storage_address: StorageBaseAddress = storage_base_address_from_felt252(
-                selector!("contract_account_nonce")
-            );
-            let nonce = Store::<u64>::read(0, storage_address).expect(NONCE_READ_ERROR);
-            Store::<u64>::write(0, storage_address, nonce + 1).expect(NONCE_WRITE_ERROR)
-        }
-
         fn is_false_positive_jumpdest(self: @ContractState, offset: usize) -> bool {
             panic_with_felt252('unimplemented')
         }
 
 
         fn set_false_positive_jumpdest(ref self: ContractState, offset: usize) {
+            self.assert_only_kakarot_core();
             panic_with_felt252('unimplemented')
         }
 
         fn selfdestruct(ref self: ContractState) {
-            //TODO add access control
+            self.assert_only_kakarot_core();
             self.set_nonce(0);
             self.evm_address.write(0.try_into().unwrap());
             self.set_bytecode(array![].span());
@@ -227,11 +222,18 @@ mod ContractAccount {
 
 
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
+            self.assert_only_kakarot_core();
+            self.upgradeable.upgrade_contract(new_class_hash);
+        }
+    }
+
+    #[generate_trait]
+    impl PrivateImpl of PrivateTrait {
+        fn assert_only_kakarot_core(self: @ContractState) {
             assert(
                 get_caller_address() == self.kakarot_core_address.read(),
                 'Caller not Kakarot Core address'
             );
-            self.upgradeable.upgrade_contract(new_class_hash);
         }
     }
 }
