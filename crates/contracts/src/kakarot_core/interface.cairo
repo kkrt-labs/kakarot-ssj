@@ -76,7 +76,7 @@ trait IKakarotCore<TContractState> {
     /// Executes an EVM transaction and possibly modifies the state
     fn eth_send_transaction(
         ref self: TContractState,
-        to: EthAddress,
+        to: Option<EthAddress>,
         gas_limit: u128,
         gas_price: u128,
         value: u256,
@@ -177,7 +177,7 @@ trait IExtendedKakarotCore<TContractState> {
     /// Executes an EVM transaction and possibly modifies the state
     fn eth_send_transaction(
         ref self: TContractState,
-        to: EthAddress,
+        to: Option<EthAddress>,
         gas_limit: u128,
         gas_price: u128,
         value: u256,

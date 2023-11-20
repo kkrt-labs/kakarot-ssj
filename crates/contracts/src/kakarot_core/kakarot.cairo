@@ -16,6 +16,7 @@ enum StoredAccountType {
 
 #[starknet::contract]
 mod KakarotCore {
+    use evm::state::StateTrait;
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
@@ -31,7 +32,8 @@ mod KakarotCore {
     use evm::model::eoa::{EOATrait};
     use evm::model::{ExecutionResult, Address, AddressTrait};
     use starknet::{
-        EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
+        EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address,
+        get_caller_address, deploy_syscall
     };
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use super::{StoredAccountType};
@@ -252,7 +254,17 @@ mod KakarotCore {
 
             let from = Address { evm: from, starknet: self.compute_starknet_address(from) };
 
-            let result = self.handle_call(:from, :to, :gas_limit, :gas_price, :value, :data);
+            let to = match to {
+                Option::Some(to) => {
+                    let target_starknet_address = self.compute_starknet_address(to);
+                    Option::Some(Address { evm: to, starknet: target_starknet_address })
+                },
+                Option::None(_) => Option::None(())
+            };
+
+            let result = KakarotInternal::handle_execute(
+                :from, :to, :gas_limit, :gas_price, :value, :data
+            );
             match result {
                 Result::Ok(result) => result.return_data,
                 // TODO: Return the error message as Bytes in the response
@@ -263,13 +275,45 @@ mod KakarotCore {
 
         fn eth_send_transaction(
             ref self: ContractState,
-            to: EthAddress,
+            to: Option<EthAddress>,
             gas_limit: u128,
             gas_price: u128,
             value: u256,
             data: Span<u8>
         ) -> Span<u8> {
-            array![].span()
+            let starknet_caller_address = get_caller_address();
+            let account = IContractAccountDispatcher { contract_address: starknet_caller_address };
+            let from = account.evm_address();
+
+            let from = Address { evm: from, starknet: starknet_caller_address };
+
+            // Invariant
+            let (caller_account_type, caller_starknet_address) = self
+                .address_registry(from.evm)
+                .expect('Fetching EOA failed');
+            assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
+
+            let to = match to {
+                Option::Some(to) => {
+                    let target_starknet_address = self.compute_starknet_address(to);
+                    Option::Some(Address { evm: to, starknet: target_starknet_address })
+                },
+                Option::None(_) => Option::None(())
+            };
+
+            let mut result = KakarotInternal::handle_execute(
+                :from, :to, :gas_limit, :gas_price, :value, :data
+            );
+            match result {
+                Result::Ok(result) => {
+                    let mut state = result.state;
+                    state.commit_state();
+                    result.return_data
+                },
+                // TODO: Return the error message as Bytes in the response
+                // Eliminate all paths of possible panic in logic with relations to the EVM itself.
+                Result::Err(err) => panic_with_felt252(err.to_string()),
+            }
         }
 
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
@@ -311,32 +355,14 @@ mod KakarotCore {
         }
     }
 
-    #[generate_trait]
-    impl KakarotCoreInternalImpl of KakarotCoreInternal {
-        fn is_view(self: @ContractState) -> bool {
-            let tx_info = get_tx_info().unbox();
+    mod KakarotInternal {
+        use evm::model::{ExecutionResult, Address, AccountTrait};
+        use evm::execution::execute;
+        use evm::errors::EVMError;
 
-            // If the account that originated the transaction is not zero, this means we
-            // are in an invoke transaction instead of a call; therefore, `eth_call` is being wrongly called
-            // For invoke transactions, `eth_send_transaction` must be used
-            if !tx_info.account_contract_address.is_zero() {
-                return false;
-            }
-            true
-        }
-
-        /// Maps an EVM address to a Starknet address
-        /// Triggerred when deployment of an EOA or CA is successful
-        fn set_address_registry(
-            ref self: ContractState, evm_address: EthAddress, account: StoredAccountType
-        ) {
-            self.address_registry.write(evm_address, account);
-        }
-
-        fn handle_call(
-            self: @ContractState,
+        fn handle_execute(
             from: Address,
-            to: Option<EthAddress>,
+            to: Option<Address>,
             gas_limit: u128,
             gas_price: u128,
             value: u256,
@@ -345,11 +371,7 @@ mod KakarotCore {
             match to {
                 //TODO we can optimize this by doing this one step later, when we load the account from the state. This way we can avoid loading the account bytecode twice.
                 Option::Some(to) => {
-                    let bytecode = AccountTrait::fetch_or_create(to)?.code;
-
-                    let target_starknet_address = self.compute_starknet_address(to);
-                    let to = Address { evm: to, starknet: target_starknet_address };
-
+                    let bytecode = AccountTrait::fetch_or_create(to.evm)?.code;
                     let execution_result = execute(
                         from,
                         to,
@@ -370,6 +392,29 @@ mod KakarotCore {
                     panic_with_felt252('deploy tx flow unimplemented')
                 },
             }
+        }
+    }
+
+    #[generate_trait]
+    impl KakarotCoreInternalImpl of KakarotCoreInternal {
+        fn is_view(self: @ContractState) -> bool {
+            let tx_info = get_tx_info().unbox();
+
+            // If the account that originated the transaction is not zero, this means we
+            // are in an invoke transaction instead of a call; therefore, `eth_call` is being wrongly called
+            // For invoke transactions, `eth_send_transaction` must be used
+            if !tx_info.account_contract_address.is_zero() {
+                return false;
+            }
+            true
+        }
+
+        /// Maps an EVM address to a Starknet address
+        /// Triggerred when deployment of an EOA or CA is successful
+        fn set_address_registry(
+            ref self: ContractState, evm_address: EthAddress, account: StoredAccountType
+        ) {
+            self.address_registry.write(evm_address, account);
         }
     }
 }
