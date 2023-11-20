@@ -97,10 +97,8 @@ impl AccountImpl of AccountTrait {
                 let starknet_address = kakarot_state.compute_starknet_address(evm_address);
                 Result::Ok(
                     // If no account exists at `address`, then we are trying to
-                    // access an undeployed contract account.  Simple value
-                    // transfers between EOAs don't call this function -
-                    // Therefore, we're sure that only contract accounts are
-                    // undeployed.
+                    // access an undeployed account (CA or EOA). We create an
+                    // empty account with the correct address and return it.
                     Account {
                         account_type: AccountType::Unknown,
                         address: Address { starknet: starknet_address, evm: evm_address, },
@@ -161,8 +159,8 @@ impl AccountImpl of AccountTrait {
     /// be registered already, and the nonce must not be 0 or the code must not
     /// be empty
     #[inline(always)]
-    fn should_deploy(self: @Account, is_registered: bool) -> bool {
-        if !is_registered && self.is_ca() && (*self.nonce != 0 || !(*self.code).is_empty()) {
+    fn should_deploy(self: @Account) -> bool {
+        if self.is_ca() && (*self.nonce != 0 || !(*self.code).is_empty()) {
             return true;
         };
         false
@@ -180,10 +178,10 @@ impl AccountImpl of AccountTrait {
     ///
     /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
     fn commit(self: @Account) -> Result<(), EVMError> {
-        // Case account exists and is already on chain
-        let is_registered = AddressTrait::is_registered(self.address().evm);
+        // Case account is already deployed onchain
+        let is_deployed = self.address().evm.is_deployed();
 
-        if is_registered {
+        if is_deployed {
             match self.account_type {
                 AccountType::EOA(eoa) => {
                     // no - op
@@ -203,7 +201,7 @@ impl AccountImpl of AccountTrait {
                 },
                 AccountType::Unknown => { Result::Ok(()) }
             }
-        } else if self.should_deploy(is_registered) {
+        } else if self.should_deploy() {
             // If SELFDESTRUCT, deploy empty SN account
             let (initial_nonce, initial_code) = if (*self.selfdestruct == true) {
                 (0, Default::default().span())
@@ -232,19 +230,19 @@ impl AccountImpl of AccountTrait {
         false
     }
 
-    /// Returns whether an accound is deployed at the given address.
+    /// Returns whether an account exists at the given address.
     ///
     /// Based on the state of the account in the cache - the account can
-    /// not be commited on-chain, but already be deployed in the KakarotState.
+    /// not be deployed on-chain, but already exist in the KakarotState.
     /// # Arguments
     ///
     /// * `address` - The Ethereum address to look up.
     ///
     /// # Returns
     ///
-    /// `true` if an account is deployed at this address, `false` otherwise.
+    /// `true` if an account exists at this address, `false` otherwise.
     #[inline(always)]
-    fn is_deployed(self: @Account) -> bool {
+    fn exists(self: @Account) -> bool {
         let is_known = *self.account_type != AccountType::Unknown;
 
         //TODO(account) verify whether is_known is a sufficient condition

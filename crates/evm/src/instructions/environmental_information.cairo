@@ -244,6 +244,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         // -> Undeployed CAs that might be deployed later, but currently don't
         // exist and have only been touched for value transfers
         // -> Undeployed EOAs
+        // Selfdestructed CAs still exist until the end of the TX.
         if account.is_precompile() || (account.account_type == AccountType::Unknown) {
             return self.stack.push(0);
         }
