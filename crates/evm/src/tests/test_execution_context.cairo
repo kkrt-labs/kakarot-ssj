@@ -18,11 +18,6 @@ use starknet::{EthAddress, ContractAddress};
 use test_utils::{callvalue, test_address};
 use traits::PartialEq;
 
-// TODO remove once no longer required (see https://github.com/starkware-libs/cairo/issues/3863)
-#[inline(never)]
-fn no_op() {}
-
-
 #[test]
 #[available_gas(1000000)]
 fn test_call_context_new() {
