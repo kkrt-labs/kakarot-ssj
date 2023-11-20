@@ -3,7 +3,6 @@ use utils::helpers::{
 };
 use utils::helpers::{ByteArrayExTrait};
 use utils::helpers;
-use utils::traits::{ByteArraySerde};
 
 #[test]
 #[available_gas(2000000000)]
