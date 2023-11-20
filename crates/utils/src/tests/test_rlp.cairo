@@ -93,33 +93,22 @@ fn test_rlp_empty() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_rlp_encode_empty_input_should_fail() {
-    let mut input = array![];
-
-    let res = RLPTrait::encode(input.span());
-
-    assert(res.is_err(), 'should return an error');
-    assert(res.unwrap_err() == RLPError::EmptyInput(RLP_EMPTY_INPUT), 'err != EmptyInput');
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_rlp_encode_default_value() {
+fn test_rlp_encode_empty_sequence() {
     let mut input = RLPItem::String(array![].span());
 
-    let res = RLPTrait::encode(array![input].span()).unwrap();
+    let res = RLPTrait::encode_sequence(array![input].span());
 
     assert(res.len() == 1, 'wrong len');
     assert(*res[0] == 0x80, 'wrong encoded value');
 }
-
+//TODO test encode sequence of strings
 
 #[test]
 #[available_gas(20000000)]
 fn test_rlp_encode_string_empty_input() {
     let mut input: Array<u8> = Default::default();
 
-    let res = RLPTrait::encode_string(input.span()).unwrap();
+    let res = RLPTrait::encode_string(input.span());
 
     assert(res.len() == 1, 'wrong len');
     assert(*res[0] == 0x80, 'wrong encoded value');
@@ -131,7 +120,7 @@ fn test_rlp_encode_string_single_byte_lt_0x80() {
     let mut input: Array<u8> = Default::default();
     input.append(0x40);
 
-    let res = RLPTrait::encode_string(input.span()).unwrap();
+    let res = RLPTrait::encode_string(input.span());
 
     assert(res.len() == 1, 'wrong len');
     assert(*res[0] == 0x40, 'wrong encoded value');
@@ -143,7 +132,7 @@ fn test_rlp_encode_string_single_byte_ge_0x80() {
     let mut input: Array<u8> = Default::default();
     input.append(0x80);
 
-    let res = RLPTrait::encode_string(input.span()).unwrap();
+    let res = RLPTrait::encode_string(input.span());
 
     assert(res.len() == 2, 'wrong len');
     assert(*res[0] == 0x81, 'wrong prefix');
@@ -157,7 +146,7 @@ fn test_rlp_encode_string_length_between_2_and_55() {
     input.append(0x40);
     input.append(0x50);
 
-    let res = RLPTrait::encode_string(input.span()).unwrap();
+    let res = RLPTrait::encode_string(input.span());
 
     assert(res.len() == 3, 'wrong len');
     assert(*res[0] == 0x82, 'wrong prefix');
@@ -178,7 +167,7 @@ fn test_rlp_encode_string_length_exactly_56() {
         i += 1;
     };
 
-    let res = RLPTrait::encode_string(input.span()).unwrap();
+    let res = RLPTrait::encode_string(input.span());
 
     assert(res.len() == 58, 'wrong len');
     assert(*res[0] == 0xb8, 'wrong prefix');
@@ -206,7 +195,7 @@ fn test_rlp_encode_string_length_greater_than_56() {
         i += 1;
     };
 
-    let res = RLPTrait::encode_string(input.span()).unwrap();
+    let res = RLPTrait::encode_string(input.span());
 
     assert(res.len() == 62, 'wrong len');
     assert(*res[0] == 0xb8, 'wrong prefix');
@@ -234,7 +223,7 @@ fn test_rlp_encode_string_large_bytearray_inputs() {
         i += 1;
     };
 
-    let res = RLPTrait::encode_string(input.span()).unwrap();
+    let res = RLPTrait::encode_string(input.span());
 
     assert(res.len() == 503, 'wrong len');
     assert(*res[0] == 0xb9, 'wrong prefix');
@@ -257,7 +246,7 @@ fn test_rlp_encode_mutilple_string() {
     input.append(RLPItem::String(array![0x40, 0x53, 0x15, 0x94, 0x50, 0x40, 0x40, 0x40].span()));
     input.append(RLPItem::String(array![0x03].span()));
 
-    let res = RLPTrait::encode(input.span()).unwrap();
+    let res = RLPTrait::encode(input.span());
 
     assert(res.len() == 10, 'wrong len');
     assert(*res[0] == 0x88, 'wrong prefix');
@@ -271,7 +260,7 @@ fn test_rlp_encode_mutilple_string() {
 fn test_rlp_encode_list() {
     let mut input = array![RLPItem::List(array![].span())];
 
-    let res = RLPTrait::encode(input.span()).unwrap();
+    let res = RLPTrait::encode(input.span());
 }
 
 #[test]

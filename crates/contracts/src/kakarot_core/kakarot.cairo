@@ -38,7 +38,8 @@ mod KakarotCore {
     };
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use super::{StoredAccountType};
-    use utils::helpers::{compute_starknet_address};
+    use utils::helpers::{compute_starknet_address, EthAddressExTrait};
+    use utils::rlp::RLPTrait;
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
@@ -392,6 +393,11 @@ mod KakarotCore {
                     return Result::Ok(execution_result);
                 },
                 Option::None => {
+                    // Deploy tx case.
+                    let caller_bytes = EthAddressExTrait::to_bytes(from.evm);
+                    //TODO(deploy) fix nonce
+                    let caller_nonce = array![1].span();
+                    // let current_target = RLPTrait::encode_string()
                     let bytecode = data;
                     // TODO: compute_evm_address
                     // HASH(RLP(deployer_address, deployer_nonce))[0..20]

@@ -5,7 +5,7 @@ use starknet::EthAddress;
 
 #[test]
 #[available_gas(3_000_000_000_000)]
-fn test_get_create2_address() {
+fn test_compute_create2_contract_address() {
     let machine = setup_machine();
     let bytecode = counter_evm_bytecode();
     let salt = 0xbeef;
@@ -14,8 +14,8 @@ fn test_get_create2_address() {
         .expect('Wrong Eth address');
 
     let address = machine
-        .get_create2_address(from, salt, bytecode)
-        .expect('get_create2_address fail');
+        .compute_create2_contract_address(from, salt, bytecode)
+        .expect('compute_create2_contract_address fail');
 
     // TODO
     // add SNJS script for:
