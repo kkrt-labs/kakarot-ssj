@@ -494,8 +494,6 @@ impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
         }
         self.append(value);
     }
-
-
 }
 
 #[generate_trait]
