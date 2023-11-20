@@ -10,7 +10,7 @@ use starknet::testing::set_contract_address;
 
 #[test]
 #[available_gas(20000000)]
-fn test_is_registered_eoa_exists() {
+fn test_is_deployed_eoa_exists() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy contract account',);
@@ -19,39 +19,39 @@ fn test_is_registered_eoa_exists() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    let is_registered = AddressTrait::is_registered(evm_address());
+    let is_deployed = evm_address().is_deployed();
 
     // Then
-    assert(is_registered, 'account should be deployed');
+    assert(is_deployed, 'account should be deployed');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_is_registered_ca_exists() {
+fn test_is_deployed_ca_exists() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     ContractAccountTrait::deploy(evm_address(), array![].span())
         .expect('failed deploy contract account',);
 
     // When
-    let is_registered = AddressTrait::is_registered(evm_address());
+    let is_deployed = evm_address().is_deployed();
 
     // Then
-    assert(is_registered, 'account should be deployed');
+    assert(is_deployed, 'account should be deployed');
 }
 
 #[test]
 #[available_gas(20000000)]
-fn test_is_registered_undeployed() {
+fn test_is_deployed_undeployed() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    let is_registered = AddressTrait::is_registered(evm_address());
+    let is_deployed = evm_address().is_deployed();
 
     // Then
-    assert(!is_registered, 'account should be undeployed');
+    assert(!is_deployed, 'account should be undeployed');
 }
 
 
@@ -94,7 +94,7 @@ fn test_address_balance_eoa() {
 
 #[test]
 #[available_gas(5000000)]
-fn test_account_is_deployed_eoa() {
+fn test_account_exists_eoa() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let mut eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy eoa',);
@@ -103,13 +103,13 @@ fn test_account_is_deployed_eoa() {
     let account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
 
     // Then
-    assert(account.is_deployed() == true, 'account should be deployed');
+    assert(account.exists() == true, 'account should be deployed');
 }
 
 
 #[test]
 #[available_gas(5000000)]
-fn test_account_is_deployed_contract_account() {
+fn test_account_exists_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span())
@@ -119,13 +119,13 @@ fn test_account_is_deployed_contract_account() {
     let account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
 
     // Then
-    assert(account.is_deployed() == true, 'account should be deployed');
+    assert(account.exists() == true, 'account should be deployed');
 }
 
 
 #[test]
 #[available_gas(5000000)]
-fn test_account_is_deployed_undeployed() {
+fn test_account_exists_undeployed() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
@@ -133,7 +133,7 @@ fn test_account_is_deployed_undeployed() {
     let account = AccountTrait::fetch_or_create(evm_address()).unwrap();
 
     // Then
-    assert(account.is_deployed() == false, 'account should be deployed');
+    assert(account.exists() == false, 'account should be deployed');
 }
 
 
