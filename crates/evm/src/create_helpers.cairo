@@ -14,6 +14,7 @@ use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use keccak::cairo_keccak;
 use starknet::{EthAddress, get_tx_info};
+use utils::address::{compute_contract_address, compute_create2_contract_address};
 use utils::helpers::ArrayExtTrait;
 use utils::helpers::{ResultExTrait, EthAddressExTrait, U256Trait, U8SpanExTrait};
 use utils::traits::{
@@ -48,15 +49,15 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
 
         // TODO(state): when the tx starts,
         // store get_tx_info().unbox().nonce inside the sender account nonce
-        let sender_nonce = get_tx_info().unbox().nonce;
+        let sender_nonce: u64 = get_tx_info().unbox().nonce.try_into().unwrap();
 
         let to = match create_type {
-            CreateType::CreateOrDeployTx => self
-                .compute_contract_address(self.address().evm, sender_nonce)?,
-            CreateType::Create2 => self
-                .compute_create2_contract_address(
-                    self.address().evm, salt: self.stack.pop()?, bytecode: bytecode.span()
-                )?,
+            CreateType::CreateOrDeployTx => compute_contract_address(
+                self.address().evm, sender_nonce
+            ),
+            CreateType::Create2 => compute_create2_contract_address(
+                self.address().evm, salt: self.stack.pop()?, bytecode: bytecode.span()
+            )?,
         };
 
         Result::Ok(CreateArgs { to, value, bytecode: bytecode.span() })

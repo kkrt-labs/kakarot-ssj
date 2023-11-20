@@ -241,12 +241,12 @@ fn test_rlp_encode_string_large_bytearray_inputs() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_rlp_encode_mutilple_string() {
+fn test_rlp_encode_sequence_strings() {
     let mut input = array![];
     input.append(RLPItem::String(array![0x40, 0x53, 0x15, 0x94, 0x50, 0x40, 0x40, 0x40].span()));
     input.append(RLPItem::String(array![0x03].span()));
 
-    let res = RLPTrait::encode(input.span());
+    let res = RLPTrait::encode_sequence(input.span());
 
     assert(res.len() == 10, 'wrong len');
     assert(*res[0] == 0x88, 'wrong prefix');
@@ -257,10 +257,10 @@ fn test_rlp_encode_mutilple_string() {
 #[test]
 #[available_gas(99999999)]
 #[should_panic(expected: ('List encoding unimplemented',))]
-fn test_rlp_encode_list() {
+fn test_rlp_encode_sequence_empty() {
     let mut input = array![RLPItem::List(array![].span())];
 
-    let res = RLPTrait::encode(input.span());
+    let res = RLPTrait::encode_sequence(input.span());
 }
 
 #[test]

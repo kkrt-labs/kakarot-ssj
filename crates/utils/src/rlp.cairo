@@ -88,7 +88,9 @@ impl RLPImpl of RLPTrait {
         };
         let len_joined_encodings = joined_encodings.len();
         if len_joined_encodings < 0x38 {
-            return array![0xC0 + len_joined_encodings].append_span(joined_encodings.span());
+            let mut result: Array<u8> = array![0xC0 + len_joined_encodings.try_into().unwrap()];
+            result.append_span(joined_encodings.span());
+            return result.span();
         } else {
             let bytes_count_len_joined_encodings = len_joined_encodings.bytes_used();
             let len_joined_encodings: Span<u8> = len_joined_encodings.to_bytes();
