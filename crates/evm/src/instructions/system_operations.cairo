@@ -138,13 +138,13 @@ impl SystemOperations of SystemOperationsTrait {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let stack_address = self.stack.pop_eth_address()?;
+        let address = self.stack.pop_eth_address()?;
 
         //TODO Remove this when https://eips.ethereum.org/EIPS/eip-6780 is validated
-        let recipient_evm_address = if (stack_address == self.address().evm) {
+        let recipient_evm_address = if (address == self.address().evm) {
             0.try_into().unwrap()
         } else {
-            stack_address
+            address
         };
         let recipient_starknet_address = kakarot_state
             .compute_starknet_address(recipient_evm_address);

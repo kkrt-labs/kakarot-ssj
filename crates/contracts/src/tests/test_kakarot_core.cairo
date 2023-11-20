@@ -263,7 +263,7 @@ fn test_eth_send_transaction() {
     let eoa = kakarot_core.deploy_eoa(evm_address);
 
     let account = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), counter_evm_bytecode()
+        test_utils::other_evm_address(), 1, counter_evm_bytecode()
     )
         .unwrap();
 
