@@ -3,7 +3,7 @@ use evm::instructions::LoggingOperationsTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::{setup_machine, setup_machine_with_read_only};
+use evm::tests::test_utils::{setup_machine, MachineBuilderImpl, MachineBuilderDirector};
 use integer::BoundedInt;
 use utils::helpers::u256_to_bytes_array;
 
@@ -180,7 +180,9 @@ fn test_exec_log4() {
 #[available_gas(20000000)]
 fn test_exec_log1_read_only_context() {
     // Given
-    let mut machine = setup_machine_with_read_only();
+    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
+    director.construct_machine_with_read_only();
+    let mut machine = director.build();
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 

@@ -1,4 +1,5 @@
 use contracts::tests::test_utils::{deploy_contract_account};
+use evm::context::DefaultBoxExecutionContext;
 use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
     DefaultOptionSpanU8
@@ -6,11 +7,121 @@ use evm::context::{
 use evm::errors::{EVMError};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::model::{ContractAccountTrait, Address, Account, AccountType};
+use evm::state::State;
+use evm::{stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}};
 use nullable::{match_nullable, FromNullableResult};
 use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
 };
+
+#[derive(Destruct)]
+struct MachineBuilder {
+    current_ctx: Box<ExecutionContext>,
+    ctx_count: usize,
+    stack: Stack,
+    memory: Memory,
+    state: State,
+    error: Option<EVMError>
+}
+
+#[generate_trait]
+impl MachineBuilderImpl of MachineBuilderTrait {
+    fn new() -> MachineBuilder {
+        MachineBuilder {
+            current_ctx: Default::default(),
+            ctx_count: 1,
+            stack: Default::default(),
+            memory: Default::default(),
+            state: Default::default(),
+            error: Option::None
+        }
+    }
+
+    fn reset(ref self: MachineBuilder) {
+        self = MachineBuilderImpl::new();
+    }
+
+    fn set_current_ctx(ref self: MachineBuilder, current_ctx: Box<ExecutionContext>) {
+        self.current_ctx = current_ctx;
+    }
+
+    fn set_ctx_count(ref self: MachineBuilder, ctx_count: usize) {
+        self.ctx_count = ctx_count;
+    }
+
+    fn set_stack(ref self: MachineBuilder, stack: Stack) {
+        self.stack = stack;
+    }
+
+    fn set_memory(ref self: MachineBuilder, memory: Memory) {
+        self.memory = memory;
+    }
+
+    fn set_state(ref self: MachineBuilder, state: State) {
+        self.state = state;
+    }
+
+    fn set_error(ref self: MachineBuilder, error: EVMError) {
+        self.error = Option::Some(error);
+    }
+
+    fn build(self: MachineBuilder) -> Machine {
+        let machine = Machine {
+            current_ctx: self.current_ctx,
+            ctx_count: self.ctx_count,
+            stack: self.stack,
+            memory: self.memory,
+            state: self.state,
+            error: self.error,
+        };
+        return machine;
+    }
+}
+
+#[derive(Destruct)]
+struct Director {
+    builder: MachineBuilder
+}
+
+#[generate_trait]
+impl MachineBuilderDirector of DirectorTrait {
+    fn new(builder: MachineBuilder) -> Director {
+        Director { builder }
+    }
+
+    fn build(self: Director) -> Machine {
+        self.builder.build()
+    }
+
+    fn construct_static_machine(ref self: Director) {
+        self.builder.set_current_ctx(BoxTrait::new(setup_static_execution_context()));
+    }
+
+    fn construct_machine_with_calldata(ref self: Director, calldata: Span<u8>) {
+        self
+            .builder
+            .set_current_ctx(BoxTrait::new(setup_execution_context_with_calldata(calldata)));
+    }
+
+    fn construct_machine_with_read_only(ref self: Director) {
+        let mut current_ctx = setup_execution_context();
+        let mut current_call_ctx = current_ctx.call_ctx.unbox();
+        current_call_ctx.read_only = true;
+        current_ctx.call_ctx = BoxTrait::new(current_call_ctx);
+        self.builder.set_current_ctx(BoxTrait::new(current_ctx));
+    }
+
+    fn construct_machine_with_nested_execution_context(ref self: Director) {
+        self.builder.set_current_ctx(BoxTrait::new(setup_nested_execution_context()));
+        self.builder.set_ctx_count(2);
+    }
+    fn construct_machine_with_bytecode(ref self: Director, bytecode: Span<u8>) {
+        self
+            .builder
+            .set_current_ctx(BoxTrait::new(setup_execution_context_with_bytecode(bytecode)));
+    }
+}
 
 fn starknet_address() -> ContractAddress {
     contract_address_const::<'starknet_address'>()
@@ -255,76 +366,6 @@ fn setup_machine() -> Machine {
     Machine {
         current_ctx: BoxTrait::new(setup_execution_context()),
         ctx_count: 1,
-        stack: Default::default(),
-        memory: Default::default(),
-        state: Default::default(),
-        error: Option::None
-    }
-}
-
-fn setup_machine_with_target(target: Address) -> Machine {
-    Machine {
-        current_ctx: BoxTrait::new(setup_execution_context_with_target(target)),
-        ctx_count: 1,
-        stack: Default::default(),
-        memory: Default::default(),
-        state: Default::default(),
-        error: Option::None
-    }
-}
-
-
-fn setup_static_machine() -> Machine {
-    Machine {
-        current_ctx: BoxTrait::new(setup_static_execution_context()),
-        ctx_count: 1,
-        stack: Default::default(),
-        memory: Default::default(),
-        state: Default::default(),
-        error: Option::None
-    }
-}
-
-
-fn setup_machine_with_bytecode(bytecode: Span<u8>) -> Machine {
-    let current_ctx = BoxTrait::new(setup_execution_context_with_bytecode(bytecode));
-    Machine {
-        current_ctx,
-        ctx_count: 1,
-        stack: Default::default(),
-        memory: Default::default(),
-        state: Default::default(),
-        error: Option::None
-    }
-}
-
-fn setup_machine_with_calldata(calldata: Span<u8>) -> Machine {
-    let current_ctx = BoxTrait::new(setup_execution_context_with_calldata(calldata));
-    Machine {
-        current_ctx,
-        ctx_count: 1,
-        stack: Default::default(),
-        memory: Default::default(),
-        state: Default::default(),
-        error: Option::None
-    }
-}
-
-fn setup_machine_with_read_only() -> Machine {
-    let mut machine = setup_machine();
-    let mut current_ctx = machine.current_ctx.unbox();
-    let mut current_call_ctx = current_ctx.call_ctx.unbox();
-    current_call_ctx.read_only = true;
-    current_ctx.call_ctx = BoxTrait::new(current_call_ctx);
-    machine.current_ctx = BoxTrait::new(current_ctx);
-    machine
-}
-
-fn setup_machine_with_nested_execution_context() -> Machine {
-    let current_ctx = BoxTrait::new(setup_nested_execution_context());
-    Machine {
-        current_ctx,
-        ctx_count: 2,
         stack: Default::default(),
         memory: Default::default(),
         state: Default::default(),
