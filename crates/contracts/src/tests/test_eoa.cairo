@@ -24,9 +24,9 @@ mod test_external_owned_account {
         EthAddress
     };
 
-    fn deploy_eoa(kakarot_address: ContractAddress) -> IExternallyOwnedAccountDispatcher {
-        set_contract_address(kakarot_address);
-        let calldata: Span<felt252> = array![kakarot_address.into(), eoa_address().into()].span();
+    fn deploy_eoa(eoa_address: EthAddress) -> IExternallyOwnedAccountDispatcher {
+        let kakarot_address = get_contract_address();
+        let calldata: Span<felt252> = array![kakarot_address.into(), eoa_address.into()].span();
 
         let (starknet_address, _) = deploy_syscall(
             UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(),
@@ -50,7 +50,7 @@ mod test_external_owned_account {
         let (_, kakarot) = setup_contracts_for_testing();
         let kakarot_address = kakarot.contract_address;
 
-        let eoa_contract = deploy_eoa(kakarot_address);
+        let eoa_contract = deploy_eoa(eoa_address());
 
         assert(eoa_contract.kakarot_core_address() == kakarot_address, 'wrong kakarot_address');
     }
@@ -63,7 +63,7 @@ mod test_external_owned_account {
         let (_, kakarot) = setup_contracts_for_testing();
         let kakarot_address = kakarot.contract_address;
 
-        let eoa_contract = deploy_eoa(kakarot_address);
+        let eoa_contract = deploy_eoa(eoa_address());
 
         assert(eoa_contract.evm_address() == expected_address, 'wrong evm_address');
     }
@@ -73,7 +73,7 @@ mod test_external_owned_account {
     fn test_eoa_upgrade() {
         let (_, kakarot) = setup_contracts_for_testing();
         let kakarot_address = kakarot.contract_address;
-        let eoa_contract = deploy_eoa(kakarot_address);
+        let eoa_contract = deploy_eoa(eoa_address());
 
         let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH
             .try_into()
@@ -96,7 +96,7 @@ mod test_external_owned_account {
     fn test_eoa_upgrade_from_noncontractaddress() {
         let (_, kakarot) = setup_contracts_for_testing();
         let kakarot_address = kakarot.contract_address;
-        let eoa_contract = deploy_eoa(kakarot_address);
+        let eoa_contract = deploy_eoa(eoa_address());
         let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH
             .try_into()
             .unwrap();
