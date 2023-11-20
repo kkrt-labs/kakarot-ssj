@@ -23,7 +23,7 @@ fn test_contract_account_deploy() {
     set_contract_address(kakarot_core.contract_address);
 
     let bytecode = counter_evm_bytecode();
-    let ca_address = ContractAccountTrait::deploy(test_utils::evm_address(), 1, bytecode)
+    let ca_address = ContractAccountTrait::deploy(test_utils::evm_address(), bytecode)
         .expect('CA deployment failed');
     let account = ContractAccountBuilderTrait::new(ca_address)
         .fetch_nonce()
@@ -45,7 +45,7 @@ fn test_at_contract_account_deployed() {
     let evm_address = test_utils::evm_address();
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
-    let ca = ContractAccountTrait::deploy(evm_address, 1, Default::default().span()).unwrap();
+    let ca = ContractAccountTrait::deploy(evm_address, Default::default().span()).unwrap();
 
     let ca_address = ContractAccountTrait::at(evm_address)
         .unwrap()
