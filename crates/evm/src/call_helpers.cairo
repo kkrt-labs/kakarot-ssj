@@ -73,7 +73,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
         let caller = match call_type {
             CallType::Call => self.address(),
             CallType::DelegateCall => self.call_ctx().caller,
-            CallType::CallCode => self.call_ctx().caller(),
+            CallType::CallCode => self.address(),
             CallType::StaticCall => self.address(),
         };
 
