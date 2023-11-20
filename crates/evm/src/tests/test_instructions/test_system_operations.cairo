@@ -1,6 +1,8 @@
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_data::{storage_evm_bytecode, storage_evm_initcode};
 use contracts::tests::test_utils::setup_contracts_for_testing;
+use core::result::ResultTrait;
+
 use evm::call_helpers::{MachineCallHelpers, MachineCallHelpersImpl};
 use evm::context::{ExecutionContext, ExecutionContextTrait, ExecutionContextType};
 use evm::instructions::MemoryOperationTrait;
@@ -369,7 +371,24 @@ fn test_exec_delegatecall() {
     // Deploy bytecode at 0x100
     // ret (+ 0x1 0x1)
     let deployed_bytecode = array![
-        0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
+        0x60,
+        0x01,
+        0x60,
+        0x01,
+        0x01,
+        0x60,
+        0x00,
+        0x53,
+        0x60,
+        0x42,
+        0x60,
+        0x42,
+        0x55,
+        0x60,
+        0x20,
+        0x60,
+        0x00,
+        0xf3
     ]
         .span();
     let eth_address: EthAddress = 0x100_u256.into();
@@ -383,6 +402,13 @@ fn test_exec_delegatecall() {
     assert(machine.error.is_none(), 'run should be success');
     assert(2 == load_word(1, machine.return_data()), 'Wrong return_data');
     assert(machine.stopped(), 'machine should be stopped');
+
+    let storage_val = machine
+        .state
+        .read_state(evm_address, 0x42)
+        .expect('failed reading storage slot');
+
+    assert(storage_val == 0x42, 'storage value is not 0x42');
 }
 
 
