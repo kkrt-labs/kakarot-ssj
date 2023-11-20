@@ -16,7 +16,6 @@ enum StoredAccountType {
 
 #[starknet::contract]
 mod KakarotCore {
-    use evm::state::StateTrait;
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
@@ -31,6 +30,7 @@ mod KakarotCore {
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::{EOATrait};
     use evm::model::{ExecutionResult, Address, AddressTrait};
+    use evm::state::StateTrait;
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address,
         get_caller_address, deploy_syscall
@@ -356,9 +356,9 @@ mod KakarotCore {
     }
 
     mod KakarotInternal {
-        use evm::model::{ExecutionResult, Address, AccountTrait};
-        use evm::execution::execute;
         use evm::errors::EVMError;
+        use evm::execution::execute;
+        use evm::model::{ExecutionResult, Address, AccountTrait};
 
         fn handle_execute(
             from: Address,

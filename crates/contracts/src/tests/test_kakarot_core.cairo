@@ -1,8 +1,8 @@
-use contracts::kakarot_core::interface::IKakarotCore;
 use contracts::contract_account::ContractAccount::TEST_CLASS_HASH as ContractAccountTestClassHash;
 use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
 use contracts::eoa::ExternallyOwnedAccount;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::kakarot_core::interface::IKakarotCore;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore,
