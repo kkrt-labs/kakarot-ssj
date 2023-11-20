@@ -194,7 +194,7 @@ mod test_simple_log {
 mod test_state {
     use contracts::tests::test_utils as contract_utils;
     use contracts::uninitialized_account::UninitializedAccount;
-    use evm::model::account::{Account, AccountType, AccountTrait};
+    use evm::model::account::{Account, AccountType};
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::EOATrait;
     use evm::model::{Event, Transfer, Address};
@@ -280,7 +280,7 @@ mod test_state {
         // Transfer native tokens to sender
         let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
         let evm_address: EthAddress = test_utils::evm_address();
-        let mut ca_address = ContractAccountTrait::deploy(evm_address, 1, array![].span())
+        let mut ca_address = ContractAccountTrait::deploy(evm_address, array![].span())
             .expect('sender deploy failed');
 
         let mut state: State = Default::default();
@@ -351,7 +351,6 @@ mod test_state {
         assert(state.read_balance(sender.evm).unwrap() == 200, 'Sender balance mismatch');
         assert(state.read_balance(recipient.evm).unwrap() == 100, 'Recipient balance mismatch');
     }
-
 
     #[test]
     #[available_gas(200000000)]

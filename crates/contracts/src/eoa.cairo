@@ -56,10 +56,9 @@ mod ExternallyOwnedAccount {
         fn chain_id(self: @ContractState) -> u128 {
             self.chain_id.read()
         }
-        // TODO: make this function reachable from an external invoke call
         // TODO: add some security methods to make sure that only some specific upgrades can be made ( low priority )
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
-            assert(get_caller_address() == get_contract_address(), 'Caller not contract address');
+            self.assert_only_self();
             self.upgradeable.upgrade_contract(new_class_hash);
         }
 
@@ -109,6 +108,13 @@ mod ExternallyOwnedAccount {
             // Call KakarotCore.send_eth_transaction with correct params
 
             array![]
+        }
+    }
+
+    #[generate_trait]
+    impl PrivateImpl of PrivateTrait {
+        fn assert_only_self(self: @ContractState) {
+            assert(get_caller_address() == get_contract_address(), 'Caller not self');
         }
     }
 }

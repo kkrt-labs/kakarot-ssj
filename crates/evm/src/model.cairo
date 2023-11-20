@@ -31,9 +31,9 @@ struct Address {
 
 #[generate_trait]
 impl AddressImpl of AddressTrait {
-    fn is_deployed(self: EthAddress) -> bool {
+    fn is_registered(evm_address: EthAddress) -> bool {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let maybe_account = kakarot_state.address_registry(self);
+        let maybe_account = kakarot_state.address_registry(evm_address);
         match maybe_account {
             Option::Some(_) => true,
             Option::None => false

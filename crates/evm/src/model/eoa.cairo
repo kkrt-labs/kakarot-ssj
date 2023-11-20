@@ -18,7 +18,7 @@ impl EOAImpl of EOATrait {
     /// * `evm_address` - The EVM address of the EOA to deploy.
     fn deploy(evm_address: EthAddress) -> Result<Address, EVMError> {
         // Unlike CAs, there is not check for the existence of an EOA prealably to calling `EOATrait::deploy` - therefore, we need to check that there is no collision.
-        let mut is_deployed = evm_address.is_deployed();
+        let mut is_deployed = AddressTrait::is_registered(evm_address);
         if is_deployed {
             return Result::Err(EVMError::DeployError(EOA_EXISTS));
         }

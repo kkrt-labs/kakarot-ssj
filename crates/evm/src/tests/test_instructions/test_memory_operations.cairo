@@ -355,7 +355,7 @@ fn test_exec_jump_out_of_bounds() {
 // Remove ignore once its handled
 #[test]
 #[available_gas(20000000)]
-#[ignore]
+#[should_panic(expected: ('exec_jump should throw error',))]
 fn test_exec_jump_inside_pushn() {
     // Given
     let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
@@ -367,8 +367,11 @@ fn test_exec_jump_inside_pushn() {
     let result = machine.exec_jump();
 
     // Then
-    assert(result.is_err(), 'invalid jump dest');
-    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+    assert(result.is_err(), 'exec_jump should throw error');
+    assert(
+        result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION),
+        'jump dest should be invalid'
+    );
 }
 
 #[test]
@@ -481,7 +484,7 @@ fn test_exec_jumpi_invalid_zero() {
 // Remove ignore once its handled
 #[test]
 #[available_gas(20000000)]
-#[ignore]
+#[should_panic(expected: ('exec_jump should throw error',))]
 fn test_exec_jumpi_inside_pushn() {
     // Given
     let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
@@ -495,8 +498,11 @@ fn test_exec_jumpi_inside_pushn() {
     let result = machine.exec_jumpi();
 
     // Then
-    assert(result.is_err(), 'invalid jump dest');
-    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+    assert(result.is_err(), 'exec_jump should throw error');
+    assert(
+        result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION),
+        'jump dest should be invalid'
+    );
 }
 
 #[test]
@@ -526,7 +532,7 @@ fn test_exec_sload_from_storage() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let mut machine = setup_machine();
-    let mut ca_address = ContractAccountTrait::deploy(machine.address().evm, 1, array![].span())
+    let mut ca_address = ContractAccountTrait::deploy(machine.address().evm, array![].span())
         .unwrap();
     let account = Account {
         account_type: AccountType::ContractAccount,
@@ -597,8 +603,7 @@ fn test_exec_sstore_finalized() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let mut machine = setup_machine();
     // Deploys the contract account to be able to commit storage changes.
-    let ca_address = ContractAccountTrait::deploy(machine.address().evm, 1, array![].span())
-        .unwrap();
+    let ca_address = ContractAccountTrait::deploy(machine.address().evm, array![].span()).unwrap();
     let account = Account {
         account_type: AccountType::ContractAccount,
         address: ca_address,
