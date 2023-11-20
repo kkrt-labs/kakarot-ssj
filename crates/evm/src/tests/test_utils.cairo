@@ -24,7 +24,7 @@ fn test_address() -> Address {
 }
 
 fn other_evm_address() -> EthAddress {
-    0xabde1.try_into().unwrap()
+    'other_evm_address'.try_into().unwrap()
 }
 
 fn other_starknet_address() -> ContractAddress {
@@ -90,7 +90,7 @@ fn setup_call_context() -> CallContext {
     let bytecode: Span<u8> = array![0x00].span();
     let calldata: Span<u8> = array![4, 5, 6].span();
     let value: u256 = callvalue();
-    let address = test_address();
+    let caller = test_address();
     let read_only = false;
     let gas_price = 0xaaaaaa;
     let gas_limit = 0xffffff;
@@ -98,7 +98,7 @@ fn setup_call_context() -> CallContext {
     let output_size = 0;
 
     CallContextTrait::new(
-        address,
+        caller,
         bytecode,
         calldata,
         value,
@@ -141,6 +141,15 @@ fn setup_execution_context() -> ExecutionContext {
     let return_data = array![1, 2, 3].span();
 
     ExecutionContextTrait::new(context_id, address, call_ctx, Default::default(), return_data,)
+}
+
+
+fn setup_execution_context_with_target(target: Address) -> ExecutionContext {
+    let context_id = ExecutionContextType::Root;
+    let call_ctx = setup_call_context();
+    let return_data = array![1, 2, 3].span();
+
+    ExecutionContextTrait::new(context_id, target, call_ctx, Default::default(), return_data,)
 }
 
 fn setup_static_execution_context() -> ExecutionContext {
@@ -252,6 +261,17 @@ fn setup_machine() -> Machine {
     }
 }
 
+fn setup_machine_with_target(target: Address) -> Machine {
+    Machine {
+        current_ctx: BoxTrait::new(setup_execution_context_with_target(target)),
+        ctx_count: 1,
+        stack: Default::default(),
+        memory: Default::default(),
+        state: Default::default(),
+        error: Option::None
+    }
+}
+
 
 fn setup_static_machine() -> Machine {
     Machine {
@@ -347,7 +367,7 @@ fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
 fn initialize_contract_account(
     eth_address: EthAddress, bytecode: Span<u8>, storage: Span<(u256, u256)>
 ) -> Result<Address, EVMError> {
-    let mut ca_address = ContractAccountTrait::deploy(eth_address, bytecode)
+    let mut ca_address = ContractAccountTrait::deploy(eth_address, 1, bytecode)
         .expect('failed deploying CA');
     // Set the storage of the contract account
     let account = Account {

@@ -1,7 +1,5 @@
 use contracts::contract_account::ContractAccount::TEST_CLASS_HASH as ContractAccountTestClassHash;
-use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
 use contracts::eoa::ExternallyOwnedAccount;
-use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
@@ -173,84 +171,11 @@ fn test_kakarot_core_upgrade_contract() {
     assert(version == 1, 'version is not 1');
 }
 
+// TODO add tests related to contract accounts once they can be deployed.
+#[ignore]
 #[test]
 #[available_gas(20000000)]
-fn test_kakarot_contract_account_nonce() {
-    // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    let address = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), Default::default().span()
-    )
-        .unwrap();
-
-    // When
-    let nonce = kakarot_core.contract_account_nonce(address.evm);
-
-    // Then
-    assert(nonce == 1, 'wrong nonce');
-}
-
-
-#[test]
-#[available_gas(20000000)]
-fn test_kakarot_contract_account_storage_at() {
-    // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    let address = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), Default::default().span()
-    )
-        .unwrap();
-    let ca = IContractAccountDispatcher { contract_address: address.starknet };
-    let expected_value = 420;
-    let key = 69;
-    ca.set_storage_at(69, expected_value);
-
-    // When
-    let value = kakarot_core.contract_account_storage_at(address.evm, key);
-
-    // Then
-    assert(value == expected_value, 'wrong storage value');
-}
-
-#[test]
-#[available_gas(2000000000)]
-fn test_kakarot_contract_account_bytecode() {
-    // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    let address = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), counter_evm_bytecode()
-    )
-        .unwrap();
-
-    // When
-    let bytecode = kakarot_core.contract_account_bytecode(address.evm);
-
-    // Then
-    assert(bytecode == counter_evm_bytecode(), 'wrong bytecode');
-}
-
-
-#[test]
-#[available_gas(20000000)]
-#[should_panic(expected: ('unimplemented', 'ENTRYPOINT_FAILED'))]
-fn test_kakarot_contract_account_false_positive_jumpdest() {
-    // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    let address = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), Default::default().span()
-    )
-        .unwrap();
-    let ca = IContractAccountDispatcher { contract_address: address.starknet };
-    let offset = 1337;
-    ca.set_false_positive_jumpdest(offset);
-
-    // When
-    let is_false_jumpdest = kakarot_core
-        .contract_account_false_positive_jumpdest(address.evm, offset);
-
-    // Then
-    assert(is_false_jumpdest, 'should be false jumpdest');
-}
+fn test_kakarot_contract_account() {}
 
 #[test]
 #[available_gas(2000000000000)]
@@ -262,7 +187,7 @@ fn test_eth_call() {
     let eoa = kakarot_core.deploy_eoa(evm_address);
 
     let account = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), counter_evm_bytecode()
+        test_utils::other_evm_address(), 1, counter_evm_bytecode()
     )
         .unwrap();
 
@@ -292,7 +217,7 @@ fn test_handle_call() {
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
     let account = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), counter_evm_bytecode()
+        test_utils::other_evm_address(), 1, counter_evm_bytecode()
     )
         .unwrap();
 

@@ -98,7 +98,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         // - contract is already deployed at this location (type fetched from storage)
         // - Contract has been scheduled for deployment (type set in cache)
         // If the AccountType is unknown, then there's no collision.
-        if target_account.is_deployed() {
+        if target_account.exists() {
             return self.stack.push(0);
         };
 
