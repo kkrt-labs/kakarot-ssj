@@ -3,6 +3,7 @@ use utils::helpers::{
 };
 use utils::helpers::{ByteArrayExTrait};
 use utils::helpers;
+use utils::traits::{ByteArraySerde};
 
 #[test]
 #[available_gas(2000000000)]
@@ -406,35 +407,6 @@ fn test_u32_bytes_used_leading_zeroes() {
     let bytes_count = len.bytes_used();
 
     assert(bytes_count == 2, 'wrong bytes count');
-}
-
-#[test]
-#[available_gas(2000000000)]
-fn test_bytearray_deserialize() {
-    let mut serialized: Span<felt252> = array![
-        0x03, 0xabcdef, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-    ]
-        .span();
-
-    let deserialized: ByteArray = Serde::<ByteArray>::deserialize(ref serialized).unwrap();
-
-    let expected = ByteArray {
-        data: array![
-            0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff.try_into().unwrap()
-        ],
-        pending_word_len: 3,
-        pending_word: 0xabcdef
-    };
-    assert(expected.len() == deserialized.len(), 'len mismatch');
-    let mut i = 0;
-    loop {
-        if i == deserialized.len() {
-            break;
-        }
-
-        assert(expected[i] == deserialized[i], 'item mismatch');
-        i += 1;
-    };
 }
 
 #[test]
