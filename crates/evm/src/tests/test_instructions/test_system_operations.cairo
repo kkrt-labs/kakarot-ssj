@@ -510,7 +510,7 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
         'contract'.try_into().unwrap(), 1, array![].span()
     )
         .expect('failed deploy CA');
-    fund_account_with_native_token(sender.starknet, native_token, 100);
+    fund_account_with_native_token(sender.starknet, native_token, 150);
     fund_account_with_native_token(ca_address.starknet, native_token, 100);
     let mut machine = setup_machine_with_target(ca_address);
 
@@ -521,7 +521,7 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     machine.stack.push(recipient.evm.into());
     machine.exec_selfdestruct().expect('selfdestruct failed');
     // Add a transfer from sender to CA - after it was selfdestructed in local state. This transfer should go through.
-    let transfer = Transfer { sender, recipient: ca_address, amount: 100 };
+    let transfer = Transfer { sender, recipient: ca_address, amount: 150 };
     machine.state.add_transfer(transfer).unwrap();
     machine.state.commit_context();
     machine.state.commit_state();
@@ -535,5 +535,5 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     //FIXME when addressed in the compiler code, this test should be fixed.
     // assert(recipient_balance == 100, 'recipient wrong balance');
     assert(sender_balance == 0, 'sender wrong balance');
-    assert(ca_balance == 100, 'ca wrong balance');
+    assert(ca_balance == 150, 'ca wrong balance');
 }
