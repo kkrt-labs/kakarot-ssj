@@ -97,10 +97,8 @@ impl AccountImpl of AccountTrait {
                 let starknet_address = kakarot_state.compute_starknet_address(evm_address);
                 Result::Ok(
                     // If no account exists at `address`, then we are trying to
-                    // access an undeployed contract account.  Simple value
-                    // transfers between EOAs don't call this function -
-                    // Therefore, we're sure that only contract accounts are
-                    // undeployed.
+                    // access an undeployed account (CA or EOA). We create an
+                    // empty account with the correct address and return it.
                     Account {
                         account_type: AccountType::Unknown,
                         address: Address { starknet: starknet_address, evm: evm_address, },
@@ -196,7 +194,7 @@ impl AccountImpl of AccountTrait {
                             .set_address_registry(
                                 self.address().evm, StoredAccountType::UnexistingAccount
                             );
-                        return self.selfdestruct();
+                        return ContractAccountTrait::selfdestruct(self);
                     }
                     self.store_nonce(*self.nonce)
                 //Storage is handled outside of the account and must be commited after all accounts are commited.
@@ -204,13 +202,14 @@ impl AccountImpl of AccountTrait {
                 AccountType::Unknown => { Result::Ok(()) }
             }
         } else if self.should_deploy() {
-            //Case new account
-            // If SELFDESTRUCT, just do nothing
-            if (*self.selfdestruct == true) {
-                return Result::Ok(());
+            // If SELFDESTRUCT, deploy empty SN account
+            let (initial_nonce, initial_code) = if (*self.selfdestruct == true) {
+                (0, Default::default().span())
+            } else {
+                (*self.nonce, *self.code)
             };
-            let mut ca_address = ContractAccountTrait::deploy(self.address().evm, *self.code)?;
-            self.store_nonce(*self.nonce)
+            ContractAccountTrait::deploy(self.address().evm, initial_nonce, initial_code)?;
+            Result::Ok(())
         //Storage is handled outside of the account and must be commited after all accounts are commited.
         } else {
             Result::Ok(())
@@ -231,7 +230,7 @@ impl AccountImpl of AccountTrait {
         false
     }
 
-    /// Returns whether an accound is exists at the given address.
+    /// Returns whether an account exists at the given address.
     ///
     /// Based on the state of the account in the cache - the account can
     /// not be deployed on-chain yet, but already exist in the KakarotState.

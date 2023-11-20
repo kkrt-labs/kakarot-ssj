@@ -180,7 +180,7 @@ fn test_kakarot_contract_account_nonce() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let address = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), Default::default().span()
+        test_utils::other_evm_address(), 1, Default::default().span()
     )
         .unwrap();
 
@@ -198,7 +198,7 @@ fn test_kakarot_contract_account_storage_at() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let address = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), Default::default().span()
+        test_utils::other_evm_address(), 1, Default::default().span()
     )
         .unwrap();
     let ca = IContractAccountDispatcher { contract_address: address.starknet };
@@ -219,7 +219,7 @@ fn test_kakarot_contract_account_bytecode() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let address = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), counter_evm_bytecode()
+        test_utils::other_evm_address(), 1, counter_evm_bytecode()
     )
         .unwrap();
 
@@ -238,7 +238,7 @@ fn test_kakarot_contract_account_false_positive_jumpdest() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let address = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), Default::default().span()
+        test_utils::other_evm_address(), 1, Default::default().span()
     )
         .unwrap();
     let ca = IContractAccountDispatcher { contract_address: address.starknet };
@@ -300,7 +300,7 @@ fn test_eth_call() {
     let eoa = kakarot_core.deploy_eoa(evm_address);
 
     let account = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), counter_evm_bytecode()
+        test_utils::other_evm_address(), 1, counter_evm_bytecode()
     )
         .unwrap();
     let counter = IContractAccountDispatcher { contract_address: account.starknet };
@@ -332,7 +332,7 @@ fn test_handle_call() {
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
     let account = ContractAccountTrait::deploy(
-        test_utils::other_evm_address(), counter_evm_bytecode()
+        test_utils::other_evm_address(), 1, counter_evm_bytecode()
     )
         .unwrap();
 

@@ -1,24 +1,28 @@
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_data::{storage_evm_bytecode, storage_evm_initcode};
-use contracts::tests::test_utils::setup_contracts_for_testing;
-use core::result::ResultTrait;
-
+use contracts::tests::test_utils::{fund_account_with_native_token, setup_contracts_for_testing};
 use evm::call_helpers::{MachineCallHelpers, MachineCallHelpersImpl};
 use evm::context::{ExecutionContext, ExecutionContextTrait, ExecutionContextType};
+use evm::errors::EVMErrorTrait;
 use evm::instructions::MemoryOperationTrait;
 use evm::instructions::SystemOperationsTrait;
 use evm::interpreter::EVMInterpreterTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
+use evm::model::account::{Account};
 use evm::model::contract_account::ContractAccountTrait;
-use evm::model::{AccountTrait, Address};
+use evm::model::eoa::EOATrait;
+use evm::model::{AccountTrait, Address, AccountType, Transfer};
 use evm::stack::StackTrait;
-use evm::state::StateTrait;
+use evm::state::{State, StateTrait};
 use evm::tests::test_utils::{
     setup_machine_with_nested_execution_context, setup_machine, setup_machine_with_bytecode,
-    initialize_contract_account, native_token, evm_address
+    test_address, initialize_contract_account, native_token, evm_address, other_evm_address,
+    setup_machine_with_target
 };
+use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::EthAddress;
+use starknet::testing::set_contract_address;
 use utils::helpers::load_word;
 use utils::traits::EthAddressIntoU256;
 
@@ -504,7 +508,7 @@ fn test_exec_create2() {
 
     let deployed_bytecode = array![0xff].span();
     let eth_address: EthAddress = 0x00000000000000000075766d5f61646472657373_u256.into();
-    let contract_address = ContractAccountTrait::deploy(eth_address, deployed_bytecode)
+    let contract_address = ContractAccountTrait::deploy(eth_address, 1, deployed_bytecode)
         .expect('failed deploying CA');
 
     let mut ctx = machine.current_ctx.unbox();
@@ -544,4 +548,96 @@ fn test_exec_create2() {
 
     assert(account.nonce() == 1, 'wrong nonce');
     assert(account.code == storage_evm_bytecode(), 'wrong bytecode');
+}
+
+#[test]
+#[available_gas(200000000)]
+fn test_exec_selfdestruct_existing_ca() {
+    // Given
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let destroyed_address = test_address().evm; // address in machine call context
+    let ca_address = ContractAccountTrait::deploy(
+        destroyed_address, 1, array![0x1, 0x2, 0x3].span()
+    )
+        .expect('failed deploying CA');
+    fund_account_with_native_token(ca_address.starknet, native_token, 1000);
+    let recipient = EOATrait::deploy(other_evm_address()).expect('failed deploying eoa');
+    let mut machine = setup_machine_with_target(ca_address);
+
+    // When
+    machine.stack.push(recipient.evm.into());
+    machine.exec_selfdestruct().expect('selfdestruct failed');
+    machine.state.commit_context();
+    machine.state.commit_state();
+    machine.state = Default::default(); //empty state to force re-fetch from SN
+    // Then
+    let destructed = machine.state.get_account(ca_address.evm).expect('couldnt fetch destructed');
+
+    assert(destructed.nonce() == 0, 'destructed nonce should be 0');
+    assert(
+        destructed.balance().expect('couldnt get balance') == 0, 'destructed balance should be 0'
+    );
+    assert(destructed.bytecode().len() == 0, 'bytecode should be empty');
+
+    let recipient = machine.state.get_account(recipient.evm).expect('couldnt fetch recipient');
+//TODO this assertion fails because of deterministic address calculations.
+// Once addressed in the compiler code, this test should be fixed.
+// in selfdestruct, we execute:
+// let recipient_starknet_address = kakarot_state
+// .compute_starknet_address(recipient_evm_address);
+// assert(recipient.balance().expect('couldnt get balance') == 1000, 'wrong recipient balance');
+}
+
+#[test]
+#[available_gas(200000000)]
+fn test_selfdestruct_undeployed_ca() { //TODO
+// for now we can't fund an undeployed CA as the SN address is not deterministically calculated in the runner, so no way of funding a SN address by calculating it from an EVM address
+// This test should
+// - deploy kkt and token, deploy an EOA
+// - call `get_account` on an undeployed account, set its type to CA, its nonce to 1, its code to something
+// - selfdestruct it
+// verify that the value transfer has succeeded
+//
+
+}
+
+#[test]
+#[available_gas(200000000)]
+fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
+    // Given
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+
+    // Deploy sender and recipiens EOAs, and CA that will be selfdestructed and funded with 100 tokens
+    let sender = EOATrait::deploy('sender'.try_into().unwrap()).expect('failed deploy EOA',);
+    let recipient = EOATrait::deploy('recipient'.try_into().unwrap()).expect('failed deploy EOA',);
+    let ca_address = ContractAccountTrait::deploy(
+        'contract'.try_into().unwrap(), 1, array![].span()
+    )
+        .expect('failed deploy CA');
+    fund_account_with_native_token(sender.starknet, native_token, 150);
+    fund_account_with_native_token(ca_address.starknet, native_token, 100);
+    let mut machine = setup_machine_with_target(ca_address);
+
+    // Cache the CA into state
+    let mut ca = machine.state.get_account('contract'.try_into().unwrap()).expect('couldnt get CA');
+
+    // When
+    machine.stack.push(recipient.evm.into());
+    machine.exec_selfdestruct().expect('selfdestruct failed');
+    // Add a transfer from sender to CA - after it was selfdestructed in local state. This transfer should go through.
+    let transfer = Transfer { sender, recipient: ca_address, amount: 150 };
+    machine.state.add_transfer(transfer).unwrap();
+    machine.state.commit_context();
+    machine.state.commit_state();
+    machine.state = Default::default(); //empty state to force re-fetch from SN
+
+    // Then
+    let recipient_balance = native_token.balanceOf(recipient.starknet);
+    let sender_balance = native_token.balanceOf(sender.starknet);
+    let ca_balance = native_token.balanceOf(ca_address.starknet);
+    //TODO this assert fails because of deterministic address calculations.
+    //FIXME when addressed in the compiler code, this test should be fixed.
+    // assert(recipient_balance == 100, 'recipient wrong balance');
+    assert(sender_balance == 0, 'sender wrong balance');
+    assert(ca_balance == 150, 'ca wrong balance');
 }

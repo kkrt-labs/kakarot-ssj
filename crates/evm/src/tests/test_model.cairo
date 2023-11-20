@@ -30,12 +30,11 @@ fn test_is_deployed_eoa_exists() {
 fn test_is_deployed_ca_exists() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    ContractAccountTrait::deploy(evm_address(), array![].span())
+    ContractAccountTrait::deploy(evm_address(), 1, array![].span())
         .expect('failed deploy contract account',);
 
     // When
     let is_deployed = evm_address().is_deployed();
-
     // Then
     assert(is_deployed, 'account should be deployed');
 }
@@ -51,7 +50,7 @@ fn test_is_deployed_undeployed() {
     let is_deployed = evm_address().is_deployed();
 
     // Then
-    assert(!is_deployed, 'account should be undeployed');
+    assert(!is_deployed, 'account shouldnt be deployed');
 }
 
 
@@ -112,7 +111,7 @@ fn test_account_exists_eoa() {
 fn test_account_exists_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span())
+    let mut ca_address = ContractAccountTrait::deploy(evm_address(), 1, array![].span())
         .expect('failed deploy contract account',);
 
     // When
@@ -159,7 +158,7 @@ fn test_account_exists_account_to_deploy() {
 fn test_account_balance_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span())
+    let mut ca_address = ContractAccountTrait::deploy(evm_address(), 1, array![].span())
         .expect('failed deploy contract account',);
 
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
@@ -177,7 +176,7 @@ fn test_account_balance_contract_account() {
 fn test_address_balance_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let mut ca_address = ContractAccountTrait::deploy(evm_address(), array![].span())
+    let mut ca_address = ContractAccountTrait::deploy(evm_address(), 1, array![].span())
         .expect('failed deploy contract account',);
 
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
