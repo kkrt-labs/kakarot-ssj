@@ -2,8 +2,8 @@ use evm::context::{CallContextTrait, ExecutionContextType, ExecutionContextTrait
 use evm::errors::{EVMError, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::tests::test_utils::{
-    evm_address, setup_machine, starknet_address, setup_execution_context, MachineBuilderDirector,
-    MachineBuilderImpl, test_address
+    evm_address, setup_machine, starknet_address, setup_execution_context, MachineBuilderImpl,
+    test_address
 };
 
 
@@ -79,10 +79,8 @@ fn test_read_code() {
     // Given a machine with some bytecode in the call context
 
     let bytecode = array![0x01, 0x02, 0x03, 0x04, 0x05].span();
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
 
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
     // When we read a code slice
     let read_code = machine.read_code(3);
 
@@ -120,9 +118,7 @@ fn test_set_error() {
 fn test_call_context_properties() {
     let bytecode = array![0x01, 0x02, 0x03, 0x04, 0x05].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     let call_ctx = machine.call_ctx();
     assert(call_ctx.read_only() == false, 'wrong read_only');
@@ -182,9 +178,7 @@ fn test_set_return_data_root() {
 #[test]
 #[available_gas(20000000)]
 fn test_set_return_data_subctx() {
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_nested_execution_context();
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new().with_nested_execution_context().build();
 
     machine.set_return_data(array![0x01, 0x02, 0x03].span());
     let return_data = machine.return_data();

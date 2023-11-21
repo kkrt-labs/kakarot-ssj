@@ -1,7 +1,7 @@
 use evm::context::ExecutionContextTrait;
 use evm::instructions::PushOperationsTrait;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::{MachineBuilderDirector, MachineBuilderImpl};
+use evm::tests::test_utils::{MachineBuilderImpl};
 
 fn get_n_0xFF(mut n: u8) -> Span<u8> {
     let mut array: Array<u8> = ArrayTrait::new();
@@ -19,9 +19,7 @@ fn get_n_0xFF(mut n: u8) -> Span<u8> {
 #[available_gas(20000000)]
 fn test_push0() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(0));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(0)).build();
 
     // When
     machine.exec_push0();
@@ -34,9 +32,8 @@ fn test_push0() {
 #[available_gas(20000000)]
 fn test_push1() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(1));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(1)).build();
+
     // When
     machine.exec_push1();
     // Then
@@ -48,9 +45,8 @@ fn test_push1() {
 #[available_gas(20000000)]
 fn test_push2() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(2));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(2)).build();
+
     // When
     machine.exec_push2();
     // Then
@@ -62,9 +58,8 @@ fn test_push2() {
 #[available_gas(20000000)]
 fn test_push3() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(3));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(3)).build();
+
     // When
     machine.exec_push3();
     // Then
@@ -76,9 +71,8 @@ fn test_push3() {
 #[available_gas(20000000)]
 fn test_push4() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(4));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(4)).build();
+
     // When
     machine.exec_push4();
     // Then
@@ -90,9 +84,8 @@ fn test_push4() {
 #[available_gas(20000000)]
 fn test_push5() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(5));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(5)).build();
+
     // When
     machine.exec_push5();
     // Then
@@ -104,9 +97,8 @@ fn test_push5() {
 #[available_gas(20000000)]
 fn test_push6() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(6));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(6)).build();
+
     // When
     machine.exec_push6();
     // Then
@@ -118,9 +110,8 @@ fn test_push6() {
 #[available_gas(20000000)]
 fn test_push7() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(7));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(7)).build();
+
     // When
     machine.exec_push7();
     // Then
@@ -133,9 +124,8 @@ fn test_push7() {
 #[available_gas(20000000)]
 fn test_push8() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(8));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(8)).build();
+
     // When
     machine.exec_push8();
     // Then
@@ -147,9 +137,8 @@ fn test_push8() {
 #[available_gas(20000000)]
 fn test_push9() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(9));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(9)).build();
+
     // When
     machine.exec_push9();
     // Then
@@ -161,9 +150,8 @@ fn test_push9() {
 #[available_gas(20000000)]
 fn test_push10() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(10));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(10)).build();
+
     // When
     machine.exec_push10();
     // Then
@@ -175,9 +163,8 @@ fn test_push10() {
 #[available_gas(20000000)]
 fn test_push11() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(11));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(11)).build();
+
     // When
     machine.exec_push11();
     // Then
@@ -189,9 +176,8 @@ fn test_push11() {
 #[available_gas(20000000)]
 fn test_push12() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(12));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(12)).build();
+
     // When
     machine.exec_push12();
     // Then
@@ -203,9 +189,8 @@ fn test_push12() {
 #[available_gas(20000000)]
 fn test_push13() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(13));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(13)).build();
+
     // When
     machine.exec_push13();
     // Then
@@ -217,9 +202,8 @@ fn test_push13() {
 #[available_gas(20000000)]
 fn test_push14() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(14));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(14)).build();
+
     // When
     machine.exec_push14();
     // Then
@@ -231,9 +215,8 @@ fn test_push14() {
 #[available_gas(20000000)]
 fn test_push15() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(15));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(15)).build();
+
     // When
     machine.exec_push15();
     // Then
@@ -245,9 +228,8 @@ fn test_push15() {
 #[available_gas(20000000)]
 fn test_push16() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(16));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(16)).build();
+
     // When
     machine.exec_push16();
     // Then
@@ -261,9 +243,8 @@ fn test_push16() {
 #[available_gas(20000000)]
 fn test_push17() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(17));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(17)).build();
+
     // When
     machine.exec_push17();
     // Then
@@ -277,9 +258,8 @@ fn test_push17() {
 #[available_gas(20000000)]
 fn test_push18() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(18));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(18)).build();
+
     // When
     machine.exec_push18();
     // Then
@@ -292,9 +272,8 @@ fn test_push18() {
 #[available_gas(20000000)]
 fn test_push19() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(19));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(19)).build();
+
     // When
     machine.exec_push19();
     // Then
@@ -309,9 +288,8 @@ fn test_push19() {
 #[available_gas(20000000)]
 fn test_push20() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(20));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(20)).build();
+
     // When
     machine.exec_push20();
     // Then
@@ -326,9 +304,8 @@ fn test_push20() {
 #[available_gas(20000000)]
 fn test_push21() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(21));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(21)).build();
+
     // When
     machine.exec_push21();
     // Then
@@ -343,9 +320,8 @@ fn test_push21() {
 #[available_gas(20000000)]
 fn test_push22() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(22));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(22)).build();
+
     // When
     machine.exec_push22();
     // Then
@@ -359,9 +335,8 @@ fn test_push22() {
 #[available_gas(20000000)]
 fn test_push23() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(23));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(23)).build();
+
     // When
     machine.exec_push23();
     // Then
@@ -375,9 +350,8 @@ fn test_push23() {
 #[available_gas(20000000)]
 fn test_push24() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(24));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(24)).build();
+
     // When
     machine.exec_push24();
     // Then
@@ -392,9 +366,8 @@ fn test_push24() {
 #[available_gas(20000000)]
 fn test_push25() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(25));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(25)).build();
+
     // When
     machine.exec_push25();
     // Then
@@ -409,9 +382,8 @@ fn test_push25() {
 #[available_gas(20000000)]
 fn test_push26() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(26));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(26)).build();
+
     // When
     machine.exec_push26();
     // Then
@@ -426,9 +398,8 @@ fn test_push26() {
 #[available_gas(20000000)]
 fn test_push27() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(27));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(27)).build();
+
     // When
     machine.exec_push27();
     // Then
@@ -443,9 +414,8 @@ fn test_push27() {
 #[available_gas(20000000)]
 fn test_push28() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(28));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(28)).build();
+
     // When
     machine.exec_push28();
     // Then
@@ -460,9 +430,8 @@ fn test_push28() {
 #[available_gas(20000000)]
 fn test_push29() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(29));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(29)).build();
+
     // When
     machine.exec_push29();
     // Then
@@ -480,9 +449,8 @@ fn test_push29() {
 #[available_gas(20000000)]
 fn test_push30() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(30));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(30)).build();
+
     // When
     machine.exec_push30();
     // Then
@@ -500,9 +468,8 @@ fn test_push30() {
 #[available_gas(20000000)]
 fn test_push31() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(31));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(31)).build();
+
     // When
     machine.exec_push31();
     // Then
@@ -520,9 +487,8 @@ fn test_push31() {
 #[available_gas(20000000)]
 fn test_push32() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(get_n_0xFF(32));
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(get_n_0xFF(32)).build();
+
     // When
     machine.exec_push32();
     // Then

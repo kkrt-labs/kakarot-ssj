@@ -7,9 +7,7 @@ use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::{Account, AccountType};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, StateInternalTrait, compute_storage_address};
-use evm::tests::test_utils::{
-    setup_machine, evm_address, MachineBuilderImpl, MachineBuilderDirector
-};
+use evm::tests::test_utils::{setup_machine, evm_address, MachineBuilderImpl};
 use integer::BoundedInt;
 use starknet::get_contract_address;
 
@@ -303,9 +301,7 @@ fn test_exec_jump_valid() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     let counter = 0x03;
     machine.stack.push(counter);
@@ -325,9 +321,7 @@ fn test_exec_jump_invalid() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     let counter = 0x02;
     machine.stack.push(counter);
@@ -346,9 +340,7 @@ fn test_exec_jump_out_of_bounds() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     let counter = 0xFF;
     machine.stack.push(counter);
@@ -372,9 +364,7 @@ fn test_exec_jump_inside_pushn() {
     // Given
     let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     let counter = 0x01;
     machine.stack.push(counter);
@@ -396,9 +386,7 @@ fn test_exec_jumpi_valid_non_zero_1() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     let b = 0x1;
     machine.stack.push(b);
@@ -420,9 +408,7 @@ fn test_exec_jumpi_valid_non_zero_2() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     let b = 0x69;
     machine.stack.push(b);
@@ -444,9 +430,7 @@ fn test_exec_jumpi_valid_zero() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     let b = 0x0;
     machine.stack.push(b);
@@ -470,9 +454,7 @@ fn test_exec_jumpi_invalid_non_zero() {
     // Given
     let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     let b = 0x69;
     machine.stack.push(b);
@@ -494,9 +476,7 @@ fn test_exec_jumpi_invalid_zero() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     let b = 0x0;
     machine.stack.push(b);
@@ -525,9 +505,7 @@ fn test_exec_jumpi_inside_pushn() {
     // Given
     let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     let b = 0x00;
     machine.stack.push(b);
@@ -615,9 +593,7 @@ fn test_exec_sstore_from_state() {
 #[available_gas(2000000)]
 fn test_exec_sstore_static_call() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_static_machine();
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_read_only().build();
 
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;

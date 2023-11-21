@@ -17,10 +17,8 @@ use evm::model::eoa::EOATrait;
 use evm::model::{AccountTrait, Address, AccountType, Transfer};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, State};
-use evm::tests::test_utils::DirectorTrait;
 use evm::tests::test_utils::{
-    MachineBuilderImpl, MachineBuilderDirector, setup_machine, initialize_contract_account,
-    native_token, evm_address
+    MachineBuilderImpl, setup_machine, initialize_contract_account, native_token, evm_address
 };
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::EthAddress;
@@ -32,9 +30,9 @@ use utils::traits::EthAddressIntoU256;
 #[available_gas(20000000)]
 fn test_exec_return() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_nested_execution_context();
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets()
+        .with_nested_execution_context()
+        .build();
     // When
     machine.stack.push(1000);
     machine.stack.push(0);
@@ -81,9 +79,9 @@ fn test_exec_revert() {
 #[available_gas(20000000)]
 fn test_exec_revert_nested() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_nested_execution_context();
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets()
+        .with_nested_execution_context()
+        .build();
     // When
     machine.stack.push(1000);
     machine.stack.push(0);
@@ -103,9 +101,9 @@ fn test_exec_revert_nested() {
 #[available_gas(20000000)]
 fn test_exec_return_with_offset() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_nested_execution_context();
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets()
+        .with_nested_execution_context()
+        .build();
     // When
     machine.stack.push(1);
     machine.stack.push(0);
@@ -164,9 +162,7 @@ fn test_exec_call() {
     ]
         .span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     // Deploy bytecode at 0x100
     // ret (+ 0x1 0x1)
@@ -222,9 +218,9 @@ fn test_exec_call_no_return() {
         0x00
     ]
         .span();
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
+
     // Deploy bytecode at 0x100
     // (+ 0x1 0x1)
     let deployed_bytecode = array![0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
@@ -275,9 +271,8 @@ fn test_exec_staticcall() {
         0x00
     ]
         .span();
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
     // Deploy bytecode at 0x100
     // ret (+ 0x1 0x1)
     let deployed_bytecode = array![
@@ -332,9 +327,9 @@ fn test_exec_staticcall_no_return() {
         0x00
     ]
         .span();
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
+
     // Deploy bytecode at 0x100
     // (+ 0x1 0x1)
     let deployed_bytecode = array![0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
@@ -467,9 +462,9 @@ fn test_exec_delegatecall() {
         0x00
     ]
         .span();
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build(); // Deploy bytecode at 0x100
+
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
+
     // ret (+ 0x1 0x1)
     let deployed_bytecode = array![
         0x60,
@@ -519,9 +514,9 @@ fn test_exec_create2() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_nested_execution_context();
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets()
+        .with_nested_execution_context()
+        .build();
 
     let mut interpreter = EVMInterpreterTrait::new();
 

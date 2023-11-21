@@ -12,8 +12,8 @@ use evm::model::{Account, AccountType};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
-    setup_machine, MachineBuilderImpl, MachineBuilderDirector, evm_address, callvalue,
-    return_from_subcontext, native_token, other_address
+    setup_machine, MachineBuilderImpl, evm_address, callvalue, return_from_subcontext, native_token,
+    other_address
 };
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
@@ -137,9 +137,9 @@ fn test_caller() {
 #[available_gas(20000000)]
 fn test_origin() {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_nested_execution_context();
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets()
+        .with_nested_execution_context()
+        .build();
 
     // When
     machine.exec_origin();
@@ -196,10 +196,7 @@ fn test_calldataload() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_calldata(calldata.span());
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new().with_calldata(calldata.span()).build();
 
     let offset: u32 = 0;
     machine.stack.push(offset.into());
@@ -223,9 +220,7 @@ fn test_calldataload_with_offset() {
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_calldata(calldata.span());
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new().with_calldata(calldata.span()).build();
 
     let offset: u32 = 31;
     machine.stack.push(offset.into());
@@ -249,9 +244,7 @@ fn test_calldataload_with_offset_beyond_calldata() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_calldata(calldata.span());
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new().with_calldata(calldata.span()).build();
 
     let offset: u32 = calldata.len() + 1;
     machine.stack.push(offset.into());
@@ -269,9 +262,7 @@ fn test_calldataload_with_offset_beyond_calldata() {
 fn test_calldataload_with_function_selector() {
     // Given
     let calldata = array![0x6d, 0x4c, 0xe6, 0x3c];
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_calldata(calldata.span());
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new().with_calldata(calldata.span()).build();
 
     let offset: u32 = 0;
     machine.stack.push(offset.into());
@@ -294,9 +285,7 @@ fn test_calldataload_with_offset_conversion_error() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_calldata(calldata.span());
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new().with_calldata(calldata.span()).build();
     let offset: u256 = 5000000000;
     machine.stack.push(offset);
 
@@ -443,9 +432,7 @@ fn test_codesize() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     // When
     machine.exec_codesize();
@@ -465,9 +452,7 @@ fn test_codecopy_type_conversion_error() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
@@ -512,9 +497,7 @@ fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_bytecode(bytecode);
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
 
     if (size == 0) {
         size = bytecode.len() - offset;
@@ -757,9 +740,9 @@ fn test_returndatasize() {
     let return_data: Array<u8> = array![1, 2, 3, 4, 5];
     let size = return_data.len();
 
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_nested_execution_context();
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets()
+        .with_nested_execution_context()
+        .build();
 
     return_from_subcontext(ref machine, return_data.span());
 
@@ -826,9 +809,9 @@ fn test_returndata_copy_with_multiple_words() {
 
 fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
-    let mut director = MachineBuilderDirector::new(MachineBuilderImpl::new());
-    director.construct_machine_with_nested_execution_context();
-    let mut machine = director.build();
+    let mut machine = MachineBuilderImpl::new_with_presets()
+        .with_nested_execution_context()
+        .build();
     // Set the return data of the current context
 
     let return_data = array![

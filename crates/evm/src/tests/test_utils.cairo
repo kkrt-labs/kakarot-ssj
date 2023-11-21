@@ -38,32 +38,122 @@ impl MachineBuilderImpl of MachineBuilderTrait {
         }
     }
 
-    fn reset(ref self: MachineBuilder) {
-        self = MachineBuilderImpl::new();
+    fn new_with_presets() -> MachineBuilder {
+        let context_id = ExecutionContextType::Root;
+        let call_ctx = setup_call_context();
+        let address = test_address();
+        let return_data = array![1, 2, 3].span();
+        let current_ctx = ExecutionContextTrait::new(
+            context_id, address, call_ctx, Default::default(), return_data
+        );
+
+        MachineBuilder {
+            current_ctx: BoxTrait::new(current_ctx),
+            ctx_count: 1,
+            stack: Default::default(),
+            memory: Default::default(),
+            state: Default::default(),
+            error: Option::None
+        }
     }
 
-    fn set_current_ctx(ref self: MachineBuilder, current_ctx: Box<ExecutionContext>) {
-        self.current_ctx = current_ctx;
+    fn with_return_data(self: MachineBuilder, return_data: Span<u8>) -> MachineBuilder {
+        let mut current_ctx = self.current_ctx.unbox();
+        current_ctx.return_data = return_data;
+        MachineBuilder {
+            current_ctx: BoxTrait::new(current_ctx),
+            ctx_count: self.ctx_count,
+            stack: self.stack,
+            memory: self.memory,
+            state: self.state,
+            error: self.error
+        }
     }
 
-    fn set_ctx_count(ref self: MachineBuilder, ctx_count: usize) {
-        self.ctx_count = ctx_count;
+    fn with_caller(self: MachineBuilder, address: Address) -> MachineBuilder {
+        let mut current_ctx = self.current_ctx.unbox();
+        let mut call_ctx = current_ctx.call_ctx.unbox();
+        call_ctx.caller = address;
+        current_ctx.call_ctx = BoxTrait::new(call_ctx);
+        MachineBuilder {
+            current_ctx: BoxTrait::new(current_ctx),
+            ctx_count: self.ctx_count,
+            stack: self.stack,
+            memory: self.memory,
+            state: self.state,
+            error: self.error
+        }
     }
 
-    fn set_stack(ref self: MachineBuilder, stack: Stack) {
-        self.stack = stack;
+    fn with_calldata(self: MachineBuilder, calldata: Span<u8>) -> MachineBuilder {
+        let mut current_ctx = self.current_ctx.unbox();
+        let mut call_ctx = current_ctx.call_ctx.unbox();
+        call_ctx.calldata = calldata;
+        current_ctx.call_ctx = BoxTrait::new(call_ctx);
+        // We need to send a copy of the MachineBuilder, as the stack, memory, state and error do not implement the Copy trait
+        MachineBuilder {
+            current_ctx: BoxTrait::new(current_ctx),
+            ctx_count: self.ctx_count,
+            stack: self.stack,
+            memory: self.memory,
+            state: self.state,
+            error: self.error
+        }
     }
 
-    fn set_memory(ref self: MachineBuilder, memory: Memory) {
-        self.memory = memory;
+    fn with_read_only(self: MachineBuilder) -> MachineBuilder {
+        let mut current_ctx = self.current_ctx.unbox();
+        let mut call_ctx = current_ctx.call_ctx.unbox();
+        call_ctx.read_only = true;
+        current_ctx.call_ctx = BoxTrait::new(call_ctx);
+        MachineBuilder {
+            current_ctx: BoxTrait::new(current_ctx),
+            ctx_count: self.ctx_count,
+            stack: self.stack,
+            memory: self.memory,
+            state: self.state,
+            error: self.error
+        }
     }
 
-    fn set_state(ref self: MachineBuilder, state: State) {
-        self.state = state;
+    fn with_bytecode(self: MachineBuilder, bytecode: Span<u8>) -> MachineBuilder {
+        // with presets and with_bytecode
+        let mut current_ctx = self.current_ctx.unbox();
+        let mut call_ctx = current_ctx.call_ctx.unbox();
+        call_ctx.bytecode = bytecode;
+        current_ctx.call_ctx = BoxTrait::new(call_ctx);
+
+        MachineBuilder {
+            current_ctx: BoxTrait::new(current_ctx),
+            ctx_count: self.ctx_count,
+            stack: self.stack,
+            memory: self.memory,
+            state: self.state,
+            error: self.error
+        }
     }
 
-    fn set_error(ref self: MachineBuilder, error: EVMError) {
-        self.error = Option::Some(error);
+    fn with_nested_execution_context(self: MachineBuilder) -> MachineBuilder {
+        // with presets and with_nested_execution_context
+        let current_ctx = self.current_ctx.unbox();
+
+        // Second Execution Context
+        let context_id = ExecutionContextType::Call(1);
+        let mut child_context = setup_execution_context();
+        child_context.ctx_type = context_id;
+        child_context.parent_ctx = NullableTrait::new(current_ctx);
+        let mut call_ctx = child_context.call_ctx.unbox();
+        call_ctx.caller = other_address();
+        child_context.call_ctx = BoxTrait::new(call_ctx);
+
+        MachineBuilder {
+            current_ctx: BoxTrait::new(child_context),
+            ctx_count: self.ctx_count + 1,
+            stack: self.stack,
+            memory: self.memory,
+            state: self.state,
+            error: self.error
+        }
     }
 
     fn build(self: MachineBuilder) -> Machine {
@@ -76,50 +166,6 @@ impl MachineBuilderImpl of MachineBuilderTrait {
             error: self.error,
         };
         return machine;
-    }
-}
-
-#[derive(Destruct)]
-struct Director {
-    builder: MachineBuilder
-}
-
-#[generate_trait]
-impl MachineBuilderDirector of DirectorTrait {
-    fn new(builder: MachineBuilder) -> Director {
-        Director { builder }
-    }
-
-    fn build(self: Director) -> Machine {
-        self.builder.build()
-    }
-
-    fn construct_static_machine(ref self: Director) {
-        self.builder.set_current_ctx(BoxTrait::new(setup_static_execution_context()));
-    }
-
-    fn construct_machine_with_calldata(ref self: Director, calldata: Span<u8>) {
-        self
-            .builder
-            .set_current_ctx(BoxTrait::new(setup_execution_context_with_calldata(calldata)));
-    }
-
-    fn construct_machine_with_read_only(ref self: Director) {
-        let mut current_ctx = setup_execution_context();
-        let mut current_call_ctx = current_ctx.call_ctx.unbox();
-        current_call_ctx.read_only = true;
-        current_ctx.call_ctx = BoxTrait::new(current_call_ctx);
-        self.builder.set_current_ctx(BoxTrait::new(current_ctx));
-    }
-
-    fn construct_machine_with_nested_execution_context(ref self: Director) {
-        self.builder.set_current_ctx(BoxTrait::new(setup_nested_execution_context()));
-        self.builder.set_ctx_count(2);
-    }
-    fn construct_machine_with_bytecode(ref self: Director, bytecode: Span<u8>) {
-        self
-            .builder
-            .set_current_ctx(BoxTrait::new(setup_execution_context_with_bytecode(bytecode)));
     }
 }
 
@@ -223,7 +269,7 @@ fn setup_call_context() -> CallContext {
 }
 
 fn setup_static_call_context() -> CallContext {
-    let bytecode: Span<u8> = array![1, 2, 3].span();
+    let bytecode: Span<u8> = array![0x00].span();
     let calldata: Span<u8> = array![4, 5, 6].span();
     let value: u256 = callvalue();
     let address = test_address();
@@ -315,7 +361,7 @@ fn setup_execution_context_with_bytecode(bytecode: Span<u8>) -> ExecutionContext
     let context_id = ExecutionContextType::Root;
     let call_ctx = setup_call_context_with_bytecode(bytecode);
     let address = test_address();
-    let return_data = Default::default().span();
+    let return_data = array![1, 2, 3].span();
 
     ExecutionContextTrait::new(context_id, address, call_ctx, Default::default(), return_data,)
 }
@@ -326,7 +372,7 @@ fn setup_call_context_with_calldata(calldata: Span<u8>) -> CallContext {
     let value: u256 = callvalue();
     let address = test_address();
     let read_only = false;
-    let gas_price = 0xffffff;
+    let gas_price = 0xaaaaaa;
     let gas_limit = 0xffffff;
     let output_offset = 0;
     let output_size = 0;
@@ -348,7 +394,7 @@ fn setup_execution_context_with_calldata(calldata: Span<u8>) -> ExecutionContext
     let context_id = ExecutionContextType::Root;
     let call_ctx = setup_call_context_with_calldata(calldata);
     let address = test_address();
-    let return_data = Default::default().span();
+    let return_data = array![1, 2, 3].span();
 
     ExecutionContextTrait::new(context_id, address, call_ctx, Default::default(), return_data,)
 }
