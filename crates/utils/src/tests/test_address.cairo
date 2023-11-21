@@ -54,7 +54,5 @@ fn test_compute_contract_address() {
 
     // console.log(address);
 
-    // let addr: felt252 = address.into();
-    // addr.print();
     assert(address.into() == 0x40A633EeF249F21D95C8803b7144f19AAfeEF7ae, 'wrong create address');
 }

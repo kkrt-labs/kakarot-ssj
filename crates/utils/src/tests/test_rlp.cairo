@@ -91,30 +91,6 @@ fn test_rlp_empty() {
     assert(res.unwrap_err() == RLPError::EmptyInput(RLP_EMPTY_INPUT), 'err != EmptyInput');
 }
 
-#[test]
-#[available_gas(20000000)]
-fn test_rlp_encode_empty_sequence() {
-    let mut input = RLPItem::String(array![].span());
-
-    let res = RLPTrait::encode_sequence(array![input].span());
-
-    assert(res.len() == 1, 'wrong len');
-    assert(*res[0] == 0x80, 'wrong encoded value');
-}
-
-#[test]
-#[available_gas(20000000)]
-fn test_rlp_encode_string_sequence() {
-    let mut input: Array<Span<u8>> = Default::default();
-    let cat = RLPItem::String(array![0x63, 0x61, 0x74].span());
-    let dog = RLPItem::String(array![0x64, 0x6f, 0x67].span());
-    let input = array![cat, dog];
-
-    let encoding = RLPTrait::encode_sequence(input.span());
-
-    let expected = array![0xc8, 0x83, 0x63, 0x61, 0x74, 0x83, 0x64, 0x6f, 0x67].span();
-    assert(expected == encoding, 'wrong rlp encoding')
-}
 
 #[test]
 #[available_gas(20000000)]
@@ -243,26 +219,25 @@ fn test_rlp_encode_string_large_bytearray_inputs() {
 
 #[test]
 #[available_gas(20000000)]
-fn test_rlp_encode_sequence_strings() {
-    let mut input = array![];
-    input.append(RLPItem::String(array![0x40, 0x53, 0x15, 0x94, 0x50, 0x40, 0x40, 0x40].span()));
-    input.append(RLPItem::String(array![0x03].span()));
+fn test_rlp_encode_sequence_empty() {
+    let res = RLPTrait::encode_sequence(array![].span());
 
-    let res = RLPTrait::encode_sequence(input.span());
-
-    assert(res.len() == 10, 'wrong len');
-    assert(*res[0] == 0x88, 'wrong prefix');
-    assert(*res[1] == 0x40, 'wrong first value');
-    assert(*res[2] == 0x53, 'wrong second value');
+    assert(res.len() == 1, 'wrong len');
+    assert(*res[0] == 0xC0, 'wrong encoded value');
 }
 
 #[test]
-#[available_gas(99999999)]
-#[should_panic(expected: ('List encoding unimplemented',))]
-fn test_rlp_encode_sequence_empty() {
-    let mut input = array![RLPItem::List(array![].span())];
+#[available_gas(20000000)]
+fn test_rlp_encode_sequence() {
+    let mut input: Array<Span<u8>> = Default::default();
+    let cat = RLPItem::String(array![0x63, 0x61, 0x74].span());
+    let dog = RLPItem::String(array![0x64, 0x6f, 0x67].span());
+    let input = array![cat, dog];
 
-    let res = RLPTrait::encode_sequence(input.span());
+    let encoding = RLPTrait::encode_sequence(input.span());
+
+    let expected = array![0xc8, 0x83, 0x63, 0x61, 0x74, 0x83, 0x64, 0x6f, 0x67].span();
+    assert(expected == encoding, 'wrong rlp encoding')
 }
 
 #[test]

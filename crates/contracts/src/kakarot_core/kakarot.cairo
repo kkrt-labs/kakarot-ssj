@@ -394,12 +394,6 @@ mod KakarotCore {
                 },
                 Option::None => {
                     // Deploy tx case.
-                    let caller_bytes = EthAddressExTrait::to_bytes(from.evm);
-                    //TODO(deploy) fix nonce
-                    let caller_nonce = array![1].span();
-                    // let current_target = RLPTrait::encode_string()
-                    let bytecode = data;
-                    // TODO: compute_evm_address
                     // HASH(RLP(deployer_address, deployer_nonce))[0..20]
                     //TODO manually set target account type to CA in state
                     panic_with_felt252('deploy tx flow unimplemented')

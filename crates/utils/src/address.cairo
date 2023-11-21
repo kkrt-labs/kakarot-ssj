@@ -1,14 +1,14 @@
-use core::traits::TryInto;
 use core::array::ArrayTrait;
+use core::traits::TryInto;
+
+use debug::PrintTrait;
 use evm::errors::EVMError;
 use starknet::EthAddress;
 use utils::errors::RLPErrorTrait;
 use utils::helpers::{U8SpanExTrait, U64Trait, U256Trait, EthAddressExTrait, ArrayExtTrait};
+use utils::math::WrappingBitshift;
 use utils::rlp::{RLPTrait, RLPItem};
 use utils::traits::{TryIntoResult, U256TryIntoEthAddress};
-use utils::math::WrappingBitshift;
-
-use debug::PrintTrait;
 /// Computes the address of the new account that needs to be created.
 ///
 /// # Arguments
@@ -22,7 +22,9 @@ use debug::PrintTrait;
 fn compute_contract_address(sender_address: EthAddress, sender_nonce: u64) -> EthAddress {
     let mut sender_address: RLPItem = RLPItem::String(sender_address.to_bytes().span());
     let sender_nonce: RLPItem = RLPItem::String(sender_nonce.to_bytes().span());
-    let computed_address = U8SpanExTrait::compute_keccak256_hash(RLPTrait::encode_sequence(array![sender_address, sender_nonce].span()));
+    let computed_address = U8SpanExTrait::compute_keccak256_hash(
+        RLPTrait::encode_sequence(array![sender_address, sender_nonce].span())
+    );
     let canonical_address = computed_address & 0xffffffffffffffffffffffffffffffffffffffff;
     canonical_address.try_into().unwrap()
 }

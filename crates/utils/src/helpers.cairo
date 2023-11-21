@@ -451,7 +451,7 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
 
 #[generate_trait]
 impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
-    // Concatenates two arrays by adding the elements of arr2 to arr1 and returning the new arr2.
+    // Concatenates two arrays by adding the elements of arr2 to arr1.
     fn concat<+Copy<T>>(ref self: Array<T>, mut arr2: Span<T>) {
         loop {
             match arr2.pop_front() {
