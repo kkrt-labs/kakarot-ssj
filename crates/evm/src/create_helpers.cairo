@@ -14,8 +14,9 @@ use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use keccak::cairo_keccak;
 use starknet::{EthAddress, get_tx_info};
+use utils::address::{compute_contract_address, compute_create2_contract_address};
 use utils::helpers::ArrayExtTrait;
-use utils::helpers::{ResultExTrait, EthAddressExt, U256Trait, U8SpanExTrait};
+use utils::helpers::{ResultExTrait, EthAddressExTrait, U256Trait, U8SpanExTrait};
 use utils::traits::{
     BoolIntoNumeric, EthAddressIntoU256, U256TryIntoResult, SpanU8TryIntoResultEthAddress
 };
@@ -48,15 +49,16 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
 
         // TODO(state): when the tx starts,
         // store get_tx_info().unbox().nonce inside the sender account nonce
-        let sender_nonce = get_tx_info().unbox().nonce;
+        // so that we can call self.nonce() instead of get_tx_info().unbox().nonce
 
         let to = match create_type {
-            CreateType::CreateOrDeployTx => self
-                .get_create_address(self.address().evm, sender_nonce)?,
-            CreateType::Create2 => self
-                .get_create2_address(
-                    self.address().evm, salt: self.stack.pop()?, bytecode: bytecode.span()
-                )?,
+            CreateType::CreateOrDeployTx => {
+                let nonce = self.state.get_account(self.address().evm)?.nonce();
+                compute_contract_address(self.address().evm, sender_nonce: nonce)
+            },
+            CreateType::Create2 => compute_create2_contract_address(
+                self.address().evm, salt: self.stack.pop()?, bytecode: bytecode.span()
+            )?,
         };
 
         Result::Ok(CreateArgs { to, value, bytecode: bytecode.span() })
@@ -98,7 +100,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         // - contract is already deployed at this location (type fetched from storage)
         // - Contract has been scheduled for deployment (type set in cache)
         // If the AccountType is unknown, then there's no collision.
-        if target_account.is_deployed() {
+        if target_account.exists() {
             return self.stack.push(0);
         };
 
@@ -171,35 +173,5 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
                 self.stack.push(0)
             },
         }
-    }
-
-    fn get_create_address(
-        ref self: Machine, sender_address: EthAddress, sender_nounce: felt252
-    ) -> Result<EthAddress, EVMError> {
-        panic_with_felt252('get_create_address todo')
-    }
-
-
-    fn get_create2_address(
-        self: @Machine, sender_address: EthAddress, salt: u256, bytecode: Span<u8>
-    ) -> Result<EthAddress, EVMError> {
-        let hash = bytecode.compute_keccak256_hash().to_bytes();
-
-        let sender_address = sender_address.to_bytes();
-
-        let salt = salt.to_bytes();
-
-        let mut preimage: Array<u8> = array![];
-
-        preimage.concat(array![0xff].span());
-        preimage.concat(sender_address);
-        preimage.concat(salt);
-        preimage.concat(hash);
-
-        let address_hash = preimage.span().compute_keccak256_hash().to_bytes();
-
-        let address: EthAddress = address_hash.slice(12, 20).try_into_result()?;
-
-        Result::Ok(address)
     }
 }

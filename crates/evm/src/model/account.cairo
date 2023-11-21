@@ -161,8 +161,8 @@ impl AccountImpl of AccountTrait {
     /// be registered already, and the nonce must not be 0 or the code must not
     /// be empty
     #[inline(always)]
-    fn should_deploy(self: @Account, is_registered: bool) -> bool {
-        if !is_registered && self.is_ca() && (*self.nonce != 0 || !(*self.code).is_empty()) {
+    fn should_deploy(self: @Account) -> bool {
+        if self.is_ca() && (*self.nonce != 0 || !(*self.code).is_empty()) {
             return true;
         };
         false
@@ -181,9 +181,9 @@ impl AccountImpl of AccountTrait {
     /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
     fn commit(self: @Account) -> Result<(), EVMError> {
         // Case account exists and is already on chain
-        let is_registered = AddressTrait::is_registered(self.address().evm);
+        let is_deployed = self.address().evm.is_deployed();
 
-        if is_registered {
+        if is_deployed {
             match self.account_type {
                 AccountType::EOA(eoa) => {
                     // no - op
@@ -203,7 +203,7 @@ impl AccountImpl of AccountTrait {
                 },
                 AccountType::Unknown => { Result::Ok(()) }
             }
-        } else if self.should_deploy(is_registered) {
+        } else if self.should_deploy() {
             //Case new account
             // If SELFDESTRUCT, just do nothing
             if (*self.selfdestruct == true) {
@@ -231,19 +231,19 @@ impl AccountImpl of AccountTrait {
         false
     }
 
-    /// Returns whether an accound is deployed at the given address.
+    /// Returns whether an accound is exists at the given address.
     ///
     /// Based on the state of the account in the cache - the account can
-    /// not be commited on-chain, but already be deployed in the KakarotState.
+    /// not be deployed on-chain yet, but already exist in the KakarotState.
     /// # Arguments
     ///
     /// * `address` - The Ethereum address to look up.
     ///
     /// # Returns
     ///
-    /// `true` if an account is deployed at this address, `false` otherwise.
+    /// `true` if an account exists at this address, `false` otherwise.
     #[inline(always)]
-    fn is_deployed(self: @Account) -> bool {
+    fn exists(self: @Account) -> bool {
         let is_known = *self.account_type != AccountType::Unknown;
 
         //TODO(account) verify whether is_known is a sufficient condition

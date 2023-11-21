@@ -1,3 +1,4 @@
+mod test_address;
 mod test_data;
 mod test_eth_transaction;
 mod test_helpers;
