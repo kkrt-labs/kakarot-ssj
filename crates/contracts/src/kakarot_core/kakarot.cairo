@@ -36,7 +36,6 @@ mod KakarotCore {
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use super::{StoredAccountType};
     use utils::helpers::{compute_starknet_address};
-    use utils::traits::{ByteArraySerde};
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);

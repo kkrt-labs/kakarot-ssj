@@ -9,7 +9,7 @@ starknet.workspace = true
 evm = { path = "../evm" }
 openzeppelin = { path = "../openzeppelin" }
 utils = { path = "../utils" }
-alexandria_storage = { git = "https://github.com/keep-starknet-strange/alexandria.git", rev = "0682b1e096fe40b2bbab69863e63f2c88ca06c77" }
+alexandria_storage = { git = "https://github.com/keep-starknet-strange/alexandria.git", rev = "01a7690dc25d19a086f525b8ce66aa505c8e7527" }
 
 [tool]
 fmt.workspace = true
