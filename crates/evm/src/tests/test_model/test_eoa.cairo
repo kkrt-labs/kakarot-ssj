@@ -1,3 +1,4 @@
+use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_utils as contract_utils;
@@ -23,4 +24,8 @@ fn test_eoa_deploy() {
 
     assert(event.evm_address == test_utils::evm_address(), 'wrong evm address');
     assert(event.starknet_address.into() == eoa_address.starknet, 'wrong starknet address');
+
+    let kakarot_chain_id = kakarot_core.chain_id();
+    let eoa = IExternallyOwnedAccountDispatcher { contract_address: eoa_address.starknet };
+    assert(eoa.chain_id() == kakarot_chain_id, 'wrong chain id');
 }

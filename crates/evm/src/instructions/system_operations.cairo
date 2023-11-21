@@ -78,7 +78,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// CALL
     /// # Specification: https://www.evm.codes/#f1?fork=shanghai
     fn exec_call(ref self: Machine) -> Result<(), EVMError> {
-        let call_args = self.prepare_call(CallType::Call)?;
+        let call_args = self.prepare_call(@CallType::Call)?;
         let read_only = self.read_only();
         let value = call_args.value;
 
@@ -102,7 +102,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// STATICCALL
     /// # Specification: https://www.evm.codes/#fa?fork=shanghai
     fn exec_staticcall(ref self: Machine) -> Result<(), EVMError> {
-        let call_args = self.prepare_call(CallType::StaticCall)?;
+        let call_args = self.prepare_call(@CallType::StaticCall)?;
         let read_only = self.read_only();
 
         // Initialize the sub context.
@@ -112,13 +112,17 @@ impl SystemOperations of SystemOperationsTrait {
     /// CALLCODE
     /// # Specification: https://www.evm.codes/#f2?fork=shanghai
     fn exec_callcode(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        let call_args = self.prepare_call(@CallType::CallCode)?;
+        let read_only = self.read_only();
+
+        // Initialize the sub context.
+        self.init_call_sub_ctx(call_args, read_only)
     }
 
     /// DELEGATECALL
     /// # Specification: https://www.evm.codes/#f4?fork=shanghai
     fn exec_delegatecall(ref self: Machine) -> Result<(), EVMError> {
-        let call_args = self.prepare_call(CallType::DelegateCall)?;
+        let call_args = self.prepare_call(@CallType::DelegateCall)?;
         let read_only = self.read_only();
 
         // Initialize the sub context.

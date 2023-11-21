@@ -33,7 +33,7 @@ use starknet::{
 };
 use utils::helpers::{ByteArrayExTrait, ResultExTrait};
 use utils::storage::{compute_storage_base_address};
-use utils::traits::{StorageBaseAddressIntoFelt252, StoreBytes31};
+use utils::traits::{StorageBaseAddressIntoFelt252};
 
 
 #[generate_trait]

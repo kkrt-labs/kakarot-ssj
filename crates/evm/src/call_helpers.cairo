@@ -21,6 +21,8 @@ use utils::traits::{BoolIntoNumeric, U256TryIntoResult};
 /// Created in order to simplify setting up the call opcodes
 #[derive(Drop)]
 struct CallArgs {
+    caller: Address,
+    code_address: Address,
     to: Address,
     gas: u128,
     value: u256,
@@ -42,18 +44,37 @@ enum CallType {
 impl MachineCallHelpersImpl of MachineCallHelpers {
     ///  Prepare the initialization of a new child or so-called sub-context
     /// As part of the CALL family of opcodes.
-    fn prepare_call(ref self: Machine, call_type: CallType) -> Result<CallArgs, EVMError> {
+    fn prepare_call(ref self: Machine, call_type: @CallType) -> Result<CallArgs, EVMError> {
         let gas = self.stack.pop_u128()?;
-        let to = self.stack.pop_eth_address()?;
+
+        let code_address = self.stack.pop_eth_address()?;
+        let to = match call_type {
+            CallType::Call => code_address,
+            CallType::DelegateCall => self.address().evm,
+            CallType::CallCode => self.address().evm,
+            CallType::StaticCall => code_address
+        };
 
         let kakarot_core = KakarotCore::unsafe_new_contract_state();
-        let to = Address { evm: to, starknet: kakarot_core.compute_starknet_address(to), };
+
+        let code_address = Address {
+            evm: code_address, starknet: kakarot_core.compute_starknet_address(code_address)
+        };
+
+        let to = Address { evm: to, starknet: kakarot_core.compute_starknet_address(to) };
 
         let (value, should_transfer) = match call_type {
             CallType::Call => (self.stack.pop()?, true),
             CallType::DelegateCall => (self.value(), false),
             CallType::CallCode => (self.stack.pop()?, false),
             CallType::StaticCall => (0, false),
+        };
+
+        let caller = match call_type {
+            CallType::Call => self.address(),
+            CallType::DelegateCall => self.call_ctx().caller,
+            CallType::CallCode => self.address(),
+            CallType::StaticCall => self.address(),
         };
 
         let args_offset = self.stack.pop_usize()?;
@@ -67,7 +88,15 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         Result::Ok(
             CallArgs {
-                to, value, gas, calldata: calldata.span(), ret_offset, ret_size, should_transfer
+                caller,
+                code_address,
+                to,
+                value,
+                gas,
+                calldata: calldata.span(),
+                ret_offset,
+                ret_size,
+                should_transfer
             }
         )
     }
@@ -98,13 +127,10 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         // Case 2: `to` address is not a precompile
         // We enter the standard flow
-        let bytecode = self.state.get_account(call_args.to.evm)?.code;
-
-        // The caller in the subcontext is the current context's current address
-        let caller = self.address();
+        let bytecode = self.state.get_account(call_args.code_address.evm)?.code;
 
         let call_ctx = CallContextTrait::new(
-            caller,
+            call_args.caller,
             bytecode,
             call_args.calldata,
             call_args.value,

@@ -34,7 +34,6 @@ trait IContractAccount<TContractState> {
 
     fn nonce(self: @TContractState) -> u64;
     fn set_nonce(ref self: TContractState, new_nonce: u64);
-    fn increment_nonce(ref self: TContractState);
     // ***
     // JUMP
     // Records of valid jumps in the context of jump opcodes
@@ -76,7 +75,7 @@ mod ContractAccount {
     use super::IContractAccount;
     use utils::helpers::{ByteArrayExTrait, ResultExTrait};
     use utils::storage::{compute_storage_base_address};
-    use utils::traits::{StorageBaseAddressIntoFelt252, StoreBytes31};
+    use utils::traits::{StorageBaseAddressIntoFelt252};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
@@ -89,6 +88,7 @@ mod ContractAccount {
         // evm_address, kakarot_core_address will be set by account/account.cairo::constructor
         evm_address: EthAddress,
         kakarot_core_address: ContractAddress,
+        contract_account_bytecode: List<bytes31>,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
     }
@@ -116,21 +116,14 @@ mod ContractAccount {
             // We start loading the full 31-byte words of bytecode data at address
             // `data_address`.  The `pending_word` and `pending_word_len` are stored at
             // address `data_address-2` and `data_address-1` respectively.
-            //TODO(eni) replace with ListTrait::new() once merged in alexandria
-            let list_len = Store::<usize>::read(0, data_address).expect(BYTECODE_READ_ERROR);
-            let mut stored_list: List<bytes31> = List {
-                address_domain: 0,
-                base: data_address,
-                len: list_len,
-                storage_size: Store::<bytes31>::size()
-            };
+            let mut stored_list: List<bytes31> = ListTrait::fetch(0, data_address)
+                .expect('failed to fetch bytecode');
             let pending_word_addr: felt252 = data_address.into() - 2;
             let pending_word_len_addr: felt252 = pending_word_addr + 1;
 
             // Read the `ByteArray` in the contract storage.
             let bytecode = ByteArray {
-                //TODO(eni) PR alexandria to make List methods return SyscallResult
-                data: stored_list.array(),
+                data: stored_list.array().expect('failed to fetch bytecode'),
                 pending_word: Store::<
                     felt252
                 >::read(0, storage_base_address_from_felt252(pending_word_addr))
@@ -144,21 +137,12 @@ mod ContractAccount {
         }
 
         fn set_bytecode(ref self: ContractState, bytecode: Span<u8>) {
+            self.assert_only_kakarot_core();
             let packed_bytecode: ByteArray = ByteArrayExTrait::from_bytes(bytecode);
-            // data_address is h(h(sn_keccak("contract_account_bytecode")), evm_address)
-            let data_address = storage_base_address_from_felt252(
-                selector!("contract_account_bytecode")
-            );
+            let data_address = self.contract_account_bytecode.address();
             // We start storing the full 31-byte words of bytecode data at address
             // `data_address`.  The `pending_word` and `pending_word_len` are stored at
             // address `data_address-2` and `data_address-1` respectively.
-            //TODO(eni) replace with ListTrait::new() once merged in alexandria
-            let mut stored_list: List<bytes31> = List {
-                address_domain: 0,
-                base: data_address,
-                len: 0,
-                storage_size: Store::<bytes31>::size()
-            };
             let pending_word_addr: felt252 = data_address.into() - 2;
             let pending_word_len_addr: felt252 = pending_word_addr + 1;
 
@@ -179,8 +163,8 @@ mod ContractAccount {
                 packed_bytecode.pending_word_len
             )
                 .expect(BYTECODE_WRITE_ERROR);
-            //TODO(eni) PR Alexandria so that from_span returns SyscallResult
-            stored_list.from_span(packed_bytecode.data.span());
+            let mut stored_list: List<bytes31> = ListTrait::new(0, data_address);
+            stored_list.append_span(packed_bytecode.data.span());
         }
 
         fn storage_at(self: @ContractState, key: u256) -> u256 {
@@ -192,6 +176,7 @@ mod ContractAccount {
         }
 
         fn set_storage_at(ref self: ContractState, key: u256, value: u256) {
+            self.assert_only_kakarot_core();
             let storage_address = compute_storage_base_address(
                 selector!("contract_account_storage_keys"),
                 array![key.low.into(), key.high.into()].span()
@@ -208,6 +193,7 @@ mod ContractAccount {
 
 
         fn set_nonce(ref self: ContractState, new_nonce: u64) {
+            self.assert_only_kakarot_core();
             let storage_address: StorageBaseAddress = storage_base_address_from_felt252(
                 selector!("contract_account_nonce")
             );
@@ -215,25 +201,18 @@ mod ContractAccount {
         }
 
 
-        fn increment_nonce(ref self: ContractState) {
-            let storage_address: StorageBaseAddress = storage_base_address_from_felt252(
-                selector!("contract_account_nonce")
-            );
-            let nonce = Store::<u64>::read(0, storage_address).expect(NONCE_READ_ERROR);
-            Store::<u64>::write(0, storage_address, nonce + 1).expect(NONCE_WRITE_ERROR)
-        }
-
         fn is_false_positive_jumpdest(self: @ContractState, offset: usize) -> bool {
             panic_with_felt252('unimplemented')
         }
 
 
         fn set_false_positive_jumpdest(ref self: ContractState, offset: usize) {
+            self.assert_only_kakarot_core();
             panic_with_felt252('unimplemented')
         }
 
         fn selfdestruct(ref self: ContractState) {
-            //TODO add access control
+            self.assert_only_kakarot_core();
             self.set_nonce(0);
             self.evm_address.write(0.try_into().unwrap());
             self.set_bytecode(array![].span());
@@ -243,11 +222,18 @@ mod ContractAccount {
 
 
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
+            self.assert_only_kakarot_core();
+            self.upgradeable.upgrade_contract(new_class_hash);
+        }
+    }
+
+    #[generate_trait]
+    impl PrivateImpl of PrivateTrait {
+        fn assert_only_kakarot_core(self: @ContractState) {
             assert(
                 get_caller_address() == self.kakarot_core_address.read(),
                 'Caller not Kakarot Core address'
             );
-            self.upgradeable.upgrade_contract(new_class_hash);
         }
     }
 }
