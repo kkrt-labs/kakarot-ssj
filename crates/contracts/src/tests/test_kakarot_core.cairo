@@ -325,7 +325,7 @@ fn test_eth_call() {
 
 #[test]
 #[available_gas(2000000000)]
-fn test_handle_call() {
+fn test_handle_execute() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let mut kakarot_core = KakarotCore::unsafe_new_contract_state();

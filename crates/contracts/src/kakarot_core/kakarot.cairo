@@ -19,6 +19,7 @@ mod KakarotCore {
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
+    use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
     use core::starknet::SyscallResultTrait;
@@ -282,7 +283,9 @@ mod KakarotCore {
             data: Span<u8>
         ) -> Span<u8> {
             let starknet_caller_address = get_caller_address();
-            let account = IContractAccountDispatcher { contract_address: starknet_caller_address };
+            let account = IExternallyOwnedAccountDispatcher {
+                contract_address: starknet_caller_address
+            };
             let from = Address { evm: account.evm_address(), starknet: starknet_caller_address };
 
             // Invariant:
@@ -300,7 +303,7 @@ mod KakarotCore {
                     let target_starknet_address = self.compute_starknet_address(to);
                     Option::Some(Address { evm: to, starknet: target_starknet_address })
                 },
-                Option::None(_) => Option::None(())
+                Option::None => Option::None
             };
 
             let mut result = KakarotInternal::handle_execute(
