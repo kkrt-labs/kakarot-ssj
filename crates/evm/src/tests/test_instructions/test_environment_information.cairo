@@ -12,7 +12,7 @@ use evm::model::{Account, AccountType};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
-    setup_machine, MachineBuilderImpl, evm_address, callvalue, return_from_subcontext, native_token,
+    MachineBuilderImpl, evm_address, callvalue, return_from_subcontext, native_token,
     other_address
 };
 use integer::u32_overflowing_add;
@@ -30,7 +30,7 @@ use utils::traits::{EthAddressIntoU256};
 #[available_gas(20000000)]
 fn test_address_basic() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     // When
     machine.exec_address();
@@ -61,7 +61,8 @@ fn test_exec_balance_eoa() {
     fund_account_with_native_token(eoa, native_token, 0x1);
 
     // And
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     machine.stack.push(evm_address().into()).unwrap();
 
     // When
@@ -79,7 +80,8 @@ fn test_exec_balance_zero() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // And
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     machine.stack.push(evm_address().into()).unwrap();
 
     // When
@@ -100,7 +102,8 @@ fn test_exec_balance_contract_account() {
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
 
     // And
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     machine.stack.push(evm_address().into()).unwrap();
 
     // When
@@ -119,7 +122,7 @@ fn test_exec_balance_contract_account() {
 #[available_gas(5000000)]
 fn test_caller() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     // When
     machine.exec_caller();
@@ -156,7 +159,7 @@ fn test_origin() {
 #[available_gas(20000000)]
 fn test_origin_nested_ctx() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     // When
     machine.exec_origin();
@@ -175,7 +178,7 @@ fn test_origin_nested_ctx() {
 #[available_gas(1200000)]
 fn test_exec_callvalue() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     // When
     machine.exec_callvalue();
@@ -308,7 +311,8 @@ fn test_calldataload_with_offset_conversion_error() {
 #[available_gas(20000000)]
 fn test_calldata_size() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let calldata: Span<u8> = machine.calldata();
 
     // When
@@ -327,7 +331,7 @@ fn test_calldata_size() {
 #[available_gas(20000000)]
 fn test_calldatacopy_type_conversion_error() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
@@ -378,7 +382,8 @@ fn test_calldatacopy_with_out_of_bound_bytes_multiple_words() {
 
 fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Span<u8>) {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let calldata: Span<u8> = machine.calldata();
 
     machine.stack.push(size.into());
@@ -550,7 +555,8 @@ fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
 #[available_gas(20000000)]
 fn test_gasprice() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
 
     // When
     machine.exec_gasprice();
@@ -568,7 +574,8 @@ fn test_gasprice() {
 fn test_exec_extcodesize_eoa() {
     // Given
     let evm_address = evm_address();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
     machine.stack.push(evm_address.into());
@@ -586,7 +593,8 @@ fn test_exec_extcodesize_eoa() {
 fn test_exec_extcodesize_ca_empty() {
     // Given
     let evm_address = evm_address();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode remains empty, and we expect the empty hash in return
@@ -607,7 +615,8 @@ fn test_exec_extcodesize_ca_empty() {
 fn test_exec_extcodesize_ca_with_bytecode() {
     // Given
     let evm_address = evm_address();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
@@ -631,7 +640,8 @@ fn test_exec_extcodesize_ca_with_bytecode() {
 fn test_exec_extcodecopy_ca() {
     // Given
     let evm_address = evm_address();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
@@ -662,7 +672,8 @@ fn test_exec_extcodecopy_ca() {
 fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
     // Given
     let evm_address = evm_address();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
@@ -687,7 +698,8 @@ fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
 fn test_exec_extcodecopy_eoa() {
     // Given
     let evm_address = evm_address();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
 
@@ -712,7 +724,8 @@ fn test_exec_extcodecopy_eoa() {
 fn test_exec_extcodecopy_account_none() {
     // Given
     let evm_address = evm_address();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // size
@@ -761,7 +774,7 @@ fn test_returndatasize() {
 #[available_gas(20000000)]
 fn test_returndata_copy_type_conversion_error() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
@@ -920,7 +933,8 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
 fn test_exec_extcodehash_precompile() {
     // Given
     let evm_address = 0x05.try_into().unwrap();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
     machine.stack.push(evm_address.into());
@@ -938,7 +952,8 @@ fn test_exec_extcodehash_precompile() {
 fn test_exec_extcodehash_selfdestructed() {
     // Given
     let evm_address = evm_address();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode remains empty, and we expect the empty hash in return
@@ -972,7 +987,8 @@ fn test_exec_extcodehash_selfdestructed() {
 fn test_exec_extcodehash_eoa() {
     // Given
     let evm_address = evm_address();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
     machine.stack.push(evm_address.into());
@@ -996,7 +1012,8 @@ fn test_exec_extcodehash_eoa() {
 fn test_exec_extcodehash_ca_empty() {
     // Given
     let evm_address = evm_address();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     // The bytecode remains empty, and we expect the empty hash in return
     let mut ca_address = deploy_contract_account(evm_address(), array![].span());
@@ -1021,7 +1038,8 @@ fn test_exec_extcodehash_ca_empty() {
 fn test_exec_extcodehash_unknown_account() {
     // Given
     let evm_address = evm_address();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     machine.stack.push(evm_address.into());
@@ -1039,7 +1057,8 @@ fn test_exec_extcodehash_unknown_account() {
 fn test_exec_extcodehash_ca_with_bytecode() {
     // Given
     let evm_address = evm_address();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract

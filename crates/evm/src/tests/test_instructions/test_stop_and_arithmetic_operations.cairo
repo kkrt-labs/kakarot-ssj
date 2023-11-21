@@ -2,7 +2,7 @@ use evm::context::ExecutionContextTrait;
 use evm::instructions::StopAndArithmeticOperationsTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::stack::StackTrait;
-use evm::tests::test_utils::setup_machine;
+use evm::tests::test_utils::MachineBuilderImpl;
 
 use integer::BoundedInt;
 
@@ -11,7 +11,7 @@ use integer::BoundedInt;
 #[available_gas(20000000)]
 fn test_exec_stop() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     // When
     machine.exec_stop();
@@ -24,7 +24,7 @@ fn test_exec_stop() {
 #[available_gas(20000000)]
 fn test_exec_add() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(1).unwrap();
     machine.stack.push(2).unwrap();
     machine.stack.push(3).unwrap();
@@ -42,7 +42,7 @@ fn test_exec_add() {
 #[available_gas(20000000)]
 fn test_exec_add_overflow() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
     machine.stack.push(1).unwrap();
 
@@ -58,7 +58,7 @@ fn test_exec_add_overflow() {
 #[available_gas(20000000)]
 fn test_exec_mul() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(4).unwrap();
     machine.stack.push(5).unwrap();
 
@@ -74,7 +74,7 @@ fn test_exec_mul() {
 #[available_gas(20000000)]
 fn test_exec_mul_overflow() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
     machine.stack.push(2).unwrap();
 
@@ -90,7 +90,7 @@ fn test_exec_mul_overflow() {
 #[available_gas(20000000)]
 fn test_exec_sub() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(7).unwrap();
     machine.stack.push(10).unwrap();
 
@@ -106,7 +106,7 @@ fn test_exec_sub() {
 #[available_gas(20000000)]
 fn test_exec_sub_underflow() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(1).unwrap();
     machine.stack.push(0).unwrap();
 
@@ -125,7 +125,7 @@ fn test_exec_sub_underflow() {
 #[available_gas(20000000)]
 fn test_exec_div() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(4).unwrap();
     machine.stack.push(100).unwrap();
 
@@ -141,7 +141,7 @@ fn test_exec_div() {
 #[available_gas(20000000)]
 fn test_exec_div_by_zero() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0).unwrap();
     machine.stack.push(100).unwrap();
 
@@ -157,7 +157,7 @@ fn test_exec_div_by_zero() {
 #[available_gas(20000000)]
 fn test_exec_sdiv_pos() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(5).unwrap();
     machine.stack.push(10).unwrap();
 
@@ -173,7 +173,7 @@ fn test_exec_sdiv_pos() {
 #[available_gas(20000000)]
 fn test_exec_sdiv_neg() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(BoundedInt::max()).unwrap();
     machine.stack.push(2).unwrap();
 
@@ -189,7 +189,7 @@ fn test_exec_sdiv_neg() {
 #[available_gas(20000000)]
 fn test_exec_sdiv_by_0() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0).unwrap();
     machine.stack.push(10).unwrap();
 
@@ -205,7 +205,7 @@ fn test_exec_sdiv_by_0() {
 #[available_gas(20000000)]
 fn test_exec_mod() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(6).unwrap();
     machine.stack.push(100).unwrap();
 
@@ -221,7 +221,7 @@ fn test_exec_mod() {
 #[available_gas(20000000)]
 fn test_exec_mod_by_zero() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0).unwrap();
     machine.stack.push(100).unwrap();
 
@@ -237,7 +237,7 @@ fn test_exec_mod_by_zero() {
 #[available_gas(20000000)]
 fn test_exec_smod() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(3).unwrap();
     machine.stack.push(10).unwrap();
 
@@ -253,7 +253,7 @@ fn test_exec_smod() {
 #[available_gas(20000000)]
 fn test_exec_smod_neg() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine
         .stack
         .push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD)
@@ -281,7 +281,7 @@ fn test_exec_smod_neg() {
 #[available_gas(20000000)]
 fn test_exec_smod_zero() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0).unwrap();
     machine.stack.push(10).unwrap();
 
@@ -298,7 +298,7 @@ fn test_exec_smod_zero() {
 #[available_gas(20000000)]
 fn test_exec_addmod() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(7).unwrap();
     machine.stack.push(10).unwrap();
     machine.stack.push(20).unwrap();
@@ -315,7 +315,7 @@ fn test_exec_addmod() {
 #[available_gas(20000000)]
 fn test_exec_addmod_by_zero() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0).unwrap();
     machine.stack.push(10).unwrap();
     machine.stack.push(20).unwrap();
@@ -333,7 +333,7 @@ fn test_exec_addmod_by_zero() {
 #[available_gas(20000000)]
 fn test_exec_addmod_overflow() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(3).unwrap();
     machine.stack.push(2).unwrap();
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
@@ -351,7 +351,7 @@ fn test_exec_addmod_overflow() {
 #[test]
 #[available_gas(20000000)]
 fn test_mulmod_basic() {
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(10).unwrap();
     machine.stack.push(7).unwrap();
     machine.stack.push(5).unwrap();
@@ -366,7 +366,7 @@ fn test_mulmod_basic() {
 #[test]
 #[available_gas(20000000)]
 fn test_mulmod_zero_modulus() {
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0).unwrap();
     machine.stack.push(7).unwrap();
     machine.stack.push(5).unwrap();
@@ -380,7 +380,7 @@ fn test_mulmod_zero_modulus() {
 #[test]
 #[available_gas(20000000)]
 fn test_mulmod_overflow() {
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(12).unwrap();
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
@@ -396,7 +396,7 @@ fn test_mulmod_overflow() {
 #[test]
 #[available_gas(20000000)]
 fn test_mulmod_zero() {
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(10).unwrap();
     machine.stack.push(7).unwrap();
     machine.stack.push(0).unwrap();
@@ -411,7 +411,7 @@ fn test_mulmod_zero() {
 #[available_gas(20000000)]
 fn test_exec_exp() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(2).unwrap();
     machine.stack.push(10).unwrap();
 
@@ -427,7 +427,7 @@ fn test_exec_exp() {
 #[available_gas(20000000)]
 fn test_exec_exp_overflow() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(2).unwrap();
     machine.stack.push(BoundedInt::<u128>::max().into() + 1).unwrap();
 
@@ -445,7 +445,7 @@ fn test_exec_exp_overflow() {
 #[available_gas(20000000)]
 fn test_exec_signextend() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0xFF).unwrap();
     machine.stack.push(0x00).unwrap();
 
@@ -467,7 +467,7 @@ fn test_exec_signextend() {
 #[available_gas(20000000)]
 fn test_exec_signextend_no_effect() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0x7F).unwrap();
     machine.stack.push(0x00).unwrap();
 
@@ -485,7 +485,7 @@ fn test_exec_signextend_no_effect() {
 #[available_gas(20000000)]
 fn test_exec_signextend_on_negative() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0001).unwrap();
     machine.stack.push(0x01).unwrap(); // s = 15, v = 0
 

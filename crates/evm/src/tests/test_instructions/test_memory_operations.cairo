@@ -7,7 +7,7 @@ use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::{Account, AccountType};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, StateInternalTrait, compute_storage_address};
-use evm::tests::test_utils::{setup_machine, evm_address, MachineBuilderImpl};
+use evm::tests::test_utils::{evm_address, MachineBuilderImpl};
 use integer::BoundedInt;
 use starknet::get_contract_address;
 
@@ -15,7 +15,7 @@ use starknet::get_contract_address;
 #[available_gas(20000000)]
 fn test_pc_basic() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     // When
     machine.exec_pc();
@@ -30,7 +30,7 @@ fn test_pc_basic() {
 #[available_gas(20000000)]
 fn test_pc_gets_updated_properly_1() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     // When
     machine.set_pc(9000);
@@ -63,7 +63,7 @@ fn test_exec_mload_should_load_a_value_from_memory_with_offset_larger_than_msize
 
 fn assert_mload(value: u256, offset: u256, expected_value: u256, expected_memory_size: u32) {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.memory.store(value, 0);
 
     machine.stack.push(offset);
@@ -81,7 +81,7 @@ fn assert_mload(value: u256, offset: u256, expected_value: u256, expected_memory
 #[available_gas(20000000)]
 fn test_exec_pop_should_pop_an_item_from_stack() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(0x01);
     machine.stack.push(0x02);
@@ -99,7 +99,7 @@ fn test_exec_pop_should_pop_an_item_from_stack() {
 #[available_gas(20000000)]
 fn test_exec_pop_should_stack_underflow() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     // When
     let result = machine.exec_pop();
@@ -115,7 +115,7 @@ fn test_exec_pop_should_stack_underflow() {
 #[available_gas(20000000)]
 fn test_exec_mstore_should_store_max_uint256_offset_0() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(BoundedInt::<u256>::max());
     machine.stack.push(0x00);
@@ -134,7 +134,7 @@ fn test_exec_mstore_should_store_max_uint256_offset_0() {
 #[available_gas(20000000)]
 fn test_exec_mstore_should_store_max_uint256_offset_1() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(BoundedInt::<u256>::max());
     machine.stack.push(0x01);
@@ -153,7 +153,7 @@ fn test_exec_mstore_should_store_max_uint256_offset_1() {
 #[available_gas(20000000)]
 fn test_exec_mstore8_should_store_uint8_offset_31() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(0xAB);
     machine.stack.push(31);
@@ -172,7 +172,7 @@ fn test_exec_mstore8_should_store_uint8_offset_31() {
 #[available_gas(20000000)]
 fn test_exec_mstore8_should_store_uint8_offset_30() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(0xAB);
     machine.stack.push(30);
@@ -191,7 +191,7 @@ fn test_exec_mstore8_should_store_uint8_offset_30() {
 #[available_gas(20000000)]
 fn test_exec_mstore8_should_store_uint8_offset_31_then_uint8_offset_30() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(0xAB);
     machine.stack.push(30);
@@ -213,7 +213,7 @@ fn test_exec_mstore8_should_store_uint8_offset_31_then_uint8_offset_30() {
 #[available_gas(20000000)]
 fn test_exec_mstore8_should_store_last_uint8_offset_31() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(0x123456789ABCDEF);
     machine.stack.push(31);
@@ -233,7 +233,7 @@ fn test_exec_mstore8_should_store_last_uint8_offset_31() {
 #[available_gas(20000000)]
 fn test_exec_mstore8_should_store_last_uint8_offset_63() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(0x123456789ABCDEF);
     machine.stack.push(63);
@@ -252,7 +252,7 @@ fn test_exec_mstore8_should_store_last_uint8_offset_63() {
 #[available_gas(20000000)]
 fn test_msize_initial() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     // When
     let result = machine.exec_msize();
@@ -267,7 +267,7 @@ fn test_msize_initial() {
 #[available_gas(20000000)]
 fn test_exec_msize_store_max_offset_0() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.memory.store(BoundedInt::<u256>::max(), 0x00);
 
     // When
@@ -283,7 +283,7 @@ fn test_exec_msize_store_max_offset_0() {
 #[available_gas(20000000)]
 fn test_exec_msize_store_max_offset_1() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.memory.store(BoundedInt::<u256>::max(), 0x01);
 
     // When
@@ -527,7 +527,7 @@ fn test_exec_jumpi_inside_pushn() {
 #[available_gas(20000000)]
 fn test_exec_sload_from_state() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     let key: u256 = 0x100000000000000000000000000000001;
     let value = 0x02;
     // `evm_address` must match the one used to instantiate the machine
@@ -549,8 +549,9 @@ fn test_exec_sload_from_state() {
 fn test_exec_sload_from_storage() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let mut machine = setup_machine();
-    let mut ca_address = deploy_contract_account(machine.address().evm, array![].span());
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut ca_address = ContractAccountTrait::deploy(machine.address().evm, array![].span())
+        .unwrap();
     let account = Account {
         account_type: AccountType::ContractAccount,
         address: ca_address,
@@ -577,7 +578,7 @@ fn test_exec_sload_from_storage() {
 #[available_gas(2000000)]
 fn test_exec_sstore_from_state() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
     machine.stack.push(value);
@@ -619,7 +620,7 @@ fn test_exec_sstore_finalized() {
     // Setting the contract address is required so that `get_contract_address` in
     // `CA::deploy` returns the kakarot address
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     // Deploys the contract account to be able to commit storage changes.
     let ca_address = deploy_contract_account(machine.address().evm, array![].span());
     let account = Account {
@@ -647,7 +648,7 @@ fn test_exec_sstore_finalized() {
 #[available_gas(20000000)]
 fn test_gas_should_push_gas_limit_to_stack() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     // When
     machine.exec_gas().unwrap();

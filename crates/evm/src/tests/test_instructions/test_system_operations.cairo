@@ -18,7 +18,7 @@ use evm::model::{AccountTrait, Address, AccountType, Transfer};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, State};
 use evm::tests::test_utils::{
-    MachineBuilderImpl, setup_machine, initialize_contract_account, native_token, evm_address
+    MachineBuilderImpl, initialize_contract_account, native_token, evm_address
 };
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::EthAddress;
@@ -60,7 +60,7 @@ fn test_exec_return() {
 #[available_gas(20000000)]
 fn test_exec_revert() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     // When
     machine.stack.push(1000);
     machine.stack.push(0);

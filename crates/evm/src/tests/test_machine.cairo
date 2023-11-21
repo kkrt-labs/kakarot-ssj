@@ -1,10 +1,7 @@
 use evm::context::{CallContextTrait, ExecutionContextType, ExecutionContextTrait};
 use evm::errors::{EVMError, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineCurrentContextTrait};
-use evm::tests::test_utils::{
-    evm_address, setup_machine, starknet_address, setup_execution_context, MachineBuilderImpl,
-    test_address
-};
+use evm::tests::test_utils::{evm_address, starknet_address, MachineBuilderImpl, test_address};
 
 
 #[test]
@@ -31,7 +28,8 @@ fn test_set_current_ctx() {
     assert(machine.memory.active_segment == 0, 'wrong initial memory segment');
 
     // Create another context with id=1
-    let mut second_ctx = setup_execution_context();
+    let mut second_machine = MachineBuilderImpl::new_with_presets().build();
+    let mut second_ctx = second_machine.current_ctx.unbox();
     second_ctx.ctx_type = ExecutionContextType::Call(1);
 
     machine.set_current_ctx(second_ctx);
@@ -133,7 +131,7 @@ fn test_call_context_properties() {
 #[available_gas(20000000)]
 fn test_addresses() {
     let expected_address = test_address();
-    let mut machine: Machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     let evm_address = machine.address();
     assert(evm_address == expected_address, 'wrong evm address');
