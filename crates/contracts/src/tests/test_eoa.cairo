@@ -15,6 +15,7 @@ mod test_external_owned_account {
         IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount,
         IUninitializedAccount
     };
+    use core::starknet::account::{Call, AccountContractDispatcher, AccountContractDispatcherTrait};
     use evm::model::{Address, AddressTrait};
     use evm::tests::test_utils::{kakarot_address, evm_address, eoa_address, chain_id};
     use starknet::class_hash::Felt252TryIntoClassHash;
@@ -23,6 +24,8 @@ mod test_external_owned_account {
         deploy_syscall, ContractAddress, ClassHash, get_contract_address, contract_address_const,
         EthAddress
     };
+    use utils::helpers::U8SpanExTrait;
+    use utils::tests::test_data::eip_2930_encoded_tx;
 
     fn deploy_eoa(eoa_address: EthAddress) -> IExternallyOwnedAccountDispatcher {
         let kakarot_address = get_contract_address();
@@ -102,5 +105,45 @@ mod test_external_owned_account {
             .unwrap();
 
         eoa_contract.upgrade(new_class_hash);
+    }
+
+    #[test]
+    #[available_gas(2000000000)]
+    fn test_execute() {
+        let (_, kakarot) = setup_contracts_for_testing();
+        let kakarot_address = kakarot.contract_address;
+
+        let eoa_contract = deploy_eoa(eoa_address());
+        let eoa_contract = AccountContractDispatcher {
+            contract_address: eoa_contract.contract_address
+        };
+
+        let encoded_tx = eip_2930_encoded_tx();
+
+        let call = Call {
+            to: kakarot_address,
+            selector: selector!("eth_send_transaction"),
+            calldata: encoded_tx.to_felt252_array()
+        };
+
+        let result = eoa_contract.__execute__(array![call]);
+
+        //todo(harsh): once eth_send_transaction is merged, update the assert
+        assert(result == array![array![].span()], 'result is not correct');
+    }
+
+    #[test]
+    #[available_gas(2000000000)]
+    #[should_panic(expected: ('calls length is not 1', 'ENTRYPOINT_FAILED'))]
+    fn test_execute_should_fail_with_zero_calls() {
+        let (_, kakarot) = setup_contracts_for_testing();
+        let kakarot_address = kakarot.contract_address;
+
+        let eoa_contract = deploy_eoa(eoa_address());
+        let eoa_contract = AccountContractDispatcher {
+            contract_address: eoa_contract.contract_address
+        };
+
+        eoa_contract.__execute__(array![]);
     }
 }

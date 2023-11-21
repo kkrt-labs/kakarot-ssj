@@ -224,7 +224,7 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
 }
 
 #[generate_trait]
-impl EthTransactionImpl of EthTransaction {
+impl EthTransactionImpl of EthTransactionTrait {
     /// Decode a raw Ethereum transaction
     /// This function decodes a raw Ethereum transaction. It checks if the transaction
     /// is a legacy transaction or a modern transaction, and calls the appropriate decode function
@@ -254,7 +254,7 @@ impl EthTransactionImpl of EthTransaction {
     ) -> Result<bool, EthTransactionError> {
         let TransactionMetadata{address, account_nonce, chain_id, signature } = tx_metadata;
 
-        let decoded_tx = EthTransaction::decode(encoded_tx_data)?;
+        let decoded_tx = EthTransactionTrait::decode(encoded_tx_data)?;
 
         if (decoded_tx.nonce != account_nonce) {
             return Result::Err(EthTransactionError::IncorrectAccountNonce);

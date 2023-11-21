@@ -17,11 +17,15 @@ trait IExternallyOwnedAccount<TContractState> {
 mod ExternallyOwnedAccount {
     use contracts::components::upgradeable::IUpgradeable;
     use contracts::components::upgradeable::upgradeable_component;
+    use contracts::eoa::IExternallyOwnedAccount;
+    use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use starknet::account::{Call, AccountContract};
 
     use starknet::{
         ContractAddress, EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address
     };
+    use utils::eth_transaction::{EthTransactionTrait, EthereumTransaction};
+    use utils::helpers::{Felt252SpanExTrait, U8SpanExTrait};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
@@ -100,14 +104,30 @@ mod ExternallyOwnedAccount {
 
 
         fn __execute__(ref self: ContractState, calls: Array<Call>) -> Array<Span<felt252>> {
-            // TODO
+            assert(calls.len() == 1, 'calls length is not 1');
 
-            // Step 1:
-            // Decode RLP-encoded transaction
-            // Step 2:
-            // Call KakarotCore.send_eth_transaction with correct params
+            let call = calls.at(0);
+            let call_data = call.calldata.span().to_bytes();
 
-            array![]
+            let EthereumTransaction{nonce,
+            gas_price,
+            gas_limit,
+            destination,
+            amount,
+            calldata,
+            chain_id } =
+                EthTransactionTrait::decode(
+                call_data.span()
+            )
+                .unwrap();
+
+            let kakarot_core_dispatcher = IKakarotCoreDispatcher {
+                contract_address: self.kakarot_core_address()
+            };
+            let result = kakarot_core_dispatcher
+                .eth_send_transaction(destination, gas_limit, gas_price, amount, calldata);
+
+            array![result.to_felt252_array().span()]
         }
     }
 

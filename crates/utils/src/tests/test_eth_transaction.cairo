@@ -1,7 +1,7 @@
 use core::starknet::eth_signature::{EthAddress, Signature};
 
 use utils::eth_transaction::{
-    EthTransaction, EncodedTransactionTrait, EncodedTransaction, TransactionMetadata,
+    EthTransactionTrait, EncodedTransactionTrait, EncodedTransaction, TransactionMetadata,
     EthTransactionError
 };
 use utils::helpers::{U32Trait};
@@ -141,7 +141,7 @@ fn test_validate_legacy_tx() {
 
     let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
+    let result = EthTransactionTrait::validate_eth_tx(validate_tx_param, encoded_tx_data)
         .expect('signature verification failed');
     assert(result == true, 'result is not true');
 }
@@ -163,7 +163,7 @@ fn test_validate_eip_2930_tx() {
 
     let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
+    let result = EthTransactionTrait::validate_eth_tx(validate_tx_param, encoded_tx_data)
         .expect('signature verification failed');
     assert(result == true, 'result is not true');
 }
@@ -185,7 +185,7 @@ fn test_validate_eip_1559_tx() {
 
     let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
+    let result = EthTransactionTrait::validate_eth_tx(validate_tx_param, encoded_tx_data)
         .expect('signature verification failed');
     assert(result == true, 'result is not true');
 }
@@ -209,7 +209,7 @@ fn test_validate_should_fail_for_wrong_account_id() {
         address, account_nonce: wrong_account_nonce, chain_id, signature
     };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
+    let result = EthTransactionTrait::validate_eth_tx(validate_tx_param, encoded_tx_data)
         .expect_err('expected to fail');
     assert(result == EthTransactionError::IncorrectAccountNonce, 'result is not true');
 }
@@ -233,7 +233,7 @@ fn test_validate_should_fail_for_wrong_chain_id() {
         address, account_nonce, chain_id: wrong_chain_id, signature
     };
 
-    let result = EthTransaction::validate_eth_tx(validate_tx_param, encoded_tx_data)
+    let result = EthTransactionTrait::validate_eth_tx(validate_tx_param, encoded_tx_data)
         .expect_err('expected to fail');
     assert(result == EthTransactionError::IncorrectChainId, 'result is not true');
 }
