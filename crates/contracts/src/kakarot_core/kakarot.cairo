@@ -255,17 +255,7 @@ mod KakarotCore {
 
             let from = Address { evm: from, starknet: self.compute_starknet_address(from) };
 
-            let to = match to {
-                Option::Some(to) => {
-                    let target_starknet_address = self.compute_starknet_address(to);
-                    Option::Some(Address { evm: to, starknet: target_starknet_address })
-                },
-                Option::None => Option::None
-            };
-
-            let result = KakarotInternal::handle_execute(
-                :from, :to, :gas_limit, :gas_price, :value, :data
-            );
+            let result = self.handle_call(:from, :to, :gas_limit, :gas_price, :value, :data);
             match result {
                 Result::Ok(result) => result.return_data,
                 // TODO: Return the error message as Bytes in the response
@@ -296,17 +286,7 @@ mod KakarotCore {
                 .expect('Fetching EOA failed');
             assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
 
-            let to = match to {
-                Option::Some(to) => {
-                    let target_starknet_address = self.compute_starknet_address(to);
-                    Option::Some(Address { evm: to, starknet: target_starknet_address })
-                },
-                Option::None(_) => Option::None(())
-            };
-
-            let mut result = KakarotInternal::handle_execute(
-                :from, :to, :gas_limit, :gas_price, :value, :data
-            );
+            let mut result = self.handle_call(:from, :to, :gas_limit, :gas_price, :value, :data);
             match result {
                 Result::Ok(result) => {
                     let mut state = result.state;
@@ -358,46 +338,6 @@ mod KakarotCore {
         }
     }
 
-    mod KakarotInternal {
-        use evm::errors::EVMError;
-        use evm::execution::execute;
-        use evm::model::{ExecutionResult, Address, AccountTrait};
-
-        fn handle_execute(
-            from: Address,
-            to: Option<Address>,
-            gas_limit: u128,
-            gas_price: u128,
-            value: u256,
-            data: Span<u8>
-        ) -> Result<ExecutionResult, EVMError> {
-            match to {
-                //TODO we can optimize this by doing this one step later, when we load the account from the state. This way we can avoid loading the account bytecode twice.
-                Option::Some(to) => {
-                    let bytecode = AccountTrait::fetch_or_create(to.evm)?.code;
-                    let execution_result = execute(
-                        from,
-                        to,
-                        :bytecode,
-                        calldata: data,
-                        :value,
-                        :gas_price,
-                        :gas_limit,
-                        read_only: false,
-                    );
-                    return Result::Ok(execution_result);
-                },
-                Option::None => {
-                    let bytecode = data;
-                    // TODO: compute_evm_address
-                    // HASH(RLP(deployer_address, deployer_nonce))[0..20]
-                    //TODO manually set target account type to CA in state
-                    panic_with_felt252('deploy tx flow unimplemented')
-                },
-            }
-        }
-    }
-
     #[generate_trait]
     impl KakarotCoreInternalImpl of KakarotCoreInternal {
         fn is_view(self: @ContractState) -> bool {
@@ -418,6 +358,45 @@ mod KakarotCore {
             ref self: ContractState, evm_address: EthAddress, account: StoredAccountType
         ) {
             self.address_registry.write(evm_address, account);
+        }
+
+        fn handle_call(
+            self: @ContractState,
+            from: Address,
+            to: Option<EthAddress>,
+            gas_limit: u128,
+            gas_price: u128,
+            value: u256,
+            data: Span<u8>
+        ) -> Result<ExecutionResult, EVMError> {
+            match to {
+                //TODO we can optimize this by doing this one step later, when we load the account from the state. This way we can avoid loading the account bytecode twice.
+                Option::Some(to) => {
+                    let bytecode = AccountTrait::fetch_or_create(to)?.code;
+
+                    let target_starknet_address = self.compute_starknet_address(to);
+                    let to = Address { evm: to, starknet: target_starknet_address };
+
+                    let execution_result = execute(
+                        from,
+                        to,
+                        :bytecode,
+                        calldata: data,
+                        :value,
+                        :gas_price,
+                        :gas_limit,
+                        read_only: false,
+                    );
+                    return Result::Ok(execution_result);
+                },
+                Option::None => {
+                    let bytecode = data;
+                    // TODO: compute_evm_address
+                    // HASH(RLP(deployer_address, deployer_nonce))[0..20]
+                    //TODO manually set target account type to CA in state
+                    panic_with_felt252('deploy tx flow unimplemented')
+                },
+            }
         }
     }
 }
