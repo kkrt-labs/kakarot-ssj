@@ -1,5 +1,4 @@
 use core::box::BoxTrait;
-use evm::tests::test_utils::MachineBuilderTrait;
 use core::nullable::{NullableTrait, null};
 use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
@@ -8,6 +7,7 @@ use evm::context::{
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Event, Address};
 use evm::stack::{Stack, StackTrait};
+use evm::tests::test_utils::MachineBuilderTrait;
 use evm::tests::test_utils::{MachineBuilderImpl, CallContextPartialEq};
 use evm::tests::test_utils;
 use starknet::testing::{set_contract_address, set_caller_address};

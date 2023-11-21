@@ -12,8 +12,7 @@ use evm::model::{Account, AccountType};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
-    MachineBuilderImpl, evm_address, callvalue, return_from_subcontext, native_token,
-    other_address
+    MachineBuilderImpl, evm_address, callvalue, return_from_subcontext, native_token, other_address
 };
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
@@ -556,7 +555,6 @@ fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
 fn test_gasprice() {
     // Given
     let mut machine = MachineBuilderImpl::new_with_presets().build();
-
 
     // When
     machine.exec_gasprice();
