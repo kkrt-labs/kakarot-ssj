@@ -259,7 +259,7 @@ mod KakarotCore {
                     let target_starknet_address = self.compute_starknet_address(to);
                     Option::Some(Address { evm: to, starknet: target_starknet_address })
                 },
-                Option::None(_) => Option::None(())
+                Option::None => Option::None
             };
 
             let result = KakarotInternal::handle_execute(
@@ -283,11 +283,13 @@ mod KakarotCore {
         ) -> Span<u8> {
             let starknet_caller_address = get_caller_address();
             let account = IContractAccountDispatcher { contract_address: starknet_caller_address };
-            let from = account.evm_address();
+            let from = Address { evm: account.evm_address(), starknet: starknet_caller_address };
 
-            let from = Address { evm: from, starknet: starknet_caller_address };
-
-            // Invariant
+            // Invariant:
+            // We want to make sure the caller is part of the Kakarot address_registry
+            // and is an EOA. Contracts are added to the registry ONLY if there are
+            // part of the Kakarot system and thus deployed by the main Kakarot contract
+            // itself.
             let (caller_account_type, caller_starknet_address) = self
                 .address_registry(from.evm)
                 .expect('Fetching EOA failed');

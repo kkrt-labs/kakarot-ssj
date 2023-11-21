@@ -304,6 +304,8 @@ fn test_eth_call() {
         test_utils::other_evm_address(), counter_evm_bytecode()
     )
         .unwrap();
+    let counter = IContractAccountDispatcher { contract_address: account.starknet };
+    counter.set_storage_at(0, 1);
 
     let to = Option::Some(test_utils::other_evm_address());
     let gas_limit = test_utils::gas_limit();
@@ -317,7 +319,7 @@ fn test_eth_call() {
         .eth_call(from: evm_address, :to, :gas_limit, :gas_price, :value, :data);
 
     // Then
-    assert(return_data == u256_to_bytes_array(0).span(), 'wrong result');
+    assert(return_data == u256_to_bytes_array(1).span(), 'wrong result');
 }
 
 
