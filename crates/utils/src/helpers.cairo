@@ -957,6 +957,27 @@ impl ResultExImpl<T, E, +Drop<T>, +Drop<E>> of ResultExTrait<T, E> {
     }
 }
 
+#[generate_trait]
+impl SpanFelt252Impl of SpanFelt252Trait {
+    fn to_bytes(self: Span<felt252>) -> Span<u8> {
+        let mut i = 0;
+        let mut bytes: Array<u8> = Default::default();
+
+        loop {
+            if (i == self.len()) {
+                break ();
+            };
+
+            let v: u8 = (*self[i]).try_into().unwrap();
+            bytes.append(v);
+
+            i += 1;
+        };
+
+        bytes.span()
+    }
+}
+
 fn compute_starknet_address(
     deployer: ContractAddress, evm_address: EthAddress, class_hash: ClassHash
 ) -> ContractAddress {
