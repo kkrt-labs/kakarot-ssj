@@ -49,12 +49,13 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
 
         // TODO(state): when the tx starts,
         // store get_tx_info().unbox().nonce inside the sender account nonce
-        let sender_nonce: u64 = get_tx_info().unbox().nonce.try_into().unwrap();
+        // so that we can call self.nonce() instead of get_tx_info().unbox().nonce
 
         let to = match create_type {
-            CreateType::CreateOrDeployTx => compute_contract_address(
-                self.address().evm, sender_nonce
-            ),
+            CreateType::CreateOrDeployTx => {
+                let nonce = self.state.get_account(self.address().evm)?.nonce();
+                compute_contract_address(self.address().evm, sender_nonce: nonce)
+            },
             CreateType::Create2 => compute_create2_contract_address(
                 self.address().evm, salt: self.stack.pop()?, bytecode: bytecode.span()
             )?,
