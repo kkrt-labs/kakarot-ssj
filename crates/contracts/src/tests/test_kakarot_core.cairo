@@ -5,8 +5,7 @@ use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::kakarot_core::interface::IKakarotCore;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
-    interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore,
-    KakarotCore::{KakarotCoreInternal, KakarotInternal},
+    interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
 };
 use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_upgradeable::{
@@ -337,8 +336,7 @@ fn test_handle_execute() {
     )
         .unwrap();
 
-    let to = test_utils::other_evm_address();
-    let to = Option::Some(Address { evm: to, starknet: kakarot_core.compute_starknet_address(to) });
+    let to = Option::Some(test_utils::other_evm_address());
     let gas_limit = test_utils::gas_limit();
     let gas_price = test_utils::gas_price();
     let value = 0;
@@ -346,15 +344,16 @@ fn test_handle_execute() {
     let data = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // When
-
-    let result = KakarotInternal::handle_execute(
-        from: Address { evm: evm_address, starknet: eoa },
-        :to,
-        :gas_limit,
-        :gas_price,
-        :value,
-        :data
-    )
+    let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
+    let result = kakarot_core
+        .handle_call(
+            from: Address { evm: evm_address, starknet: eoa },
+            :to,
+            :gas_limit,
+            :gas_price,
+            :value,
+            :data
+        )
         .expect('handle_call failed');
     let return_data = result.return_data;
 
