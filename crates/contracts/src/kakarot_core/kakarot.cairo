@@ -19,6 +19,7 @@ mod KakarotCore {
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
+    use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
     use core::starknet::SyscallResultTrait;
@@ -32,8 +33,8 @@ mod KakarotCore {
     use evm::model::{ExecutionResult, Address, AddressTrait};
     use evm::state::StateTrait;
     use starknet::{
-        EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address,
-        get_caller_address, deploy_syscall
+        EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall,
+        get_caller_address
     };
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use super::{StoredAccountType};
