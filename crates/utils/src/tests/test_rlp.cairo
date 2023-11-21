@@ -101,17 +101,19 @@ fn test_rlp_encode_empty_sequence() {
     assert(res.len() == 1, 'wrong len');
     assert(*res[0] == 0x80, 'wrong encoded value');
 }
-//TODO test encode sequence of strings
 
 #[test]
 #[available_gas(20000000)]
-fn test_rlp_encode_string_empty_input() {
-    let mut input: Array<u8> = Default::default();
+fn test_rlp_encode_string_sequence() {
+    let mut input: Array<Span<u8>> = Default::default();
+    let cat = RLPItem::String(array![0x63, 0x61, 0x74].span());
+    let dog = RLPItem::String(array![0x64, 0x6f, 0x67].span());
+    let input = array![cat, dog];
 
-    let res = RLPTrait::encode_string(input.span());
+    let encoding = RLPTrait::encode_sequence(input.span());
 
-    assert(res.len() == 1, 'wrong len');
-    assert(*res[0] == 0x80, 'wrong encoded value');
+    let expected = array![0xc8, 0x83, 0x63, 0x61, 0x74, 0x83, 0x64, 0x6f, 0x67].span();
+    assert(expected == encoding, 'wrong rlp encoding')
 }
 
 #[test]
