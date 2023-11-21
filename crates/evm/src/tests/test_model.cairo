@@ -136,6 +136,23 @@ fn test_account_exists_undeployed() {
     assert(account.exists() == false, 'account should be deployed');
 }
 
+#[test]
+#[available_gas(5000000)]
+fn test_account_exists_account_to_deploy() {
+    // Given
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+
+    // When
+    let mut account = AccountTrait::fetch_or_create(evm_address()).unwrap();
+    // Mock account as an existing contract account in the cached state.
+    account.account_type = AccountType::ContractAccount;
+    account.nonce = 1;
+    account.code = array![0x1].span();
+
+    // Then
+    assert(account.exists() == true, 'account should exist');
+}
+
 
 #[test]
 #[available_gas(5000000)]

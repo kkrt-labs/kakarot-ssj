@@ -92,12 +92,15 @@ impl RLPImpl of RLPTrait {
             result.append_span(joined_encodings.span());
             return result.span();
         } else {
-            let bytes_count_len_joined_encodings = len_joined_encodings.bytes_used();
-            let len_joined_encodings: Span<u8> = len_joined_encodings.to_bytes();
-            let mut result = array![0xF7 + bytes_count_len_joined_encodings];
-            result.append_span(len_joined_encodings);
-            result.append_span(joined_encodings.span());
-            return result.span();
+            // Actual implementation of long list encoding is commented out
+            // as we should never reach this point in the current implementation
+            // let bytes_count_len_joined_encodings = len_joined_encodings.bytes_used();
+            // let len_joined_encodings: Span<u8> = len_joined_encodings.to_bytes();
+            // let mut result = array![0xF7 + bytes_count_len_joined_encodings];
+            // result.append_span(len_joined_encodings);
+            // result.append_span(joined_encodings.span());
+            // return result.span();
+            return panic_with_felt252('Shouldnt encode long sequence');
         }
     }
 

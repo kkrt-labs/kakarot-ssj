@@ -241,6 +241,141 @@ fn test_rlp_encode_sequence() {
 }
 
 #[test]
+#[available_gas(20000000)]
+#[should_panic(expected: ('Shouldnt encode long sequence',))]
+fn test_rlp_encode_sequence_long_sequence() {
+    // encoding of a sequence with more than 55 bytes
+    let mut lorem_ipsum = RLPItem::String(
+        array![
+            0x4c,
+            0x6f,
+            0x72,
+            0x65,
+            0x6d,
+            0x20,
+            0x69,
+            0x70,
+            0x73,
+            0x75,
+            0x6d,
+            0x20,
+            0x64,
+            0x6f,
+            0x6c,
+            0x6f,
+            0x72,
+            0x20,
+            0x73,
+            0x69,
+            0x74,
+            0x20,
+            0x61,
+            0x6d,
+            0x65,
+            0x74,
+            0x2c,
+            0x20,
+            0x63,
+            0x6f,
+            0x6e,
+            0x73,
+            0x65,
+            0x63,
+            0x74,
+            0x65,
+            0x74,
+            0x75,
+            0x72,
+            0x20,
+            0x61,
+            0x64,
+            0x69,
+            0x70,
+            0x69,
+            0x73,
+            0x69,
+            0x63,
+            0x69,
+            0x6e,
+            0x67,
+            0x20,
+            0x65,
+            0x6c,
+            0x69,
+            0x74
+        ]
+            .span()
+    );
+    let input = array![lorem_ipsum].span();
+    let encoding = RLPTrait::encode_sequence(input);
+
+    let expected = array![
+        0xf8,
+        0x3a,
+        0xb8,
+        0x38,
+        0x4c,
+        0x6f,
+        0x72,
+        0x65,
+        0x6d,
+        0x20,
+        0x69,
+        0x70,
+        0x73,
+        0x75,
+        0x6d,
+        0x20,
+        0x64,
+        0x6f,
+        0x6c,
+        0x6f,
+        0x72,
+        0x20,
+        0x73,
+        0x69,
+        0x74,
+        0x20,
+        0x61,
+        0x6d,
+        0x65,
+        0x74,
+        0x2c,
+        0x20,
+        0x63,
+        0x6f,
+        0x6e,
+        0x73,
+        0x65,
+        0x63,
+        0x74,
+        0x65,
+        0x74,
+        0x75,
+        0x72,
+        0x20,
+        0x61,
+        0x64,
+        0x69,
+        0x70,
+        0x69,
+        0x73,
+        0x69,
+        0x63,
+        0x69,
+        0x6e,
+        0x67,
+        0x20,
+        0x65,
+        0x6c,
+        0x69,
+        0x74
+    ]
+        .span();
+    assert(expected == encoding, 'wrong rlp encoding')
+}
+
+#[test]
 #[available_gas(99999999)]
 fn test_rlp_decode_string_default_value() {
     let mut arr = array![0x80];
