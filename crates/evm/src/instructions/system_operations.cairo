@@ -112,7 +112,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// CALLCODE
     /// # Specification: https://www.evm.codes/#f2?fork=shanghai
     fn exec_callcode(ref self: Machine) -> Result<(), EVMError> {
-        let call_args = self.prepare_call(@CallType::DelegateCall)?;
+        let call_args = self.prepare_call(@CallType::CallCode)?;
         let read_only = self.read_only();
 
         // Initialize the sub context.
