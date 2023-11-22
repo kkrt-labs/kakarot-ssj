@@ -3,8 +3,7 @@ version = 1
 
 [[package]]
 name = "alexandria_storage"
-version = "0.3.0"
-source = "git+https://github.com/keep-starknet-strange/alexandria.git?rev=01a7690dc25d19a086f525b8ce66aa505c8e7527#01a7690dc25d19a086f525b8ce66aa505c8e7527"
+version = "0.1.0"
 
 [[package]]
 name = "contracts"
