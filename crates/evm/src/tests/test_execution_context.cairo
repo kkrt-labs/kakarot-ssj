@@ -4,6 +4,7 @@ use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
     DefaultOptionSpanU8
 };
+use evm::machine::{MachineCurrentContextTrait};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Event, Address};
 use evm::stack::{Stack, StackTrait};
@@ -57,7 +58,7 @@ fn test_call_context_new() {
 fn test_execution_context_new() {
     let mut machine = MachineBuilderImpl::new_with_presets().build();
     // Given
-    let call_ctx = machine.current_ctx.unbox().call_ctx();
+    let call_ctx = machine.call_ctx();
     let context_id = ExecutionContextType::Root;
     let program_counter: u32 = 0;
 
