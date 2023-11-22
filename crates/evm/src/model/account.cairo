@@ -178,42 +178,54 @@ impl AccountImpl of AccountTrait {
     ///
     /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
     fn commit(self: @Account) -> Result<(), EVMError> {
-        // Case account exists and is already on chain
+        // The account can be deployed already, but can be `should_deploy` as well if we're deploying on a previously selfdestructed account.
         let is_deployed = self.address().evm.is_deployed();
 
-        if is_deployed {
-            match self.account_type {
-                AccountType::EOA(eoa) => {
-                    // no - op
-                    Result::Ok(())
-                },
-                AccountType::ContractAccount => {
-                    if *self.selfdestruct {
-                        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-                        kakarot_state
-                            .set_address_registry(
-                                self.address().evm, StoredAccountType::UnexistingAccount
-                            );
-                        return ContractAccountTrait::selfdestruct(self);
-                    }
-                    self.store_nonce(*self.nonce)
-                //Storage is handled outside of the account and must be commited after all accounts are commited.
-                },
-                AccountType::Unknown => { Result::Ok(()) }
+        // If a Starknet account is already deployed for this evm address, we
+        // should "EVM-Deploy" only if the bytecode length is different (!=0) or the nonce is different.
+        let should_deploy = if is_deployed {
+            let deployed_bytecode_len = ContractAccountTrait::fetch_bytecode_length(self)?;
+            let deployed_nonce = ContractAccountTrait::fetch_nonce(self)?;
+            if (deployed_bytecode_len != self.bytecode().len() || deployed_nonce != *self.nonce) {
+                true
+            } else {
+                false
             }
-        } else if self.should_deploy() {
+            true
+        } else {
+            // Otherwise, the deploy condition is simply has_code_or_nonce.
+            self.should_deploy()
+        };
+
+        if should_deploy {
             // If SELFDESTRUCT, deploy empty SN account
             let (initial_nonce, initial_code) = if (*self.selfdestruct == true) {
                 (0, Default::default().span())
             } else {
                 (*self.nonce, *self.code)
             };
-            ContractAccountTrait::deploy(self.address().evm, initial_nonce, initial_code)?;
-            Result::Ok(())
+            ContractAccountTrait::deploy(
+                self.address().evm,
+                initial_nonce,
+                initial_code,
+                deploy_starknet_contract: !is_deployed
+            )?;
+            return Result::Ok(());
         //Storage is handled outside of the account and must be commited after all accounts are commited.
-        } else {
-            Result::Ok(())
-        }
+        };
+
+        // If the account was not scheduled for deployment - then update it if it's deployed.
+        if is_deployed {
+            // Only CAs have components commited on starknet.
+            if self.is_ca() {
+                if *self.selfdestruct {
+                    return ContractAccountTrait::selfdestruct(self);
+                }
+                self.store_nonce(*self.nonce);
+            };
+            return Result::Ok(());
+        };
+        return Result::Ok(());
     }
 
     #[inline(always)]

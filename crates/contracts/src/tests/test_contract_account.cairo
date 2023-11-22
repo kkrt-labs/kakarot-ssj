@@ -7,9 +7,8 @@ use evm::tests::test_utils::{ca_address, native_token};
 #[available_gas(3000000000)]
 fn test_ca_deploy() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let contract_account = deploy_contract_account(
-        kakarot_core.contract_address, Default::default().span()
-    );
+    let ca_address = deploy_contract_account(ca_address(), Default::default().span());
+    let contract_account = IContractAccountDispatcher { contract_address: ca_address.starknet };
 
     let initial_bytecode = contract_account.bytecode();
     assert(initial_bytecode.is_empty(), 'bytecode should be empty');
@@ -24,7 +23,8 @@ fn test_ca_deploy() {
 fn test_ca_bytecode() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let bytecode = counter_evm_bytecode();
-    let contract_account = deploy_contract_account(kakarot_core.contract_address, bytecode);
+    let ca_address = deploy_contract_account(ca_address(), bytecode);
+    let contract_account = IContractAccountDispatcher { contract_address: ca_address.starknet };
 
     let contract_bytecode = contract_account.bytecode();
     assert(contract_bytecode == bytecode, 'wrong contract bytecode');
@@ -35,9 +35,8 @@ fn test_ca_bytecode() {
 #[available_gas(3000000000)]
 fn test_ca_nonce() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let contract_account = deploy_contract_account(
-        kakarot_core.contract_address, Default::default().span()
-    );
+    let ca_address = deploy_contract_account(ca_address(), Default::default().span());
+    let contract_account = IContractAccountDispatcher { contract_address: ca_address.starknet };
 
     let initial_nonce = contract_account.nonce();
     assert(initial_nonce == 1, 'nonce should be 1');
@@ -55,9 +54,8 @@ fn test_ca_nonce() {
 #[available_gas(3000000000)]
 fn test_ca_storage() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let contract_account = deploy_contract_account(
-        kakarot_core.contract_address, Default::default().span()
-    );
+    let ca_address = deploy_contract_account(ca_address(), Default::default().span());
+    let contract_account = IContractAccountDispatcher { contract_address: ca_address.starknet };
 
     let storage_slot = 0x555;
 

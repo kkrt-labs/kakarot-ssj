@@ -13,6 +13,10 @@ trait IContractAccount<TContractState> {
     /// Getter for CA bytecode
     fn bytecode(self: @TContractState) -> Span<u8>;
 
+
+    /// Getter for CA bytecode length
+    fn bytecode_len(self: @TContractState) -> usize;
+
     /// Set the bytecode of a contract account
     fn set_bytecode(ref self: TContractState, bytecode: Span<u8>);
 
@@ -134,6 +138,14 @@ mod ContractAccount {
                     .expect(BYTECODE_READ_ERROR)
             };
             bytecode.into_bytes()
+        }
+
+        fn bytecode_len(self: @ContractState) -> usize {
+            let bytecode_list: List<bytes31> = ListTrait::fetch(
+                0, self.contract_account_bytecode.address()
+            )
+                .expect('failed to fetch bytecode');
+            bytecode_list.len()
         }
 
         fn set_bytecode(ref self: ContractState, bytecode: Span<u8>) {

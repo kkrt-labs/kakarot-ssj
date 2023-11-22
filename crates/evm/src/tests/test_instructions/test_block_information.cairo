@@ -2,7 +2,9 @@ use contracts::kakarot_core::interface::{
     IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
 
-use contracts::tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
+use contracts::tests::test_utils::{
+    setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
+};
 use evm::instructions::BlockInformationTrait;
 use evm::model::contract_account::ContractAccountTrait;
 use evm::stack::StackTrait;
@@ -155,8 +157,7 @@ fn test_exec_selfbalance_zero() {
 fn test_exec_selfbalance_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let mut ca_address = ContractAccountTrait::deploy(evm_address(), 1, array![].span())
-        .expect('failed deploy contract account',);
+    let mut ca_address = deploy_contract_account(evm_address(), array![].span());
 
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
     let mut machine = setup_machine();
