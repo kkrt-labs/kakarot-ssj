@@ -3,7 +3,7 @@ use core::option::OptionTrait;
 use core::traits::Into;
 
 use result::ResultTrait;
-use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT, RLP_PAYLOAD_TOO_LONG};
+use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use utils::rlp::{RLPType, RLPTrait, RLPItem};
 
 // Tests source : https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
@@ -79,32 +79,6 @@ fn test_rlp_decode_type_long_list_len_too_short() {
     assert(res.is_err(), 'Wrong type');
     assert(
         res.unwrap_err() == RLPError::InputTooShort(RLP_INPUT_TOO_SHORT), 'err != InputTooShort'
-    );
-}
-
-#[test]
-#[available_gas(99999999)]
-fn test_rlp_decode_type_long_string_payload_too_long() {
-    let mut arr = array![0xbf, 0x01, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02];
-
-    let res = RLPTrait::decode_type(arr.span());
-
-    assert(res.is_err(), 'Should have failed');
-    assert(
-        res.unwrap_err() == RLPError::PayloadTooLong(RLP_PAYLOAD_TOO_LONG), 'err != PayloadTooLong'
-    );
-}
-
-#[test]
-#[available_gas(99999999)]
-fn test_rlp_decode_type_long_list_payload_too_long() {
-    let mut arr = array![0xfc, 0x01, 0x02, 0x02, 0x02, 0x02];
-
-    let res = RLPTrait::decode_type(arr.span());
-
-    assert(res.is_err(), 'Should have failed');
-    assert(
-        res.unwrap_err() == RLPError::PayloadTooLong(RLP_PAYLOAD_TOO_LONG), 'err != PayloadTooLong'
     );
 }
 

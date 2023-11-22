@@ -1,8 +1,6 @@
 use core::byte_array::ByteArrayTrait;
 use core::result::ResultTrait;
-use utils::errors::{
-    RLPError, RLPHelpersError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT, RLP_PAYLOAD_TOO_LONG
-};
+use utils::errors::{RLPError, RLPHelpersError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use utils::helpers::{U32Trait, U256Impl, U128Impl, ArrayExtension};
 
 // Possible RLP types
@@ -45,9 +43,6 @@ impl RLPImpl of RLPTrait {
             Result::Ok((RLPType::String, 1, prefix_byte.into() - 0x80))
         } else if prefix_byte < 0xc0 { // Long String
             let len_bytes_count: u32 = (prefix_byte - 0xb7).into();
-            if len_bytes_count > 4 {
-                return Result::Err(RLPError::PayloadTooLong(RLP_PAYLOAD_TOO_LONG));
-            }
             if input_len <= len_bytes_count {
                 return Result::Err(RLPError::InputTooShort(RLP_INPUT_TOO_SHORT));
             }
@@ -59,9 +54,6 @@ impl RLPImpl of RLPTrait {
             Result::Ok((RLPType::List, 1, prefix_byte.into() - 0xc0))
         } else { // Long List
             let len_bytes_count = prefix_byte.into() - 0xf7;
-            if len_bytes_count > 4 {
-                return Result::Err(RLPError::PayloadTooLong(RLP_PAYLOAD_TOO_LONG));
-            }
             if input.len() <= len_bytes_count {
                 return Result::Err(RLPError::InputTooShort(RLP_INPUT_TOO_SHORT));
             }
@@ -167,7 +159,6 @@ impl RLPImpl of RLPTrait {
         match rlp_type {
             RLPType::String => {
                 if (len == 0) {
-                    // Empty strings are parsed as 0 for an integer
                     output.append(RLPItem::String(array![].span()));
                 } else {
                     output.append(RLPItem::String(input.slice(offset, len)));
