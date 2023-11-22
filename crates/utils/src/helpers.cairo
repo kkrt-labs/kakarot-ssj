@@ -15,7 +15,8 @@ use utils::constants::{
 use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 use utils::math::{Bitshift, WrappingBitshift};
 use utils::num::{Zero, One, SizeOf};
-use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256};
+use utils::traits::TryIntoResult;
+use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, U256TryIntoEthAddress};
 /// Ceils a number of bits to the next word (32 bytes)
 ///
 /// # Arguments
@@ -457,7 +458,7 @@ impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
                 Option::Some(elem) => self.append(*elem),
                 Option::None => { break; }
             };
-        }
+        };
     }
 
     /// Reverses an array
@@ -654,6 +655,65 @@ impl U32Impl of U32Trait {
         }
     }
 }
+
+
+#[generate_trait]
+impl U64Impl of U64Trait {
+    /// Unpacks a u64 into an array of bytes
+    /// # Arguments
+    /// * `self` a `u64` value.
+    /// # Returns
+    /// * The bytes array representation of the value.
+    fn to_bytes(mut self: u64) -> Array<u8> {
+        let bytes_used: u64 = self.bytes_used().into();
+        let mut bytes: Array<u8> = Default::default();
+        let mut i = 0;
+        loop {
+            if i == bytes_used {
+                break ();
+            }
+            let val = self.shr(8 * (bytes_used.try_into().unwrap() - i - 1));
+            bytes.append((val & 0xFF).try_into().unwrap());
+            i += 1;
+        };
+
+        bytes
+    }
+
+    /// Returns the number of bytes used to represent a `u64` value.
+    /// # Arguments
+    /// * `self` - The value to check.
+    /// # Returns
+    /// The number of bytes used to represent the value.
+    fn bytes_used(self: u64) -> u8 {
+        if self < 0x10000 { // 256^2
+            if self < 0x100 { // 256^1
+                return if self == 0 {
+                    0
+                } else {
+                    1
+                };
+            } else {
+                return if self < 0x1000 {
+                    2
+                } else {
+                    3
+                };
+            }
+        } else {
+            if self < 0x1000000 { // 256^6
+                return if self < 0x100000 {
+                    4
+                } else {
+                    5
+                };
+            } else {
+                return 6;
+            }
+        }
+    }
+}
+
 
 #[generate_trait]
 impl U128Impl of U128Trait {
@@ -930,8 +990,8 @@ fn compute_starknet_address(
 
 
 #[generate_trait]
-impl EthAddressExtTrait of EthAddressExt {
-    fn to_bytes(self: EthAddress) -> Span<u8> {
+impl EthAddressExImpl of EthAddressExTrait {
+    fn to_bytes(self: EthAddress) -> Array<u8> {
         let bytes_used: u256 = 20;
         let value: u256 = self.into();
         let mut bytes: Array<u8> = Default::default();
@@ -945,6 +1005,32 @@ impl EthAddressExtTrait of EthAddressExt {
             i += 1;
         };
 
-        bytes.span()
+        bytes
+    }
+
+    /// Packs 20 bytes into a EthAddress
+    /// # Arguments
+    /// * `input` a Span<u8> of len == 20
+    /// # Returns
+    /// * Option::Some(EthAddress) if the operation succeeds
+    /// * Option::None otherwise
+    fn from_bytes(input: Span<u8>) -> EthAddress {
+        let len = input.len();
+        if len != 20 {
+            panic_with_felt252('EthAddress::from_bytes != 20b')
+        }
+        let offset: u32 = len - 1;
+        let mut result: u256 = 0;
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: u256 = (*input.at(i)).into();
+            result += byte.shl((8 * (offset - i)).into());
+
+            i += 1;
+        };
+        result.try_into().unwrap()
     }
 }

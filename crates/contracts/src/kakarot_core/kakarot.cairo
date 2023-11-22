@@ -19,6 +19,7 @@ mod KakarotCore {
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
+    use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
     use core::starknet::SyscallResultTrait;
@@ -30,12 +31,15 @@ mod KakarotCore {
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::{EOATrait};
     use evm::model::{ExecutionResult, Address, AddressTrait};
+    use evm::state::StateTrait;
     use starknet::{
-        EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall
+        EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall,
+        get_caller_address
     };
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use super::{StoredAccountType};
-    use utils::helpers::{compute_starknet_address};
+    use utils::helpers::{compute_starknet_address, EthAddressExTrait};
+    use utils::rlp::RLPTrait;
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
@@ -263,13 +267,39 @@ mod KakarotCore {
 
         fn eth_send_transaction(
             ref self: ContractState,
-            to: EthAddress,
+            to: Option<EthAddress>,
             gas_limit: u128,
             gas_price: u128,
             value: u256,
             data: Span<u8>
         ) -> Span<u8> {
-            array![].span()
+            let starknet_caller_address = get_caller_address();
+            let account = IExternallyOwnedAccountDispatcher {
+                contract_address: starknet_caller_address
+            };
+            let from = Address { evm: account.evm_address(), starknet: starknet_caller_address };
+
+            // Invariant:
+            // We want to make sure the caller is part of the Kakarot address_registry
+            // and is an EOA. Contracts are added to the registry ONLY if there are
+            // part of the Kakarot system and thus deployed by the main Kakarot contract
+            // itself.
+            let (caller_account_type, caller_starknet_address) = self
+                .address_registry(from.evm)
+                .expect('Fetching EOA failed');
+            assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
+
+            let mut result = self.handle_call(:from, :to, :gas_limit, :gas_price, :value, :data);
+            match result {
+                Result::Ok(result) => {
+                    let mut state = result.state;
+                    state.commit_state();
+                    result.return_data
+                },
+                // TODO: Return the error message as Bytes in the response
+                // Eliminate all paths of possible panic in logic with relations to the EVM itself.
+                Result::Err(err) => panic_with_felt252(err.to_string()),
+            }
         }
 
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
@@ -363,8 +393,7 @@ mod KakarotCore {
                     return Result::Ok(execution_result);
                 },
                 Option::None => {
-                    let bytecode = data;
-                    // TODO: compute_evm_address
+                    // Deploy tx case.
                     // HASH(RLP(deployer_address, deployer_nonce))[0..20]
                     //TODO manually set target account type to CA in state
                     panic_with_felt252('deploy tx flow unimplemented')

@@ -1,8 +1,9 @@
+//! Utilities for kakarot standard library.
+
+mod address;
 mod constants;
 mod errors;
 mod eth_transaction;
-//! Utilities for kakarot standard library.
-
 mod helpers;
 mod i256;
 mod math;

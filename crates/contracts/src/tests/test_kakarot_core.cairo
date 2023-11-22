@@ -2,6 +2,7 @@ use contracts::contract_account::ContractAccount::TEST_CLASS_HASH as ContractAcc
 use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
 use contracts::eoa::ExternallyOwnedAccount;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::kakarot_core::interface::IKakarotCore;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
@@ -254,6 +255,43 @@ fn test_kakarot_contract_account_false_positive_jumpdest() {
 
 #[test]
 #[available_gas(2000000000000)]
+fn test_eth_send_transaction() {
+    // Given
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+
+    let evm_address = test_utils::evm_address();
+    let eoa = kakarot_core.deploy_eoa(evm_address);
+
+    let account = ContractAccountTrait::deploy(
+        test_utils::other_evm_address(), counter_evm_bytecode()
+    )
+        .unwrap();
+
+    let to = Option::Some(test_utils::other_evm_address());
+    let gas_limit = test_utils::gas_limit();
+    let gas_price = test_utils::gas_price();
+    let value = 0;
+    // selector: function inc()
+    let data = array![0x37, 0x13, 0x03, 0xc0].span();
+
+    // When
+    testing::set_contract_address(eoa);
+    let return_data = kakarot_core.eth_send_transaction(:to, :gas_limit, :gas_price, :value, :data);
+
+    // Then
+    // selector: function get()
+    let data = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+
+    // When
+    let return_data = kakarot_core
+        .eth_call(from: evm_address, :to, :gas_limit, :gas_price, :value, :data);
+
+    // Then
+    assert(return_data == u256_to_bytes_array(1).span(), 'wrong result');
+}
+
+#[test]
+#[available_gas(2000000000000)]
 fn test_eth_call() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -265,6 +303,8 @@ fn test_eth_call() {
         test_utils::other_evm_address(), counter_evm_bytecode()
     )
         .unwrap();
+    let counter = IContractAccountDispatcher { contract_address: account.starknet };
+    counter.set_storage_at(0, 1);
 
     let to = Option::Some(test_utils::other_evm_address());
     let gas_limit = test_utils::gas_limit();
@@ -274,12 +314,11 @@ fn test_eth_call() {
     let data = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // When
-
     let return_data = kakarot_core
         .eth_call(from: evm_address, :to, :gas_limit, :gas_price, :value, :data);
 
     // Then
-    assert(return_data == u256_to_bytes_array(0).span(), 'wrong result');
+    assert(return_data == u256_to_bytes_array(1).span(), 'wrong result');
 }
 
 
@@ -288,6 +327,7 @@ fn test_eth_call() {
 fn test_handle_call() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
 
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -304,7 +344,6 @@ fn test_handle_call() {
     let data = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // When
-
     let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
     let result = kakarot_core
         .handle_call(
