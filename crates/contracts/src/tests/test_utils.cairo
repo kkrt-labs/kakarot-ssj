@@ -7,12 +7,15 @@ use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcher, Kakarot
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount
 };
+use evm::model::contract_account::ContractAccountTrait;
+use evm::model::{Address};
 
 use evm::tests::test_utils::{deploy_fee, ca_address, other_starknet_address, chain_id};
 use openzeppelin::token::erc20::ERC20;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{
-    testing, contract_address_const, ContractAddress, deploy_syscall, get_contract_address
+    testing, contract_address_const, EthAddress, ContractAddress, deploy_syscall,
+    get_contract_address
 };
 
 /// Pop the earliest unpopped logged event for the contract as the requested type
@@ -101,26 +104,10 @@ fn deploy_kakarot_core(native_token: ContractAddress) -> IExtendedKakarotCoreDis
     }
 }
 
-fn deploy_contract_account(
-    kakarot_address: ContractAddress, bytecode: Span<u8>
-) -> IContractAccountDispatcher {
-    testing::set_contract_address(kakarot_address);
-    let calldata: Array<felt252> = array![kakarot_address.into(), ca_address().into(),];
-
-    let (contract_address, _) = deploy_syscall(
-        UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
-    )
-        .expect('Deployment should succeed');
-    IUninitializedAccountDispatcher { contract_address }
-        .initialize(ContractAccount::TEST_CLASS_HASH.try_into().unwrap());
-
-    let contract_account = IContractAccountDispatcher { contract_address };
-
-    // Initialize the contract account
-    contract_account.set_nonce(1);
-    contract_account.set_bytecode(bytecode);
-
-    contract_account
+fn deploy_contract_account(evm_address: EthAddress, bytecode: Span<u8>) -> Address {
+    let ca_address = ContractAccountTrait::deploy(evm_address, 1, bytecode, true)
+        .expect('deploy CA failed');
+    ca_address
 }
 
 

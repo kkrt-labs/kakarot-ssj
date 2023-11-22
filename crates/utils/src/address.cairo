@@ -1,7 +1,6 @@
 use core::array::ArrayTrait;
 use core::traits::TryInto;
 
-use debug::PrintTrait;
 use evm::errors::EVMError;
 use starknet::EthAddress;
 use utils::errors::RLPErrorTrait;
