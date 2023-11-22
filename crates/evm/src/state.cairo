@@ -210,14 +210,14 @@ struct State {
 
 #[generate_trait]
 impl StateImpl of StateTrait {
-    fn get_account(ref self: State, evm_address: EthAddress) -> Result<Account, EVMError> {
+    fn get_account(ref self: State, evm_address: EthAddress) -> Account {
         let maybe_account = self.accounts.read(evm_address.into());
         match maybe_account {
-            Option::Some(acc) => { return Result::Ok(acc); },
+            Option::Some(acc) => { return acc; },
             Option::None => {
-                let account = AccountTrait::fetch_or_create(evm_address)?;
+                let account = AccountTrait::fetch_or_create(evm_address);
                 self.accounts.write(evm_address.into(), account);
-                return Result::Ok(account);
+                return account;
             }
         }
     }
@@ -235,7 +235,7 @@ impl StateImpl of StateTrait {
         match maybe_entry {
             Option::Some((_, key, value)) => { return Result::Ok(value); },
             Option::None => {
-                let account = AccountTrait::fetch_or_create(evm_address)?;
+                let account = AccountTrait::fetch_or_create(evm_address);
                 return account.read_storage(key);
             }
         }
@@ -283,7 +283,7 @@ impl StateImpl of StateTrait {
                 //TODO this function should compute the deterministic address of the evm_address's corresponding starknet contract to perform value transfers. However, the test runner doesn't deterministically calculate the starknet address from the evm address, so we can't test this yet. In the meantime, we'll use `fetch_or_create` - which is unoptimized as we don't want to load a CA's bytecode to perform value transfers.
                 // let kakarot_state = KakarotCore::unsafe_new_contract_state();
                 // let starknet_address = kakarot_state.compute_starknet_address(evm_address);
-                let account = AccountTrait::fetch_or_create(evm_address)?;
+                let account = AccountTrait::fetch_or_create(evm_address);
                 let balance = account.balance()?;
                 self.write_balance(evm_address, balance);
                 Result::Ok(balance)
@@ -340,11 +340,8 @@ impl StateInternalImpl of StateInternalTrait {
                         .transactional_changes
                         .get(state_key)
                         .deref();
-                    let res_account = self.get_account(evm_address);
-                    match res_account {
-                        Result::Ok(account) => { account.commit_storage(key, value); },
-                        Result::Err(err) => { break Result::Err(err); }
-                    }
+                    let mut account = self.get_account(evm_address);
+                    account.commit_storage(key, value);
                 },
                 Option::None => { break Result::Ok(()); }
             }

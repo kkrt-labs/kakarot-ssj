@@ -5,7 +5,7 @@ use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::call_helpers::{MachineCallHelpers, CallType};
 use evm::create_helpers::{MachineCreateHelpers, CreateType};
 use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL, WRITE_IN_STATIC_CONTEXT};
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
 use evm::model::{Address, Transfer};
@@ -148,7 +148,7 @@ impl SystemOperations of SystemOperationsTrait {
         };
         let recipient_starknet_address = kakarot_state
             .compute_starknet_address(recipient_evm_address);
-        let mut account = self.state.get_account(self.address().evm)?;
+        let mut account = self.state.get_account(self.address().evm);
 
         let recipient = Address {
             evm: recipient_evm_address, starknet: recipient_starknet_address

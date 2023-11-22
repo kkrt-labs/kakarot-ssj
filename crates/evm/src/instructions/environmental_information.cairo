@@ -3,7 +3,7 @@ use contracts::kakarot_core::{KakarotCore};
 use core::hash::{HashStateExTrait, HashStateTrait};
 use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED};
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
 use evm::model::{AccountType, ContractAccountTrait};
@@ -170,7 +170,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_extcodesize(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        let account = self.state.get_account(evm_address)?;
+        let account = self.state.get_account(evm_address);
         self.stack.push(account.code.len().into())
     }
 
@@ -183,7 +183,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
-        let bytecode = self.state.get_account(evm_address)?.code;
+        let bytecode = self.state.get_account(evm_address).code;
         let bytecode_len = bytecode.len();
         let bytecode_slice = if offset < bytecode_len {
             bytecode.slice(offset, bytecode_len - offset)
@@ -239,7 +239,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_extcodehash(ref self: Machine) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
 
-        let account = self.state.get_account(evm_address)?;
+        let account = self.state.get_account(evm_address);
         // UnknownAccount can either be
         // -> Undeployed CAs that might be deployed later, but currently don't
         // exist and have only been touched for value transfers

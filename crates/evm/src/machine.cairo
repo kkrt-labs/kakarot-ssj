@@ -36,6 +36,34 @@ impl DefaultMachine of Default<Machine> {
     }
 }
 
+
+struct MachineBuilder {
+    machine: Machine
+}
+
+#[generate_trait]
+impl MachineBuilderImpl of MachineBuilderTrait {
+    fn new() -> MachineBuilder {
+        MachineBuilder { machine: Default::default() }
+    }
+
+    #[inline(always)]
+    fn set_ctx(mut self: MachineBuilder, ctx: ExecutionContext) -> MachineBuilder {
+        self.machine.current_ctx = BoxTrait::new(ctx);
+        self
+    }
+
+    #[inline(always)]
+    fn set_state(mut self: MachineBuilder, state: State) -> MachineBuilder {
+        self.machine.state = state;
+        self
+    }
+
+    #[inline(always)]
+    fn build(self: MachineBuilder) -> Machine {
+        self.machine
+    }
+}
 /// A set of getters and setters for the current context
 /// Since current_ctx is a pointer to the current context being executed by the machine we're forced into the following pattern:
 ///
@@ -53,9 +81,8 @@ impl DefaultMachine of Default<Machine> {
 /// 1. We're not able to use @Machine as an argument for getters, as the ExecutionContext struct does not derive the Copy trait.
 /// 2. We must use a box reference to the current context, as the changes made during execution must be applied
 /// to only one ExecutionContext struct instance. Using a pointer ensures we never duplicate structs and thus changes.
-
 #[generate_trait]
-impl MachineCurrentContextImpl of MachineCurrentContextTrait {
+impl MachineImpl of MachineTrait {
     #[inline(always)]
     fn new(ctx: ExecutionContext) -> Machine {
         Machine {

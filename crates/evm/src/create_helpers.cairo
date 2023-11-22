@@ -5,7 +5,7 @@ use evm::context::{
     ExecutionContextTrait
 };
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
 use evm::model::contract_account::{ContractAccountTrait};
@@ -47,13 +47,9 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         let mut bytecode = Default::default();
         self.memory.load_n(size, ref bytecode, offset);
 
-        // TODO(state): when the tx starts,
-        // store get_tx_info().unbox().nonce inside the sender account nonce
-        // so that we can call self.nonce() instead of get_tx_info().unbox().nonce
-
         let to = match create_type {
             CreateType::CreateOrDeployTx => {
-                let nonce = self.state.get_account(self.address().evm)?.nonce();
+                let nonce = self.state.get_account(self.address().evm).nonce();
                 compute_contract_address(self.address().evm, sender_nonce: nonce)
             },
             CreateType::Create2 => compute_create2_contract_address(
@@ -70,12 +66,12 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
     fn init_create_sub_ctx(ref self: Machine, create_args: CreateArgs) -> Result<(), EVMError> {
-        let mut target_account = self.state.get_account(create_args.to)?;
+        let mut target_account = self.state.get_account(create_args.to);
         let target_address = target_account.address();
 
         // The caller in the subcontext is the calling context's current address
         let caller = self.address();
-        let mut caller_account = self.state.get_account(caller.evm)?;
+        let mut caller_account = self.state.get_account(caller.evm);
         let caller_current_nonce = caller_account.nonce();
         let caller_balance = self.state.read_balance(caller.evm)?;
         if caller_balance < create_args.value
@@ -118,7 +114,8 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
             gas_limit: self.gas_limit(),
             gas_price: self.gas_price(),
             ret_offset: 0,
-            ret_size: 0
+            ret_size: 0,
+            is_create: true
         );
 
         let parent_ctx = NullableTrait::new(self.current_ctx.unbox());
@@ -157,7 +154,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
                 let mut return_data = self.return_data();
                 let mut i = 0;
 
-                let mut account = self.state.get_account(account_address)?;
+                let mut account = self.state.get_account(account_address);
                 account.set_code(return_data);
                 assert(
                     account.account_type == AccountType::ContractAccount,

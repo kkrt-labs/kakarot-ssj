@@ -44,7 +44,7 @@ impl LoggingOperations of LoggingOperationsTrait {
 
 mod internal {
     use evm::errors::{EVMError, WRITE_IN_STATIC_CONTEXT};
-    use evm::machine::{Machine, MachineCurrentContextTrait};
+    use evm::machine::{Machine, MachineTrait};
     use evm::memory::MemoryTrait;
     use evm::model::Event;
     use evm::stack::StackTrait;

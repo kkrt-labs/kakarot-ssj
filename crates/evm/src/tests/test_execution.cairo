@@ -19,22 +19,19 @@ fn test_execute_load_origin_nonce() {
     let mut exec_result = execute(
         origin: sender,
         target: recipient,
-        bytecode: Default::default().span(),
         calldata: Default::default().span(),
         value: 0,
         gas_price: 0,
         gas_limit: 0,
         read_only: false,
+        is_deploy_tx: false,
     );
     match exec_result.error {
         Option::Some(error) => panic_with_felt252(error.to_string()),
         Option::None => {}
     }
 
-    let origin_account = exec_result
-        .state
-        .get_account(sender.evm)
-        .expect('couldnt get origin account');
+    let origin_account = exec_result.state.get_account(sender.evm);
 
     assert(origin_account.nonce == 1337, 'wrong origin nonce');
 }
@@ -53,12 +50,12 @@ fn test_execute_value_transfer() {
     let mut exec_result = execute(
         origin: sender,
         target: recipient,
-        bytecode: Default::default().span(),
         calldata: Default::default().span(),
         value: 2000,
         gas_price: 0,
         gas_limit: 0,
         read_only: false,
+        is_deploy_tx: false,
     );
     match exec_result.error {
         Option::Some(error) => panic_with_felt252(error.to_string()),

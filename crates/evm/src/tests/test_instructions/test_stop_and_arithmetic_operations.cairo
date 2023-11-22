@@ -1,6 +1,6 @@
 use evm::context::ExecutionContextTrait;
 use evm::instructions::StopAndArithmeticOperationsTrait;
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::stack::StackTrait;
 use evm::tests::test_utils::MachineBuilderImpl;
 

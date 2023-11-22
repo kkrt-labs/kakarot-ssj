@@ -42,6 +42,8 @@ struct CallContext {
     ret_offset: usize,
     // The size in memory to store the context return
     ret_size: usize,
+    //  If the call is a create call
+    is_create: bool
 }
 
 #[generate_trait]
@@ -56,10 +58,20 @@ impl CallContextImpl of CallContextTrait {
         gas_limit: u128,
         gas_price: u128,
         ret_offset: usize,
-        ret_size: usize
+        ret_size: usize,
+        is_create: bool,
     ) -> CallContext {
         CallContext {
-            caller, bytecode, calldata, value, read_only, gas_limit, gas_price, ret_offset, ret_size
+            caller,
+            bytecode,
+            calldata,
+            value,
+            read_only,
+            gas_limit,
+            gas_price,
+            ret_offset,
+            ret_size,
+            is_create
         }
     }
 
@@ -98,6 +110,11 @@ impl CallContextImpl of CallContextTrait {
     #[inline(always)]
     fn gas_price(self: @CallContext) -> u128 {
         *self.gas_price
+    }
+
+    #[inline(always)]
+    fn is_create(self: @CallContext) -> bool {
+        *self.is_create
     }
 }
 

@@ -227,7 +227,7 @@ mod test_state {
             selfdestruct: false
         };
 
-        let account = state.get_account(evm_address).unwrap();
+        let account = state.get_account(evm_address);
 
         assert(account == expected_account, 'Account mismatch');
         assert(state.accounts.contextual_keyset.len() == 1, 'Account not written in context');
@@ -255,7 +255,7 @@ mod test_state {
         };
 
         state.set_account(expected_account);
-        let account = state.get_account(evm_address).unwrap();
+        let account = state.get_account(evm_address);
 
         assert(account == expected_account, 'Account mismatch');
         assert(state.accounts.contextual_keyset.len() == 1, 'Account not written in context');

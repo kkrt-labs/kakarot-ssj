@@ -1,6 +1,6 @@
 use evm::errors::{EVMError, WRITE_IN_STATIC_CONTEXT, TYPE_CONVERSION_ERROR};
 use evm::instructions::LoggingOperationsTrait;
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{MachineBuilderImpl};

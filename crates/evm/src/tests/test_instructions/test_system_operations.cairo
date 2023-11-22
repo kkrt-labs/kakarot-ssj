@@ -1,3 +1,4 @@
+use core::result::ResultTrait;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_data::{storage_evm_bytecode, storage_evm_initcode};
 use contracts::tests::test_utils::{
@@ -9,7 +10,7 @@ use evm::errors::EVMErrorTrait;
 use evm::instructions::MemoryOperationTrait;
 use evm::instructions::SystemOperationsTrait;
 use evm::interpreter::EVMInterpreterTrait;
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{Account};
 use evm::model::contract_account::ContractAccountTrait;
@@ -558,8 +559,7 @@ fn test_exec_create2() {
     // console.log(address)
     let account = machine
         .state
-        .get_account(0xeea3a85A7497e74d85b46E987B8E05152A183892.try_into().unwrap())
-        .expect('cannot retrieve account');
+        .get_account(0xeea3a85A7497e74d85b46E987B8E05152A183892.try_into().unwrap());
 
     assert(account.nonce() == 1, 'wrong nonce');
     assert(account.code == storage_evm_bytecode(), 'wrong bytecode');
@@ -582,7 +582,7 @@ fn test_exec_selfdestruct_existing_ca() {
     machine.state.commit_state();
     machine.state = Default::default(); //empty state to force re-fetch from SN
     // Then
-    let destructed = machine.state.get_account(ca_address.evm).expect('couldnt fetch destructed');
+    let destructed = machine.state.get_account(ca_address.evm);
 
     assert(destructed.nonce() == 0, 'destructed nonce should be 0');
     assert(
@@ -590,7 +590,7 @@ fn test_exec_selfdestruct_existing_ca() {
     );
     assert(destructed.bytecode().len() == 0, 'bytecode should be empty');
 
-    let recipient = machine.state.get_account(recipient.evm).expect('couldnt fetch recipient');
+    let recipient = machine.state.get_account(recipient.evm);
 //TODO this assertion fails because of deterministic address calculations.
 // Once addressed in the compiler code, this test should be fixed.
 // in selfdestruct, we execute:
@@ -627,7 +627,7 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     let mut machine = MachineBuilderImpl::new_with_presets().with_target(ca_address).build();
 
     // Cache the CA into state
-    let mut ca = machine.state.get_account('contract'.try_into().unwrap()).expect('couldnt get CA');
+    let mut ca = machine.state.get_account('contract'.try_into().unwrap());
 
     // When
     machine.stack.push(recipient.evm.into());

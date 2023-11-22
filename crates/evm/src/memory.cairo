@@ -1,5 +1,4 @@
 use cmp::{max};
-use debug::PrintTrait;
 use integer::{
     u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_as_non_zero
 };
@@ -646,24 +645,5 @@ impl Felt252DictExtensionImpl of Felt252DictExtension {
         let high: u128 = self.get(index);
         let low: u128 = self.get(index + 1);
         u256 { low: low, high: high }
-    }
-}
-
-
-#[generate_trait]
-impl MemoryPrintImpl of MemoryPrintTrait {
-    /// Prints the memory content between offset begin and end
-    fn print_segment(ref self: Memory, begin: usize, end: usize) {
-        let mut begin = self.compute_active_segment_offset(begin);
-        let end = self.compute_active_segment_offset(end);
-        '____MEMORY_BEGIN___'.print();
-        loop {
-            if begin >= end {
-                break;
-            }
-            self.items.get(begin.into()).print();
-            begin += 1;
-        };
-        '____MEMORY_END___'.print();
     }
 }

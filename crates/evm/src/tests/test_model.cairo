@@ -67,7 +67,7 @@ fn test_account_balance_eoa() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    let account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
+    let account = AccountTrait::fetch(evm_address()).unwrap();
     let balance = account.balance().unwrap();
 
     // Then
@@ -85,7 +85,7 @@ fn test_address_balance_eoa() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    let account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
+    let account = AccountTrait::fetch(evm_address()).unwrap();
     let balance = account.balance().unwrap();
 
     // Then
@@ -101,7 +101,7 @@ fn test_account_exists_eoa() {
     let mut eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy eoa',);
 
     // When
-    let account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
+    let account = AccountTrait::fetch(evm_address()).unwrap();
 
     // Then
     assert(account.exists() == true, 'account should be deployed');
@@ -116,7 +116,7 @@ fn test_account_exists_contract_account() {
     let mut ca_address = deploy_contract_account(evm_address(), array![].span());
 
     // When
-    let account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
+    let account = AccountTrait::fetch(evm_address()).unwrap();
 
     // Then
     assert(account.exists() == true, 'account should be deployed');
@@ -130,7 +130,7 @@ fn test_account_exists_undeployed() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // When
-    let account = AccountTrait::fetch_or_create(evm_address()).unwrap();
+    let account = AccountTrait::fetch_or_create(evm_address());
 
     // Then
     assert(account.exists() == false, 'account should be deployed');
@@ -143,7 +143,7 @@ fn test_account_exists_account_to_deploy() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // When
-    let mut account = AccountTrait::fetch_or_create(evm_address()).unwrap();
+    let mut account = AccountTrait::fetch_or_create(evm_address());
     // Mock account as an existing contract account in the cached state.
     account.account_type = AccountType::ContractAccount;
     account.nonce = 1;
@@ -164,7 +164,7 @@ fn test_account_balance_contract_account() {
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
 
     // When
-    let account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
+    let account = AccountTrait::fetch(evm_address()).unwrap();
     let balance = account.balance().unwrap();
 
     // Then
@@ -252,7 +252,7 @@ fn test_address_balance_contract_account() {
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
 
     // When
-    let account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
+    let account = AccountTrait::fetch(evm_address()).unwrap();
     let balance = account.balance().unwrap();
 
     // Then

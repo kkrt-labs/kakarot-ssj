@@ -1,7 +1,7 @@
 use contracts::tests::test_utils::{setup_contracts_for_testing, deploy_contract_account};
 use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION, WRITE_IN_STATIC_CONTEXT};
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::{Account, AccountType};

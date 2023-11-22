@@ -1,6 +1,6 @@
 use evm::context::{CallContextTrait, ExecutionContextType, ExecutionContextTrait};
 use evm::errors::{EVMError, READ_SYSCALL_FAILED};
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::tests::test_utils::{evm_address, starknet_address, MachineBuilderImpl, test_address};
 
 

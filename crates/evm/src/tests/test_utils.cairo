@@ -5,7 +5,7 @@ use evm::context::{
     DefaultOptionSpanU8
 };
 use evm::errors::{EVMError};
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::model::{ContractAccountTrait, Address, Account, AccountType};
 use evm::state::State;
 use evm::{stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}};
@@ -267,7 +267,8 @@ fn setup_call_context() -> CallContext {
         gas_limit,
         gas_price,
         output_offset,
-        output_size
+        output_size,
+        false
     )
 }
 

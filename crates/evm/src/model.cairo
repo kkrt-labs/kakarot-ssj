@@ -61,6 +61,7 @@ struct Transfer {
 
 #[derive(Destruct)]
 struct ExecutionResult {
+    address: Address,
     status: Status,
     return_data: Span<u8>,
     create_addresses: Span<EthAddress>,

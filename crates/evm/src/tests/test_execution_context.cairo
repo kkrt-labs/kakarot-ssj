@@ -4,7 +4,7 @@ use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
     DefaultOptionSpanU8
 };
-use evm::machine::{MachineCurrentContextTrait};
+use evm::machine::{MachineTrait};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Event, Address};
 use evm::stack::{Stack, StackTrait};
@@ -41,7 +41,8 @@ fn test_call_context_new() {
         gas_limit,
         gas_price,
         output_offset,
-        output_size
+        output_size,
+        false
     );
 
     // Then
@@ -51,6 +52,7 @@ fn test_call_context_new() {
     assert(call_ctx.gas_limit() == gas_limit, 'wrong gas_limit');
     assert(call_ctx.gas_price() == gas_price, 'wrong gas_price');
     assert(call_ctx.read_only() == read_only, 'wrong read_only');
+    assert(call_ctx.is_create() == false, 'wrong is_create');
 }
 
 #[test]

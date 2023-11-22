@@ -7,7 +7,7 @@ use evm::context::{
     ExecutionContextTrait
 };
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
 use evm::model::{Transfer, Address};
@@ -127,7 +127,7 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
 
         // Case 2: `to` address is not a precompile
         // We enter the standard flow
-        let bytecode = self.state.get_account(call_args.code_address.evm)?.code;
+        let bytecode = self.state.get_account(call_args.code_address.evm).code;
 
         let call_ctx = CallContextTrait::new(
             call_args.caller,
@@ -138,7 +138,8 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
             call_args.gas,
             self.gas_price(),
             call_args.ret_offset,
-            call_args.ret_size
+            call_args.ret_size,
+            false,
         );
 
         let parent_ctx = NullableTrait::new(self.current_ctx.unbox());

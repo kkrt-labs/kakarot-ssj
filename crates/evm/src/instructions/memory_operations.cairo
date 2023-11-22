@@ -1,6 +1,6 @@
 //! Stack Memory Storage and Flow Operations.
 use evm::errors::{EVMError, INVALID_DESTINATION, READ_SYSCALL_FAILED, WRITE_IN_STATIC_CONTEXT};
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, compute_state_key};
