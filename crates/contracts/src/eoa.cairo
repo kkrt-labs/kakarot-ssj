@@ -19,6 +19,8 @@ mod ExternallyOwnedAccount {
     use contracts::components::upgradeable::upgradeable_component;
     use contracts::eoa::IExternallyOwnedAccount;
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
+    use core::clone::Clone;
+
     use starknet::account::{Call, AccountContract};
 
     use starknet::{
@@ -124,8 +126,11 @@ mod ExternallyOwnedAccount {
             let kakarot_core_dispatcher = IKakarotCoreDispatcher {
                 contract_address: self.kakarot_core_address()
             };
+
             let result = kakarot_core_dispatcher
-                .eth_send_transaction(destination, gas_limit, gas_price, amount, calldata);
+                .eth_send_transaction(
+                    Option::Some(destination), gas_limit, gas_price, amount, calldata
+                );
 
             array![result.to_felt252_array().span()]
         }

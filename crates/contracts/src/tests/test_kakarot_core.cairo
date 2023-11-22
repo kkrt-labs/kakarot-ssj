@@ -266,12 +266,31 @@ fn test_eth_send_transaction() {
     let gas_limit = test_utils::gas_limit();
     let gas_price = test_utils::gas_price();
     let value = 0;
+
+    // Then
+    // selector: function get()
+    let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+
+    // check counter value is 0 before doing inc
+    let return_data = kakarot_core
+        .eth_call(
+            from: evm_address,
+            to: Option::Some(account.evm),
+            gas_limit: gas_limit,
+            gas_price: gas_price,
+            value: 0,
+            data: data_get_tx
+        );
+
+    assert(return_data == u256_to_bytes_array(0).span(), 'counter value not 0');
+
     // selector: function inc()
-    let data = array![0x37, 0x13, 0x03, 0xc0].span();
+    let data_inc_tx = array![0x37, 0x13, 0x03, 0xc0].span();
 
     // When
     testing::set_contract_address(eoa);
-    let return_data = kakarot_core.eth_send_transaction(:to, :gas_limit, :gas_price, :value, :data);
+    let return_data = kakarot_core
+        .eth_send_transaction(:to, :gas_limit, :gas_price, :value, data: data_inc_tx);
 
     // Then
     // selector: function get()
@@ -279,10 +298,10 @@ fn test_eth_send_transaction() {
 
     // When
     let return_data = kakarot_core
-        .eth_call(from: evm_address, :to, :gas_limit, :gas_price, :value, :data);
+        .eth_call(from: evm_address, :to, :gas_limit, :gas_price, :value, data: data_get_tx);
 
     // Then
-    assert(return_data == u256_to_bytes_array(1).span(), 'wrong result');
+    assert(return_data == u256_to_bytes_array(1).span(), 'counter value is not 1');
 }
 
 #[test]
