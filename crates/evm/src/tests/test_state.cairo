@@ -1,3 +1,4 @@
+use contracts::tests::test_utils::{deploy_contract_account};
 use evm::state::compute_state_key;
 use evm::tests::test_utils;
 
@@ -194,7 +195,7 @@ mod test_simple_log {
 mod test_state {
     use contracts::tests::test_utils as contract_utils;
     use contracts::uninitialized_account::UninitializedAccount;
-    use evm::model::account::{Account, AccountType};
+    use evm::model::account::{Account, AccountType, AccountTrait};
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::EOATrait;
     use evm::model::{Event, Transfer, Address};
@@ -280,8 +281,7 @@ mod test_state {
         // Transfer native tokens to sender
         let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
         let evm_address: EthAddress = test_utils::evm_address();
-        let mut ca_address = ContractAccountTrait::deploy(evm_address, array![].span())
-            .expect('sender deploy failed');
+        let mut ca_address = contract_utils::deploy_contract_account(evm_address, array![].span());
 
         let mut state: State = Default::default();
         let key = 10;

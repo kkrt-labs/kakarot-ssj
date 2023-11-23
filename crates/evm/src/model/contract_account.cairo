@@ -49,41 +49,51 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `origin` - The EVM address of the transaction sender
     /// * `evm_address` - The EVM address of the contract account
     /// * `bytecode` - The deploy bytecode
+    /// * `deploy_starknet_contract` - Whether to deploy a starknet contract for
+    /// this CA.  If a starknet contract is already deployed at this address but
+    /// we want to deploy an EVM contract, e.g. if it is the address of a
+    /// previously selfdestructed contract, then this should be set to false as
+    /// the starknet contract already exists.
     /// # Returns
     /// * The evm_address and starknet_address the CA is deployed at - which is KakarotCore
     /// # Errors
     /// * `ACCOUNT_EXISTS` - If a contract account already exists at the given `evm_address`
-    fn deploy(evm_address: EthAddress, bytecode: Span<u8>) -> Result<Address, EVMError> {
+    fn deploy(
+        evm_address: EthAddress, nonce: u64, bytecode: Span<u8>, deploy_starknet_contract: bool
+    ) -> Result<Address, EVMError> {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let account_class_hash = kakarot_state.account_class_hash();
-        let kakarot_address = get_contract_address();
-        let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
 
-        let maybe_address = deploy_syscall(account_class_hash, evm_address.into(), calldata, false);
-        // Panic with err as syscall failure can't be caught, so we can't manage
-        // the error
-        match maybe_address {
-            Result::Ok((
-                starknet_address, _
-            )) => {
-                IUninitializedAccountDispatcher { contract_address: starknet_address }
-                    .initialize(kakarot_state.ca_class_hash());
+        let starknet_address = if deploy_starknet_contract {
+            let account_class_hash = kakarot_state.account_class_hash();
+            let kakarot_address = get_contract_address();
+            let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
+            let result_address = deploy_syscall(
+                account_class_hash, evm_address.into(), calldata, false
+            );
+            if result_address.is_err() {
+                return Result::Err(EVMError::SyscallFailed(DEPLOYMENT_FAILED));
+            };
+            let (starknet_address, _) = result_address.unwrap();
+            // Initialize the account
+            IUninitializedAccountDispatcher { contract_address: starknet_address }
+                .initialize(kakarot_state.ca_class_hash());
+            starknet_address
+        } else {
+            kakarot_state.compute_starknet_address(evm_address)
+        };
 
-                // Initialize the account
-                let account = IContractAccountDispatcher { contract_address: starknet_address };
-                account.set_nonce(1);
-                account.set_bytecode(bytecode);
+        // Set code and nonce of the CA - no matter if we deployed a starknet contract or not.
+        let account = IContractAccountDispatcher { contract_address: starknet_address };
+        account.set_nonce(nonce);
+        account.set_bytecode(bytecode);
 
-                // Kakarot Core logic
-                kakarot_state
-                    .set_address_registry(
-                        evm_address, StoredAccountType::ContractAccount(starknet_address)
-                    );
-                kakarot_state.emit(ContractAccountDeployed { evm_address, starknet_address });
-                Result::Ok(Address { evm: evm_address, starknet: starknet_address })
-            },
-            Result::Err(err) => panic(err)
-        }
+        // Kakarot Core logic
+        kakarot_state
+            .set_address_registry(
+                evm_address, StoredAccountType::ContractAccount(starknet_address)
+            );
+        kakarot_state.emit(ContractAccountDeployed { evm_address, starknet_address });
+        Result::Ok(Address { evm: evm_address, starknet: starknet_address })
     }
 
     #[inline(always)]
@@ -114,6 +124,15 @@ impl ContractAccountImpl of ContractAccountTrait {
             Option::None => Result::Ok(Option::None)
         }
     }
+
+    /// Fetches the nonce of a contract account.
+    fn fetch_nonce(self: @Account) -> Result<u64, EVMError> {
+        let contract_account = IContractAccountDispatcher {
+            contract_address: self.address().starknet
+        };
+        Result::Ok(contract_account.nonce())
+    }
+
 
     /// Sets the nonce of a contract account.
     /// The new nonce is written in Kakarot Core's contract storage.

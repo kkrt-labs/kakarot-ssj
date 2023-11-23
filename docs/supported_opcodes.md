@@ -223,6 +223,6 @@ This document describes the opcodes supported by Kakarot.
 | 0xfa         | STATICCALL   | Static message-call into an account                               |             |
 | 0xfd         | REVERT       | Halt execution reverting state changes                            |             |
 | 0xfe         | INVALID      | Designated invalid instruction                                    |             |
-| 0xff         | SELFDESTRUCT | Halt execution and register account for later deletion            |             |
+| 0xff         | SELFDESTRUCT | Halt execution and register account for later deletion            | ✅          |
 
 <!-- markdownlint-restore -->

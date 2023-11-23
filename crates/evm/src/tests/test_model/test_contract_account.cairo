@@ -23,8 +23,7 @@ fn test_contract_account_deploy() {
     set_contract_address(kakarot_core.contract_address);
 
     let bytecode = counter_evm_bytecode();
-    let ca_address = ContractAccountTrait::deploy(test_utils::evm_address(), bytecode)
-        .expect('CA deployment failed');
+    let ca_address = contract_utils::deploy_contract_account(test_utils::evm_address(), bytecode);
     let account = ContractAccountBuilderTrait::new(ca_address)
         .fetch_nonce()
         .fetch_bytecode()
@@ -45,7 +44,7 @@ fn test_at_contract_account_deployed() {
     let evm_address = test_utils::evm_address();
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
-    let ca = ContractAccountTrait::deploy(evm_address, Default::default().span()).unwrap();
+    let ca = contract_utils::deploy_contract_account(evm_address, Default::default().span());
 
     let ca_address = ContractAccountTrait::at(evm_address)
         .unwrap()
@@ -66,6 +65,26 @@ fn test_at_contract_account_undeployed() {
     let evm_address = EVM_ADDRESS();
     let maybe_ca = ContractAccountTrait::at(evm_address).unwrap();
     assert(maybe_ca.is_none(), 'contract account shouldnt exist');
+}
+
+#[test]
+#[available_gas(200000000)]
+fn test_fetch_nonce() {
+    let evm_address = test_utils::evm_address();
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+
+    let ca = contract_utils::deploy_contract_account(evm_address, Default::default().span());
+
+    let account = Account {
+        account_type: AccountType::ContractAccount,
+        address: ca,
+        nonce: 1,
+        code: Default::default().span(),
+        selfdestruct: false,
+    };
+
+    let nonce = account.fetch_nonce().expect('cant fetch nonce');
+    assert(nonce == 1, 'wrong nonce');
 }
 //TODO add a test with huge amount of bytecode - using SNFoundry and loading data from txt
 

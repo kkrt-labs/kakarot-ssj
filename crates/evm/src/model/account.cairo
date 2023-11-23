@@ -97,10 +97,8 @@ impl AccountImpl of AccountTrait {
                 let starknet_address = kakarot_state.compute_starknet_address(evm_address);
                 Result::Ok(
                     // If no account exists at `address`, then we are trying to
-                    // access an undeployed contract account.  Simple value
-                    // transfers between EOAs don't call this function -
-                    // Therefore, we're sure that only contract accounts are
-                    // undeployed.
+                    // access an undeployed account (CA or EOA). We create an
+                    // empty account with the correct address and return it.
                     Account {
                         account_type: AccountType::Unknown,
                         address: Address { starknet: starknet_address, evm: evm_address, },
@@ -156,13 +154,10 @@ impl AccountImpl of AccountTrait {
         Result::Ok(account)
     }
 
-    /// Returns whether an account should be deployed or not.
-    /// To be deployed, the type must have been resolved to be a CA - must not
-    /// be registered already, and the nonce must not be 0 or the code must not
-    /// be empty
+    /// Returns whether an account has code or a nonce.
     #[inline(always)]
-    fn should_deploy(self: @Account) -> bool {
-        if self.is_ca() && (*self.nonce != 0 || !(*self.code).is_empty()) {
+    fn has_code_or_nonce(self: @Account) -> bool {
+        if *self.nonce != 0 || !(*self.code).is_empty() {
             return true;
         };
         false
@@ -180,40 +175,66 @@ impl AccountImpl of AccountTrait {
     ///
     /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
     fn commit(self: @Account) -> Result<(), EVMError> {
-        // Case account exists and is already on chain
         let is_deployed = self.address().evm.is_deployed();
+        let is_ca = self.is_ca();
 
-        if is_deployed {
-            match self.account_type {
-                AccountType::EOA(eoa) => {
-                    // no - op
-                    Result::Ok(())
-                },
-                AccountType::ContractAccount => {
-                    if *self.selfdestruct {
-                        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-                        kakarot_state
-                            .set_address_registry(
-                                self.address().evm, StoredAccountType::UnexistingAccount
-                            );
-                        return self.selfdestruct();
-                    }
-                    self.store_nonce(*self.nonce)
-                //Storage is handled outside of the account and must be commited after all accounts are commited.
-                },
-                AccountType::Unknown => { Result::Ok(()) }
+        // If a Starknet account is already deployed for this evm address, we
+        // should "EVM-Deploy" only if the nonce is different.
+        let should_deploy = if is_deployed && is_ca {
+            let deployed_nonce = ContractAccountTrait::fetch_nonce(self)?;
+            if (deployed_nonce == 0 && deployed_nonce != *self.nonce) {
+                true
+            } else {
+                false
             }
-        } else if self.should_deploy() {
-            //Case new account
-            // If SELFDESTRUCT, just do nothing
-            if (*self.selfdestruct == true) {
-                return Result::Ok(());
-            };
-            let mut ca_address = ContractAccountTrait::deploy(self.address().evm, *self.code)?;
-            self.store_nonce(*self.nonce)
-        //Storage is handled outside of the account and must be commited after all accounts are commited.
+        } else if is_ca {
+            // Otherwise, the deploy condition is simply has_code_or_nonce - if the account is a CA.
+            self.has_code_or_nonce()
         } else {
-            Result::Ok(())
+            false
+        };
+
+        if should_deploy {
+            // If SELFDESTRUCT, deploy empty SN account
+            let (initial_nonce, initial_code) = if (*self.selfdestruct == true) {
+                (0, Default::default().span())
+            } else {
+                (*self.nonce, *self.code)
+            };
+            ContractAccountTrait::deploy(
+                self.address().evm,
+                initial_nonce,
+                initial_code,
+                deploy_starknet_contract: !is_deployed
+            )?;
+        //Storage is handled outside of the account and must be commited after all accounts are commited.
+        //TODO(bug) uncommenting this bugs, needs to be removed when fixed in the compiler
+        // return Result::Ok(());
+        };
+
+        if should_deploy {
+            return Result::Ok(());
+        };
+
+        // If the account was not scheduled for deployment - then update it if it's deployed.
+        // Only CAs have components commited on starknet.
+        if is_deployed && is_ca {
+            if *self.selfdestruct {
+                return ContractAccountTrait::selfdestruct(self);
+            }
+            self.store_nonce(*self.nonce)?;
+        };
+        return Result::Ok(());
+    }
+
+    fn commit_storage(self: @Account, key: u256, value: u256) {
+        if self.is_selfdestruct() {
+            return;
+        }
+        match self.account_type {
+            AccountType::EOA => { panic_with_felt252('EOA account commitment') },
+            AccountType::ContractAccount => { self.store_storage(key, value); },
+            AccountType::Unknown(_) => { panic_with_felt252('Unknown account commitment') }
         }
     }
 
@@ -231,7 +252,7 @@ impl AccountImpl of AccountTrait {
         false
     }
 
-    /// Returns whether an accound is exists at the given address.
+    /// Returns whether an account exists at the given address.
     ///
     /// Based on the state of the account in the cache - the account can
     /// not be deployed on-chain yet, but already exist in the KakarotState.
