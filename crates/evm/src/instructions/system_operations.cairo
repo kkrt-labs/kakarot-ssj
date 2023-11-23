@@ -92,7 +92,7 @@ impl SystemOperations of SystemOperationsTrait {
         // If sender_balance < value, return early, pushing
         // 0 on the stack to indicate call failure.
         let caller_address = self.address();
-        let sender_balance = self.state.read_balance(caller_address.evm)?;
+        let sender_balance = self.state.get_account(caller_address.evm).balance();
         if sender_balance < value {
             return self.stack.push(0);
         }
@@ -161,7 +161,7 @@ impl SystemOperations of SystemOperationsTrait {
                 Transfer {
                     sender: account.address(),
                     recipient,
-                    amount: self.state.read_balance(account.address().evm)?
+                    amount: self.state.get_account(account.address().evm).balance
                 }
             );
 

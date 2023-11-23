@@ -68,7 +68,7 @@ fn test_account_balance_eoa() {
     // When
     set_contract_address(kakarot_core.contract_address);
     let account = AccountTrait::fetch(evm_address()).unwrap();
-    let balance = account.balance().unwrap();
+    let balance = account.balance();
 
     // Then
     assert(balance == native_token.balanceOf(eoa_address.starknet), 'wrong balance');
@@ -86,7 +86,7 @@ fn test_address_balance_eoa() {
     // When
     set_contract_address(kakarot_core.contract_address);
     let account = AccountTrait::fetch(evm_address()).unwrap();
-    let balance = account.balance().unwrap();
+    let balance = account.balance();
 
     // Then
     assert(balance == native_token.balanceOf(eoa_address.starknet), 'wrong balance');
@@ -165,7 +165,7 @@ fn test_account_balance_contract_account() {
 
     // When
     let account = AccountTrait::fetch(evm_address()).unwrap();
-    let balance = account.balance().unwrap();
+    let balance = account.balance();
 
     // Then
     assert(balance == native_token.balanceOf(ca_address.starknet), 'wrong balance');
@@ -253,7 +253,7 @@ fn test_address_balance_contract_account() {
 
     // When
     let account = AccountTrait::fetch(evm_address()).unwrap();
-    let balance = account.balance().unwrap();
+    let balance = account.balance();
 
     // Then
     // Then

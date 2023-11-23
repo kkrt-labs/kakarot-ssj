@@ -3,6 +3,7 @@ use contracts::contract_account::{
 };
 
 use contracts::eoa::{ExternallyOwnedAccount};
+use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
 use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcher, KakarotCore};
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount
@@ -108,6 +109,27 @@ fn deploy_contract_account(evm_address: EthAddress, bytecode: Span<u8>) -> Addre
     let ca_address = ContractAccountTrait::deploy(evm_address, 1, bytecode, true)
         .expect('deploy CA failed');
     ca_address
+}
+
+
+fn deploy_eoa(eoa_address: EthAddress) -> IExternallyOwnedAccountDispatcher {
+    let kakarot_address = get_contract_address();
+    let calldata: Span<felt252> = array![kakarot_address.into(), eoa_address.into()].span();
+
+    let (starknet_address, _) = deploy_syscall(
+        UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(),
+        eoa_address.into(),
+        calldata,
+        false
+    )
+        .expect('failed to deploy EOA');
+
+    let account = IUninitializedAccountDispatcher { contract_address: starknet_address };
+
+    account.initialize(ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap());
+    let eoa = IExternallyOwnedAccountDispatcher { contract_address: starknet_address };
+    eoa.set_chain_id(chain_id());
+    eoa
 }
 
 

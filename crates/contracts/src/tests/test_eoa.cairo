@@ -14,8 +14,9 @@ mod test_external_owned_account {
         IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
         MockContractUpgradeableV1
     };
-    use contracts::tests::test_utils::deploy_contract_account;
-    use contracts::tests::test_utils::{setup_contracts_for_testing};
+    use contracts::tests::test_utils::{
+        setup_contracts_for_testing, deploy_eoa, deploy_contract_account
+    };
     use contracts::uninitialized_account::{
         IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount,
         IUninitializedAccount
@@ -40,25 +41,6 @@ mod test_external_owned_account {
     };
     use utils::helpers::{U8SpanExTrait, u256_to_bytes_array};
 
-    fn deploy_eoa(eoa_address: EthAddress) -> IExternallyOwnedAccountDispatcher {
-        let kakarot_address = get_contract_address();
-        let calldata: Span<felt252> = array![kakarot_address.into(), eoa_address.into()].span();
-
-        let (starknet_address, _) = deploy_syscall(
-            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(),
-            evm_address().into(),
-            calldata,
-            false
-        )
-            .expect('failed to deploy EOA');
-
-        let account = IUninitializedAccountDispatcher { contract_address: starknet_address };
-
-        account.initialize(ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap());
-        let eoa = IExternallyOwnedAccountDispatcher { contract_address: starknet_address };
-        eoa.set_chain_id(chain_id());
-        eoa
-    }
 
     #[test]
     #[available_gas(2000000000)]

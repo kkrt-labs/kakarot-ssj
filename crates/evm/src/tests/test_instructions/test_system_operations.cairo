@@ -295,7 +295,7 @@ fn test_exec_staticcall() {
 
 
 #[test]
-#[available_gas(50000000)]
+#[available_gas(70000000)]
 fn test_exec_staticcall_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
@@ -584,9 +584,7 @@ fn test_exec_selfdestruct_existing_ca() {
     let destructed = machine.state.get_account(ca_address.evm);
 
     assert(destructed.nonce() == 0, 'destructed nonce should be 0');
-    assert(
-        destructed.balance().expect('couldnt get balance') == 0, 'destructed balance should be 0'
-    );
+    assert(destructed.balance() == 0, 'destructed balance should be 0');
     assert(destructed.bytecode().len() == 0, 'bytecode should be empty');
 
     let recipient = machine.state.get_account(recipient.evm);

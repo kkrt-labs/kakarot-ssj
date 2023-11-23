@@ -23,9 +23,7 @@ use evm::errors::{
 use evm::execution::execute;
 use evm::model::{Address, Account, AccountType, AccountTrait};
 use hash::{HashStateTrait, HashStateExTrait};
-use openzeppelin::token::erc20::interface::{
-    IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
-};
+use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use poseidon::PoseidonTrait;
 use starknet::{
     deploy_syscall, StorageBaseAddress, storage_base_address_from_felt252, Store, EthAddress,

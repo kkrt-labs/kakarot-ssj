@@ -9,9 +9,7 @@ use evm::model::account::{Account, AccountTrait};
 use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::eoa::EOATrait;
 use evm::state::State;
-use openzeppelin::token::erc20::interface::{
-    IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
-};
+use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{EthAddress, get_contract_address, ContractAddress};
 use utils::helpers::{ResultExTrait};
 use utils::traits::{EthAddressDefault, ContractAddressDefault};
@@ -40,13 +38,11 @@ impl AddressImpl of AddressTrait {
         }
     }
 
-    fn balance(self: @Address) -> Result<u256, EVMError> {
+    fn fetch_balance(self: @Address) -> u256 {
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
         let native_token_address = kakarot_state.native_token();
-        let native_token = IERC20CamelSafeDispatcher { contract_address: native_token_address };
-        native_token
-            .balanceOf(*self.starknet)
-            .map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
+        let native_token = IERC20CamelDispatcher { contract_address: native_token_address };
+        native_token.balanceOf(*self.starknet)
     }
 }
 

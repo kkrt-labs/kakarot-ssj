@@ -4,7 +4,7 @@ use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_utils as contract_utils;
 use contracts::tests::test_utils::constants::EVM_ADDRESS;
-use evm::model::account::{Account, ContractAccountBuilderTrait};
+use evm::model::account::{Account, AccountBuilderTrait};
 use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::{AccountType};
 use evm::tests::test_utils;
@@ -24,10 +24,7 @@ fn test_contract_account_deploy() {
 
     let bytecode = counter_evm_bytecode();
     let ca_address = contract_utils::deploy_contract_account(test_utils::evm_address(), bytecode);
-    let account = ContractAccountBuilderTrait::new(ca_address)
-        .fetch_nonce()
-        .fetch_bytecode()
-        .build();
+    let account = AccountBuilderTrait::new(ca_address).fetch_nonce().fetch_bytecode().build();
     let event = contract_utils::pop_log::<
         KakarotCore::ContractAccountDeployed
     >(kakarot_core.contract_address)
@@ -80,6 +77,7 @@ fn test_fetch_nonce() {
         address: ca,
         nonce: 1,
         code: Default::default().span(),
+        balance: 0,
         selfdestruct: false,
     };
 

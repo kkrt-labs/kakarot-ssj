@@ -265,6 +265,7 @@ fn initialize_contract_account(
         address: ca_address,
         code: array![0xab, 0xcd, 0xef].span(),
         nonce: 1,
+        balance: 0,
         selfdestruct: false
     };
     let mut i = 0;
