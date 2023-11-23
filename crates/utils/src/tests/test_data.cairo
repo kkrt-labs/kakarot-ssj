@@ -51,7 +51,7 @@ fn legacy_rlp_encoded_tx() -> Span<u8> {
         239,
         1,
         128,
-        128
+        128,
     ]
         .span()
 }
@@ -110,7 +110,7 @@ fn eip_2930_encoded_tx() -> Span<u8> {
         171,
         205,
         239,
-        192
+        192,
     ]
         .span()
 }
@@ -169,7 +169,7 @@ fn eip_1559_encoded_tx() -> Span<u8> {
         171,
         205,
         239,
-        192
+        192,
     ]
         .span()
 }

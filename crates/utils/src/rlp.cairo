@@ -158,9 +158,8 @@ impl RLPImpl of RLPTrait {
 
         match rlp_type {
             RLPType::String => {
-                // checking for default value `0`
                 if (len == 0) {
-                    output.append(RLPItem::String(array![0].span()));
+                    output.append(RLPItem::String(array![].span()));
                 } else {
                     output.append(RLPItem::String(input.slice(offset, len)));
                 }
@@ -192,6 +191,10 @@ impl RLPHelpersImpl of RLPHelpersTrait {
     fn parse_u128_from_string(self: RLPItem) -> Result<u128, RLPHelpersError> {
         match self {
             RLPItem::String(bytes) => {
+                // Empty strings means 0
+                if bytes.len() == 0 {
+                    return Result::Ok(0);
+                }
                 let value = U128Impl::from_bytes(bytes).ok_or(RLPHelpersError::FailedParsingU128)?;
                 Result::Ok(value)
             },
@@ -202,6 +205,10 @@ impl RLPHelpersImpl of RLPHelpersTrait {
     fn parse_u256_from_string(self: RLPItem) -> Result<u256, RLPHelpersError> {
         match self {
             RLPItem::String(bytes) => {
+                // Empty strings means 0
+                if bytes.len() == 0 {
+                    return Result::Ok(0);
+                }
                 let value = U256Impl::from_bytes(bytes).ok_or(RLPHelpersError::FailedParsingU256)?;
                 Result::Ok(value)
             },
