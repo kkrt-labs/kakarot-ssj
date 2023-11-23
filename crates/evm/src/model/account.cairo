@@ -154,13 +154,10 @@ impl AccountImpl of AccountTrait {
         Result::Ok(account)
     }
 
-    /// Returns whether an account should be deployed or not.
-    /// To be deployed, the type must have been resolved to be a CA - must not
-    /// be registered already, and the nonce must not be 0 or the code must not
-    /// be empty
+    /// Returns whether an account has code or a nonce.
     #[inline(always)]
-    fn should_deploy(self: @Account) -> bool {
-        if self.is_ca() && (*self.nonce != 0 || !(*self.code).is_empty()) {
+    fn has_code_or_nonce(self: @Account) -> bool {
+        if *self.nonce != 0 || !(*self.code).is_empty() {
             return true;
         };
         false
@@ -179,19 +176,22 @@ impl AccountImpl of AccountTrait {
     /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
     fn commit(self: @Account) -> Result<(), EVMError> {
         let is_deployed = self.address().evm.is_deployed();
+        let is_ca = self.is_ca();
 
         // If a Starknet account is already deployed for this evm address, we
         // should "EVM-Deploy" only if the bytecode length is different (!=0) or the nonce is different.
-        let should_deploy = if is_deployed && self.is_ca() {
+        let should_deploy = if is_deployed && is_ca {
             let deployed_nonce = ContractAccountTrait::fetch_nonce(self)?;
             if (deployed_nonce != *self.nonce) {
                 true
             } else {
                 false
             }
+        } else if is_ca {
+            // Otherwise, the deploy condition is simply has_code_or_nonce - if the account is a CA.
+            self.has_code_or_nonce()
         } else {
-            // Otherwise, the deploy condition is simply has_code_or_nonce.
-            self.should_deploy()
+            false
         };
 
         if should_deploy {
@@ -214,18 +214,15 @@ impl AccountImpl of AccountTrait {
 
         if should_deploy {
             return Result::Ok(());
-        }
+        };
 
         // If the account was not scheduled for deployment - then update it if it's deployed.
-        if is_deployed {
-            // Only CAs have components commited on starknet.
-            if self.is_ca() {
-                if *self.selfdestruct {
-                    return ContractAccountTrait::selfdestruct(self);
-                }
-                self.store_nonce(*self.nonce);
-            };
-            return Result::Ok(());
+        // Only CAs have components commited on starknet.
+        if is_deployed && is_ca {
+            if *self.selfdestruct {
+                return ContractAccountTrait::selfdestruct(self);
+            }
+            self.store_nonce(*self.nonce)?;
         };
         return Result::Ok(());
     }
