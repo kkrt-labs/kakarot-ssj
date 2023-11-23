@@ -342,21 +342,7 @@ impl StateInternalImpl of StateInternalTrait {
                         .deref();
                     let res_account = self.get_account(evm_address);
                     match res_account {
-                        Result::Ok(account) => {
-                            let account_type = account.account_type;
-                            match account_type {
-                                //this shouldn't ever happen
-                                AccountType::EOA => {
-                                    panic_with_felt252('EOA account commitment')
-                                },
-                                AccountType::ContractAccount => {
-                                    account.store_storage(key, value);
-                                },
-                                AccountType::Unknown(_) => {
-                                    panic_with_felt252('Unknown account commitment')
-                                }
-                            }
-                        },
+                        Result::Ok(account) => { account.commit_storage(key, value); },
                         Result::Err(err) => { break Result::Err(err); }
                     }
                 },

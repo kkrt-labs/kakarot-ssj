@@ -227,6 +227,17 @@ impl AccountImpl of AccountTrait {
         return Result::Ok(());
     }
 
+    fn commit_storage(self: @Account, key: u256, value: u256) {
+        if self.is_selfdestruct() {
+            return;
+        }
+        match self.account_type {
+            AccountType::EOA => { panic_with_felt252('EOA account commitment') },
+            AccountType::ContractAccount => { self.store_storage(key, value); },
+            AccountType::Unknown(_) => { panic_with_felt252('Unknown account commitment') }
+        }
+    }
+
     #[inline(always)]
     fn address(self: @Account) -> Address {
         *self.address
