@@ -179,10 +179,10 @@ impl AccountImpl of AccountTrait {
         let is_ca = self.is_ca();
 
         // If a Starknet account is already deployed for this evm address, we
-        // should "EVM-Deploy" only if the bytecode length is different (!=0) or the nonce is different.
+        // should "EVM-Deploy" only if the nonce is different.
         let should_deploy = if is_deployed && is_ca {
             let deployed_nonce = ContractAccountTrait::fetch_nonce(self)?;
-            if (deployed_nonce != *self.nonce) {
+            if (deployed_nonce == 0 && deployed_nonce != *self.nonce) {
                 true
             } else {
                 false
