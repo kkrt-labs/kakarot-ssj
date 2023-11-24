@@ -143,19 +143,11 @@ fn test_kakarot_core_eoa_mapping() {
 #[available_gas(20000000)]
 fn test_kakarot_core_compute_starknet_address() {
     let evm_address = test_utils::evm_address();
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let expected_starknet_address = kakarot_core.deploy_eoa(evm_address);
 
-    // Precomputed Starknet address with the script compute_starknet_address.ts
-    // With arguments:
-    // ['STARKNET_CONTRACT_ADDRESS', kakarot_address: 0x01, salt: evm_address, class_hash: UninitializedAccount::TEST_CLASS_HASH, constructor_calldata: hash([kakarot_address, evm_address]), ]
-
-    let class_hash = UninitializedAccount::TEST_CLASS_HASH; // used to get the hash using the LSP
-    let expected_starknet_address: ContractAddress = contract_address_const::<
-        0x50f2821ed90360ac0508d52f8db1f87e541811773bce3dbcaf863c572cd696f
-    >();
-
-    let eoa_starknet_address = kakarot_core.compute_starknet_address(evm_address);
-    assert(eoa_starknet_address == expected_starknet_address, 'wrong starknet address');
+    let actual_starknet_address = kakarot_core.compute_starknet_address(evm_address);
+    assert(actual_starknet_address == expected_starknet_address, 'wrong starknet address');
 }
 
 #[test]
