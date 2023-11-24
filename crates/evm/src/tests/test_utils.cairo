@@ -109,7 +109,6 @@ impl MachineBuilderImpl of MachineBuilderTrait {
     }
 
     fn with_bytecode(self: MachineBuilder, bytecode: Span<u8>) -> MachineBuilder {
-        // with presets and with_bytecode
         let mut current_ctx = self.current_ctx.unbox();
         let mut call_ctx = current_ctx.call_ctx();
         call_ctx.bytecode = bytecode;
@@ -126,7 +125,6 @@ impl MachineBuilderImpl of MachineBuilderTrait {
     }
 
     fn with_nested_execution_context(self: MachineBuilder) -> MachineBuilder {
-        // with presets and with_nested_execution_context
         let current_ctx = self.current_ctx.unbox();
 
         // Second Execution Context
@@ -141,6 +139,19 @@ impl MachineBuilderImpl of MachineBuilderTrait {
         MachineBuilder {
             current_ctx: BoxTrait::new(child_context),
             ctx_count: self.ctx_count + 1,
+            stack: self.stack,
+            memory: self.memory,
+            state: self.state,
+            error: self.error
+        }
+    }
+
+    fn with_target(self: MachineBuilder, target: Address) -> MachineBuilder {
+        let mut current_ctx = self.current_ctx.unbox();
+        current_ctx.address = target;
+        MachineBuilder {
+            current_ctx: BoxTrait::new(current_ctx),
+            ctx_count: self.ctx_count,
             stack: self.stack,
             memory: self.memory,
             state: self.state,

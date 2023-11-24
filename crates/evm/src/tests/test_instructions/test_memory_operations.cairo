@@ -550,8 +550,7 @@ fn test_exec_sload_from_storage() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let mut machine = MachineBuilderImpl::new_with_presets().build();
-    let mut ca_address = ContractAccountTrait::deploy(machine.address().evm, array![].span())
-        .unwrap();
+    let mut ca_address = deploy_contract_account(machine.address().evm, array![].span());
     let account = Account {
         account_type: AccountType::ContractAccount,
         address: ca_address,

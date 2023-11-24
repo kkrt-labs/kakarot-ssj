@@ -17,8 +17,10 @@ use evm::model::eoa::EOATrait;
 use evm::model::{AccountTrait, Address, AccountType, Transfer};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, State};
+use evm::tests::test_utils::MachineBuilderTrait;
 use evm::tests::test_utils::{
-    MachineBuilderImpl, initialize_contract_account, native_token, evm_address
+    MachineBuilderImpl, initialize_contract_account, native_token, evm_address, test_address,
+    other_evm_address,
 };
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::EthAddress;
@@ -382,7 +384,7 @@ fn test_exec_call_code() {
         0x00
     ]
         .span();
-    let mut machine = setup_machine_with_bytecode(bytecode);
+    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
     // Deploy bytecode at 0x100
     // ret (+ 0x1 0x1)
     let deployed_bytecode = array![
@@ -572,8 +574,7 @@ fn test_exec_selfdestruct_existing_ca() {
     let ca_address = deploy_contract_account(destroyed_address, array![0x1, 0x2, 0x3].span());
     fund_account_with_native_token(ca_address.starknet, native_token, 1000);
     let recipient = EOATrait::deploy(other_evm_address()).expect('failed deploying eoa');
-    let mut machine = setup_machine_with_target(ca_address);
-
+    let mut machine = MachineBuilderImpl::new_with_presets().with_target(ca_address).build();
     // When
     machine.stack.push(recipient.evm.into());
     machine.exec_selfdestruct().expect('selfdestruct failed');
@@ -623,7 +624,7 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     let ca_address = deploy_contract_account('contract'.try_into().unwrap(), array![].span());
     fund_account_with_native_token(sender.starknet, native_token, 150);
     fund_account_with_native_token(ca_address.starknet, native_token, 100);
-    let mut machine = setup_machine_with_target(ca_address);
+    let mut machine = MachineBuilderImpl::new_with_presets().with_target(ca_address).build();
 
     // Cache the CA into state
     let mut ca = machine.state.get_account('contract'.try_into().unwrap()).expect('couldnt get CA');
