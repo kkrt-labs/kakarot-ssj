@@ -23,6 +23,10 @@ mod test_external_owned_account {
     use core::array::SpanTrait;
     use core::starknet::account::{Call, AccountContractDispatcher, AccountContractDispatcherTrait};
 
+
+    //todo(harsh): remove
+    use debug::PrintTrait;
+
     use evm::model::{Address, AddressTrait, ContractAccountTrait};
     use evm::tests::test_utils::{
         kakarot_address, evm_address, other_evm_address, eoa_address, chain_id, gas_limit, gas_price
@@ -124,6 +128,9 @@ mod test_external_owned_account {
         let evm_address = evm_address();
         let eoa = kakarot_core.deploy_eoa(evm_address);
 
+        //todo(harsh): remove
+        other_evm_address().print();
+
         let kakarot_address = kakarot_core.contract_address;
 
         let account = deploy_contract_account(other_evm_address(), counter_evm_bytecode());
@@ -158,12 +165,6 @@ mod test_external_owned_account {
         };
 
         let result = eoa_contract.__execute__(array![call]);
-
-        let call = Call {
-            to: kakarot_address,
-            selector: selector!("eth_send_transaction"),
-            calldata: encoded_tx.to_felt252_array()
-        };
 
         // check counter value has increased
         let return_data = kakarot_core
