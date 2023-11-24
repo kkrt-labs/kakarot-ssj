@@ -42,7 +42,7 @@ struct MachineBuilder {
 }
 
 #[generate_trait]
-impl MachineBuilderTestTrait of MachineBuilderTrait {
+impl MachineBuilderImpl of MachineBuilderTrait {
     fn new() -> MachineBuilder {
         MachineBuilder { machine: Default::default() }
     }

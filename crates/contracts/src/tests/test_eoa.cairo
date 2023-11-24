@@ -145,12 +145,12 @@ mod test_external_owned_account {
         // check counter value is 0 before doing inc
         let return_data = kakarot_core
             .eth_call(
-                from: evm_address,
+                origin: evm_address,
                 to: Option::Some(other_evm_address()),
                 gas_limit: gas_limit(),
                 gas_price: gas_price(),
                 value: 0,
-                data: data_get_tx
+                calldata: data_get_tx
             );
 
         assert(return_data == u256_to_bytes_array(0).span(), 'counter value not 0');
@@ -169,12 +169,12 @@ mod test_external_owned_account {
         // check counter value has increased
         let return_data = kakarot_core
             .eth_call(
-                from: evm_address,
+                origin: evm_address,
                 to: Option::Some(other_evm_address()),
                 gas_limit: gas_limit(),
                 gas_price: gas_price(),
                 value: 0,
-                data: data_get_tx
+                calldata: data_get_tx
             );
 
         assert(return_data == u256_to_bytes_array(1).span(), 'counter value not 1');
