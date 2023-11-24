@@ -118,7 +118,7 @@ mod test_external_owned_account {
 
     #[test]
     #[available_gas(2000000000)]
-    fn test_execute() {
+    fn test___execute__() {
         let (_, kakarot_core) = setup_contracts_for_testing();
 
         let evm_address = evm_address();
@@ -182,7 +182,7 @@ mod test_external_owned_account {
     #[test]
     #[available_gas(2000000000)]
     #[should_panic(expected: ('calls length is not 1', 'ENTRYPOINT_FAILED'))]
-    fn test_execute_should_fail_with_zero_calls() {
+    fn test___execute___should_fail_with_zero_calls() {
         let (_, kakarot) = setup_contracts_for_testing();
         let kakarot_address = kakarot.contract_address;
 
