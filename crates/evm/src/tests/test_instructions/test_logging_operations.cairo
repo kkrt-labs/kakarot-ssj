@@ -3,7 +3,7 @@ use evm::instructions::LoggingOperationsTrait;
 use evm::machine::{Machine, MachineCurrentContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::{setup_machine, setup_machine_with_read_only};
+use evm::tests::test_utils::{MachineBuilderImpl};
 use integer::BoundedInt;
 use utils::helpers::u256_to_bytes_array;
 
@@ -11,7 +11,7 @@ use utils::helpers::u256_to_bytes_array;
 #[available_gas(20000000)]
 fn test_exec_log0() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
@@ -40,7 +40,7 @@ fn test_exec_log0() {
 #[available_gas(20000000)]
 fn test_exec_log1() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
@@ -71,7 +71,7 @@ fn test_exec_log1() {
 #[available_gas(20000000)]
 fn test_exec_log2() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
@@ -104,7 +104,7 @@ fn test_exec_log2() {
 #[available_gas(20000000)]
 fn test_exec_log3() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
     machine.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
@@ -142,7 +142,7 @@ fn test_exec_log3() {
 #[available_gas(20000000)]
 fn test_exec_log4() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
     machine.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
@@ -180,7 +180,7 @@ fn test_exec_log4() {
 #[available_gas(20000000)]
 fn test_exec_log1_read_only_context() {
     // Given
-    let mut machine = setup_machine_with_read_only();
+    let mut machine = MachineBuilderImpl::new().with_read_only().build();
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
@@ -203,7 +203,7 @@ fn test_exec_log1_read_only_context() {
 #[available_gas(20000000)]
 fn test_exec_log1_size_0_offset_0() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
@@ -232,7 +232,7 @@ fn test_exec_log1_size_0_offset_0() {
 #[available_gas(20000000)]
 fn test_exec_log1_size_too_big() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
@@ -255,7 +255,7 @@ fn test_exec_log1_size_too_big() {
 #[available_gas(20000000)]
 fn test_exec_log1_offset_too_big() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
@@ -278,7 +278,7 @@ fn test_exec_log1_offset_too_big() {
 #[available_gas(20000000)]
 fn test_exec_log_multiple_events() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
     machine.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);

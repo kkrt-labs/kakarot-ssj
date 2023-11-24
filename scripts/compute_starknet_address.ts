@@ -13,7 +13,7 @@ rl.question("Enter the class hash: ", (classHashInput) => {
     "Enter the salt (default: 0x65766d5f61646472657373): ",
     (saltInput) => {
       rl.question(
-        "Enter the deployer address (default: 1): ",
+        "Enter the deployer address (default: 0x7753aaa1814b9f978fd93b66453ae87419b66d764fbf9313847edeb0283ef63): ",
         (deployerInput) => {
           rl.close();
 
@@ -23,7 +23,7 @@ rl.question("Enter the class hash: ", (classHashInput) => {
             : 0x65766d5f61646472657373n;
           const deployerAddress = deployerInput.trim()
             ? BigInt(deployerInput)
-            : 1n;
+            : 0x7753aaa1814b9f978fd93b66453ae87419b66d764fbf9313847edeb0283ef63n;
 
           const CONSTRUCTOR_CALLDATA = [deployerAddress, salt];
 

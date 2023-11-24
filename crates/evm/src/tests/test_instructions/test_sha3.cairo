@@ -4,13 +4,13 @@ use evm::instructions::Sha3Trait;
 use evm::instructions::sha3::internal;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::stack::StackTrait;
-use evm::tests::test_utils::setup_machine;
+use evm::tests::test_utils::MachineBuilderImpl;
 
 #[test]
 #[available_gas(20000000)]
 fn test_exec_sha3_size_0_offset_0() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(0x00);
     machine.stack.push(0x00);
@@ -34,7 +34,7 @@ fn test_exec_sha3_size_0_offset_0() {
 #[available_gas(20000000)]
 fn test_exec_sha3_size_5_offset_4() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(0x05);
     machine.stack.push(0x04);
@@ -56,7 +56,7 @@ fn test_exec_sha3_size_5_offset_4() {
 #[available_gas(20000000)]
 fn test_exec_sha3_size_10_offset_10() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(10);
     machine.stack.push(10);
@@ -78,7 +78,7 @@ fn test_exec_sha3_size_10_offset_10() {
 #[available_gas(1000000000000000)]
 fn test_exec_sha3_size_0xFFFFF_offset_1000() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(0xFFFFF);
     machine.stack.push(1000);
@@ -100,7 +100,7 @@ fn test_exec_sha3_size_0xFFFFF_offset_1000() {
 #[available_gas(1000000000000000)]
 fn test_exec_sha3_size_1000000_offset_2() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(1000000);
     machine.stack.push(2);
@@ -122,7 +122,7 @@ fn test_exec_sha3_size_1000000_offset_2() {
 #[available_gas(1000000000000000)]
 fn test_exec_sha3_size_1000000_offset_23() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(1000000);
     machine.stack.push(2);
@@ -145,7 +145,7 @@ fn test_exec_sha3_size_1000000_offset_23() {
 #[available_gas(20000000)]
 fn test_exec_sha3_size_1_offset_2048() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(1);
     machine.stack.push(2048);
@@ -167,7 +167,7 @@ fn test_exec_sha3_size_1_offset_2048() {
 #[available_gas(20000000)]
 fn test_exec_sha3_size_0_offset_1024() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(0);
     machine.stack.push(1024);
@@ -189,7 +189,7 @@ fn test_exec_sha3_size_0_offset_1024() {
 #[available_gas(20000000)]
 fn test_exec_sha3_size_32_offset_2016() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(32);
     machine.stack.push(2016);
@@ -211,7 +211,7 @@ fn test_exec_sha3_size_32_offset_2016() {
 #[available_gas(20000000)]
 fn test_exec_sha3_size_32_offset_0() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(32);
     machine.stack.push(0);
@@ -233,7 +233,7 @@ fn test_exec_sha3_size_32_offset_0() {
 #[available_gas(20000000)]
 fn test_exec_sha3_size_31_offset_0() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(31);
     machine.stack.push(0);
@@ -255,7 +255,7 @@ fn test_exec_sha3_size_31_offset_0() {
 #[available_gas(20000000)]
 fn test_exec_sha3_size_33_offset_0() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(33);
     machine.stack.push(0);
@@ -277,7 +277,7 @@ fn test_exec_sha3_size_33_offset_0() {
 #[available_gas(20000000000)]
 fn test_exec_sha3_size_0x0C80_offset_0() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
 
     machine.stack.push(0x0C80);
     machine.stack.push(0x00);
@@ -308,7 +308,7 @@ fn test_exec_sha3_size_0x0C80_offset_0() {
 #[available_gas(20000000000)]
 fn test_internal_fill_array_with_memory_words() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     let mut to_hash: Array<u64> = Default::default();
 
     machine.memory.store(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
@@ -333,7 +333,7 @@ fn test_internal_fill_array_with_memory_words() {
 #[available_gas(20000000000)]
 fn test_internal_fill_array_with_memory_words_size_33() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     let mut to_hash: Array<u64> = Default::default();
 
     machine.memory.store(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
