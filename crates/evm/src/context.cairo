@@ -144,14 +144,16 @@ struct ExecutionContext {
     parent_ctx: Nullable<ExecutionContext>,
 }
 
-/// A context is either: the root, a call sub-context or a create sub-context.
+
+type IsCreate = bool;
 /// In the case of call and create, the execution context requires an id number
 /// to access their respective Stack and Memory; while the Root context always has
 /// id equal to 0.
+/// A context is either: the root, a call sub-context or a create sub-context.
 #[derive(Drop, Default, Copy, PartialEq)]
 enum ExecutionContextType {
     #[default]
-    Root: bool,
+    Root: IsCreate,
     Call: usize,
     Create: usize
 }
@@ -334,7 +336,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn id(self: @ExecutionContext) -> usize {
         match *self.ctx_type {
-            ExecutionContextType::Root => 0,
+            ExecutionContextType::Root(_) => 0,
             ExecutionContextType::Call(id) => id,
             ExecutionContextType::Create(id) => id,
         }
