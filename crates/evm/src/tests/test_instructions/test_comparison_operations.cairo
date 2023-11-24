@@ -1,13 +1,13 @@
 use evm::instructions::ComparisonAndBitwiseOperationsTrait;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::setup_machine;
+use evm::tests::test_utils::MachineBuilderImpl;
 use integer::BoundedInt;
 
 #[test]
 #[available_gas(20000000)]
 fn test_eq_same_pair() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
     machine.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
 
@@ -23,7 +23,7 @@ fn test_eq_same_pair() {
 #[available_gas(20000000)]
 fn test_eq_different_pair() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0xAB8765432DCBA98765410F149E87610FDCBA98765432543217654DCBA93210F8).unwrap();
     machine.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
 
@@ -39,7 +39,7 @@ fn test_eq_different_pair() {
 #[available_gas(20000000)]
 fn test_and_zero_and_max() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0x00).unwrap();
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
 
@@ -55,7 +55,7 @@ fn test_and_zero_and_max() {
 #[available_gas(20000000)]
 fn test_and_max_and_max() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
 
@@ -73,7 +73,7 @@ fn test_and_max_and_max() {
 #[available_gas(20000000)]
 fn test_and_two_random_uint() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0xAB8765432DCBA98765410F149E87610FDCBA98765432543217654DCBA93210F8).unwrap();
     machine.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
 
@@ -96,7 +96,7 @@ fn test_and_two_random_uint() {
 #[available_gas(20000000)]
 fn test_xor_different_pair() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0b010101).unwrap();
     machine.stack.push(0b101010).unwrap();
 
@@ -112,7 +112,7 @@ fn test_xor_different_pair() {
 #[available_gas(20000000)]
 fn test_xor_same_pair() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0b000111).unwrap();
     machine.stack.push(0b000111).unwrap();
 
@@ -128,7 +128,7 @@ fn test_xor_same_pair() {
 #[available_gas(20000000)]
 fn test_xor_half_same_pair() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0b111000).unwrap();
     machine.stack.push(0b000000).unwrap();
 
@@ -145,7 +145,7 @@ fn test_xor_half_same_pair() {
 #[available_gas(20000000)]
 fn test_not_zero() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0x00).unwrap();
 
     // When
@@ -163,7 +163,7 @@ fn test_not_zero() {
 #[available_gas(20000000)]
 fn test_not_max_uint() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
 
     // When
@@ -178,7 +178,7 @@ fn test_not_max_uint() {
 #[available_gas(20000000)]
 fn test_not_random_uint() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0x123456789ABCDEF123456789ABCDEF123456789ABCDEF123456789ABCDEF1234).unwrap();
 
     // When
@@ -199,7 +199,7 @@ fn test_not_random_uint() {
 #[available_gas(20000000)]
 fn test_is_zero_true() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0x00).unwrap();
 
     // When
@@ -214,7 +214,7 @@ fn test_is_zero_true() {
 #[available_gas(20000000)]
 fn test_is_zero_false() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0x01).unwrap();
 
     // When
@@ -229,7 +229,7 @@ fn test_is_zero_false() {
 #[available_gas(20000000)]
 fn test_byte_random_u256() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0xf7ec8b2ea4a6b7fd5f4ed41b66197fcc14c4a37d68275ea151d899bb4d7c2ae7).unwrap();
     machine.stack.push(0x08).unwrap();
 
@@ -245,7 +245,7 @@ fn test_byte_random_u256() {
 #[available_gas(20000000)]
 fn test_byte_offset_out_of_range() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0x01be893aefcfa1592f60622b80d45c2db74281d2b9e10c14b0f6ce7c8f58e209).unwrap();
     machine.stack.push(32_u256).unwrap();
 
@@ -261,7 +261,7 @@ fn test_byte_offset_out_of_range() {
 #[available_gas(20000000)]
 fn test_exec_gt_true() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(9_u256).unwrap();
     machine.stack.push(10_u256).unwrap();
 
@@ -277,7 +277,7 @@ fn test_exec_gt_true() {
 #[available_gas(20000000)]
 fn test_exec_shl() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0xff00000000000000000000000000000000000000000000000000000000000000).unwrap();
     machine.stack.push(4_u256).unwrap();
 
@@ -299,7 +299,7 @@ fn test_exec_shl() {
 #[available_gas(20000000)]
 fn test_exec_shl_wrapping() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0xff00000000000000000000000000000000000000000000000000000000000000).unwrap();
     machine.stack.push(256_u256).unwrap();
 
@@ -315,7 +315,7 @@ fn test_exec_shl_wrapping() {
 #[available_gas(20000000)]
 fn test_exec_gt_false() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(10_u256).unwrap();
     machine.stack.push(9_u256).unwrap();
 
@@ -331,7 +331,7 @@ fn test_exec_gt_false() {
 #[available_gas(20000000)]
 fn test_exec_gt_false_equal() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(10_u256).unwrap();
     machine.stack.push(10_u256).unwrap();
 
@@ -576,7 +576,7 @@ fn test_exec_slt() {
 
 fn assert_slt(b: u256, a: u256, expected: u256) {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(b);
     machine.stack.push(a);
 
@@ -821,7 +821,7 @@ fn test_exec_sgt() {
 
 fn assert_sgt(b: u256, a: u256, expected: u256) {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(b);
     machine.stack.push(a);
 
@@ -1246,7 +1246,7 @@ fn test_exec_shr() {
 
 fn assert_shr(a: u256, b: u256, expected: u256) {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(a).unwrap();
     machine.stack.push(b).unwrap();
 
@@ -1671,7 +1671,7 @@ fn test_exec_sar() {
 
 fn assert_sar(a: u256, b: u256, expected: u256) {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(a).unwrap();
     machine.stack.push(b).unwrap();
 
@@ -1688,7 +1688,7 @@ fn assert_sar(a: u256, b: u256, expected: u256) {
 #[available_gas(20000000)]
 fn test_exec_or_should_pop_0_and_1_and_push_0xCD_when_0_is_0x89_and_1_is_0xC5() {
     //Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0x89);
     machine.stack.push(0xC5);
 
@@ -1704,7 +1704,7 @@ fn test_exec_or_should_pop_0_and_1_and_push_0xCD_when_0_is_0x89_and_1_is_0xC5() 
 #[available_gas(20000000)]
 fn test_or_true() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0x01).unwrap();
     machine.stack.push(0x00).unwrap();
 
@@ -1720,7 +1720,7 @@ fn test_or_true() {
 #[available_gas(20000000)]
 fn test_or_false() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(0x00).unwrap();
     machine.stack.push(0x00).unwrap();
 
@@ -1737,7 +1737,7 @@ fn test_or_false() {
 #[available_gas(20000000)]
 fn test_exec_lt_true() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(10_u256).unwrap();
     machine.stack.push(9_u256).unwrap();
 
@@ -1753,7 +1753,7 @@ fn test_exec_lt_true() {
 #[available_gas(20000000)]
 fn test_exec_lt_false() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(10_u256).unwrap();
     machine.stack.push(20_u256).unwrap();
 
@@ -1769,7 +1769,7 @@ fn test_exec_lt_false() {
 #[available_gas(20000000)]
 fn test_exec_lt_false_eq() {
     // Given
-    let mut machine = setup_machine();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     machine.stack.push(10_u256).unwrap();
     machine.stack.push(10_u256).unwrap();
 

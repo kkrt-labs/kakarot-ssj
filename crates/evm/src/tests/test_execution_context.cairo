@@ -1,15 +1,15 @@
+use core::box::BoxTrait;
 use core::nullable::{NullableTrait, null};
 use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
     DefaultOptionSpanU8
 };
+use evm::machine::{MachineCurrentContextTrait};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Event, Address};
 use evm::stack::{Stack, StackTrait};
-use evm::tests::test_utils::{
-    setup_call_context, setup_execution_context, setup_nested_execution_context,
-    setup_execution_context_with_bytecode, CallContextPartialEq
-};
+use evm::tests::test_utils::MachineBuilderTrait;
+use evm::tests::test_utils::{MachineBuilderImpl, CallContextPartialEq};
 use evm::tests::test_utils;
 use starknet::testing::{set_contract_address, set_caller_address};
 use starknet::{EthAddress, ContractAddress};
@@ -56,8 +56,9 @@ fn test_call_context_new() {
 #[test]
 #[available_gas(500000)]
 fn test_execution_context_new() {
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
     // Given
-    let call_ctx = setup_call_context();
+    let call_ctx = machine.call_ctx();
     let context_id = ExecutionContextType::Root;
     let program_counter: u32 = 0;
 
@@ -97,10 +98,11 @@ fn test_execution_context_new() {
 }
 
 #[test]
-#[available_gas(100000)]
+#[available_gas(1000000)]
 fn test_execution_context_stop_and_revert() {
     // Given
-    let mut execution_context = setup_execution_context();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut execution_context = machine.current_ctx.unbox();
 
     // When
     execution_context.set_stopped();
@@ -113,7 +115,8 @@ fn test_execution_context_stop_and_revert() {
 #[available_gas(1000000)]
 fn test_execution_context_revert() {
     // Given
-    let mut execution_context = setup_execution_context();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut execution_context = machine.current_ctx.unbox();
 
     // When
     let revert_reason = array![0, 1, 2, 3].span();
@@ -127,11 +130,13 @@ fn test_execution_context_revert() {
 #[available_gas(300000)]
 fn test_execution_context_read_code() {
     // Given
-    let mut execution_context = setup_execution_context_with_bytecode(array![1, 2, 3].span());
+    let mut machine = MachineBuilderImpl::new_with_presets()
+        .with_bytecode(array![1, 2, 3].span())
+        .build();
 
     // When
     let len = 2;
-    let code = execution_context.read_code(len);
+    let code = machine.current_ctx.unbox().read_code(len);
 
     // Then
     assert(code == array![1, 2].span(), 'wrong code read'); // Compare with expected slice
@@ -142,7 +147,8 @@ fn test_execution_context_read_code() {
 #[available_gas(300000)]
 fn test_is_root() {
     // Given
-    let mut execution_context = setup_execution_context();
+    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut execution_context = machine.current_ctx.unbox();
 
     // When
     let is_root = execution_context.is_root();
@@ -153,14 +159,16 @@ fn test_is_root() {
 
 
 #[test]
-#[available_gas(300000)]
+#[available_gas(3000000)]
 fn test_origin() {
     // Given
-    let mut execution_context = setup_nested_execution_context();
+    let mut machine = MachineBuilderImpl::new_with_presets()
+        .with_nested_execution_context()
+        .build();
+    let mut context = machine.current_ctx.unbox();
 
     // When
-    let origin = execution_context.origin();
-
+    let origin = context.origin();
     // Then
     assert(origin == test_address(), 'wrong origin');
 }
