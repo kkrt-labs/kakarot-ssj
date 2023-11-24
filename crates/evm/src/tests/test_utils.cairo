@@ -268,12 +268,11 @@ fn setup_call_context() -> CallContext {
         gas_price,
         output_offset,
         output_size,
-        false
     )
 }
 
 fn preset_execution_context() -> ExecutionContext {
-    let context_id = ExecutionContextType::Root;
+    let context_id = ExecutionContextType::Root(false);
     let call_ctx = setup_call_context();
     let address = test_address();
     let return_data = array![1, 2, 3].span();

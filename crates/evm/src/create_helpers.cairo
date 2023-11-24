@@ -115,7 +115,6 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
             gas_price: self.gas_price(),
             ret_offset: 0,
             ret_size: 0,
-            is_create: true
         );
 
         let parent_ctx = NullableTrait::new(self.current_ctx.unbox());

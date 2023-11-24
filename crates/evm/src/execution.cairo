@@ -65,10 +65,9 @@ fn execute(
         :gas_price,
         ret_offset: 0,
         ret_size: 0,
-        is_create: is_deploy_tx
     );
     let ctx = ExecutionContextTrait::new(
-        ctx_type: Default::default(),
+        ctx_type: ExecutionContextType::Root(is_deploy_tx),
         address: target,
         :call_ctx,
         parent_ctx: Default::default(),

@@ -42,7 +42,6 @@ fn test_call_context_new() {
         gas_price,
         output_offset,
         output_size,
-        false
     );
 
     // Then
@@ -52,7 +51,6 @@ fn test_call_context_new() {
     assert(call_ctx.gas_limit() == gas_limit, 'wrong gas_limit');
     assert(call_ctx.gas_price() == gas_price, 'wrong gas_price');
     assert(call_ctx.read_only() == read_only, 'wrong read_only');
-    assert(call_ctx.is_create() == false, 'wrong is_create');
 }
 
 #[test]
@@ -61,7 +59,7 @@ fn test_execution_context_new() {
     let mut machine = MachineBuilderImpl::new_with_presets().build();
     // Given
     let call_ctx = machine.call_ctx();
-    let context_id = ExecutionContextType::Root;
+    let context_id = ExecutionContextType::Root(false);
     let program_counter: u32 = 0;
 
     let stopped: bool = false;
@@ -97,6 +95,7 @@ fn test_execution_context_new() {
         execution_context.create_addresses() == create_addresses.span(), 'wrong create_addresses'
     );
     assert(execution_context.reverted() == reverted, 'wrong reverted');
+    assert(execution_context.is_create() == false, 'wrong is_create');
 }
 
 #[test]

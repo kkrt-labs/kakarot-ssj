@@ -139,7 +139,6 @@ impl MachineCallHelpersImpl of MachineCallHelpers {
             self.gas_price(),
             call_args.ret_offset,
             call_args.ret_size,
-            false,
         );
 
         let parent_ctx = NullableTrait::new(self.current_ctx.unbox());

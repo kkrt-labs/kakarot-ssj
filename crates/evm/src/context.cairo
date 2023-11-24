@@ -42,8 +42,6 @@ struct CallContext {
     ret_offset: usize,
     // The size in memory to store the context return
     ret_size: usize,
-    //  If the call is a create call
-    is_create: bool
 }
 
 #[generate_trait]
@@ -59,7 +57,6 @@ impl CallContextImpl of CallContextTrait {
         gas_price: u128,
         ret_offset: usize,
         ret_size: usize,
-        is_create: bool,
     ) -> CallContext {
         CallContext {
             caller,
@@ -71,7 +68,6 @@ impl CallContextImpl of CallContextTrait {
             gas_price,
             ret_offset,
             ret_size,
-            is_create
         }
     }
 
@@ -110,11 +106,6 @@ impl CallContextImpl of CallContextTrait {
     #[inline(always)]
     fn gas_price(self: @CallContext) -> u128 {
         *self.gas_price
-    }
-
-    #[inline(always)]
-    fn is_create(self: @CallContext) -> bool {
-        *self.is_create
     }
 }
 
@@ -160,7 +151,7 @@ struct ExecutionContext {
 #[derive(Drop, Default, Copy, PartialEq)]
 enum ExecutionContextType {
     #[default]
-    Root,
+    Root: bool,
     Call: usize,
     Create: usize
 }
@@ -319,7 +310,20 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     #[inline(always)]
     fn is_root(self: @ExecutionContext) -> bool {
-        *self.ctx_type == ExecutionContextType::Root
+        match *self.ctx_type {
+            ExecutionContextType::Root(_) => true,
+            ExecutionContextType::Call(_) => false,
+            ExecutionContextType::Create(_) => false,
+        }
+    }
+
+    #[inline(always)]
+    fn is_create(self: @ExecutionContext) -> bool {
+        match *self.ctx_type {
+            ExecutionContextType::Root(is_create) => is_create,
+            ExecutionContextType::Call(_) => false,
+            ExecutionContextType::Create(_) => true,
+        }
     }
 
     #[inline(always)]

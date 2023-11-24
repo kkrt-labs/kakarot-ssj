@@ -668,9 +668,9 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
     /// transactional changes.
     fn finalize_context(ref self: EVMInterpreter, ref machine: Machine) {
         match machine.ctx_type() {
-            ExecutionContextType::Root => { // TODO: error handling
+            ExecutionContextType::Root(is_create) => { // TODO: error handling
                 // In case of a deploy tx, we need to store the return_data in the account.
-                if machine.call_ctx().is_create() {
+                if is_create {
                     let mut deployed_account = machine.state.get_account(machine.address().evm);
                     deployed_account.set_code(machine.return_data());
                     machine.state.set_account(deployed_account);
