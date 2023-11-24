@@ -119,7 +119,7 @@ mod ExternallyOwnedAccount {
                 EthTransactionTrait::decode(
                 calldata.span()
             )
-                .unwrap();
+                .expect('rlp decoding of tx failed');
 
             let kakarot_core_dispatcher = IKakarotCoreDispatcher {
                 contract_address: self.kakarot_core_address()
