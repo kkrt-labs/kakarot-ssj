@@ -978,7 +978,7 @@ impl ResultExImpl<T, E, +Drop<T>, +Drop<E>> of ResultExTrait<T, E> {
 
 #[generate_trait]
 impl Felt252SpanExImpl of Felt252SpanExTrait {
-    fn to_bytes(self: Span<felt252>) -> Array<u8> {
+    fn try_into_bytes(self: Span<felt252>) -> Option<Array<u8>> {
         let mut i = 0;
         let mut bytes: Array<u8> = Default::default();
 
@@ -987,13 +987,22 @@ impl Felt252SpanExImpl of Felt252SpanExTrait {
                 break ();
             };
 
-            let v: u8 = (*self[i]).try_into().unwrap();
-            bytes.append(v);
+            let v: Option<u8> = (*self[i]).try_into();
+
+            match v {
+                Option::Some(v) => { bytes.append(v); },
+                Option::None => { break (); }
+            }
 
             i += 1;
         };
 
-        bytes
+        // it means there was an error in the above loop
+        if (i != self.len()) {
+            Option::None
+        } else {
+            Option::Some(bytes)
+        }
     }
 }
 

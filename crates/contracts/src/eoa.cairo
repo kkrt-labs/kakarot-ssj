@@ -18,6 +18,7 @@ mod ExternallyOwnedAccount {
     use contracts::components::upgradeable::IUpgradeable;
     use contracts::components::upgradeable::upgradeable_component;
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
+    use core::option::OptionTrait;
 
     use starknet::account::{Call, AccountContract};
 
@@ -107,7 +108,7 @@ mod ExternallyOwnedAccount {
             assert(calls.len() == 1, 'calls length is not 1');
 
             let call = calls.at(0);
-            let calldata = call.calldata.span().to_bytes();
+            let calldata = call.calldata.span().try_into_bytes().expect('conversion failed');
 
             let EthereumTransaction{nonce,
             gas_price,
