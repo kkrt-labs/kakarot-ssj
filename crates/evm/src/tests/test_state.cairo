@@ -367,9 +367,9 @@ mod test_state {
             UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
         );
         let sender = Address { evm: sender_evm_address, starknet: sender_starknet_address };
-        
+
         // since sender and recipient is same
-        let transfer = Transfer { sender:sender, recipient:sender, amount:100 };
+        let transfer = Transfer { sender: sender, recipient: sender, amount: 100 };
 
         // Write user balances in cache to avoid fetching from SN storage
         state.write_balance(sender.evm, 300);
