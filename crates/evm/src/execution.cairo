@@ -110,16 +110,16 @@ fn execute(
     }
 }
 
-fn reverted_with_err(mut self: Machine, error: EVMError) -> ExecutionResult {
-    self.set_stopped();
+fn reverted_with_err(mut machine: Machine, error: EVMError) -> ExecutionResult {
+    machine.set_stopped();
     ExecutionResult {
-        address: self.address(),
+        address: machine.address(),
         status: Status::Reverted,
         return_data: Default::default().span(),
         destroyed_contracts: Default::default().span(),
         create_addresses: Default::default().span(),
         events: Default::default().span(),
-        state: self.state,
+        state: machine.state,
         error: Option::Some(error)
     }
 }

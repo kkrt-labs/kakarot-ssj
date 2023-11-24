@@ -1,7 +1,7 @@
 use evm::instructions::DuplicationOperationsTrait;
 use evm::stack::Stack;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::MachineBuilderImpl;
+use evm::tests::test_utils::MachineBuilderTestTrait;
 use integer::BoundedInt;
 
 
@@ -39,7 +39,7 @@ fn push_zeros(ref stack: Stack, n: u8) {
 #[available_gas(20000000)]
 fn test_dup1() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -65,7 +65,7 @@ fn test_dup1() {
 #[available_gas(20000000)]
 fn test_dup2() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -92,7 +92,7 @@ fn test_dup2() {
 #[available_gas(20000000)]
 fn test_dup3() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -119,7 +119,7 @@ fn test_dup3() {
 #[available_gas(20000000)]
 fn test_dup4() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -146,7 +146,7 @@ fn test_dup4() {
 #[available_gas(20000000)]
 fn test_dup5() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -173,7 +173,7 @@ fn test_dup5() {
 #[available_gas(20000000)]
 fn test_dup6() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -200,7 +200,7 @@ fn test_dup6() {
 #[available_gas(20000000)]
 fn test_dup7() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -227,7 +227,7 @@ fn test_dup7() {
 #[available_gas(20000000)]
 fn test_dup8() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -254,7 +254,7 @@ fn test_dup8() {
 #[available_gas(20000000)]
 fn test_dup9() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -281,7 +281,7 @@ fn test_dup9() {
 #[available_gas(20000000)]
 fn test_dup10() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -308,7 +308,7 @@ fn test_dup10() {
 #[available_gas(20000000)]
 fn test_dup11() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -335,7 +335,7 @@ fn test_dup11() {
 #[available_gas(20000000)]
 fn test_dup12() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -362,7 +362,7 @@ fn test_dup12() {
 #[available_gas(20000000)]
 fn test_dup13() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -389,7 +389,7 @@ fn test_dup13() {
 #[available_gas(20000000)]
 fn test_dup14() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -416,7 +416,7 @@ fn test_dup14() {
 #[available_gas(20000000)]
 fn test_dup15() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 
@@ -443,7 +443,7 @@ fn test_dup15() {
 #[available_gas(20000000)]
 fn test_dup16() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let initial_len = machine.stack.len();
 

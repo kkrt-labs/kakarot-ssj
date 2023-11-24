@@ -5,7 +5,7 @@ use evm::context::{
     DefaultOptionSpanU8
 };
 use evm::errors::{EVMError};
-use evm::machine::{Machine, MachineTrait};
+use evm::machine::{Machine, MachineBuilder, MachineTrait};
 use evm::model::{ContractAccountTrait, Address, Account, AccountType};
 use evm::state::State;
 use evm::{stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}};
@@ -15,117 +15,71 @@ use starknet::{
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
 };
 
-#[derive(Destruct)]
-struct MachineBuilder {
-    current_ctx: Box<ExecutionContext>,
-    ctx_count: usize,
-    stack: Stack,
-    memory: Memory,
-    state: State,
-    error: Option<EVMError>
-}
-
 #[generate_trait]
-impl MachineBuilderImpl of MachineBuilderTrait {
+impl MachineBuilderTestImpl of MachineBuilderTestTrait {
     fn new() -> MachineBuilder {
-        MachineBuilder {
-            current_ctx: Default::default(),
-            ctx_count: 1,
-            stack: Default::default(),
-            memory: Default::default(),
-            state: Default::default(),
-            error: Option::None
-        }
+        MachineBuilder { machine: Default::default() }
     }
 
     fn new_with_presets() -> MachineBuilder {
+        let ctx = preset_execution_context();
         MachineBuilder {
-            current_ctx: BoxTrait::new(preset_execution_context()),
-            ctx_count: 1,
-            stack: Default::default(),
-            memory: Default::default(),
-            state: Default::default(),
-            error: Option::None
+            machine: Machine {
+                current_ctx: BoxTrait::new(ctx),
+                ctx_count: 1,
+                state: Default::default(),
+                stack: Default::default(),
+                memory: Default::default(),
+                error: Option::None,
+            }
         }
     }
 
-    fn with_return_data(self: MachineBuilder, return_data: Span<u8>) -> MachineBuilder {
-        let mut current_ctx = self.current_ctx.unbox();
+    fn with_return_data(mut self: MachineBuilder, return_data: Span<u8>) -> MachineBuilder {
+        let mut current_ctx = self.machine.current_ctx.unbox();
         current_ctx.return_data = return_data;
-        MachineBuilder {
-            current_ctx: BoxTrait::new(current_ctx),
-            ctx_count: self.ctx_count,
-            stack: self.stack,
-            memory: self.memory,
-            state: self.state,
-            error: self.error
-        }
+        self.machine.current_ctx = BoxTrait::new(current_ctx);
+        self
     }
 
-    fn with_caller(self: MachineBuilder, address: Address) -> MachineBuilder {
-        let mut current_ctx = self.current_ctx.unbox();
+    fn with_caller(mut self: MachineBuilder, address: Address) -> MachineBuilder {
+        let mut current_ctx = self.machine.current_ctx.unbox();
         let mut call_ctx = current_ctx.call_ctx();
         call_ctx.caller = address;
         current_ctx.call_ctx = BoxTrait::new(call_ctx);
-        MachineBuilder {
-            current_ctx: BoxTrait::new(current_ctx),
-            ctx_count: self.ctx_count,
-            stack: self.stack,
-            memory: self.memory,
-            state: self.state,
-            error: self.error
-        }
+        self.machine.current_ctx = BoxTrait::new(current_ctx);
+        self
     }
 
-    fn with_calldata(self: MachineBuilder, calldata: Span<u8>) -> MachineBuilder {
-        let mut current_ctx = self.current_ctx.unbox();
+    fn with_calldata(mut self: MachineBuilder, calldata: Span<u8>) -> MachineBuilder {
+        let mut current_ctx = self.machine.current_ctx.unbox();
         let mut call_ctx = current_ctx.call_ctx();
         call_ctx.calldata = calldata;
         current_ctx.call_ctx = BoxTrait::new(call_ctx);
-        // We need to send a copy of the MachineBuilder, as the stack, memory, state and error do not implement the Copy trait
-        MachineBuilder {
-            current_ctx: BoxTrait::new(current_ctx),
-            ctx_count: self.ctx_count,
-            stack: self.stack,
-            memory: self.memory,
-            state: self.state,
-            error: self.error
-        }
+        self.machine.current_ctx = BoxTrait::new(current_ctx);
+        self
     }
 
-    fn with_read_only(self: MachineBuilder) -> MachineBuilder {
-        let mut current_ctx = self.current_ctx.unbox();
+    fn with_read_only(mut self: MachineBuilder) -> MachineBuilder {
+        let mut current_ctx = self.machine.current_ctx.unbox();
         let mut call_ctx = current_ctx.call_ctx();
         call_ctx.read_only = true;
         current_ctx.call_ctx = BoxTrait::new(call_ctx);
-        MachineBuilder {
-            current_ctx: BoxTrait::new(current_ctx),
-            ctx_count: self.ctx_count,
-            stack: self.stack,
-            memory: self.memory,
-            state: self.state,
-            error: self.error
-        }
+        self.machine.current_ctx = BoxTrait::new(current_ctx);
+        self
     }
 
-    fn with_bytecode(self: MachineBuilder, bytecode: Span<u8>) -> MachineBuilder {
-        let mut current_ctx = self.current_ctx.unbox();
+    fn with_bytecode(mut self: MachineBuilder, bytecode: Span<u8>) -> MachineBuilder {
+        let mut current_ctx = self.machine.current_ctx.unbox();
         let mut call_ctx = current_ctx.call_ctx();
         call_ctx.bytecode = bytecode;
         current_ctx.call_ctx = BoxTrait::new(call_ctx);
-
-        MachineBuilder {
-            current_ctx: BoxTrait::new(current_ctx),
-            ctx_count: self.ctx_count,
-            stack: self.stack,
-            memory: self.memory,
-            state: self.state,
-            error: self.error
-        }
+        self.machine.current_ctx = BoxTrait::new(current_ctx);
+        self
     }
 
-    fn with_nested_execution_context(self: MachineBuilder) -> MachineBuilder {
-        let current_ctx = self.current_ctx.unbox();
+    fn with_nested_execution_context(mut self: MachineBuilder) -> MachineBuilder {
+        let current_ctx = self.machine.current_ctx.unbox();
 
         // Second Execution Context
         let context_id = ExecutionContextType::Call(1);
@@ -135,40 +89,19 @@ impl MachineBuilderImpl of MachineBuilderTrait {
         let mut call_ctx = child_context.call_ctx();
         call_ctx.caller = other_address();
         child_context.call_ctx = BoxTrait::new(call_ctx);
-
-        MachineBuilder {
-            current_ctx: BoxTrait::new(child_context),
-            ctx_count: self.ctx_count + 1,
-            stack: self.stack,
-            memory: self.memory,
-            state: self.state,
-            error: self.error
-        }
+        self.machine.current_ctx = BoxTrait::new(child_context);
+        self
     }
 
-    fn with_target(self: MachineBuilder, target: Address) -> MachineBuilder {
-        let mut current_ctx = self.current_ctx.unbox();
+    fn with_target(mut self: MachineBuilder, target: Address) -> MachineBuilder {
+        let mut current_ctx = self.machine.current_ctx.unbox();
         current_ctx.address = target;
-        MachineBuilder {
-            current_ctx: BoxTrait::new(current_ctx),
-            ctx_count: self.ctx_count,
-            stack: self.stack,
-            memory: self.memory,
-            state: self.state,
-            error: self.error
-        }
+        self.machine.current_ctx = BoxTrait::new(current_ctx);
+        self
     }
 
     fn build(self: MachineBuilder) -> Machine {
-        let machine = Machine {
-            current_ctx: self.current_ctx,
-            ctx_count: self.ctx_count,
-            stack: self.stack,
-            memory: self.memory,
-            state: self.state,
-            error: self.error,
-        };
-        return machine;
+        return self.machine;
     }
 }
 

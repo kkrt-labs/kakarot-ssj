@@ -36,13 +36,13 @@ impl DefaultMachine of Default<Machine> {
     }
 }
 
-
+#[derive(Destruct)]
 struct MachineBuilder {
     machine: Machine
 }
 
 #[generate_trait]
-impl MachineBuilderImpl of MachineBuilderTrait {
+impl MachineBuilderTestTrait of MachineBuilderTrait {
     fn new() -> MachineBuilder {
         MachineBuilder { machine: Default::default() }
     }

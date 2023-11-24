@@ -381,9 +381,6 @@ mod KakarotCore {
             value: u256,
             calldata: Span<u8>
         ) -> Result<ExecutionResult, EVMError> {
-            let starknet_origin_address = self.compute_starknet_address(origin.evm);
-            let origin = Address { evm: origin.evm, starknet: starknet_origin_address };
-
             let (to, is_deploy_tx) = match to {
                 Option::Some(to) => {
                     let target_starknet_address = self.compute_starknet_address(to);
