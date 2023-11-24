@@ -354,6 +354,76 @@ mod test_state {
 
     #[test]
     #[available_gas(200000000)]
+    fn test_add_transfer_with_same_sender_and_recipient() {
+        //Given
+        let mut state: State = Default::default();
+        let deployer = test_utils::kakarot_address();
+        set_contract_address(deployer);
+
+        let sender_evm_address = test_utils::evm_address();
+        let sender_starknet_address = compute_starknet_address(
+            deployer.into(),
+            sender_evm_address,
+            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
+        );
+        let sender = Address { evm: sender_evm_address, starknet: sender_starknet_address };
+        
+        // since sender and recipient is same
+        let transfer = Transfer { sender:sender, recipient:sender, amount:100 };
+
+        // Write user balances in cache to avoid fetching from SN storage
+        state.write_balance(sender.evm, 300);
+
+        // When
+        state.add_transfer(transfer).unwrap();
+
+        // Then, no transfer appended to log and cached balances updated
+        assert(state.transfers.contextual_logs.len() == 0, 'Transfer added');
+
+        assert(state.read_balance(sender.evm).unwrap() == 300, 'Sender balance mismatch');
+    }
+
+    #[test]
+    #[available_gas(200000000)]
+    fn test_add_transfer_when_amount_is_zero() {
+        //Given
+        let mut state: State = Default::default();
+        let deployer = test_utils::kakarot_address();
+        set_contract_address(deployer);
+
+        let sender_evm_address = test_utils::evm_address();
+        let sender_starknet_address = compute_starknet_address(
+            deployer.into(),
+            sender_evm_address,
+            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
+        );
+        let sender = Address { evm: sender_evm_address, starknet: sender_starknet_address };
+        let recipient_evm_address = test_utils::other_evm_address();
+        let recipient_starknet_address = compute_starknet_address(
+            deployer.into(),
+            recipient_evm_address,
+            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
+        );
+        let recipient = Address {
+            evm: recipient_evm_address, starknet: recipient_starknet_address
+        };
+        let transfer = Transfer { sender, recipient, amount: 0 };
+        // Write user balances in cache to avoid fetching from SN storage
+        state.write_balance(sender.evm, 300);
+        state.write_balance(recipient.evm, 0);
+
+        // When
+        state.add_transfer(transfer).unwrap();
+
+        // Then, no transfer appended to log and cached balances updated
+        assert(state.transfers.contextual_logs.len() == 0, 'Transfer added');
+
+        assert(state.read_balance(sender.evm).unwrap() == 300, 'Sender balance mismatch');
+        assert(state.read_balance(recipient.evm).unwrap() == 0, 'Recipient balance mismatch');
+    }
+
+    #[test]
+    #[available_gas(200000000)]
     fn test_read_balance_cached() {
         let mut state: State = Default::default();
         let deployer = test_utils::kakarot_address();
