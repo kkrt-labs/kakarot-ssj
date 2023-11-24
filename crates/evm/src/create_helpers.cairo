@@ -92,11 +92,10 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         caller_account.set_nonce(caller_current_nonce + 1);
         self.state.set_account(caller_account);
 
-        // Collision happens if a
-        // - contract is already deployed at this location (type fetched from storage)
-        // - Contract has been scheduled for deployment (type set in cache)
-        // If the AccountType is unknown, then there's no collision.
-        if target_account.exists() {
+        // Collision happens if the target account loaded in state has code or nonce set, meaning
+        // - it's deployed on SN and is an active EVM contract
+        // - it's not deployed on SN and is an active EVM contract in the Kakarot cache
+        if target_account.has_code_or_nonce() {
             return self.stack.push(0);
         };
 

@@ -1,7 +1,8 @@
+use core::num::traits::{Zero, One};
 use integer::{
     u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt, u128_overflowing_mul
 };
-use utils::num::{Zero, One, SizeOf};
+use utils::num::{SizeOf};
 
 
 // === Exponentiation ===

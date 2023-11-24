@@ -95,7 +95,7 @@ fn test_address_balance_eoa() {
 
 #[test]
 #[available_gas(5000000)]
-fn test_account_exists_eoa() {
+fn test_account_has_code_or_nonce_eoa() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let mut eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy eoa',);
@@ -104,13 +104,13 @@ fn test_account_exists_eoa() {
     let account = AccountTrait::fetch(evm_address()).unwrap();
 
     // Then
-    assert(account.exists() == true, 'account should be deployed');
+    assert(account.has_code_or_nonce() == true, 'account should be deployed');
 }
 
 
 #[test]
 #[available_gas(5000000)]
-fn test_account_exists_contract_account() {
+fn test_account_has_code_or_nonce_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let mut ca_address = deploy_contract_account(evm_address(), array![].span());
@@ -119,13 +119,13 @@ fn test_account_exists_contract_account() {
     let account = AccountTrait::fetch(evm_address()).unwrap();
 
     // Then
-    assert(account.exists() == true, 'account should be deployed');
+    assert(account.has_code_or_nonce() == true, 'account should be deployed');
 }
 
 
 #[test]
 #[available_gas(5000000)]
-fn test_account_exists_undeployed() {
+fn test_account_has_code_or_nonce_undeployed() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
@@ -133,12 +133,12 @@ fn test_account_exists_undeployed() {
     let account = AccountTrait::fetch_or_create(evm_address());
 
     // Then
-    assert(account.exists() == false, 'account should be deployed');
+    assert(account.has_code_or_nonce() == false, 'account should be deployed');
 }
 
 #[test]
 #[available_gas(5000000)]
-fn test_account_exists_account_to_deploy() {
+fn test_account_has_code_or_nonce_account_to_deploy() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
@@ -150,7 +150,7 @@ fn test_account_exists_account_to_deploy() {
     account.code = array![0x1].span();
 
     // Then
-    assert(account.exists() == true, 'account should exist');
+    assert(account.has_code_or_nonce() == true, 'account should exist');
 }
 
 
@@ -171,76 +171,76 @@ fn test_account_balance_contract_account() {
     assert(balance == native_token.balanceOf(ca_address.starknet), 'wrong balance');
 }
 
-//TODO(bug) these tests don't pass until we have deterministic addresses computation
-// #[test]
-// #[available_gas(5000000)]
-// fn test_account_commit_already_deployed() {
-//     let (native_token, kakarot_core) = setup_contracts_for_testing();
-//     let mut ca_address = deploy_contract_account(evm_address(), array![].span());
+#[test]
+#[available_gas(5000000)]
+fn test_account_commit_already_deployed() {
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let mut ca_address = deploy_contract_account(evm_address(), array![].span());
 
-//     // When
-//     let mut account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
-//     account.nonce = 420;
-//     account.code = array![0x1].span();
-//     account.commit().unwrap();
+    // When
+    let mut account = AccountTrait::fetch(evm_address()).unwrap();
+    account.nonce = 420;
+    account.code = array![0x1].span();
+    account.commit().unwrap();
 
-//     // Then
-//     let account_dispatcher = IContractAccountDispatcher { contract_address: ca_address.starknet };
-//     let nonce = account_dispatcher.nonce();
-//     let code = account_dispatcher.bytecode();
-//     assert(nonce == 420, 'wrong nonce');
-//     assert(code == array![].span(), 'notdeploying =  unmodified code');
-// }
+    // Then
+    let account_dispatcher = IContractAccountDispatcher { contract_address: ca_address.starknet };
+    let nonce = account_dispatcher.nonce();
+    let code = account_dispatcher.bytecode();
+    assert(nonce == 420, 'wrong nonce');
+    assert(code == array![].span(), 'notdeploying =  unmodified code');
+}
 
-// #[test]
-// #[available_gas(5000000)]
-// fn test_account_commit_redeploy_selfdestructed_new_nonce() {
-//     let (native_token, kakarot_core) = setup_contracts_for_testing();
-//     let mut ca_address = deploy_contract_account(evm_address(), array![].span());
+#[test]
+#[available_gas(5000000)]
+fn test_account_commit_redeploy_selfdestructed_new_nonce() {
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let mut ca_address = deploy_contract_account(evm_address(), array![].span());
 
-//     // When
-//     // Selfdestructing the deployed CA to reset its code and nonce.
-//     // Setting the nonce and the code of a CA
-//     IContractAccountDispatcher { contract_address: ca_address.starknet }.selfdestruct();
-//     let mut account = AccountTrait::fetch(evm_address()).unwrap().unwrap();
-//     account.nonce = 420;
-//     account.code = array![0x1].span();
-//     account.commit().unwrap();
+    // When
+    // Selfdestructing the deployed CA to reset its code and nonce.
+    // Setting the nonce and the code of a CA
+    IContractAccountDispatcher { contract_address: ca_address.starknet }.selfdestruct();
+    let mut account = AccountTrait::fetch(evm_address()).unwrap();
+    account.nonce = 420;
+    account.code = array![0x1].span();
+    account.commit().unwrap();
 
-//     // Then
-//     let account_dispatcher = IContractAccountDispatcher { contract_address: ca_address.starknet };
-//     let nonce = account_dispatcher.nonce();
-//     let code = account_dispatcher.bytecode();
-//     assert(nonce == 420, 'nonce should be modified');
-//     assert(code == array![0x1].span(), 'code should be modified');
-// }
+    // Then
+    let account_dispatcher = IContractAccountDispatcher { contract_address: ca_address.starknet };
+    let nonce = account_dispatcher.nonce();
+    let code = account_dispatcher.bytecode();
+    assert(nonce == 420, 'nonce should be modified');
+    assert(code == array![0x1].span(), 'code should be modified');
+}
 
-// #[test]
-// #[available_gas(5000000)]
-// fn test_account_commit_undeployed() {
-//     let (native_token, kakarot_core) = setup_contracts_for_testing();
+#[test]
+#[available_gas(5000000)]
+fn test_account_commit_undeployed() {
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
-//     let evm = evm_address();
-//     let starknet = kakarot_core.compute_starknet_address(evm);
-//     // When
-//     let mut account = Account {
-//         account_type: AccountType::ContractAccount,
-//         address: Address { evm, starknet },
-//         nonce: 420,
-//         code: array![0x69].span(),
-//         selfdestruct: false,
-//     };
-//     account.nonce = 420;
-//     account.code = array![0x1].span();
-//     account.commit().unwrap();
+    let evm = evm_address();
+    let starknet = kakarot_core.compute_starknet_address(evm);
+    // When
+    let mut account = Account {
+        account_type: AccountType::ContractAccount,
+        address: Address { evm, starknet },
+        nonce: 420,
+        code: array![0x69].span(),
+        balance: 0,
+        selfdestruct: false,
+    };
+    account.nonce = 420;
+    account.code = array![0x1].span();
+    account.commit().unwrap();
 
-//     // Then
-//     let account_dispatcher = IContractAccountDispatcher { contract_address: starknet };
-//     let nonce = account_dispatcher.nonce();
-//     let code = account_dispatcher.bytecode();
-//     assert(nonce == 420, 'nonce should be modified');
-//     assert(code == array![0x1].span(), 'code should be modified');
-// }
+    // Then
+    let account_dispatcher = IContractAccountDispatcher { contract_address: starknet };
+    let nonce = account_dispatcher.nonce();
+    let code = account_dispatcher.bytecode();
+    assert(nonce == 420, 'nonce should be modified');
+    assert(code == array![0x1].span(), 'code should be modified');
+}
 
 #[test]
 #[available_gas(5000000)]
