@@ -6,7 +6,10 @@ use core::pedersen::{HashState, PedersenTrait};
 use integer::U32TryIntoNonZero;
 use integer::u32_as_non_zero;
 use keccak::{cairo_keccak, u128_split};
-use starknet::{EthAddress, EthAddressIntoFelt252, ContractAddress, ClassHash};
+use starknet::{
+    EthAddress, EthAddressIntoFelt252, ContractAddress, ClassHash,
+    eth_signature::{Signature as EthSignature}
+};
 use traits::DivRem;
 use utils::constants::{
     POW_256_0, POW_256_1, POW_256_2, POW_256_3, POW_256_4, POW_256_5, POW_256_6, POW_256_7,
@@ -1082,5 +1085,45 @@ impl EthAddressExImpl of EthAddressExTrait {
             i += 1;
         };
         result.try_into().unwrap()
+    }
+}
+
+#[generate_trait]
+impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
+    // format: [r_low, r_high, s_low, s_high, yParity]
+    fn try_into_eth_signature(self: Span<felt252>) -> Option<EthSignature> {
+        assert(self.len() == 5, 'signature length is not 5');
+
+        let r_low: u128 = (*self.at(0)).try_into()?;
+        let r_high: u128 = (*self.at(1)).try_into()?;
+
+        let s_low: u128 = (*self.at(2)).try_into()?;
+        let s_high: u128 = (*self.at(3)).try_into()?;
+
+        let y_parity = (*self.at(4)) == 1;
+
+        let r = u256 { low: r_low, high: r_high };
+        let s = u256 { low: s_low, high: s_high };
+
+        Option::Some(EthSignature { r, s, y_parity })
+    }
+
+    fn to_felt252_array(self: EthSignature) -> Array<felt252> {
+        let y_parity = {
+            if (self.y_parity) {
+                1
+            } else {
+                0
+            }
+        };
+
+        let mut arr: Array<felt252> = array![];
+        arr.append(self.r.low.into());
+        arr.append(self.r.high.into());
+        arr.append(self.s.low.into());
+        arr.append(self.s.high.into());
+        arr.append(y_parity);
+
+        arr
     }
 }

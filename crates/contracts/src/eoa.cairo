@@ -20,13 +20,17 @@ mod ExternallyOwnedAccount {
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use core::option::OptionTrait;
 
+    use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
+    use core::option::OptionTrait;
+
     use starknet::account::{Call, AccountContract};
 
     use starknet::{
-        ContractAddress, EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address
+        ContractAddress, EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address,
+        get_tx_info
     };
-    use utils::eth_transaction::{EthTransactionTrait, EthereumTransaction};
-    use utils::helpers::{Felt252SpanExTrait, U8SpanExTrait};
+    use utils::eth_transaction::{EthTransactionTrait, EthereumTransaction, TransactionMetadata};
+    use utils::helpers::{Felt252SpanExTrait, U8SpanExTrait, EthAddressSignatureTrait};
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
@@ -79,21 +83,41 @@ mod ExternallyOwnedAccount {
     #[abi(embed_v0)]
     impl AccountContractImpl of AccountContract<ContractState> {
         fn __validate__(ref self: ContractState, calls: Array<Call>) -> felt252 {
-            assert(get_caller_address().is_zero(), 'Caller not zero');
-            // TODO
-            // Steps:
-            // Receive a payload formed as:
-            // Starknet Transaction Signature field: r, s, v (EVM Signature fields)
-            // Calldata field: an RLP-encoded EVM transaction, without r, s, v
+            assert(get_caller_address().is_zero(), 'Caller not 0');
 
-            // Step 1:
-            // Hash RLP-encoded EVM transaction
-            // Step 2:
-            // Verify EVM signature using get_tx_info().signature field against the keccak hash of the EVM tx
-            // Step 3:
-            // If valid signature, decode the RLP-encoded payload
-            // Step 4:
-            // Return ok
+            let tx_info = get_tx_info().unbox();
+
+            let call_len = calls.len();
+            assert(call_len == 1, 'call len is not 1');
+
+            let call = calls.at(0);
+            assert(*call.to == self.kakarot_core_address(), 'to is not kakarot core');
+            assert(
+                *call.selector == selector!("eth_send_transaction"),
+                'selector not eth_send_transa...'
+            );
+
+            let signature = tx_info.signature;
+
+            let tx_metadata = TransactionMetadata {
+                address: self.evm_address(),
+                chain_id: self.chain_id(),
+                account_nonce: tx_info.nonce.try_into().unwrap(),
+                signature: signature.try_into_eth_signature().expect('signature extraction failed')
+            };
+
+            let encoded_tx = (call.calldata)
+                .span()
+                .try_into_bytes()
+                .expect('converstion to Span<u8> failed');
+            let validation_result = EthTransactionTrait::validate_eth_tx(
+                tx_metadata, encoded_tx.span()
+            )
+                .unwrap();
+
+            if (!validation_result) {
+                panic(array!['transaction validation failed']);
+            }
 
             VALIDATED
         }
