@@ -578,6 +578,25 @@ impl U8SpanExImpl of U8SpanExTrait {
 
         (u64_words, last_input_word, last_input_num_bytes)
     }
+
+    fn to_felt252_array(self: Span<u8>) -> Array<felt252> {
+        let mut array: Array<felt252> = Default::default();
+
+        let mut i = 0;
+
+        loop {
+            if (i == self.len()) {
+                break ();
+            }
+
+            let value: felt252 = (*self[i]).into();
+            array.append(value);
+
+            i += 1;
+        };
+
+        array
+    }
 }
 
 #[generate_trait]
@@ -953,6 +972,36 @@ impl ResultExImpl<T, E, +Drop<T>, +Drop<E>> of ResultExTrait<T, E> {
         match self {
             Result::Ok(val) => Result::Ok(val),
             Result::Err(_) => Result::Err(err)
+        }
+    }
+}
+
+#[generate_trait]
+impl Felt252SpanExImpl of Felt252SpanExTrait {
+    fn try_into_bytes(self: Span<felt252>) -> Option<Array<u8>> {
+        let mut i = 0;
+        let mut bytes: Array<u8> = Default::default();
+
+        loop {
+            if (i == self.len()) {
+                break ();
+            };
+
+            let v: Option<u8> = (*self[i]).try_into();
+
+            match v {
+                Option::Some(v) => { bytes.append(v); },
+                Option::None => { break (); }
+            }
+
+            i += 1;
+        };
+
+        // it means there was an error in the above loop
+        if (i != self.len()) {
+            Option::None
+        } else {
+            Option::Some(bytes)
         }
     }
 }

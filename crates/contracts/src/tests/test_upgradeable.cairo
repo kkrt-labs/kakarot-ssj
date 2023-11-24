@@ -80,8 +80,6 @@ fn test_upgradeable_update_contract() {
 
     assert(version == 0, 'version is not 0');
 
-    let mut call_data: Array<felt252> = array![];
-
     let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
 
     IUpgradeableDispatcher { contract_address: contract_address }.upgrade_contract(new_class_hash);

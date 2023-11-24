@@ -8,6 +8,10 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@ethereumjs/tx": "^5.0.0",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.8.1",
+    "rlp": "^3.0.0",
     "starknet": "^5.19.5"
   },
   "scripts": {

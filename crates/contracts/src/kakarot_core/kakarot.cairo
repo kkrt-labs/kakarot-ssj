@@ -24,6 +24,7 @@ mod KakarotCore {
     use contracts::kakarot_core::interface;
     use core::starknet::SyscallResultTrait;
     use core::zeroable::Zeroable;
+
     use evm::context::Status;
     use evm::errors::{EVMError, EVMErrorTrait, CALLING_FROM_CA, CALLING_FROM_UNDEPLOYED_ACCOUNT};
     use evm::execution::execute;
@@ -284,6 +285,7 @@ mod KakarotCore {
             // and is an EOA. Contracts are added to the registry ONLY if there are
             // part of the Kakarot system and thus deployed by the main Kakarot contract
             // itself.
+
             let (caller_account_type, caller_starknet_address) = self
                 .address_registry(from.evm)
                 .expect('Fetching EOA failed');

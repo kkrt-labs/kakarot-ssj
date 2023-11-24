@@ -143,19 +143,11 @@ fn test_kakarot_core_eoa_mapping() {
 #[available_gas(20000000)]
 fn test_kakarot_core_compute_starknet_address() {
     let evm_address = test_utils::evm_address();
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let expected_starknet_address = kakarot_core.deploy_eoa(evm_address);
 
-    // Precomputed Starknet address with the script compute_starknet_address.ts
-    // With arguments:
-    // ['STARKNET_CONTRACT_ADDRESS', kakarot_address: 0x7753aaa1814b9f978fd93b66453ae87419b66d764fbf9313847edeb0283ef63, salt: evm_address, class_hash: UninitializedAccount::TEST_CLASS_HASH, constructor_calldata: hash([kakarot_address, evm_address]), ]
-
-    let class_hash = UninitializedAccount::TEST_CLASS_HASH; // used to get the hash using the LSP
-    let expected_starknet_address: ContractAddress = contract_address_const::<
-        0xa3361997afde7c64cd1be14ac1c0d1db62b1ff2896ebea7836234c10d57769
-    >();
-
-    let eoa_starknet_address = kakarot_core.compute_starknet_address(evm_address);
-    assert(eoa_starknet_address == expected_starknet_address, 'wrong starknet address');
+    let actual_starknet_address = kakarot_core.compute_starknet_address(evm_address);
+    assert(actual_starknet_address == expected_starknet_address, 'wrong starknet address');
 }
 
 #[test]
@@ -266,12 +258,31 @@ fn test_eth_send_transaction() {
     let gas_limit = test_utils::gas_limit();
     let gas_price = test_utils::gas_price();
     let value = 0;
+
+    // Then
+    // selector: function get()
+    let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+
+    // check counter value is 0 before doing inc
+    let return_data = kakarot_core
+        .eth_call(
+            from: evm_address,
+            to: Option::Some(account.evm),
+            gas_limit: gas_limit,
+            gas_price: gas_price,
+            value: 0,
+            data: data_get_tx
+        );
+
+    assert(return_data == u256_to_bytes_array(0).span(), 'counter value not 0');
+
     // selector: function inc()
-    let data = array![0x37, 0x13, 0x03, 0xc0].span();
+    let data_inc_tx = array![0x37, 0x13, 0x03, 0xc0].span();
 
     // When
     testing::set_contract_address(eoa);
-    let return_data = kakarot_core.eth_send_transaction(:to, :gas_limit, :gas_price, :value, :data);
+    let return_data = kakarot_core
+        .eth_send_transaction(:to, :gas_limit, :gas_price, :value, data: data_inc_tx);
 
     // Then
     // selector: function get()
@@ -279,10 +290,10 @@ fn test_eth_send_transaction() {
 
     // When
     let return_data = kakarot_core
-        .eth_call(from: evm_address, :to, :gas_limit, :gas_price, :value, :data);
+        .eth_call(from: evm_address, :to, :gas_limit, :gas_price, :value, data: data_get_tx);
 
     // Then
-    assert(return_data == u256_to_bytes_array(1).span(), 'wrong result');
+    assert(return_data == u256_to_bytes_array(1).span(), 'counter value is not 1');
 }
 
 #[test]

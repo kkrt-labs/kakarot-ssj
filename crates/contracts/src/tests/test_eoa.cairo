@@ -5,24 +5,40 @@ mod test_external_owned_account {
         IExternallyOwnedAccountDispatcherTrait
     };
     use contracts::kakarot_core::kakarot::StoredAccountType;
-    use contracts::kakarot_core::{IKakarotCore, KakarotCore, KakarotCore::KakarotCoreInternal};
+    use contracts::kakarot_core::{
+        IKakarotCore, KakarotCore, KakarotCore::KakarotCoreInternal,
+        interface::IExtendedKakarotCoreDispatcherTrait
+    };
+    use contracts::tests::test_data::{counter_evm_bytecode, eip_2930_rlp_encoded_counter_inc_tx,};
     use contracts::tests::test_upgradeable::{
         IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
         MockContractUpgradeableV1
     };
-    use contracts::tests::test_utils::setup_contracts_for_testing;
+    use contracts::tests::test_utils::deploy_contract_account;
+    use contracts::tests::test_utils::{setup_contracts_for_testing};
     use contracts::uninitialized_account::{
         IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount,
         IUninitializedAccount
     };
-    use evm::model::{Address, AddressTrait};
-    use evm::tests::test_utils::{kakarot_address, evm_address, eoa_address, chain_id};
+    use core::array::SpanTrait;
+    use core::starknet::account::{Call, AccountContractDispatcher, AccountContractDispatcherTrait};
+
+
+    //todo(harsh): remove
+    use debug::PrintTrait;
+
+    use evm::model::{Address, AddressTrait, ContractAccountTrait};
+    use evm::tests::test_utils::{
+        kakarot_address, evm_address, other_evm_address, eoa_address, chain_id, gas_limit, gas_price
+    };
+    use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
     use starknet::class_hash::Felt252TryIntoClassHash;
     use starknet::testing::{set_caller_address, set_contract_address};
     use starknet::{
         deploy_syscall, ContractAddress, ClassHash, get_contract_address, contract_address_const,
         EthAddress
     };
+    use utils::helpers::{U8SpanExTrait, u256_to_bytes_array};
 
     fn deploy_eoa(eoa_address: EthAddress) -> IExternallyOwnedAccountDispatcher {
         let kakarot_address = get_contract_address();
@@ -102,5 +118,80 @@ mod test_external_owned_account {
             .unwrap();
 
         eoa_contract.upgrade(new_class_hash);
+    }
+
+    #[test]
+    #[available_gas(2000000000)]
+    fn test___execute__() {
+        let (_, kakarot_core) = setup_contracts_for_testing();
+
+        let evm_address = evm_address();
+        let eoa = kakarot_core.deploy_eoa(evm_address);
+
+        //todo(harsh): remove
+        other_evm_address().print();
+
+        let kakarot_address = kakarot_core.contract_address;
+
+        let account = deploy_contract_account(other_evm_address(), counter_evm_bytecode());
+
+        set_contract_address(eoa);
+        let eoa_contract = AccountContractDispatcher { contract_address: eoa };
+
+        // Then
+        // selector: function get()
+        let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+
+        // check counter value is 0 before doing inc
+        let return_data = kakarot_core
+            .eth_call(
+                from: evm_address,
+                to: Option::Some(other_evm_address()),
+                gas_limit: gas_limit(),
+                gas_price: gas_price(),
+                value: 0,
+                data: data_get_tx
+            );
+
+        assert(return_data == u256_to_bytes_array(0).span(), 'counter value not 0');
+
+        // perform inc on the counter
+        let encoded_tx = eip_2930_rlp_encoded_counter_inc_tx();
+
+        let call = Call {
+            to: kakarot_address,
+            selector: selector!("eth_send_transaction"),
+            calldata: encoded_tx.to_felt252_array()
+        };
+
+        let result = eoa_contract.__execute__(array![call]);
+
+        // check counter value has increased
+        let return_data = kakarot_core
+            .eth_call(
+                from: evm_address,
+                to: Option::Some(other_evm_address()),
+                gas_limit: gas_limit(),
+                gas_price: gas_price(),
+                value: 0,
+                data: data_get_tx
+            );
+
+        assert(return_data == u256_to_bytes_array(1).span(), 'counter value not 1');
+    }
+
+    #[test]
+    #[available_gas(2000000000)]
+    #[should_panic(expected: ('calls length is not 1', 'ENTRYPOINT_FAILED'))]
+    fn test___execute___should_fail_with_zero_calls() {
+        let (_, kakarot) = setup_contracts_for_testing();
+        let kakarot_address = kakarot.contract_address;
+
+        let eoa_contract = deploy_eoa(eoa_address());
+        let eoa_contract = AccountContractDispatcher {
+            contract_address: eoa_contract.contract_address
+        };
+
+        eoa_contract.__execute__(array![]);
     }
 }

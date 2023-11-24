@@ -1021,3 +1021,54 @@ fn storage_evm_bytecode() -> Span<u8> {
     ]
         .span()
 }
+
+
+// eip-2930 RLP encoded tx { unsigned }, calls the `inc` function of counter bytecode
+// format: 0x01 || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList])
+// rlp decoding:  [ '0x01', '0x', '0x3b9aca00', '0x1e8480', '0x0000006f746865725f65766d5f61646472657373', '0x', '0x371303c0', [] ]
+fn eip_2930_rlp_encoded_counter_inc_tx() -> Span<u8> {
+    array![
+        1,
+        231,
+        1,
+        128,
+        132,
+        59,
+        154,
+        202,
+        0,
+        131,
+        30,
+        132,
+        128,
+        148,
+        0,
+        0,
+        0,
+        111,
+        116,
+        104,
+        101,
+        114,
+        95,
+        101,
+        118,
+        109,
+        95,
+        97,
+        100,
+        100,
+        114,
+        101,
+        115,
+        115,
+        128,
+        132,
+        55,
+        19,
+        3,
+        192,
+        192,
+    ]
+        .span()
+}
