@@ -14,7 +14,7 @@ impl Sha3Impl of Sha3Trait {
     /// and push the hash result to the stack.
     ///
     /// # Inputs
-    /// * `offset` - The offset in memory where to read the datas
+    /// * `offset` - The offset in memory where to read the data
     /// * `size` - The amount of bytes to read
     ///
     /// # Specification: https://www.evm.codes/#20?fork=shanghai

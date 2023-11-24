@@ -151,8 +151,8 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
         let tx_type: u32 = (*encoded_tx_data.at(0)).into();
         let rlp_encoded_data = encoded_tx_data.slice(1, encoded_tx_data.len() - 1);
 
-        // tx_format (EIP-2930, unsiged):  0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList])
-        // tx_format (EIP-1559, unsiged):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, destination, amount, data, access_list])
+        // tx_format (EIP-2930, unsigned):  0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList])
+        // tx_format (EIP-1559, unsigned):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, destination, amount, data, access_list])
         let chain_idx = 0;
         let nonce_idx = 1;
         let gas_price_idx = tx_type + nonce_idx;
@@ -263,7 +263,7 @@ impl EthTransactionImpl of EthTransactionTrait {
             return Result::Err(EthTransactionError::IncorrectChainId);
         }
         //TODO: add check for max_fee = gas_price * gas_limit
-        // max_fee should be later provided by the RPC, and hence this check is neccessary
+        // max_fee should be later provided by the RPC, and hence this check is necessary
 
         let msg_hash = encoded_tx_data.compute_keccak256_hash();
 

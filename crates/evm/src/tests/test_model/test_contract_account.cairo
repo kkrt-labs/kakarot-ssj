@@ -15,7 +15,7 @@ use starknet::testing::set_contract_address;
 fn test_contract_account_deploy() {
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
-    // triggerred in the constructor
+    // triggered in the constructor
     contract_utils::drop_event(kakarot_core.contract_address);
 
     let mut kakarot_state = KakarotCore::unsafe_new_contract_state();

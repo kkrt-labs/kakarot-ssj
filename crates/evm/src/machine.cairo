@@ -345,7 +345,7 @@ impl MachineImpl of MachineTrait {
     }
 
     /// Sets the `return_data` field of the appropriate execution context,
-    /// taking into acount EVM specs: If the current context is the root
+    /// taking into account EVM specs: If the current context is the root
     /// context, sets the return_data field of the root context.  If the current
     /// context is a subcontext, sets the return_data field of the parent.
     /// Should be called when returning from a context.

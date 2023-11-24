@@ -370,7 +370,7 @@ fn split_word_le(mut value: u256, mut len: usize) -> Array<u8> {
     dst
 }
 
-/// Splits a u256 into 16 bytes, big-endien, and appends the result to `dst`.
+/// Splits a u256 into 16 bytes, big-endian, and appends the result to `dst`.
 fn split_word_128(value: u256, ref dst: Array<u8>) {
     split_word(value, 16, ref dst)
 }

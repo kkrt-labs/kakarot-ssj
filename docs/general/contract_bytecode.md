@@ -12,13 +12,15 @@ with its associated EVM address.
 
 ```mermaid
 flowchart TD
-    A[RPC call] --> |"eth_sendTransaction (contract deployment)"| B(KakarotCore)
-    B --> C[Execute initialization code]
-    C -->|Set account code to return data| D[Store account code in KakarotCore storage]
+    A[RPC call] --> B["eth_sendTransaction"]
+    B --> |Check transaction type| C{Is deploy transaction?}
+    C -- Yes --> D1[Execute initialization code]
+    D1 -->|Set account code to return data| E1[Commit code to Starknet storage]
+    E1 --> F1[Return deployed contract address]
 
-    X[RPC call] --> |"eth_sendTransaction (contract interaction)"| Y(KakarotCore)
-    Y --> Z[Load account code from KakarotCore storage]
-    Z --> ZZ[Execute bytecode]
+    C -- No --> D2[Load account code from KakarotCore storage]
+    D2 --> E2[Execute bytecode]
+    E2 --> F2[Return execution result]
 ```
 
 There are several different ways to store the bytecode of a contract, and this

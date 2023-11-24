@@ -231,7 +231,7 @@ impl AccountImpl of AccountTrait {
                 initial_code,
                 deploy_starknet_contract: !is_deployed
             )?;
-        //Storage is handled outside of the account and must be commited after all accounts are commited.
+        //Storage is handled outside of the account and must be committed after all accounts are committed.
         //TODO(bug) uncommenting this bugs, needs to be removed when fixed in the compiler
         // return Result::Ok(());
         };
@@ -241,7 +241,7 @@ impl AccountImpl of AccountTrait {
         };
 
         // If the account was not scheduled for deployment - then update it if it's deployed.
-        // Only CAs have components commited on starknet.
+        // Only CAs have components committed on starknet.
         if is_deployed && is_ca {
             if *self.selfdestruct {
                 return ContractAccountTrait::selfdestruct(self);

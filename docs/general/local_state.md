@@ -44,7 +44,7 @@ sequenceDiagram
     participant Starknet
 
     User->>+KakarotCore:Sends transaction
-    KakarotCore->>+Machine: Instanciates machine with bytecode to run
+    KakarotCore->>+Machine: Instantiates machine with bytecode to run
     Machine->>LocalState: Initialize local state
     Machine->>+LocalState: Start execution
 
@@ -61,7 +61,7 @@ sequenceDiagram
 
     Machine-->>-Machine: Execution ended
 
-    alt Execution terminated sucessfully
+    alt Execution terminated successfully
         KakarotCore->>Starknet: Apply transactional state diffs to Starknet
 
     else Execution failed
@@ -91,7 +91,7 @@ perform actual token transfers.
 ## Implementation design
 
 The state is implemented as a struct composed by `StateChangeLog` - for objects
-that need to be overriden in the State - and `SimpleLog` data structures, for
+that need to be overridden in the State - and `SimpleLog` data structures, for
 objects that only need to be appended to a list. They are implemented as
 follows:
 
@@ -109,7 +109,7 @@ struct State {
     /// Pending emitted events
     events: SimpleLog<Event>,
     /// Account balances updates. This is only internal accounting and stored
-    /// balances are updated when commiting transfers.
+    /// balances are updated when committing transfers.
     balances: StateChangeLog<u256>,
     /// Pending transfers
     transfers: SimpleLog<Transfer>,

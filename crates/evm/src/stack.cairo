@@ -219,7 +219,7 @@ impl StackImpl of StackTrait {
     ///
     /// # Errors
     ///
-    /// If the index is greather than the stack length, returns with a StackUnderflow error.
+    /// If the index is greater than the stack length, returns with a StackUnderflow error.
     #[inline(always)]
     fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError> {
         if index >= self.len() {

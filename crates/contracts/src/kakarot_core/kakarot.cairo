@@ -364,7 +364,7 @@ mod KakarotCore {
         }
 
         /// Maps an EVM address to a Starknet address
-        /// Triggerred when deployment of an EOA or CA is successful
+        /// Triggered when deployment of an EOA or CA is successful
         fn set_address_registry(
             ref self: ContractState, evm_address: EthAddress, account: StoredAccountType
         ) {

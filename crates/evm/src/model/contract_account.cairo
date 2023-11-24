@@ -41,7 +41,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// storing the contract bytecode and emitting a ContractAccountDeployed
     /// event.
     ///
-    /// `deploy` is only called when commiting a transaction. We already
+    /// `deploy` is only called when committing a transaction. We already
     /// checked that no account exists at this address prealably.
     /// # Arguments
     /// * `origin` - The EVM address of the transaction sender
