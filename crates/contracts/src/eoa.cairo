@@ -17,9 +17,7 @@ trait IExternallyOwnedAccount<TContractState> {
 mod ExternallyOwnedAccount {
     use contracts::components::upgradeable::IUpgradeable;
     use contracts::components::upgradeable::upgradeable_component;
-    use contracts::eoa::IExternallyOwnedAccount;
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
-    use core::clone::Clone;
 
     use starknet::account::{Call, AccountContract};
 
