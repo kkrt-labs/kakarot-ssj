@@ -1,9 +1,9 @@
-use core::result::ResultTrait;
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_data::{storage_evm_bytecode, storage_evm_initcode};
 use contracts::tests::test_utils::{
     fund_account_with_native_token, setup_contracts_for_testing, deploy_contract_account
 };
+use core::result::ResultTrait;
 use evm::call_helpers::{MachineCallHelpers, MachineCallHelpersImpl};
 use evm::context::{ExecutionContext, ExecutionContextTrait, ExecutionContextType};
 use evm::errors::EVMErrorTrait;

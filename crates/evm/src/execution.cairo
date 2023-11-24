@@ -42,11 +42,6 @@ fn execute(
 ) -> ExecutionResult {
     // Create a new root execution context.
     let mut state: State = Default::default();
-    // Cache the EOA of origin inside the state, and set its nonce to the tx nonce.
-    // This allows us to call compute_contract_address to deploy with the correct nonce as the salt for create opcode.
-    let mut origin_account = state.get_account(origin.evm);
-    origin_account.nonce = starknet::get_tx_info().unbox().nonce.try_into().unwrap();
-    state.set_account(origin_account);
 
     let mut target_account = state.get_account(target.evm);
     let (bytecode, calldata) = if is_deploy_tx {
