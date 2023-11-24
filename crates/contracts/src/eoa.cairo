@@ -109,7 +109,7 @@ mod ExternallyOwnedAccount {
             assert(calls.len() == 1, 'calls length is not 1');
 
             let call = calls.at(0);
-            let call_data = call.calldata.span().to_bytes();
+            let calldata = call.calldata.span().to_bytes();
 
             let EthereumTransaction{nonce,
             gas_price,
@@ -119,7 +119,7 @@ mod ExternallyOwnedAccount {
             calldata,
             chain_id } =
                 EthTransactionTrait::decode(
-                call_data.span()
+                calldata.span()
             )
                 .unwrap();
 

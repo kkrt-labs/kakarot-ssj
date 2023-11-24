@@ -14,6 +14,7 @@ mod test_external_owned_account {
         IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
         MockContractUpgradeableV1
     };
+    use contracts::tests::test_utils::deploy_contract_account;
     use contracts::tests::test_utils::{setup_contracts_for_testing};
     use contracts::uninitialized_account::{
         IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount,
@@ -125,8 +126,7 @@ mod test_external_owned_account {
 
         let kakarot_address = kakarot_core.contract_address;
 
-        let account = ContractAccountTrait::deploy(other_evm_address(), counter_evm_bytecode())
-            .unwrap();
+        let account = deploy_contract_account(other_evm_address(), counter_evm_bytecode());
 
         set_contract_address(eoa);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
