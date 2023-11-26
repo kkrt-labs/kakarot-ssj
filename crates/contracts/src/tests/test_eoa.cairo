@@ -10,11 +10,6 @@ mod test_external_owned_account {
         interface::IExtendedKakarotCoreDispatcherTrait
     };
     use contracts::tests::test_data::{counter_evm_bytecode, eip_2930_rlp_encoded_counter_inc_tx,};
-    use contracts::kakarot_core::{
-        IKakarotCore, KakarotCore, KakarotCore::KakarotCoreInternal,
-        interface::IExtendedKakarotCoreDispatcherTrait
-    };
-    use contracts::tests::test_data::{counter_evm_bytecode, eip_2930_rlp_encoded_counter_inc_tx,};
     use contracts::tests::test_upgradeable::{
         IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
         MockContractUpgradeableV1

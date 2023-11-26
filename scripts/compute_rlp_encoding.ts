@@ -119,30 +119,33 @@ const main = async () => {
   console.log("the hash over which the signature was made:", hash);
 
   console.log("signature details: ");
-  const v = decodedRlp[decodedRlp.length - 3]
-  const r = decodedRlp[decodedRlp.length - 2]
-  const s = decodedRlp[decodedRlp.length - 1]
+  const v = decodedRlp[decodedRlp.length - 3];
+  const r = decodedRlp[decodedRlp.length - 2];
+  const s = decodedRlp[decodedRlp.length - 1];
 
-  const y_parity = tx_type == 0 ? get_y_parity(BigInt(v), BigInt(chainId)): parseInt(v, 16) == 1;
-  console.log('r: ', r);
-  console.log('s: ', s);
-  console.log('y parity: ', y_parity);
+  const y_parity =
+    tx_type == 0
+      ? get_y_parity(BigInt(v), BigInt(chainId))
+      : parseInt(v, 16) == 1;
+  console.log("r: ", r);
+  console.log("s: ", s);
+  console.log("y parity: ", y_parity);
 
   process.exit(0);
 };
 
 const get_y_parity = (v: bigint, chain_id: bigint): boolean => {
   let y_parity = v - (chain_id * BigInt(2) + BigInt(35));
-  if (y_parity == BigInt(0) || y_parity == BigInt(1)){
-      return y_parity == BigInt(1);
+  if (y_parity == BigInt(0) || y_parity == BigInt(1)) {
+    return y_parity == BigInt(1);
   }
 
   y_parity = v - (chain_id * BigInt(2) + BigInt(36));
-  if (y_parity == BigInt(0) || y_parity == BigInt(1)){
-      return y_parity == BigInt(1);
+  if (y_parity == BigInt(0) || y_parity == BigInt(1)) {
+    return y_parity == BigInt(1);
   }
 
-  throw new Error('invalid v value')
-}
+  throw new Error("invalid v value");
+};
 
 main();

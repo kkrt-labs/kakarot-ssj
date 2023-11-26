@@ -20,9 +20,6 @@ mod ExternallyOwnedAccount {
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use core::option::OptionTrait;
 
-    use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
-    use core::option::OptionTrait;
-
     use starknet::account::{Call, AccountContract};
 
     use starknet::{
