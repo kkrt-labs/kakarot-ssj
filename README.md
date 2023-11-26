@@ -204,6 +204,7 @@ Thanks goes to these wonderful people
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Noeljarillo"><img src="https://avatars.githubusercontent.com/u/77942794?v=4?s=100" width="100px;" alt="Noeljarillo"/><br /><sub><b>Noeljarillo</b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=Noeljarillo" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/trbutler4"><img src="https://avatars.githubusercontent.com/u/58192340?v=4?s=100" width="100px;" alt="Thomas Butler"/><br /><sub><b>Thomas Butler</b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=trbutler4" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/kariy"><img src="https://avatars.githubusercontent.com/u/26515232?v=4?s=100" width="100px;" alt="Ammar Arif"/><br /><sub><b>Ammar Arif</b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=kariy" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/greged93"><img src="https://avatars.githubusercontent.com/u/82421016?v=4?s=100" width="100px;" alt="greged93"/><br /><sub><b>greged93</b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=greged93" title="Code">💻</a></td>
     </tr>
   </tbody>
   <tfoot>
