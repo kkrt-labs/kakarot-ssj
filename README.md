@@ -206,6 +206,7 @@ Thanks goes to these wonderful people
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/kariy"><img src="https://avatars.githubusercontent.com/u/26515232?v=4?s=100" width="100px;" alt="Ammar Arif"/><br /><sub><b>Ammar Arif</b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=kariy" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/greged93"><img src="https://avatars.githubusercontent.com/u/82421016?v=4?s=100" width="100px;" alt="greged93"/><br /><sub><b>greged93</b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=greged93" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/chachaleo"><img src="https://avatars.githubusercontent.com/u/49371958?v=4?s=100" width="100px;" alt="Charlotte"/><br /><sub><b>Charlotte</b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=chachaleo" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://t.me/notaihe"><img src="https://avatars.githubusercontent.com/u/22559023?v=4?s=100" width="100px;" alt="akhercha"/><br /><sub><b>akhercha</b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=akhercha" title="Code">💻</a></td>
     </tr>
   </tbody>
   <tfoot>
