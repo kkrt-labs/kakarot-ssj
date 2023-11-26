@@ -209,6 +209,9 @@ Thanks goes to these wonderful people
       <td align="center" valign="top" width="14.28%"><a href="https://t.me/notaihe"><img src="https://avatars.githubusercontent.com/u/22559023?v=4?s=100" width="100px;" alt="akhercha"/><br /><sub><b>akhercha</b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=akhercha" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/alextnetto"><img src="https://avatars.githubusercontent.com/u/56097505?v=4?s=100" width="100px;" alt="Alexandro T. Netto"/><br /><sub><b>Alexandro T. Netto</b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=alextnetto" title="Code">💻</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/edisontim"><img src="https://avatars.githubusercontent.com/u/76473430?v=4?s=100" width="100px;" alt="tedison"/><br /><sub><b>tedison</b></sub></a><br /><a href="https://github.com/sayajin-labs/kakarot-ssj/commits?author=edisontim" title="Code">💻</a></td>
+    </tr>
   </tbody>
   <tfoot>
     <tr>
