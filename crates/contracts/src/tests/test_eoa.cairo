@@ -197,7 +197,7 @@ mod test_external_owned_account {
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
 
-        set_contract_address(0_felt252.try_into().unwrap());
+        set_contract_address(contract_address_const::<0>());
 
         let calls = array![];
         eoa_contract.__validate__(calls);
@@ -212,7 +212,7 @@ mod test_external_owned_account {
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
 
-        set_contract_address(0_felt252.try_into().unwrap());
+        set_contract_address(contract_address_const::<0>());
 
         let call = Call {
             to: other_starknet_address(),
@@ -234,7 +234,7 @@ mod test_external_owned_account {
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
 
-        set_contract_address(0.try_into().unwrap());
+        set_contract_address(contract_address_const::<0>());
 
         let call = Call {
             to: kakarot_core.contract_address, selector: selector!("eth_call"), calldata: array![]
@@ -261,7 +261,7 @@ mod test_external_owned_account {
         };
         set_signature(signature.to_felt252_array().span());
 
-        set_contract_address(0.try_into().unwrap());
+        set_contract_address(contract_address_const::<0>());
 
         let call = Call {
             to: kakarot_core.contract_address,
@@ -292,7 +292,7 @@ mod test_external_owned_account {
 
         set_signature(signature.to_felt252_array().span());
 
-        set_contract_address(0.try_into().unwrap());
+        set_contract_address(contract_address_const::<0>());
 
         let call = Call {
             to: kakarot_core.contract_address,
@@ -323,7 +323,7 @@ mod test_external_owned_account {
 
         set_signature(signature.to_felt252_array().span());
 
-        set_contract_address(0.try_into().unwrap());
+        set_contract_address(contract_address_const::<0>());
 
         let call = Call {
             to: kakarot_core.contract_address,
