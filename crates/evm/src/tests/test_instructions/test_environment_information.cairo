@@ -1081,7 +1081,7 @@ fn test_exec_extcodehash_ca_with_bytecode() {
 
 #[test]
 #[available_gas(2000000000)]
-fn test_exex_extcodehash_precompiles() {
+fn test_exec_extcodehash_precompiles() {
     // Given
     let evm_address = evm_address();
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -1097,7 +1097,7 @@ fn test_exex_extcodehash_precompiles() {
         machine.exec_extcodehash().unwrap();
 
         // Then
-        assert(machine.stack.pop().unwrap() == 0, 'expected counter SC code hash');
+        assert(machine.stack.pop().unwrap() == 0, 'expected 0 for precompiles');
         i += 1;
     };
 }

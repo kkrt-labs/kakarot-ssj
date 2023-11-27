@@ -104,7 +104,7 @@ fn test_account_has_code_or_nonce_eoa() {
     let account = AccountTrait::fetch(evm_address()).unwrap();
 
     // Then
-    assert(account.has_code_or_nonce() == true, 'account should be deployed');
+    assert(account.has_code_or_nonce() == true, 'account shouldhave codeornonce');
 }
 
 
@@ -119,7 +119,7 @@ fn test_account_has_code_or_nonce_contract_account() {
     let account = AccountTrait::fetch(evm_address()).unwrap();
 
     // Then
-    assert(account.has_code_or_nonce() == true, 'account should be deployed');
+    assert(account.has_code_or_nonce() == true, 'account shouldhave codeornonce');
 }
 
 
@@ -133,7 +133,7 @@ fn test_account_has_code_or_nonce_undeployed() {
     let account = AccountTrait::fetch_or_create(evm_address());
 
     // Then
-    assert(account.has_code_or_nonce() == false, 'account should be deployed');
+    assert(account.has_code_or_nonce() == false, 'account has codeornonce');
 }
 
 #[test]
