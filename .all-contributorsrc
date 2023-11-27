@@ -126,6 +126,55 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/26515232?v=4",
       "profile": "https://github.com/kariy",
       "contributions": ["doc"]
+    },
+    {
+      "login": "greged93",
+      "name": "greged93",
+      "avatar_url": "https://avatars.githubusercontent.com/u/82421016?v=4",
+      "profile": "https://github.com/greged93",
+      "contributions": ["code"]
+    },
+    {
+      "login": "chachaleo",
+      "name": "Charlotte",
+      "avatar_url": "https://avatars.githubusercontent.com/u/49371958?v=4",
+      "profile": "https://github.com/chachaleo",
+      "contributions": ["code"]
+    },
+    {
+      "login": "akhercha",
+      "name": "akhercha",
+      "avatar_url": "https://avatars.githubusercontent.com/u/22559023?v=4",
+      "profile": "https://t.me/notaihe",
+      "contributions": ["code"]
+    },
+    {
+      "login": "alextnetto",
+      "name": "Alexandro T. Netto",
+      "avatar_url": "https://avatars.githubusercontent.com/u/56097505?v=4",
+      "profile": "https://github.com/alextnetto",
+      "contributions": ["code"]
+    },
+    {
+      "login": "edisontim",
+      "name": "tedison",
+      "avatar_url": "https://avatars.githubusercontent.com/u/76473430?v=4",
+      "profile": "https://github.com/edisontim",
+      "contributions": ["code"]
+    },
+    {
+      "login": "rkdud007",
+      "name": "Pia",
+      "avatar_url": "https://avatars.githubusercontent.com/u/76558220?v=4",
+      "profile": "https://github.com/rkdud007",
+      "contributions": ["code"]
+    },
+    {
+      "login": "glihm",
+      "name": "glihm",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7962849?v=4",
+      "profile": "https://github.com/glihm",
+      "contributions": ["code"]
     }
   ],
   "contributorsPerLine": 7,
