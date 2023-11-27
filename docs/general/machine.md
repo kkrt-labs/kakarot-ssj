@@ -46,11 +46,11 @@ The following diagram describes the model of the Kakarot Machine.
 ```mermaid
 classDiagram
     class Machine{
-        current_ctx: Box<ExecutionContext>,
+        current_ctx: Box~ExecutionContext~,
         ctx_count: usize,
         stack: Stack,
         memory: Memory,
-        storage_journal: Journal,
+        state: State,
     }
 
     class Memory{
@@ -66,20 +66,21 @@ classDiagram
     }
 
     class ExecutionContext{
-        id: usize,
-        evm_address: EthAddress,
-        starknet_address: ContractAddress,
-        program_counter: u32,
-        status: Status,
-        call_ctx: CallContext,
-        destroyed_contracts: Array~EthAddress~,
-        events: Array~Event~,
-        create_addresses: Array~EthAddress~,
-        return_data: Array~u8~,
-        parent_ctx: Nullable~ExecutionContext~,
-        child_return_data: Option~Span~u8~~
+      ctx_type: ExecutionContextType,
+      address: Address,
+      program_counter: u32,
+      status: Status,
+      call_ctx: Box~CallContext~,
+      return_data: Span~u8~,
+      parent_ctx: Nullable~ExecutionContext~,
     }
 
+    class ExecutionContextType {
+      <<enumeration>>
+      Root: IsCreate,
+      Call: usize,
+      Create: usize
+    }
 
     class CallContext{
         caller: EthAddress,
@@ -89,13 +90,27 @@ classDiagram
         gas_price: u128,
         gas_limit: u128,
         read_only: bool,
+        ret_offset: usize,
+        ret_size: usize,
     }
 
-    class Journal{
-        local_changes: Felt252Dict~felt252~,
-        local_keys: Array~felt252~,
-        global_changes: Felt252Dict~felt252~,
-        global_keys: Array~felt252~,
+    class State{
+      accounts: StateChangeLog~Account~,
+      accounts_storage: StateChangeLog~EthAddress_u256_u256~,
+      events: SimpleLog~Event~,
+      transfers: SimpleLog~Transfer~,
+    }
+
+    class StateChangeLog~T~ {
+      contextual_changes: Felt252Dict~Nullable~T~~,
+      contextual_keyset: Array~felt252~,
+      transactional_changes: Felt252Dict~Nullable~T~~,
+      transactional_keyset: Array~felt252~
+    }
+
+    class SimpleLog~T~ {
+      contextual_logs: Array~T~,
+      transactional_logs: Array~T~,
     }
 
     class Status{
@@ -109,10 +124,13 @@ classDiagram
     Machine *-- Memory
     Machine *-- Stack
     Machine *-- ExecutionContext
-    Machine *-- Journal
+    Machine *-- State
     ExecutionContext *-- ExecutionContext
+    ExecutionContext *-- ExecutionContextType
     ExecutionContext *-- CallContext
     ExecutionContext *-- Status
+    State *-- StateChangeLog
+    State *-- SimpleLog
 ```
 
 ### The Stack
@@ -175,55 +193,6 @@ where $i$ is the id of the active execution context.
 If we want to store an item at offset 10 of the memory relative to the execution
 context of id 1, the internal index will be
 $index = 10 + 1 \cdot 131072 = 131082$.
-
-### Tracking storage changes
-
-The EVM has a persistent storage, which is a key-value store. The storage
-changes are tracked in the `journal` field of the Machine. This field is a
-dictionary mapping storage slots addresses modified by the current execution
-context to their most recent value. For more information on how storage is
-managed in Kakarot, read [contract_storage](./contract_storage.md).
-
-We encounter the same constraints as for the Stack and the Memory, as the
-storage changes are tracked using a dictionary; meaning that it can't be a part
-of the ExecutionContext struct. Therefore, we will track the storage changes in
-the Machine struct. What we want to achieve is the following:
-
-- Track the storage changes performed in the transaction as a whole.
-- Track the storage changes performed in the current execution context.
-- Rollback the storage changes performed in the current execution context when
-  the execution context is reverted.
-- Finalize the storage changes performed in the transaction when the transaction
-  is finalized.
-
-Considering Cairo's limitations raised previously, we will use a single data
-structure to track local and global storage changes. We will use a `Journal`
-data structure, that will track two things: the changes performed in the current
-execution context, and the changes performed in the transaction as a whole. The
-Journal will have the following fields:
-
-```rust
-  struct Journal {
-      local_changes: Felt252Dict<u256>,
-      local_keys: Array<u256>,
-      global_changes: Felt252Dict<u256>,
-      global_keys: Array<u256>,
-  }
-```
-
-The `local_changes` field is a dictionary mapping storage slots addresses to the
-most recent changes, performed in the local execution context. The `local_keys`
-field is used to track the indexes of the storage slots addresses in the
-dictionary in order to be able to iterate over the dictionary. Similarly, the
-`global_changes` field is a dictionary mapping storage slots addresses to the
-changes performed in the transaction as a whole. The `global_keys` tracks the
-indexes of these storage slots addresses in the dictionary.
-
-When an execution contexts stops, we will commit the local changes to the global
-changes by inserting the local changes in the `global_changes` dictionary, and
-updating the `global_keys` array. When the transaction is finalized, we will
-iterate over the `global_changes` dictionary, and perform the required storage
-updates, as mentioned in [Contract Storage](./contract_storage.md).
 
 ## Conclusion
 

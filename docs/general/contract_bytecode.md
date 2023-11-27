@@ -5,7 +5,7 @@ EVM will execute when a contract is called. As Kakarot's state is embedded into
 the Starknet chain it is deployed on, contracts are not actually "deployed" on
 Kakarot: instead, the EVM bytecode of the deployed contract is first executed,
 and the returned data is then stored on-chain at a particular storage address
-inside the starknet contract corresponding to the contract's EVM address, whose
+inside the Starknet contract corresponding to the contract's EVM address, whose
 address is deterministically computed. The Kakarot EVM will be able to load this
 bytecode by querying the storage of this Starknet contract when a user interacts
 with its associated EVM address.
@@ -69,11 +69,12 @@ significant price, as the publication of state diffs on Ethereum accounted for
 [over 93% of the transaction fees paid on Starknet](https://community.starknet.io/t/volition-hybrid-data-availability-solution/97387).
 
 The first choice when storing contract bytecode is to store it as a regular
-storage variable, with its state diff posted on Ethereum acting as the DA Layer.
+variable in the contract account's storage, with its state diff posted on
+Ethereum acting as the DA Layer.
 
 In this case, the following data would reach L1:
 
-- The KakarotCore contract address
+- The Starknet address of the contract account
 - The number of updated keys in that contract
 - The keys to update
 - The new values for these keys
@@ -85,15 +86,15 @@ $$ gas\ price \cdot c_w \cdot (2n + 2m) $$
 
 where $c_w$ is the calldata cost (in gas) per 32-byte word.
 
-In this case, one single contract (the Starknet contract corresponding to the
-ContractAccount) would be updated, with $m$ keys, where $m = (B / 31) + 2$ and
-$B$ is the size of the bytecode to store (see
-[implementation details](./contract_bytecode.md#implementation-details)).
+When storing the EVM bytecode during deployment, one single contract (the
+Starknet contract corresponding to the ContractAccount) would be updated, with
+$m$ keys, where $m = (B / 31) + 2$ and $B$ is the size of the bytecode to store
+(see [implementation details](./contract_bytecode.md#implementation-details)).
 
 Considering a gas price of 34 gwei (average gas price in 2023, according to
-[Etherscan](https://etherscan.io/chart/gasprice)),a calldata cost of 16 per byte
-and the size of a typical ERC20 contract size of 2174 bytes, we would have
-$m = 72$. The associated storage update fee would be:
+[Etherscan](https://etherscan.io/chart/gasprice)), a calldata cost of 16 per
+non-zero byte of calldata and the size of a typical ERC20 contract size of 2174
+bytes, we would have $m = 72$. The associated storage update fee would be:
 
 $$ fee = 34 \cdot (16 \cdot 32) \cdot (2 + 144) = 2,541,468 \text{ gwei}$$
 
@@ -110,7 +111,7 @@ for both L2 and L1 data availability modes. The difference is in the data
 availability guarantees. When a state transition is verified on L1, its
 correctness is ensured - however, the actual state of the L2 is not known on L1.
 By posting state diffs on L1, the current state of Starknet can be reconstructed
-from the beginning, but this has a significant cost.
+from the beginning, but this has a significant cost as mentioned previously.
 
 ![Volition](volition.png)
 
@@ -174,12 +175,12 @@ committed to Ethereum. This solution is the most secure one, as it relies on
 Ethereum as a DA Layer, and thus inherits from Ethereum's security guarantees,
 ensuring that the bytecode of the deployed contract is always available.
 
-A `deploy` transaction is identified by a null `to` address (`Option::None`).
-The data sent to the KakarotCore contract when deploying a new contract will be
-passed as an `Array<u8>` to the entrypoint `eth_send_transaction` of the
-KakarotCore contract. This bytecode will then be packed 31 bytes at a time,
-reducing by 31 the size of the bytecode stored in storage, which is the most
-expensive part of the transaction.
+In Ethereum, a `deploy` transaction is identified by a null `to` address
+(`Option::None`). The calldata sent to the KakarotCore contract when deploying a
+new contract will be passed as an `Array<u8>` to the `eth_send_transaction`
+entrypoint of the KakarotCore contract. This bytecode will then be packed 31
+bytes at a time, reducing by 31 the size of the bytecode stored in storage,
+which is the most expensive part of the transaction.
 
 The contract storage related to a deployed contract is organized as:
 
@@ -232,4 +233,5 @@ Once our bytecode is written in storage, we can simply load it by doing so:
 ```
 
 After which the value of the bytecode at offset `i` can be accessed by simply
-doing `bytecode[i]` when executing the bytecode instructions in the EVM.
+doing `bytecode[i]` when executing the bytecode instructions in the EVM - making
+it convenient to iterate over.

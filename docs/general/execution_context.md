@@ -22,9 +22,7 @@ classDiagram
         program_counter: u32,
         status: Status,
         call_ctx: CallContext,
-        destroyed_contracts: Array~EthAddress~,
         events: Array~Event~,
-        create_addresses: Array~EthAddress~,
         return_data: Span~u8~,
         parent_ctx: Nullable~ExecutionContext~,
     }

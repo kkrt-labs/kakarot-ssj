@@ -136,9 +136,6 @@ struct ExecutionContext {
     program_counter: u32,
     status: Status,
     call_ctx: Box<CallContext>,
-    destroyed_contracts: Array<EthAddress>,
-    events: Array<Event>,
-    create_addresses: Array<EthAddress>,
     // Return data of a child context.
     return_data: Span<u8>,
     parent_ctx: Nullable<ExecutionContext>,
@@ -185,9 +182,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             program_counter: Default::default(),
             status: Default::default(),
             call_ctx: BoxTrait::new(call_ctx),
-            destroyed_contracts: Default::default(),
-            events: Default::default(),
-            create_addresses: Default::default(),
             return_data,
             parent_ctx,
         }
@@ -222,21 +216,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn call_ctx(self: @ExecutionContext) -> CallContext {
         (*self.call_ctx).unbox()
-    }
-
-    #[inline(always)]
-    fn destroyed_contracts(self: @ExecutionContext) -> Span<EthAddress> {
-        self.destroyed_contracts.span()
-    }
-
-    #[inline(always)]
-    fn events(self: @ExecutionContext) -> Span<Event> {
-        self.events.span()
-    }
-
-    #[inline(always)]
-    fn create_addresses(self: @ExecutionContext) -> Span<EthAddress> {
-        self.create_addresses.span()
     }
 
     #[inline(always)]
@@ -357,12 +336,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn pc(self: @ExecutionContext) -> u32 {
         *self.program_counter
-    }
-
-
-    #[inline(always)]
-    fn append_event(ref self: ExecutionContext, event: Event) {
-        self.events.append(event);
     }
 
     fn origin(ref self: ExecutionContext) -> Address {

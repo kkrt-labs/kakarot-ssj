@@ -60,9 +60,6 @@ struct ExecutionResult {
     address: Address,
     status: Status,
     return_data: Span<u8>,
-    create_addresses: Span<EthAddress>,
-    destroyed_contracts: Span<EthAddress>,
-    events: Span<Event>,
     state: State,
 }
 

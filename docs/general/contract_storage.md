@@ -113,17 +113,16 @@ This design has some limitations:
 - It moves away from the traditional EVM design, in which execution clients
   store account states in a common database backend.
 
-But, as we're looking for maximum compatibility between "pure" Starknet
-contracts and "Kakarot" Starknet contracts, this design is ideal from a
-compatibility perspective. It allows us to have a one-to-one mapping between
-Kakarot contracts and Starknet contracts, which makes it easier to perform value
-transfers with the chain's native token. Moreover, it allows one to send funds
-from a Starknet account to a Kakarot account, which can be useful to implement a
-bridging mechanism to Kakarot with low overhead.
+However, it has some interesting properties. It allows us to have a one-to-one
+mapping between Kakarot contracts and Starknet contracts, which makes it easier
+to perform value transfers with the chain's native token. Moreover, it allows
+one to send funds from a Starknet account to a Kakarot account, which can be
+useful to implement a bridging mechanism to Kakarot with low overhead, or any
+other mechanism that requires interacting with funds of a Kakarot account.
 
-Therefore, we will this design in Kakarot. The second design, presented after,
-still has some interesting properties that we will discuss. But the benefits it
-brings do not outweigh the loss of compatibility.
+Therefore, we will use this design in Kakarot. The second design, presented
+after, still has some interesting properties that we will discuss. But the
+benefits it brings do not outweigh the loss of compatibility.
 
 ### A shared storage space for all Kakarot Contracts
 
@@ -144,6 +143,48 @@ This new model doesn't expose read and write methods on Kakarot contracts.
 Instead of having $n$ contracts with `write_storage` and `read_storage`
 entrypoints, the only way to update the storage of a Kakarot contract is now
 through executing SLOAD / SSTORE internally to KakarotCore.
+
+Regarding the security of such a design, we can reason about the probability of
+a collision occurring when interacting with this shared storage.
+[65M contracts](https://dune.com/queries/2284893/3744521) have been deployed on
+Ethereum so far. If we assume that Kakarot could reach the same number of
+contracts, that would leave us with a total of
+$2^{251} / 65\cdot10^6 \approx 2^{225}$ slots per contract. Even with a
+hypothetical number of 100 billion contracts, we would still have around
+$2^{214}$ storage slots available per contract.
+
+Considering the birthday paradox, the probability of a collision occurring,
+given $2^{214}$ randomly chosen slots, is roughly $1/2^{107}$. This is a very
+low probability, which is considered secure by today's standards. We can
+therefore consider that the collision risk is negligible and that this storage
+layout doesn't introduce any security risk to Kakarot. For reference, Ethereum
+has 80 bits of security on its account addresses, which are 160 bits long.
+
+But, as we're looking for maximum compatibility between "pure" Starknet
+contracts and "Kakarot" Starknet contracts, this design is not ideal from a
+compatibility perspective. It requires us to keep an internal accounting of the
+balances of each account, and to expose external entrypoints in order to query
+the balances of each account. This is not ideal, as it completely breaks the
+compatibility with Starknet.
+
+### Tracking and reverting storage changes
+
+The storage mechansim presented in the [Local State](./local_state.md) section
+enable us to revert storage changes by using a concept similar to Geth's
+journal. Each storage change will be stored in a `StateChangeLog` implemented
+using a `Felt252Dict` data structure, that will associate each modified storage
+address to its new value. This allows us to perform three things:
+
+- When executing a transaction, instead of using one `storage_write_syscall` per
+  SSTORE opcode, we can simply store the storage changes in this cache state. At
+  the end of the transaction, we can finalize all the storage writes together
+  and perform only one `storage_write_syscall` per modified storage address.
+- When reading from storage, we can first read from the state to see if the
+  storage slot has been modified. If it's the case, we can read the new value
+  from the state instead of performing a `storage_read_syscall`.
+- If the transaction reverts, we won't need to revert the storage changes
+  manually. Instead, we can simply not finalize the storage changes present in
+  the state, which can save a lot of gas.
 
 ```mermaid
 sequenceDiagram
@@ -183,41 +224,6 @@ sequenceDiagram
 
     Note over S: Storage is now updated with the final state of all changes made during the transaction.
 ```
-
-### Eventual security risks
-
-[65M contracts](https://dune.com/queries/2284893/3744521) have been deployed on
-Ethereum so far. If we assume that Kakarot could reach the same number of
-contracts, that would leave us with a total of
-$2^{251} / 65\cdot10^6 \approx 2^{225}$ slots per contract. Even with a
-hypothetical number of 100 billion contracts, we would still have around
-$2^{214}$ storage slots available per contract.
-
-Considering the birthday paradox, the probability of a collision occurring,
-given $2^{214}$ randomly chosen slots, is roughly $1/2^{107}$. This is a very
-low probability, which is considered secure by today's standards. We can
-therefore consider that the collision risk is negligible and that this storage
-layout doesn't introduce any security risk to Kakarot. For reference, Ethereum
-has 80 bits of security on its account addresses, which are 160 bits long.
-
-### Tracking and reverting storage changes
-
-This design allows reverting storage changes by using a concept similar to
-Geth's journal. Each storage change will be stored in a `StateChangeLog`
-implemented using a `Felt252Dict` data structure, that will associate each
-modified storage address to its new value. This allows us to perform three
-things:
-
-- When executing a transaction, instead of using one `storage_write_syscall` per
-  SSTORE opcode, we can simply store the storage changes in this cache state. At
-  the end of the transaction, we can finalize all the storage writes together
-  and perform only one `storage_write_syscall` per modified storage address.
-- When reading from storage, we can first read from the state to see if the
-  storage slot has been modified. If it's the case, we can read the new value
-  from the state instead of performing a `storage_read_syscall`.
-- If the transaction reverts, we won't need to revert the storage changes
-  manually. Instead, we can simply not finalize the storage changes present in
-  the state, which can save a lot of gas.
 
 ### Implementation
 

@@ -48,6 +48,7 @@ mod internal {
     use evm::memory::MemoryTrait;
     use evm::model::Event;
     use evm::stack::StackTrait;
+    use evm::state::StateTrait;
 
     /// Store a new event in the dynamic context using topics
     /// popped from the stack and data from the memory.
@@ -70,7 +71,7 @@ mod internal {
         self.memory.load_n(size, ref data, offset);
 
         let event: Event = Event { keys: topics, data };
-        self.append_event(event);
+        self.state.add_event(event);
 
         Result::Ok(())
     }
