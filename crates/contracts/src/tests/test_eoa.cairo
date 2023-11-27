@@ -249,6 +249,9 @@ mod test_external_owned_account {
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
 
+        // to reproduce locally:
+        // run: cp .env.example .env
+        // bun install & bun run scripts/compute_rlp_encoding.ts
         let signature = Signature {
             r: 0xaae7c4f6e4caa03257e37a6879ed5b51a6f7db491d559d10a0594f804aa8d797,
             s: 0x2f3d9634f8cb9b9a43b048ee3310be91c2d3dc3b51a3313b473ef2260bbf6bc7,
@@ -276,6 +279,9 @@ mod test_external_owned_account {
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
 
+        // to reproduce locally:
+        // run: cp .env.example .env
+        // bun install & bun run scripts/compute_rlp_encoding.ts
         let signature = Signature {
             r: 0x96a5512ce388874338c3825959674c130a7cde2317ab0c2312e9e687d15fc373,
             s: 0x12d0b91acc6c7683186f746b8d0a39991911cca2ab99fc84b2a1652792a15249,
@@ -304,6 +310,9 @@ mod test_external_owned_account {
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
 
+        // to reproduce locally:
+        // run: cp .env.example .env
+        // bun install & bun run scripts/compute_rlp_encoding.ts
         let signature = Signature {
             r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
             s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,

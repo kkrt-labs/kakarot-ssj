@@ -127,6 +127,9 @@ fn test_validate_legacy_tx() {
     let account_nonce = 0x0;
     let chain_id = chain_id();
 
+    // to reproduce locally:
+    // run: cp .env.example .env
+    // bun install & bun run scripts/compute_rlp_encoding.ts
     let signature = Signature {
         r: 0xaae7c4f6e4caa03257e37a6879ed5b51a6f7db491d559d10a0594f804aa8d797,
         s: 0x2f3d9634f8cb9b9a43b048ee3310be91c2d3dc3b51a3313b473ef2260bbf6bc7,
@@ -148,6 +151,9 @@ fn test_validate_eip_2930_tx() {
     let account_nonce = 0x0;
     let chain_id = chain_id();
 
+    // to reproduce locally:
+    // run: cp .env.example .env
+    // bun install & bun run scripts/compute_rlp_encoding.ts
     let signature = Signature {
         r: 0x96a5512ce388874338c3825959674c130a7cde2317ab0c2312e9e687d15fc373,
         s: 0x12d0b91acc6c7683186f746b8d0a39991911cca2ab99fc84b2a1652792a15249,
@@ -169,6 +175,9 @@ fn test_validate_eip_1559_tx() {
     let account_nonce = 0x0;
     let chain_id = chain_id();
 
+    // to reproduce locally:
+    // run: cp .env.example .env
+    // bun install & bun run scripts/compute_rlp_encoding.ts
     let signature = Signature {
         r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
         s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
@@ -190,6 +199,9 @@ fn test_validate_should_fail_for_wrong_account_id() {
     let wrong_account_nonce = 0x1;
     let chain_id = 0x1;
 
+    // to reproduce locally:
+    // run: cp .env.example .env
+    // bun install & bun run scripts/compute_rlp_encoding.ts
     let signature = Signature {
         r: 0x81f7eca8b0db688d69efa4283149b715b87714170d7e671b3d5ec449998fe30a,
         s: 0x320c159d81ed83c26abbcfe428b4036dd6e1af778069437a9512bda223104b95,
@@ -213,6 +225,9 @@ fn test_validate_should_fail_for_wrong_chain_id() {
     // the tx was signed for chain_id 0x1
     let wrong_chain_id = 0x2;
 
+    // to reproduce locally:
+    // run: cp .env.example .env
+    // bun install & bun run scripts/compute_rlp_encoding.ts
     let signature = Signature {
         r: 0x81f7eca8b0db688d69efa4283149b715b87714170d7e671b3d5ec449998fe30a,
         s: 0x320c159d81ed83c26abbcfe428b4036dd6e1af778069437a9512bda223104b95,
