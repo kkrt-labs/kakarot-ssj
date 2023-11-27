@@ -20,7 +20,6 @@ struct Machine {
     stack: Stack,
     memory: Memory,
     state: State,
-    error: Option<EVMError>
 }
 
 impl DefaultMachine of Default<Machine> {
@@ -31,7 +30,6 @@ impl DefaultMachine of Default<Machine> {
             stack: Default::default(),
             memory: Default::default(),
             state: Default::default(),
-            error: Option::None
         }
     }
 }
@@ -91,7 +89,6 @@ impl MachineImpl of MachineTrait {
             stack: Default::default(),
             memory: Default::default(),
             state: Default::default(),
-            error: Option::None
         }
     }
 
@@ -160,12 +157,6 @@ impl MachineImpl of MachineTrait {
         self.current_ctx = BoxTrait::new(current_execution_ctx);
         status
     }
-
-    #[inline(always)]
-    fn set_error(ref self: Machine, error: EVMError) {
-        self.error = Option::Some(error);
-    }
-
 
     #[inline(always)]
     fn call_ctx(ref self: Machine) -> CallContext {
@@ -309,11 +300,6 @@ impl MachineImpl of MachineTrait {
         current_call_ctx.calldata()
     }
 
-
-    #[inline(always)]
-    fn error(self: @Machine) -> Option<EVMError> {
-        *self.error
-    }
 
     /// Reads and returns `size` elements from bytecode starting from the current value
     /// `pc`.

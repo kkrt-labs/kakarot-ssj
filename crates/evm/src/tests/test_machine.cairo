@@ -89,20 +89,6 @@ fn test_is_root() {
     assert(machine.is_root(), 'current_ctx should be root');
 }
 
-
-#[test]
-fn test_set_error() {
-    let mut machine: Machine = Default::default();
-
-    let error = EVMError::SyscallFailed(READ_SYSCALL_FAILED);
-    machine.set_error(error);
-
-    assert(
-        machine.error == Option::Some(EVMError::SyscallFailed(READ_SYSCALL_FAILED)), 'wrong error'
-    );
-}
-
-
 #[test]
 fn test_call_context_properties() {
     let bytecode = array![0x01, 0x02, 0x03, 0x04, 0x05].span();

@@ -9,7 +9,7 @@ use evm::model::account::{AccountTrait};
 use evm::model::{Address, Transfer, ExecutionResult, AccountType};
 use evm::state::{State, StateTrait};
 use starknet::{EthAddress, ContractAddress};
-use utils::helpers::compute_starknet_address;
+use utils::helpers::{U256Trait, compute_starknet_address};
 
 /// Creates an instance of the EVM to execute a transaction.
 ///
@@ -97,7 +97,6 @@ fn execute(
     let destroyed_contracts = machine.destroyed_contracts();
     let create_addresses = machine.create_addresses();
     let events = machine.events();
-    let error = machine.error();
     ExecutionResult {
         address,
         status,
@@ -106,20 +105,18 @@ fn execute(
         create_addresses,
         events,
         state: machine.state,
-        error
     }
 }
 
 fn reverted_with_err(mut machine: Machine, error: EVMError) -> ExecutionResult {
-    machine.set_stopped();
+    let return_data = Into::<felt252, u256>::into(error.to_string()).to_bytes();
     ExecutionResult {
         address: machine.address(),
         status: Status::Reverted,
-        return_data: Default::default().span(),
+        return_data,
         destroyed_contracts: Default::default().span(),
         create_addresses: Default::default().span(),
         events: Default::default().span(),
         state: machine.state,
-        error: Option::Some(error)
     }
 }

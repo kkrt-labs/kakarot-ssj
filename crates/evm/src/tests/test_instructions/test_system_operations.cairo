@@ -177,7 +177,7 @@ fn test_exec_call() {
     interpreter.run(ref machine);
 
     // Then
-    assert(machine.error.is_none(), 'run should be success');
+    assert(machine.stopped(), 'run should be success');
     assert(2 == load_word(1, machine.return_data()), 'Wrong return_data');
     assert(machine.stopped(), 'machine should be stopped');
 }
@@ -230,7 +230,7 @@ fn test_exec_call_no_return() {
     interpreter.run(ref machine);
 
     // Then
-    assert(machine.error.is_none(), 'run should be success');
+    assert(machine.stopped(), 'run should be success');
     assert(machine.return_data().is_empty(), 'Wrong return_data len');
     assert(machine.stopped(), 'machine should be stopped')
 }
@@ -409,7 +409,7 @@ fn test_exec_call_code() {
     interpreter.run(ref machine);
 
     // Then
-    assert(machine.error.is_none(), 'run should be success');
+    assert(machine.stopped(), 'run should be success');
     assert(2 == load_word(1, machine.return_data()), 'Wrong return_data');
     assert(machine.stopped(), 'machine should be stopped');
 
@@ -489,7 +489,7 @@ fn test_exec_delegatecall() {
     interpreter.run(ref machine);
 
     // Then
-    assert(machine.error.is_none(), 'run should be success');
+    assert(machine.stopped(), 'run should be success');
     assert(2 == load_word(1, machine.return_data()), 'Wrong return_data');
     assert(machine.stopped(), 'machine should be stopped');
 
@@ -535,7 +535,7 @@ fn test_exec_create2() {
     machine.exec_create2().unwrap();
     interpreter.run(ref machine);
 
-    assert(machine.error.is_none(), 'run should be success');
+    assert(machine.stopped(), 'run should be success');
 
     // Add SNJS script to precompute the address of the Storage.sol contract
     //     import { getContractAddress } from 'viem'
