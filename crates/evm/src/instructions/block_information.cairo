@@ -1,3 +1,4 @@
+use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
 //! Block Information.
 
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
@@ -54,11 +55,11 @@ impl BlockInformation of BlockInformationTrait {
         let execution_info = get_execution_info_syscall()
             .map_err(EVMError::SyscallFailed(EXECUTION_INFO_SYSCALL_FAILED))?
             .unbox();
-        let coinbase: EthAddress = execution_info
-            .block_info
-            .unbox()
-            .sequencer_address
-            .try_into_result()?;
+
+        let coinbase = execution_info.block_info.unbox().sequencer_address;
+        let eoa = IExternallyOwnedAccountDispatcher { contract_address: coinbase };
+
+        let coinbase = eoa.evm_address();
         self.stack.push(coinbase.into())
     }
 

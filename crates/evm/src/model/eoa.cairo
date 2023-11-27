@@ -5,6 +5,7 @@ use contracts::kakarot_core::{IKakarotCore, KakarotCore, KakarotCore::KakarotCor
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
+
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
 use evm::model::{Address, AddressTrait};
 use starknet::{EthAddress, ContractAddress, get_contract_address, deploy_syscall};
@@ -29,6 +30,7 @@ impl EOAImpl of EOATrait {
         let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
 
         let maybe_address = deploy_syscall(account_class_hash, evm_address.into(), calldata, false);
+
         // Panic with err as syscall failure can't be caught, so we can't manage
         // the error
         match maybe_address {
