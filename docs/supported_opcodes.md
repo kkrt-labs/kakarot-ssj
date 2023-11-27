@@ -79,7 +79,7 @@ This document describes the opcodes supported by Kakarot.
 | Opcode Value | Opcode Name | Description                                                | Implemented |
 | ------------ | ----------- | ---------------------------------------------------------- | ----------- |
 | 0x40         | BLOCKHASH   | Get the hash of one of the 256 most recent complete blocks | ✅          |
-| 0x41         | COINBASE    | Get the block's beneficiary address                        |             |
+| 0x41         | COINBASE    | Get the block's beneficiary address                        | ✅          |
 | 0x42         | TIMESTAMP   | Get the block's timestamp                                  | ✅          |
 | 0x43         | NUMBER      | Get the block's number                                     | ✅          |
 | 0x44         | PREVRANDAO  | Get the block's difficulty                                 | ✅          |
@@ -214,15 +214,15 @@ This document describes the opcodes supported by Kakarot.
 
 | Opcode Value | Opcode Name  | Description                                                       | Implemented |
 | ------------ | ------------ | ----------------------------------------------------------------- | ----------- |
-| 0xf0         | CREATE       | Create a new account with associated code                         |             |
-| 0xf1         | CALL         | Message-call into an account                                      |             |
-| 0xf2         | CALLCODE     | Message-call into this account with alternative account's code    |             |
+| 0xf0         | CREATE       | Create a new account with associated code                         | ✅          |
+| 0xf1         | CALL         | Message-call into an account                                      | ✅          |
+| 0xf2         | CALLCODE     | Message-call into this account with alternative account's code    | ✅          |
 | 0xf3         | RETURN       | Halt execution returning output data                              | ✅          |
-| 0xf4         | DELEGATECALL | Message-call into this account with an alternative account’s code |             |
-| 0xf5         | CREATE2      | Create a new account with associated code                         |             |
-| 0xfa         | STATICCALL   | Static message-call into an account                               |             |
-| 0xfd         | REVERT       | Halt execution reverting state changes                            |             |
-| 0xfe         | INVALID      | Designated invalid instruction                                    |             |
+| 0xf4         | DELEGATECALL | Message-call into this account with an alternative account’s code | ✅          |
+| 0xf5         | CREATE2      | Create a new account with associated code                         | ✅          |
+| 0xfa         | STATICCALL   | Static message-call into an account                               | ✅          |
+| 0xfd         | REVERT       | Halt execution reverting state changes                            | ✅          |
+| 0xfe         | INVALID      | Designated invalid instruction                                    | ✅          |
 | 0xff         | SELFDESTRUCT | Halt execution and register account for later deletion            | ✅          |
 
 <!-- markdownlint-restore -->

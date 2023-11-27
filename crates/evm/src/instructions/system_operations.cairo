@@ -42,7 +42,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// INVALID
     /// # Specification: https://www.evm.codes/#fe?fork=shanghai
     fn exec_invalid(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::NotImplemented)
+        Result::Err(EVMError::InvalidOpcode(0xfe))
     }
 
     /// RETURN

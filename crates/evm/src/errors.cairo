@@ -54,7 +54,7 @@ enum EVMError {
     ReturnDataError: felt252,
     JumpError: felt252,
     NotImplemented,
-    UnknownOpcode: u8,
+    InvalidOpcode: u8,
     SyscallFailed: felt252,
     WriteInStaticContext: felt252,
     InvalidMachineState: felt252,
@@ -74,7 +74,7 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::JumpError(error_message) => error_message,
             EVMError::NotImplemented => 'NotImplemented',
             // TODO: refactor with dynamic strings once supported
-            EVMError::UnknownOpcode => 'UnknownOpcode'.into(),
+            EVMError::InvalidOpcode => 'InvalidOpcode'.into(),
             EVMError::SyscallFailed(error_message) => error_message.into(),
             EVMError::WriteInStaticContext(error_message) => error_message.into(),
             EVMError::InvalidMachineState(error_message) => error_message.into(),

@@ -655,7 +655,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
             return machine.exec_selfdestruct();
         }
         // Unknown opcode
-        return Result::Err(EVMError::UnknownOpcode(opcode));
+        return Result::Err(EVMError::InvalidOpcode(opcode));
     }
 
     /// Finalizes the revert of an execution context.
