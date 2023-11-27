@@ -106,15 +106,13 @@ mod ExternallyOwnedAccount {
             let encoded_tx = (call.calldata)
                 .span()
                 .try_into_bytes()
-                .expect('converstion to Span<u8> failed');
+                .expect('conversion to Span<u8> failed');
             let validation_result = EthTransactionTrait::validate_eth_tx(
                 tx_metadata, encoded_tx.span()
             )
                 .unwrap();
 
-            if (!validation_result) {
-                panic(array!['transaction validation failed']);
-            }
+            assert(validation_result, 'transaction validation failed');
 
             VALIDATED
         }
