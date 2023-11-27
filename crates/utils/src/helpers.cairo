@@ -1113,13 +1113,7 @@ impl TryIntoEthSignature of TryInto<Span<felt252>, EthSignature> {
 #[generate_trait]
 impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
     fn to_felt252_array(self: EthSignature) -> Array<felt252> {
-        let y_parity = {
-            if (self.y_parity) {
-                1
-            } else {
-                0
-            }
-        };
+        let y_parity: felt252 = self.y_parity.into();
 
         let mut arr: Array<felt252> = array![];
         arr.append(self.r.low.into());
