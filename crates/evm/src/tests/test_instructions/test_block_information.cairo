@@ -8,7 +8,7 @@ use contracts::tests::test_utils::{
 use evm::instructions::BlockInformationTrait;
 use evm::model::contract_account::ContractAccountTrait;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::{evm_address, MachineBuilderImpl};
+use evm::tests::test_utils::{evm_address, MachineBuilderTestTrait};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::{set_block_timestamp, set_block_number, set_contract_address};
 
@@ -17,7 +17,7 @@ use starknet::testing::{set_block_timestamp, set_block_number, set_contract_addr
 #[available_gas(20000000)]
 fn test_exec_blockhash_below_bounds() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     set_block_number(500);
 
@@ -33,7 +33,7 @@ fn test_exec_blockhash_below_bounds() {
 #[available_gas(20000000)]
 fn test_exec_blockhash_above_bounds() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     set_block_number(500);
 
@@ -51,7 +51,7 @@ fn test_exec_blockhash_above_bounds() {
 #[available_gas(20000000)]
 fn test_exec_blockhash_within_bounds() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     set_block_number(500);
 
@@ -71,7 +71,7 @@ fn test_exec_blockhash_within_bounds() {
 #[available_gas(20000000)]
 fn test_block_timestamp_set_to_1692873993() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // 24/08/2023 12h46 33s
     // If not set the default timestamp is 0.
     set_block_timestamp(1692873993);
@@ -87,7 +87,7 @@ fn test_block_timestamp_set_to_1692873993() {
 #[available_gas(20000000)]
 fn test_block_number_set_to_32() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // If not set the default block number is 0.
     set_block_number(32);
     // When
@@ -102,7 +102,7 @@ fn test_block_number_set_to_32() {
 #[available_gas(20000000)]
 fn test_gaslimit() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // When
     machine.exec_gaslimit();
 
@@ -125,7 +125,7 @@ fn test_exec_selfbalance_eoa() {
     fund_account_with_native_token(eoa, native_token, 0x1);
 
     // And
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     // When
     set_contract_address(kakarot_core.contract_address);
@@ -142,7 +142,7 @@ fn test_exec_selfbalance_zero() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // And
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     // When
     set_contract_address(kakarot_core.contract_address);
@@ -160,7 +160,7 @@ fn test_exec_selfbalance_contract_account() {
     let mut ca_address = deploy_contract_account(evm_address(), array![].span());
 
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     // When
     set_contract_address(kakarot_core.contract_address);
@@ -175,7 +175,7 @@ fn test_exec_selfbalance_contract_account() {
 #[available_gas(20000000)]
 fn test_basefee() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // When
     machine.exec_basefee();
 
@@ -190,7 +190,7 @@ fn test_chainid_should_push_chain_id_to_stack() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let chain_id: u256 = IExtendedKakarotCoreDispatcher {
         contract_address: kakarot_core.contract_address
@@ -211,7 +211,7 @@ fn test_chainid_should_push_chain_id_to_stack() {
 #[available_gas(20000000)]
 fn test_randao_should_push_zero_to_stack() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     // When
     machine.exec_prevrandao().unwrap();

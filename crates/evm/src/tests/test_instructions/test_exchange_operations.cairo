@@ -3,13 +3,13 @@ use evm::context::ExecutionContextTrait;
 use evm::instructions::exchange_operations::ExchangeOperationsTrait;
 use evm::machine::Machine;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::MachineBuilderImpl;
+use evm::tests::test_utils::MachineBuilderTestTrait;
 
 
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap1() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(1).unwrap();
@@ -23,7 +23,7 @@ fn test_exec_swap1() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap2() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -36,7 +36,7 @@ fn test_exec_swap2() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap3() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -50,7 +50,7 @@ fn test_exec_swap3() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap4() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -66,7 +66,7 @@ fn test_exec_swap4() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap5() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -82,7 +82,7 @@ fn test_exec_swap5() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap6() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -100,7 +100,7 @@ fn test_exec_swap6() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap7() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -118,7 +118,7 @@ fn test_exec_swap7() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap8() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -138,7 +138,7 @@ fn test_exec_swap8() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap9() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -158,7 +158,7 @@ fn test_exec_swap9() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap10() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -179,7 +179,7 @@ fn test_exec_swap10() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap11() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -201,7 +201,7 @@ fn test_exec_swap11() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap12() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -224,7 +224,7 @@ fn test_exec_swap12() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap13() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -248,7 +248,7 @@ fn test_exec_swap13() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap14() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -273,7 +273,7 @@ fn test_exec_swap14() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap15() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();
@@ -299,7 +299,7 @@ fn test_exec_swap15() {
 #[test]
 #[available_gas(20000000)]
 fn test_exec_swap16() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
     machine.stack.push(0xf).unwrap();
     machine.stack.push(0).unwrap();

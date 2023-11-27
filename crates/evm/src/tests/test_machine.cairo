@@ -1,7 +1,7 @@
 use evm::context::{CallContextTrait, ExecutionContextType, ExecutionContextTrait};
 use evm::errors::{EVMError, READ_SYSCALL_FAILED};
-use evm::machine::{Machine, MachineCurrentContextTrait};
-use evm::tests::test_utils::{evm_address, starknet_address, MachineBuilderImpl, test_address};
+use evm::machine::{Machine, MachineTrait};
+use evm::tests::test_utils::{evm_address, starknet_address, MachineBuilderTestTrait, test_address};
 
 
 #[test]
@@ -28,7 +28,7 @@ fn test_set_current_ctx() {
     assert(machine.memory.active_segment == 0, 'wrong initial memory segment');
 
     // Create another context with id=1
-    let mut second_machine = MachineBuilderImpl::new_with_presets().build();
+    let mut second_machine = MachineBuilderTestTrait::new_with_presets().build();
     let mut second_ctx = second_machine.current_ctx.unbox();
     second_ctx.ctx_type = ExecutionContextType::Call(1);
 
@@ -78,7 +78,7 @@ fn test_read_code() {
 
     let bytecode = array![0x01, 0x02, 0x03, 0x04, 0x05].span();
 
-    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
     // When we read a code slice
     let read_code = machine.read_code(3);
 
@@ -116,7 +116,7 @@ fn test_set_error() {
 fn test_call_context_properties() {
     let bytecode = array![0x01, 0x02, 0x03, 0x04, 0x05].span();
 
-    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     let call_ctx = machine.call_ctx();
     assert(call_ctx.read_only() == false, 'wrong read_only');
@@ -131,7 +131,7 @@ fn test_call_context_properties() {
 #[available_gas(20000000)]
 fn test_addresses() {
     let expected_address = test_address();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let evm_address = machine.address();
     assert(evm_address == expected_address, 'wrong evm address');
@@ -176,7 +176,7 @@ fn test_set_return_data_root() {
 #[test]
 #[available_gas(20000000)]
 fn test_set_return_data_subctx() {
-    let mut machine = MachineBuilderImpl::new().with_nested_execution_context().build();
+    let mut machine = MachineBuilderTestTrait::new().with_nested_execution_context().build();
 
     machine.set_return_data(array![0x01, 0x02, 0x03].span());
     let return_data = machine.return_data();

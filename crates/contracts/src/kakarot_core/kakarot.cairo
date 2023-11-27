@@ -2,7 +2,6 @@ use starknet::{ContractAddress, EthAddress, ClassHash};
 
 const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
-
 // Local enum to differentiate EOA and CA in storage
 // TODO: remove distinction between EOA and CA as EVM accounts
 // As soon as EOA::nonce can be handled at the application level
@@ -23,22 +22,25 @@ mod KakarotCore {
     use contracts::kakarot_core::interface::IKakarotCore;
     use contracts::kakarot_core::interface;
     use core::starknet::SyscallResultTrait;
+    use core::traits::TryInto;
     use core::zeroable::Zeroable;
 
     use evm::context::Status;
     use evm::errors::{EVMError, EVMErrorTrait, CALLING_FROM_CA, CALLING_FROM_UNDEPLOYED_ACCOUNT};
     use evm::execution::execute;
+    use evm::machine::{Machine, MachineTrait};
     use evm::model::account::{Account, AccountType, AccountTrait};
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::{EOATrait};
     use evm::model::{ExecutionResult, Address, AddressTrait};
-    use evm::state::StateTrait;
+    use evm::state::{State, StateTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall,
         get_caller_address
     };
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use super::{StoredAccountType};
+    use utils::address::compute_contract_address;
     use utils::helpers::{compute_starknet_address, EthAddressExTrait};
     use utils::rlp::RLPTrait;
 
@@ -244,20 +246,20 @@ mod KakarotCore {
 
         fn eth_call(
             self: @ContractState,
-            from: EthAddress,
+            origin: EthAddress,
             to: Option<EthAddress>,
             gas_limit: u128,
             gas_price: u128,
             value: u256,
-            data: Span<u8>
+            calldata: Span<u8>
         ) -> Span<u8> {
             if !self.is_view() {
                 panic_with_felt252('fn must be called, not invoked');
             };
 
-            let from = Address { evm: from, starknet: self.compute_starknet_address(from) };
+            let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
 
-            let result = self.handle_call(:from, :to, :gas_limit, :gas_price, :value, :data);
+            let result = self.handle_call(:origin, :to, :gas_limit, :gas_price, :value, :calldata);
             match result {
                 Result::Ok(result) => result.return_data,
                 // TODO: Return the error message as Bytes in the response
@@ -272,13 +274,13 @@ mod KakarotCore {
             gas_limit: u128,
             gas_price: u128,
             value: u256,
-            data: Span<u8>
+            calldata: Span<u8>
         ) -> Span<u8> {
             let starknet_caller_address = get_caller_address();
             let account = IExternallyOwnedAccountDispatcher {
                 contract_address: starknet_caller_address
             };
-            let from = Address { evm: account.evm_address(), starknet: starknet_caller_address };
+            let origin = Address { evm: account.evm_address(), starknet: starknet_caller_address };
 
             // Invariant:
             // We want to make sure the caller is part of the Kakarot address_registry
@@ -287,15 +289,19 @@ mod KakarotCore {
             // itself.
 
             let (caller_account_type, caller_starknet_address) = self
-                .address_registry(from.evm)
+                .address_registry(origin.evm)
                 .expect('Fetching EOA failed');
             assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
 
-            let mut result = self.handle_call(:from, :to, :gas_limit, :gas_price, :value, :data);
-            match result {
-                Result::Ok(result) => {
-                    let mut state = result.state;
-                    state.commit_state();
+            let mut maybe_exec_result = self
+                .handle_call(:origin, :to, :gas_limit, :gas_price, :value, :calldata);
+            match maybe_exec_result {
+                Result::Ok(mut result) => {
+                    result.state.commit_state();
+                    if to.is_none() {
+                        // Overwrite return_data with deployed address
+                        return result.address.evm.to_bytes().span();
+                    }
                     result.return_data
                 },
                 // TODO: Return the error message as Bytes in the response
@@ -365,42 +371,43 @@ mod KakarotCore {
             self.address_registry.write(evm_address, account);
         }
 
+
         fn handle_call(
             self: @ContractState,
-            from: Address,
+            origin: Address,
             to: Option<EthAddress>,
             gas_limit: u128,
             gas_price: u128,
             value: u256,
-            data: Span<u8>
+            calldata: Span<u8>
         ) -> Result<ExecutionResult, EVMError> {
-            match to {
-                //TODO we can optimize this by doing this one step later, when we load the account from the state. This way we can avoid loading the account bytecode twice.
+            let (to, is_deploy_tx) = match to {
                 Option::Some(to) => {
-                    let bytecode = AccountTrait::fetch_or_create(to)?.code;
-
                     let target_starknet_address = self.compute_starknet_address(to);
                     let to = Address { evm: to, starknet: target_starknet_address };
-
-                    let execution_result = execute(
-                        from,
-                        to,
-                        :bytecode,
-                        calldata: data,
-                        :value,
-                        :gas_price,
-                        :gas_limit,
-                        read_only: false,
-                    );
-                    return Result::Ok(execution_result);
+                    (to, false)
                 },
                 Option::None => {
                     // Deploy tx case.
-                    // HASH(RLP(deployer_address, deployer_nonce))[0..20]
-                    //TODO manually set target account type to CA in state
-                    panic_with_felt252('deploy tx flow unimplemented')
+                    let mut origin_nonce: u64 = get_tx_info().unbox().nonce.try_into().unwrap();
+                    let to_evm_address = compute_contract_address(origin.evm, origin_nonce);
+                    let to_starknet_address = self.compute_starknet_address(to_evm_address);
+                    let to = Address { evm: to_evm_address, starknet: to_starknet_address };
+                    (to, true)
                 },
-            }
+            };
+
+            let execution_result = execute(
+                :origin,
+                target: to,
+                :calldata,
+                :value,
+                :gas_price,
+                :gas_limit,
+                read_only: false,
+                :is_deploy_tx,
+            );
+            Result::Ok(execution_result)
         }
     }
 }

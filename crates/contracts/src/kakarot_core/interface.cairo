@@ -64,12 +64,12 @@ trait IKakarotCore<TContractState> {
     /// It cannot modify the state of the chain
     fn eth_call(
         self: @TContractState,
-        from: EthAddress,
+        origin: EthAddress,
         to: Option<EthAddress>,
         gas_limit: u128,
         gas_price: u128,
         value: u256,
-        data: Span<u8>
+        calldata: Span<u8>
     ) -> Span<u8>;
 
     /// Transaction entrypoint into the EVM
@@ -80,7 +80,7 @@ trait IKakarotCore<TContractState> {
         gas_limit: u128,
         gas_price: u128,
         value: u256,
-        data: Span<u8>
+        calldata: Span<u8>
     ) -> Span<u8>;
 
     /// Upgrade the KakarotCore smart contract
@@ -165,12 +165,12 @@ trait IExtendedKakarotCore<TContractState> {
     /// It cannot modify the state of the chain
     fn eth_call(
         self: @TContractState,
-        from: EthAddress,
+        origin: EthAddress,
         to: Option<EthAddress>,
         gas_limit: u128,
         gas_price: u128,
         value: u256,
-        data: Span<u8>
+        calldata: Span<u8>
     ) -> Span<u8>;
 
     /// Transaction entrypoint into the EVM
@@ -181,7 +181,7 @@ trait IExtendedKakarotCore<TContractState> {
         gas_limit: u128,
         gas_price: u128,
         value: u256,
-        data: Span<u8>
+        calldata: Span<u8>
     ) -> Span<u8>;
 
     /// Upgrade the KakarotCore smart contract

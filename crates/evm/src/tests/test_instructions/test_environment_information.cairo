@@ -5,14 +5,15 @@ use contracts::tests::test_utils::{
 };
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::model::contract_account::ContractAccountTrait;
 use evm::model::{Account, AccountType};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
-    MachineBuilderImpl, evm_address, callvalue, return_from_subcontext, native_token, other_address
+    MachineBuilderTestTrait, evm_address, callvalue, return_from_subcontext, native_token,
+    other_address
 };
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
@@ -29,7 +30,7 @@ use utils::traits::{EthAddressIntoU256};
 #[available_gas(20000000)]
 fn test_address_basic() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     // When
     machine.exec_address();
@@ -60,7 +61,7 @@ fn test_exec_balance_eoa() {
     fund_account_with_native_token(eoa, native_token, 0x1);
 
     // And
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     machine.stack.push(evm_address().into()).unwrap();
 
@@ -79,7 +80,7 @@ fn test_exec_balance_zero() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     // And
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     machine.stack.push(evm_address().into()).unwrap();
 
@@ -101,7 +102,7 @@ fn test_exec_balance_contract_account() {
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
 
     // And
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     machine.stack.push(evm_address().into()).unwrap();
 
@@ -121,7 +122,7 @@ fn test_exec_balance_contract_account() {
 #[available_gas(5000000)]
 fn test_caller() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     // When
     machine.exec_caller();
@@ -139,7 +140,7 @@ fn test_caller() {
 #[available_gas(20000000)]
 fn test_origin() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets()
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
         .with_nested_execution_context()
         .build();
 
@@ -158,7 +159,7 @@ fn test_origin() {
 #[available_gas(20000000)]
 fn test_origin_nested_ctx() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     // When
     machine.exec_origin();
@@ -177,7 +178,7 @@ fn test_origin_nested_ctx() {
 #[available_gas(1200000)]
 fn test_exec_callvalue() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     // When
     machine.exec_callvalue();
@@ -198,7 +199,7 @@ fn test_calldataload() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut machine = MachineBuilderImpl::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
 
     let offset: u32 = 0;
     machine.stack.push(offset.into());
@@ -222,7 +223,7 @@ fn test_calldataload_with_offset() {
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
 
-    let mut machine = MachineBuilderImpl::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
 
     let offset: u32 = 31;
     machine.stack.push(offset.into());
@@ -246,7 +247,7 @@ fn test_calldataload_with_offset_beyond_calldata() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut machine = MachineBuilderImpl::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
 
     let offset: u32 = calldata.len() + 1;
     machine.stack.push(offset.into());
@@ -264,7 +265,7 @@ fn test_calldataload_with_offset_beyond_calldata() {
 fn test_calldataload_with_function_selector() {
     // Given
     let calldata = array![0x6d, 0x4c, 0xe6, 0x3c];
-    let mut machine = MachineBuilderImpl::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
 
     let offset: u32 = 0;
     machine.stack.push(offset.into());
@@ -287,7 +288,7 @@ fn test_calldataload_with_offset_conversion_error() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut machine = MachineBuilderImpl::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
     let offset: u256 = 5000000000;
     machine.stack.push(offset);
 
@@ -310,7 +311,7 @@ fn test_calldataload_with_offset_conversion_error() {
 #[available_gas(20000000)]
 fn test_calldata_size() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let calldata: Span<u8> = machine.calldata();
 
@@ -330,7 +331,7 @@ fn test_calldata_size() {
 #[available_gas(20000000)]
 fn test_calldatacopy_type_conversion_error() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
@@ -381,7 +382,7 @@ fn test_calldatacopy_with_out_of_bound_bytes_multiple_words() {
 
 fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Span<u8>) {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let calldata: Span<u8> = machine.calldata();
 
@@ -436,7 +437,7 @@ fn test_codesize() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
 
-    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     // When
     machine.exec_codesize();
@@ -456,7 +457,7 @@ fn test_codecopy_type_conversion_error() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
 
-    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
@@ -501,7 +502,7 @@ fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
 
-    let mut machine = MachineBuilderImpl::new_with_presets().with_bytecode(bytecode).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     if (size == 0) {
         size = bytecode.len() - offset;
@@ -554,7 +555,7 @@ fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
 #[available_gas(20000000)]
 fn test_gasprice() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     // When
     machine.exec_gasprice();
@@ -572,7 +573,7 @@ fn test_gasprice() {
 fn test_exec_extcodesize_eoa() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
@@ -591,7 +592,7 @@ fn test_exec_extcodesize_eoa() {
 fn test_exec_extcodesize_ca_empty() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
@@ -613,7 +614,7 @@ fn test_exec_extcodesize_ca_empty() {
 fn test_exec_extcodesize_ca_with_bytecode() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
@@ -627,7 +628,7 @@ fn test_exec_extcodesize_ca_with_bytecode() {
     // Then
     assert(
         machine.stack.peek() // extcodesize(Counter.sol) := 275 (source: remix)
-        .unwrap() == 275,
+        .unwrap() == 473,
         'expected counter SC code size'
     );
 }
@@ -638,7 +639,7 @@ fn test_exec_extcodesize_ca_with_bytecode() {
 fn test_exec_extcodecopy_ca() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
@@ -670,7 +671,7 @@ fn test_exec_extcodecopy_ca() {
 fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
@@ -696,7 +697,7 @@ fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
 fn test_exec_extcodecopy_eoa() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
@@ -722,7 +723,7 @@ fn test_exec_extcodecopy_eoa() {
 fn test_exec_extcodecopy_account_none() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
@@ -751,7 +752,7 @@ fn test_returndatasize() {
     let return_data: Array<u8> = array![1, 2, 3, 4, 5];
     let size = return_data.len();
 
-    let mut machine = MachineBuilderImpl::new_with_presets()
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
         .with_nested_execution_context()
         .build();
 
@@ -772,7 +773,7 @@ fn test_returndatasize() {
 #[available_gas(20000000)]
 fn test_returndata_copy_type_conversion_error() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
@@ -820,7 +821,7 @@ fn test_returndata_copy_with_multiple_words() {
 
 fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets()
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
         .with_nested_execution_context()
         .build();
     // Set the return data of the current context
@@ -931,7 +932,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
 fn test_exec_extcodehash_precompile() {
     // Given
     let evm_address = 0x05.try_into().unwrap();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
@@ -950,7 +951,7 @@ fn test_exec_extcodehash_precompile() {
 fn test_exec_extcodehash_selfdestructed() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
@@ -985,7 +986,7 @@ fn test_exec_extcodehash_selfdestructed() {
 fn test_exec_extcodehash_eoa() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
@@ -1010,7 +1011,7 @@ fn test_exec_extcodehash_eoa() {
 fn test_exec_extcodehash_ca_empty() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     // The bytecode remains empty, and we expect the empty hash in return
@@ -1036,7 +1037,7 @@ fn test_exec_extcodehash_ca_empty() {
 fn test_exec_extcodehash_unknown_account() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
@@ -1055,7 +1056,7 @@ fn test_exec_extcodehash_unknown_account() {
 fn test_exec_extcodehash_ca_with_bytecode() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
@@ -1072,8 +1073,8 @@ fn test_exec_extcodehash_ca_with_bytecode() {
             .stack
             .peek()
             // extcodehash(Counter.sol) := 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275 (source: remix)
-            // <https://emn178.github.io/online-tools/keccak_256.html?input=6080604052348015600f57600080fd5b506004361060465760003560e01c806306661abd14604b578063371303c01460655780636d4ce63c14606d578063b3bcfa82146074575b600080fd5b605360005481565b60405190815260200160405180910390f35b606b607a565b005b6000546053565b606b6091565b6001600080828254608a919060b7565b9091555050565b6001600080828254608a919060cd565b634e487b7160e01b600052601160045260246000fd5b8082018082111560c75760c760a1565b92915050565b8181038181111560c75760c760a156fea2646970667358221220f379b9089b70e8e00da8545f9a86f648441fdf27ece9ade2c71653b12fb80c7964736f6c63430008120033&input_type=hex>
-            .unwrap() == 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275,
+            // <https://emn178.github.io/online-tools/keccak_256.html?input=608060405234801561000f575f80fd5b506004361061004a575f3560e01c806306661abd1461004e578063371303c01461006c5780636d4ce63c14610076578063b3bcfa8214610094575b5f80fd5b61005661009e565b60405161006391906100f7565b60405180910390f35b6100746100a3565b005b61007e6100bd565b60405161008b91906100f7565b60405180910390f35b61009c6100c5565b005b5f5481565b60015f808282546100b4919061013d565b92505081905550565b5f8054905090565b60015f808282546100d69190610170565b92505081905550565b5f819050919050565b6100f1816100df565b82525050565b5f60208201905061010a5f8301846100e8565b92915050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52601160045260245ffd5b5f610147826100df565b9150610152836100df565b925082820190508082111561016a57610169610110565b5b92915050565b5f61017a826100df565b9150610185836100df565b925082820390508181111561019d5761019c610110565b5b9291505056fea26469706673582212207e792fcff28a4bf0bad8675c5bc2288b07835aebaa90b8dc5e0df19183fb72cf64736f6c63430008160033&input_type=hex>
+            .unwrap() == 0xec976f44607e73ea88910411e3da156757b63bea5547b169e1e0d733443f73b0,
         'expected counter SC code hash'
     );
 }

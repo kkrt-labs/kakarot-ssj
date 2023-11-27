@@ -7,19 +7,20 @@ use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
 };
-use contracts::tests::test_data::counter_evm_bytecode;
+use contracts::tests::test_data::{deploy_counter_calldata, counter_evm_bytecode};
 use contracts::tests::test_upgradeable::{
     MockContractUpgradeableV1, IMockContractUpgradeableDispatcher,
     IMockContractUpgradeableDispatcherTrait
 };
 use contracts::tests::test_utils as contract_utils;
 use contracts::uninitialized_account::UninitializedAccount;
+use core::traits::TryInto;
 use evm::machine::Status;
 use evm::model::contract_account::ContractAccountTrait;
 use evm::model::{AccountType, Address};
 use evm::tests::test_utils;
-use starknet::{testing, contract_address_const, ContractAddress, ClassHash};
-use utils::helpers::u256_to_bytes_array;
+use starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};
+use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
 
 #[test]
 #[available_gas(20000000)]
@@ -49,7 +50,6 @@ fn test_kakarot_core_renounce_ownership() {
     assert(kakarot_core.owner() == contract_address_const::<0x00>(), 'wrong owner')
 }
 
-
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_core_deploy_fee() {
@@ -73,7 +73,6 @@ fn test_kakarot_core_set_deploy_fee() {
     kakarot_core.set_deploy_fee(0x100);
     assert(kakarot_core.deploy_fee() == 0x100, 'wrong new deploy_fee');
 }
-
 
 #[test]
 #[available_gas(20000000)]
@@ -101,7 +100,6 @@ fn test_kakarot_core_deploy_eoa() {
         .unwrap();
     assert(event.starknet_address == eoa_starknet_address, 'wrong starknet address');
 }
-
 
 #[test]
 #[available_gas(20000000)]
@@ -182,7 +180,6 @@ fn test_kakarot_contract_account_nonce() {
     assert(nonce == 1, 'wrong nonce');
 }
 
-
 #[test]
 #[available_gas(20000000)]
 fn test_kakarot_contract_account_storage_at() {
@@ -218,7 +215,6 @@ fn test_kakarot_contract_account_bytecode() {
     // Then
     assert(bytecode == counter_evm_bytecode(), 'wrong bytecode');
 }
-
 
 #[test]
 #[available_gas(20000000)]
@@ -266,31 +262,31 @@ fn test_eth_send_transaction() {
     // check counter value is 0 before doing inc
     let return_data = kakarot_core
         .eth_call(
-            from: evm_address,
+            origin: evm_address,
             to: Option::Some(account.evm),
             gas_limit: gas_limit,
             gas_price: gas_price,
             value: 0,
-            data: data_get_tx
+            calldata: data_get_tx
         );
 
     assert(return_data == u256_to_bytes_array(0).span(), 'counter value not 0');
 
     // selector: function inc()
-    let data_inc_tx = array![0x37, 0x13, 0x03, 0xc0].span();
+    let calldata = array![0x37, 0x13, 0x03, 0xc0].span();
 
     // When
     testing::set_contract_address(eoa);
     let return_data = kakarot_core
-        .eth_send_transaction(:to, :gas_limit, :gas_price, :value, data: data_inc_tx);
+        .eth_send_transaction(:to, :gas_limit, :gas_price, :value, :calldata);
 
     // Then
     // selector: function get()
-    let data = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+    let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // When
     let return_data = kakarot_core
-        .eth_call(from: evm_address, :to, :gas_limit, :gas_price, :value, data: data_get_tx);
+        .eth_call(origin: evm_address, :to, :gas_limit, :gas_price, :value, :calldata);
 
     // Then
     assert(return_data == u256_to_bytes_array(1).span(), 'counter value is not 1');
@@ -316,16 +312,15 @@ fn test_eth_call() {
     let gas_price = test_utils::gas_price();
     let value = 0;
     // selector: function get()
-    let data = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+    let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // When
     let return_data = kakarot_core
-        .eth_call(from: evm_address, :to, :gas_limit, :gas_price, :value, :data);
+        .eth_call(origin: evm_address, :to, :gas_limit, :gas_price, :value, :calldata);
 
     // Then
     assert(return_data == u256_to_bytes_array(1).span(), 'wrong result');
 }
-
 
 #[test]
 #[available_gas(2000000000)]
@@ -345,18 +340,18 @@ fn test_handle_call() {
     let gas_price = test_utils::gas_price();
     let value = 0;
     // selector: function get()
-    let data = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+    let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // When
     let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
     let result = kakarot_core
         .handle_call(
-            from: Address { evm: evm_address, starknet: eoa },
+            origin: Address { evm: evm_address, starknet: eoa },
             :to,
             :gas_limit,
             :gas_price,
             :value,
-            :data
+            :calldata
         )
         .expect('handle_call failed');
     let return_data = result.return_data;
@@ -367,6 +362,55 @@ fn test_handle_call() {
     assert(return_data == u256_to_bytes_array(0).span(), 'wrong result');
 }
 
+#[test]
+#[available_gas(2000000000)]
+fn test_eth_send_transaction_deploy_tx() {
+    // Given
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+
+    let evm_address = test_utils::evm_address();
+    let eoa = kakarot_core.deploy_eoa(evm_address);
+
+    let to = Option::None;
+    let gas_limit = test_utils::gas_limit();
+    let gas_price = test_utils::gas_price();
+    let value = 0;
+
+    // When
+    // Set the contract address to the EOA address, so that the caller of the `eth_send_transaction` is an eoa
+    testing::set_contract_address(eoa);
+    let deploy_result = kakarot_core
+        .eth_send_transaction(
+            :to, :gas_limit, :gas_price, :value, calldata: deploy_counter_calldata()
+        );
+
+    // Then
+    let expected_address: EthAddress = 0x19587b345dcadfe3120272bd0dbec24741891759
+        .try_into()
+        .unwrap();
+    assert(deploy_result == expected_address.to_bytes().span(), 'returndata not counter bytecode');
+
+    // Set back the contract address to Kakarot for the calculation of the deployed SN contract address, where we use a kakarot
+    // internal functions and thus must "mock" its address.
+    testing::set_contract_address(kakarot_core.contract_address);
+    let kakarot_state = KakarotCore::unsafe_new_contract_state();
+    let computed_sn_addr = kakarot_state.compute_starknet_address(expected_address);
+    let CA = IContractAccountDispatcher {
+        contract_address: kakarot_state.compute_starknet_address(expected_address)
+    };
+    let bytecode = CA.bytecode();
+    assert(bytecode == counter_evm_bytecode(), 'wrong bytecode');
+
+    // Check that the account was created and `get` returns 0.
+    let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+    let to = Option::Some(expected_address);
+
+    // No need to set address back to eoa, as eth_call doesn't use the caller address.
+    let result = kakarot_core
+        .eth_call(origin: evm_address, :to, :gas_limit, :gas_price, :value, :calldata);
+    // Then
+    assert(result == u256_to_bytes_array(0).span(), 'wrong result');
+}
 #[test]
 #[available_gas(20000000)]
 fn test_contract_account_class_hash() {
@@ -419,7 +463,6 @@ fn test_account_class_hash() {
     assert(event.new_class_hash == kakarot_core.account_class_hash(), 'wrong new hash');
 }
 
-
 #[test]
 #[available_gas(20000000)]
 fn test_eoa_class_hash() {
@@ -447,3 +490,4 @@ fn test_eoa_class_hash() {
     assert(event.old_class_hash == class_hash, 'wrong old hash');
     assert(event.new_class_hash == kakarot_core.eoa_class_hash(), 'wrong new hash');
 }
+

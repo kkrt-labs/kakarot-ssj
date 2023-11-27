@@ -5,7 +5,7 @@ use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{
     EVMError, BLOCK_HASH_SYSCALL_FAILED, EXECUTION_INFO_SYSCALL_FAILED, TYPE_CONVERSION_ERROR
 };
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::model::Account;
 use evm::model::account::{AccountTrait};
 use evm::stack::StackTrait;

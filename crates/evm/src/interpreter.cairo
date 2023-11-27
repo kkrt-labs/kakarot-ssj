@@ -5,6 +5,7 @@ use evm::call_helpers::MachineCallHelpers;
 use evm::context::{CallContextTrait, Status};
 use evm::context::{ExecutionContextTrait, ExecutionContext, ExecutionContextType};
 use evm::create_helpers::MachineCreateHelpers;
+use evm::errors::EVMErrorTrait;
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS};
 use evm::instructions::{
     duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
@@ -13,7 +14,8 @@ use evm::instructions::{
     DuplicationOperationsTrait, EnvironmentInformationTrait, PushOperationsTrait,
     MemoryOperationTrait
 };
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
+use evm::model::account::AccountTrait;
 use evm::state::StateTrait;
 use utils::{helpers::u256_to_bytes_array};
 
@@ -30,7 +32,6 @@ trait EVMInterpreterTrait {
     fn finalize_revert(ref self: Machine);
     fn finalize_context(ref self: EVMInterpreter, ref machine: Machine);
 }
-
 
 impl EVMInterpreterImpl of EVMInterpreterTrait {
     #[inline(always)]
@@ -77,7 +78,6 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
         }
 
         let opcode: u8 = *bytecode.at(pc);
-
         // Increment pc
         machine.set_pc(pc + 1);
 
@@ -667,9 +667,14 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
     /// Finalizes the changes performed during a context by applying them to the
     /// transactional changes.
     fn finalize_context(ref self: EVMInterpreter, ref machine: Machine) {
-        machine.state.commit_context();
         match machine.ctx_type() {
-            ExecutionContextType::Root => { // TODO: error handling
+            ExecutionContextType::Root(is_create) => { // TODO: error handling
+                // In case of a deploy tx, we need to store the return_data in the account.
+                if is_create {
+                    let mut deployed_account = machine.state.get_account(machine.address().evm);
+                    deployed_account.set_code(machine.return_data());
+                    machine.state.set_account(deployed_account);
+                }
             },
             ExecutionContextType::Call(_) => {
                 machine.finalize_calling_context(); // TODO: error handling
@@ -680,5 +685,6 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
                 self.run(ref machine);
             }
         }
+        machine.state.commit_context();
     }
 }

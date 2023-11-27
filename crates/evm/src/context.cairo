@@ -56,10 +56,18 @@ impl CallContextImpl of CallContextTrait {
         gas_limit: u128,
         gas_price: u128,
         ret_offset: usize,
-        ret_size: usize
+        ret_size: usize,
     ) -> CallContext {
         CallContext {
-            caller, bytecode, calldata, value, read_only, gas_limit, gas_price, ret_offset, ret_size
+            caller,
+            bytecode,
+            calldata,
+            value,
+            read_only,
+            gas_limit,
+            gas_price,
+            ret_offset,
+            ret_size,
         }
     }
 
@@ -136,14 +144,16 @@ struct ExecutionContext {
     parent_ctx: Nullable<ExecutionContext>,
 }
 
-/// A context is either: the root, a call sub-context or a create sub-context.
+
+type IsCreate = bool;
 /// In the case of call and create, the execution context requires an id number
 /// to access their respective Stack and Memory; while the Root context always has
 /// id equal to 0.
+/// A context is either: the root, a call sub-context or a create sub-context.
 #[derive(Drop, Default, Copy, PartialEq)]
 enum ExecutionContextType {
     #[default]
-    Root,
+    Root: IsCreate,
     Call: usize,
     Create: usize
 }
@@ -302,7 +312,20 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     #[inline(always)]
     fn is_root(self: @ExecutionContext) -> bool {
-        *self.ctx_type == ExecutionContextType::Root
+        match *self.ctx_type {
+            ExecutionContextType::Root(_) => true,
+            ExecutionContextType::Call(_) => false,
+            ExecutionContextType::Create(_) => false,
+        }
+    }
+
+    #[inline(always)]
+    fn is_create(self: @ExecutionContext) -> bool {
+        match *self.ctx_type {
+            ExecutionContextType::Root(is_create) => is_create,
+            ExecutionContextType::Call(_) => false,
+            ExecutionContextType::Create(_) => true,
+        }
     }
 
     #[inline(always)]
@@ -313,7 +336,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn id(self: @ExecutionContext) -> usize {
         match *self.ctx_type {
-            ExecutionContextType::Root => 0,
+            ExecutionContextType::Root(_) => 0,
             ExecutionContextType::Call(id) => id,
             ExecutionContextType::Create(id) => id,
         }

@@ -1,12 +1,12 @@
 //! Push Operations.
 
 use evm::errors::EVMError;
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::stack::StackTrait;
 
 mod internal {
     use evm::errors::EVMError;
-    use evm::machine::{Machine, MachineCurrentContextTrait};
+    use evm::machine::{Machine, MachineTrait};
     use evm::stack::StackTrait;
     use utils::helpers::load_word;
 

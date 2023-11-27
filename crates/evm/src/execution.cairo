@@ -2,26 +2,27 @@ use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
     Status
 };
-use evm::errors::{EVMError, EVMErrorTrait};
+use evm::errors::{EVMError, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
 use evm::interpreter::EVMInterpreterTrait;
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait, MachineBuilderTrait};
 use evm::model::account::{AccountTrait};
-use evm::model::{Address, Transfer, ExecutionResult};
-use evm::state::{StateTrait};
+use evm::model::{Address, Transfer, ExecutionResult, AccountType};
+use evm::state::{State, StateTrait};
 use starknet::{EthAddress, ContractAddress};
 use utils::helpers::compute_starknet_address;
 
-/// Creates an instance of the EVM to execute the given bytecode.
+/// Creates an instance of the EVM to execute a transaction.
 ///
 /// # Arguments
-///
-/// * `target` - The EVM address of the called contract. Set to 0
-/// if there is no notion of deployed contract in the bytecode.
-/// * `bytecode` - The bytecode to run.
+/// * `origin` - The EVM address of the origin of the transaction.
+/// * `target` - The EVM address of the called contract.
 /// * `calldata` - The calldata of the execution.
 /// * `value` - The value of the execution.
 /// * `gas_limit` - The gas limit of the execution.
 /// * `gas_price` - The gas price for the execution.
+/// * `read_only` - Whether the execution is read only.
+/// * `is_deploy_tx` - Whether the execution is a deploy transaction.
+///
 /// # Returns
 /// * ExecutionResult struct, containing:
 /// *   The execution status
@@ -32,14 +33,23 @@ use utils::helpers::compute_starknet_address;
 fn execute(
     origin: Address,
     target: Address,
-    bytecode: Span<u8>,
-    calldata: Span<u8>,
+    mut calldata: Span<u8>,
     value: u256,
     gas_price: u128,
     gas_limit: u128,
     read_only: bool,
+    is_deploy_tx: bool,
 ) -> ExecutionResult {
     // Create a new root execution context.
+    let mut state: State = Default::default();
+
+    let mut target_account = state.get_account(target.evm);
+    let (bytecode, calldata) = if is_deploy_tx {
+        (calldata, array![].span())
+    } else {
+        (target_account.code, calldata)
+    };
+
     let call_ctx = CallContextTrait::new(
         caller: origin,
         :bytecode,
@@ -49,18 +59,17 @@ fn execute(
         :gas_limit,
         :gas_price,
         ret_offset: 0,
-        ret_size: 0
+        ret_size: 0,
     );
     let ctx = ExecutionContextTrait::new(
-        ctx_type: Default::default(),
+        ctx_type: ExecutionContextType::Root(is_deploy_tx),
         address: target,
         :call_ctx,
         parent_ctx: Default::default(),
         return_data: Default::default().span()
     );
 
-    // Initiate the Machine with the root context
-    let mut machine: Machine = MachineCurrentContextTrait::new(ctx);
+    let mut machine = MachineBuilderTrait::new().set_state(state).set_ctx(ctx).build();
 
     let transfer = Transfer { sender: origin, recipient: target, amount: value };
     match machine.state.add_transfer(transfer) {
@@ -68,18 +77,21 @@ fn execute(
         Result::Err(err) => { return reverted_with_err(machine, err); }
     }
 
-    // cache the EOA of origin inside the state, and set its nonce to get_tx_info().unbox().nonce.
-    // This allows us to call create with the correct nonce as the salt.
-    let mut origin_account = match machine.state.get_account(origin.evm) {
-        Result::Ok(account) => { account },
-        Result::Err(err) => { return reverted_with_err(machine, err); }
-    };
-    origin_account.nonce = starknet::get_tx_info().unbox().nonce.try_into().unwrap();
-    machine.state.set_account(origin_account);
+    if is_deploy_tx {
+        // Check collision
+        if target_account.exists() {
+            return reverted_with_err(machine, EVMError::DeployError(CONTRACT_ACCOUNT_EXISTS));
+        }
+        // Nonce is set to 1 in the case of a deploy tx
+        target_account.nonce = 1;
+        target_account.account_type = AccountType::ContractAccount;
+        machine.state.set_account(target_account);
+    }
 
     let mut interpreter = EVMInterpreterTrait::new();
     // Execute the bytecode
     interpreter.run(ref machine);
+    let address = machine.address();
     let status = machine.status();
     let return_data = machine.return_data();
     let destroyed_contracts = machine.destroyed_contracts();
@@ -87,6 +99,7 @@ fn execute(
     let events = machine.events();
     let error = machine.error();
     ExecutionResult {
+        address,
         status,
         return_data,
         destroyed_contracts,
@@ -97,14 +110,16 @@ fn execute(
     }
 }
 
-fn reverted_with_err(self: Machine, error: EVMError) -> ExecutionResult {
+fn reverted_with_err(mut machine: Machine, error: EVMError) -> ExecutionResult {
+    machine.set_stopped();
     ExecutionResult {
+        address: machine.address(),
         status: Status::Reverted,
         return_data: Default::default().span(),
         destroyed_contracts: Default::default().span(),
         create_addresses: Default::default().span(),
         events: Default::default().span(),
-        state: self.state,
+        state: machine.state,
         error: Option::Some(error)
     }
 }

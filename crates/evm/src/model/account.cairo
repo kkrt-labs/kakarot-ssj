@@ -22,33 +22,30 @@ struct Account {
     selfdestruct: bool,
 }
 
-#[derive(Drop)]
 struct ContractAccountBuilder {
-    account_type: AccountType,
-    address: Address,
-    code: Span<u8>,
-    nonce: u64,
-    selfdestruct: bool,
+    account: Account
 }
 
 #[generate_trait]
 impl ContractAccountBuilderImpl of ContractAccountBuilderTrait {
     fn new(address: Address) -> ContractAccountBuilder {
         ContractAccountBuilder {
-            account_type: AccountType::ContractAccount,
-            address: address,
-            code: Default::default().span(),
-            nonce: 0,
-            selfdestruct: false,
+            account: Account {
+                account_type: AccountType::ContractAccount,
+                address: address,
+                code: Default::default().span(),
+                nonce: 0,
+                selfdestruct: false,
+            }
         }
     }
 
     #[inline(always)]
     fn fetch_nonce(mut self: ContractAccountBuilder) -> ContractAccountBuilder {
         let contract_account = IContractAccountDispatcher {
-            contract_address: self.address.starknet
+            contract_address: self.account.address.starknet
         };
-        self.nonce = contract_account.nonce();
+        self.account.nonce = contract_account.nonce();
         self
     }
 
@@ -59,22 +56,16 @@ impl ContractAccountBuilderImpl of ContractAccountBuilderTrait {
     /// * The bytecode of the Contract Account as a ByteArray
     fn fetch_bytecode(mut self: ContractAccountBuilder) -> ContractAccountBuilder {
         let contract_account = IContractAccountDispatcher {
-            contract_address: self.address.starknet
+            contract_address: self.account.address.starknet
         };
         let bytecode = contract_account.bytecode();
-        self.code = bytecode;
+        self.account.code = bytecode;
         self
     }
 
     #[inline(always)]
     fn build(self: ContractAccountBuilder) -> Account {
-        Account {
-            account_type: self.account_type,
-            address: self.address,
-            code: self.code,
-            nonce: self.nonce,
-            selfdestruct: self.selfdestruct,
-        }
+        self.account
     }
 }
 
@@ -87,26 +78,24 @@ impl AccountImpl of AccountTrait {
     ///
     /// # Returns
     /// The fetched account if it existed, otherwise a new empty account.
-    fn fetch_or_create(evm_address: EthAddress) -> Result<Account, EVMError> {
-        let maybe_acc = AccountTrait::fetch(evm_address)?;
+    fn fetch_or_create(evm_address: EthAddress) -> Account {
+        let maybe_acc = AccountTrait::fetch(evm_address);
 
         match maybe_acc {
-            Option::Some(account) => Result::Ok(account),
+            Option::Some(account) => account,
             Option::None => {
                 let kakarot_state = KakarotCore::unsafe_new_contract_state();
                 let starknet_address = kakarot_state.compute_starknet_address(evm_address);
-                Result::Ok(
-                    // If no account exists at `address`, then we are trying to
-                    // access an undeployed account (CA or EOA). We create an
-                    // empty account with the correct address and return it.
-                    Account {
-                        account_type: AccountType::Unknown,
-                        address: Address { starknet: starknet_address, evm: evm_address, },
-                        code: Default::default().span(),
-                        nonce: 0,
-                        selfdestruct: false,
-                    }
-                )
+                // If no account exists at `address`, then we are trying to
+                // access an undeployed account (CA or EOA). We create an
+                // empty account with the correct address and return it.
+                Account {
+                    account_type: AccountType::Unknown,
+                    address: Address { starknet: starknet_address, evm: evm_address, },
+                    code: Default::default().span(),
+                    nonce: 0,
+                    selfdestruct: false,
+                }
             }
         }
     }
@@ -121,7 +110,7 @@ impl AccountImpl of AccountTrait {
     ///
     /// # Returns
     /// The fetched account if it existed, otherwise `None`.
-    fn fetch(evm_address: EthAddress) -> Result<Option<Account>, EVMError> {
+    fn fetch(evm_address: EthAddress) -> Option<Account> {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
         let maybe_stored_account = kakarot_state.address_registry(evm_address);
         let mut account = match maybe_stored_account {
@@ -151,7 +140,7 @@ impl AccountImpl of AccountTrait {
             },
             Option::None => Option::None,
         };
-        Result::Ok(account)
+        account
     }
 
     /// Returns whether an account has code or a nonce.

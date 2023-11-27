@@ -1,7 +1,7 @@
 //! Stop and Arithmetic Operations.
 
 use evm::errors::EVMError;
-use evm::machine::{Machine, MachineCurrentContextTrait};
+use evm::machine::{Machine, MachineTrait};
 use evm::stack::StackTrait;
 
 use integer::{

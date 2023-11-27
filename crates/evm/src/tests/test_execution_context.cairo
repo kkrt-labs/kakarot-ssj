@@ -4,12 +4,11 @@ use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
     DefaultOptionSpanU8
 };
-use evm::machine::{MachineCurrentContextTrait};
+use evm::machine::{MachineTrait};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Event, Address};
 use evm::stack::{Stack, StackTrait};
-use evm::tests::test_utils::MachineBuilderTrait;
-use evm::tests::test_utils::{MachineBuilderImpl, CallContextPartialEq};
+use evm::tests::test_utils::{MachineBuilderTestTrait, CallContextPartialEq};
 use evm::tests::test_utils;
 use starknet::testing::{set_contract_address, set_caller_address};
 use starknet::{EthAddress, ContractAddress};
@@ -41,7 +40,7 @@ fn test_call_context_new() {
         gas_limit,
         gas_price,
         output_offset,
-        output_size
+        output_size,
     );
 
     // Then
@@ -56,10 +55,10 @@ fn test_call_context_new() {
 #[test]
 #[available_gas(500000)]
 fn test_execution_context_new() {
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // Given
     let call_ctx = machine.call_ctx();
-    let context_id = ExecutionContextType::Root;
+    let context_id = ExecutionContextType::Root(false);
     let program_counter: u32 = 0;
 
     let stopped: bool = false;
@@ -95,13 +94,14 @@ fn test_execution_context_new() {
         execution_context.create_addresses() == create_addresses.span(), 'wrong create_addresses'
     );
     assert(execution_context.reverted() == reverted, 'wrong reverted');
+    assert(execution_context.is_create() == false, 'wrong is_create');
 }
 
 #[test]
 #[available_gas(1000000)]
 fn test_execution_context_stop_and_revert() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     let mut execution_context = machine.current_ctx.unbox();
 
     // When
@@ -115,7 +115,7 @@ fn test_execution_context_stop_and_revert() {
 #[available_gas(1000000)]
 fn test_execution_context_revert() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     let mut execution_context = machine.current_ctx.unbox();
 
     // When
@@ -130,7 +130,7 @@ fn test_execution_context_revert() {
 #[available_gas(300000)]
 fn test_execution_context_read_code() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets()
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
         .with_bytecode(array![1, 2, 3].span())
         .build();
 
@@ -147,7 +147,7 @@ fn test_execution_context_read_code() {
 #[available_gas(300000)]
 fn test_is_root() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets().build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     let mut execution_context = machine.current_ctx.unbox();
 
     // When
@@ -162,7 +162,7 @@ fn test_is_root() {
 #[available_gas(3000000)]
 fn test_origin() {
     // Given
-    let mut machine = MachineBuilderImpl::new_with_presets()
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
         .with_nested_execution_context()
         .build();
     let mut context = machine.current_ctx.unbox();
