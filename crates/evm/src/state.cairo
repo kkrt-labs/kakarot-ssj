@@ -201,9 +201,6 @@ struct State {
     /// Account states
     /// Pending emitted events
     events: SimpleLog<Event>,
-    /// Account balances updates. This is only internal accounting and stored
-    /// balances are updated when commiting transfers.
-    balances: StateChangeLog<u256>,
     /// Pending transfers
     transfers: SimpleLog<Transfer>,
 }
@@ -257,41 +254,28 @@ impl StateImpl of StateTrait {
         if (transfer.amount == 0 || transfer.sender.evm == transfer.recipient.evm) {
             return Result::Ok(());
         }
-        let sender_balance = self.read_balance(transfer.sender.evm)?;
-        let recipient_balance = self.read_balance(transfer.recipient.evm)?;
+        let mut sender = self.get_account(transfer.sender.evm);
+        let mut recipient = self.get_account(transfer.recipient.evm);
 
-        let (new_sender_balance, underflow) = u256_overflow_sub(sender_balance, transfer.amount);
+        let (new_sender_balance, underflow) = u256_overflow_sub(sender.balance(), transfer.amount);
         if underflow {
             return Result::Err(EVMError::NumericOperations(INSUFFICIENT_BALANCE));
         }
         let (new_recipient_balance, overflow) = u256_overflowing_add(
-            recipient_balance, transfer.amount
+            recipient.balance, transfer.amount
         );
         if overflow {
             return Result::Err(EVMError::NumericOperations(BALANCE_OVERFLOW));
         }
 
-        self.write_balance(transfer.sender.evm, new_sender_balance);
-        self.write_balance(transfer.recipient.evm, new_recipient_balance);
+        sender.set_balance(new_sender_balance);
+        recipient.set_balance(new_recipient_balance);
+
+        self.set_account(sender);
+        self.set_account(recipient);
 
         self.transfers.append(transfer);
         Result::Ok(())
-    }
-
-    #[inline(always)]
-    fn read_balance(ref self: State, evm_address: EthAddress) -> Result<u256, EVMError> {
-        match self.balances.read(evm_address.into()) {
-            Option::Some(value) => { Result::Ok(value) },
-            Option::None => {
-                //TODO this function should compute the deterministic address of the evm_address's corresponding starknet contract to perform value transfers. However, the test runner doesn't deterministically calculate the starknet address from the evm address, so we can't test this yet. In the meantime, we'll use `fetch_or_create` - which is unoptimized as we don't want to load a CA's bytecode to perform value transfers.
-                // let kakarot_state = KakarotCore::unsafe_new_contract_state();
-                // let starknet_address = kakarot_state.compute_starknet_address(evm_address);
-                let account = AccountTrait::fetch_or_create(evm_address);
-                let balance = account.balance()?;
-                self.write_balance(evm_address, balance);
-                Result::Ok(balance)
-            }
-        }
     }
 
     fn commit_context(ref self: State) {
@@ -299,7 +283,6 @@ impl StateImpl of StateTrait {
         self.accounts_storage.commit_context();
         self.events.commit_context();
         self.transfers.commit_context();
-        self.balances.commit_context();
     }
 
     fn clear_context(ref self: State) {
@@ -307,7 +290,6 @@ impl StateImpl of StateTrait {
         self.accounts_storage.clear_context();
         self.events.clear_context();
         self.transfers.clear_context();
-        self.balances.clear_context();
     }
 
     fn commit_state(ref self: State) -> Result<(), EVMError> {
@@ -319,18 +301,6 @@ impl StateImpl of StateTrait {
 }
 #[generate_trait]
 impl StateInternalImpl of StateInternalTrait {
-    /// Writes a value to the `balances` StateChangeLog.
-    /// This should not be called autonomously and should be called only by
-    /// when performing value transfers, using `add_transfer`.
-    /// # Arguments
-    /// * `address` - The EVM address of the account to write the balance to.
-    /// * `value` - The new balance to write.
-
-    #[inline(always)]
-    fn write_balance(ref self: State, evm_address: EthAddress, value: u256) {
-        self.balances.write(evm_address.into(), value)
-    }
-
     /// Commits storage changes to the KakarotCore contract by writing pending
     /// state changes to Starknet Storage.
     /// commit_storage MUST be called after commit_accounts.

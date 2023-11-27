@@ -962,6 +962,7 @@ fn test_exec_extcodehash_selfdestructed() {
         address: ca_address,
         code: array![].span(),
         nonce: 1,
+        balance: 1,
         selfdestruct: false
     };
     account.selfdestruct().expect('CA selfdestruct failed');

@@ -1,4 +1,4 @@
-use contracts::tests::test_utils::{deploy_contract_account};
+use contracts::tests::test_utils::{deploy_contract_account, deploy_eoa};
 use evm::state::compute_state_key;
 use evm::tests::test_utils;
 
@@ -193,6 +193,7 @@ mod test_simple_log {
 }
 
 mod test_state {
+    use contracts::kakarot_core::interface::{IExtendedKakarotCoreDispatcherTrait};
     use contracts::tests::test_utils as contract_utils;
     use contracts::uninitialized_account::UninitializedAccount;
     use evm::model::account::{Account, AccountType, AccountTrait};
@@ -224,6 +225,7 @@ mod test_state {
             address: Address { evm: evm_address, starknet: starknet_address },
             code: Default::default().span(),
             nonce: 0,
+            balance: 0,
             selfdestruct: false
         };
 
@@ -251,10 +253,40 @@ mod test_state {
             address: Address { evm: evm_address, starknet: starknet_address },
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,
+            balance: 420,
             selfdestruct: false
         };
 
         state.set_account(expected_account);
+        let account = state.get_account(evm_address);
+
+        assert(account == expected_account, 'Account mismatch');
+        assert(state.accounts.contextual_keyset.len() == 1, 'Account not written in context');
+    }
+
+
+    #[test]
+    #[available_gas(200000000)]
+    fn test_get_account_when_deployed() {
+        let mut state: State = Default::default();
+        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+        let evm_address: EthAddress = test_utils::evm_address();
+        let ca = contract_utils::deploy_contract_account(
+            evm_address, array![0xab, 0xcd, 0xef].span()
+        );
+        contract_utils::fund_account_with_native_token(ca.starknet, native_token, 420);
+
+        let starknet_address = kakarot_core.compute_starknet_address(evm_address);
+        let expected_type = AccountType::ContractAccount;
+        let expected_account = Account {
+            account_type: expected_type,
+            address: Address { evm: evm_address, starknet: starknet_address },
+            code: array![0xab, 0xcd, 0xef].span(),
+            nonce: 1,
+            balance: 420,
+            selfdestruct: false
+        };
+
         let account = state.get_account(evm_address);
 
         assert(account == expected_account, 'Account mismatch');
@@ -291,6 +323,7 @@ mod test_state {
             address: ca_address,
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,
+            balance: 0,
             selfdestruct: false
         };
         account.store_storage(key, value);
@@ -317,29 +350,25 @@ mod test_state {
     fn test_add_transfer() {
         //Given
         let mut state: State = Default::default();
-        let deployer = test_utils::kakarot_address();
-        set_contract_address(deployer);
+        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
         let sender_evm_address = test_utils::evm_address();
-        let sender_starknet_address = compute_starknet_address(
-            deployer.into(),
-            sender_evm_address,
-            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
-        );
-        let sender = Address { evm: sender_evm_address, starknet: sender_starknet_address };
+        let sender_starknet_address = contract_utils::deploy_eoa(sender_evm_address)
+            .contract_address;
+        let sender_address = Address { evm: sender_evm_address, starknet: sender_starknet_address };
         let recipient_evm_address = test_utils::other_evm_address();
-        let recipient_starknet_address = compute_starknet_address(
-            deployer.into(),
-            recipient_evm_address,
-            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
-        );
-        let recipient = Address {
+        let recipient_starknet_address = contract_utils::deploy_eoa(recipient_evm_address)
+            .contract_address;
+        let recipient_address = Address {
             evm: recipient_evm_address, starknet: recipient_starknet_address
         };
-        let transfer = Transfer { sender, recipient, amount: 100 };
+        let transfer = Transfer {
+            sender: sender_address, recipient: recipient_address, amount: 100
+        };
         // Write user balances in cache to avoid fetching from SN storage
-        state.write_balance(sender.evm, 300);
-        state.write_balance(recipient.evm, 0);
+        let mut sender = state.get_account(sender_address.evm);
+        sender.set_balance(300);
+        state.set_account(sender);
 
         // When
         state.add_transfer(transfer).unwrap();
@@ -348,8 +377,10 @@ mod test_state {
         assert(state.transfers.contextual_logs.len() == 1, 'Transfer not added');
         assert(*state.transfers.contextual_logs[0] == transfer, 'Transfer mismatch');
 
-        assert(state.read_balance(sender.evm).unwrap() == 200, 'Sender balance mismatch');
-        assert(state.read_balance(recipient.evm).unwrap() == 100, 'Recipient balance mismatch');
+        assert(state.get_account(sender_address.evm).balance() == 200, 'Sender balance mismatch');
+        assert(
+            state.get_account(recipient_address.evm).balance() == 100, 'Recipient balance mismatch'
+        );
     }
 
     #[test]
@@ -357,22 +388,26 @@ mod test_state {
     fn test_add_transfer_with_same_sender_and_recipient() {
         //Given
         let mut state: State = Default::default();
-        let deployer = test_utils::kakarot_address();
-        set_contract_address(deployer);
+        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
         let sender_evm_address = test_utils::evm_address();
-        let sender_starknet_address = compute_starknet_address(
-            deployer.into(),
-            sender_evm_address,
-            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
-        );
-        let sender = Address { evm: sender_evm_address, starknet: sender_starknet_address };
+        let sender_starknet_address = contract_utils::deploy_eoa(sender_evm_address)
+            .contract_address;
+        let sender_address = Address { evm: sender_evm_address, starknet: sender_starknet_address };
+        let recipient_evm_address = test_utils::other_evm_address();
+        let recipient_starknet_address = contract_utils::deploy_eoa(recipient_evm_address)
+            .contract_address;
+        let recipient_address = Address {
+            evm: recipient_evm_address, starknet: recipient_starknet_address
+        };
 
         // since sender and recipient is same
-        let transfer = Transfer { sender: sender, recipient: sender, amount: 100 };
+        let transfer = Transfer { sender: sender_address, recipient: sender_address, amount: 100 };
 
         // Write user balances in cache to avoid fetching from SN storage
-        state.write_balance(sender.evm, 300);
+        let mut sender = state.get_account(sender_address.evm);
+        sender.balance = 300;
+        state.set_account(sender);
 
         // When
         state.add_transfer(transfer).unwrap();
@@ -380,7 +415,7 @@ mod test_state {
         // Then, no transfer appended to log and cached balances updated
         assert(state.transfers.contextual_logs.len() == 0, 'Transfer added');
 
-        assert(state.read_balance(sender.evm).unwrap() == 300, 'Sender balance mismatch');
+        assert(state.get_account(sender_address.evm).balance() == 300, 'Sender balance mismatch');
     }
 
     #[test]
@@ -388,29 +423,27 @@ mod test_state {
     fn test_add_transfer_when_amount_is_zero() {
         //Given
         let mut state: State = Default::default();
-        let deployer = test_utils::kakarot_address();
-        set_contract_address(deployer);
+        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
         let sender_evm_address = test_utils::evm_address();
-        let sender_starknet_address = compute_starknet_address(
-            deployer.into(),
-            sender_evm_address,
-            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
-        );
-        let sender = Address { evm: sender_evm_address, starknet: sender_starknet_address };
+        let sender_starknet_address = contract_utils::deploy_eoa(sender_evm_address)
+            .contract_address;
+        let sender_address = Address { evm: sender_evm_address, starknet: sender_starknet_address };
         let recipient_evm_address = test_utils::other_evm_address();
-        let recipient_starknet_address = compute_starknet_address(
-            deployer.into(),
-            recipient_evm_address,
-            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
-        );
-        let recipient = Address {
+        let recipient_starknet_address = contract_utils::deploy_eoa(recipient_evm_address)
+            .contract_address;
+        let recipient_address = Address {
             evm: recipient_evm_address, starknet: recipient_starknet_address
         };
-        let transfer = Transfer { sender, recipient, amount: 0 };
+        let transfer = Transfer { sender: sender_address, recipient: recipient_address, amount: 0 };
         // Write user balances in cache to avoid fetching from SN storage
-        state.write_balance(sender.evm, 300);
-        state.write_balance(recipient.evm, 0);
+        // Write user balances in cache to avoid fetching from SN storage
+        let mut sender = state.get_account(sender_address.evm);
+        sender.balance = 300;
+        state.set_account(sender);
+        let mut recipient = state.get_account(recipient_address.evm);
+        recipient.set_balance(0);
+        state.set_account(recipient);
 
         // When
         state.add_transfer(transfer).unwrap();
@@ -418,25 +451,28 @@ mod test_state {
         // Then, no transfer appended to log and cached balances updated
         assert(state.transfers.contextual_logs.len() == 0, 'Transfer added');
 
-        assert(state.read_balance(sender.evm).unwrap() == 300, 'Sender balance mismatch');
-        assert(state.read_balance(recipient.evm).unwrap() == 0, 'Recipient balance mismatch');
+        assert(state.get_account(sender_address.evm).balance() == 300, 'Sender balance mismatch');
+        assert(
+            state.get_account(recipient_address.evm).balance() == 0, 'Recipient balance mismatch'
+        );
     }
 
     #[test]
     #[available_gas(200000000)]
     fn test_read_balance_cached() {
         let mut state: State = Default::default();
-        let deployer = test_utils::kakarot_address();
-        let evm_address: EthAddress = test_utils::evm_address();
-        let starknet_address = compute_starknet_address(
-            deployer.into(), evm_address, UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
-        );
+        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+
+        let evm_address = test_utils::evm_address();
+        let starknet_address = contract_utils::deploy_eoa(evm_address).contract_address;
         let address = Address { evm: evm_address, starknet: starknet_address };
 
         let balance = 100;
 
-        state.write_balance(address.evm, balance);
-        let read_balance = state.read_balance(address.evm).unwrap();
+        let mut account = state.get_account(address.evm);
+        account.set_balance(balance);
+        state.set_account(account);
+        let read_balance = state.get_account(address.evm).balance();
 
         assert(balance == read_balance, 'Balance mismatch');
     }
@@ -456,7 +492,7 @@ mod test_state {
         // Revert back to contract_address = kakarot for the test
         set_contract_address(kakarot_core.contract_address);
         let mut state: State = Default::default();
-        let read_balance = state.read_balance(evm_address).unwrap();
+        let read_balance = state.get_account(evm_address).balance();
 
         assert(read_balance == 10000, 'Balance mismatch');
     }

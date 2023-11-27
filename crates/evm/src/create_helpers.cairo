@@ -73,7 +73,7 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         let caller = self.address();
         let mut caller_account = self.state.get_account(caller.evm);
         let caller_current_nonce = caller_account.nonce();
-        let caller_balance = self.state.read_balance(caller.evm)?;
+        let caller_balance = caller_account.balance();
         if caller_balance < create_args.value
             || target_account.nonce() == integer::BoundedInt::<u64>::max() {
             return self.stack.push(0);

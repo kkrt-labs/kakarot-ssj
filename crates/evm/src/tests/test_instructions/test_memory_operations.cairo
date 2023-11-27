@@ -556,6 +556,7 @@ fn test_exec_sload_from_storage() {
         address: ca_address,
         code: array![0xab, 0xcd, 0xef].span(),
         nonce: 1,
+        balance: 0,
         selfdestruct: false
     };
     let key: u256 = 0x100000000000000000000000000000001;
@@ -627,6 +628,7 @@ fn test_exec_sstore_finalized() {
         address: ca_address,
         code: array![].span(),
         nonce: 1,
+        balance: 0,
         selfdestruct: false
     };
     let key: u256 = 0x100000000000000000000000000000001;

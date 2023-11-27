@@ -203,7 +203,7 @@ mod KakarotCore {
             let address = Address {
                 evm: evm_address, starknet: self.compute_starknet_address(evm_address)
             };
-            address.balance().unwrap()
+            address.fetch_balance()
         }
 
         fn contract_account_storage_at(

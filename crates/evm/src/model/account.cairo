@@ -7,9 +7,7 @@ use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
 use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::{Address, AddressTrait, AccountType};
-use openzeppelin::token::erc20::interface::{
-    IERC20CamelSafeDispatcher, IERC20CamelSafeDispatcherTrait
-};
+use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{ContractAddress, EthAddress, get_contract_address};
 use utils::helpers::{ResultExTrait, ByteArrayExTrait, compute_starknet_address};
 
@@ -19,33 +17,61 @@ struct Account {
     address: Address,
     code: Span<u8>,
     nonce: u64,
+    balance: u256,
     selfdestruct: bool,
 }
 
-struct ContractAccountBuilder {
+#[derive(Drop)]
+struct AccountBuilder {
     account: Account
 }
 
 #[generate_trait]
-impl ContractAccountBuilderImpl of ContractAccountBuilderTrait {
-    fn new(address: Address) -> ContractAccountBuilder {
-        ContractAccountBuilder {
+impl AccountBuilderImpl of AccountBuilderTrait {
+    fn new(address: Address) -> AccountBuilder {
+        AccountBuilder {
             account: Account {
-                account_type: AccountType::ContractAccount,
+                account_type: AccountType::Unknown,
                 address: address,
                 code: Default::default().span(),
                 nonce: 0,
+                balance: 0,
                 selfdestruct: false,
             }
         }
     }
 
     #[inline(always)]
-    fn fetch_nonce(mut self: ContractAccountBuilder) -> ContractAccountBuilder {
+    fn set_type(mut self: AccountBuilder, account_type: AccountType) -> AccountBuilder {
+        self.account.account_type = account_type;
+        self
+    }
+
+    #[inline(always)]
+    fn fetch_balance(mut self: AccountBuilder) -> AccountBuilder {
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let native_token_address = kakarot_state.native_token();
+        let native_token = IERC20CamelDispatcher { contract_address: native_token_address };
+        self.account.balance = self.account.address.fetch_balance();
+        self
+    }
+
+    #[inline(always)]
+    fn fetch_nonce(mut self: AccountBuilder) -> AccountBuilder {
+        assert!(
+            self.account.account_type == AccountType::ContractAccount,
+            "Cannot fetch nonce of an EOA"
+        );
         let contract_account = IContractAccountDispatcher {
             contract_address: self.account.address.starknet
         };
         self.account.nonce = contract_account.nonce();
+        self
+    }
+
+    #[inline(always)]
+    fn set_nonce(mut self: AccountBuilder, nonce: u64) -> AccountBuilder {
+        self.account.nonce = nonce;
         self
     }
 
@@ -54,7 +80,7 @@ impl ContractAccountBuilderImpl of ContractAccountBuilderTrait {
     /// * `self` - The address of the Contract Account to load the bytecode from
     /// # Returns
     /// * The bytecode of the Contract Account as a ByteArray
-    fn fetch_bytecode(mut self: ContractAccountBuilder) -> ContractAccountBuilder {
+    fn fetch_bytecode(mut self: AccountBuilder) -> AccountBuilder {
         let contract_account = IContractAccountDispatcher {
             contract_address: self.account.address.starknet
         };
@@ -64,7 +90,7 @@ impl ContractAccountBuilderImpl of ContractAccountBuilderTrait {
     }
 
     #[inline(always)]
-    fn build(self: ContractAccountBuilder) -> Account {
+    fn build(self: AccountBuilder) -> Account {
         self.account
     }
 }
@@ -89,13 +115,9 @@ impl AccountImpl of AccountTrait {
                 // If no account exists at `address`, then we are trying to
                 // access an undeployed account (CA or EOA). We create an
                 // empty account with the correct address and return it.
-                Account {
-                    account_type: AccountType::Unknown,
-                    address: Address { starknet: starknet_address, evm: evm_address, },
-                    code: Default::default().span(),
-                    nonce: 0,
-                    selfdestruct: false,
-                }
+                AccountBuilderTrait::new(Address { starknet: starknet_address, evm: evm_address })
+                    .fetch_balance()
+                    .build()
             }
         }
     }
@@ -117,21 +139,21 @@ impl AccountImpl of AccountTrait {
             Option::Some((
                 account_type, starknet_address
             )) => {
+                let address = Address { evm: evm_address, starknet: starknet_address };
                 match account_type {
                     AccountType::EOA => Option::Some(
-                        Account {
-                            account_type: AccountType::EOA,
-                            address: Address { evm: evm_address, starknet: starknet_address },
-                            code: Default::default().span(),
-                            nonce: 1,
-                            selfdestruct: false,
-                        }
+                        AccountBuilderTrait::new(address)
+                            .set_type(AccountType::EOA)
+                            .set_nonce(1)
+                            .fetch_balance()
+                            .build()
                     ),
                     AccountType::ContractAccount => {
-                        let address = Address { evm: evm_address, starknet: starknet_address };
-                        let account = ContractAccountBuilderTrait::new(address)
+                        let account = AccountBuilderTrait::new(address)
+                            .set_type(AccountType::ContractAccount)
                             .fetch_nonce()
                             .fetch_bytecode()
+                            .fetch_balance()
                             .build();
                         Option::Some(account)
                     },
@@ -228,6 +250,16 @@ impl AccountImpl of AccountTrait {
     }
 
     #[inline(always)]
+    fn set_balance(ref self: Account, value: u256) {
+        self.balance = value;
+    }
+
+    #[inline(always)]
+    fn balance(self: @Account) -> u256 {
+        *self.balance
+    }
+
+    #[inline(always)]
     fn address(self: @Account) -> Address {
         *self.address
     }
@@ -278,20 +310,6 @@ impl AccountImpl of AccountTrait {
     #[inline(always)]
     fn evm_address(self: @Account) -> EthAddress {
         self.address().evm
-    }
-
-    /// Returns the balance in native token for a given EVM account (EOA or CA)
-    /// This is equivalent to checking the balance in native coin, i.e. ETHER of an account in Ethereum
-    #[inline(always)]
-    fn balance(self: @Account) -> Result<u256, EVMError> {
-        let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let native_token_address = kakarot_state.native_token();
-        let native_token = IERC20CamelSafeDispatcher { contract_address: native_token_address };
-        //Note: Starknet OS doesn't allow error management of failed syscalls yet.
-        // If this call fails, the entire transaction will revert.
-        native_token
-            .balanceOf(self.address().starknet)
-            .map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
     }
 
     /// Returns the bytecode of the EVM account (EOA or CA)
