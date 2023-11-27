@@ -1051,7 +1051,6 @@ fn test_exec_extcodehash_unknown_account() {
     assert(machine.stack.peek().unwrap() == 0, 'expected stack top to be 0');
 }
 
-//TODO test extcodehash precompile
 #[test]
 #[available_gas(20000000000)]
 fn test_exec_extcodehash_ca_with_bytecode() {
@@ -1078,4 +1077,27 @@ fn test_exec_extcodehash_ca_with_bytecode() {
             .unwrap() == 0xec976f44607e73ea88910411e3da156757b63bea5547b169e1e0d733443f73b0,
         'expected counter SC code hash'
     );
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test_exec_extcodehash_precompiles() {
+    // Given
+    let evm_address = evm_address();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+
+    let mut i = 0;
+    loop {
+        if i == 0x10 {
+            break;
+        }
+        machine.stack.push(i.into());
+        // When
+        machine.exec_extcodehash().unwrap();
+
+        // Then
+        assert(machine.stack.pop().unwrap() == 0, 'expected 0 for precompiles');
+        i += 1;
+    };
 }

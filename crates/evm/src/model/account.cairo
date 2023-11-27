@@ -165,7 +165,20 @@ impl AccountImpl of AccountTrait {
         account
     }
 
-    /// Returns whether an account has code or a nonce.
+    /// Returns whether an account exists at the given address by checking
+    /// whether it has code or a nonce.
+    ///
+    /// Based on the state of the account in the cache - the account can
+    /// not be deployed on-chain yet, but already exist in the KakarotState.
+    /// The account can also be EVM-undeployed but Starknet-deployed. In that case,
+    /// is_known is true, but we should be able to deploy on top of it
+    /// # Arguments
+    ///
+    /// * `account` - The instance of the account to check.
+    ///
+    /// # Returns
+    ///
+    /// `true` if an account exists at this address (has code or nonce), `false` otherwise.
     #[inline(always)]
     fn has_code_or_nonce(self: @Account) -> bool {
         if *self.nonce != 0 || !(*self.code).is_empty() {
@@ -273,29 +286,6 @@ impl AccountImpl of AccountTrait {
         false
     }
 
-    /// Returns whether an account exists at the given address.
-    ///
-    /// Based on the state of the account in the cache - the account can
-    /// not be deployed on-chain yet, but already exist in the KakarotState.
-    /// # Arguments
-    ///
-    /// * `address` - The Ethereum address to look up.
-    ///
-    /// # Returns
-    ///
-    /// `true` if an account exists at this address, `false` otherwise.
-    #[inline(always)]
-    fn exists(self: @Account) -> bool {
-        let is_known = *self.account_type != AccountType::Unknown;
-
-        //TODO(account) verify whether is_known is a sufficient condition
-        // as if an account's nonce != 0 or its code is not empty,
-        // its type is necessarily known
-        if (is_known || *self.nonce != 0 || !(*self.code).is_empty()) {
-            return true;
-        }
-        return false;
-    }
 
     /// Returns `true` if the account is a Contract Account (CA).
     #[inline(always)]

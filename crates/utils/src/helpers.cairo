@@ -1,5 +1,6 @@
 use cmp::min;
 use core::hash::{HashStateExTrait, HashStateTrait};
+use core::num::traits::{Zero, One};
 use core::pedersen::{HashState, PedersenTrait};
 
 use integer::U32TryIntoNonZero;
@@ -14,7 +15,7 @@ use utils::constants::{
 };
 use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 use utils::math::{Bitshift, WrappingBitshift};
-use utils::num::{Zero, One, SizeOf};
+use utils::num::{SizeOf};
 use utils::traits::TryIntoResult;
 use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, U256TryIntoEthAddress};
 /// Ceils a number of bits to the next word (32 bytes)

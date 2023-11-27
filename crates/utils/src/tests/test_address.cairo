@@ -42,17 +42,5 @@ fn test_compute_contract_address() {
         .expect('Wrong Eth address');
 
     let address = compute_contract_address(from, nonce);
-
-    // TODO
-    // add SNJS script for:
-    // import { getContractAddress } from "viem";
-    // const address = getContractAddress({
-    //   opcode: "CREATE",
-    //   from: "0xF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
-    //   nonce: BigInt(420),
-    // });
-
-    // console.log(address);
-
     assert(address.into() == 0x40A633EeF249F21D95C8803b7144f19AAfeEF7ae, 'wrong create address');
 }

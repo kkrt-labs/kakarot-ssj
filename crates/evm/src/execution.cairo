@@ -79,7 +79,7 @@ fn execute(
 
     if is_deploy_tx {
         // Check collision
-        if target_account.exists() {
+        if target_account.has_code_or_nonce() {
             return reverted_with_err(machine, EVMError::DeployError(CONTRACT_ACCOUNT_EXISTS));
         }
         // Nonce is set to 1 in the case of a deploy tx
