@@ -225,7 +225,9 @@ mod test_external_owned_account {
 
     #[test]
     #[available_gas(2000000000)]
-    #[should_panic(expected: ('selector not eth_send_transa...', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(
+        expected: ("Validate: selector must be eth_send_transaction", 'ENTRYPOINT_FAILED')
+    )]
     fn test___validate__fail__selector_not_eth_send_transaction() {
         let (_, kakarot_core) = setup_contracts_for_testing();
         let evm_address = evm_address();

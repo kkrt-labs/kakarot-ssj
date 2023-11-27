@@ -89,9 +89,9 @@ mod ExternallyOwnedAccount {
 
             let call = calls.at(0);
             assert(*call.to == self.kakarot_core_address(), 'to is not kakarot core');
-            assert(
+            assert!(
                 *call.selector == selector!("eth_send_transaction"),
-                'selector not eth_send_transa...'
+                "Validate: selector must be eth_send_transaction"
             );
 
             let signature = tx_info.signature;
