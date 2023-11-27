@@ -1088,10 +1088,9 @@ impl EthAddressExImpl of EthAddressExTrait {
     }
 }
 
-#[generate_trait]
-impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
+impl TryIntoEthSignature of TryInto<Span<felt252>, EthSignature> {
     // format: [r_low, r_high, s_low, s_high, yParity]
-    fn try_into_eth_signature(self: Span<felt252>) -> Option<EthSignature> {
+    fn try_into(self: Span<felt252>) -> Option<EthSignature> {
         assert(self.len() == 5, 'signature length is not 5');
 
         let r_low: u128 = (*self.at(0)).try_into()?;
@@ -1107,7 +1106,10 @@ impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
 
         Option::Some(EthSignature { r, s, y_parity })
     }
+}
 
+#[generate_trait]
+impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
     fn to_felt252_array(self: EthSignature) -> Array<felt252> {
         let y_parity = {
             if (self.y_parity) {

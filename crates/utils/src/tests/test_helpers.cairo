@@ -1,7 +1,7 @@
 use starknet::eth_signature::Signature;
 use utils::helpers::{
     SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, U32Trait, U8SpanExTrait,
-    EthAddressSignatureTrait
+    EthAddressSignatureTrait, TryIntoEthSignature
 };
 use utils::helpers::{ByteArrayExTrait};
 use utils::helpers;
@@ -511,9 +511,9 @@ fn test_felt252_array_to_eth_signature() {
         0x0_felt252,
     ];
 
-    let result = signature_1_felt252_arr.span().try_into_eth_signature().unwrap();
+    let result = signature_1_felt252_arr.span().try_into().unwrap();
     assert(result == signature_1, 'wrong signature extracted');
 
-    let result = signature_2_felt252_arr.span().try_into_eth_signature().unwrap();
+    let result = signature_2_felt252_arr.span().try_into().unwrap();
     assert(result == signature_2, 'wrong signature extracted');
 }
