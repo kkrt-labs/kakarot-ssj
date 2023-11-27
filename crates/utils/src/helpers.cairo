@@ -1091,7 +1091,9 @@ impl EthAddressExImpl of EthAddressExTrait {
 impl TryIntoEthSignature of TryInto<Span<felt252>, EthSignature> {
     // format: [r_low, r_high, s_low, s_high, yParity]
     fn try_into(self: Span<felt252>) -> Option<EthSignature> {
-        assert(self.len() == 5, 'signature length is not 5');
+        if (self.len() != 5) {
+            return Option::None;
+        }
 
         let r_low: u128 = (*self.at(0)).try_into()?;
         let r_high: u128 = (*self.at(1)).try_into()?;
