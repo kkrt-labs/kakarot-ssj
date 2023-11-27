@@ -24,7 +24,11 @@ fn test_contract_account_deploy() {
 
     let bytecode = counter_evm_bytecode();
     let ca_address = contract_utils::deploy_contract_account(test_utils::evm_address(), bytecode);
-    let account = AccountBuilderTrait::new(ca_address).fetch_nonce().fetch_bytecode().build();
+    let account = AccountBuilderTrait::new(ca_address)
+        .set_type(AccountType::ContractAccount)
+        .fetch_nonce()
+        .fetch_bytecode()
+        .build();
     let event = contract_utils::pop_log::<
         KakarotCore::ContractAccountDeployed
     >(kakarot_core.contract_address)
