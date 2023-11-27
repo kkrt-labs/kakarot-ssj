@@ -1115,13 +1115,8 @@ impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
     fn to_felt252_array(self: EthSignature) -> Array<felt252> {
         let y_parity: felt252 = self.y_parity.into();
 
-        let mut arr: Array<felt252> = array![];
-        arr.append(self.r.low.into());
-        arr.append(self.r.high.into());
-        arr.append(self.s.low.into());
-        arr.append(self.s.high.into());
-        arr.append(y_parity);
-
-        arr
+        array![
+            self.r.low.into(), self.r.high.into(), self.s.low.into(), self.s.high.into(), y_parity,
+        ]
     }
 }
