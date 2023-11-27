@@ -14,7 +14,6 @@ use starknet::testing::{set_block_timestamp, set_block_number, set_contract_addr
 
 /// 0x40 - BLOCKHASH
 #[test]
-#[available_gas(20000000)]
 fn test_exec_blockhash_below_bounds() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -30,7 +29,6 @@ fn test_exec_blockhash_below_bounds() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_blockhash_above_bounds() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -48,7 +46,6 @@ fn test_exec_blockhash_above_bounds() {
 // TODO: implement exec_blockhash testing for block number within bounds
 // https://github.com/starkware-libs/cairo/blob/77a7e7bc36aa1c317bb8dd5f6f7a7e6eef0ab4f3/crates/cairo-lang-starknet/cairo_level_tests/interoperability.cairo#L173
 #[test]
-#[available_gas(20000000)]
 fn test_exec_blockhash_within_bounds() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -68,7 +65,6 @@ fn test_exec_blockhash_within_bounds() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_block_timestamp_set_to_1692873993() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -84,7 +80,6 @@ fn test_block_timestamp_set_to_1692873993() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_block_number_set_to_32() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -99,7 +94,6 @@ fn test_block_number_set_to_32() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_gaslimit() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -116,7 +110,6 @@ fn test_gaslimit() {
 // 0x47: SELFBALANCE
 // *************************************************************************
 #[test]
-#[available_gas(5000000)]
 fn test_exec_selfbalance_eoa() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
@@ -136,7 +129,6 @@ fn test_exec_selfbalance_eoa() {
 }
 
 #[test]
-#[available_gas(5000000)]
 fn test_exec_selfbalance_zero() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
@@ -153,7 +145,6 @@ fn test_exec_selfbalance_zero() {
 }
 
 #[test]
-#[available_gas(5000000)]
 fn test_exec_selfbalance_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
@@ -172,7 +163,6 @@ fn test_exec_selfbalance_contract_account() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_basefee() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -185,7 +175,6 @@ fn test_basefee() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_chainid_should_push_chain_id_to_stack() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
@@ -208,7 +197,6 @@ fn test_chainid_should_push_chain_id_to_stack() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_randao_should_push_zero_to_stack() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();

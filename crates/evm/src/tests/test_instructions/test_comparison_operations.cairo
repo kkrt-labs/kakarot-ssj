@@ -4,7 +4,6 @@ use evm::tests::test_utils::MachineBuilderTestTrait;
 use integer::BoundedInt;
 
 #[test]
-#[available_gas(20000000)]
 fn test_eq_same_pair() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -20,7 +19,6 @@ fn test_eq_same_pair() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_eq_different_pair() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -36,7 +34,6 @@ fn test_eq_different_pair() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_and_zero_and_max() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -52,7 +49,6 @@ fn test_and_zero_and_max() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_and_max_and_max() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -70,7 +66,6 @@ fn test_and_max_and_max() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_and_two_random_uint() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -93,7 +88,6 @@ fn test_and_two_random_uint() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_xor_different_pair() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -109,7 +103,6 @@ fn test_xor_different_pair() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_xor_same_pair() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -125,7 +118,6 @@ fn test_xor_same_pair() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_xor_half_same_pair() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -142,7 +134,6 @@ fn test_xor_half_same_pair() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_not_zero() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -160,7 +151,6 @@ fn test_not_zero() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_not_max_uint() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -175,7 +165,6 @@ fn test_not_max_uint() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_not_random_uint() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -196,7 +185,6 @@ fn test_not_random_uint() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_is_zero_true() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -211,7 +199,6 @@ fn test_is_zero_true() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_is_zero_false() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -226,7 +213,6 @@ fn test_is_zero_false() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_byte_random_u256() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -242,7 +228,6 @@ fn test_byte_random_u256() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_byte_offset_out_of_range() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -258,7 +243,6 @@ fn test_byte_offset_out_of_range() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_gt_true() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -274,7 +258,6 @@ fn test_exec_gt_true() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_shl() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -296,7 +279,6 @@ fn test_exec_shl() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_shl_wrapping() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -312,7 +294,6 @@ fn test_exec_shl_wrapping() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_gt_false() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -328,7 +309,6 @@ fn test_exec_gt_false() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_gt_false_equal() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -344,7 +324,6 @@ fn test_exec_gt_false_equal() {
 }
 
 #[test]
-#[available_gas(220000000)]
 fn test_exec_slt() {
     // https://github.com/ethereum/go-ethereum/blob/master/core/vm/testdata/testcases_slt.json
     assert_slt(0x0, 0x0, 0);
@@ -589,7 +568,6 @@ fn assert_slt(b: u256, a: u256, expected: u256) {
 }
 
 #[test]
-#[available_gas(220000000)]
 fn test_exec_sgt() {
     // https://github.com/ethereum/go-ethereum/blob/master/core/vm/testdata/testcases_sgt.json
     assert_sgt(0x0, 0x0, 0);
@@ -834,7 +812,6 @@ fn assert_sgt(b: u256, a: u256, expected: u256) {
 }
 
 #[test]
-#[available_gas(300000000)]
 fn test_exec_shr() {
     // https://github.com/ethereum/go-ethereum/blob/master/core/vm/testdata/testcases_shr.json
     assert_shr(
@@ -1259,7 +1236,6 @@ fn assert_shr(a: u256, b: u256, expected: u256) {
 }
 
 #[test]
-#[available_gas(50000000)]
 fn test_exec_sar() {
     // https://github.com/ethereum/go-ethereum/blob/master/core/vm/testdata/testcases_sar.json
     assert_sar(
@@ -1685,7 +1661,6 @@ fn assert_sar(a: u256, b: u256, expected: u256) {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_or_should_pop_0_and_1_and_push_0xCD_when_0_is_0x89_and_1_is_0xC5() {
     //Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -1701,7 +1676,6 @@ fn test_exec_or_should_pop_0_and_1_and_push_0xCD_when_0_is_0x89_and_1_is_0xC5() 
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_or_true() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -1717,7 +1691,6 @@ fn test_or_true() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_or_false() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -1734,7 +1707,6 @@ fn test_or_false() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_lt_true() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -1750,7 +1722,6 @@ fn test_exec_lt_true() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_lt_false() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -1766,7 +1737,6 @@ fn test_exec_lt_false() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_lt_false_eq() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();

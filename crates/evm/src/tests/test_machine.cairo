@@ -5,7 +5,6 @@ use evm::tests::test_utils::{evm_address, starknet_address, MachineBuilderTestTr
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_machine_default() {
     let mut machine: Machine = Default::default();
 
@@ -16,7 +15,6 @@ fn test_machine_default() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_set_current_ctx() {
     let mut machine: Machine = Default::default();
 
@@ -39,7 +37,6 @@ fn test_set_current_ctx() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_set_pc() {
     let mut machine: Machine = Default::default();
 
@@ -50,7 +47,6 @@ fn test_set_pc() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_revert() {
     let mut machine: Machine = Default::default();
 
@@ -61,7 +57,6 @@ fn test_revert() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_set_stopped() {
     let mut machine: Machine = Default::default();
 
@@ -72,7 +67,6 @@ fn test_set_stopped() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_read_code() {
     // Given a machine with some bytecode in the call context
 
@@ -89,7 +83,6 @@ fn test_read_code() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_is_root() {
     let mut machine: Machine = Default::default();
 
@@ -98,7 +91,6 @@ fn test_is_root() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_set_error() {
     let mut machine: Machine = Default::default();
 
@@ -112,7 +104,6 @@ fn test_set_error() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_call_context_properties() {
     let bytecode = array![0x01, 0x02, 0x03, 0x04, 0x05].span();
 
@@ -128,7 +119,6 @@ fn test_call_context_properties() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_addresses() {
     let expected_address = test_address();
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -138,7 +128,6 @@ fn test_addresses() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_destroyed_contracts() {
     let mut machine: Machine = Default::default();
     let destroyed_contracts = machine.destroyed_contracts();
@@ -146,7 +135,6 @@ fn test_destroyed_contracts() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_events() {
     let mut machine: Machine = Default::default();
 
@@ -155,7 +143,6 @@ fn test_events() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_create_addresses() {
     let mut machine: Machine = Default::default();
 
@@ -165,7 +152,6 @@ fn test_create_addresses() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_set_return_data_root() {
     let mut machine: Machine = Default::default();
     machine.set_return_data(array![0x01, 0x02, 0x03].span());
@@ -174,7 +160,6 @@ fn test_set_return_data_root() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_set_return_data_subctx() {
     let mut machine = MachineBuilderTestTrait::new().with_nested_execution_context().build();
 
@@ -184,7 +169,6 @@ fn test_set_return_data_subctx() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_return_data() {
     let mut machine: Machine = Default::default();
 

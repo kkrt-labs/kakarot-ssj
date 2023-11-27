@@ -8,7 +8,6 @@ use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDi
 use starknet::testing::set_nonce;
 
 #[test]
-#[available_gas(20000000)]
 fn test_execute_value_transfer() {
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
     // Transfer native tokens to sender

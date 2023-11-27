@@ -3,7 +3,6 @@ use evm::state::compute_state_key;
 use evm::tests::test_utils;
 
 #[test]
-#[available_gas(200000)]
 fn test_compute_state_key() {
     let key = 100;
     let evm_address = test_utils::evm_address();

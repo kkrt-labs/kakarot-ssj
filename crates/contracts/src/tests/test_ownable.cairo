@@ -51,7 +51,6 @@ impl TestingStateImpl of TestingStateTrait {
 }
 
 #[test]
-#[available_gas(200000)]
 fn test_ownable_initializer() {
     let mut ownable: TestingState = Default::default();
     assert(ownable.owner().is_zero(), 'owner should be zero');
@@ -63,7 +62,6 @@ fn test_ownable_initializer() {
 }
 
 #[test]
-#[available_gas(200000)]
 fn test_assert_only_owner() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
     testing::set_caller_address(OWNER());
@@ -72,7 +70,6 @@ fn test_assert_only_owner() {
 }
 
 #[test]
-#[available_gas(2000000)]
 #[should_panic(expected: ('Caller is not the owner',))]
 fn test_assert_only_owner_not_owner() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
@@ -82,7 +79,6 @@ fn test_assert_only_owner_not_owner() {
 }
 
 #[test]
-#[available_gas(2000000)]
 #[should_panic(expected: ('Caller is the zero address',))]
 fn test_assert_only_owner_zero() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
@@ -92,7 +88,6 @@ fn test_assert_only_owner_zero() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test__transfer_ownership() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
 
@@ -104,7 +99,6 @@ fn test__transfer_ownership() {
 
 
 #[test]
-#[available_gas(2000000)]
 fn test_transfer_ownership() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
     testing::set_caller_address(OWNER());
@@ -116,7 +110,6 @@ fn test_transfer_ownership() {
 }
 
 #[test]
-#[available_gas(2000000)]
 #[should_panic(expected: ('New owner is the zero address',))]
 fn test_transfer_ownership_to_zero() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
@@ -127,7 +120,6 @@ fn test_transfer_ownership_to_zero() {
 
 
 #[test]
-#[available_gas(2000000)]
 #[should_panic(expected: ('Caller is the zero address',))]
 fn test_transfer_ownership_from_zero() {
     let mut ownable: TestingState = Default::default();
@@ -137,7 +129,6 @@ fn test_transfer_ownership_from_zero() {
 
 
 #[test]
-#[available_gas(2000000)]
 #[should_panic(expected: ('Caller is not the owner',))]
 fn test_transfer_ownership_from_nonowner() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
@@ -148,7 +139,6 @@ fn test_transfer_ownership_from_nonowner() {
 
 
 #[test]
-#[available_gas(2000000)]
 fn test_renounce_ownership() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
     testing::set_caller_address(OWNER());
@@ -161,7 +151,6 @@ fn test_renounce_ownership() {
 }
 
 #[test]
-#[available_gas(2000000)]
 #[should_panic(expected: ('Caller is the zero address',))]
 fn test_renounce_ownership_from_zero_address() {
     let mut ownable: TestingState = Default::default();
@@ -169,7 +158,6 @@ fn test_renounce_ownership_from_zero_address() {
 }
 
 #[test]
-#[available_gas(2000000)]
 #[should_panic(expected: ('Caller is not the owner',))]
 fn test_renounce_ownership_from_nonowner() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());

@@ -18,7 +18,6 @@ use test_utils::{callvalue, test_address};
 use traits::PartialEq;
 
 #[test]
-#[available_gas(1000000)]
 fn test_call_context_new() {
     // When
     let bytecode: Span<u8> = array![1, 2, 3].span();
@@ -53,7 +52,6 @@ fn test_call_context_new() {
 }
 
 #[test]
-#[available_gas(500000)]
 fn test_execution_context_new() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // Given
@@ -98,7 +96,6 @@ fn test_execution_context_new() {
 }
 
 #[test]
-#[available_gas(1000000)]
 fn test_execution_context_stop_and_revert() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -112,7 +109,6 @@ fn test_execution_context_stop_and_revert() {
 }
 
 #[test]
-#[available_gas(1000000)]
 fn test_execution_context_revert() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -127,7 +123,6 @@ fn test_execution_context_revert() {
 }
 
 #[test]
-#[available_gas(300000)]
 fn test_execution_context_read_code() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -144,7 +139,6 @@ fn test_execution_context_read_code() {
 
 
 #[test]
-#[available_gas(300000)]
 fn test_is_root() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -159,7 +153,6 @@ fn test_is_root() {
 
 
 #[test]
-#[available_gas(3000000)]
 fn test_origin() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()

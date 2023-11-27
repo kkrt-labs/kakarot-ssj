@@ -8,7 +8,6 @@ use integer::BoundedInt;
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_stop() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -21,7 +20,6 @@ fn test_exec_stop() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_add() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -39,7 +37,6 @@ fn test_exec_add() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_add_overflow() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -55,7 +52,6 @@ fn test_exec_add_overflow() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_mul() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -71,7 +67,6 @@ fn test_exec_mul() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_mul_overflow() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -87,7 +82,6 @@ fn test_exec_mul_overflow() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sub() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -103,7 +97,6 @@ fn test_exec_sub() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sub_underflow() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -122,7 +115,6 @@ fn test_exec_sub_underflow() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_div() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -138,7 +130,6 @@ fn test_exec_div() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_div_by_zero() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -154,7 +145,6 @@ fn test_exec_div_by_zero() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sdiv_pos() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -170,7 +160,6 @@ fn test_exec_sdiv_pos() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sdiv_neg() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -186,7 +175,6 @@ fn test_exec_sdiv_neg() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sdiv_by_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -202,7 +190,6 @@ fn test_exec_sdiv_by_0() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_mod() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -218,7 +205,6 @@ fn test_exec_mod() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_mod_by_zero() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -234,7 +220,6 @@ fn test_exec_mod_by_zero() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_smod() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -250,7 +235,6 @@ fn test_exec_smod() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_smod_neg() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -278,7 +262,6 @@ fn test_exec_smod_neg() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_smod_zero() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -295,7 +278,6 @@ fn test_exec_smod_zero() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_addmod() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -312,7 +294,6 @@ fn test_exec_addmod() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_addmod_by_zero() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -330,7 +311,6 @@ fn test_exec_addmod_by_zero() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_addmod_overflow() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -349,7 +329,6 @@ fn test_exec_addmod_overflow() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_mulmod_basic() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     machine.stack.push(10).unwrap();
@@ -364,7 +343,6 @@ fn test_mulmod_basic() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_mulmod_zero_modulus() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     machine.stack.push(0).unwrap();
@@ -378,7 +356,6 @@ fn test_mulmod_zero_modulus() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_mulmod_overflow() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     machine.stack.push(12).unwrap();
@@ -394,7 +371,6 @@ fn test_mulmod_overflow() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_mulmod_zero() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     machine.stack.push(10).unwrap();
@@ -408,7 +384,6 @@ fn test_mulmod_zero() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_exp() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -424,7 +399,6 @@ fn test_exec_exp() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_exp_overflow() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -442,7 +416,6 @@ fn test_exec_exp_overflow() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_signextend() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -464,7 +437,6 @@ fn test_exec_signextend() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_signextend_no_effect() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -482,7 +454,6 @@ fn test_exec_signextend_no_effect() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_signextend_on_negative() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();

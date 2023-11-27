@@ -11,7 +11,6 @@ use starknet::testing::set_contract_address;
 
 
 #[test]
-#[available_gas(200000000)]
 fn test_eoa_deploy() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     contract_utils::drop_event(kakarot_core.contract_address);

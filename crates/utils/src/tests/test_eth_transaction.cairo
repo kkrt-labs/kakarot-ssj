@@ -9,7 +9,6 @@ use utils::tests::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_15
 
 
 #[test]
-#[available_gas(200000000)]
 fn test_decode_legacy_tx() {
     // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0, 0]
     // expected rlp decoding:  [ '0x', '0x3b9aca00', '0x1e8480', '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984', '0x016345785d8a0000', '0xabcdef', '0x01', '0x', '0x' ]
@@ -39,7 +38,6 @@ fn test_decode_legacy_tx() {
 
 
 #[test]
-#[available_gas(200000000)]
 fn test_decode_eip_2930_tx() {
     // tx_format (EIP-2930, unsiged): 0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList])
     // expected rlp decoding:  [ '0x01', '0x', '0x3b9aca00', '0x1e8480', '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984', '0x016345785d8a0000', '0xabcdef', [], '0x', '0x14a38ea5e92fe6831b2137226418d03db2ab8cefd6f62bdfc0078787afa63f83', '0x6c89b2928b518445bef8d479167bb9aef73bab1871d1275fd8dcba3c1628a619']
@@ -69,7 +67,6 @@ fn test_decode_eip_2930_tx() {
 
 
 #[test]
-#[available_gas(200000000)]
 fn test_decode_eip_1559_tx() {
     // tx_format (EIP-1559, unsiged):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, destination, amount, data, access_list])
     // expected rlp decoding:   [ '0x01', '0x', '0x', '0x3b9aca00', '0x1e8480', '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984', '0x016345785d8a0000', '0xabcdef', []]
@@ -98,7 +95,6 @@ fn test_decode_eip_1559_tx() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_is_legacy_tx_eip_155_tx() {
     let encoded_tx_data = legacy_rlp_encoded_tx();
     let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
@@ -107,7 +103,6 @@ fn test_is_legacy_tx_eip_155_tx() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_is_legacy_tx_eip_1559_tx() {
     let encoded_tx_data = eip_1559_encoded_tx();
     let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
@@ -116,7 +111,6 @@ fn test_is_legacy_tx_eip_1559_tx() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_is_legacy_tx_eip_2930_tx() {
     let encoded_tx_data = eip_2930_encoded_tx();
     let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
@@ -126,7 +120,6 @@ fn test_is_legacy_tx_eip_2930_tx() {
 
 
 #[test]
-#[available_gas(200000000)]
 fn test_validate_legacy_tx() {
     let encoded_tx_data = legacy_rlp_encoded_tx();
     let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
@@ -148,7 +141,6 @@ fn test_validate_legacy_tx() {
 
 
 #[test]
-#[available_gas(200000000)]
 fn test_validate_eip_2930_tx() {
     let encoded_tx_data = eip_2930_encoded_tx();
     let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
@@ -170,7 +162,6 @@ fn test_validate_eip_2930_tx() {
 
 
 #[test]
-#[available_gas(200000000)]
 fn test_validate_eip_1559_tx() {
     let encoded_tx_data = eip_1559_encoded_tx();
     let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
@@ -191,7 +182,6 @@ fn test_validate_eip_1559_tx() {
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_validate_should_fail_for_wrong_account_id() {
     let encoded_tx_data = eip_1559_encoded_tx();
     let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
@@ -215,7 +205,6 @@ fn test_validate_should_fail_for_wrong_account_id() {
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_validate_should_fail_for_wrong_chain_id() {
     let encoded_tx_data = eip_1559_encoded_tx();
     let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();

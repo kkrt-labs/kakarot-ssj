@@ -6,7 +6,6 @@ const MAX_SIGNED_VALUE: u256 = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 const MIN_SIGNED_VALUE: u256 = 0x8000000000000000000000000000000000000000000000000000000000000000;
 
 #[test]
-#[available_gas(20000000)]
 fn test_i256_eq() {
     let val: i256 = 1_u256.into();
 
@@ -14,7 +13,6 @@ fn test_i256_eq() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_i256_ne() {
     let val: i256 = 1_u256.into();
 
@@ -22,7 +20,6 @@ fn test_i256_ne() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_i256_positive() {
     let val: i256 = MAX_SIGNED_VALUE.into();
 
@@ -30,7 +27,6 @@ fn test_i256_positive() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_i256_negative() {
     let val: i256 = BoundedInt::<u256>::max().into(); // -1
 
@@ -38,7 +34,6 @@ fn test_i256_negative() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_lt_positive_positive() {
     let lhs: i256 = 1_u256.into();
     let rhs: i256 = 2_u256.into();
@@ -47,7 +42,6 @@ fn test_lt_positive_positive() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_lt_negative_negative() {
     let lhs: i256 = (BoundedInt::<u256>::max() - 1).into(); // -2
     let rhs: i256 = BoundedInt::<u256>::max().into(); // -1
@@ -56,7 +50,6 @@ fn test_lt_negative_negative() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_lt_negative_positive() {
     let lhs: i256 = BoundedInt::<u256>::max().into(); // -1
     let rhs: i256 = 1_u256.into();
@@ -65,7 +58,6 @@ fn test_lt_negative_positive() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_lt_positive_negative() {
     let lhs: i256 = 1_u256.into();
     let rhs: i256 = BoundedInt::<u256>::max().into(); // -1
@@ -74,7 +66,6 @@ fn test_lt_positive_negative() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_lt_equals() {
     let lhs: i256 = 1_u256.into();
     let rhs: i256 = 1_u256.into();
@@ -83,7 +74,6 @@ fn test_lt_equals() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_le_positive_positive() {
     let lhs: i256 = 1_u256.into();
     let rhs: i256 = 2_u256.into();
@@ -92,7 +82,6 @@ fn test_le_positive_positive() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_le_negative_negative() {
     let lhs: i256 = (BoundedInt::<u256>::max() - 1).into(); // -2
     let rhs: i256 = BoundedInt::<u256>::max().into(); // -1
@@ -101,7 +90,6 @@ fn test_le_negative_negative() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_le_negative_positive() {
     let lhs: i256 = BoundedInt::<u256>::max().into(); // -1
     let rhs: i256 = 1_u256.into();
@@ -110,7 +98,6 @@ fn test_le_negative_positive() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_le_positive_negative() {
     let lhs: i256 = 1_u256.into();
     let rhs: i256 = BoundedInt::<u256>::max().into(); // -1
@@ -119,7 +106,6 @@ fn test_le_positive_negative() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_le_equals() {
     let lhs: i256 = 1_u256.into();
     let rhs: i256 = 1_u256.into();
@@ -128,7 +114,6 @@ fn test_le_equals() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_gt_positive_positive() {
     let lhs: i256 = 2_u256.into();
     let rhs: i256 = 1_u256.into();
@@ -137,7 +122,6 @@ fn test_gt_positive_positive() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_gt_negative_negative() {
     let lhs: i256 = BoundedInt::<u256>::max().into(); // -1
     let rhs: i256 = (BoundedInt::<u256>::max() - 1).into(); // -2
@@ -146,7 +130,6 @@ fn test_gt_negative_negative() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_gt_negative_positive() {
     let lhs: i256 = BoundedInt::<u256>::max().into(); // -1
     let rhs: i256 = 1_u256.into();
@@ -155,7 +138,6 @@ fn test_gt_negative_positive() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_gt_positive_negative() {
     let lhs: i256 = 1_u256.into();
     let rhs: i256 = BoundedInt::<u256>::max().into(); // -1
@@ -164,7 +146,6 @@ fn test_gt_positive_negative() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_gt_equals() {
     let lhs: i256 = 1_u256.into();
     let rhs: i256 = 1_u256.into();
@@ -173,7 +154,6 @@ fn test_gt_equals() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_ge_positive_positive() {
     let lhs: i256 = 2_u256.into();
     let rhs: i256 = 1_u256.into();
@@ -182,7 +162,6 @@ fn test_ge_positive_positive() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_ge_negative_negative() {
     let lhs: i256 = BoundedInt::<u256>::max().into(); // -1
     let rhs: i256 = (BoundedInt::<u256>::max() - 1).into(); // -2
@@ -191,7 +170,6 @@ fn test_ge_negative_negative() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_ge_negative_positive() {
     let lhs: i256 = BoundedInt::<u256>::max().into(); // -1
     let rhs: i256 = 1_u256.into();
@@ -200,7 +178,6 @@ fn test_ge_negative_positive() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_ge_positive_negative() {
     let lhs: i256 = 1_u256.into();
     let rhs: i256 = BoundedInt::<u256>::max().into(); // -1
@@ -209,7 +186,6 @@ fn test_ge_positive_negative() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_ge_equals() {
     let lhs: i256 = 1_u256.into();
     let rhs: i256 = 1_u256.into();
@@ -218,7 +194,6 @@ fn test_ge_equals() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_i256_neg() {
     let max_u256 = BoundedInt::<u256>::max();
     let x = i256_neg(1_u256.into());
@@ -235,7 +210,6 @@ fn test_i256_neg() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_signed_div_rem() {
     let max_u256 = BoundedInt::<u256>::max();
     let max_i256 = i256 { value: max_u256 };
@@ -390,7 +364,6 @@ fn test_signed_div_rem() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('u256 is 0',))]
 fn test_signed_div_rem_by_zero() {
     //     Zero Division

@@ -3,7 +3,6 @@ use starknet::EthAddress;
 use utils::address::{compute_contract_address, compute_create2_contract_address};
 
 #[test]
-#[available_gas(3_000_000_000_000)]
 fn test_compute_create2_contract_address() {
     let bytecode = counter_evm_bytecode();
     let salt = 0xbeef;
@@ -34,7 +33,6 @@ fn test_compute_create2_contract_address() {
 }
 
 #[test]
-#[available_gas(3_000_000_000_000)]
 fn test_compute_contract_address() {
     let nonce = 420;
     let from: EthAddress = 0xF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266

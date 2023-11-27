@@ -1,7 +1,6 @@
 use utils::num::{U8SizeOf, U64SizeOf, Felt252SizeOf, SizeOf};
 
 #[test]
-#[available_gas(20000000)]
 fn test_sizeof() {
     assert(10_u8.size_of() == 8, 'should be 8');
     assert(100_u8.size_of() == 8, 'should be 8');
@@ -11,7 +10,6 @@ fn test_sizeof() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_size() {
     assert(U8SizeOf::size() == 8, 'should be 8');
     assert(U64SizeOf::size() == 64, 'should be 64');

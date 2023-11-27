@@ -16,7 +16,6 @@ fn get_n_0xFF(mut n: u8) -> Span<u8> {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -31,7 +30,6 @@ fn test_push0() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push1() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -46,7 +44,6 @@ fn test_push1() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push2() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -61,7 +58,6 @@ fn test_push2() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push3() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -76,7 +72,6 @@ fn test_push3() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push4() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -91,7 +86,6 @@ fn test_push4() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push5() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -106,7 +100,6 @@ fn test_push5() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push6() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -121,7 +114,6 @@ fn test_push6() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push7() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -137,7 +129,6 @@ fn test_push7() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_push8() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -152,7 +143,6 @@ fn test_push8() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push9() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -167,7 +157,6 @@ fn test_push9() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push10() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -182,7 +171,6 @@ fn test_push10() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push11() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -197,7 +185,6 @@ fn test_push11() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push12() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -212,7 +199,6 @@ fn test_push12() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push13() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -227,7 +213,6 @@ fn test_push13() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push14() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -242,7 +227,6 @@ fn test_push14() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push15() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -257,7 +241,6 @@ fn test_push15() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push16() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -274,7 +257,6 @@ fn test_push16() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push17() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -291,7 +273,6 @@ fn test_push17() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push18() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -307,7 +288,6 @@ fn test_push18() {
     );
 }
 #[test]
-#[available_gas(20000000)]
 fn test_push19() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -325,7 +305,6 @@ fn test_push19() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push20() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -343,7 +322,6 @@ fn test_push20() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push21() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -361,7 +339,6 @@ fn test_push21() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push22() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -378,7 +355,6 @@ fn test_push22() {
     );
 }
 #[test]
-#[available_gas(20000000)]
 fn test_push23() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -395,7 +371,6 @@ fn test_push23() {
     );
 }
 #[test]
-#[available_gas(20000000)]
 fn test_push24() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -413,7 +388,6 @@ fn test_push24() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push25() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -431,7 +405,6 @@ fn test_push25() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push26() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -449,7 +422,6 @@ fn test_push26() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push27() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -467,7 +439,6 @@ fn test_push27() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push28() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -485,7 +456,6 @@ fn test_push28() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push29() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -506,7 +476,6 @@ fn test_push29() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push30() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -527,7 +496,6 @@ fn test_push30() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push31() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -548,7 +516,6 @@ fn test_push31() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_push32() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()

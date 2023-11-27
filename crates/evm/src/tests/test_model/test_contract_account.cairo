@@ -12,7 +12,6 @@ use starknet::testing::set_contract_address;
 
 
 #[test]
-#[available_gas(200000000)]
 fn test_contract_account_deploy() {
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
@@ -40,7 +39,6 @@ fn test_contract_account_deploy() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_at_contract_account_deployed() {
     let evm_address = test_utils::evm_address();
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -61,7 +59,6 @@ fn test_at_contract_account_deployed() {
 
 
 #[test]
-#[available_gas(2000000)]
 fn test_at_contract_account_undeployed() {
     let evm_address = EVM_ADDRESS();
     let maybe_ca = ContractAccountTrait::at(evm_address).unwrap();
@@ -69,7 +66,6 @@ fn test_at_contract_account_undeployed() {
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_fetch_nonce() {
     let evm_address = test_utils::evm_address();
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();

@@ -7,7 +7,6 @@ use evm::tests::test_utils::MachineBuilderTestTrait;
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap1() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -21,7 +20,6 @@ fn test_exec_swap1() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap2() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -34,7 +32,6 @@ fn test_exec_swap2() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap3() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -48,7 +45,6 @@ fn test_exec_swap3() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap4() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -64,7 +60,6 @@ fn test_exec_swap4() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap5() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -80,7 +75,6 @@ fn test_exec_swap5() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap6() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -98,7 +92,6 @@ fn test_exec_swap6() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap7() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -116,7 +109,6 @@ fn test_exec_swap7() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap8() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -136,7 +128,6 @@ fn test_exec_swap8() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap9() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -156,7 +147,6 @@ fn test_exec_swap9() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap10() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -177,7 +167,6 @@ fn test_exec_swap10() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap11() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -199,7 +188,6 @@ fn test_exec_swap11() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap12() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -222,7 +210,6 @@ fn test_exec_swap12() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap13() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -246,7 +233,6 @@ fn test_exec_swap13() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap14() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -271,7 +257,6 @@ fn test_exec_swap14() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap15() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given
@@ -297,7 +282,6 @@ fn test_exec_swap15() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_swap16() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // given

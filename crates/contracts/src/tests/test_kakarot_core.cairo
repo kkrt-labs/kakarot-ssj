@@ -23,7 +23,6 @@ use starknet::{testing, contract_address_const, ContractAddress, EthAddress, Cla
 use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
 
 #[test]
-#[available_gas(20000000)]
 fn test_kakarot_core_owner() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
 
@@ -31,7 +30,6 @@ fn test_kakarot_core_owner() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_kakarot_core_transfer_ownership() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     assert(kakarot_core.owner() == test_utils::other_starknet_address(), 'wrong owner');
@@ -41,7 +39,6 @@ fn test_kakarot_core_transfer_ownership() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_kakarot_core_renounce_ownership() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     assert(kakarot_core.owner() == test_utils::other_starknet_address(), 'wrong owner');
@@ -51,21 +48,18 @@ fn test_kakarot_core_renounce_ownership() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_kakarot_core_deploy_fee() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     assert(kakarot_core.deploy_fee() == contract_utils::deploy_fee(), 'wrong deploy_fee');
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_kakarot_core_chain_id() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     assert(kakarot_core.chain_id() == contract_utils::chain_id(), 'wrong chain id');
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_kakarot_core_set_deploy_fee() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     assert(kakarot_core.deploy_fee() == contract_utils::deploy_fee(), 'wrong deploy_fee');
@@ -75,7 +69,6 @@ fn test_kakarot_core_set_deploy_fee() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_kakarot_core_set_native_token() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     assert(kakarot_core.native_token() == test_utils::native_token(), 'wrong native_token');
@@ -88,7 +81,6 @@ fn test_kakarot_core_set_native_token() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_kakarot_core_deploy_eoa() {
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
@@ -102,7 +94,6 @@ fn test_kakarot_core_deploy_eoa() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_kakarot_core_eoa_mapping() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -138,7 +129,6 @@ fn test_kakarot_core_eoa_mapping() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_kakarot_core_compute_starknet_address() {
     let evm_address = test_utils::evm_address();
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -149,7 +139,6 @@ fn test_kakarot_core_compute_starknet_address() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_kakarot_core_upgrade_contract() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     let class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
@@ -165,7 +154,6 @@ fn test_kakarot_core_upgrade_contract() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_kakarot_contract_account_nonce() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -181,7 +169,6 @@ fn test_kakarot_contract_account_nonce() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_kakarot_contract_account_storage_at() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -201,7 +188,6 @@ fn test_kakarot_contract_account_storage_at() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_kakarot_contract_account_bytecode() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -217,7 +203,6 @@ fn test_kakarot_contract_account_bytecode() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('unimplemented', 'ENTRYPOINT_FAILED'))]
 fn test_kakarot_contract_account_false_positive_jumpdest() {
     // Given
@@ -238,7 +223,6 @@ fn test_kakarot_contract_account_false_positive_jumpdest() {
 }
 
 #[test]
-#[available_gas(2000000000000)]
 fn test_eth_send_transaction() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -293,7 +277,6 @@ fn test_eth_send_transaction() {
 }
 
 #[test]
-#[available_gas(2000000000000)]
 fn test_eth_call() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -323,7 +306,6 @@ fn test_eth_call() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_handle_call() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -363,7 +345,6 @@ fn test_handle_call() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_eth_send_transaction_deploy_tx() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -412,7 +393,6 @@ fn test_eth_send_transaction_deploy_tx() {
     assert(result == u256_to_bytes_array(0).span(), 'wrong result');
 }
 #[test]
-#[available_gas(20000000)]
 fn test_contract_account_class_hash() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
@@ -437,7 +417,6 @@ fn test_contract_account_class_hash() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_account_class_hash() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
@@ -464,7 +443,6 @@ fn test_account_class_hash() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_eoa_class_hash() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,

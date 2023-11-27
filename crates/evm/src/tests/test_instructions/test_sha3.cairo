@@ -7,7 +7,6 @@ use evm::stack::StackTrait;
 use evm::tests::test_utils::MachineBuilderTestTrait;
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sha3_size_0_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -31,7 +30,6 @@ fn test_exec_sha3_size_0_offset_0() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sha3_size_5_offset_4() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -53,7 +51,6 @@ fn test_exec_sha3_size_5_offset_4() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sha3_size_10_offset_10() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -75,7 +72,6 @@ fn test_exec_sha3_size_10_offset_10() {
 }
 
 #[test]
-#[available_gas(1000000000000000)]
 fn test_exec_sha3_size_0xFFFFF_offset_1000() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -97,7 +93,6 @@ fn test_exec_sha3_size_0xFFFFF_offset_1000() {
 }
 
 #[test]
-#[available_gas(1000000000000000)]
 fn test_exec_sha3_size_1000000_offset_2() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -119,7 +114,6 @@ fn test_exec_sha3_size_1000000_offset_2() {
 }
 
 #[test]
-#[available_gas(1000000000000000)]
 fn test_exec_sha3_size_1000000_offset_23() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -142,7 +136,6 @@ fn test_exec_sha3_size_1000000_offset_23() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sha3_size_1_offset_2048() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -164,7 +157,6 @@ fn test_exec_sha3_size_1_offset_2048() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sha3_size_0_offset_1024() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -186,7 +178,6 @@ fn test_exec_sha3_size_0_offset_1024() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sha3_size_32_offset_2016() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -208,7 +199,6 @@ fn test_exec_sha3_size_32_offset_2016() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sha3_size_32_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -230,7 +220,6 @@ fn test_exec_sha3_size_32_offset_0() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sha3_size_31_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -252,7 +241,6 @@ fn test_exec_sha3_size_31_offset_0() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sha3_size_33_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -274,7 +262,6 @@ fn test_exec_sha3_size_33_offset_0() {
 }
 
 #[test]
-#[available_gas(20000000000)]
 fn test_exec_sha3_size_0x0C80_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -305,7 +292,6 @@ fn test_exec_sha3_size_0x0C80_offset_0() {
 }
 
 #[test]
-#[available_gas(20000000000)]
 fn test_internal_fill_array_with_memory_words() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -330,7 +316,6 @@ fn test_internal_fill_array_with_memory_words() {
 }
 
 #[test]
-#[available_gas(20000000000)]
 fn test_internal_fill_array_with_memory_words_size_33() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -355,7 +340,6 @@ fn test_internal_fill_array_with_memory_words_size_33() {
 }
 
 #[test]
-#[available_gas(20000000000)]
 fn test_internal_fill_array_with_last_inputs_size_5() {
     // Given
     let mut to_hash: Array<u64> = Default::default();
@@ -371,7 +355,6 @@ fn test_internal_fill_array_with_last_inputs_size_5() {
 }
 
 #[test]
-#[available_gas(20000000000)]
 fn test_internal_fill_array_with_last_inputs_size_20() {
     // Given
     let mut to_hash: Array<u64> = Default::default();
@@ -389,7 +372,6 @@ fn test_internal_fill_array_with_last_inputs_size_20() {
 }
 
 #[test]
-#[available_gas(20000000000)]
 fn test_internal_fill_array_with_last_inputs_size_50() {
     // Given
     let mut to_hash: Array<u64> = Default::default();

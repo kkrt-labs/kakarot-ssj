@@ -31,7 +31,6 @@ use utils::helpers::load_word;
 use utils::traits::EthAddressIntoU256;
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_return() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -61,7 +60,6 @@ fn test_exec_return() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_revert() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -80,7 +78,6 @@ fn test_exec_revert() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_revert_nested() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -102,7 +99,6 @@ fn test_exec_revert_nested() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_return_with_offset() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -131,7 +127,6 @@ fn test_exec_return_with_offset() {
 }
 
 #[test]
-#[available_gas(4_000_000_000)]
 fn test_exec_call() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
@@ -188,7 +183,6 @@ fn test_exec_call() {
 }
 
 #[test]
-#[available_gas(70000000)]
 fn test_exec_call_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
@@ -243,7 +237,6 @@ fn test_exec_call_no_return() {
 
 
 #[test]
-#[available_gas(400000000)]
 fn test_exec_staticcall() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
@@ -297,7 +290,6 @@ fn test_exec_staticcall() {
 
 
 #[test]
-#[available_gas(500000000)]
 fn test_exec_staticcall_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
@@ -350,7 +342,6 @@ fn test_exec_staticcall_no_return() {
 }
 
 #[test]
-#[available_gas(4_000_000_000)]
 fn test_exec_call_code() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
@@ -432,7 +423,6 @@ fn test_exec_call_code() {
 
 
 #[test]
-#[available_gas(4_000_000_000)]
 fn test_exec_delegatecall() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
@@ -513,7 +503,6 @@ fn test_exec_delegatecall() {
 
 
 #[test]
-#[available_gas(4_000_000_000)]
 fn test_exec_create2() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
@@ -567,7 +556,6 @@ fn test_exec_create2() {
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_exec_selfdestruct_existing_ca() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
@@ -599,7 +587,6 @@ fn test_exec_selfdestruct_existing_ca() {
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_selfdestruct_undeployed_ca() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let evm_address: EthAddress = 'ca_address'.try_into().unwrap();
@@ -635,7 +622,6 @@ fn test_selfdestruct_undeployed_ca() {
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
