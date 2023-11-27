@@ -254,6 +254,9 @@ impl StateImpl of StateTrait {
 
     #[inline(always)]
     fn add_transfer(ref self: State, transfer: Transfer) -> Result<(), EVMError> {
+        if (transfer.amount == 0 || transfer.sender.evm == transfer.recipient.evm) {
+            return Result::Ok(());
+        }
         let sender_balance = self.read_balance(transfer.sender.evm)?;
         let recipient_balance = self.read_balance(transfer.recipient.evm)?;
 
