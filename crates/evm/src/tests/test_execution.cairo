@@ -1,4 +1,5 @@
 use contracts::tests::test_utils as contract_utils;
+use core::traits::TryInto;
 use evm::errors::{EVMError, EVMErrorTrait, STACK_OVERFLOW};
 use evm::execution::execute;
 use evm::interpreter::{EVMInterpreter, EVMInterpreterTrait};
@@ -10,6 +11,7 @@ use evm::tests::test_utils::{evm_address, other_evm_address, MachineBuilderTestT
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::testing::set_nonce;
 use utils::helpers::U256Trait;
+use utils::traits::EthAddressIntoU256;
 
 #[test]
 fn test_execute_value_transfer() {
@@ -43,11 +45,6 @@ fn test_execute_value_transfer() {
 #[test]
 fn test_run_evm_error_revert() {
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    // Transfer native tokens to sender
-    let sender = EOATrait::deploy(evm_address()).expect('sender deploy failed');
-    let recipient = EOATrait::deploy(other_evm_address()).expect('recipient deploy failed');
-    // Transfer native tokens to sender
-    contract_utils::fund_account_with_native_token(sender.starknet, native_token, 10000);
     // PUSH1 0x01
     let mut bytecode = array![0x60, 0x01].span();
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
@@ -63,15 +60,59 @@ fn test_run_evm_error_revert() {
     );
 }
 
+#[test]
+fn test_run_evm_error_revert_subcontext() {
+    let mut interpreter = EVMInterpreter {};
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    // Set machine bytecode
+    // (call 0xffffff 0x100 0 0 0 0 1)
+    let bytecode = array![
+        0x60,
+        0x01,
+        0x60,
+        0x00,
+        0x60,
+        0x00,
+        0x60,
+        0x00,
+        0x60,
+        0x00,
+        0x61,
+        0x01,
+        0x00,
+        0x62,
+        0xff,
+        0xff,
+        0xff,
+        // CALL
+        0xf1,
+        0x60, // PUSH1 0x69 (value)
+        0x01,
+        0x60, // PUSH1 0x01 (key)
+        0x69,
+        0x55, // SSTORE
+        0x00 //STOP
+    ]
+        .span();
+    // we need to deploy this account so that it's usable directly by the machine
+    let mut caller_account = contract_utils::deploy_contract_account(evm_address(), bytecode);
+    let mut called_account = contract_utils::deploy_contract_account(
+        other_evm_address(), array![0xFD].span() // REVERT
+    );
+
+    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+
+    interpreter.run(ref machine);
+
+    machine.state.commit_state();
+    assert_eq!(machine.state.read_state(evm_address(), 0x69).expect('couldnt read state'), 0x01);
+    let error = machine.return_data();
+    assert_eq!(error.len(), 0);
+}
 
 #[test]
 fn test_run_evm_opcopde_revert() {
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    // Transfer native tokens to sender
-    let sender = EOATrait::deploy(evm_address()).expect('sender deploy failed');
-    let recipient = EOATrait::deploy(other_evm_address()).expect('recipient deploy failed');
-    // Transfer native tokens to sender
-    contract_utils::fund_account_with_native_token(sender.starknet, native_token, 10000);
     let mut interpreter = EVMInterpreter {};
 
     // MSTORE 0 1000 - REVERT 0 32
