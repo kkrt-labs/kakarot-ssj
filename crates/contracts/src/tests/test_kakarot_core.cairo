@@ -91,7 +91,7 @@ fn test_kakarot_core_set_native_token() {
 
 #[test]
 fn test_kakarot_core_deploy_eoa() {
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
     // triggered in the constructor
@@ -105,7 +105,7 @@ fn test_kakarot_core_deploy_eoa() {
 #[test]
 fn test_kakarot_core_eoa_mapping() {
     // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
     assert(
         kakarot_core.address_registry(test_utils::evm_address()).is_none(),
         'should be uninitialized'
@@ -165,7 +165,7 @@ fn test_kakarot_core_upgrade_contract() {
 #[test]
 fn test_kakarot_contract_account_nonce() {
     // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let address = contract_utils::deploy_contract_account(
         test_utils::other_evm_address(), Default::default().span()
     );
@@ -180,7 +180,7 @@ fn test_kakarot_contract_account_nonce() {
 #[test]
 fn test_kakarot_contract_account_storage_at() {
     // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let address = contract_utils::deploy_contract_account(
         test_utils::other_evm_address(), Default::default().span()
     );
@@ -199,7 +199,7 @@ fn test_kakarot_contract_account_storage_at() {
 #[test]
 fn test_kakarot_contract_account_bytecode() {
     // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let address = contract_utils::deploy_contract_account(
         test_utils::other_evm_address(), counter_evm_bytecode()
     );
@@ -215,7 +215,7 @@ fn test_kakarot_contract_account_bytecode() {
 #[should_panic(expected: ('unimplemented', 'ENTRYPOINT_FAILED'))]
 fn test_kakarot_contract_account_false_positive_jumpdest() {
     // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let address = contract_utils::deploy_contract_account(
         test_utils::other_evm_address(), Default::default().span()
     );
@@ -234,7 +234,7 @@ fn test_kakarot_contract_account_false_positive_jumpdest() {
 #[test]
 fn test_eth_send_transaction() {
     // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -288,10 +288,10 @@ fn test_eth_send_transaction() {
 #[test]
 fn test_eth_call() {
     // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     let evm_address = test_utils::evm_address();
-    let eoa = kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_eoa(evm_address);
 
     let account = contract_utils::deploy_contract_account(
         test_utils::other_evm_address(), counter_evm_bytecode()
@@ -317,12 +317,12 @@ fn test_eth_call() {
 #[test]
 fn test_handle_call() {
     // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
-    let account = contract_utils::deploy_contract_account(
+
+    let _account = contract_utils::deploy_contract_account(
         test_utils::other_evm_address(), counter_evm_bytecode()
     );
 
@@ -356,7 +356,7 @@ fn test_handle_call() {
 #[test]
 fn test_eth_send_transaction_deploy_tx() {
     // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
@@ -385,9 +385,7 @@ fn test_eth_send_transaction_deploy_tx() {
     testing::set_contract_address(kakarot_core.contract_address);
     let kakarot_state = KakarotCore::unsafe_new_contract_state();
     let computed_sn_addr = kakarot_state.compute_starknet_address(expected_address);
-    let CA = IContractAccountDispatcher {
-        contract_address: kakarot_state.compute_starknet_address(expected_address)
-    };
+    let CA = IContractAccountDispatcher { contract_address: computed_sn_addr };
     let bytecode = CA.bytecode();
     assert(bytecode == counter_evm_bytecode(), 'wrong bytecode');
 

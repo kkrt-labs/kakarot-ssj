@@ -76,7 +76,7 @@ fn test_store_should_add_an_element_to_the_memory() {
 
     // When
     let value: u256 = 1;
-    let result = memory.store(value, 0);
+    memory.store(value, 0);
 
     // Then
     let len = memory.size();
@@ -90,7 +90,7 @@ fn test_store_should_add_an_element_with_offset_to_the_memory() {
 
     // When
     let value: u256 = 1;
-    let result = memory.store(value, 1);
+    memory.store(value, 1);
 
     // Then
     let len = memory.size();
@@ -105,7 +105,7 @@ fn test_store_should_add_n_elements_to_the_memory() {
     // When
     let value: u256 = 1;
     let bytes_array = helpers::u256_to_bytes_array(value);
-    let result = memory.store_n(bytes_array.span(), 0);
+    memory.store_n(bytes_array.span(), 0);
 
     // Then
     let len = memory.size();
@@ -463,7 +463,7 @@ fn test_expand_and_load_should_return_expanded_memory_and_element_and_cost() {
     memory.store_n(bytes_array.span(), 0);
 
     // When
-    let loaded_element = memory.load(32);
+    memory.load(32);
 
     // Then
     assert(memory.size() == 64, 'memory should be 64 bytes');

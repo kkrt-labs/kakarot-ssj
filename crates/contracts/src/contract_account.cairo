@@ -164,7 +164,7 @@ mod ContractAccount {
             )
                 .expect(BYTECODE_WRITE_ERROR);
             let mut stored_list: List<bytes31> = ListTrait::new(0, data_address);
-            stored_list.append_span(packed_bytecode.data.span());
+            stored_list.append_span(packed_bytecode.data.span()).expect('failed to store bytecode');
         }
 
         fn storage_at(self: @ContractState, key: u256) -> u256 {

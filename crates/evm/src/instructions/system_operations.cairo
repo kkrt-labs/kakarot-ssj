@@ -163,7 +163,7 @@ impl SystemOperations of SystemOperationsTrait {
                     recipient,
                     amount: self.state.get_account(account.address().evm).balance
                 }
-            );
+            )?;
 
         // Register for selfdestruct
         account.selfdestruct();

@@ -23,7 +23,7 @@ fn test_push0() {
         .build();
 
     // When
-    machine.exec_push0();
+    machine.exec_push0().expect('exec_push0 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0, 'invalid stack top');
@@ -37,7 +37,7 @@ fn test_push1() {
         .build();
 
     // When
-    machine.exec_push1();
+    machine.exec_push1().expect('exec_push1 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFF, 'invalid stack top');
@@ -51,7 +51,7 @@ fn test_push2() {
         .build();
 
     // When
-    machine.exec_push2();
+    machine.exec_push2().expect('exec_push2 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFF, 'invalid stack top');
@@ -65,7 +65,7 @@ fn test_push3() {
         .build();
 
     // When
-    machine.exec_push3();
+    machine.exec_push3().expect('exec_push3 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFFFF, 'invalid stack top');
@@ -79,7 +79,7 @@ fn test_push4() {
         .build();
 
     // When
-    machine.exec_push4();
+    machine.exec_push4().expect('exec_push4 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFFFFFF, 'invalid stack top');
@@ -93,7 +93,7 @@ fn test_push5() {
         .build();
 
     // When
-    machine.exec_push5();
+    machine.exec_push5().expect('exec_push5 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFFFFFFFF, 'invalid stack top');
@@ -107,7 +107,7 @@ fn test_push6() {
         .build();
 
     // When
-    machine.exec_push6();
+    machine.exec_push6().expect('exec_push6 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFFFFFFFFFF, 'invalid stack top');
@@ -121,7 +121,7 @@ fn test_push7() {
         .build();
 
     // When
-    machine.exec_push7();
+    machine.exec_push7().expect('exec_push7 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFFFFFFFFFFFF, 'invalid stack top');
@@ -136,7 +136,7 @@ fn test_push8() {
         .build();
 
     // When
-    machine.exec_push8();
+    machine.exec_push8().expect('exec_push8 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFF, 'invalid stack top');
@@ -150,7 +150,7 @@ fn test_push9() {
         .build();
 
     // When
-    machine.exec_push9();
+    machine.exec_push9().expect('exec_push9 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFF, 'invalid stack top');
@@ -164,7 +164,7 @@ fn test_push10() {
         .build();
 
     // When
-    machine.exec_push10();
+    machine.exec_push10().expect('exec_push10 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFF, 'invalid stack top');
@@ -178,7 +178,7 @@ fn test_push11() {
         .build();
 
     // When
-    machine.exec_push11();
+    machine.exec_push11().expect('exec_push11 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFF, 'invalid stack top');
@@ -192,7 +192,7 @@ fn test_push12() {
         .build();
 
     // When
-    machine.exec_push12();
+    machine.exec_push12().expect('exec_push12 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFF, 'invalid stack top');
@@ -206,7 +206,7 @@ fn test_push13() {
         .build();
 
     // When
-    machine.exec_push13();
+    machine.exec_push13().expect('exec_push13 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFF, 'invalid stack top');
@@ -220,7 +220,7 @@ fn test_push14() {
         .build();
 
     // When
-    machine.exec_push14();
+    machine.exec_push14().expect('exec_push14 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 'invalid stack top');
@@ -234,7 +234,7 @@ fn test_push15() {
         .build();
 
     // When
-    machine.exec_push15();
+    machine.exec_push15().expect('exec_push15 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 'invalid stack top');
@@ -248,7 +248,7 @@ fn test_push16() {
         .build();
 
     // When
-    machine.exec_push16();
+    machine.exec_push16().expect('exec_push16 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -264,7 +264,7 @@ fn test_push17() {
         .build();
 
     // When
-    machine.exec_push17();
+    machine.exec_push17().expect('exec_push17 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -280,7 +280,7 @@ fn test_push18() {
         .build();
 
     // When
-    machine.exec_push18();
+    machine.exec_push18().expect('exec_push18 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -295,7 +295,7 @@ fn test_push19() {
         .build();
 
     // When
-    machine.exec_push19();
+    machine.exec_push19().expect('exec_push19 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -312,7 +312,7 @@ fn test_push20() {
         .build();
 
     // When
-    machine.exec_push20();
+    machine.exec_push20().expect('exec_push20 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -329,7 +329,7 @@ fn test_push21() {
         .build();
 
     // When
-    machine.exec_push21();
+    machine.exec_push21().expect('exec_push21 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -346,7 +346,7 @@ fn test_push22() {
         .build();
 
     // When
-    machine.exec_push22();
+    machine.exec_push22().expect('exec_push22 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -362,7 +362,7 @@ fn test_push23() {
         .build();
 
     // When
-    machine.exec_push23();
+    machine.exec_push23().expect('exec_push23 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -378,7 +378,7 @@ fn test_push24() {
         .build();
 
     // When
-    machine.exec_push24();
+    machine.exec_push24().expect('exec_push24 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -395,7 +395,7 @@ fn test_push25() {
         .build();
 
     // When
-    machine.exec_push25();
+    machine.exec_push25().expect('exec_push25 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -412,7 +412,7 @@ fn test_push26() {
         .build();
 
     // When
-    machine.exec_push26();
+    machine.exec_push26().expect('exec_push26 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -429,7 +429,7 @@ fn test_push27() {
         .build();
 
     // When
-    machine.exec_push27();
+    machine.exec_push27().expect('exec_push27 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -446,7 +446,7 @@ fn test_push28() {
         .build();
 
     // When
-    machine.exec_push28();
+    machine.exec_push28().expect('exec_push28 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -463,7 +463,7 @@ fn test_push29() {
         .build();
 
     // When
-    machine.exec_push29();
+    machine.exec_push29().expect('exec_push29 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -483,7 +483,7 @@ fn test_push30() {
         .build();
 
     // When
-    machine.exec_push30();
+    machine.exec_push30().expect('exec_push30 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -503,7 +503,7 @@ fn test_push31() {
         .build();
 
     // When
-    machine.exec_push31();
+    machine.exec_push31().expect('exec_push31 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -523,7 +523,7 @@ fn test_push32() {
         .build();
 
     // When
-    machine.exec_push32();
+    machine.exec_push32().expect('exec_push32 failed');
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(

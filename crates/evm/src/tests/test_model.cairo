@@ -14,8 +14,8 @@ use starknet::testing::set_contract_address;
 #[test]
 fn test_is_deployed_eoa_exists() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy eoa account',);
+    let (_, kakarot_core) = setup_contracts_for_testing();
+    EOATrait::deploy(evm_address()).expect('failed deploy eoa account',);
 
     // When
 
@@ -30,7 +30,7 @@ fn test_is_deployed_eoa_exists() {
 #[test]
 fn test_is_deployed_ca_exists() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    setup_contracts_for_testing();
     deploy_contract_account(evm_address(), array![].span());
 
     // When
@@ -42,7 +42,7 @@ fn test_is_deployed_ca_exists() {
 #[test]
 fn test_is_deployed_undeployed() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
 
     // When
     set_contract_address(kakarot_core.contract_address);
@@ -91,8 +91,8 @@ fn test_address_balance_eoa() {
 #[test]
 fn test_account_has_code_or_nonce_eoa() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let mut eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy eoa',);
+    setup_contracts_for_testing();
+    let mut _eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy eoa',);
 
     // When
     let account = AccountTrait::fetch(evm_address()).unwrap();
@@ -105,8 +105,8 @@ fn test_account_has_code_or_nonce_eoa() {
 #[test]
 fn test_account_has_code_or_nonce_contract_account() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let mut ca_address = deploy_contract_account(evm_address(), array![].span());
+    setup_contracts_for_testing();
+    let mut _ca_address = deploy_contract_account(evm_address(), array![].span());
 
     // When
     let account = AccountTrait::fetch(evm_address()).unwrap();
@@ -119,7 +119,7 @@ fn test_account_has_code_or_nonce_contract_account() {
 #[test]
 fn test_account_has_code_or_nonce_undeployed() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    setup_contracts_for_testing();
 
     // When
     let account = AccountTrait::fetch_or_create(evm_address());
@@ -131,7 +131,7 @@ fn test_account_has_code_or_nonce_undeployed() {
 #[test]
 fn test_account_has_code_or_nonce_account_to_deploy() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    setup_contracts_for_testing();
 
     // When
     let mut account = AccountTrait::fetch_or_create(evm_address());
@@ -148,7 +148,7 @@ fn test_account_has_code_or_nonce_account_to_deploy() {
 #[test]
 fn test_account_balance_contract_account() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (native_token, _) = setup_contracts_for_testing();
     let mut ca_address = deploy_contract_account(evm_address(), array![].span());
 
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
@@ -163,7 +163,7 @@ fn test_account_balance_contract_account() {
 
 #[test]
 fn test_account_commit_already_deployed() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    setup_contracts_for_testing();
     let mut ca_address = deploy_contract_account(evm_address(), array![].span());
 
     // When
@@ -182,7 +182,7 @@ fn test_account_commit_already_deployed() {
 
 #[test]
 fn test_account_commit_redeploy_selfdestructed_new_nonce() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    setup_contracts_for_testing();
     let mut ca_address = deploy_contract_account(evm_address(), array![].span());
 
     // When
@@ -204,7 +204,7 @@ fn test_account_commit_redeploy_selfdestructed_new_nonce() {
 
 #[test]
 fn test_account_commit_undeployed() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm = evm_address();
     let starknet = kakarot_core.compute_starknet_address(evm);
@@ -232,7 +232,7 @@ fn test_account_commit_undeployed() {
 #[test]
 fn test_address_balance_contract_account() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (native_token, _) = setup_contracts_for_testing();
     let mut ca_address = deploy_contract_account(evm_address(), array![].span());
 
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);

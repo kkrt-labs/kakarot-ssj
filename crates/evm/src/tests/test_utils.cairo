@@ -273,7 +273,7 @@ fn initialize_contract_account(
             break;
         };
         let (key, value) = storage.get(i).unwrap().unbox();
-        account.store_storage(*key, *value);
+        account.store_storage(*key, *value).expect('failed init CA');
         i += 1;
     };
 

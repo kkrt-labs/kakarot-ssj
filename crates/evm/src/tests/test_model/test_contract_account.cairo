@@ -13,12 +13,11 @@ use starknet::testing::set_contract_address;
 
 #[test]
 fn test_contract_account_deploy() {
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
     // triggered in the constructor
     contract_utils::drop_event(kakarot_core.contract_address);
 
-    let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
     set_contract_address(kakarot_core.contract_address);
 
     let bytecode = counter_evm_bytecode();
@@ -41,9 +40,9 @@ fn test_contract_account_deploy() {
 #[test]
 fn test_at_contract_account_deployed() {
     let evm_address = test_utils::evm_address();
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
-    let ca = contract_utils::deploy_contract_account(evm_address, Default::default().span());
+    contract_utils::deploy_contract_account(evm_address, Default::default().span());
 
     let ca_address = ContractAccountTrait::at(evm_address)
         .unwrap()
@@ -68,7 +67,7 @@ fn test_at_contract_account_undeployed() {
 #[test]
 fn test_fetch_nonce() {
     let evm_address = test_utils::evm_address();
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    contract_utils::setup_contracts_for_testing();
 
     let ca = contract_utils::deploy_contract_account(evm_address, Default::default().span());
 

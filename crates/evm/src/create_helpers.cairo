@@ -150,7 +150,6 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
             // Success
             Status::Stopped => {
                 let mut return_data = self.return_data();
-                let mut i = 0;
 
                 let mut account = self.state.get_account(account_address);
                 account.set_code(return_data);
@@ -159,12 +158,12 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
                     'type should be CA in finalize'
                 );
                 self.state.set_account(account);
-                self.return_to_parent_ctx();
+                self.return_to_parent_ctx()?;
                 self.stack.push(account_address.into())
             },
             // Failure
             Status::Reverted => {
-                self.return_to_parent_ctx();
+                self.return_to_parent_ctx()?;
                 self.stack.push(0)
             },
         }

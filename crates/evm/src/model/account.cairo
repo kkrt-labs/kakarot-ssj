@@ -49,9 +49,6 @@ impl AccountBuilderImpl of AccountBuilderTrait {
 
     #[inline(always)]
     fn fetch_balance(mut self: AccountBuilder) -> AccountBuilder {
-        let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let native_token_address = kakarot_state.native_token();
-        let native_token = IERC20CamelDispatcher { contract_address: native_token_address };
         self.account.balance = self.account.address.fetch_balance();
         self
     }
@@ -251,13 +248,13 @@ impl AccountImpl of AccountTrait {
         return Result::Ok(());
     }
 
-    fn commit_storage(self: @Account, key: u256, value: u256) {
+    fn commit_storage(self: @Account, key: u256, value: u256) -> Result<(), EVMError> {
         if self.is_selfdestruct() {
-            return;
+            return Result::Ok(());
         }
         match self.account_type {
             AccountType::EOA => { panic_with_felt252('EOA account commitment') },
-            AccountType::ContractAccount => { self.store_storage(key, value); },
+            AccountType::ContractAccount => { self.store_storage(key, value) },
             AccountType::Unknown(_) => { panic_with_felt252('Unknown account commitment') }
         }
     }

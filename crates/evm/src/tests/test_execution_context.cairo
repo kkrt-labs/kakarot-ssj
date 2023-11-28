@@ -63,10 +63,8 @@ fn test_execution_context_new() {
     let return_data: Array<u8> = ArrayTrait::new();
 
     let address: Address = Default::default();
-    let events: Array<Event> = Default::default();
-    let revert_contract_state: Felt252Dict<felt252> = Default::default();
     let reverted: bool = false;
-    let read_only: bool = false;
+    let _read_only: bool = false;
 
     let parent_ctx: Nullable<ExecutionContext> = null();
 
@@ -105,7 +103,7 @@ fn test_execution_context_revert() {
     let mut execution_context = machine.current_ctx.unbox();
 
     // When
-    let revert_reason = array![0, 1, 2, 3].span();
+    let _revert_reason = array![0, 1, 2, 3].span();
     execution_context.set_reverted();
 
     // Then

@@ -46,7 +46,7 @@ fn test_account_initialize() {
 #[test]
 #[should_panic(expected: ('Caller not Kakarot Core address', 'ENTRYPOINT_FAILED'))]
 fn test_eoa_upgrade_from_nonkakarot() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
     let account = deploy_account(kakarot_core.contract_address);
     set_contract_address(kakarot_address());
     let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();

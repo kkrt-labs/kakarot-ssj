@@ -56,7 +56,7 @@ fn test_wide_add_basic() {
     let a = 1000;
     let b = 500;
 
-    let (sum, overflow) = u256_overflowing_add(a, b);
+    let (_, overflow) = u256_overflowing_add(a, b);
 
     let expected = u512 { limb0: 1500, limb1: 0, limb2: 0, limb3: 0, };
 
@@ -71,7 +71,7 @@ fn test_wide_add_overflow() {
     let a = BoundedInt::<u256>::max();
     let b = 1;
 
-    let (sum, overflow) = u256_overflowing_add(a, b);
+    let (_, overflow) = u256_overflowing_add(a, b);
 
     let expected = u512 { limb0: 0, limb1: 0, limb2: 1, limb3: 0, };
 
@@ -123,7 +123,7 @@ fn test_shl_256_bits_overflow() {
     let shift = 32 * 8;
 
     // When & Then 2.pow(256) overflows u256
-    let result = a.shl(shift);
+    a.shl(shift);
 }
 
 #[test]
@@ -135,7 +135,7 @@ fn test_shl_overflow() {
     let shift = 4 * 8;
 
     // When & Then a << 32 overflows u256 
-    let result = a.shl(shift);
+    a.shl(shift);
 }
 
 #[test]
@@ -192,7 +192,7 @@ fn test_shr_256_bits_overflow() {
     let shift = 32 * 8;
 
     // When & Then 2.pow(256) overflows u256
-    let result = a.shr(shift);
+    a.shr(shift);
 }
 
 

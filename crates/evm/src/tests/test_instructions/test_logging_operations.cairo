@@ -15,8 +15,8 @@ fn test_exec_log0() {
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(0x1F);
-    machine.stack.push(0x00);
+    machine.stack.push(0x1F).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     // When
     let result = machine.exec_log0();
@@ -43,9 +43,9 @@ fn test_exec_log1() {
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(0x0123456789ABCDEF);
-    machine.stack.push(0x20);
-    machine.stack.push(0x00);
+    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
+    machine.stack.push(0x20).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     // When
     let result = machine.exec_log1();
@@ -73,10 +73,10 @@ fn test_exec_log2() {
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(BoundedInt::<u256>::max());
-    machine.stack.push(0x0123456789ABCDEF);
-    machine.stack.push(0x05);
-    machine.stack.push(0x05);
+    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
+    machine.stack.push(0x05).expect('push failed');
+    machine.stack.push(0x05).expect('push failed');
 
     // When
     let result = machine.exec_log2();
@@ -106,11 +106,11 @@ fn test_exec_log3() {
     machine.memory.store(BoundedInt::<u256>::max(), 0);
     machine.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
 
-    machine.stack.push(0x00);
-    machine.stack.push(BoundedInt::<u256>::max());
-    machine.stack.push(0x0123456789ABCDEF);
-    machine.stack.push(0x28);
-    machine.stack.push(0x00);
+    machine.stack.push(0x00).expect('push failed');
+    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
+    machine.stack.push(0x28).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     // When
     let result = machine.exec_log3();
@@ -143,12 +143,12 @@ fn test_exec_log4() {
     machine.memory.store(BoundedInt::<u256>::max(), 0);
     machine.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
 
-    machine.stack.push(BoundedInt::<u256>::max());
-    machine.stack.push(0x00);
-    machine.stack.push(BoundedInt::<u256>::max());
-    machine.stack.push(0x0123456789ABCDEF);
-    machine.stack.push(0x0A);
-    machine.stack.push(0x20);
+    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
+    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
+    machine.stack.push(0x0A).expect('push failed');
+    machine.stack.push(0x20).expect('push failed');
 
     // When
     let result = machine.exec_log4();
@@ -179,9 +179,9 @@ fn test_exec_log1_read_only_context() {
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(0x0123456789ABCDEF);
-    machine.stack.push(0x20);
-    machine.stack.push(0x00);
+    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
+    machine.stack.push(0x20).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     // When
     let result = machine.exec_log1();
@@ -201,9 +201,9 @@ fn test_exec_log1_size_0_offset_0() {
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(0x0123456789ABCDEF);
-    machine.stack.push(0x00);
-    machine.stack.push(0x00);
+    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     // When
     let result = machine.exec_log1();
@@ -229,9 +229,9 @@ fn test_exec_log1_size_too_big() {
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(0x0123456789ABCDEF);
-    machine.stack.push(BoundedInt::<u256>::max());
-    machine.stack.push(0x00);
+    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
+    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     // When
     let result = machine.exec_log1();
@@ -251,9 +251,9 @@ fn test_exec_log1_offset_too_big() {
 
     machine.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(0x0123456789ABCDEF);
-    machine.stack.push(0x20);
-    machine.stack.push(BoundedInt::<u256>::max());
+    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
+    machine.stack.push(0x20).expect('push failed');
+    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
 
     // When
     let result = machine.exec_log1();
@@ -274,17 +274,17 @@ fn test_exec_log_multiple_events() {
     machine.memory.store(BoundedInt::<u256>::max(), 0);
     machine.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
 
-    machine.stack.push(BoundedInt::<u256>::max());
-    machine.stack.push(0x00);
-    machine.stack.push(BoundedInt::<u256>::max());
-    machine.stack.push(0x0123456789ABCDEF);
-    machine.stack.push(0x0A);
-    machine.stack.push(0x20);
-    machine.stack.push(0x00);
-    machine.stack.push(BoundedInt::<u256>::max());
-    machine.stack.push(0x0123456789ABCDEF);
-    machine.stack.push(0x28);
-    machine.stack.push(0x00);
+    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
+    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
+    machine.stack.push(0x0A).expect('push failed');
+    machine.stack.push(0x20).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
+    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
+    machine.stack.push(0x28).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     // When
     let result = machine.exec_log3();

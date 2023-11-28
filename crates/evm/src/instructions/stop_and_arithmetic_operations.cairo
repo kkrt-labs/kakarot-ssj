@@ -151,7 +151,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let result: u256 = match u256_try_as_non_zero(n) {
             Option::Some(nonzero_n) => {
                 // This is more gas efficient than computing (a mod N) + (b mod N) mod N
-                let sum = u256_wide_add(*popped[0], *popped[1]);
+                let sum = u256_wide_add(a, b);
                 let (_, r) = u512_safe_div_rem_by_u256(sum, nonzero_n);
                 r
             },
@@ -167,18 +167,16 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// If the denominator is 0, the result will be 0.
     /// # Specification: https://www.evm.codes/#09?fork=shanghai
     fn exec_mulmod(ref self: Machine) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(3)?;
-
-        let a: u256 = *popped[0];
-        let b: u256 = *popped[1];
-        let n = *popped[2];
+        let a: u256 = self.stack.pop()?;
+        let b: u256 = self.stack.pop()?;
+        let n = self.stack.pop()?;
 
         let result: u256 = match u256_try_as_non_zero(n) {
             Option::Some(_) => {
                 // (x * y) mod N <=> (x mod N) * (y mod N) mod N
                 // It is more gas-efficient than to use u256_wide_mul
                 // Won't panic because n is not zero
-                (*popped[0] % n) * (*popped[1] % n) % n
+                (a % n) * (b % n) % n
             },
             Option::None => 0,
         };
@@ -191,9 +189,8 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a ** b: integer result of raising a to the bth power modulo 2^256.
     /// # Specification: https://www.evm.codes/#0a?fork=shanghai
     fn exec_exp(ref self: Machine) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
-        let a = *popped[0];
-        let b = *popped[1];
+        let a = self.stack.pop()?;
+        let b = self.stack.pop()?;
 
         let result = a.wrapping_pow(b);
 
@@ -218,9 +215,8 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// # Specification: https://www.evm.codes/#0b?fork=shanghai
     /// Complex opcode, check: https://ethereum.github.io/yellowpaper/paper.pdf
     fn exec_signextend(ref self: Machine) -> Result<(), EVMError> {
-        let popped = self.stack.pop_n(2)?;
-        let b = *popped[0];
-        let x = *popped[1];
+        let b = self.stack.pop()?;
+        let x = self.stack.pop()?;
 
         let result = if b < 32 {
             let s = 8 * b + 7;

@@ -289,7 +289,7 @@ mod KakarotCore {
             // part of the Kakarot system and thus deployed by the main Kakarot contract
             // itself.
 
-            let (caller_account_type, caller_starknet_address) = self
+            let (caller_account_type, _) = self
                 .address_registry(origin.evm)
                 .expect('Fetching EOA failed');
             assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
@@ -298,7 +298,7 @@ mod KakarotCore {
                 .handle_call(:origin, :to, :gas_limit, :gas_price, :value, :calldata);
             match maybe_exec_result {
                 Result::Ok(mut result) => {
-                    result.state.commit_state();
+                    result.state.commit_state().expect('Committing state failed');
                     if to.is_none() {
                         // Overwrite return_data with deployed address
                         return result.address.evm.to_bytes().span();

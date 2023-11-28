@@ -31,7 +31,7 @@ fn pop_log<T, impl TDrop: Drop<T>, impl TEvent: starknet::Event<T>>(
     let (mut keys, mut data) = testing::pop_log_raw(address)?;
 
     // Remove the event ID from the keys
-    keys.pop_front();
+    keys.pop_front().expect('pop_log popfront failed');
 
     let ret = starknet::Event::deserialize(ref keys, ref data);
     assert(data.is_empty(), 'Event has extra data');
@@ -40,7 +40,7 @@ fn pop_log<T, impl TDrop: Drop<T>, impl TEvent: starknet::Event<T>>(
 
 /// Author: Openzeppelin https://github.com/OpenZeppelin/cairo-contracts
 fn drop_event(address: ContractAddress) {
-    testing::pop_log_raw(address);
+    testing::pop_log_raw(address).unwrap();
 }
 
 /// Author: Openzeppelin https://github.com/OpenZeppelin/cairo-contracts

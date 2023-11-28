@@ -73,7 +73,7 @@ fn execute(
 
     let transfer = Transfer { sender: origin, recipient: target, amount: value };
     match machine.state.add_transfer(transfer) {
-        Result::Ok(x) => {},
+        Result::Ok(_) => {},
         Result::Err(err) => { return reverted_with_err(machine, err); }
     }
 

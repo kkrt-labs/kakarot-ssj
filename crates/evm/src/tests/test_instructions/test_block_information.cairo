@@ -27,7 +27,7 @@ fn test_exec_blockhash_below_bounds() {
     set_block_number(500);
 
     // When
-    machine.stack.push(243).unwrap();
+    machine.stack.push(243).expect('push failed');
     machine.exec_blockhash().unwrap();
 
     // Then
@@ -42,7 +42,7 @@ fn test_exec_blockhash_above_bounds() {
     set_block_number(500);
 
     // When
-    machine.stack.push(491).unwrap();
+    machine.stack.push(491).expect('push failed');
     machine.exec_blockhash().unwrap();
 
     // Then
@@ -59,7 +59,7 @@ fn test_exec_blockhash_within_bounds() {
     set_block_number(500);
 
     // When
-    machine.stack.push(244).unwrap();
+    machine.stack.push(244).expect('push failed');
 
     //TODO the CASM runner used in tests doesn't implement
     //`get_block_hash_syscall` yet. As such, this test should fail no if the
@@ -137,7 +137,7 @@ fn test_exec_selfbalance_eoa() {
 #[test]
 fn test_exec_selfbalance_zero() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
 
     // And
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -182,7 +182,7 @@ fn test_basefee() {
 
 #[test]
 fn test_chainid_should_push_chain_id_to_stack() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
 
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -222,7 +222,7 @@ fn test_randao_should_push_zero_to_stack() {
 #[available_gas(5000000)]
 fn test_exec_coinbase() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
     let sequencer_eoa = kakarot_core.deploy_eoa(evm_address());
 
     // And

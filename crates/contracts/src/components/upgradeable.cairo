@@ -32,7 +32,7 @@ mod upgradeable_component {
         fn upgrade_contract(
             ref self: ComponentState<TContractState>, new_class_hash: starknet::ClassHash
         ) {
-            starknet::replace_class_syscall(new_class_hash);
+            starknet::replace_class_syscall(new_class_hash).expect('replace class failed');
             self.emit(ContractUpgraded { new_class_hash: new_class_hash });
         }
     }

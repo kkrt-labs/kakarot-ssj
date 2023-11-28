@@ -11,13 +11,13 @@ fn test_exec_sha3_size_0_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(0x00);
-    machine.stack.push(0x00);
+    machine.stack.push(0x00).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     machine.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
 
     // When
-    machine.exec_sha3();
+    machine.exec_sha3().expect('exec_sha3 failed');
 
     // Then
     let result = machine.stack.peek().unwrap();
@@ -34,13 +34,13 @@ fn test_exec_sha3_size_5_offset_4() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(0x05);
-    machine.stack.push(0x04);
+    machine.stack.push(0x05).expect('push failed');
+    machine.stack.push(0x04).expect('push failed');
 
     machine.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
 
     // When
-    machine.exec_sha3();
+    machine.exec_sha3().expect('exec_sha3 failed');
 
     // Then
     let result = machine.stack.peek().unwrap();
@@ -55,13 +55,13 @@ fn test_exec_sha3_size_10_offset_10() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(10);
-    machine.stack.push(10);
+    machine.stack.push(10).expect('push failed');
+    machine.stack.push(10).expect('push failed');
 
     machine.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
 
     // When
-    machine.exec_sha3();
+    machine.exec_sha3().expect('exec_sha3 failed');
 
     // Then
     let result = machine.stack.peek().unwrap();
@@ -76,13 +76,13 @@ fn test_exec_sha3_size_0xFFFFF_offset_1000() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(0xFFFFF);
-    machine.stack.push(1000);
+    machine.stack.push(0xFFFFF).expect('push failed');
+    machine.stack.push(1000).expect('push failed');
 
     machine.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
 
     // When
-    machine.exec_sha3();
+    machine.exec_sha3().expect('exec_sha3 failed');
 
     // Then
     let result = machine.stack.peek().unwrap();
@@ -97,13 +97,13 @@ fn test_exec_sha3_size_1000000_offset_2() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(1000000);
-    machine.stack.push(2);
+    machine.stack.push(1000000).expect('push failed');
+    machine.stack.push(2).expect('push failed');
 
     machine.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
 
     // When
-    machine.exec_sha3();
+    machine.exec_sha3().expect('exec_sha3 failed');
 
     // Then
     let result = machine.stack.peek().unwrap();
@@ -118,14 +118,14 @@ fn test_exec_sha3_size_1000000_offset_23() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(1000000);
-    machine.stack.push(2);
+    machine.stack.push(1000000).expect('push failed');
+    machine.stack.push(2).expect('push failed');
 
     machine.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
     machine.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
 
     // When
-    machine.exec_sha3();
+    machine.exec_sha3().expect('exec_sha3 failed');
 
     // Then
     let result = machine.stack.peek().unwrap();
@@ -140,13 +140,13 @@ fn test_exec_sha3_size_1_offset_2048() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(1);
-    machine.stack.push(2048);
+    machine.stack.push(1).expect('push failed');
+    machine.stack.push(2048).expect('push failed');
 
     machine.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
 
     // When
-    machine.exec_sha3();
+    machine.exec_sha3().expect('exec_sha3 failed');
 
     // Then
     let result = machine.stack.peek().unwrap();
@@ -161,13 +161,13 @@ fn test_exec_sha3_size_0_offset_1024() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(0);
-    machine.stack.push(1024);
+    machine.stack.push(0).expect('push failed');
+    machine.stack.push(1024).expect('push failed');
 
     machine.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
 
     // When
-    machine.exec_sha3();
+    machine.exec_sha3().expect('exec_sha3 failed');
 
     // Then
     let result = machine.stack.peek().unwrap();
@@ -182,13 +182,13 @@ fn test_exec_sha3_size_32_offset_2016() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(32);
-    machine.stack.push(2016);
+    machine.stack.push(32).expect('push failed');
+    machine.stack.push(2016).expect('push failed');
 
     machine.memory.store(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
 
     // When
-    machine.exec_sha3();
+    machine.exec_sha3().expect('exec_sha3 failed');
 
     // Then
     let result = machine.stack.peek().unwrap();
@@ -203,13 +203,13 @@ fn test_exec_sha3_size_32_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(32);
-    machine.stack.push(0);
+    machine.stack.push(32).expect('push failed');
+    machine.stack.push(0).expect('push failed');
 
     machine.memory.store(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
 
     // When
-    machine.exec_sha3();
+    machine.exec_sha3().expect('exec_sha3 failed');
 
     // Then
     let result = machine.stack.peek().unwrap();
@@ -224,13 +224,13 @@ fn test_exec_sha3_size_31_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(31);
-    machine.stack.push(0);
+    machine.stack.push(31).expect('push failed');
+    machine.stack.push(0).expect('push failed');
 
     machine.memory.store(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
 
     // When
-    machine.exec_sha3();
+    machine.exec_sha3().expect('exec_sha3 failed');
 
     // Then
     let result = machine.stack.peek().unwrap();
@@ -245,13 +245,13 @@ fn test_exec_sha3_size_33_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(33);
-    machine.stack.push(0);
+    machine.stack.push(33).expect('push failed');
+    machine.stack.push(0).expect('push failed');
 
     machine.memory.store(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
 
     // When
-    machine.exec_sha3();
+    machine.exec_sha3().expect('exec_sha3 failed');
 
     // Then
     let result = machine.stack.peek().unwrap();
@@ -266,8 +266,8 @@ fn test_exec_sha3_size_0x0C80_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(0x0C80);
-    machine.stack.push(0x00);
+    machine.stack.push(0x0C80).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     let mut mem_dst: u32 = 0;
     loop {
@@ -281,7 +281,7 @@ fn test_exec_sha3_size_0x0C80_offset_0() {
     };
 
     // When
-    machine.exec_sha3();
+    machine.exec_sha3().expect('exec_sha3 failed');
 
     // Then
     let result = machine.stack.peek().unwrap();
