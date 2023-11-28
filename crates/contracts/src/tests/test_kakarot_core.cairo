@@ -1,8 +1,14 @@
 use contracts::contract_account::ContractAccount::TEST_CLASS_HASH as ContractAccountTestClassHash;
+use contracts::contract_account::ContractAccount;
 use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
-use contracts::eoa::ExternallyOwnedAccount;
-use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::eoa::{
+    ExternallyOwnedAccount, IExternallyOwnedAccountDispatcher,
+    IExternallyOwnedAccountDispatcherTrait
+};
 use contracts::kakarot_core::interface::IKakarotCore;
+use contracts::kakarot_core::interface::{
+    IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
+};
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
@@ -14,6 +20,9 @@ use contracts::tests::test_upgradeable::{
 };
 use contracts::tests::test_utils as contract_utils;
 use contracts::uninitialized_account::UninitializedAccount;
+use core::option::OptionTrait;
+
+
 use core::traits::TryInto;
 use evm::machine::Status;
 use evm::model::contract_account::ContractAccountTrait;
@@ -468,4 +477,3 @@ fn test_eoa_class_hash() {
     assert(event.old_class_hash == class_hash, 'wrong old hash');
     assert(event.new_class_hash == kakarot_core.eoa_class_hash(), 'wrong new hash');
 }
-
