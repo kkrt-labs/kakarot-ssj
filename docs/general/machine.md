@@ -13,10 +13,10 @@ context, which contained the stack, the memory, and the execution state. Each
 local execution context optionally contained parent and child execution
 contexts, which were used to model the execution of sub-calls. However, this
 design was not possible to implement in Cairo, as Cairo does not support the use
-of Nullable types containing dictionaries. Since the ExecutionContext struct
-mentioned in [execution_context](./execution_context.md) contains such Nullable
-types, we had to change the design of the EVM to use a machine with a single
-Stack and Memory, which are our dict-based data structures.
+of `Nullable` types containing dictionaries. Since the `ExecutionContext` struct
+contains such `Nullable` types, we had to change the design of the EVM to use a
+machine with a single stack and memory, which are our dict-based data
+structures.
 
 ## The Kakarot Machine design
 
@@ -41,7 +41,7 @@ To overcome the problem stated above, we have come up with the following design:
 - The execution context tree is initialized with a single root execution
   context, which has no parent and no child. It has an `id` field equal to 0.
 
-The following diagram describes the model of the Kakarot Machine.
+The following diagram describes the model of the Kakarot machine.
 
 ```mermaid
 classDiagram
@@ -193,6 +193,40 @@ where $i$ is the id of the active execution context.
 If we want to store an item at offset 10 of the memory relative to the execution
 context of id 1, the internal index will be
 $index = 10 + 1 \cdot 131072 = 131082$.
+
+## Execution flow
+
+The following diagram describe the flow of the execution context when executing
+the `run` function given an instance of the `Machine` struct instantiated with
+the bytecode to execute and the appropriate execution context.
+
+The run function is responsible for executing EVM bytecode. The flow of
+execution involves decoding and executing the current opcode, handling the
+execution, and continue executing the next opcode if the execution of the
+previous one succeeded. If the execution of an opcode fails, the execution
+context reverts, the changes made in this context are dropped, and the state of
+the blockchain is not updated.
+
+```mermaid
+flowchart TD
+AA["START"] --> A
+A["run()"] --> B[Decode and Execute Opcode]
+B --> |pc+=1| C{Result OK?}
+C -->|Yes| D{Execution stopped?}
+D -->|No| A
+D -->|Yes| F{Reverted?}
+C -->|No| RA
+F --> |No| FA
+F -->|Yes| RA[Discard account updates]
+
+subgraph Discard context changes
+RA --> RB["Discard storage updates"]
+RB --> RC["Discard event log"]
+RC --> RD["Discard transfers log"]
+end
+
+RD --> FA[finalize context]
+```
 
 ## Conclusion
 

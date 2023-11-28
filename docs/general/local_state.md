@@ -24,7 +24,7 @@ contextual changes, which refers to changes made inside the current execution
 context.
 
 The local state is updated as the code is executed, and when an execution
-context is finished, we merge the contextual state updates into the
+context is finalized, we merge the contextual state updates into the
 transactional state. When a transaction finishes, we apply the transactional
 state diffs by writing them inside the blockchain storage.
 
@@ -72,6 +72,9 @@ sequenceDiagram
 
 ```
 
+<span class="caption">Interactions between Kakarot, its local state and Starknet
+storage</span>
+
 ## Implementation
 
 We need to be able to store in the local state the current information:
@@ -116,6 +119,8 @@ struct State {
 }
 ```
 
+<span class="caption">The State struct</span>
+
 A `StateChangeLog` is a data structure that tracks the changes made to a
 specific object both at the context-level and at the transaction-level using the
 mechanism specified above. The `SimpleLog` is a simplified version of this
@@ -145,6 +150,8 @@ struct StateChangeLog<T> {
 }
 ```
 
+<span class="caption">The StateChangeLog generic struct</span>
+
 ```rust
 
 /// `SimpleLog` is a straightforward logging mechanism.
@@ -160,17 +167,11 @@ struct SimpleLog<T> {
     contextual_logs: Array<T>,
     transactional_logs: Array<T>,
 }
-
 ```
 
-The reason for this implementations are that:
+<span class="caption">The SimpleLog generic struct</span>
 
-- Including `balances` inside the `Account` struct would require loading the
-  entire bytecode of a ContractAccount, even for simple transfers - which is not
-  optimized as it can be an expensive operation. Therefore, by storing these
-  changes in a standalone field in the state, we can apply balance changes
-  without loading the accounts first.
-- Storage changes are modeled using a dictionary where the key is the storage
-  address to update, and the value is the updated value. However, we can't
-  create nested dictionaries in Cairo - so we have to separate the accounts
-  storage updates from the account updates themselves.
+Storage changes are modeled using a dictionary where the key is the storage
+address to update, and the value is the updated value. However, we can't create
+nested dictionaries in Cairo - so we have to separate the accounts storage
+updates from the account updates themselves.

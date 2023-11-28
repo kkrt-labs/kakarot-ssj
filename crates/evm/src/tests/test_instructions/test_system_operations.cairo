@@ -599,7 +599,7 @@ fn test_selfdestruct_undeployed_ca() {
     fund_account_with_native_token(ca_address.starknet, native_token, ca_balance);
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_target(ca_address).build();
     // - call `get_account` on an undeployed account, set its type to CA, its nonce to 1, its code to something
-    // to mock a cached CA that has not been commited yet.
+    // to mock a cached CA that has not been committed yet.
     let mut ca_account = machine.state.get_account(ca_address.evm);
     ca_account.set_code(array![0x1, 0x2, 0x3].span());
     ca_account.set_type(AccountType::ContractAccount);
