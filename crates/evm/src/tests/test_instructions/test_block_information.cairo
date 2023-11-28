@@ -3,14 +3,20 @@ use contracts::kakarot_core::interface::{
 };
 
 use contracts::tests::test_utils::{
-    setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
+    setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account,
 };
+use core::clone::Clone;
+use core::result::ResultTrait;
+use core::traits::TryInto;
 use evm::instructions::BlockInformationTrait;
 use evm::model::contract_account::ContractAccountTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{evm_address, MachineBuilderTestTrait};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-use starknet::testing::{set_block_timestamp, set_block_number, set_contract_address};
+use starknet::testing::{
+    set_block_timestamp, set_block_number, set_contract_address, set_sequencer_address,
+    ContractAddress
+};
 
 /// 0x40 - BLOCKHASH
 #[test]
@@ -22,7 +28,7 @@ fn test_exec_blockhash_below_bounds() {
 
     // When
     machine.stack.push(243).unwrap();
-    machine.exec_blockhash();
+    machine.exec_blockhash().unwrap();
 
     // Then
     assert(machine.stack.peek().unwrap() == 0, 'stack top should be 0');
@@ -37,7 +43,7 @@ fn test_exec_blockhash_above_bounds() {
 
     // When
     machine.stack.push(491).unwrap();
-    machine.exec_blockhash();
+    machine.exec_blockhash().unwrap();
 
     // Then
     assert(machine.stack.peek().unwrap() == 0, 'stack top should be 0');
@@ -72,7 +78,7 @@ fn test_block_timestamp_set_to_1692873993() {
     // If not set the default timestamp is 0.
     set_block_timestamp(1692873993);
     // When
-    machine.exec_timestamp();
+    machine.exec_timestamp().unwrap();
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -86,7 +92,7 @@ fn test_block_number_set_to_32() {
     // If not set the default block number is 0.
     set_block_number(32);
     // When
-    machine.exec_number();
+    machine.exec_number().unwrap();
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -98,7 +104,7 @@ fn test_gaslimit() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // When
-    machine.exec_gaslimit();
+    machine.exec_gaslimit().unwrap();
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -122,7 +128,7 @@ fn test_exec_selfbalance_eoa() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    machine.exec_selfbalance();
+    machine.exec_selfbalance().unwrap();
 
     // Then
     assert(machine.stack.peek().unwrap() == native_token.balanceOf(eoa), 'wrong balance');
@@ -138,7 +144,7 @@ fn test_exec_selfbalance_zero() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    machine.exec_selfbalance();
+    machine.exec_selfbalance().unwrap();
 
     // Then
     assert(machine.stack.peek().unwrap() == 0x00, 'wrong balance');
@@ -155,7 +161,7 @@ fn test_exec_selfbalance_contract_account() {
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    machine.exec_selfbalance();
+    machine.exec_selfbalance().unwrap();
 
     // Then
     assert(machine.stack.peek().unwrap() == 0x1, 'wrong balance');
@@ -167,7 +173,7 @@ fn test_basefee() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // When
-    machine.exec_basefee();
+    machine.exec_basefee().unwrap();
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -188,7 +194,7 @@ fn test_chainid_should_push_chain_id_to_stack() {
         .into();
 
     // When
-    machine.exec_chainid();
+    machine.exec_chainid().unwrap();
 
     // Then
     let result = machine.stack.peek().unwrap();
@@ -207,4 +213,28 @@ fn test_randao_should_push_zero_to_stack() {
     // Then
     let result = machine.stack.peek().unwrap();
     assert(result == 0x00, 'stack top should be zero');
+}
+
+// *************************************************************************
+// 0x41: COINBASE
+// *************************************************************************
+#[test]
+#[available_gas(5000000)]
+fn test_exec_coinbase() {
+    // Given
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let sequencer_eoa = kakarot_core.deploy_eoa(evm_address());
+    fund_account_with_native_token(sequencer_eoa, native_token, 0x1);
+
+    // And
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+
+    // When
+    set_sequencer_address(sequencer_eoa);
+    machine.exec_coinbase().unwrap();
+
+    let sequencer_address = machine.stack.pop().unwrap();
+
+    // Then
+    assert(evm_address().address.into() == sequencer_address, 'wrong sequencer_address');
 }
