@@ -189,7 +189,9 @@ fn test_calldataload() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_calldata(calldata.span())
+        .build();
 
     let offset: u32 = 0;
     machine.stack.push(offset.into()).expect('push failed');
@@ -212,7 +214,9 @@ fn test_calldataload_with_offset() {
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
 
-    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_calldata(calldata.span())
+        .build();
 
     let offset: u32 = 31;
     machine.stack.push(offset.into()).expect('push failed');
@@ -235,7 +239,9 @@ fn test_calldataload_with_offset_beyond_calldata() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_calldata(calldata.span())
+        .build();
 
     let offset: u32 = calldata.len() + 1;
     machine.stack.push(offset.into()).expect('push failed');
@@ -252,7 +258,9 @@ fn test_calldataload_with_offset_beyond_calldata() {
 fn test_calldataload_with_function_selector() {
     // Given
     let calldata = array![0x6d, 0x4c, 0xe6, 0x3c];
-    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_calldata(calldata.span())
+        .build();
 
     let offset: u32 = 0;
     machine.stack.push(offset.into()).expect('push failed');
@@ -274,7 +282,9 @@ fn test_calldataload_with_offset_conversion_error() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_calldata(calldata.span())
+        .build();
     let offset: u256 = 5000000000;
     machine.stack.push(offset).expect('push failed');
 

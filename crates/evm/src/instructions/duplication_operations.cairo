@@ -7,12 +7,14 @@ use evm::machine::Machine;
 mod internal {
     use evm::context::{ExecutionContext, ExecutionContextTrait,};
     use evm::errors::EVMError;
-    use evm::machine::Machine;
+    use evm::gas;
+    use evm::machine::{Machine, MachineTrait};
     use evm::stack::StackTrait;
 
     /// Generic DUP operation
     #[inline(always)]
     fn exec_dup_i(ref machine: Machine, i: u8) -> Result<(), EVMError> {
+        machine.increment_gas_used_checked(gas::VERYLOW)?;
         let item = machine.stack.peek_at((i - 1).into())?;
         machine.stack.push(item)
     }

@@ -1,8 +1,10 @@
 use evm::context::{CallContextTrait, ExecutionContextType, ExecutionContextTrait};
+use evm::errors::DebugEVMError;
 use evm::errors::{EVMError, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineTrait};
-use evm::tests::test_utils::{gas_limit, evm_address, starknet_address, MachineBuilderTestTrait, test_address, gas_price};
-use evm::errors::DebugEVMError;
+use evm::tests::test_utils::{
+    gas_limit, evm_address, starknet_address, MachineBuilderTestTrait, test_address, gas_price
+};
 
 #[test]
 fn test_machine_default() {

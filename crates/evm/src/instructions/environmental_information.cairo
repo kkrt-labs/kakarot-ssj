@@ -3,6 +3,7 @@ use contracts::kakarot_core::{KakarotCore};
 use core::hash::{HashStateExTrait, HashStateTrait};
 use evm::context::ExecutionContextTrait;
 use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED};
+use evm::gas;
 use evm::machine::{Machine, MachineTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
@@ -27,6 +28,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get address of currently executing account.
     /// # Specification: https://www.evm.codes/#30?fork=shanghai
     fn exec_address(ref self: Machine) -> Result<(), EVMError> {
+        self.increment_gas_used_checked(gas::BASE)?;
         self.stack.push(self.address().evm.into())
     }
 
@@ -34,6 +36,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get ETH balance of the specified address.
     /// # Specification: https://www.evm.codes/#31?fork=shanghai
     fn exec_balance(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: Add warm / cold storage costs
+        self.increment_gas_used_checked(gas::WARM_STORAGE_READ_COST)?;
+
         let evm_address = self.stack.pop_eth_address()?;
 
         let balance = self.state.get_account(evm_address).balance();
@@ -44,6 +49,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get execution origination address.
     /// # Specification: https://www.evm.codes/#32?fork=shanghai
     fn exec_origin(ref self: Machine) -> Result<(), EVMError> {
+        self.increment_gas_used_checked(gas::BASE)?;
         self.stack.push(self.origin().evm.into())
     }
 
@@ -51,6 +57,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get caller address.
     /// # Specification: https://www.evm.codes/#33?fork=shanghai
     fn exec_caller(ref self: Machine) -> Result<(), EVMError> {
+        self.increment_gas_used_checked(gas::BASE)?;
         self.stack.push(self.caller().evm.into())
     }
 
@@ -58,6 +65,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get deposited value by the instruction/transaction responsible for this execution.
     /// # Specification: https://www.evm.codes/#34?fork=shanghai
     fn exec_callvalue(ref self: Machine) -> Result<(), EVMError> {
+        self.increment_gas_used_checked(gas::BASE)?;
         self.stack.push(self.value())
     }
 
@@ -65,6 +73,8 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Push a word from the calldata onto the stack.
     /// # Specification: https://www.evm.codes/#35?fork=shanghai
     fn exec_calldataload(ref self: Machine) -> Result<(), EVMError> {
+        self.increment_gas_used_checked(gas::VERYLOW)?;
+
         let offset: usize = self.stack.pop_usize()?;
 
         let calldata = self.calldata();
@@ -100,6 +110,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get the size of return data.
     /// # Specification: https://www.evm.codes/#36?fork=shanghai
     fn exec_calldatasize(ref self: Machine) -> Result<(), EVMError> {
+        self.increment_gas_used_checked(gas::BASE)?;
         let size: u256 = self.calldata().len().into();
         self.stack.push(size)
     }
@@ -108,6 +119,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#37?fork=shanghai
     fn exec_calldatacopy(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: Add dynamic gas
+        self.increment_gas_used_checked(gas::VERYLOW)?;
+
         let dest_offset = self.stack.pop_usize()?;
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
@@ -129,6 +143,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get size of bytecode running in current environment.
     /// # Specification: https://www.evm.codes/#38?fork=shanghai
     fn exec_codesize(ref self: Machine) -> Result<(), EVMError> {
+        self.increment_gas_used_checked(gas::BASE)?;
         let size: u256 = self.bytecode().len().into();
         self.stack.push(size)
     }
@@ -137,6 +152,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Copies slice of bytecode to memory.
     /// # Specification: https://www.evm.codes/#39?fork=shanghai
     fn exec_codecopy(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: Add dynamic gas
+        self.increment_gas_used_checked(gas::VERYLOW)?;
+
         let dest_offset = self.stack.pop_usize()?;
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
@@ -160,6 +178,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get price of gas in current environment.
     /// # Specification: https://www.evm.codes/#3a?fork=shanghai
     fn exec_gasprice(ref self: Machine) -> Result<(), EVMError> {
+        self.increment_gas_used_checked(gas::BASE)?;
         self.stack.push(self.gas_price().into())
     }
 
@@ -167,6 +186,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get size of an account's code.
     /// # Specification: https://www.evm.codes/#3b?fork=shanghai
     fn exec_extcodesize(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: Add Warm / Cold storage costs
+        self.increment_gas_used_checked(gas::WARM_STORAGE_READ_COST)?;
+
         let evm_address = self.stack.pop_eth_address()?;
 
         let account = self.state.get_account(evm_address);
@@ -177,6 +199,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Copy an account's code to memory
     /// # Specification: https://www.evm.codes/#3c?fork=shanghai
     fn exec_extcodecopy(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: Add Warm / Cold storage costs
+        self.increment_gas_used_checked(gas::WARM_STORAGE_READ_COST)?;
+
         let evm_address = self.stack.pop_eth_address()?;
         let dest_offset = self.stack.pop_usize()?;
         let offset = self.stack.pop_usize()?;
@@ -197,6 +222,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get the size of return data.
     /// # Specification: https://www.evm.codes/#3d?fork=shanghai
     fn exec_returndatasize(ref self: Machine) -> Result<(), EVMError> {
+        self.increment_gas_used_checked(gas::BASE)?;
         let size = self.return_data().len();
         self.stack.push(size.into())
     }
@@ -205,6 +231,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#3e?fork=shanghai
     fn exec_returndatacopy(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: Add dynamic gas
+        self.increment_gas_used_checked(gas::VERYLOW)?;
+
         let dest_offset = self.stack.pop_usize()?;
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
@@ -236,6 +265,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     // Else return, the hash of the account's code
     /// # Specification: https://www.evm.codes/#3f?fork=shanghai
     fn exec_extcodehash(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: Add Warm / Cold storage costs
+        self.increment_gas_used_checked(gas::WARM_STORAGE_READ_COST)?;
+
         let evm_address = self.stack.pop_eth_address()?;
 
         let account = self.state.get_account(evm_address);

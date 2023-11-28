@@ -1,8 +1,8 @@
+use evm::errors::EVMError;
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::Address;
 use evm::model::Event;
 use evm::stack::{Stack, StackTrait};
-use evm::errors::EVMError;
 use starknet::get_caller_address;
 use starknet::{EthAddress, ContractAddress};
 use utils::helpers::{ArrayExtension, ArrayExtTrait};

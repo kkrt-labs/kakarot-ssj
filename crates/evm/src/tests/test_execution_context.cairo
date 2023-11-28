@@ -4,16 +4,15 @@ use evm::context::{
     CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
     DefaultOptionSpanU8
 };
+use evm::errors::{EVMError, DebugEVMError};
 use evm::machine::{MachineTrait};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Event, Address};
-use evm::errors::{EVMError, DebugEVMError};
 use evm::stack::{Stack, StackTrait};
 use evm::tests::test_utils::{MachineBuilderTestTrait, CallContextPartialEq};
 use evm::tests::test_utils;
 use starknet::testing::{set_contract_address, set_caller_address};
 use starknet::{EthAddress, ContractAddress};
-
 
 
 use test_utils::{callvalue, test_address};

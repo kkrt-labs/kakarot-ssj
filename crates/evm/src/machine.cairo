@@ -163,7 +163,7 @@ impl MachineImpl of MachineTrait {
     }
 
     #[inline(always)]
-    fn increment_gas_used_checked(ref self: Machine, gas: u128) -> Result<(), EVMError>{
+    fn increment_gas_used_checked(ref self: Machine, gas: u128) -> Result<(), EVMError> {
         let mut current_execution_ctx = self.current_ctx.unbox();
         let res = current_execution_ctx.increment_gas_used_checked(gas);
         match res {

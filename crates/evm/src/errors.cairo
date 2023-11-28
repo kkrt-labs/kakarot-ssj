@@ -86,7 +86,6 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::OutOfGas => 'OutOfGas'.into(),
         }
     }
-
 }
 
 impl DebugEVMError of Debug<EVMError> {

@@ -8,14 +8,14 @@ mod context;
 // Create opcodes helpers
 mod create_helpers;
 
-// Gas module
-mod gas;
-
 // Errors module
 mod errors;
 
 // Kakarot main module
 mod execution;
+
+// Gas module
+mod gas;
 
 // instructions module
 mod instructions;
