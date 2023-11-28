@@ -18,9 +18,10 @@ use utils::constants::{
 };
 use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 use utils::math::{Bitshift, WrappingBitshift};
-use utils::num::{SizeOf};
-use utils::traits::TryIntoResult;
-use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, U256TryIntoEthAddress};
+use utils::traits::{
+    U256TryIntoContractAddress, EthAddressIntoU256, U256TryIntoEthAddress, TryIntoResult,
+    NumbericIntoBool
+};
 /// Ceils a number of bits to the next word (32 bytes)
 ///
 /// # Arguments
@@ -1101,7 +1102,7 @@ impl TryIntoEthSignature of TryInto<Span<felt252>, EthSignature> {
         let s_low: u128 = (*self.at(2)).try_into()?;
         let s_high: u128 = (*self.at(3)).try_into()?;
 
-        let y_parity = (*self.at(4)) == 1;
+        let y_parity = (*self.at(4)).into();
 
         let r = u256 { low: r_low, high: r_high };
         let s = u256 { low: s_low, high: s_high };
