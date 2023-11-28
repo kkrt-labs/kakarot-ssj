@@ -39,17 +39,6 @@ impl BoolIntoNumeric<T, +Zero<T>, +One<T>> of Into<bool, T> {
     }
 }
 
-impl NumbericIntoBool<T, +Zero<T>, +Drop<T>> of Into<T, bool> {
-    #[inline(always)]
-    fn into(self: T) -> bool {
-        if self.is_zero() {
-            false
-        } else {
-            true
-        }
-    }
-}
-
 impl EthAddressIntoU256 of Into<EthAddress, u256> {
     fn into(self: EthAddress) -> u256 {
         let intermediate: felt252 = self.into();
