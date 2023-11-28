@@ -66,8 +66,8 @@ flowchart TD;
     style M fill:#DB2929,stroke:#333,stroke-width:2px;
 ```
 
-_Simplified process representation of SSTORE and SLOAD Opcodes in the Geth EVM
-Client_
+<span class="caption">_Simplified representation of SSTORE and SLOAD Opcodes
+behavior in the Geth EVM Client_ </span>
 
 ## Storage in Kakarot
 
@@ -225,6 +225,9 @@ sequenceDiagram
 
     Note over S: Storage is now updated with the final state of all changes made during the transaction.
 ```
+
+<span class="caption">Sequence of interactions between Kakarot, the local State
+and Starknet for the SSTORE and SLOAD Opcodes</span>
 
 ### Implementation
 

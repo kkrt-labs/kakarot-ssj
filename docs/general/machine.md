@@ -133,6 +133,8 @@ classDiagram
     State *-- SimpleLog
 ```
 
+<span class="caption">Kakarot internal architecture model</span>
+
 ### The Stack
 
 Instead of having one Stack per execution context, we have a single Stack shared
@@ -227,6 +229,8 @@ end
 
 RD --> FA[finalize context]
 ```
+
+<span class="caption">Execution flow of EVM bytecode</span>
 
 ## Conclusion
 

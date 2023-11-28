@@ -23,6 +23,9 @@ flowchart TD
     E2 --> F2[Return execution result]
 ```
 
+<span class="caption"> Transaction flow for deploy and execute transactions in
+Kakarot</span>
+
 There are several different ways to store the bytecode of a contract, and this
 document will provide a quick overview of the different options, to choose the
 most optimized one for this use case. The three main ways of handling contract
@@ -195,34 +198,24 @@ struct Storage {
 We use the `List` type from the
 [Alexandria](https://github.com/keep-starknet-strange/alexandria/blob/main/src/storage/src/list.cairo)
 library to store the bytecode, allowing us to store up to 255 31-bytes values
-per `StorageBaseAddress`. For bytecode containing more than 255 31-bytes values,
-the `List` type abstracts the calculations of the next storage address used,
-which is calculated by using poseidon hashes applied on `previous_address+1`.
+per `StorageBaseAddress`. Indeed, the current limitation on the maximal size of
+a complex storage value is 256 field elements, where a field element is the
+native data type of the Cairo VM. If we want to store more than 256 field
+elements, which is the case for bytecode larger than 255 31-bytes values, which
+represents 7.9kB, we need to split the data between multiple storage addresses.
+The `List` type abstracts this process by automatically calculating the next
+storage address to use, by applying poseidon hashes on the base storage address
+of the list with the index of the segment to store the element in.
 
 The logic behind this storage design is to make it very easy to load the
 bytecode in the EVM when we want to execute a program. We will rely on the
 ByteArray type, which is a type from the core library that we can use to access
-individual byte indexes in an array of packed bytes31 values. This type is
-defined as:
+individual byte indexes in an array of packed bytes31 values.
 
-```rust
-struct ByteArray {
-    // Full "words" of 31 bytes each. The first byte of each word in the byte array
-    // is the most significant byte in the word.
-    data: Array<bytes31>,
-    // This felt252 actually represents a bytes31, with < 31 bytes.
-    // It is represented as a felt252 to improve performance of building the byte array.
-    // The number of bytes in here is specified in `pending_word_len`.
-    // The first byte is the most significant byte among the `pending_word_len` bytes in the word.
-    pending_word: felt252,
-    // Should be in range [0, 30].
-    pending_word_len: usize,
-}
-```
-
-The rationale behind this structure is detailed in the code snippet above - but
-you can notice that our stored variables reflect the fields the ByteArray type.
-Once our bytecode is written in storage, we can simply load it by doing so:
+The rationale behind this structure is thoroughly documented in the core library
+code. The variable stored in our contract's storage reflect the fields of the
+ByteArray type. Once our bytecode is written in storage, we can simply load it
+with
 
 ```rust
  let bytecode = ByteArray {
