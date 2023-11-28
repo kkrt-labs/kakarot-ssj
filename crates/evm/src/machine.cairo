@@ -171,7 +171,10 @@ impl MachineImpl of MachineTrait {
                 current_ctx = parent_ctx;
             },
         };
-        self.current_ctx = BoxTrait::new(current_ctx);
+        // We need to rebox the current context after modifying it
+        // before calling a function - otherwise, we get a variable moved error
+        self.current_ctx = Default::default();
+        self.set_current_ctx(current_ctx);
         Result::Ok(())
     }
 

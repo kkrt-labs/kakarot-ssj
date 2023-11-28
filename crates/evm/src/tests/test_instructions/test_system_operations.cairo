@@ -503,6 +503,94 @@ fn test_exec_delegatecall() {
 
 
 #[test]
+fn test_exec_create() {
+    // Given
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_nested_execution_context()
+        .build();
+
+    let mut interpreter = EVMInterpreterTrait::new();
+
+    let deployed_bytecode = array![0xff].span();
+    let eth_address: EthAddress = evm_address();
+    let contract_address = deploy_contract_account(eth_address, deployed_bytecode);
+
+    let mut ctx = machine.current_ctx.unbox();
+    ctx.address = contract_address;
+    ctx.ctx_type = ExecutionContextType::Create(ctx.id());
+    machine.current_ctx = BoxTrait::new(ctx);
+
+    // Load into memory the bytecode of Storage.sol
+    let storage_initcode = storage_evm_initcode();
+    machine.memory.store_n(storage_initcode, 0);
+
+    machine.stack.push(storage_initcode.len().into()).unwrap();
+    machine.stack.push(0).unwrap();
+    machine.stack.push(0).unwrap();
+
+    // When
+    machine.exec_create().unwrap();
+    interpreter.run(ref machine);
+
+    // computed using `compute_create_address` script
+    let account = machine
+        .state
+        .get_account(0x930b3d8D35621F2e27Db700cA5D16Df771642fdD.try_into().unwrap());
+
+    assert_eq!(account.nonce(), 1);
+    assert(account.code == storage_evm_bytecode(), 'wrong bytecode');
+
+    let deployer = machine.state.get_account(eth_address);
+    assert_eq!(deployer.nonce(), 2)
+}
+
+#[test]
+fn test_exec_create_failure() {
+    // Given
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_nested_execution_context()
+        .build();
+
+    let mut interpreter = EVMInterpreterTrait::new();
+
+    let deployed_bytecode = array![0xFF].span();
+    let eth_address: EthAddress = evm_address();
+    let contract_address = deploy_contract_account(eth_address, deployed_bytecode);
+
+    let mut ctx = machine.current_ctx.unbox();
+    ctx.address = contract_address;
+    ctx.ctx_type = ExecutionContextType::Create(ctx.id());
+    machine.current_ctx = BoxTrait::new(ctx);
+
+    // Load into memory the bytecode to init, which is the revert opcode
+    let revert_initcode = array![0xFD].span();
+    machine.memory.store_n(revert_initcode, 0);
+
+    machine.stack.push(revert_initcode.len().into()).unwrap();
+    machine.stack.push(0).unwrap();
+    machine.stack.push(0).unwrap();
+
+    // When
+    machine.exec_create();
+    interpreter.run(ref machine);
+
+    let expected_address = 0x930b3d8D35621F2e27Db700cA5D16Df771642fdD.try_into().unwrap();
+
+    // computed using `compute_create_address` script
+    let account = machine.state.get_account(expected_address);
+    assert_eq!(account.nonce(), 0);
+    assert_eq!(account.code.len(), 0);
+
+    let deployer = machine.state.get_account(eth_address);
+    assert_eq!(deployer.nonce(), 1)
+}
+
+
+#[test]
 fn test_exec_create2() {
     // Given
     setup_contracts_for_testing();
