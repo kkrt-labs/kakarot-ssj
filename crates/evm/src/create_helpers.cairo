@@ -78,19 +78,25 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
             || target_account.nonce() == integer::BoundedInt::<u64>::max() {
             return self.stack.push(0);
         }
-
-        if create_args.value > 0 {
-            let transfer = Transfer {
-                sender: self.address(), recipient: target_address, amount: create_args.value,
-            };
-            let result = self.state.add_transfer(transfer);
-            if result.is_err() {
-                return self.stack.push(0);
-            }
-        }
+        let maybe_transfer = if create_args.value > 0 {
+            Option::Some(
+                Transfer {
+                    sender: self.address(), recipient: target_address, amount: create_args.value,
+                }
+            )
+        } else {
+            Option::None
+        };
 
         caller_account.set_nonce(caller_current_nonce + 1);
         self.state.set_account(caller_account);
+
+        //TODO when compiler bug is fixed handle this properly.
+        // It needs to be after self.set_current_ctx(child_ctx);
+        match maybe_transfer {
+            Option::Some(transfer) => { self.state.add_transfer(transfer).expect('transfer'); },
+            Option::None => {}
+        };
 
         // Collision happens if the target account loaded in state has code or nonce set, meaning
         // - it's deployed on SN and is an active EVM contract
@@ -127,7 +133,12 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
 
         // Machine logic
         self.ctx_count += 1;
-        self.current_ctx = BoxTrait::new(child_ctx);
+
+        // Satisfy the compiler by setting the current_ctx to a default value
+        // before setting it to its real value - otherwise, "variable moved"
+        //TODO find workaround
+        self.current_ctx = BoxTrait::new(Default::default());
+        self.set_current_ctx(child_ctx);
 
         Result::Ok(())
     }

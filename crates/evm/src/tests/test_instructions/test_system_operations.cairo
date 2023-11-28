@@ -505,7 +505,7 @@ fn test_exec_delegatecall() {
 #[test]
 fn test_exec_create() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (native_token, _) = setup_contracts_for_testing();
 
     let mut machine = MachineBuilderTestTrait::new_with_presets()
         .with_nested_execution_context()
@@ -516,6 +516,7 @@ fn test_exec_create() {
     let deployed_bytecode = array![0xff].span();
     let eth_address: EthAddress = evm_address();
     let contract_address = deploy_contract_account(eth_address, deployed_bytecode);
+    fund_account_with_native_token(contract_address.starknet, native_token, 2);
 
     let mut ctx = machine.current_ctx.unbox();
     ctx.address = contract_address;
@@ -527,29 +528,32 @@ fn test_exec_create() {
     machine.memory.store_n(storage_initcode, 0);
 
     machine.stack.push(storage_initcode.len().into()).unwrap();
-    machine.stack.push(0).unwrap();
-    machine.stack.push(0).unwrap();
+    machine.stack.push(0).expect('push failed');
+    machine.stack.push(1).expect('push failed');
 
     // When
     machine.exec_create().unwrap();
     interpreter.run(ref machine);
 
-    // computed using `compute_create_address` script
+    // computed using `compute_create_address` script  
+    // run `bun run compute_create_address` -> CREATE -> EthAddress = evm_address() -> nonce = 1  
     let account = machine
         .state
         .get_account(0x930b3d8D35621F2e27Db700cA5D16Df771642fdD.try_into().unwrap());
 
     assert_eq!(account.nonce(), 1);
     assert(account.code == storage_evm_bytecode(), 'wrong bytecode');
+    assert_eq!(account.balance(), 1);
 
     let deployer = machine.state.get_account(eth_address);
-    assert_eq!(deployer.nonce(), 2)
+    assert_eq!(deployer.nonce(), 2);
+    assert_eq!(deployer.balance(), 1);
 }
 
 #[test]
 fn test_exec_create_failure() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (native_token, _) = setup_contracts_for_testing();
 
     let mut machine = MachineBuilderTestTrait::new_with_presets()
         .with_nested_execution_context()
@@ -560,6 +564,7 @@ fn test_exec_create_failure() {
     let deployed_bytecode = array![0xFF].span();
     let eth_address: EthAddress = evm_address();
     let contract_address = deploy_contract_account(eth_address, deployed_bytecode);
+    fund_account_with_native_token(contract_address.starknet, native_token, 2);
 
     let mut ctx = machine.current_ctx.unbox();
     ctx.address = contract_address;
@@ -571,11 +576,11 @@ fn test_exec_create_failure() {
     machine.memory.store_n(revert_initcode, 0);
 
     machine.stack.push(revert_initcode.len().into()).unwrap();
-    machine.stack.push(0).unwrap();
-    machine.stack.push(0).unwrap();
+    machine.stack.push(0).expect('push failed');
+    machine.stack.push(1).expect('push failed');
 
     // When
-    machine.exec_create();
+    machine.exec_create().expect('exec_create failed');
     interpreter.run(ref machine);
 
     let expected_address = 0x930b3d8D35621F2e27Db700cA5D16Df771642fdD.try_into().unwrap();
@@ -584,9 +589,11 @@ fn test_exec_create_failure() {
     let account = machine.state.get_account(expected_address);
     assert_eq!(account.nonce(), 0);
     assert_eq!(account.code.len(), 0);
+    assert_eq!(account.balance(), 0);
 
     let deployer = machine.state.get_account(eth_address);
-    assert_eq!(deployer.nonce(), 1)
+    assert_eq!(deployer.nonce(), 1);
+    assert_eq!(deployer.balance(), 2);
 }
 
 
