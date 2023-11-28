@@ -5,7 +5,6 @@ use utils::math::{
 };
 
 #[test]
-#[available_gas(20000000)]
 fn test_wrapping_pow() {
     assert(5_u256.wrapping_pow(10) == 9765625, '5^10 should be 9765625');
     assert(
@@ -18,7 +17,6 @@ fn test_wrapping_pow() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_pow() {
     assert(5_u256.pow(10) == 9765625, '5^10 should be 9765625');
     assert(5_u256.pow(45) == 28421709430404007434844970703125, '5^45 failed');
@@ -35,7 +33,6 @@ fn test_wrapping_slow_pow_runs_out_of_gas() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_wrapping_fast_pow() {
     let exp = internal_wrapping_pow_u256::wrapping_fpow(3_u256, 10);
     assert(
@@ -55,7 +52,6 @@ fn test_pow_should_overflow() {
 
 
 #[test]
-#[available_gas(2000000)]
 fn test_wide_add_basic() {
     let a = 1000;
     let b = 500;
@@ -71,7 +67,6 @@ fn test_wide_add_basic() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_wide_add_overflow() {
     let a = BoundedInt::<u256>::max();
     let b = 1;
@@ -87,7 +82,6 @@ fn test_wide_add_overflow() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_wide_add_max_values() {
     let a = BoundedInt::<u256>::max();
     let b = BoundedInt::<u256>::max();
@@ -105,7 +99,6 @@ fn test_wide_add_max_values() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_shl() {
     // Given
     let a = 0x00000091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aab3f_u256;
@@ -122,7 +115,6 @@ fn test_shl() {
 
 
 #[test]
-#[available_gas(2000000000000)]
 #[should_panic(expected: ('mul Overflow',))]
 fn test_shl_256_bits_overflow() {
     // Given
@@ -135,7 +127,6 @@ fn test_shl_256_bits_overflow() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('u256_mul Overflow',))]
 fn test_shl_overflow() {
     // Given
@@ -148,7 +139,6 @@ fn test_shl_overflow() {
 }
 
 #[test]
-#[available_gas(2000000000000)]
 fn test_wrapping_shl_overflow() {
     // Given
     let a = 0x00000091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498faab3fe_u256;
@@ -166,7 +156,6 @@ fn test_wrapping_shl_overflow() {
 
 
 #[test]
-#[available_gas(2000000)]
 fn test_wrapping_shl() {
     // Given
     let a = 0x00000091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aab3f_u256;
@@ -182,7 +171,6 @@ fn test_wrapping_shl() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_shr() {
     // Given
     let a = 0x0091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade6263a_u256;
@@ -198,7 +186,6 @@ fn test_shr() {
 }
 
 #[test]
-#[available_gas(20000000000)]
 #[should_panic(expected: ('mul Overflow',))]
 fn test_shr_256_bits_overflow() {
     let a = 0xab91b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade6263a_u256;
@@ -210,7 +197,6 @@ fn test_shr_256_bits_overflow() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_wrapping_shr() {
     // Given
     let a = 0x0091b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade6263a_u256;
@@ -227,7 +213,6 @@ fn test_wrapping_shr() {
 
 
 #[test]
-#[available_gas(20000000000)]
 fn test_wrapping_shr_to_zero() {
     // Given
     let a = 0xab91b2efa2bfd58aee61f24201bac4e64f70ca2b9d9491e82a498f2aade6263a_u256;

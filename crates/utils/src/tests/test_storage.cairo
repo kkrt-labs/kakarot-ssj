@@ -2,7 +2,6 @@ use starknet::{StorageBaseAddress, storage_base_address_from_felt252, storage_ad
 use utils::storage::compute_storage_base_address;
 
 #[test]
-#[available_gas(20000000)]
 fn test_compute_storage_base_address() {
     let selector = selector!("my_storage_var");
     let keys = array![0x01, 0x02].span();

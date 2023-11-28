@@ -12,7 +12,6 @@ use integer::BoundedInt;
 use starknet::get_contract_address;
 
 #[test]
-#[available_gas(20000000)]
 fn test_pc_basic() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -27,7 +26,6 @@ fn test_pc_basic() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_pc_gets_updated_properly_1() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -44,19 +42,16 @@ fn test_pc_gets_updated_properly_1() {
 // 0x51 - MLOAD
 
 #[test]
-#[available_gas(20000000000)]
 fn test_exec_mload_should_load_a_value_from_memory() {
     assert_mload(0x1, 0, 0x1, 32);
 }
 
 #[test]
-#[available_gas(20000000000)]
 fn test_exec_mload_should_load_a_value_from_memory_with_memory_expansion() {
     assert_mload(0x1, 16, 0x100000000000000000000000000000000, 64);
 }
 
 #[test]
-#[available_gas(20000000000)]
 fn test_exec_mload_should_load_a_value_from_memory_with_offset_larger_than_msize() {
     assert_mload(0x1, 684, 0x0, 736);
 }
@@ -78,7 +73,6 @@ fn assert_mload(value: u256, offset: u256, expected_value: u256, expected_memory
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_pop_should_pop_an_item_from_stack() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -96,7 +90,6 @@ fn test_exec_pop_should_pop_an_item_from_stack() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_pop_should_stack_underflow() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -112,7 +105,6 @@ fn test_exec_pop_should_stack_underflow() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_mstore_should_store_max_uint256_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -131,7 +123,6 @@ fn test_exec_mstore_should_store_max_uint256_offset_0() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_mstore_should_store_max_uint256_offset_1() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -150,7 +141,6 @@ fn test_exec_mstore_should_store_max_uint256_offset_1() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_mstore8_should_store_uint8_offset_31() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -169,7 +159,6 @@ fn test_exec_mstore8_should_store_uint8_offset_31() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_mstore8_should_store_uint8_offset_30() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -188,7 +177,6 @@ fn test_exec_mstore8_should_store_uint8_offset_30() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_mstore8_should_store_uint8_offset_31_then_uint8_offset_30() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -210,7 +198,6 @@ fn test_exec_mstore8_should_store_uint8_offset_31_then_uint8_offset_30() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_mstore8_should_store_last_uint8_offset_31() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -230,7 +217,6 @@ fn test_exec_mstore8_should_store_last_uint8_offset_31() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_mstore8_should_store_last_uint8_offset_63() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -249,7 +235,6 @@ fn test_exec_mstore8_should_store_last_uint8_offset_63() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_msize_initial() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -264,7 +249,6 @@ fn test_msize_initial() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_msize_store_max_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -280,7 +264,6 @@ fn test_exec_msize_store_max_offset_0() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_msize_store_max_offset_1() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -296,7 +279,6 @@ fn test_exec_msize_store_max_offset_1() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_jump_valid() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
@@ -316,7 +298,6 @@ fn test_exec_jump_valid() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_jump_invalid() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
@@ -335,7 +316,6 @@ fn test_exec_jump_invalid() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_jump_out_of_bounds() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
@@ -358,7 +338,6 @@ fn test_exec_jump_out_of_bounds() {
 //
 // Remove ignore once its handled
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('exec_jump should throw error',))]
 fn test_exec_jump_inside_pushn() {
     // Given
@@ -381,7 +360,6 @@ fn test_exec_jump_inside_pushn() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_jumpi_valid_non_zero_1() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
@@ -403,7 +381,6 @@ fn test_exec_jumpi_valid_non_zero_1() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_jumpi_valid_non_zero_2() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
@@ -425,7 +402,6 @@ fn test_exec_jumpi_valid_non_zero_2() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_jumpi_valid_zero() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
@@ -449,7 +425,6 @@ fn test_exec_jumpi_valid_zero() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_jumpi_invalid_non_zero() {
     // Given
     let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
@@ -471,7 +446,6 @@ fn test_exec_jumpi_invalid_non_zero() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_jumpi_invalid_zero() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
@@ -499,7 +473,6 @@ fn test_exec_jumpi_invalid_zero() {
 //
 // Remove ignore once its handled
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('exec_jump should throw error',))]
 fn test_exec_jumpi_inside_pushn() {
     // Given
@@ -524,7 +497,6 @@ fn test_exec_jumpi_inside_pushn() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sload_from_state() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -545,7 +517,6 @@ fn test_exec_sload_from_state() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_sload_from_storage() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
@@ -575,7 +546,6 @@ fn test_exec_sload_from_storage() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_exec_sstore_from_state() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -591,7 +561,6 @@ fn test_exec_sstore_from_state() {
     assert(machine.state.read_state(evm_address(), key).unwrap() == value, 'wrong value in state')
 }
 #[test]
-#[available_gas(2000000)]
 fn test_exec_sstore_static_call() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_read_only().build();
@@ -614,7 +583,6 @@ fn test_exec_sstore_static_call() {
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_exec_sstore_finalized() {
     // Given
     // Setting the contract address is required so that `get_contract_address` in
@@ -646,7 +614,6 @@ fn test_exec_sstore_finalized() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_gas_should_push_gas_limit_to_stack() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();

@@ -27,7 +27,6 @@ fn deploy_account(kakarot_core: ContractAddress) -> IUninitializedAccountDispatc
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_account_initialize() {
     let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
     let (native_token, kakarot_core) = setup_contracts_for_testing();
@@ -45,7 +44,6 @@ fn test_account_initialize() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 #[should_panic(expected: ('Caller not Kakarot Core address', 'ENTRYPOINT_FAILED'))]
 fn test_eoa_upgrade_from_nonkakarot() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();

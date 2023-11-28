@@ -68,7 +68,6 @@ mod MockContractUpgradeableV1 {
 }
 
 #[test]
-#[available_gas(500000)]
 fn test_upgradeable_update_contract() {
     let (contract_address, _) = deploy_syscall(
         MockContractUpgradeableV0::TEST_CLASS_HASH.try_into().unwrap(), 0, array![].span(), false

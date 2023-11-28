@@ -49,7 +49,6 @@ mod internal {
 
 
 #[test]
-#[available_gas(2000000)]
 fn test_init_should_return_an_empty_memory() {
     // When
     let mut result = MemoryTrait::new();
@@ -59,7 +58,6 @@ fn test_init_should_return_an_empty_memory() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_len_should_return_the_length_of_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -72,7 +70,6 @@ fn test_len_should_return_the_length_of_the_memory() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_store_should_add_an_element_to_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -87,7 +84,6 @@ fn test_store_should_add_an_element_to_the_memory() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_store_should_add_an_element_with_offset_to_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -102,7 +98,6 @@ fn test_store_should_add_an_element_with_offset_to_the_memory() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_store_should_add_n_elements_to_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -119,7 +114,6 @@ fn test_store_should_add_n_elements_to_the_memory() {
 
 
 #[test]
-#[available_gas(200000000)]
 fn test_store_n_no_aligned_words() {
     let mut memory = MemoryTrait::new();
     memory.store_n(array![1, 2].span(), 15);
@@ -127,7 +121,6 @@ fn test_store_n_no_aligned_words() {
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_store_n_2_aligned_words() {
     let mut memory = MemoryTrait::new();
     let bytes_arr = array![
@@ -179,7 +172,6 @@ fn test_store_n_2_aligned_words() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_load_n_internal_same_word() {
     let mut memory = MemoryTrait::new();
     memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
@@ -200,7 +192,6 @@ fn test_load_n_internal_same_word() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_load_should_load_an_element_from_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -233,21 +224,18 @@ fn test_load_should_load_an_element_from_the_memory() {
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_8() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
         8, 2 * POW_2_64, POW_2_64, 0
     );
 }
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_7() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
         7, 2 * POW_2_56, POW_2_56, 0
     );
 }
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_23() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
         23, 3 * POW_2_56, 2 * POW_2_56, 0
@@ -255,14 +243,12 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_23() {
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_33() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
         33, 4 * POW_2_8, 3 * POW_2_8, 0
     );
 }
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_63() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
         63, 0, 4 * POW_2_120, 0
@@ -270,7 +256,6 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_63() {
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_500() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
         500, 0, 0, 0
@@ -279,21 +264,18 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_500() {
 
 
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_8_and_active_segment_1() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
         8, 2 * POW_2_64, POW_2_64, 1
     );
 }
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_7_and_active_segment_2() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
         7, 2 * POW_2_56, POW_2_56, 2
     );
 }
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_23_and_active_segment_3() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
         23, 3 * POW_2_56, 2 * POW_2_56, 3
@@ -301,7 +283,6 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_23_and_active_se
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_33_and_active_segment_4() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
         33, 4 * POW_2_8, 3 * POW_2_8, 2
@@ -317,7 +298,6 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_63_and_active_se
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_500_and_active_segment_1() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
         500, 0, 0, 1
@@ -326,21 +306,18 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_500_and_active_s
 
 
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_8_and_active_segment_1_with_store() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
         8, 2 * POW_2_64, POW_2_64, 1
     );
 }
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_7_and_active_segment_2_with_store() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
         7, 2 * POW_2_56, POW_2_56, 2
     );
 }
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_23_and_active_segment_3_with_store() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
         23, 3 * POW_2_56, 2 * POW_2_56, 3
@@ -348,7 +325,6 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_23_and_active_se
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_33_and_active_segment_4_with_store() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
         33, 4 * POW_2_8, 3 * POW_2_8, 4
@@ -364,7 +340,6 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_63_and_active_se
 }
 
 #[test]
-#[available_gas(200000000)]
 fn test_load_should_load_an_element_from_the_memory_with_offset_500_and_active_segment_1_with_store() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
         500, 0, 0, 1
@@ -373,7 +348,6 @@ fn test_load_should_load_an_element_from_the_memory_with_offset_500_and_active_s
 
 
 #[test]
-#[available_gas(200000000)]
 fn test_expand__should_return_the_same_memory_and_no_cost() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -391,7 +365,6 @@ fn test_expand__should_return_the_same_memory_and_no_cost() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_expand__should_return_expanded_memory_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -410,7 +383,6 @@ fn test_expand__should_return_expanded_memory_and_cost() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_expand__should_return_expanded_memory_by_one_word_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -423,7 +395,6 @@ fn test_expand__should_return_expanded_memory_by_one_word_and_cost() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_expand__should_return_expanded_memory_by_exactly_one_word_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -436,7 +407,6 @@ fn test_expand__should_return_expanded_memory_by_exactly_one_word_and_cost() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_expand__should_return_expanded_memory_by_two_words_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -449,7 +419,6 @@ fn test_expand__should_return_expanded_memory_by_two_words_and_cost() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_ensure_length__should_return_the_same_memory_and_no_cost() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -468,7 +437,6 @@ fn test_ensure_length__should_return_the_same_memory_and_no_cost() {
 }
 
 #[test]
-#[available_gas(20000000000)]
 fn test_ensure_length__should_return_expanded_memory_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -487,7 +455,6 @@ fn test_ensure_length__should_return_expanded_memory_and_cost() {
 }
 
 #[test]
-#[available_gas(20000000000)]
 fn test_expand_and_load_should_return_expanded_memory_and_element_and_cost() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -508,7 +475,6 @@ fn test_expand_and_load_should_return_expanded_memory_and_element_and_cost() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_store_padded_segment_should_not_change_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -523,7 +489,6 @@ fn test_store_padded_segment_should_not_change_the_memory() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_store_padded_segment_should_expand_memory() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -540,7 +505,6 @@ fn test_store_padded_segment_should_expand_memory() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_store_padded_segment_should_add_n_elements_to_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -561,7 +525,6 @@ fn test_store_padded_segment_should_add_n_elements_to_the_memory() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_store_padded_segment_should_add_n_elements_padded_to_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -586,7 +549,6 @@ fn test_store_padded_segment_should_add_n_elements_padded_to_the_memory() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_store_padded_segment_should_add_n_elements_padded_with_offset_to_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -611,7 +573,6 @@ fn test_store_padded_segment_should_add_n_elements_padded_with_offset_to_the_mem
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_store_padded_segment_should_add_n_elements_padded_with_offset_between_two_words_to_the_memory() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -644,7 +605,6 @@ fn test_store_padded_segment_should_add_n_elements_padded_with_offset_between_tw
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_store_byte_should_store_byte_at_offset() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -658,7 +618,6 @@ fn test_store_byte_should_store_byte_at_offset() {
     assert(memory.size() == 32, 'Wrong memory length');
 }
 #[test]
-#[available_gas(20000000)]
 fn test_store_byte_should_store_byte_at_offset_2() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -673,7 +632,6 @@ fn test_store_byte_should_store_byte_at_offset_2() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_store_byte_should_store_byte_at_offset_in_existing_word() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -690,7 +648,6 @@ fn test_store_byte_should_store_byte_at_offset_in_existing_word() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_store_byte_should_store_byte_at_offset_in_new_word() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -706,7 +663,6 @@ fn test_store_byte_should_store_byte_at_offset_in_new_word() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_store_byte_should_store_byte_at_offset_in_new_word_with_existing_value_in_previous_word() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -723,7 +679,6 @@ fn test_store_byte_should_store_byte_at_offset_in_new_word_with_existing_value_i
 }
 
 #[test]
-#[available_gas(20000)]
 fn test_set_active_segment() {
     // Given
     let mut memory = MemoryTrait::new();
@@ -737,7 +692,6 @@ fn test_set_active_segment() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_memory_store_byte_with_active_segment() {
     // Given
     let mut memory = MemoryTrait::new();

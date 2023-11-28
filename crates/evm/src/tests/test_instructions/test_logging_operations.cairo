@@ -8,7 +8,6 @@ use integer::BoundedInt;
 use utils::helpers::u256_to_bytes_array;
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_log0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -37,7 +36,6 @@ fn test_exec_log0() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_log1() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -68,7 +66,6 @@ fn test_exec_log1() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_log2() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -101,7 +98,6 @@ fn test_exec_log2() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_log3() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -139,7 +135,6 @@ fn test_exec_log3() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_log4() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -177,7 +172,6 @@ fn test_exec_log4() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_log1_read_only_context() {
     // Given
     let mut machine = MachineBuilderTestTrait::new().with_read_only().build();
@@ -200,7 +194,6 @@ fn test_exec_log1_read_only_context() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_log1_size_0_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -229,7 +222,6 @@ fn test_exec_log1_size_0_offset_0() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_log1_size_too_big() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -252,7 +244,6 @@ fn test_exec_log1_size_too_big() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_log1_offset_too_big() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -275,7 +266,6 @@ fn test_exec_log1_offset_too_big() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_log_multiple_events() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();

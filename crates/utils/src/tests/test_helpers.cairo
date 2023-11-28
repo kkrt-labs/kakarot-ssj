@@ -5,7 +5,6 @@ use utils::helpers::{ByteArrayExTrait};
 use utils::helpers;
 
 #[test]
-#[available_gas(2000000000)]
 fn test_u256_to_bytes_array() {
     let value: u256 = 256;
 
@@ -14,7 +13,6 @@ fn test_u256_to_bytes_array() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_load_word() {
     // No bytes to load
     let res0 = helpers::load_word(0, ArrayTrait::new().span());
@@ -70,7 +68,6 @@ fn test_load_word() {
 
 
 #[test]
-#[available_gas(2000000000)]
 fn test_split_word_le() {
     // Test with 0 value and 0 len
     let res0 = helpers::split_word_le(0, 0);
@@ -112,7 +109,6 @@ fn test_split_word_le() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_split_word() {
     // Test with 0 value and 0 len
     let mut dst0: Array<u8> = ArrayTrait::new();
@@ -158,7 +154,6 @@ fn test_split_word() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_append_n() {
     // Given
     let mut original: Array<u8> = array![1, 2, 3, 4];
@@ -171,7 +166,6 @@ fn test_append_n() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_append_unique() {
     let mut arr = array![1, 2, 3];
     arr.append_unique(4);
@@ -181,7 +175,6 @@ fn test_append_unique() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_reverse_bytes_u256() {
     let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
     let res = value.reverse_endianness();
@@ -192,7 +185,6 @@ fn test_reverse_bytes_u256() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_split_u256_into_u64_little() {
     let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
     let ((high_h, low_h), (high_l, low_l)) = value.split_into_u64_le();
@@ -203,7 +195,6 @@ fn test_split_u256_into_u64_little() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_pack_bytes_le_bytes31() {
     let mut arr = array![0x11, 0x22, 0x33, 0x44];
     let res = ByteArrayExTrait::from_bytes(arr.span());
@@ -220,7 +211,6 @@ fn test_pack_bytes_le_bytes31() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_pack_bytes_ge_bytes31() {
     let mut arr = array![
         0x01,
@@ -272,7 +262,6 @@ fn test_pack_bytes_ge_bytes31() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_bytearray_append_span_bytes() {
     let bytes = array![0x01, 0x02, 0x03, 0x04];
     let mut byte_arr: ByteArray = Default::default();
@@ -289,7 +278,6 @@ fn test_bytearray_append_span_bytes() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_byte_array_into_bytes() {
     let input = array![
         0x01,
@@ -334,7 +322,6 @@ fn test_byte_array_into_bytes() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_u32_from_bytes() {
     let input: Array<u8> = array![0xf4, 0x32, 0x15, 0x62];
     let res: Option<u32> = U32Trait::from_bytes(input.span());
@@ -344,7 +331,6 @@ fn test_u32_from_bytes() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_u32_from_bytes_too_big() {
     let input: Array<u8> = array![0xf4, 0x32, 0x15, 0x62, 0x01];
     let res: Option<u32> = U32Trait::from_bytes(input.span());
@@ -353,7 +339,6 @@ fn test_u32_from_bytes_too_big() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_u32_to_bytes_full() {
     let input: u32 = 0xf4321562;
     let res: Span<u8> = input.to_bytes();
@@ -366,7 +351,6 @@ fn test_u32_to_bytes_full() {
 }
 
 #[test]
-#[available_gas(2000000)]
 fn test_u32_to_bytes_partial() {
     let input: u32 = 0xf43215;
     let res: Span<u8> = input.to_bytes();
@@ -379,7 +363,6 @@ fn test_u32_to_bytes_partial() {
 
 
 #[test]
-#[available_gas(2000000)]
 fn test_u32_to_bytes_leading_zeros() {
     let input: u32 = 0x00f432;
     let res: Span<u8> = input.to_bytes();
@@ -391,7 +374,6 @@ fn test_u32_to_bytes_leading_zeros() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_u32_bytes_used() {
     let len = 0x1234;
     let bytes_count = len.bytes_used();
@@ -400,7 +382,6 @@ fn test_u32_bytes_used() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_u32_bytes_used_leading_zeroes() {
     let len = 0x001234;
     let bytes_count = len.bytes_used();
@@ -409,7 +390,6 @@ fn test_u32_bytes_used_leading_zeroes() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_compute_msg_hash() {
     let msg = 0xabcdef_u32.to_bytes();
     let expected_hash = 0x800d501693feda2226878e1ec7869eef8919dbc5bd10c2bcd031b94d73492860_u256;
@@ -419,7 +399,6 @@ fn test_compute_msg_hash() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_bytearray_to_64_words_partial() {
     let input = ByteArrayExTrait::from_bytes(array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span());
     let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
@@ -429,7 +408,6 @@ fn test_bytearray_to_64_words_partial() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_bytearray_to_64_words_full() {
     let input = ByteArrayExTrait::from_bytes(
         array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span()
@@ -443,7 +421,6 @@ fn test_bytearray_to_64_words_full() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_span_u8_to_64_words_partial() {
     let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span();
     let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
@@ -453,7 +430,6 @@ fn test_span_u8_to_64_words_partial() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_span_u8_to_64_words_full() {
     let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span();
     let (u64_words, pending_word, pending_word_len) = input.to_u64_words();

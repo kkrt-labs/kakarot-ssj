@@ -27,7 +27,6 @@ use utils::traits::{EthAddressIntoU256};
 // *************************************************************************
 
 #[test]
-#[available_gas(20000000)]
 fn test_address_basic() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -41,7 +40,6 @@ fn test_address_basic() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[ignore]
 fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls)-> C (smart contract)
 // TODO: Once we have ability to do nested smart contract calls, check that in `C`s context `ADDRESS` should return address `B`
@@ -52,7 +50,6 @@ fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls
 // 0x31: BALANCE
 // *************************************************************************
 #[test]
-#[available_gas(5000000)]
 fn test_exec_balance_eoa() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
@@ -74,7 +71,6 @@ fn test_exec_balance_eoa() {
 }
 
 #[test]
-#[available_gas(5000000)]
 fn test_exec_balance_zero() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
@@ -93,7 +89,6 @@ fn test_exec_balance_zero() {
 }
 
 #[test]
-#[available_gas(5000000)]
 fn test_exec_balance_contract_account() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
@@ -119,7 +114,6 @@ fn test_exec_balance_contract_account() {
 // 0x33: CALLER
 // *************************************************************************
 #[test]
-#[available_gas(5000000)]
 fn test_caller() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -137,7 +131,6 @@ fn test_caller() {
 // 0x32: ORIGIN
 // *************************************************************************
 #[test]
-#[available_gas(20000000)]
 fn test_origin() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets()
@@ -156,7 +149,6 @@ fn test_origin() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_origin_nested_ctx() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -175,7 +167,6 @@ fn test_origin_nested_ctx() {
 // *************************************************************************
 
 #[test]
-#[available_gas(1200000)]
 fn test_exec_callvalue() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -193,7 +184,6 @@ fn test_exec_callvalue() {
 // *************************************************************************
 
 #[test]
-#[available_gas(20000000)]
 fn test_calldataload() {
     // Given
     let calldata = u256_to_bytes_array(
@@ -216,7 +206,6 @@ fn test_calldataload() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_calldataload_with_offset() {
     // Given
     let calldata = u256_to_bytes_array(
@@ -241,7 +230,6 @@ fn test_calldataload_with_offset() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_calldataload_with_offset_beyond_calldata() {
     // Given
     let calldata = u256_to_bytes_array(
@@ -261,7 +249,6 @@ fn test_calldataload_with_offset_beyond_calldata() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_calldataload_with_function_selector() {
     // Given
     let calldata = array![0x6d, 0x4c, 0xe6, 0x3c];
@@ -282,7 +269,6 @@ fn test_calldataload_with_function_selector() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_calldataload_with_offset_conversion_error() {
     // Given
     let calldata = u256_to_bytes_array(
@@ -308,7 +294,6 @@ fn test_calldataload_with_offset_conversion_error() {
 // *************************************************************************
 
 #[test]
-#[available_gas(20000000)]
 fn test_calldata_size() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -328,7 +313,6 @@ fn test_calldata_size() {
 // *************************************************************************
 
 #[test]
-#[available_gas(20000000)]
 fn test_calldatacopy_type_conversion_error() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -349,19 +333,16 @@ fn test_calldatacopy_type_conversion_error() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_calldatacopy_basic() {
     test_calldatacopy(32, 0, 3, array![4, 5, 6].span());
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_calldatacopy_with_offset() {
     test_calldatacopy(32, 2, 1, array![6].span());
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_calldatacopy_with_out_of_bound_bytes() {
     // For out of bound bytes, 0s will be copied.
     let mut expected = array![4, 5, 6];
@@ -371,7 +352,6 @@ fn test_calldatacopy_with_out_of_bound_bytes() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_calldatacopy_with_out_of_bound_bytes_multiple_words() {
     // For out of bound bytes, 0s will be copied.
     let mut expected = array![4, 5, 6];
@@ -432,7 +412,6 @@ fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Spa
 // *************************************************************************
 
 #[test]
-#[available_gas(20000000)]
 fn test_codesize() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
@@ -452,7 +431,6 @@ fn test_codesize() {
 // *************************************************************************
 
 #[test]
-#[available_gas(20000000)]
 fn test_codecopy_type_conversion_error() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
@@ -475,25 +453,21 @@ fn test_codecopy_type_conversion_error() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_codecopy_basic() {
     test_codecopy(32, 0, 0);
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_codecopy_with_offset() {
     test_codecopy(32, 2, 0);
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_codecopy_with_out_of_bound_bytes() {
     test_codecopy(32, 0, 8);
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_codecopy_with_out_of_bound_offset() {
     test_codecopy(0, 0xFFFFFFFE, 2);
 }
@@ -552,7 +526,6 @@ fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
 // *************************************************************************
 
 #[test]
-#[available_gas(20000000)]
 fn test_gasprice() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -569,7 +542,6 @@ fn test_gasprice() {
 // 0x3B - EXTCODESIZE
 // *************************************************************************
 #[test]
-#[available_gas(20000000)]
 fn test_exec_extcodesize_eoa() {
     // Given
     let evm_address = evm_address();
@@ -588,7 +560,6 @@ fn test_exec_extcodesize_eoa() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_extcodesize_ca_empty() {
     // Given
     let evm_address = evm_address();
@@ -610,7 +581,6 @@ fn test_exec_extcodesize_ca_empty() {
 
 
 #[test]
-#[available_gas(20000000000)]
 fn test_exec_extcodesize_ca_with_bytecode() {
     // Given
     let evm_address = evm_address();
@@ -635,7 +605,6 @@ fn test_exec_extcodesize_ca_with_bytecode() {
 
 
 #[test]
-#[available_gas(2000000000)]
 fn test_exec_extcodecopy_ca() {
     // Given
     let evm_address = evm_address();
@@ -667,7 +636,6 @@ fn test_exec_extcodecopy_ca() {
 // 0x3C - EXTCODECOPY
 // *************************************************************************
 #[test]
-#[available_gas(2000000000000)]
 fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
     // Given
     let evm_address = evm_address();
@@ -746,7 +714,6 @@ fn test_exec_extcodecopy_account_none() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_returndatasize() {
     // Given
     let return_data: Array<u8> = array![1, 2, 3, 4, 5];
@@ -770,7 +737,6 @@ fn test_returndatasize() {
 // *************************************************************************
 
 #[test]
-#[available_gas(20000000)]
 fn test_returndata_copy_type_conversion_error() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
@@ -790,31 +756,26 @@ fn test_returndata_copy_type_conversion_error() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_returndata_copy_overflowing_add_error() {
     test_returndata_copy(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_returndata_copy_basic() {
     test_returndata_copy(32, 0, 0);
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_returndata_copy_with_offset() {
     test_returndata_copy(32, 2, 0);
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_returndata_copy_with_out_of_bound_bytes() {
     test_returndata_copy(32, 30, 10);
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_returndata_copy_with_multiple_words() {
     test_returndata_copy(32, 0, 33);
 }
@@ -928,7 +889,6 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
 // 0x3F: EXTCODEHASH
 // *************************************************************************
 #[test]
-#[available_gas(20000000)]
 fn test_exec_extcodehash_precompile() {
     // Given
     let evm_address = 0x05.try_into().unwrap();
@@ -947,7 +907,6 @@ fn test_exec_extcodehash_precompile() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_extcodehash_selfdestructed() {
     // Given
     let evm_address = evm_address();
@@ -983,7 +942,6 @@ fn test_exec_extcodehash_selfdestructed() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_extcodehash_eoa() {
     // Given
     let evm_address = evm_address();
@@ -1008,7 +966,6 @@ fn test_exec_extcodehash_eoa() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_extcodehash_ca_empty() {
     // Given
     let evm_address = evm_address();
@@ -1034,7 +991,6 @@ fn test_exec_extcodehash_ca_empty() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_exec_extcodehash_unknown_account() {
     // Given
     let evm_address = evm_address();
@@ -1052,7 +1008,6 @@ fn test_exec_extcodehash_unknown_account() {
 }
 
 #[test]
-#[available_gas(20000000000)]
 fn test_exec_extcodehash_ca_with_bytecode() {
     // Given
     let evm_address = evm_address();
@@ -1080,7 +1035,6 @@ fn test_exec_extcodehash_ca_with_bytecode() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_exec_extcodehash_precompiles() {
     // Given
     let evm_address = evm_address();
