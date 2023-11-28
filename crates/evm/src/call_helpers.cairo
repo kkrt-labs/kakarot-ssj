@@ -2,6 +2,7 @@
 use cmp::min;
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
+
 use evm::context::{
     ExecutionContext, Status, CallContext, CallContextTrait, ExecutionContextType,
     ExecutionContextTrait
@@ -19,7 +20,7 @@ use utils::traits::{BoolIntoNumeric, U256TryIntoResult};
 
 /// CallArgs is a subset of CallContext
 /// Created in order to simplify setting up the call opcodes
-#[derive(Drop)]
+#[derive(Drop, PartialEq)]
 struct CallArgs {
     caller: Address,
     code_address: Address,

@@ -1,4 +1,5 @@
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
+
 use evm::errors::{
     EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, INSUFFICIENT_BALANCE, BALANCE_OVERFLOW
 };
@@ -222,6 +223,7 @@ impl StateImpl of StateTrait {
     #[inline(always)]
     fn set_account(ref self: State, account: Account) {
         let evm_address = account.evm_address();
+
         self.accounts.write(evm_address.into(), account)
     }
 

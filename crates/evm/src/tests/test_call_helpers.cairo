@@ -1,0 +1,297 @@
+use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+
+use contracts::tests::test_utils::setup_contracts_for_testing;
+use core::box::BoxTrait;
+use core::nullable::NullableTrait;
+use core::result::ResultTrait;
+use core::traits::Destruct;
+use core::traits::TryInto;
+
+use evm::call_helpers::{MachineCallHelpers, CallType, CallArgs};
+use evm::machine::MachineTrait;
+use evm::model::{Address, account::{AccountBuilderTrait}};
+use evm::stack::StackTrait;
+use evm::state::StateTrait;
+use evm::tests::test_utils::{MachineBuilderTestTrait, test_address, other_evm_address};
+use starknet::testing::set_contract_address;
+use starknet::{contract_address_const, EthAddress};
+
+#[test]
+#[available_gas(20000000)]
+fn test_prepare_call_type_call() {
+    let (_, kakarot_core) = setup_contracts_for_testing();
+
+    set_contract_address(kakarot_core.contract_address);
+
+    let caller_address = EthAddress { address: 0xabde2 };
+    let caller_address = Address {
+        evm: caller_address, starknet: kakarot_core.compute_starknet_address(caller_address)
+    };
+
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_caller(caller_address)
+        .build();
+
+    let gas: u128 = 1000;
+    let address = other_evm_address();
+    let value = 100;
+    let args_offset = 5;
+    let args_size = 1;
+    let ret_offset: usize = 15;
+    let ret_size: usize = 20;
+
+    machine.stack.push(ret_size.into());
+    machine.stack.push(ret_offset.into());
+    machine.stack.push(args_size);
+    machine.stack.push(args_offset);
+    machine.stack.push(value);
+    machine.stack.push(address.address.into());
+    machine.stack.push(gas.into());
+
+    let expected_call_args = CallArgs {
+        caller: test_address(),
+        code_address: Address {
+            evm: address, starknet: kakarot_core.compute_starknet_address(address)
+        },
+        to: Address { evm: address, starknet: kakarot_core.compute_starknet_address(address) },
+        gas,
+        value,
+        calldata: array![0x0].span(),
+        ret_offset,
+        ret_size,
+        should_transfer: true
+    };
+
+    let call_args = machine.prepare_call(@CallType::Call).unwrap();
+
+    assert(call_args == expected_call_args, 'wrong calls_args prepared');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_prepare_call_type_delegate_call() {
+    let (_, kakarot_core) = setup_contracts_for_testing();
+
+    let caller_address = EthAddress { address: 0xabde2 };
+    let caller_address = Address {
+        evm: caller_address, starknet: kakarot_core.compute_starknet_address(caller_address)
+    };
+
+    set_contract_address(kakarot_core.contract_address);
+
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_caller(caller_address)
+        .build();
+
+    let gas: u128 = 1000;
+    let address = other_evm_address();
+    let args_offset = 5;
+    let args_size = 1;
+    let ret_offset: usize = 15;
+    let ret_size: usize = 20;
+
+    machine.stack.push(ret_size.into());
+    machine.stack.push(ret_offset.into());
+    machine.stack.push(args_size);
+    machine.stack.push(args_offset);
+    machine.stack.push(address.address.into());
+    machine.stack.push(gas.into());
+
+    let expected_call_args = CallArgs {
+        caller: caller_address,
+        code_address: Address {
+            evm: address, starknet: kakarot_core.compute_starknet_address(address)
+        },
+        to: Address {
+            evm: test_address().evm,
+            starknet: kakarot_core.compute_starknet_address(test_address().evm)
+        },
+        gas,
+        value: machine.call_ctx().value,
+        calldata: array![0x0].span(),
+        ret_offset,
+        ret_size,
+        should_transfer: false
+    };
+
+    let call_args = machine.prepare_call(@CallType::DelegateCall).unwrap();
+
+    assert(call_args == expected_call_args, 'wrong calls_args prepared');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_prepare_call_type_call_code() {
+    let (_, kakarot_core) = setup_contracts_for_testing();
+
+    let caller_address = EthAddress { address: 0xabde2 };
+    let caller_address = Address {
+        evm: caller_address, starknet: kakarot_core.compute_starknet_address(caller_address)
+    };
+
+    set_contract_address(kakarot_core.contract_address);
+
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_caller(caller_address)
+        .build();
+
+    let gas: u128 = 1000;
+    let address = other_evm_address();
+    let value = 100;
+    let args_offset = 5;
+    let args_size = 1;
+    let ret_offset: usize = 15;
+    let ret_size: usize = 20;
+
+    machine.stack.push(ret_size.into());
+    machine.stack.push(ret_offset.into());
+    machine.stack.push(args_size);
+    machine.stack.push(args_offset);
+    machine.stack.push(value);
+    machine.stack.push(address.address.into());
+    machine.stack.push(gas.into());
+
+    let expected_call_args = CallArgs {
+        caller: test_address(),
+        code_address: Address {
+            evm: address, starknet: kakarot_core.compute_starknet_address(address)
+        },
+        to: Address {
+            evm: test_address().evm,
+            starknet: kakarot_core.compute_starknet_address(test_address().evm)
+        },
+        gas,
+        value: 100,
+        calldata: array![0x0].span(),
+        ret_offset,
+        ret_size,
+        should_transfer: false
+    };
+
+    let call_args = machine.prepare_call(@CallType::CallCode).unwrap();
+
+    assert(call_args == expected_call_args, 'wrong calls_args prepared');
+}
+
+#[test]
+#[available_gas(20000000)]
+fn test_prepare_call_type_static_call() {
+    let (_, kakarot_core) = setup_contracts_for_testing();
+
+    let caller_address = EthAddress { address: 0xabde2 };
+    let caller_address = Address {
+        evm: caller_address, starknet: kakarot_core.compute_starknet_address(caller_address)
+    };
+
+    set_contract_address(kakarot_core.contract_address);
+
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_caller(caller_address)
+        .build();
+
+    let gas: u128 = 1000;
+    let address = other_evm_address();
+    let args_offset = 5;
+    let args_size = 1;
+    let ret_offset: usize = 15;
+    let ret_size: usize = 20;
+
+    machine.stack.push(ret_size.into());
+    machine.stack.push(ret_offset.into());
+    machine.stack.push(args_size);
+    machine.stack.push(args_offset);
+    machine.stack.push(address.address.into());
+    machine.stack.push(gas.into());
+
+    let expected_call_args = CallArgs {
+        caller: test_address(),
+        code_address: Address {
+            evm: address, starknet: kakarot_core.compute_starknet_address(address)
+        },
+        to: Address {
+            evm: other_evm_address(),
+            starknet: kakarot_core.compute_starknet_address(other_evm_address())
+        },
+        gas,
+        value: 0,
+        calldata: array![0x0].span(),
+        ret_offset,
+        ret_size,
+        should_transfer: false
+    };
+
+    let call_args = machine.prepare_call(@CallType::StaticCall).unwrap();
+
+    assert(call_args == expected_call_args, 'wrong calls_args prepared');
+}
+
+
+#[test]
+#[available_gas(20000000)]
+fn test_init_call_sub_ctx() {
+    let (_, kakarot_core) = setup_contracts_for_testing();
+
+    set_contract_address(kakarot_core.contract_address);
+
+    let caller_address = EthAddress { address: 0xabde2 };
+    let caller_address = Address {
+        evm: caller_address, starknet: kakarot_core.compute_starknet_address(caller_address)
+    };
+
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_caller(caller_address)
+        .build();
+
+    let gas: u128 = 1000;
+    let address = other_evm_address();
+    let value = 100;
+    let args_offset = 5;
+    let args_size = 1;
+    let ret_offset: usize = 15;
+    let ret_size: usize = 20;
+
+    let call_args = CallArgs {
+        caller: test_address(),
+        code_address: Address {
+            evm: address, starknet: kakarot_core.compute_starknet_address(address)
+        },
+        to: Address { evm: address, starknet: kakarot_core.compute_starknet_address(address) },
+        gas,
+        value,
+        calldata: array![0x0].span(),
+        ret_offset,
+        ret_size,
+        should_transfer: true
+    };
+
+    let account = AccountBuilderTrait::new(machine.address()).set_balance(1000).build();
+    machine.state.set_account(account);
+
+    let sender_address = machine.address().evm;
+
+    let current_ctx_prev = machine.current_ctx.as_snapshot().unbox();
+    let ctx_count_prev = machine.ctx_count;
+
+    let sender_balance_prev = machine.state.get_account(sender_address).balance;
+    let reciver_balance_prev = machine.state.get_account(address).balance;
+
+    machine.init_call_sub_ctx(call_args, machine.call_ctx().read_only).unwrap();
+
+    let ctx_count_after = machine.ctx_count;
+
+    let sender_balance_after = machine.state.get_account(sender_address).balance;
+    let reciver_balance_after = machine.state.get_account(address).balance;
+
+    assert(
+        machine
+            .address() == Address {
+                evm: address, starknet: kakarot_core.compute_starknet_address(address)
+            },
+        'wrong execution context address'
+    );
+
+    assert(sender_balance_prev - sender_balance_after == 100, 'wrong sender balance');
+    assert(reciver_balance_after - reciver_balance_prev == 100, 'wrong reciever balance');
+
+    assert!(ctx_count_after - ctx_count_prev == 1, "ctx count increased by wrong value");
+}

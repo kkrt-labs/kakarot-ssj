@@ -4,6 +4,7 @@ use contracts::contract_account::{
 use contracts::kakarot_core::kakarot::KakarotCore::KakarotCoreInternal;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
+
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
 use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::{Address, AddressTrait, AccountType};
@@ -69,6 +70,12 @@ impl AccountBuilderImpl of AccountBuilderTrait {
     #[inline(always)]
     fn set_nonce(mut self: AccountBuilder, nonce: u64) -> AccountBuilder {
         self.account.nonce = nonce;
+        self
+    }
+
+    #[inline(always)]
+    fn set_balance(mut self: AccountBuilder, balance: u256) -> AccountBuilder {
+        self.account.balance = balance;
         self
     }
 
