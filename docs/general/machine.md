@@ -73,6 +73,7 @@ classDiagram
       call_ctx: Box~CallContext~,
       return_data: Span~u8~,
       parent_ctx: Nullable~ExecutionContext~,
+      gas_used: u128,
     }
 
     class ExecutionContextType {
