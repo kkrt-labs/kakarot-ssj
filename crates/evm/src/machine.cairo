@@ -94,10 +94,7 @@ impl MachineImpl of MachineTrait {
 
     #[inline(always)]
     fn id(ref self: Machine) -> usize {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let id = current_execution_ctx.id();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        id
+        self.current_ctx.as_snapshot().unbox().id()
     }
 
     /// Sets the current execution context being executed by the machine.
@@ -113,10 +110,7 @@ impl MachineImpl of MachineTrait {
 
     #[inline(always)]
     fn pc(ref self: Machine) -> usize {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let pc = current_execution_ctx.pc();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        pc
+        self.current_ctx.as_snapshot().unbox().pc()
     }
 
     #[inline(always)]
@@ -135,35 +129,22 @@ impl MachineImpl of MachineTrait {
 
     #[inline(always)]
     fn reverted(ref self: Machine) -> bool {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let reverted = current_execution_ctx.reverted();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        reverted
+        self.current_ctx.as_snapshot().unbox().reverted()
     }
 
     #[inline(always)]
     fn stopped(ref self: Machine) -> bool {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let stopped = current_execution_ctx.stopped();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        stopped
+        self.current_ctx.as_snapshot().unbox().stopped()
     }
 
     #[inline(always)]
     fn status(ref self: Machine) -> Status {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let status = current_execution_ctx.status();
-
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        status
+        self.current_ctx.as_snapshot().unbox().status()
     }
 
     #[inline(always)]
     fn call_ctx(ref self: Machine) -> CallContext {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let call_ctx = current_execution_ctx.call_ctx.unbox();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        call_ctx
+        (*self.current_ctx.as_snapshot().unbox().call_ctx).unbox()
     }
 
     /// Returns from the sub context by setting the current context
@@ -196,10 +177,7 @@ impl MachineImpl of MachineTrait {
 
     #[inline(always)]
     fn return_data(ref self: Machine) -> Span<u8> {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let return_data = current_execution_ctx.return_data;
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        return_data
+        *self.current_ctx.as_snapshot().unbox().return_data
     }
 
     /// Stops the current execution context.
@@ -213,60 +191,47 @@ impl MachineImpl of MachineTrait {
 
     #[inline(always)]
     fn address(ref self: Machine) -> Address {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let evm_address = current_execution_ctx.address();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        evm_address
+        self.current_ctx.as_snapshot().unbox().address()
     }
 
     #[inline(always)]
     fn caller(ref self: Machine) -> Address {
-        let current_call_ctx = self.call_ctx();
-        current_call_ctx.caller()
+        self.call_ctx().caller()
     }
 
     #[inline(always)]
     fn origin(ref self: Machine) -> Address {
-        let mut current_execution_ctx = self.current_ctx.unbox();
-        let origin = current_execution_ctx.origin();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        origin
+        self.current_ctx.as_snapshot().unbox().origin()
     }
 
     #[inline(always)]
     fn read_only(ref self: Machine) -> bool {
-        let current_call_ctx = self.call_ctx();
-        current_call_ctx.read_only()
+        self.call_ctx().read_only()
     }
 
     #[inline(always)]
     fn gas_limit(ref self: Machine) -> u128 {
-        let current_call_ctx = self.call_ctx();
-        current_call_ctx.gas_limit()
+        self.call_ctx().gas_limit()
     }
 
     #[inline(always)]
     fn gas_price(ref self: Machine) -> u128 {
-        let current_call_ctx = self.call_ctx();
-        current_call_ctx.gas_price()
+        self.call_ctx().gas_price()
     }
 
     #[inline(always)]
     fn value(ref self: Machine) -> u256 {
-        let current_call_ctx = self.call_ctx();
-        current_call_ctx.value()
+        self.call_ctx().value()
     }
 
     #[inline(always)]
     fn bytecode(ref self: Machine) -> Span<u8> {
-        let current_call_ctx = self.call_ctx();
-        current_call_ctx.bytecode()
+        self.call_ctx().bytecode()
     }
 
     #[inline(always)]
     fn calldata(ref self: Machine) -> Span<u8> {
-        let current_call_ctx = self.call_ctx();
-        current_call_ctx.calldata()
+        self.call_ctx().calldata()
     }
 
 
@@ -289,28 +254,19 @@ impl MachineImpl of MachineTrait {
     /// Returns the current execution context type (root, call or create).
     #[inline(always)]
     fn ctx_type(ref self: Machine) -> ExecutionContextType {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let ctx_type = current_execution_ctx.ctx_type();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        ctx_type
+        self.current_ctx.as_snapshot().unbox().ctx_type()
     }
 
     /// Returns whether the current execution context is the root context.
     #[inline(always)]
     fn is_root(ref self: Machine) -> bool {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let is_root = current_execution_ctx.is_root();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        is_root
+        self.current_ctx.as_snapshot().unbox().is_root()
     }
 
     /// Returns whether the current execution context is a call context.
     #[inline(always)]
     fn is_call(ref self: Machine) -> bool {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let is_call = current_execution_ctx.is_call();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        is_call
+        self.current_ctx.as_snapshot().unbox().is_call()
     }
 
     /// Sets the `return_data` field of the appropriate execution context,

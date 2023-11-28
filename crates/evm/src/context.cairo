@@ -275,9 +275,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     /// * `self` - The `ExecutionContext` instance to read the data from.
     #[inline(always)]
     fn read_only(self: @ExecutionContext) -> bool {
-        let read_only = (*self.call_ctx).unbox().read_only();
-
-        read_only
+        self.call_ctx().read_only()
     }
 
     #[inline(always)]
@@ -338,19 +336,16 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         *self.program_counter
     }
 
-    fn origin(ref self: ExecutionContext) -> Address {
+    fn origin(self: @ExecutionContext) -> Address {
         if (self.is_root()) {
             return self.call_ctx().caller();
         }
         // If the current execution context is not root, then it MUST have a parent_context
         // We're able to deref the nullable pointer without risk of panic
-        let mut parent_context = self.parent_ctx.deref();
+        let mut parent_context = self.parent_ctx.as_snapshot().deref();
 
         // Entering a recursion
         let origin = parent_context.origin();
-
-        // Recursively reboxing parent contexts
-        self.parent_ctx = NullableTrait::new(parent_context);
 
         // Return self.call_context().caller() where self is the root context
         origin
