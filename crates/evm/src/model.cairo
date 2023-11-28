@@ -64,7 +64,6 @@ struct ExecutionResult {
     destroyed_contracts: Span<EthAddress>,
     events: Span<Event>,
     state: State,
-    error: Option<EVMError>,
 }
 
 /// An EVM Account is either an EOA or a Contract Account.  In both cases, the

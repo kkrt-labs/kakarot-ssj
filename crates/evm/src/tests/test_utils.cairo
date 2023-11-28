@@ -30,7 +30,6 @@ impl MachineBuilderTestImpl of MachineBuilderTestTrait {
                 state: Default::default(),
                 stack: Default::default(),
                 memory: Default::default(),
-                error: Option::None,
             }
         }
     }

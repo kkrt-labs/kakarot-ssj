@@ -1,11 +1,17 @@
 use contracts::tests::test_utils as contract_utils;
-use evm::errors::EVMErrorTrait;
+use core::traits::TryInto;
+use evm::errors::{EVMError, EVMErrorTrait, STACK_OVERFLOW};
 use evm::execution::execute;
+use evm::interpreter::{EVMInterpreter, EVMInterpreterTrait};
+use evm::machine::{MachineTrait};
 use evm::model::eoa::EOATrait;
+use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use evm::tests::test_utils::{evm_address, other_evm_address};
+use evm::tests::test_utils::{evm_address, other_evm_address, MachineBuilderTestTrait};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::testing::set_nonce;
+use utils::helpers::U256Trait;
+use utils::traits::EthAddressIntoU256;
 
 #[test]
 fn test_execute_value_transfer() {
@@ -26,10 +32,6 @@ fn test_execute_value_transfer() {
         read_only: false,
         is_deploy_tx: false,
     );
-    match exec_result.error {
-        Option::Some(error) => panic_with_felt252(error.to_string()),
-        Option::None => {}
-    }
     // `commit_state` is applied in `eth_send_tx` only - to test that `execute` worked correctly, we manually apply it here.
     exec_result.state.commit_state();
 
@@ -38,4 +40,91 @@ fn test_execute_value_transfer() {
 
     assert(sender_balance == 8000, 'wrong sender balance');
     assert(recipient_balance == 2000, 'wrong recipient balance');
+}
+
+#[test]
+fn test_run_evm_error_revert() {
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    // PUSH1 0x01
+    let mut bytecode = array![0x60, 0x01].span();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+    let mut interpreter = EVMInterpreter {};
+    // When - stack already full
+    machine.stack.len.insert(0, 1024);
+    interpreter.run(ref machine);
+
+    assert_eq!(machine.reverted(), true);
+    let error = machine.return_data();
+    assert(
+        error == Into::<felt252, u256>::into(STACK_OVERFLOW).to_bytes(), 'expected stack overflow',
+    );
+}
+
+#[test]
+fn test_run_evm_error_revert_subcontext() {
+    let mut interpreter = EVMInterpreter {};
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    // Set machine bytecode
+    // (call 0xffffff 0x100 0 0 0 0 1)
+    let bytecode = array![
+        0x60,
+        0x01,
+        0x60,
+        0x00,
+        0x60,
+        0x00,
+        0x60,
+        0x00,
+        0x60,
+        0x00,
+        0x61,
+        0x01,
+        0x00,
+        0x62,
+        0xff,
+        0xff,
+        0xff,
+        // CALL
+        0xf1,
+        0x60, // PUSH1 0x69 (value)
+        0x01,
+        0x60, // PUSH1 0x01 (key)
+        0x69,
+        0x55, // SSTORE
+        0x00 //STOP
+    ]
+        .span();
+    // we need to deploy this account so that it's usable directly by the machine
+    let mut caller_account = contract_utils::deploy_contract_account(evm_address(), bytecode);
+    let mut called_account = contract_utils::deploy_contract_account(
+        other_evm_address(), array![0xFD].span() // REVERT
+    );
+
+    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+
+    interpreter.run(ref machine);
+
+    machine.state.commit_state();
+    assert_eq!(machine.state.read_state(evm_address(), 0x69).expect('couldnt read state'), 0x01);
+    let error = machine.return_data();
+    assert_eq!(error.len(), 0);
+}
+
+#[test]
+fn test_run_evm_opcopde_revert() {
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let mut interpreter = EVMInterpreter {};
+
+    // MSTORE 0 1000 - REVERT 0 32
+    let mut bytecode = array![0x52, 0xFD].span();
+    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+    machine.stack.push(32);
+    machine.stack.push(0);
+    machine.stack.push(1000);
+    machine.stack.push(0);
+    interpreter.run(ref machine);
+
+    assert_eq!(machine.reverted(), true);
+    let error = machine.return_data();
+    assert(error == 1000.to_bytes(), 'expected error == 1000',);
 }

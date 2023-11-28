@@ -278,6 +278,7 @@ impl StateImpl of StateTrait {
         Result::Ok(())
     }
 
+    #[inline(always)]
     fn commit_context(ref self: State) {
         self.accounts.commit_context();
         self.accounts_storage.commit_context();
@@ -285,6 +286,7 @@ impl StateImpl of StateTrait {
         self.transfers.commit_context();
     }
 
+    #[inline(always)]
     fn clear_context(ref self: State) {
         self.accounts.clear_context();
         self.accounts_storage.clear_context();
@@ -292,6 +294,7 @@ impl StateImpl of StateTrait {
         self.transfers.clear_context();
     }
 
+    #[inline(always)]
     fn commit_state(ref self: State) -> Result<(), EVMError> {
         self.commit_accounts()?;
         self.transfer_native_token()?;
