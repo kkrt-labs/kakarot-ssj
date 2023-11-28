@@ -7,11 +7,13 @@ use evm::context::{
 use evm::machine::{MachineTrait};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Event, Address};
+use evm::errors::{EVMError, DebugEVMError};
 use evm::stack::{Stack, StackTrait};
 use evm::tests::test_utils::{MachineBuilderTestTrait, CallContextPartialEq};
 use evm::tests::test_utils;
 use starknet::testing::{set_contract_address, set_caller_address};
 use starknet::{EthAddress, ContractAddress};
+
 
 
 use test_utils::{callvalue, test_address};
@@ -81,6 +83,35 @@ fn test_execution_context_new() {
     assert(execution_context.address() == address, 'wrong evm_address');
     assert(execution_context.reverted() == reverted, 'wrong reverted');
     assert(execution_context.is_create() == false, 'wrong is_create');
+    assert(execution_context.gas_used() == 0, 'wrong gas_used');
+}
+
+#[test]
+fn test_execution_context_increment_gas_used_unchecked() {
+    // Given
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut execution_context = machine.current_ctx.unbox();
+
+    // When
+    let gas_used = test_utils::gas_limit();
+    execution_context.increment_gas_used_unchecked(gas_used);
+
+    // Then
+    assert(execution_context.gas_used() == gas_used, 'wrong gas_used');
+}
+
+#[test]
+fn test_execution_context_increment_gas_used_checked() {
+    // Given
+    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut execution_context = machine.current_ctx.unbox();
+
+    // When
+    let gas_used = test_utils::gas_limit();
+    let result = execution_context.increment_gas_used_checked(gas_used);
+
+    // Then
+    assert_eq!(result.unwrap_err(), EVMError::OutOfGas);
 }
 
 #[test]

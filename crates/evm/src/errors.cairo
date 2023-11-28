@@ -1,3 +1,5 @@
+use core::fmt::{Debug, Formatter, Error, Display};
+
 // STACK
 const STACK_OVERFLOW: felt252 = 'KKT: StackOverflow';
 const STACK_UNDERFLOW: felt252 = 'KKT: StackUnderflow';
@@ -60,6 +62,7 @@ enum EVMError {
     InvalidMachineState: felt252,
     DeployError: felt252,
     OriginError: felt252,
+    OutOfGas,
 }
 
 #[generate_trait]
@@ -80,6 +83,15 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::InvalidMachineState(error_message) => error_message.into(),
             EVMError::DeployError(error_message) => error_message,
             EVMError::OriginError(error_message) => error_message,
+            EVMError::OutOfGas => 'OutOfGas'.into(),
         }
+    }
+
+}
+
+impl DebugEVMError of Debug<EVMError> {
+    fn fmt(self: @EVMError, ref f: Formatter) -> Result<(), Error> {
+        let error_message = (*self).to_string();
+        Display::fmt(@error_message, ref f)
     }
 }

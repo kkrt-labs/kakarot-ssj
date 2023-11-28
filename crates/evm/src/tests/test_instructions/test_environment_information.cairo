@@ -13,7 +13,7 @@ use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
     MachineBuilderTestTrait, evm_address, callvalue, return_from_subcontext, native_token,
-    other_address
+    other_address, gas_price, gas_limit
 };
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
@@ -553,7 +553,7 @@ fn test_gasprice() {
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0xaaaaaa, 'stack top should be 0xaaaaaa');
+    assert(machine.stack.peek().unwrap() == gas_price().into(), 'stack top should be gas_price');
 }
 
 // *************************************************************************
