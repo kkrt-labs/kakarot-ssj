@@ -224,7 +224,6 @@ fn test_exec_coinbase() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let sequencer_eoa = kakarot_core.deploy_eoa(evm_address());
-    fund_account_with_native_token(sequencer_eoa, native_token, 0x1);
 
     // And
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
