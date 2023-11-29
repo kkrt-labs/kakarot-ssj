@@ -93,7 +93,7 @@ impl MachineImpl of MachineTrait {
     }
 
     #[inline(always)]
-    fn id(ref self: Machine) -> usize {
+    fn id(self: @Machine) -> usize {
         self.current_ctx.as_snapshot().unbox().id()
     }
 
@@ -109,7 +109,7 @@ impl MachineImpl of MachineTrait {
     }
 
     #[inline(always)]
-    fn pc(ref self: Machine) -> usize {
+    fn pc(self: @Machine) -> usize {
         self.current_ctx.as_snapshot().unbox().pc()
     }
 
@@ -128,22 +128,22 @@ impl MachineImpl of MachineTrait {
     }
 
     #[inline(always)]
-    fn reverted(ref self: Machine) -> bool {
+    fn reverted(self: @Machine) -> bool {
         self.current_ctx.as_snapshot().unbox().reverted()
     }
 
     #[inline(always)]
-    fn stopped(ref self: Machine) -> bool {
+    fn stopped(self: @Machine) -> bool {
         self.current_ctx.as_snapshot().unbox().stopped()
     }
 
     #[inline(always)]
-    fn status(ref self: Machine) -> Status {
+    fn status(self: @Machine) -> Status {
         self.current_ctx.as_snapshot().unbox().status()
     }
 
     #[inline(always)]
-    fn call_ctx(ref self: Machine) -> CallContext {
+    fn call_ctx(self: @Machine) -> CallContext {
         (*self.current_ctx.as_snapshot().unbox().call_ctx).unbox()
     }
 
@@ -176,7 +176,7 @@ impl MachineImpl of MachineTrait {
     }
 
     #[inline(always)]
-    fn return_data(ref self: Machine) -> Span<u8> {
+    fn return_data(self: @Machine) -> Span<u8> {
         *self.current_ctx.as_snapshot().unbox().return_data
     }
 
@@ -190,47 +190,47 @@ impl MachineImpl of MachineTrait {
 
 
     #[inline(always)]
-    fn address(ref self: Machine) -> Address {
+    fn address(self: @Machine) -> Address {
         self.current_ctx.as_snapshot().unbox().address()
     }
 
     #[inline(always)]
-    fn caller(ref self: Machine) -> Address {
+    fn caller(self: @Machine) -> Address {
         self.call_ctx().caller()
     }
 
     #[inline(always)]
-    fn origin(ref self: Machine) -> Address {
+    fn origin(self: @Machine) -> Address {
         self.current_ctx.as_snapshot().unbox().origin()
     }
 
     #[inline(always)]
-    fn read_only(ref self: Machine) -> bool {
+    fn read_only(self: @Machine) -> bool {
         self.call_ctx().read_only()
     }
 
     #[inline(always)]
-    fn gas_limit(ref self: Machine) -> u128 {
+    fn gas_limit(self: @Machine) -> u128 {
         self.call_ctx().gas_limit()
     }
 
     #[inline(always)]
-    fn gas_price(ref self: Machine) -> u128 {
+    fn gas_price(self: @Machine) -> u128 {
         self.call_ctx().gas_price()
     }
 
     #[inline(always)]
-    fn value(ref self: Machine) -> u256 {
+    fn value(self: @Machine) -> u256 {
         self.call_ctx().value()
     }
 
     #[inline(always)]
-    fn bytecode(ref self: Machine) -> Span<u8> {
+    fn bytecode(self: @Machine) -> Span<u8> {
         self.call_ctx().bytecode()
     }
 
     #[inline(always)]
-    fn calldata(ref self: Machine) -> Span<u8> {
+    fn calldata(self: @Machine) -> Span<u8> {
         self.call_ctx().calldata()
     }
 
@@ -253,19 +253,19 @@ impl MachineImpl of MachineTrait {
 
     /// Returns the current execution context type (root, call or create).
     #[inline(always)]
-    fn ctx_type(ref self: Machine) -> ExecutionContextType {
+    fn ctx_type(self: @Machine) -> ExecutionContextType {
         self.current_ctx.as_snapshot().unbox().ctx_type()
     }
 
     /// Returns whether the current execution context is the root context.
     #[inline(always)]
-    fn is_root(ref self: Machine) -> bool {
+    fn is_root(self: @Machine) -> bool {
         self.current_ctx.as_snapshot().unbox().is_root()
     }
 
     /// Returns whether the current execution context is a call context.
     #[inline(always)]
-    fn is_call(ref self: Machine) -> bool {
+    fn is_call(self: @Machine) -> bool {
         self.current_ctx.as_snapshot().unbox().is_call()
     }
 
