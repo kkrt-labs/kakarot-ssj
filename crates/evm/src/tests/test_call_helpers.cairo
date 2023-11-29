@@ -117,7 +117,7 @@ fn test_prepare_call_type_call() {
 
     let call_args = machine.prepare_call(@CallType::Call).unwrap();
 
-    assert(call_args == expected_call_args, 'wrong calls_args prepared');
+    assert!(call_args == expected_call_args, "wrong calls_args prepared");
 }
 
 #[test]
@@ -158,7 +158,7 @@ fn test_prepare_call_type_delegate_call() {
 
     let call_args = machine.prepare_call(@CallType::DelegateCall).unwrap();
 
-    assert(call_args == expected_call_args, 'wrong calls_args prepared');
+    assert!(call_args == expected_call_args, "wrong calls_args prepared");
 }
 
 #[test]
@@ -199,7 +199,7 @@ fn test_prepare_call_type_call_code() {
 
     let call_args = machine.prepare_call(@CallType::CallCode).unwrap();
 
-    assert(call_args == expected_call_args, 'wrong calls_args prepared');
+    assert!(call_args == expected_call_args, "wrong calls_args prepared");
 }
 
 #[test]
@@ -240,7 +240,7 @@ fn test_prepare_call_type_static_call() {
 
     let call_args = machine.prepare_call(@CallType::StaticCall).unwrap();
 
-    assert(call_args == expected_call_args, 'wrong calls_args prepared');
+    assert!(call_args == expected_call_args, "wrong calls_args prepared");
 }
 
 
@@ -296,16 +296,16 @@ fn test_init_call_sub_ctx() {
     let sender_balance_after = machine.state.get_account(sender_address).balance;
     let reciver_balance_after = machine.state.get_account(address).balance;
 
-    assert(
+    assert!(
         machine
             .address() == Address {
                 evm: address, starknet: kakarot_core.compute_starknet_address(address)
             },
-        'wrong execution context address'
+        "wrong execution context address"
     );
 
-    assert(sender_balance_prev - sender_balance_after == 100, 'wrong sender balance');
-    assert(reciver_balance_after - reciver_balance_prev == 100, 'wrong reciever balance');
+    assert!(sender_balance_prev - sender_balance_after == 100, "wrong sender balance");
+    assert!(reciver_balance_after - reciver_balance_prev == 100, "wrong reciever balance");
 
     assert!(ctx_count_after - ctx_count_prev == 1, "ctx count increased by wrong value");
 }
