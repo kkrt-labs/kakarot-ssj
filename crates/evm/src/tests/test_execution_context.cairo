@@ -177,7 +177,7 @@ fn test_origin() {
     let mut context = machine.current_ctx.unbox();
 
     // When
-    let origin = context.origin();
+    let origin = vm.origin();
     // Then
     assert(origin == test_address(), 'wrong origin');
 }

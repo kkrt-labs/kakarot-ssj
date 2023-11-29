@@ -197,7 +197,7 @@ impl AccountImpl of AccountTrait {
     ///
     /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
     fn commit(self: @Account) -> Result<(), EVMError> {
-        let is_deployed = self.address().evm.is_deployed();
+        let is_deployed = self.evm_address().is_deployed();
         let is_ca = self.is_ca();
 
         // If a Starknet account is already deployed for this evm address, we
@@ -224,7 +224,7 @@ impl AccountImpl of AccountTrait {
                 (*self.nonce, *self.code)
             };
             ContractAccountTrait::deploy(
-                self.address().evm,
+                self.evm_address(),
                 initial_nonce,
                 initial_code,
                 deploy_starknet_contract: !is_deployed
@@ -277,7 +277,7 @@ impl AccountImpl of AccountTrait {
 
     #[inline(always)]
     fn is_precompile(self: @Account) -> bool {
-        let evm_address: felt252 = self.address().evm.into();
+        let evm_address: felt252 = self.evm_address().into();
         if evm_address.into() < 0x10_u256 {
             return true;
         }
@@ -297,7 +297,12 @@ impl AccountImpl of AccountTrait {
 
     #[inline(always)]
     fn evm_address(self: @Account) -> EthAddress {
-        self.address().evm
+        *self.address.evm
+    }
+
+    #[inline(always)]
+    fn starknet_address(self: @Account) -> ContractAddress {
+        *self.address.starknet
     }
 
     /// Returns the bytecode of the EVM account (EOA or CA)

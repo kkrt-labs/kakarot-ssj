@@ -189,7 +189,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     #[inline(always)]
     fn gas_limit(self: @ExecutionContext) -> u128 {
-        self.call_ctx().gas_limit()
+        self.message().gas_limit
     }
 
     #[inline(always)]
@@ -199,7 +199,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     #[inline(always)]
     fn caller(self: @ExecutionContext) -> Address {
-        self.call_ctx().caller()
+        self.message().caller()
     }
 
     #[inline(always)]
@@ -261,7 +261,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
 
     /// Stops the current execution context.
     #[inline(always)]
-    fn set_stopped(ref self: ExecutionContext) {
+    fn set_stopped(ref self: VM) {
         self.status = Status::Stopped;
     }
 
@@ -271,20 +271,8 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
     #[inline(always)]
-    fn increment_gas_used_unchecked(ref self: ExecutionContext, value: u128) {
+    fn increment_gas_used_unchecked(ref self: VM, value: u128) {
         self.gas_used += value;
-    }
-
-    /// Increments the gas_used field of the current execution context by the value amount.
-    /// # Error : returns `EVMError::OutOfGas` if gas_used + new_gas >= limit
-    #[inline(always)]
-    fn charge_gas(ref self: ExecutionContext, value: u128) -> Result<(), EVMError> {
-        let new_gas_used = self.gas_used() + value;
-        if (new_gas_used >= self.call_ctx().gas_limit()) {
-            return Result::Err(EVMError::OutOfGas);
-        }
-        self.gas_used = new_gas_used;
-        Result::Ok(())
     }
 
     /// Revert the current execution context.
@@ -293,7 +281,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     /// (it is stopped) and contract creation and contract storage writes are
     /// reverted on its finalization.
     #[inline(always)]
-    fn set_reverted(ref self: ExecutionContext) {
+    fn set_reverted(ref self: VM) {
         self.status = Status::Reverted;
     }
 
@@ -312,20 +300,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     //                          ExecutionContext methods
     // *************************************************************************
 
-    /// Reads and return data from bytecode.
-    /// The program counter is incremented accordingly.
-    ///
-    /// # Arguments
-    ///
-    /// * `self` - The `ExecutionContext` instance to read the data from.
-    /// * `len` - The length of the data to read from the bytecode.
-    #[inline(always)]
-    fn read_code(self: @ExecutionContext, len: usize) -> Span<u8> {
-        // Copy code slice from [pc, pc+len]
-        let code = (*self.call_ctx).unbox().bytecode().slice(self.pc(), len);
 
-        code
-    }
 
     /// Returns the read only field for the current call context
     ///
@@ -352,16 +327,11 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     // TODO: Implement print_debug
     /// Debug print the execution context.
     #[inline(always)]
-    fn print_debug(ref self: ExecutionContext) { // debug::print_felt252('gas used');
+    fn print_debug(ref self: VM) { // debug::print_felt252('gas used');
     // self.gas_used.print();
     }
 
-    #[inline(always)]
-    fn set_pc(ref self: ExecutionContext, value: u32) {
-        self.program_counter = value;
-    }
-
-    fn set_return_data(ref self: ExecutionContext, return_data: Span<u8>) {
+    fn set_return_data(ref self: VM, return_data: Span<u8>) {
         self.return_data = return_data;
     }
 
@@ -370,7 +340,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         *self.program_counter
     }
 
-    fn origin(ref self: ExecutionContext) -> Address {
+    fn origin(ref self: VM) -> Address {
         self.call_ctx().origin()
     }
 
@@ -380,7 +350,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             status: self.status(),
             return_data: self.return_data(),
             state: self.state,
-            address: self.address()
+            address: self.message().target
         }
     }
 }

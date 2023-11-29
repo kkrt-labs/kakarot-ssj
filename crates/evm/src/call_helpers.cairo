@@ -8,7 +8,7 @@ use evm::context::{ExecutionContext, Status, CallContext, CallContextTrait, Exec
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
-use evm::model::{Transfer, Address};
+use evm::model::{VM, VMTrait, Transfer, Address, Message};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use starknet::{EthAddress, get_contract_address};
@@ -43,16 +43,14 @@ enum CallType {
 impl CallHelpersImpl of CallHelpers {
     ///  Prepare the initialization of a new child or so-called sub-context
     /// As part of the CALL family of opcodes.
-    fn prepare_call(
-        ref self: ExecutionContext, call_type: @CallType
-    ) -> Result<CallArgs, EVMError> {
+    fn prepare_call(ref vm: VM, call_type: @CallType) -> Result<CallArgs, EVMError> {
         let gas = self.stack.pop_u128()?;
 
         let code_address = self.stack.pop_eth_address()?;
         let to = match call_type {
             CallType::Call => code_address,
-            CallType::DelegateCall => self.address().evm,
-            CallType::CallCode => self.address().evm,
+            CallType::DelegateCall => self.message().target.evm,
+            CallType::CallCode => self.message().target.evm,
             CallType::StaticCall => code_address
         };
 
@@ -65,12 +63,16 @@ impl CallHelpersImpl of CallHelpers {
         let to = Address { evm: to, starknet: kakarot_core.compute_starknet_address(to) };
 
         let (value, caller, should_transfer, read_only) = match call_type {
-            CallType::Call => (self.stack.pop()?, self.address(), true, self.read_only()),
-            CallType::DelegateCall => (
-                self.value(), self.call_ctx().caller, false, self.read_only()
+            CallType::Call => (
+                self.stack.pop()?, self.message().target, true, self.message().read_only
             ),
-            CallType::CallCode => (self.stack.pop()?, self.address(), false, self.read_only()),
-            CallType::StaticCall => (0, self.address(), false, true),
+            CallType::DelegateCall => (
+                self.message().value, self.message().caller, false, self.message().read_only
+            ),
+            CallType::CallCode => (
+                self.stack.pop()?, self.message().target, false, self.message().read_only
+            ),
+            CallType::StaticCall => (0, self.message().target, false, true),
         };
 
         let args_offset = self.stack.pop_usize()?;
@@ -102,32 +104,43 @@ impl CallHelpersImpl of CallHelpers {
     /// The Machine will change its `current_ctx` to point to the
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
-    fn generic_call(ref self: ExecutionContext, call_args: CallArgs,) -> Result<(), EVMError> {
+    fn generic_call(ref vm: VM, call_args: CallArgs,) -> Result<(), EVMError> {
         // check if depth is too high
 
         // Case 2: `to` address is not a precompile
         // We enter the standard flow
-        let bytecode = self.state.get_account(call_args.code_address.evm).code;
+        let code = vm.env.state.get_account(call_args.code_address.evm).code;
+        vm.return_data = Default::default().span();
+        let message = Message {
+            caller: call_args.caller,
+            target: call_args.to,
+            gas_limit: call_args.gas,
+            value: call_args.value,
+            read_only: call_args.read_only,
+            should_transfer_value: call_args.should_transfer,
+            data: call_args.calldata,
+            code,
+            depth: vm.message().depth + 1
+        };
 
-        let call_ctx = CallContextTrait::new(
-            call_args.caller,
-            self.origin(),
-            bytecode,
-            call_args.calldata,
-            call_args.value,
-            call_args.read_only,
-            call_args.gas,
-            self.gas_price(),
-            call_args.should_transfer,
-        );
+        let result = EVMTrait::process_message(message, ref vm.env);
 
-        let mut child_ctx = ExecutionContextTrait::new(
-            call_args.to,
-            call_ctx,
-            depth: self.depth()
-                + 1, // TODO(elias): deep copy and pass the state down to the child context
-            state: Default::default(),
-        );
+        if result.success {
+            vm.return_data = result.return_data;
+            //TODO(migration): continue migration here
+            target_account.set_code(code);
+            env.state.set_account(target_account);
+        } else {
+            // The `process_message` function has mutated the environment state.
+            // Revert state changes using the old snapshot as execution failed.
+            env.state = old_state;
+        }
+        return ExecutionSummary {
+            success: result.success,
+            address: target_evm_address,
+            state: env.state,
+            return_data: result.return_data,
+        };
 
         let result = child_ctx.process_message();
         let success = match result.status {

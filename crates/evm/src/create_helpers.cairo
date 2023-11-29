@@ -37,9 +37,7 @@ enum CreateType {
 impl CreateHelpersImpl of CreateHelpers {
     ///  Prepare the initialization of a new child or so-called sub-context
     /// As part of the CREATE family of opcodes.
-    fn prepare_create(
-        ref self: ExecutionContext, create_type: CreateType
-    ) -> Result<CreateArgs, EVMError> {
+    fn prepare_create(ref vm: VM, create_type: CreateType) -> Result<CreateArgs, EVMError> {
         let value = self.stack.pop()?;
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
@@ -49,11 +47,11 @@ impl CreateHelpersImpl of CreateHelpers {
 
         let to = match create_type {
             CreateType::CreateOrDeployTx => {
-                let nonce = self.state.get_account(self.address().evm).nonce();
-                compute_contract_address(self.address().evm, sender_nonce: nonce)
+                let nonce = self.env.state.get_account(self.message().target.evm).nonce();
+                compute_contract_address(self.message().target.evm, sender_nonce: nonce)
             },
             CreateType::Create2 => compute_create2_contract_address(
-                self.address().evm, salt: self.stack.pop()?, bytecode: bytecode.span()
+                self.message().target.evm, salt: self.stack.pop()?, bytecode: bytecode.span()
             )?,
         };
 
@@ -65,13 +63,13 @@ impl CreateHelpersImpl of CreateHelpers {
     /// The Machine will change its `current_ctx` to point to the
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
-    fn generic_create(ref self: ExecutionContext, create_args: CreateArgs) -> Result<(), EVMError> {
-        let mut target_account = self.state.get_account(create_args.to);
+    fn generic_create(ref vm: VM, create_args: CreateArgs) -> Result<(), EVMError> {
+        let mut target_account = self.env.state.get_account(create_args.to);
         let target_address = target_account.address();
 
         // The caller in the subcontext is the calling context's current address
-        let caller = self.address();
-        let mut caller_account = self.state.get_account(caller.evm);
+        let caller = self.message().target;
+        let mut caller_account = self.env.state.get_account(caller.evm);
         let caller_current_nonce = caller_account.nonce();
         let caller_balance = caller_account.balance();
         if caller_balance < create_args.value
@@ -80,7 +78,7 @@ impl CreateHelpersImpl of CreateHelpers {
         }
 
         caller_account.set_nonce(caller_current_nonce + 1);
-        self.state.set_account(caller_account);
+        self.env.state.set_account(caller_account);
 
         // Collision happens if the target account loaded in state has code or nonce set, meaning
         // - it's deployed on SN and is an active EVM contract
@@ -96,8 +94,8 @@ impl CreateHelpersImpl of CreateHelpers {
             calldata: Default::default().span(),
             value: create_args.value,
             read_only: false,
-            gas_limit: self.gas_limit(),
-            gas_price: self.gas_price(),
+            gas_limit: self.message().gas_limit,
+            gas_price: self.env.gas_price,
             should_transfer: true,
         );
 

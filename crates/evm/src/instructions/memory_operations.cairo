@@ -8,13 +8,14 @@ use evm::state::{StateTrait, compute_state_key};
 use hash::{HashStateTrait, HashStateExTrait};
 use poseidon::PoseidonTrait;
 use starknet::{storage_base_address_from_felt252, Store};
+use evm::model::{VM, VMTrait};
 
 #[generate_trait]
 impl MemoryOperation of MemoryOperationTrait {
     /// 0x50 - POP operation.
     /// Pops the first item on the stack (top of the stack).
     /// # Specification: https://www.evm.codes/#50?fork=shanghai
-    fn exec_pop(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_pop(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
 
         // self.stack.pop() returns a Result<u256, EVMError> so we cannot simply return its result
@@ -24,7 +25,7 @@ impl MemoryOperation of MemoryOperationTrait {
 
     /// MLOAD operation.
     /// Load word from memory and push to stack.
-    fn exec_mload(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_mload(ref self: VM) -> Result<(), EVMError> {
         // TODO: add dynamic gas
         self.charge_gas(gas::VERYLOW)?;
 
@@ -36,7 +37,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// 0x52 - MSTORE operation.
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#52?fork=shanghai
-    fn exec_mstore(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_mstore(ref self: VM) -> Result<(), EVMError> {
         // TODO: add dynamic gas
         self.charge_gas(gas::VERYLOW)?;
 
@@ -50,7 +51,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// 0x53 - MSTORE8 operation.
     /// Save single byte to memory
     /// # Specification: https://www.evm.codes/#53?fork=shanghai
-    fn exec_mstore8(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_mstore8(ref self: VM) -> Result<(), EVMError> {
         // TODO: add dynamic gas
         self.charge_gas(gas::VERYLOW)?;
 
@@ -66,14 +67,14 @@ impl MemoryOperation of MemoryOperationTrait {
     /// 0x54 - SLOAD operation
     /// Load from storage.
     /// # Specification: https://www.evm.codes/#54?fork=shanghai
-    fn exec_sload(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_sload(ref self: VM) -> Result<(), EVMError> {
         // TODO: Add Warm / Cold storage costs
         self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
 
         let key = self.stack.pop()?;
-        let evm_address = self.address().evm;
+        let evm_address = self.message().target.evm;
 
-        let value = self.state.read_state(evm_address, key)?;
+        let value = self.env.state.read_state(evm_address, key)?;
         self.stack.push(value)
     }
 
@@ -81,8 +82,8 @@ impl MemoryOperation of MemoryOperationTrait {
     /// 0x55 - SSTORE operation
     /// Save 32-byte word to storage.
     /// # Specification: https://www.evm.codes/#55?fork=shanghai
-    fn exec_sstore(ref self: ExecutionContext) -> Result<(), EVMError> {
-        if self.read_only() {
+    fn exec_sstore(ref self: VM) -> Result<(), EVMError> {
+        if self.message().read_only {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
 
@@ -91,8 +92,8 @@ impl MemoryOperation of MemoryOperationTrait {
 
         let key = self.stack.pop()?;
         let value = self.stack.pop()?;
-        let evm_address = self.address().evm;
-        self.state.write_state(:evm_address, :key, :value);
+        let evm_address = self.message().target.evm;
+        self.env.state.write_state(:evm_address, :key, :value);
         Result::Ok(())
     }
 
@@ -109,7 +110,7 @@ impl MemoryOperation of MemoryOperationTrait {
     ///       `PUSH-N` opcodes.
     ///
     /// Note: Jump destinations are 0-indexed.
-    fn exec_jump(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_jump(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::MID)?;
 
         let index = self.stack.pop_usize()?;
@@ -122,7 +123,7 @@ impl MemoryOperation of MemoryOperationTrait {
         // present in that list
         //
         // Check if idx in bytecode points to `JUMPDEST` opcode
-        match self.bytecode().get(index) {
+        match self.message().code.get(index) {
             Option::Some(opcode) => {
                 if *opcode.unbox() != 0x5B {
                     return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
@@ -138,7 +139,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Change the pc counter under a provided certain condition.
     /// The new pc target has to be a JUMPDEST opcode.
     /// # Specification: https://www.evm.codes/#57?fork=shanghai
-    fn exec_jumpi(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_jumpi(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::HIGH)?;
 
         // Peek the value so we don't need to push it back again incase we want to call `exec_jump`
@@ -161,7 +162,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// 0x58 - PC operation
     /// Get the value of the program counter prior to the increment.
     /// # Specification: https://www.evm.codes/#58?fork=shanghai
-    fn exec_pc(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_pc(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
 
         let pc = self.pc().into();
@@ -171,7 +172,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// 0x59 - MSIZE operation.
     /// Get the value of memory size.
     /// # Specification: https://www.evm.codes/#59?fork=shanghai
-    fn exec_msize(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_msize(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
 
         let msize: u256 = self.memory.size().into();
@@ -182,7 +183,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// 0x5A - GAS operation
     /// Get the amount of available gas, including the corresponding reduction for the cost of this instruction.
     /// # Specification: https://www.evm.codes/#5a?fork=shanghai
-    fn exec_gas(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_gas(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
         self.stack.push(self.gas_used().into())
     }
@@ -194,7 +195,7 @@ impl MemoryOperation of MemoryOperationTrait {
     ///
     /// This doesn't have any affect on execution state, so we don't have
     /// to do anything here. It's a NO-OP.
-    fn exec_jumpdest(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_jumpdest(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::JUMPDEST)?;
         Result::Ok(())
     }

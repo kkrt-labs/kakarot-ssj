@@ -27,13 +27,13 @@ mod KakarotCore {
 
     use evm::context::Status;
     use evm::errors::{EVMError, EVMErrorTrait, CALLING_FROM_CA, CALLING_FROM_UNDEPLOYED_ACCOUNT};
-    use evm::execution::execute;
-    use evm::machine::{Machine, MachineTrait};
+    use evm::model::{Message, Environment};
     use evm::model::account::{Account, AccountType, AccountTrait};
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::{EOATrait};
     use evm::model::{ExecutionSummary, Address, AddressTrait};
     use evm::state::{State, StateTrait};
+    use evm::interpreter::{EVMTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall,
         get_caller_address
@@ -253,20 +253,16 @@ mod KakarotCore {
             gas_price: u128,
             value: u256,
             calldata: Span<u8>
-        ) -> Span<u8> {
+        ) -> (bool, Span<u8>) {
             if !self.is_view() {
                 panic_with_felt252('fn must be called, not invoked');
             };
 
             let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
 
-            let result = self.handle_call(:origin, :to, :gas_limit, :gas_price, :value, :calldata);
-            match result {
-                Result::Ok(result) => result.return_data,
-                // TODO: Return the error message as Bytes in the response
-                // Eliminate all paths of possible panic in logic with relations to the EVM itself.
-                Result::Err(err) => panic_with_felt252(err.to_string()),
-            }
+            let ExecutionSummary{state: _, return_data, address: _, success } = self
+                .process_transaction(:origin, :to, :gas_limit, :gas_price, :value, :calldata);
+            (success, return_data)
         }
 
         fn eth_send_transaction(
@@ -276,7 +272,7 @@ mod KakarotCore {
             gas_price: u128,
             value: u256,
             calldata: Span<u8>
-        ) -> Span<u8> {
+        ) -> (bool, Span<u8>) {
             let starknet_caller_address = get_caller_address();
             let account = IExternallyOwnedAccountDispatcher {
                 contract_address: starknet_caller_address
@@ -294,21 +290,10 @@ mod KakarotCore {
                 .expect('Fetching EOA failed');
             assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
 
-            let mut maybe_exec_result = self
-                .handle_call(:origin, :to, :gas_limit, :gas_price, :value, :calldata);
-            match maybe_exec_result {
-                Result::Ok(mut result) => {
-                    result.state.commit_state().expect('Committing state failed');
-                    if to.is_none() {
-                        // Overwrite return_data with deployed address
-                        return result.address.evm.to_bytes().span();
-                    }
-                    result.return_data
-                },
-                // TODO: Return the error message as Bytes in the response
-                // Eliminate all paths of possible panic in logic with relations to the EVM itself.
-                Result::Err(err) => panic_with_felt252(err.to_string()),
-            }
+            let ExecutionSummary{mut state, return_data, address: _, success } = self
+                .process_transaction(:origin, :to, :gas_limit, :gas_price, :value, :calldata);
+            state.commit_state().expect('Committing state failed');
+            (success, return_data)
         }
 
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
@@ -373,7 +358,7 @@ mod KakarotCore {
         }
 
 
-        fn handle_call(
+        fn process_transaction(
             self: @ContractState,
             origin: Address,
             to: Option<EthAddress>,
@@ -381,12 +366,29 @@ mod KakarotCore {
             gas_price: u128,
             value: u256,
             calldata: Span<u8>
-        ) -> Result<ExecutionSummary, EVMError> {
-            let (to, is_deploy_tx) = match to {
+        ) -> ExecutionSummary {
+            let block_info = starknet::get_block_info().unbox();
+            let eoa = IExternallyOwnedAccountDispatcher {
+                contract_address: block_info.sequencer_address
+            };
+            let coinbase = eoa.evm_address();
+            let mut env = Environment {
+                origin: origin.evm,
+                gas_price,
+                chain_id: self.chain_id.read(),
+                prevrandao: 0,
+                block_number: block_info.block_number,
+                coinbase,
+                timestamp: block_info.block_timestamp,
+                state: Default::default(),
+            };
+
+            let (to, is_deploy_tx, code, calldata) = match to {
                 Option::Some(to) => {
                     let target_starknet_address = self.compute_starknet_address(to);
                     let to = Address { evm: to, starknet: target_starknet_address };
-                    (to, false)
+                    let code = env.state.get_account(to.evm).code;
+                    (to, false, code, calldata)
                 },
                 Option::None => {
                     // Deploy tx case.
@@ -394,21 +396,31 @@ mod KakarotCore {
                     let to_evm_address = compute_contract_address(origin.evm, origin_nonce);
                     let to_starknet_address = self.compute_starknet_address(to_evm_address);
                     let to = Address { evm: to_evm_address, starknet: to_starknet_address };
-                    (to, true)
+                    let code = calldata;
+                    let calldata = Default::default().span();
+                    (to, true, code, calldata)
                 },
             };
 
-            let execution_result = execute(
-                :origin,
+            let code = env.state.get_account(to.evm).code;
+
+            let message = Message {
+                caller: origin,
                 target: to,
-                :calldata,
-                :value,
-                :gas_price,
-                :gas_limit,
+                gas_limit,
+                data: calldata,
+                code,
+                value,
+                depth: 0,
                 read_only: false,
-                :is_deploy_tx,
-            );
-            Result::Ok(execution_result)
+                should_transfer_value: true,
+            };
+
+            let mut result = EVMTrait::process_message_call(message, env, is_deploy_tx,);
+            if is_deploy_tx && result.success == true {
+                result.return_data = to.evm.to_bytes().span();
+            }
+            result
         }
     }
 }

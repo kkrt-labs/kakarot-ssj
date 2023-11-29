@@ -2,7 +2,10 @@ use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionCon
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
 
 use evm::model::account::{AccountTrait};
-use evm::model::{Address, Transfer, ExecutionSummary, AccountType};
+use evm::model::{
+    Message, Environment, VM, VMTrait, Address, Transfer, ExecutionSummary, ExecutionResult,
+    AccountType
+};
 use evm::state::{State, StateTrait};
 use starknet::{EthAddress, ContractAddress};
 use utils::helpers::{U256Trait, compute_starknet_address};
@@ -20,196 +23,132 @@ use evm::call_helpers::is_precompile;
 
 #[generate_trait]
 impl EVMImpl of EVMTrait {
-    /// Creates an instance of the EVM to execute a transaction.
-    ///
-    /// # Arguments
-    /// * `origin` - The EVM address of the origin of the transaction.
-    /// * `target` - The EVM address of the called contract.
-    /// * `calldata` - The calldata of the execution.
-    /// * `value` - The value of the execution.
-    /// * `gas_limit` - The gas limit of the execution.
-    /// * `gas_price` - The gas price for the execution.
-    /// * `read_only` - Whether the execution is read only.
-    /// * `is_deploy_tx` - Whether the execution is a deploy transaction.
-    ///
-    /// # Returns
-    /// * ExecutionSummary struct, containing:
-    /// *   The execution status
-    /// *   The return data of the execution.
-    /// *   The destroyed contracts
-    /// *   The created contracts
-    /// *   The events emitted
     fn process_message_call(
-        origin: Address,
-        target: Address,
-        calldata: Span<u8>,
-        value: u256,
-        gas_price: u128,
-        gas_limit: u128,
-        read_only: bool,
-        is_deploy_tx: bool,
+        message: Message, mut env: Environment, is_deploy_tx: bool,
     ) -> ExecutionSummary {
-        let mut state: State = Default::default();
-
-        let mut target_account = state.get_account(target.evm);
-        let (bytecode, calldata) = if is_deploy_tx {
-            (calldata, array![].span())
-        } else {
-            (target_account.code, calldata)
-        };
-
-        let call_ctx = CallContextTrait::new(
-            caller: origin,
-            :origin,
-            :bytecode,
-            :calldata,
-            :value,
-            :read_only,
-            :gas_limit,
-            :gas_price,
-            should_transfer: true,
-        );
-
-        let mut ctx = ExecutionContextTrait::new(
-            address: target, :call_ctx, depth: 0, state: state,
-        );
-
+        let mut target_account = env.state.get_account(message.target.evm);
         if is_deploy_tx {
             // Check collision
             if target_account.has_code_or_nonce() {
                 return ExecutionSummary {
-                    address: target,
-                    status: Status::Reverted,
+                    state: env.state,
+                    address: message.target.evm,
+                    success: false,
                     return_data: Into::<
                         felt252, u256
                     >::into(EVMError::DeployError(CONTRACT_ACCOUNT_EXISTS).to_string())
                         .to_bytes(),
-                    state: ctx.state,
                 };
             }
-            let execution_result = ctx.process_create_message();
-            return execution_result;
+            return EVMTrait::process_create_message(message, env);
         }
 
-        // Execute the bytecode
-        let result = ctx.process_message();
-        return result;
+        // No need to take snapshot of state, as the state is still empty at this point.
+        let result = EVMTrait::process_message(message, ref env);
+        ExecutionSummary {
+            success: result.success,
+            address: message.target.evm,
+            state: env.state,
+            return_data: result.return_data,
+        }
     }
 
-    fn process_create_message(ref self: ExecutionContext) -> ExecutionSummary {
-        let mut target_account = self.state.get_account(self.address().evm);
+    fn process_create_message(message: Message, mut env: Environment) -> ExecutionSummary {
+        // Take a snapshot of the environment state so that we can revert if the
+        // message processing fails.
+        // This needs to be done every time before we call `process_message``
+        let old_state = env.state;
+        env.state = Default::default(); //TODO deep clone
+
+        let target_evm_address = message.target.evm;
+        let mut target_account = env.state.get_account(target_evm_address);
 
         target_account.set_nonce(1);
         target_account.set_type(AccountType::ContractAccount);
-        target_account.address = self.address();
-        self.state.set_account(target_account);
+        target_account.address = *(@message.target);
+        env.state.set_account(target_account);
 
-        let result = self.process_message();
+        let result = EVMTrait::process_message(message, ref env);
 
-        match result.status {
-            Status::Active => {
-                // TODO: The Execution Result should not share the Status type since it cannot be active
-                // This INVARIANT should be handled by the type system
-                panic!(
-                    "INVARIANT: Status of the Execution Context should not be Active in finalize logic"
-                )
-            },
-            Status::Stopped => {
-                self.state = result.state;
-
-                let code = result.return_data;
-                target_account.set_code(code);
-                self.state.set_account(target_account);
-
-                ExecutionSummary {
-                    status: Status::Stopped,
-                    address: self.address(),
-                    state: self.state(),
-                    return_data: self.return_data(),
-                }
-            },
-            Status::Reverted => result,
+        if result.success {
+            let code = result.return_data;
+            target_account.set_code(code);
+            env.state.set_account(target_account);
+        } else {
+            // The `process_message` function has mutated the environment state.
+            // Revert state changes using the old snapshot as execution failed.
+            env.state = old_state;
         }
+        return ExecutionSummary {
+            success: result.success,
+            address: target_evm_address,
+            state: env.state,
+            return_data: result.return_data,
+        };
     }
 
-    fn process_message(ref self: ExecutionContext) -> ExecutionSummary {
-        if self.should_transfer() && self.value() > 0 {
+    fn process_message(message: Message, ref env: Environment) -> ExecutionResult {
+        if message.should_transfer_value && message.value != 0 {
             let transfer = Transfer {
-                sender: self.caller(), recipient: self.address(), amount: self.value(),
+                sender: message.caller, recipient: message.target, amount: message.value
             };
-            self.state.add_transfer(transfer).expect('TODO(ELIAS): handle');
+            env.state.add_transfer(transfer).expect('TODO(ELIAS): handle');
         }
 
         // Handle precompile logic
-        if is_precompile(self.address().evm) {
+        if is_precompile(message.target.evm) {
             panic!("Not Implemented: Precompiles are not implemented yet");
         }
 
-        // execute code
+        // Instanciate a new VM using the to process message and the current environment.
+        let mut vm: VM = VMTrait::new(message, env);
 
         // Decode and execute the current opcode.
-        loop {
-            let mut res = self.decode_and_execute();
+        // until we have processed all opcodes or until we have stopped.
+        // Use a recursive function to allow passing VM by ref - which wouldn't work in a loop;
+        let execution_result = EVMTrait::execute_code(ref vm);
 
-            let execution_result = match res {
-                Result::Ok(_) => {
-                    match self.status() {
-                        Status::Active => {
-                            // execute the next opcode
-                            // TODO: pair programming with Eni
-                            res = self.decode_and_execute();
-                        },
-                        Status::Stopped => {
-                            break ExecutionSummary {
-                                status: self.status(),
-                                address: self.address(),
-                                state: self.state(),
-                                return_data: self.return_data(),
-                            };
-                        },
-                        Status::Reverted => {
-                            break ExecutionSummary {
-                                status: self.status(),
-                                address: self.address(),
-                                // return a Default::default() State -> flush it!
-                                state: self.state(),
-                                return_data: self.return_data(),
-                            };
-                        }
-                    }
-                },
-                Result::Err(error) => {
-                    // If an error occurred, revert execution self.
-                    // Currently, revert reason is a Span<u8>.
-                    break ExecutionSummary {
-                        status: self.status(),
-                        address: self.address(),
-                        // return a Default::default() State -> flush it!
-                        state: self.state(),
-                        return_data: Into::<felt252, u256>::into(error.to_string()).to_bytes(),
-                    };
-                }
-            };
-        }
+        // Retrieve ownership of the `env` variable
+        // The state in the environment has been modified by the VM.
+        // Handling state reverts is done at a higher level, using previously taken state snapshots.
+        env = vm.env;
+
+        execution_result
     }
 
-    fn decode_and_execute(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn execute_code(ref vm: VM) -> ExecutionResult {
         // Retrieve the current program counter.
-        let pc = self.pc();
-
-        let bytecode = self.call_ctx().bytecode();
-        let bytecode_len = bytecode.len();
+        let pc = vm.pc();
+        let bytecode = vm.message().code;
 
         // Check if PC is not out of bounds.
-        if pc >= bytecode_len {
-            self.set_stopped();
-            return Result::Ok(());
+        if pc >= bytecode.len() || vm.running() == false {
+            return ExecutionResult { success: true, return_data: vm.return_data() };
         }
 
         let opcode: u8 = *bytecode.at(pc);
         // Increment pc
-        self.set_pc(pc + 1);
+        vm.set_pc(pc + 1);
 
+        match EVMTrait::execute_opcode(ref vm, opcode) {
+            Result::Ok(_) => {
+                if vm.running() {
+                    return EVMTrait::execute_code(ref vm);
+                }
+                return ExecutionResult { success: false, return_data: vm.return_data() };
+            },
+            Result::Err(error) => {
+                // If an error occurred, revert execution self.
+                // Currently, revert reason is a Span<u8>.
+                return ExecutionResult {
+                    success: false,
+                    return_data: Into::<felt252, u256>::into(error.to_string()).to_bytes()
+                };
+            }
+        }
+    }
+
+    fn execute_opcode(ref self: VM, opcode: u8) -> Result<(), EVMError> {
         // Call the appropriate function based on the opcode.
         if opcode == 0 {
             // STOP

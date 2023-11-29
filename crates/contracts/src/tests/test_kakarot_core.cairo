@@ -315,7 +315,7 @@ fn test_eth_call() {
 }
 
 #[test]
-fn test_handle_call() {
+fn test_process_transaction() {
     // Given
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
@@ -336,7 +336,7 @@ fn test_handle_call() {
     // When
     let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
     let result = kakarot_core
-        .handle_call(
+        .process_transaction(
             origin: Address { evm: evm_address, starknet: eoa },
             :to,
             :gas_limit,
@@ -344,7 +344,7 @@ fn test_handle_call() {
             :value,
             :calldata
         )
-        .expect('handle_call failed');
+        .expect('process_transaction failed');
     let return_data = result.return_data;
 
     assert(result.status == Status::Stopped, 'wrong status');

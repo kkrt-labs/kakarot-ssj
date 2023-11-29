@@ -13,14 +13,14 @@ use evm::model::{Address, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use utils::math::Exponentiation;
-
+use evm::model::{VM, VMTrait};
 
 #[generate_trait]
 impl SystemOperations of SystemOperationsTrait {
     /// CREATE
     /// # Specification: https://www.evm.codes/#f0?fork=shanghai
-    fn exec_create(ref self: ExecutionContext) -> Result<(), EVMError> {
-        if self.read_only() {
+    fn exec_create(ref self: VM) -> Result<(), EVMError> {
+        if self.message().read_only {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
 
@@ -61,12 +61,12 @@ impl SystemOperations of SystemOperationsTrait {
 
     /// CALL
     /// # Specification: https://www.evm.codes/#f1?fork=shanghai
-    fn exec_call(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_call(ref self: VM) -> Result<(), EVMError> {
         // TODO: add dynamic gas cost and handle warm/cold storage
         self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
 
         let call_args = self.prepare_call(@CallType::Call)?;
-        let read_only = self.read_only();
+        let read_only = self.message().read_only;
         let value = call_args.value;
 
         // Check if current context is read only that value == 0.
@@ -76,8 +76,8 @@ impl SystemOperations of SystemOperationsTrait {
 
         // If sender_balance < value, return early, pushing
         // 0 on the stack to indicate call failure.
-        let caller_address = self.address();
-        let sender_balance = self.state.get_account(caller_address.evm).balance();
+        let caller_address = self.message().target;
+        let sender_balance = self.env.state.get_account(caller_address.evm).balance();
         if sender_balance < value {
             return self.stack.push(0);
         }
@@ -95,7 +95,7 @@ impl SystemOperations of SystemOperationsTrait {
 
     /// CALLCODE
     /// # Specification: https://www.evm.codes/#f2?fork=shanghai
-    fn exec_callcode(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_callcode(ref self: VM) -> Result<(), EVMError> {
         // TODO: add dynamic gas cost and handle warm/cold storage
         self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
 
@@ -112,7 +112,7 @@ impl SystemOperations of SystemOperationsTrait {
     }
     /// RETURN
     /// # Specification: https://www.evm.codes/#f3?fork=shanghai
-    fn exec_return(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_return(ref self: VM) -> Result<(), EVMError> {
         // TODO: add dynamic gas
         self.charge_gas(gas::ZERO)?;
 
@@ -131,7 +131,7 @@ impl SystemOperations of SystemOperationsTrait {
 
     /// DELEGATECALL
     /// # Specification: https://www.evm.codes/#f4?fork=shanghai
-    fn exec_delegatecall(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_delegatecall(ref self: VM) -> Result<(), EVMError> {
         // TODO: add dynamic gas cost and handle warm/cold storage
         self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
 
@@ -149,8 +149,8 @@ impl SystemOperations of SystemOperationsTrait {
 
     /// CREATE2
     /// # Specification: https://www.evm.codes/#f5?fork=shanghai
-    fn exec_create2(ref self: ExecutionContext) -> Result<(), EVMError> {
-        if self.read_only() {
+    fn exec_create2(ref self: VM) -> Result<(), EVMError> {
+        if self.message().read_only {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
 
@@ -190,7 +190,7 @@ impl SystemOperations of SystemOperationsTrait {
 
     /// STATICCALL
     /// # Specification: https://www.evm.codes/#fa?fork=shanghai
-    fn exec_staticcall(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_staticcall(ref self: VM) -> Result<(), EVMError> {
         // TODO: add dynamic gas cost and handle warm/cold storage
         self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
 
@@ -209,7 +209,7 @@ impl SystemOperations of SystemOperationsTrait {
 
     /// REVERT
     /// # Specification: https://www.evm.codes/#fd?fork=shanghai
-    fn exec_revert(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_revert(ref self: VM) -> Result<(), EVMError> {
         // TODO: add dynamic gas
         self.charge_gas(gas::ZERO)?;
 
@@ -228,15 +228,15 @@ impl SystemOperations of SystemOperationsTrait {
 
     /// INVALID
     /// # Specification: https://www.evm.codes/#fe?fork=shanghai
-    fn exec_invalid(ref self: ExecutionContext) -> Result<(), EVMError> {
+    fn exec_invalid(ref self: VM) -> Result<(), EVMError> {
         Result::Err(EVMError::InvalidOpcode(0xfe))
     }
 
 
     /// SELFDESTRUCT
     /// # Specification: https://www.evm.codes/#ff?fork=shanghai
-    fn exec_selfdestruct(ref self: ExecutionContext) -> Result<(), EVMError> {
-        if self.read_only() {
+    fn exec_selfdestruct(ref self: VM) -> Result<(), EVMError> {
+        if self.message().read_only {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
 
@@ -247,14 +247,14 @@ impl SystemOperations of SystemOperationsTrait {
         let address = self.stack.pop_eth_address()?;
 
         //TODO Remove this when https://eips.ethereum.org/EIPS/eip-6780 is validated
-        let recipient_evm_address = if (address == self.address().evm) {
+        let recipient_evm_address = if (address == self.message().target.evm) {
             0.try_into().unwrap()
         } else {
             address
         };
         let recipient_starknet_address = kakarot_state
             .compute_starknet_address(recipient_evm_address);
-        let mut account = self.state.get_account(self.address().evm);
+        let mut account = self.env.state.get_account(self.message().target.evm);
 
         let recipient = Address {
             evm: recipient_evm_address, starknet: recipient_starknet_address
@@ -262,18 +262,19 @@ impl SystemOperations of SystemOperationsTrait {
 
         // Transfer balance
         self
+            .env
             .state
             .add_transfer(
                 Transfer {
                     sender: account.address(),
                     recipient,
-                    amount: self.state.get_account(account.address().evm).balance
+                    amount: self.env.state.get_account(account.address().evm).balance
                 }
             )?;
 
         // Register for selfdestruct
         account.selfdestruct();
-        self.state.set_account(account);
+        self.env.state.set_account(account);
         self.set_stopped();
         Result::Ok(())
     }
