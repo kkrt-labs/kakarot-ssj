@@ -17,7 +17,6 @@ use starknet::testing::set_contract_address;
 use starknet::{contract_address_const, EthAddress};
 
 #[test]
-#[available_gas(20000000)]
 fn test_prepare_call_type_call() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
@@ -68,7 +67,6 @@ fn test_prepare_call_type_call() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_prepare_call_type_delegate_call() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
@@ -120,7 +118,6 @@ fn test_prepare_call_type_delegate_call() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_prepare_call_type_call_code() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
@@ -174,7 +171,6 @@ fn test_prepare_call_type_call_code() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_prepare_call_type_static_call() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
@@ -227,7 +223,6 @@ fn test_prepare_call_type_static_call() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_init_call_sub_ctx() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
