@@ -149,10 +149,7 @@ impl MachineImpl of MachineTrait {
 
     #[inline(always)]
     fn gas_used(ref self: Machine) -> u128 {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let gas_used = current_execution_ctx.gas_used();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        gas_used
+        self.current_ctx.as_snapshot().unbox().gas_used()
     }
 
     #[inline(always)]

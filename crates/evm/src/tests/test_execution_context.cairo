@@ -96,7 +96,7 @@ fn test_execution_context_increment_gas_used_unchecked() {
     execution_context.increment_gas_used_unchecked(gas_used);
 
     // Then
-    assert(execution_context.gas_used() == gas_used, 'wrong gas_used');
+    assert_eq!(execution_context.gas_used(), gas_used);
 }
 
 #[test]
