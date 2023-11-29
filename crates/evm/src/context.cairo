@@ -8,7 +8,7 @@ use starknet::get_caller_address;
 use starknet::{EthAddress, ContractAddress};
 use utils::helpers::{ArrayExtension, ArrayExtTrait};
 use utils::traits::{SpanDefault, EthAddressDefault, ContractAddressDefault};
-use evm::model::ExecutionResult;
+use evm::model::ExecutionSummary;
 
 #[derive(Drop, Default, Copy, PartialEq)]
 enum Status {
@@ -349,21 +349,6 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         *self.depth
     }
 
-    #[inline(always)]
-    fn stack(self: ExecutionContext) -> Stack {
-        self.stack
-    }
-
-    #[inline(always)]
-    fn memory(self: ExecutionContext) -> Memory {
-        self.memory
-    }
-
-    #[inline(always)]
-    fn state(self: ExecutionContext) -> State {
-        self.state
-    }
-
     // TODO: Implement print_debug
     /// Debug print the execution context.
     #[inline(always)]
@@ -390,11 +375,11 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     }
 
 
-    fn into_result(self: ExecutionContext) -> ExecutionResult {
-        ExecutionResult {
+    fn summarize(self: ExecutionContext) -> ExecutionSummary {
+        ExecutionSummary {
             status: self.status(),
             return_data: self.return_data(),
-            state: self.state(),
+            state: self.state,
             address: self.address()
         }
     }

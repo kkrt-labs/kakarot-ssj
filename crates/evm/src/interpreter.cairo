@@ -2,7 +2,7 @@ use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionCon
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
 
 use evm::model::account::{AccountTrait};
-use evm::model::{Address, Transfer, ExecutionResult, AccountType};
+use evm::model::{Address, Transfer, ExecutionSummary, AccountType};
 use evm::state::{State, StateTrait};
 use starknet::{EthAddress, ContractAddress};
 use utils::helpers::{U256Trait, compute_starknet_address};
@@ -33,7 +33,7 @@ impl EVMImpl of EVMTrait {
     /// * `is_deploy_tx` - Whether the execution is a deploy transaction.
     ///
     /// # Returns
-    /// * ExecutionResult struct, containing:
+    /// * ExecutionSummary struct, containing:
     /// *   The execution status
     /// *   The return data of the execution.
     /// *   The destroyed contracts
@@ -48,7 +48,7 @@ impl EVMImpl of EVMTrait {
         gas_limit: u128,
         read_only: bool,
         is_deploy_tx: bool,
-    ) -> ExecutionResult {
+    ) -> ExecutionSummary {
         let mut state: State = Default::default();
 
         let mut target_account = state.get_account(target.evm);
@@ -77,7 +77,7 @@ impl EVMImpl of EVMTrait {
         if is_deploy_tx {
             // Check collision
             if target_account.has_code_or_nonce() {
-                return ExecutionResult {
+                return ExecutionSummary {
                     address: target,
                     status: Status::Reverted,
                     return_data: Into::<
@@ -96,7 +96,7 @@ impl EVMImpl of EVMTrait {
         return result;
     }
 
-    fn process_create_message(ref self: ExecutionContext) -> ExecutionResult {
+    fn process_create_message(ref self: ExecutionContext) -> ExecutionSummary {
         let mut target_account = self.state.get_account(self.address().evm);
 
         target_account.set_nonce(1);
@@ -121,7 +121,7 @@ impl EVMImpl of EVMTrait {
                 target_account.set_code(code);
                 self.state.set_account(target_account);
 
-                ExecutionResult {
+                ExecutionSummary {
                     status: Status::Stopped,
                     address: self.address(),
                     state: self.state(),
@@ -132,7 +132,7 @@ impl EVMImpl of EVMTrait {
         }
     }
 
-    fn process_message(ref self: ExecutionContext) -> ExecutionResult {
+    fn process_message(ref self: ExecutionContext) -> ExecutionSummary {
         if self.should_transfer() && self.value() > 0 {
             let transfer = Transfer {
                 sender: self.caller(), recipient: self.address(), amount: self.value(),
@@ -160,7 +160,7 @@ impl EVMImpl of EVMTrait {
                             res = self.decode_and_execute();
                         },
                         Status::Stopped => {
-                            break ExecutionResult {
+                            break ExecutionSummary {
                                 status: self.status(),
                                 address: self.address(),
                                 state: self.state(),
@@ -168,7 +168,7 @@ impl EVMImpl of EVMTrait {
                             };
                         },
                         Status::Reverted => {
-                            break ExecutionResult {
+                            break ExecutionSummary {
                                 status: self.status(),
                                 address: self.address(),
                                 // return a Default::default() State -> flush it!
@@ -181,7 +181,7 @@ impl EVMImpl of EVMTrait {
                 Result::Err(error) => {
                     // If an error occurred, revert execution self.
                     // Currently, revert reason is a Span<u8>.
-                    break ExecutionResult {
+                    break ExecutionSummary {
                         status: self.status(),
                         address: self.address(),
                         // return a Default::default() State -> flush it!

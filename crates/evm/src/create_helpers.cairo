@@ -17,7 +17,7 @@ use utils::helpers::{ResultExTrait, EthAddressExTrait, U256Trait, U8SpanExTrait}
 use utils::traits::{
     BoolIntoNumeric, EthAddressIntoU256, U256TryIntoResult, SpanU8TryIntoResultEthAddress
 };
-use evm::model::ExecutionResult;
+use evm::model::ExecutionSummary;
 
 /// Helper struct to prepare CREATE and CREATE2 opcodes
 #[derive(Drop)]

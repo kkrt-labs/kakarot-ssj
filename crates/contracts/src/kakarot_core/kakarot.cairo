@@ -32,7 +32,7 @@ mod KakarotCore {
     use evm::model::account::{Account, AccountType, AccountTrait};
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::{EOATrait};
-    use evm::model::{ExecutionResult, Address, AddressTrait};
+    use evm::model::{ExecutionSummary, Address, AddressTrait};
     use evm::state::{State, StateTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall,
@@ -381,7 +381,7 @@ mod KakarotCore {
             gas_price: u128,
             value: u256,
             calldata: Span<u8>
-        ) -> Result<ExecutionResult, EVMError> {
+        ) -> Result<ExecutionSummary, EVMError> {
             let (to, is_deploy_tx) = match to {
                 Option::Some(to) => {
                     let target_starknet_address = self.compute_starknet_address(to);

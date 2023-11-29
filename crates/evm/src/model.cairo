@@ -56,7 +56,7 @@ struct Transfer {
 }
 
 #[derive(Destruct)]
-struct ExecutionResult {
+struct ExecutionSummary {
     address: Address,
     status: Status,
     return_data: Span<u8>,
