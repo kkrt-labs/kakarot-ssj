@@ -1,4 +1,6 @@
-use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
+use contracts::kakarot_core::interface::{
+    IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
+};
 
 use contracts::tests::test_utils::setup_contracts_for_testing;
 use core::box::BoxTrait;
@@ -7,21 +9,32 @@ use core::result::ResultTrait;
 use core::traits::Destruct;
 use core::traits::TryInto;
 
+
 use evm::call_helpers::{MachineCallHelpers, CallType, CallArgs};
+use evm::machine::Machine;
 use evm::machine::MachineTrait;
 use evm::model::{Address, account::{AccountBuilderTrait}};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{MachineBuilderTestTrait, test_address, other_evm_address};
 use starknet::testing::set_contract_address;
-use starknet::{contract_address_const, EthAddress};
+use starknet::{contract_address_const, EthAddress, ContractAddress};
 
-#[test]
-fn test_prepare_call_type_call() {
-    let (_, kakarot_core) = setup_contracts_for_testing();
+struct TestSetupValues {
+    gas: u128,
+    address: EthAddress,
+    value: Option::<u256>,
+    args_offset: u256,
+    args_size: u256,
+    ret_offset: usize,
+    ret_size: usize,
+    caller_address: Address
+}
 
-    set_contract_address(kakarot_core.contract_address);
-
+fn prep_machine_prepare_call_test(
+    call_type: CallType, kakarot_core_address: ContractAddress
+) -> (Machine, TestSetupValues) {
+    let kakarot_core = IExtendedKakarotCoreDispatcher { contract_address: kakarot_core_address };
     let caller_address = EthAddress { address: 0xabde2 };
     let caller_address = Address {
         evm: caller_address, starknet: kakarot_core.compute_starknet_address(caller_address)
@@ -33,7 +46,6 @@ fn test_prepare_call_type_call() {
 
     let gas: u128 = 1000;
     let address = other_evm_address();
-    let value = 100;
     let args_offset = 5;
     let args_size = 1;
     let ret_offset: usize = 15;
@@ -43,9 +55,51 @@ fn test_prepare_call_type_call() {
     machine.stack.push(ret_offset.into()).unwrap();
     machine.stack.push(args_size).unwrap();
     machine.stack.push(args_offset).unwrap();
-    machine.stack.push(value).unwrap();
+
+    let value = match call_type {
+        CallType::Call => {
+            let value = 100;
+            machine.stack.push(value).unwrap();
+            Option::Some(value)
+        },
+        CallType::DelegateCall => { Option::None },
+        CallType::CallCode => {
+            let value = 100;
+            machine.stack.push(value).unwrap();
+            Option::Some(value)
+        },
+        CallType::StaticCall => { Option::None },
+    };
+
     machine.stack.push(address.address.into()).unwrap();
     machine.stack.push(gas.into()).unwrap();
+
+    (
+        machine,
+        TestSetupValues {
+            gas, address, value, args_offset, args_size, ret_offset, ret_size, caller_address
+        }
+    )
+}
+
+#[test]
+fn test_prepare_call_type_call() {
+    let (_, kakarot_core) = setup_contracts_for_testing();
+
+    let (
+        mut machine,
+        TestSetupValues{gas,
+        address,
+        value,
+        args_offset: _,
+        args_size: _,
+        ret_offset,
+        ret_size,
+        caller_address: _ }
+    ) =
+        prep_machine_prepare_call_test(
+        CallType::Call, kakarot_core.contract_address
+    );
 
     let expected_call_args = CallArgs {
         caller: test_address(),
@@ -54,7 +108,7 @@ fn test_prepare_call_type_call() {
         },
         to: Address { evm: address, starknet: kakarot_core.compute_starknet_address(address) },
         gas,
-        value,
+        value: value.unwrap(),
         calldata: array![0x0].span(),
         ret_offset,
         ret_size,
@@ -70,30 +124,20 @@ fn test_prepare_call_type_call() {
 fn test_prepare_call_type_delegate_call() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
-    let caller_address = EthAddress { address: 0xabde2 };
-    let caller_address = Address {
-        evm: caller_address, starknet: kakarot_core.compute_starknet_address(caller_address)
-    };
-
-    set_contract_address(kakarot_core.contract_address);
-
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_caller(caller_address)
-        .build();
-
-    let gas: u128 = 1000;
-    let address = other_evm_address();
-    let args_offset = 5;
-    let args_size = 1;
-    let ret_offset: usize = 15;
-    let ret_size: usize = 20;
-
-    machine.stack.push(ret_size.into()).unwrap();
-    machine.stack.push(ret_offset.into()).unwrap();
-    machine.stack.push(args_size).unwrap();
-    machine.stack.push(args_offset).unwrap();
-    machine.stack.push(address.address.into()).unwrap();
-    machine.stack.push(gas.into()).unwrap();
+    let (
+        mut machine,
+        TestSetupValues{gas,
+        address,
+        value: _,
+        args_offset: _,
+        args_size: _,
+        ret_offset,
+        ret_size,
+        caller_address }
+    ) =
+        prep_machine_prepare_call_test(
+        CallType::DelegateCall, kakarot_core.contract_address
+    );
 
     let expected_call_args = CallArgs {
         caller: caller_address,
@@ -121,32 +165,20 @@ fn test_prepare_call_type_delegate_call() {
 fn test_prepare_call_type_call_code() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
-    let caller_address = EthAddress { address: 0xabde2 };
-    let caller_address = Address {
-        evm: caller_address, starknet: kakarot_core.compute_starknet_address(caller_address)
-    };
-
-    set_contract_address(kakarot_core.contract_address);
-
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_caller(caller_address)
-        .build();
-
-    let gas: u128 = 1000;
-    let address = other_evm_address();
-    let value = 100;
-    let args_offset = 5;
-    let args_size = 1;
-    let ret_offset: usize = 15;
-    let ret_size: usize = 20;
-
-    machine.stack.push(ret_size.into()).unwrap();
-    machine.stack.push(ret_offset.into()).unwrap();
-    machine.stack.push(args_size).unwrap();
-    machine.stack.push(args_offset).unwrap();
-    machine.stack.push(value).unwrap();
-    machine.stack.push(address.address.into()).unwrap();
-    machine.stack.push(gas.into()).unwrap();
+    let (
+        mut machine,
+        TestSetupValues{gas,
+        address,
+        value,
+        args_offset: _,
+        args_size: _,
+        ret_offset,
+        ret_size,
+        caller_address: _ }
+    ) =
+        prep_machine_prepare_call_test(
+        CallType::CallCode, kakarot_core.contract_address
+    );
 
     let expected_call_args = CallArgs {
         caller: test_address(),
@@ -158,7 +190,7 @@ fn test_prepare_call_type_call_code() {
             starknet: kakarot_core.compute_starknet_address(test_address().evm)
         },
         gas,
-        value: 100,
+        value: value.unwrap(),
         calldata: array![0x0].span(),
         ret_offset,
         ret_size,
@@ -174,30 +206,20 @@ fn test_prepare_call_type_call_code() {
 fn test_prepare_call_type_static_call() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
-    let caller_address = EthAddress { address: 0xabde2 };
-    let caller_address = Address {
-        evm: caller_address, starknet: kakarot_core.compute_starknet_address(caller_address)
-    };
-
-    set_contract_address(kakarot_core.contract_address);
-
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_caller(caller_address)
-        .build();
-
-    let gas: u128 = 1000;
-    let address = other_evm_address();
-    let args_offset = 5;
-    let args_size = 1;
-    let ret_offset: usize = 15;
-    let ret_size: usize = 20;
-
-    machine.stack.push(ret_size.into()).unwrap();
-    machine.stack.push(ret_offset.into()).unwrap();
-    machine.stack.push(args_size).unwrap();
-    machine.stack.push(args_offset).unwrap();
-    machine.stack.push(address.address.into()).unwrap();
-    machine.stack.push(gas.into()).unwrap();
+    let (
+        mut machine,
+        TestSetupValues{gas,
+        address,
+        value: _,
+        args_offset: _,
+        args_size: _,
+        ret_offset,
+        ret_size,
+        caller_address: _ }
+    ) =
+        prep_machine_prepare_call_test(
+        CallType::StaticCall, kakarot_core.contract_address
+    );
 
     let expected_call_args = CallArgs {
         caller: test_address(),
