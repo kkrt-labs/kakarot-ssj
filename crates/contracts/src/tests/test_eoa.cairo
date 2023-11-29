@@ -24,7 +24,6 @@ mod test_external_owned_account {
     use core::array::SpanTrait;
     use core::starknet::account::{Call, AccountContractDispatcher, AccountContractDispatcherTrait};
 
-
     use evm::model::{Address, AddressTrait, ContractAccountTrait};
     use evm::tests::test_utils::{
         kakarot_address, evm_address, other_evm_address, other_starknet_address, eoa_address,
