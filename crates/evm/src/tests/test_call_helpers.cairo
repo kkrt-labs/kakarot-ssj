@@ -2,7 +2,7 @@ use contracts::kakarot_core::interface::{
     IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
 
-use contracts::tests::test_utils::setup_contracts_for_testing;
+use contracts::tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
 use core::box::BoxTrait;
 use core::nullable::NullableTrait;
 use core::result::ResultTrait;
@@ -13,7 +13,7 @@ use core::traits::TryInto;
 use evm::call_helpers::{MachineCallHelpers, CallType, CallArgs};
 use evm::machine::Machine;
 use evm::machine::MachineTrait;
-use evm::model::{Address, account::{AccountBuilderTrait}};
+use evm::model::{Address, account::{AccountBuilderTrait}, eoa::EOATrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{MachineBuilderTestTrait, test_address, other_evm_address};
@@ -246,7 +246,7 @@ fn test_prepare_call_type_static_call() {
 
 #[test]
 fn test_init_call_sub_ctx() {
-    let (_, kakarot_core) = setup_contracts_for_testing();
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
     set_contract_address(kakarot_core.contract_address);
 
@@ -279,21 +279,19 @@ fn test_init_call_sub_ctx() {
         should_transfer: true
     };
 
-    let account = AccountBuilderTrait::new(machine.address()).set_balance(1000).build();
-    machine.state.set_account(account);
+    let sender_eoa = EOATrait::deploy(machine.address().evm).expect('failed deploying sender');
+    fund_account_with_native_token(sender_eoa.starknet, native_token, 0x10000);
 
-    let sender_address = machine.address().evm;
+    EOATrait::deploy(address).expect('failed deploying reciever');
 
     let ctx_count_prev = machine.ctx_count;
-
-    let sender_balance_prev = machine.state.get_account(sender_address).balance;
+    let sender_balance_prev = machine.state.get_account(sender_eoa.evm).balance;
     let reciver_balance_prev = machine.state.get_account(address).balance;
 
     machine.init_call_sub_ctx(call_args, machine.call_ctx().read_only).unwrap();
 
     let ctx_count_after = machine.ctx_count;
-
-    let sender_balance_after = machine.state.get_account(sender_address).balance;
+    let sender_balance_after = machine.state.get_account(sender_eoa.evm).balance;
     let reciver_balance_after = machine.state.get_account(address).balance;
 
     assert!(

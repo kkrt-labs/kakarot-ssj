@@ -73,12 +73,6 @@ impl AccountBuilderImpl of AccountBuilderTrait {
         self
     }
 
-    #[inline(always)]
-    fn set_balance(mut self: AccountBuilder, balance: u256) -> AccountBuilder {
-        self.account.balance = balance;
-        self
-    }
-
     /// Loads the bytecode of a ContractAccount from Kakarot Core's contract storage into a Span<u8>.
     /// # Arguments
     /// * `self` - The address of the Contract Account to load the bytecode from
