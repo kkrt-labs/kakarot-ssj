@@ -40,13 +40,13 @@ fn test_prepare_call_type_call() {
     let ret_offset: usize = 15;
     let ret_size: usize = 20;
 
-    machine.stack.push(ret_size.into());
-    machine.stack.push(ret_offset.into());
-    machine.stack.push(args_size);
-    machine.stack.push(args_offset);
-    machine.stack.push(value);
-    machine.stack.push(address.address.into());
-    machine.stack.push(gas.into());
+    machine.stack.push(ret_size.into()).unwrap();
+    machine.stack.push(ret_offset.into()).unwrap();
+    machine.stack.push(args_size).unwrap();
+    machine.stack.push(args_offset).unwrap();
+    machine.stack.push(value).unwrap();
+    machine.stack.push(address.address.into()).unwrap();
+    machine.stack.push(gas.into()).unwrap();
 
     let expected_call_args = CallArgs {
         caller: test_address(),
@@ -90,12 +90,12 @@ fn test_prepare_call_type_delegate_call() {
     let ret_offset: usize = 15;
     let ret_size: usize = 20;
 
-    machine.stack.push(ret_size.into());
-    machine.stack.push(ret_offset.into());
-    machine.stack.push(args_size);
-    machine.stack.push(args_offset);
-    machine.stack.push(address.address.into());
-    machine.stack.push(gas.into());
+    machine.stack.push(ret_size.into()).unwrap();
+    machine.stack.push(ret_offset.into()).unwrap();
+    machine.stack.push(args_size).unwrap();
+    machine.stack.push(args_offset).unwrap();
+    machine.stack.push(address.address.into()).unwrap();
+    machine.stack.push(gas.into()).unwrap();
 
     let expected_call_args = CallArgs {
         caller: caller_address,
@@ -143,13 +143,13 @@ fn test_prepare_call_type_call_code() {
     let ret_offset: usize = 15;
     let ret_size: usize = 20;
 
-    machine.stack.push(ret_size.into());
-    machine.stack.push(ret_offset.into());
-    machine.stack.push(args_size);
-    machine.stack.push(args_offset);
-    machine.stack.push(value);
-    machine.stack.push(address.address.into());
-    machine.stack.push(gas.into());
+    machine.stack.push(ret_size.into()).unwrap();
+    machine.stack.push(ret_offset.into()).unwrap();
+    machine.stack.push(args_size).unwrap();
+    machine.stack.push(args_offset).unwrap();
+    machine.stack.push(value).unwrap();
+    machine.stack.push(address.address.into()).unwrap();
+    machine.stack.push(gas.into()).unwrap();
 
     let expected_call_args = CallArgs {
         caller: test_address(),
@@ -196,12 +196,12 @@ fn test_prepare_call_type_static_call() {
     let ret_offset: usize = 15;
     let ret_size: usize = 20;
 
-    machine.stack.push(ret_size.into());
-    machine.stack.push(ret_offset.into());
-    machine.stack.push(args_size);
-    machine.stack.push(args_offset);
-    machine.stack.push(address.address.into());
-    machine.stack.push(gas.into());
+    machine.stack.push(ret_size.into()).unwrap();
+    machine.stack.push(ret_offset.into()).unwrap();
+    machine.stack.push(args_size).unwrap();
+    machine.stack.push(args_offset).unwrap();
+    machine.stack.push(address.address.into()).unwrap();
+    machine.stack.push(gas.into()).unwrap();
 
     let expected_call_args = CallArgs {
         caller: test_address(),
@@ -245,8 +245,6 @@ fn test_init_call_sub_ctx() {
     let gas: u128 = 1000;
     let address = other_evm_address();
     let value = 100;
-    let args_offset = 5;
-    let args_size = 1;
     let ret_offset: usize = 15;
     let ret_size: usize = 20;
 
@@ -269,7 +267,6 @@ fn test_init_call_sub_ctx() {
 
     let sender_address = machine.address().evm;
 
-    let current_ctx_prev = machine.current_ctx.as_snapshot().unbox();
     let ctx_count_prev = machine.ctx_count;
 
     let sender_balance_prev = machine.state.get_account(sender_address).balance;
