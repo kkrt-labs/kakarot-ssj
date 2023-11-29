@@ -5,6 +5,7 @@ use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::call_helpers::{MachineCallHelpers, CallType};
 use evm::create_helpers::{MachineCreateHelpers, CreateType};
 use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL, WRITE_IN_STATIC_CONTEXT};
+use evm::gas;
 use evm::machine::{Machine, MachineTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
@@ -22,64 +23,21 @@ impl SystemOperations of SystemOperationsTrait {
         if self.read_only() {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
+
+        // TODO: add dynamic gas cost
+        self.increment_gas_used_checked(gas::CREATE)?;
+
         let create_args = self.prepare_create(CreateType::CreateOrDeployTx)?;
 
         self.init_create_sub_ctx(create_args)
     }
 
-
-    /// CREATE2
-    /// # Specification: https://www.evm.codes/#f5?fork=shanghai
-    fn exec_create2(ref self: Machine) -> Result<(), EVMError> {
-        if self.read_only() {
-            return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
-        }
-        let create_args = self.prepare_create(CreateType::Create2)?;
-
-        self.init_create_sub_ctx(create_args)
-    }
-
-    /// INVALID
-    /// # Specification: https://www.evm.codes/#fe?fork=shanghai
-    fn exec_invalid(ref self: Machine) -> Result<(), EVMError> {
-        Result::Err(EVMError::InvalidOpcode(0xfe))
-    }
-
-    /// RETURN
-    /// # Specification: https://www.evm.codes/#f3?fork=shanghai
-    fn exec_return(ref self: Machine) -> Result<(), EVMError> {
-        let offset = self.stack.pop_usize()?;
-        let size = self.stack.pop_usize()?;
-
-        let mut return_data = Default::default();
-        self.memory.load_n(size, ref return_data, offset);
-
-        // Set the memory data to the parent context return data
-        // and halt the context.
-        self.set_return_data(return_data.span());
-        self.set_stopped();
-        Result::Ok(())
-    }
-
-    /// REVERT
-    /// # Specification: https://www.evm.codes/#fd?fork=shanghai
-    fn exec_revert(ref self: Machine) -> Result<(), EVMError> {
-        let offset = self.stack.pop_usize()?;
-        let size = self.stack.pop_usize()?;
-
-        let mut return_data = Default::default();
-        self.memory.load_n(size, ref return_data, offset);
-
-        // Set the memory data to the parent context return data
-        // and halt the context.
-        self.set_return_data(return_data.span());
-        self.set_reverted();
-        Result::Ok(())
-    }
-
     /// CALL
     /// # Specification: https://www.evm.codes/#f1?fork=shanghai
     fn exec_call(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: add dynamic gas cost and handle warm/cold storage
+        self.increment_gas_used_checked(gas::WARM_STORAGE_READ_COST)?;
+
         let call_args = self.prepare_call(@CallType::Call)?;
         let read_only = self.read_only();
         let value = call_args.value;
@@ -101,29 +59,42 @@ impl SystemOperations of SystemOperationsTrait {
         self.init_call_sub_ctx(call_args, read_only)
     }
 
-    /// STATICCALL
-    /// # Specification: https://www.evm.codes/#fa?fork=shanghai
-    fn exec_staticcall(ref self: Machine) -> Result<(), EVMError> {
-        let call_args = self.prepare_call(@CallType::StaticCall)?;
-        let read_only = self.read_only();
-
-        // Initialize the sub context.
-        self.init_call_sub_ctx(call_args, read_only)
-    }
-
     /// CALLCODE
     /// # Specification: https://www.evm.codes/#f2?fork=shanghai
     fn exec_callcode(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: add dynamic gas cost and handle warm/cold storage
+        self.increment_gas_used_checked(gas::WARM_STORAGE_READ_COST)?;
+
         let call_args = self.prepare_call(@CallType::CallCode)?;
         let read_only = self.read_only();
 
         // Initialize the sub context.
         self.init_call_sub_ctx(call_args, read_only)
     }
+    /// RETURN
+    /// # Specification: https://www.evm.codes/#f3?fork=shanghai
+    fn exec_return(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: add dynamic gas
+
+        let offset = self.stack.pop_usize()?;
+        let size = self.stack.pop_usize()?;
+
+        let mut return_data = Default::default();
+        self.memory.load_n(size, ref return_data, offset);
+
+        // Set the memory data to the parent context return data
+        // and halt the context.
+        self.set_return_data(return_data.span());
+        self.set_stopped();
+        Result::Ok(())
+    }
 
     /// DELEGATECALL
     /// # Specification: https://www.evm.codes/#f4?fork=shanghai
     fn exec_delegatecall(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: add dynamic gas cost and handle warm/cold storage
+        self.increment_gas_used_checked(gas::WARM_STORAGE_READ_COST)?;
+
         let call_args = self.prepare_call(@CallType::DelegateCall)?;
         let read_only = self.read_only();
 
@@ -131,12 +102,71 @@ impl SystemOperations of SystemOperationsTrait {
         self.init_call_sub_ctx(call_args, read_only)
     }
 
+    /// CREATE2
+    /// # Specification: https://www.evm.codes/#f5?fork=shanghai
+    fn exec_create2(ref self: Machine) -> Result<(), EVMError> {
+        if self.read_only() {
+            return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
+        }
+
+        // TODO: add dynamic gas costs
+        self.increment_gas_used_checked(gas::CREATE)?;
+
+        let create_args = self.prepare_create(CreateType::Create2)?;
+
+        self.init_create_sub_ctx(create_args)
+    }
+
+    /// STATICCALL
+    /// # Specification: https://www.evm.codes/#fa?fork=shanghai
+    fn exec_staticcall(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: add dynamic gas cost and handle warm/cold storage
+        self.increment_gas_used_checked(gas::WARM_STORAGE_READ_COST)?;
+
+        let call_args = self.prepare_call(@CallType::StaticCall)?;
+        let read_only = self.read_only();
+
+        // Initialize the sub context.
+        self.init_call_sub_ctx(call_args, read_only)
+    }
+
+
+    /// REVERT
+    /// # Specification: https://www.evm.codes/#fd?fork=shanghai
+    fn exec_revert(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: add dynamic gas
+        self.increment_gas_used_checked(gas::ZERO)?;
+
+        let offset = self.stack.pop_usize()?;
+        let size = self.stack.pop_usize()?;
+
+        let mut return_data = Default::default();
+        self.memory.load_n(size, ref return_data, offset);
+
+        // Set the memory data to the parent context return data
+        // and halt the context.
+        self.set_return_data(return_data.span());
+        self.set_reverted();
+        Result::Ok(())
+    }
+
+    /// INVALID
+    /// # Specification: https://www.evm.codes/#fe?fork=shanghai
+    fn exec_invalid(ref self: Machine) -> Result<(), EVMError> {
+        Result::Err(EVMError::InvalidOpcode(0xfe))
+    }
+
+
     /// SELFDESTRUCT
     /// # Specification: https://www.evm.codes/#ff?fork=shanghai
     fn exec_selfdestruct(ref self: Machine) -> Result<(), EVMError> {
         if self.read_only() {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
+
+        // TODO: add dynamic gas costs
+        self.increment_gas_used_checked(gas::SELFDESTRUCT)?;
+
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
         let address = self.stack.pop_eth_address()?;
 

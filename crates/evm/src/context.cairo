@@ -1,3 +1,4 @@
+use evm::errors::EVMError;
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::Address;
 use evm::model::Event;
@@ -139,6 +140,7 @@ struct ExecutionContext {
     // Return data of a child context.
     return_data: Span<u8>,
     parent_ctx: Nullable<ExecutionContext>,
+    gas_used: u128,
 }
 
 
@@ -184,6 +186,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             call_ctx: BoxTrait::new(call_ctx),
             return_data,
             parent_ctx,
+            gas_used: Default::default(),
         }
     }
 
@@ -227,6 +230,28 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     #[inline(always)]
     fn set_stopped(ref self: ExecutionContext) {
         self.status = Status::Stopped;
+    }
+
+    #[inline(always)]
+    fn gas_used(self: @ExecutionContext) -> u128 {
+        *self.gas_used
+    }
+
+    #[inline(always)]
+    fn increment_gas_used_unchecked(ref self: ExecutionContext, value: u128) {
+        self.gas_used += value;
+    }
+
+    /// Increments the gas_used field of the current execution context by the value amount.
+    /// # Error : returns `EVMError::OutOfGas` if gas_used + new_gas >= limit
+    #[inline(always)]
+    fn increment_gas_used_checked(ref self: ExecutionContext, value: u128) -> Result<(), EVMError> {
+        let new_gas_used = self.gas_used() + value;
+        if (new_gas_used >= self.call_ctx().gas_limit()) {
+            return Result::Err(EVMError::OutOfGas);
+        }
+        self.gas_used = new_gas_used;
+        Result::Ok(())
     }
 
     /// Revert the current execution context.

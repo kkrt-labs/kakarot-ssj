@@ -44,6 +44,7 @@ impl LoggingOperations of LoggingOperationsTrait {
 
 mod internal {
     use evm::errors::{EVMError, WRITE_IN_STATIC_CONTEXT};
+    use evm::gas;
     use evm::machine::{Machine, MachineTrait};
     use evm::memory::MemoryTrait;
     use evm::model::Event;
@@ -62,6 +63,9 @@ mod internal {
         if self.read_only() {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
+
+        // TODO: Add dynamic memory gas
+        self.increment_gas_used_checked(gas::LOG + gas::LOGTOPIC * topics_len.into())?;
 
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
