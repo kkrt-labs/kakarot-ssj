@@ -14,6 +14,9 @@ mod errors;
 // Kakarot main module
 mod execution;
 
+// Gas module
+mod gas;
+
 // instructions module
 mod instructions;
 

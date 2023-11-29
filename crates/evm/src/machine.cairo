@@ -147,6 +147,34 @@ impl MachineImpl of MachineTrait {
         (*self.current_ctx.as_snapshot().unbox().call_ctx).unbox()
     }
 
+    #[inline(always)]
+    fn gas_used(ref self: Machine) -> u128 {
+        self.current_ctx.as_snapshot().unbox().gas_used()
+    }
+
+    #[inline(always)]
+    fn increment_gas_used_unchecked(ref self: Machine, gas: u128) {
+        let mut current_execution_ctx = self.current_ctx.unbox();
+        current_execution_ctx.increment_gas_used_unchecked(gas);
+        self.current_ctx = BoxTrait::new(current_execution_ctx);
+    }
+
+    #[inline(always)]
+    fn increment_gas_used_checked(ref self: Machine, gas: u128) -> Result<(), EVMError> {
+        let mut current_execution_ctx = self.current_ctx.unbox();
+        let res = current_execution_ctx.increment_gas_used_checked(gas);
+        match res {
+            Result::Ok(_) => {
+                self.current_ctx = BoxTrait::new(current_execution_ctx);
+                Result::Ok(())
+            },
+            Result::Err(e) => {
+                self.current_ctx = BoxTrait::new(current_execution_ctx);
+                Result::Err(e)
+            }
+        }
+    }
+
     /// Returns from the sub context by setting the current context
     /// to the parent context.
     ///
@@ -171,7 +199,10 @@ impl MachineImpl of MachineTrait {
                 current_ctx = parent_ctx;
             },
         };
-        self.current_ctx = BoxTrait::new(current_ctx);
+        // We need to rebox the current context after modifying it
+        // before calling a function - otherwise, we get a variable moved error
+        self.current_ctx = Default::default();
+        self.set_current_ctx(current_ctx);
         Result::Ok(())
     }
 

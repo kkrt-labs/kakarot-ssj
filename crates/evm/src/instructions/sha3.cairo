@@ -1,8 +1,9 @@
 //! SHA3.
 
 use evm::errors::EVMError;
+use evm::gas;
 // Internal imports
-use evm::machine::Machine;
+use evm::machine::{Machine, MachineTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use keccak::{cairo_keccak, u128_split};
@@ -19,6 +20,9 @@ impl Sha3Impl of Sha3Trait {
     ///
     /// # Specification: https://www.evm.codes/#20?fork=shanghai
     fn exec_sha3(ref self: Machine) -> Result<(), EVMError> {
+        // TODO: Add dynamic gas
+        self.increment_gas_used_checked(gas::KECCAK256)?;
+
         let offset: usize = self.stack.pop_usize()?;
         let mut size: usize = self.stack.pop_usize()?;
 

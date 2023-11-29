@@ -13,7 +13,7 @@ use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
     MachineBuilderTestTrait, evm_address, callvalue, return_from_subcontext, native_token,
-    other_address
+    other_address, gas_price, gas_limit
 };
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
@@ -189,7 +189,9 @@ fn test_calldataload() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_calldata(calldata.span())
+        .build();
 
     let offset: u32 = 0;
     machine.stack.push(offset.into()).expect('push failed');
@@ -212,7 +214,9 @@ fn test_calldataload_with_offset() {
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
 
-    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_calldata(calldata.span())
+        .build();
 
     let offset: u32 = 31;
     machine.stack.push(offset.into()).expect('push failed');
@@ -235,7 +239,9 @@ fn test_calldataload_with_offset_beyond_calldata() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_calldata(calldata.span())
+        .build();
 
     let offset: u32 = calldata.len() + 1;
     machine.stack.push(offset.into()).expect('push failed');
@@ -252,7 +258,9 @@ fn test_calldataload_with_offset_beyond_calldata() {
 fn test_calldataload_with_function_selector() {
     // Given
     let calldata = array![0x6d, 0x4c, 0xe6, 0x3c];
-    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_calldata(calldata.span())
+        .build();
 
     let offset: u32 = 0;
     machine.stack.push(offset.into()).expect('push failed');
@@ -274,7 +282,9 @@ fn test_calldataload_with_offset_conversion_error() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut machine = MachineBuilderTestTrait::new().with_calldata(calldata.span()).build();
+    let mut machine = MachineBuilderTestTrait::new_with_presets()
+        .with_calldata(calldata.span())
+        .build();
     let offset: u256 = 5000000000;
     machine.stack.push(offset).expect('push failed');
 
@@ -553,7 +563,7 @@ fn test_gasprice() {
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0xaaaaaa, 'stack top should be 0xaaaaaa');
+    assert(machine.stack.peek().unwrap() == gas_price().into(), 'stack top should be gas_price');
 }
 
 // *************************************************************************

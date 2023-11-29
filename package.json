@@ -18,6 +18,7 @@
     "viem": "^1.19.8"
   },
   "scripts": {
-    "compute_starknet_address": "bun run scripts/compute_starknet_address.ts"
+    "compute_starknet_address": "bun run scripts/compute_starknet_address.ts",
+    "compute_create_address": "bun run scripts/compute_create_address.ts"
   }
 }
