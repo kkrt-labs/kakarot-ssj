@@ -122,6 +122,8 @@ mod KakarotCore {
         new_class_hash: ClassHash,
     }
 
+    // TODO: add ability to pass Span<EthAddress>, which should be deployed along with Kakarot
+    // this can be done once https://github.com/starkware-libs/cairo/issues/4488 is resolved
     #[constructor]
     fn constructor(
         ref self: ContractState,
@@ -187,7 +189,6 @@ mod KakarotCore {
                 ),
             }
         }
-
 
         fn contract_account_nonce(self: @ContractState, evm_address: EthAddress) -> u64 {
             let ca_address = ContractAccountTrait::at(evm_address)

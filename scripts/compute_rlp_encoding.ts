@@ -50,7 +50,7 @@ const main = async () => {
   // for type 0 and type 1
   let tx;
 
-  if (tx_type === 1 || tx_type === 2) {
+  if (tx_type === 0 || tx_type === 1) {
     tx = {
       to,
       value,
@@ -118,7 +118,34 @@ const main = async () => {
   const hash = ethers.keccak256(bytes);
   console.log("the hash over which the signature was made:", hash);
 
+  console.log("signature details: ");
+  const v = decodedRlp[decodedRlp.length - 3];
+  const r = decodedRlp[decodedRlp.length - 2];
+  const s = decodedRlp[decodedRlp.length - 1];
+
+  const y_parity =
+    tx_type == 0
+      ? get_y_parity(BigInt(v), BigInt(chainId))
+      : parseInt(v, 16) == 1;
+  console.log("r: ", r);
+  console.log("s: ", s);
+  console.log("y parity: ", y_parity);
+
   process.exit(0);
+};
+
+const get_y_parity = (v: bigint, chain_id: bigint): boolean => {
+  let y_parity = v - (chain_id * BigInt(2) + BigInt(35));
+  if (y_parity == BigInt(0) || y_parity == BigInt(1)) {
+    return y_parity == BigInt(1);
+  }
+
+  y_parity = v - (chain_id * BigInt(2) + BigInt(36));
+  if (y_parity == BigInt(0) || y_parity == BigInt(1)) {
+    return y_parity == BigInt(1);
+  }
+
+  throw new Error("invalid v value");
 };
 
 main();

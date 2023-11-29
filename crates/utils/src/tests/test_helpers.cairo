@@ -1,5 +1,7 @@
+use starknet::eth_signature::Signature;
 use utils::helpers::{
     SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, U32Trait, U8SpanExTrait,
+    EthAddressSignatureTrait, TryIntoEthSignature
 };
 use utils::helpers::{ByteArrayExTrait};
 use utils::helpers;
@@ -438,4 +440,80 @@ fn test_span_u8_to_64_words_full() {
     assert(pending_word_len == 0, 'wrong pending word length');
     assert(u64_words.len() == 1, 'wrong u64 words length');
     assert(*u64_words[0] == 578437695752307201, 'wrong u64 words length');
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test_eth_signature_to_felt252_array() {
+    let signature_1 = Signature {
+        r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
+        s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
+        y_parity: true
+    };
+
+    let signature_2 = Signature {
+        r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
+        s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
+        y_parity: false
+    };
+
+    let expected_signature_1: Array<felt252> = array![
+        signature_1.r.low.into(),
+        signature_1.r.high.into(),
+        signature_1.s.low.into(),
+        signature_1.s.high.into(),
+        0x01_felt252,
+    ];
+
+    let expected_signature_2: Array<felt252> = array![
+        signature_1.r.low.into(),
+        signature_1.r.high.into(),
+        signature_1.s.low.into(),
+        signature_1.s.high.into(),
+        0x0_felt252,
+    ];
+
+    let result = signature_1.to_felt252_array();
+    assert(result == expected_signature_1, 'wrong signature conversion');
+
+    let result = signature_2.to_felt252_array();
+    assert(result == expected_signature_2, 'wrong signature conversion');
+}
+
+#[test]
+#[available_gas(2000000000)]
+fn test_felt252_array_to_eth_signature() {
+    let signature_1 = Signature {
+        r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
+        s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
+        y_parity: true
+    };
+
+    let signature_2 = Signature {
+        r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
+        s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
+        y_parity: false
+    };
+
+    let signature_1_felt252_arr: Array<felt252> = array![
+        signature_1.r.low.into(),
+        signature_1.r.high.into(),
+        signature_1.s.low.into(),
+        signature_1.s.high.into(),
+        0x01_felt252,
+    ];
+
+    let signature_2_felt252_arr: Array<felt252> = array![
+        signature_1.r.low.into(),
+        signature_1.r.high.into(),
+        signature_1.s.low.into(),
+        signature_1.s.high.into(),
+        0x0_felt252,
+    ];
+
+    let result = signature_1_felt252_arr.span().try_into().unwrap();
+    assert(result == signature_1, 'wrong signature extracted');
+
+    let result = signature_2_felt252_arr.span().try_into().unwrap();
+    assert(result == signature_2, 'wrong signature extracted');
 }
