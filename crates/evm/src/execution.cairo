@@ -102,7 +102,7 @@ fn reverted_with_err(mut machine: Machine, error: EVMError) -> ExecutionResult {
     ExecutionResult {
         address: machine.address(),
         status: Status::Reverted,
-        return_data: Default::default().span(),
+        return_data: return_data,
         state: machine.state,
     }
 }
