@@ -1,11 +1,13 @@
 //! Push Operations.
 
 use evm::errors::EVMError;
+use evm::gas;
 use evm::machine::{Machine, MachineTrait};
 use evm::stack::StackTrait;
 
 mod internal {
     use evm::errors::EVMError;
+    use evm::gas;
     use evm::machine::{Machine, MachineTrait};
     use evm::stack::StackTrait;
     use utils::helpers::load_word;
@@ -13,6 +15,7 @@ mod internal {
     /// Place i bytes items on stack.
     #[inline(always)]
     fn exec_push_i(ref machine: Machine, i: u8) -> Result<(), EVMError> {
+        machine.increment_gas_used_checked(gas::VERYLOW)?;
         let i = i.into();
         let data = machine.read_code(i);
 
@@ -28,6 +31,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#5f?fork=shanghai
     #[inline(always)]
     fn exec_push0(ref self: Machine) -> Result<(), EVMError> {
+        self.increment_gas_used_checked(gas::BASE)?;
         self.stack.push(0)
     }
 

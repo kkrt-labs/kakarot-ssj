@@ -612,7 +612,7 @@ fn test_exec_sstore_finalized() {
 }
 
 #[test]
-fn test_gas_should_push_gas_limit_to_stack() {
+fn test_gas_should_push_gas_used_to_stack() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
@@ -621,5 +621,5 @@ fn test_gas_should_push_gas_limit_to_stack() {
 
     // Then
     let result = machine.stack.peek().unwrap();
-    assert(result == machine.gas_limit().into(), 'stack top should be gas_limit');
+    assert(result == machine.gas_used().into(), 'stack top should be gas_limit');
 }

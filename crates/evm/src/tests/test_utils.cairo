@@ -185,8 +185,8 @@ fn setup_call_context() -> CallContext {
     let value: u256 = callvalue();
     let caller = test_address();
     let read_only = false;
-    let gas_price = 0xaaaaaa;
-    let gas_limit = 0xffffff;
+    let gas_price = gas_price();
+    let gas_limit = gas_limit();
     let output_offset = 0;
     let output_size = 0;
 

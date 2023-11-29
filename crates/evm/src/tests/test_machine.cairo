@@ -1,8 +1,10 @@
 use evm::context::{CallContextTrait, ExecutionContextType, ExecutionContextTrait};
+use evm::errors::DebugEVMError;
 use evm::errors::{EVMError, READ_SYSCALL_FAILED};
 use evm::machine::{Machine, MachineTrait};
-use evm::tests::test_utils::{evm_address, starknet_address, MachineBuilderTestTrait, test_address};
-
+use evm::tests::test_utils::{
+    gas_limit, evm_address, starknet_address, MachineBuilderTestTrait, test_address, gas_price
+};
 
 #[test]
 fn test_machine_default() {
@@ -57,6 +59,28 @@ fn test_revert() {
 }
 
 #[test]
+fn test_increment_gas_unchecked() {
+    let mut machine: Machine = Default::default();
+
+    assert(machine.gas_used() == 0, 'wrong gas_used');
+
+    machine.increment_gas_used_unchecked(gas_limit());
+
+    assert(machine.gas_used() == gas_limit(), 'wrong gas_used');
+}
+
+#[test]
+fn test_increment_gas_checked() {
+    let mut machine: Machine = Default::default();
+
+    assert(machine.gas_used() == 0, 'wrong gas_used');
+
+    let result = machine.increment_gas_used_checked(gas_limit());
+
+    assert_eq!(result.unwrap_err(), EVMError::OutOfGas);
+}
+
+#[test]
 fn test_set_stopped() {
     let mut machine: Machine = Default::default();
 
@@ -97,8 +121,8 @@ fn test_call_context_properties() {
 
     let call_ctx = machine.call_ctx();
     assert(call_ctx.read_only() == false, 'wrong read_only');
-    assert(call_ctx.gas_limit() == 0xffffff, 'wrong gas_limit');
-    assert(call_ctx.gas_price() == 0xaaaaaa, 'wrong gas_price');
+    assert(call_ctx.gas_limit() == gas_limit(), 'wrong gas_limit');
+    assert(call_ctx.gas_price() == gas_price(), 'wrong gas_price');
     assert(call_ctx.value() == 123456789, 'wrong value');
     assert(call_ctx.bytecode() == bytecode, 'wrong bytecode');
     assert(call_ctx.calldata() == array![4, 5, 6].span(), 'wrong calldata');
