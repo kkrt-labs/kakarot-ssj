@@ -1,4 +1,3 @@
-use core::result::ResultTrait;
 use contracts::tests::test_utils::{setup_contracts_for_testing, deploy_contract_account};
 use core::result::ResultTrait;
 use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION, WRITE_IN_STATIC_CONTEXT};

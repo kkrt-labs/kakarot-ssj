@@ -503,7 +503,7 @@ fn test_exec_delegatecall() {
 
 
 #[test]
-fn test_exec_create() {
+fn test_exec_create_no_value_transfer() {
     // Given
     let (native_token, _) = setup_contracts_for_testing();
 
@@ -529,7 +529,7 @@ fn test_exec_create() {
 
     machine.stack.push(storage_initcode.len().into()).unwrap();
     machine.stack.push(0).expect('push failed');
-    machine.stack.push(1).expect('push failed');
+    machine.stack.push(0).expect('push failed');
 
     // When
     machine.exec_create().unwrap();
@@ -543,12 +543,14 @@ fn test_exec_create() {
 
     assert_eq!(account.nonce(), 1);
     assert(account.code == storage_evm_bytecode(), 'wrong bytecode');
-    assert_eq!(account.balance(), 1);
+    assert_eq!(account.balance(), 0);
 
     let deployer = machine.state.get_account(eth_address);
     assert_eq!(deployer.nonce(), 2);
-    assert_eq!(deployer.balance(), 1);
+    assert_eq!(deployer.balance(), 2);
 }
+
+//TODO add test with value transfer
 
 #[test]
 fn test_exec_create_failure() {
@@ -609,7 +611,7 @@ fn test_exec_create2() {
     let mut interpreter = EVMInterpreterTrait::new();
 
     let deployed_bytecode = array![0xff].span();
-    let eth_address: EthAddress = 0x00000000000000000075766d5f61646472657373_u256.into();
+    let eth_address: EthAddress = evm_address();
     let contract_address = deploy_contract_account(eth_address, deployed_bytecode);
 
     let mut ctx = machine.current_ctx.unbox();
@@ -637,14 +639,14 @@ fn test_exec_create2() {
 
     // const address = getContractAddress({
     //   bytecode: '0x608060405234801561000f575f80fd5b506101438061001d5f395ff3fe608060405234801561000f575f80fd5b5060043610610034575f3560e01c80632e64cec1146100385780636057361d14610056575b5f80fd5b610040610072565b60405161004d919061009b565b60405180910390f35b610070600480360381019061006b91906100e2565b61007a565b005b5f8054905090565b805f8190555050565b5f819050919050565b61009581610083565b82525050565b5f6020820190506100ae5f83018461008c565b92915050565b5f80fd5b6100c181610083565b81146100cb575f80fd5b50565b5f813590506100dc816100b8565b92915050565b5f602082840312156100f7576100f66100b4565b5b5f610104848285016100ce565b9150509291505056fea2646970667358221220b5c3075f2f2034d039a227fac6dd314b052ffb2b3da52c7b6f5bc374d528ed3664736f6c63430008140033',
-    //   from: '0x00000000000000000075766d5f61646472657373',
+    //   from: '0x00000000000000000065766d5f61646472657373',
     //   opcode: 'CREATE2',
     //   salt: '0x00',
     // });
     // console.log(address)
     let account = machine
         .state
-        .get_account(0xeea3a85A7497e74d85b46E987B8E05152A183892.try_into().unwrap());
+        .get_account(0x0f48B8c382B5234b1a92368ee0f6864a429d0Cb8.try_into().unwrap());
 
     assert(account.nonce() == 1, 'wrong nonce');
     assert(account.code == storage_evm_bytecode(), 'wrong bytecode');
