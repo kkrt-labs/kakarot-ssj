@@ -94,7 +94,7 @@ fn test_kakarot_core_deploy_eoa() {
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
-    // triggerred in the constructor
+    // triggered in the constructor
     contract_utils::drop_event(kakarot_core.contract_address);
 
     let event = contract_utils::pop_log::<KakarotCore::EOADeployed>(kakarot_core.contract_address)
@@ -405,7 +405,7 @@ fn test_eth_send_transaction_deploy_tx() {
 fn test_contract_account_class_hash() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
-    // triggerred in the constructor
+    // triggered in the constructor
     contract_utils::drop_event(kakarot_core.contract_address);
 
     let class_hash = kakarot_core.ca_class_hash();
@@ -429,7 +429,7 @@ fn test_contract_account_class_hash() {
 fn test_account_class_hash() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
-    // triggerred in the constructor
+    // triggered in the constructor
     contract_utils::drop_event(kakarot_core.contract_address);
 
     let class_hash = kakarot_core.account_class_hash();
@@ -455,7 +455,7 @@ fn test_account_class_hash() {
 fn test_eoa_class_hash() {
     let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
-    // triggerred in the constructor
+    // triggered in the constructor
     contract_utils::drop_event(kakarot_core.contract_address);
 
     let class_hash = kakarot_core.eoa_class_hash();

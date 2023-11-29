@@ -232,7 +232,7 @@ impl StateImpl of StateTrait {
         match maybe_entry {
             Option::Some((_, key, value)) => { return Result::Ok(value); },
             Option::None => {
-                let account = AccountTrait::fetch_or_create(evm_address);
+                let account = self.get_account(evm_address);
                 return account.read_storage(key);
             }
         }

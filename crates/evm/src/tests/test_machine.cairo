@@ -114,30 +114,6 @@ fn test_addresses() {
 }
 
 #[test]
-fn test_destroyed_contracts() {
-    let mut machine: Machine = Default::default();
-    let destroyed_contracts = machine.destroyed_contracts();
-    assert(destroyed_contracts.len() == 0, 'wrong length');
-}
-
-#[test]
-fn test_events() {
-    let mut machine: Machine = Default::default();
-
-    let events = machine.events();
-    assert(events.len() == 0, 'wrong length');
-}
-
-#[test]
-fn test_create_addresses() {
-    let mut machine: Machine = Default::default();
-
-    let create_addresses = machine.create_addresses();
-    assert(create_addresses.len() == 0, 'wrong length');
-}
-
-
-#[test]
 fn test_set_return_data_root() {
     let mut machine: Machine = Default::default();
     machine.set_return_data(array![0x01, 0x02, 0x03].span());

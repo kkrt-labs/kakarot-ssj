@@ -15,7 +15,7 @@ _Account state associated to an Ethereum address. Source:
 [EVM Illustrated](https://takenobu-hs.github.io/downloads/ethereum_evm_illustrated.pdf)_
 
 In traditional EVM clients, like Geth, the _world state_ is stored as a _trie_,
-and informations about account are stored in the world state trie and can be
+and information about account are stored in the world state trie and can be
 retrieved through queries. Each account in the world state trie is associated
 with an account storage trie, which stores all of the information related to the
 account. When Geth updates the storage of a contract by executing the SSTORE
@@ -66,17 +66,16 @@ flowchart TD;
     style M fill:#DB2929,stroke:#333,stroke-width:2px;
 ```
 
-_Simplified process representation of SSTORE and SLOAD Opcodes in the Geth EVM
-Client_
+<span class="caption">_Simplified representation of SSTORE and SLOAD Opcodes
+behavior in the Geth EVM Client_ </span>
 
 ## Storage in Kakarot
 
 As Kakarot is a contract that is deployed on Starknet and is not a client that
 can directly manipulate a storage database, our approach differs from one of a
-traditional client. We do not have a world state trie, and we do not have a
-storage trie. Instead, we have access to Kakarot's contract storage on the
-Starknet blockchain, that we can query using syscalls to read and update the
-value of a of a storage slot.
+traditional client. We do not directly manipulate tries. Instead, we have access
+to contracts storage on the Starknet blockchain, that we can query using
+syscalls to read and update the value of a of a storage slot.
 
 There are two different ways of handling Storage in Kakarot.
 
@@ -87,34 +86,44 @@ that for every contract that is deployed on Kakarot, we will deploy an
 underlying Starknet contract, which has its own state which can only be queried
 by itself.
 
-The current contract storage design in Kakarot Zero is organized as such:
+This design closely resembles the design of the EVM. It has the following
+properties:
 
 - The two different kinds of EVM accounts - Externally Owned Accounts (EOA) and
   Contract Accounts (CA) - are both represented by Starknet smart contracts.
-  Each account is mapped to a unique Starknet contract. Each contract has its
-  own storage.
+  Each EVM account is mapped to a unique Starknet contract. Each contract
+  account has its own storage, and has external functions that can be called by
+  Kakarot to read and write to its storage.
 - Each contract is deployed by Kakarot, and contains its own bytecode in storage
-  in the case of a smart contract (no bytecode for an EOA).
+  in the case of a smart contract (as EOAs don't have code)
 - Each contract account has external functions that can be called by Kakarot to
   read the bytecode it stores and to read / write to its storage. This makes
   Kakarot an effective "admin" to all contracts with rights to modify their
   storage.
-- SLOAD/SSTORE opcodes are used to read/write to storage and perform a
-  `contract_call_syscall` to modify the storage of the remote contract.
 
-However, this design has some limitations:
+This design has some limitations:
 
-- We perform a `call_contract_syscall` for each SLOAD/SSTORE, which is
-  expensive. Given that only KakarotCore can modify the storage of a Kakarot
-  contract, we could directly store the whole world state in the main Kakarot
-  contract storage.
+- We perform a `call_contract_syscall` for each SLOAD/SSTORE operation that is
+  committed to Starknet, which has an extra overhead compared to directly
+  modifying the current contract's storage . Given that only KakarotCore can
+  modify the storage of a Kakarot contract, we could directly store the whole
+  world state in the main Kakarot contract storage.
 - It adds external entrypoints with admin rights to read and write from storage
-  in each Kakarot contract. This is not ideal from a security perspective.
+  in each Kakarot contract, which adds security risks.
 - It moves away from the traditional EVM design, in which execution clients
   store account states in a common database backend.
 
-Therefore, we will not use this design in SSJ. We will instead use the second
-design presented thereafter.
+However, it has some interesting properties. It allows us to have a one-to-one
+mapping between Kakarot contracts and Starknet contracts, which makes it easier
+to perform value transfers with the chain's native token. Moreover, it allows
+one to send funds from a Starknet account to a Kakarot account, which can be
+useful to implement a bridging mechanism to Kakarot with low overhead, or any
+other mechanism that requires interacting with funds of a Kakarot account.
+
+Considering the compatibility properties, we will use this design in Kakarot.
+The second design, presented after, still has some interesting properties that
+we will discuss. But the benefits it brings do not outweigh the loss of
+compatibility.
 
 ### A shared storage space for all Kakarot Contracts
 
@@ -129,59 +138,19 @@ deploying contracts.
 
 A contract’s storage on Starknet is a persistent storage space where you can
 read, write, modify, and persist data. The storage is a map with $2^{251}$
-slots, where each slot is a felt which is initialized to 0.
+slots, where each slot is a `felt252` which is initialized to 0.
 
 This new model doesn't expose read and write methods on Kakarot contracts.
 Instead of having $n$ contracts with `write_storage` and `read_storage`
 entrypoints, the only way to update the storage of a Kakarot contract is now
 through executing SLOAD / SSTORE internally to KakarotCore.
 
-```mermaid
-sequenceDiagram
-    participant C as Caller
-    participant K as KakarotCore
-    participant M as Machine
-    participant J as Journal
-    participant S as ContractState
-
-    C->>K: Executes Kakarot contract
-    K->>M: Executes Opcode (Either SSTORE or SLOAD)
-
-    Note over K,M: If it's an SSTORE operation, it writes to Storage.
-    Note over K,M: If it's an SLOAD operation, it reads from Storage.
-
-    alt SSTORE
-        M-->>M: key = hash(evm_address, storage_slot)
-        M->>J: journal.insert(key,value)
-    else SLOAD
-        M-->>M: key = hash(evm_address, storage_slot)
-        M->>J: journal.get(key)
-        J -->> M: Nullable<value>
-        alt Journal returns value
-
-        else Journal returns nothing
-            M->>S: storage_read(key)
-            S-->>M: value
-        end
-    end
-    Note over K,M: Committing journal entries to storage
-    K->>M: Commit
-    M->>J: Get all journal entries
-    J -->>M: entries
-    loop for each journal entry
-        M->>S: storage_write(key,value)
-    end
-
-    Note over S: Storage is now updated with the final state of all changes made during the transaction.
-```
-
-### Eventual security risks
-
-According to
-[an engineer from ElectricCapital](https://twitter.com/n4motto/status/1554853912074522624?s=20),
-44M contracts have been deployed on Ethereum so far. If we assume that Kakarot
-could reach the same number of contracts, that would leave us with a total of
-$2^{251} / 44\cdot10^6 \approx 2^{225}$ slots per contract. Even with a
+Regarding the security of such a design, we can reason about the probability of
+a collision occurring when interacting with this shared storage.
+[65M contracts](https://dune.com/queries/2284893/3744521) have been deployed on
+Ethereum so far. If we assume that Kakarot could reach the same number of
+contracts, that would leave us with a total of
+$2^{251} / 65\cdot10^6 \approx 2^{225}$ slots per contract. Even with a
 hypothetical number of 100 billion contracts, we would still have around
 $2^{214}$ storage slots available per contract.
 
@@ -192,52 +161,113 @@ therefore consider that the collision risk is negligible and that this storage
 layout doesn't introduce any security risk to Kakarot. For reference, Ethereum
 has 80 bits of security on its account addresses, which are 160 bits long.
 
+But, as we're looking for maximum compatibility between "pure" Starknet
+contracts and "Kakarot" Starknet contracts, this design is not ideal from a
+compatibility perspective. It requires us to keep an internal accounting of the
+balances of each account, and to expose external entrypoints in order to query
+the balances of each account. This is not ideal, as it completely breaks the
+compatibility with Starknet.
+
 ### Tracking and reverting storage changes
 
-This design allows reverting storage changes by using a concept similar to
-Geth's journal. Each storage change will be stored in a `Journal` implemented
+The storage mechanism presented in the [Local State](./local_state.md) section
+enable us to revert storage changes by using a concept similar to Geth's
+journal. Each storage change will be stored in a `StateChangeLog` implemented
 using a `Felt252Dict` data structure, that will associate each modified storage
 address to its new value. This allows us to perform three things:
 
 - When executing a transaction, instead of using one `storage_write_syscall` per
-  SSTORE opcode, we can simply store the storage changes in this journal. At the
-  end of the transaction, we can finalize all the storage writes together and
-  perform only one `storage_write_syscall` per modified storage address.
-- When reading from storage, we can first read from the journal to see if the
+  SSTORE opcode, we can simply store the storage changes in this cache state. At
+  the end of the transaction, we can finalize all the storage writes together
+  and perform only one `storage_write_syscall` per modified storage address.
+- When reading from storage, we can first read from the state to see if the
   storage slot has been modified. If it's the case, we can read the new value
-  from the journal instead of performing a `storage_read_syscall`.
+  from the state instead of performing a `storage_read_syscall`.
 - If the transaction reverts, we won't need to revert the storage changes
   manually. Instead, we can simply not finalize the storage changes present in
-  the journal, which can save a lot of gas.
+  the state, which can save a lot of gas.
+
+```mermaid
+sequenceDiagram
+    participant C as Caller
+    participant K as KakarotCore
+    participant M as Machine
+    participant J as State
+    participant S as ContractState
+
+    C->>K: Executes Kakarot contract
+    K->>M: Executes Opcode (Either SSTORE or SLOAD)
+
+    Note over K,M: If it's an SSTORE operation, it writes to Storage.
+    Note over K,M: If it's an SLOAD operation, it reads from Storage.
+
+    alt SSTORE
+        M-->>M: hash = hash(evm_address, storage_key)
+        M->>J: state.accounts_storage.insert(hash, (key, value))
+    else SLOAD
+        M-->>M: hash = hash(evm_address, storage_key)
+        M->>J: state.accounts_storage.get(hash)
+        J -->> M: Nullable~value~
+        alt State returns value
+
+        else State returns nothing
+            M->>S: storage_read(evm_address, key)
+            S-->>M: value
+        end
+    end
+    Note over K,M: Committing State entries to storage
+    K->>M: Commit
+    M->>J: Get all state storage entries
+    J -->>M: entries
+    loop for each storage entry
+        M->>S: storage_write(evm_address, key, value)
+    end
+
+    Note over S: Storage is now updated with the final state of all changes made during the transaction.
+```
+
+<span class="caption">Sequence of interactions between Kakarot, the local State
+and Starknet for the SSTORE and SLOAD Opcodes</span>
 
 ### Implementation
 
 The SSTORE and SLOAD opcodes are implemented to first read and write to the
-`Journal` instead of directly writing to the KakarotCore contract's storage.
+`State` instead of directly writing to the KakarotCore contract's storage. The
+internal location of the storage slot is computed by applying the poseidon hash
+on the EVM address of the contract and the storage key. We store the key
+nonetheless, as it will be needed to finalize the storage updates at the end of
+the transaction when retrieving the address of the contract to apply storage
+changes to.
 
-Using the `storage_read_syscall` and `storage_write_syscall` syscalls, we can
-arbitrarily read and write to a contract's storage. Therefore, we will be able
-to simply implement the SSTORE and SLOAD opcodes as follows:
+Using the `storage_at` and `set_storage_at` entrypoints in the contract
+accounts, we can arbitrarily read and write to another contract's storage.
+Therefore, we will be able to simply implement the SSTORE and SLOAD opcodes in
+two steps, as follows:
 
 ```rust
   // SSTORE
-  let storage_address = poseidon_hash(evm_address, storage_slot);
-  self.journal.insert(storage_address, NullableTrait::new(value));
+  let hash = poseidon_hash(evm_address, key);
+  self.state.accounts_storage.write(hash, (evm_address, key, value));
 ```
 
 ```rust
   // SLOAD
   let storage_address = poseidon_hash(evm_address, storage_slot);
-  let value = match_nullable(self.journal.get(storage_address)) {
-            FromNullableResult::Null => storage_read_syscall(storage_address),
-            FromNullableResult::NotNull(value) => value.unbox(),
-  }
+  let maybe_entry = self.accounts_storage.read(internal_key);
+  match maybe_entry {
+      Option::Some((_, key, value)) => { return Result::Ok(value); },
+      Option::None => {
+          let account = self.get_account(evm_address);
+          return account.read_storage(key);
+      }
+}
 ```
 
 ```rust
   // Finalizing storage updates
-  for keys in journal_keys{
-    storage_write_syscall(key, journal.get(key));
+  for storage_hash in accounts_storage{
+    let (contract_address, key, value) = account_state_keys[storage_hash]
+    ContractAccountDispatcher{contract_address}.set_storage_at(key, value);
   }
 ```
 

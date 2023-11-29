@@ -427,7 +427,7 @@ mod swap {
         let index1 = stack.peek_at(1).unwrap();
         assert(index1 == 3, 'post-swap: wrong index1');
         let index0 = stack.peek_at(0).unwrap();
-        assert(index0 == 2, 'post-swap: wront index0');
+        assert(index0 == 2, 'post-swap: wrong index0');
     }
 
     #[test]
@@ -462,7 +462,7 @@ mod swap {
         let index1 = stack.peek_at(1).unwrap();
         assert(index1 == 3, 'post-swap: wrong index1');
         let index0 = stack.peek_at(0).unwrap();
-        assert(index0 == 2, 'post-swap: wront index0');
+        assert(index0 == 2, 'post-swap: wrong index0');
     }
 
     #[test]

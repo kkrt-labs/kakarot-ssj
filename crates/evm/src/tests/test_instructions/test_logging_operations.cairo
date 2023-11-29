@@ -3,6 +3,7 @@ use evm::instructions::LoggingOperationsTrait;
 use evm::machine::{Machine, MachineTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
+use evm::state::StateTrait;
 use evm::tests::test_utils::{MachineBuilderTestTrait};
 use integer::BoundedInt;
 use utils::helpers::u256_to_bytes_array;
@@ -24,7 +25,7 @@ fn test_exec_log0() {
     assert(result.is_ok(), 'should have succeeded');
     assert(machine.stack.len() == 0, 'stack should be empty');
 
-    let mut events = machine.events();
+    let mut events = machine.state.events.contextual_logs;
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -53,7 +54,7 @@ fn test_exec_log1() {
     assert(result.is_ok(), 'should have succeeded');
     assert(machine.stack.len() == 0, 'stack should be empty');
 
-    let mut events = machine.events();
+    let mut events = machine.state.events.contextual_logs;
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -84,7 +85,7 @@ fn test_exec_log2() {
     assert(result.is_ok(), 'should have succeeded');
     assert(machine.stack.len() == 0, 'stack should be empty');
 
-    let mut events = machine.events();
+    let mut events = machine.state.events.contextual_logs;
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -118,7 +119,7 @@ fn test_exec_log3() {
     assert(result.is_ok(), 'should have succeeded');
     assert(machine.stack.len() == 0, 'stack should be empty');
 
-    let mut events = machine.events();
+    let mut events = machine.state.events.contextual_logs;
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -156,7 +157,7 @@ fn test_exec_log4() {
     assert(result.is_ok(), 'should have succeeded');
     assert(machine.stack.len() == 0, 'stack should be empty');
 
-    let mut events = machine.events();
+    let mut events = machine.state.events.contextual_logs;
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -211,7 +212,7 @@ fn test_exec_log1_size_0_offset_0() {
     assert(result.is_ok(), 'should have succeeded');
     assert(machine.stack.len() == 0, 'stack should be empty');
 
-    let mut events = machine.events();
+    let mut events = machine.state.events.contextual_logs;
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -293,7 +294,7 @@ fn test_exec_log_multiple_events() {
     assert(result.is_ok(), 'should have succeeded');
     assert(machine.stack.len() == 0, 'stack size should be 0');
 
-    let mut events = machine.events();
+    let mut events = machine.state.events.contextual_logs;
     assert(events.len() == 2, 'context should have 2 events');
 
     let event1 = events.pop_front().unwrap();

@@ -54,7 +54,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     fn exec_sub(ref self: Machine) -> Result<(), EVMError> {
         let popped = self.stack.pop_n(2)?;
 
-        // Compute the substraction
+        // Compute the subtraction
         let (result, _) = u256_overflow_sub(*popped[0], *popped[1]);
 
         self.stack.push(result)

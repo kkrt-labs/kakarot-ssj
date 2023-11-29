@@ -94,18 +94,7 @@ fn execute(
     let address = machine.address();
     let status = machine.status();
     let return_data = machine.return_data();
-    let destroyed_contracts = machine.destroyed_contracts();
-    let create_addresses = machine.create_addresses();
-    let events = machine.events();
-    ExecutionResult {
-        address,
-        status,
-        return_data,
-        destroyed_contracts,
-        create_addresses,
-        events,
-        state: machine.state,
-    }
+    ExecutionResult { address, status, return_data, state: machine.state }
 }
 
 fn reverted_with_err(mut machine: Machine, error: EVMError) -> ExecutionResult {
@@ -113,10 +102,7 @@ fn reverted_with_err(mut machine: Machine, error: EVMError) -> ExecutionResult {
     ExecutionResult {
         address: machine.address(),
         status: Status::Reverted,
-        return_data,
-        destroyed_contracts: Default::default().span(),
-        create_addresses: Default::default().span(),
-        events: Default::default().span(),
+        return_data: Default::default().span(),
         state: machine.state,
     }
 }

@@ -13,10 +13,10 @@ context, which contained the stack, the memory, and the execution state. Each
 local execution context optionally contained parent and child execution
 contexts, which were used to model the execution of sub-calls. However, this
 design was not possible to implement in Cairo, as Cairo does not support the use
-of Nullable types containing dictionaries. Since the ExecutionContext struct
-mentioned in [execution_context](./execution_context.md) contains such Nullable
-types, we had to change the design of the EVM to use a machine with a single
-Stack and Memory, which are our dict-based data structures.
+of `Nullable` types containing dictionaries. Since the `ExecutionContext` struct
+contains such `Nullable` types, we had to change the design of the EVM to use a
+machine with a single stack and memory, which are our dict-based data
+structures.
 
 ## The Kakarot Machine design
 
@@ -41,16 +41,16 @@ To overcome the problem stated above, we have come up with the following design:
 - The execution context tree is initialized with a single root execution
   context, which has no parent and no child. It has an `id` field equal to 0.
 
-The following diagram describes the model of the Kakarot Machine.
+The following diagram describes the model of the Kakarot machine.
 
 ```mermaid
 classDiagram
     class Machine{
-        current_ctx: Box<ExecutionContext>,
+        current_ctx: Box~ExecutionContext~,
         ctx_count: usize,
         stack: Stack,
         memory: Memory,
-        storage_journal: Journal,
+        state: State,
     }
 
     class Memory{
@@ -66,20 +66,22 @@ classDiagram
     }
 
     class ExecutionContext{
-        id: usize,
-        evm_address: EthAddress,
-        starknet_address: ContractAddress,
-        program_counter: u32,
-        status: Status,
-        call_ctx: CallContext,
-        destroyed_contracts: Array~EthAddress~,
-        events: Array~Event~,
-        create_addresses: Array~EthAddress~,
-        return_data: Array~u8~,
-        parent_ctx: Nullable~ExecutionContext~,
-        child_return_data: Option~Span~u8~~
+      ctx_type: ExecutionContextType,
+      address: Address,
+      program_counter: u32,
+      status: Status,
+      call_ctx: Box~CallContext~,
+      return_data: Span~u8~,
+      parent_ctx: Nullable~ExecutionContext~,
+      gas_used: u128,
     }
 
+    class ExecutionContextType {
+      <<enumeration>>
+      Root: IsCreate,
+      Call: usize,
+      Create: usize
+    }
 
     class CallContext{
         caller: EthAddress,
@@ -89,13 +91,27 @@ classDiagram
         gas_price: u128,
         gas_limit: u128,
         read_only: bool,
+        ret_offset: usize,
+        ret_size: usize,
     }
 
-    class Journal{
-        local_changes: Felt252Dict~felt252~,
-        local_keys: Array~felt252~,
-        global_changes: Felt252Dict~felt252~,
-        global_keys: Array~felt252~,
+    class State{
+      accounts: StateChangeLog~Account~,
+      accounts_storage: StateChangeLog~EthAddress_u256_u256~,
+      events: SimpleLog~Event~,
+      transfers: SimpleLog~Transfer~,
+    }
+
+    class StateChangeLog~T~ {
+      contextual_changes: Felt252Dict~Nullable~T~~,
+      contextual_keyset: Array~felt252~,
+      transactional_changes: Felt252Dict~Nullable~T~~,
+      transactional_keyset: Array~felt252~
+    }
+
+    class SimpleLog~T~ {
+      contextual_logs: Array~T~,
+      transactional_logs: Array~T~,
     }
 
     class Status{
@@ -109,11 +125,16 @@ classDiagram
     Machine *-- Memory
     Machine *-- Stack
     Machine *-- ExecutionContext
-    Machine *-- Journal
+    Machine *-- State
     ExecutionContext *-- ExecutionContext
+    ExecutionContext *-- ExecutionContextType
     ExecutionContext *-- CallContext
     ExecutionContext *-- Status
+    State *-- StateChangeLog
+    State *-- SimpleLog
 ```
+
+<span class="caption">Kakarot internal architecture model</span>
 
 ### The Stack
 
@@ -176,54 +197,41 @@ If we want to store an item at offset 10 of the memory relative to the execution
 context of id 1, the internal index will be
 $index = 10 + 1 \cdot 131072 = 131082$.
 
-### Tracking storage changes
+## Execution flow
 
-The EVM has a persistent storage, which is a key-value store. The storage
-changes are tracked in the `journal` field of the Machine. This field is a
-dictionary mapping storage slots addresses modified by the current execution
-context to their most recent value. For more information on how storage is
-managed in Kakarot, read [contract_storage](./contract_storage.md).
+The following diagram describe the flow of the execution context when executing
+the `run` function given an instance of the `Machine` struct instantiated with
+the bytecode to execute and the appropriate execution context.
 
-We encounter the same constraints as for the Stack and the Memory, as the
-storage changes are tracked using a dictionary; meaning that it can't be a part
-of the ExecutionContext struct. Therefore, we will track the storage changes in
-the Machine struct. What we want to achieve is the following:
+The run function is responsible for executing EVM bytecode. The flow of
+execution involves decoding and executing the current opcode, handling the
+execution, and continue executing the next opcode if the execution of the
+previous one succeeded. If the execution of an opcode fails, the execution
+context reverts, the changes made in this context are dropped, and the state of
+the blockchain is not updated.
 
-- Track the storage changes performed in the transaction as a whole.
-- Track the storage changes performed in the current execution context.
-- Rollback the storage changes performed in the current execution context when
-  the execution context is reverted.
-- Finalize the storage changes performed in the transaction when the transaction
-  is finalized.
+```mermaid
+flowchart TD
+AA["START"] --> A
+A["run()"] --> B[Decode and Execute Opcode]
+B --> |pc+=1| C{Result OK?}
+C -->|Yes| D{Execution stopped?}
+D -->|No| A
+D -->|Yes| F{Reverted?}
+C -->|No| RA
+F --> |No| FA
+F -->|Yes| RA[Discard account updates]
 
-Considering Cairo's limitations raised previously, we will use a single data
-structure to track local and global storage changes. We will use a `Journal`
-data structure, that will track two things: the changes performed in the current
-execution context, and the changes performed in the transaction as a whole. The
-Journal will have the following fields:
+subgraph Discard context changes
+RA --> RB["Discard storage updates"]
+RB --> RC["Discard event log"]
+RC --> RD["Discard transfers log"]
+end
 
-```rust
-  struct Journal {
-      local_changes: Felt252Dict<u256>,
-      local_keys: Array<u256>,
-      global_changes: Felt252Dict<u256>,
-      global_keys: Array<u256>,
-  }
+RD --> FA[finalize context]
 ```
 
-The `local_changes` field is a dictionary mapping storage slots addresses to the
-most recent changes, performed in the local execution context. The `local_keys`
-field is used to track the indexes of the storage slots addresses in the
-dictionary in order to be able to iterate over the dictionary. Similarly, the
-`global_changes` field is a dictionary mapping storage slots addresses to the
-changes performed in the transaction as a whole. The `global_keys` tracks the
-indexes of these storage slots addresses in the dictionary.
-
-When an execution contexts stops, we will commit the local changes to the global
-changes by inserting the local changes in the `global_changes` dictionary, and
-updating the `global_keys` array. When the transaction is finalized, we will
-iterate over the `global_changes` dictionary, and perform the required storage
-updates, as mentioned in [Contract Storage](./contract_storage.md).
+<span class="caption">Execution flow of EVM bytecode</span>
 
 ## Conclusion
 

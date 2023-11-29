@@ -5,21 +5,26 @@ EVM will execute when a contract is called. As Kakarot's state is embedded into
 the Starknet chain it is deployed on, contracts are not actually "deployed" on
 Kakarot: instead, the EVM bytecode of the deployed contract is first executed,
 and the returned data is then stored on-chain at a particular storage address
-inside the starknet contract corresponding to the contract's EVM address, whose
+inside the Starknet contract corresponding to the contract's EVM address, whose
 address is deterministically computed. The Kakarot EVM will be able to load this
 bytecode by querying the storage of this Starknet contract when a user interacts
 with its associated EVM address.
 
 ```mermaid
 flowchart TD
-    A[RPC call] --> |"eth_sendTransaction (contract deployment)"| B(KakarotCore)
-    B --> C[Execute initialization code]
-    C -->|Set account code to return data| D[Store account code in KakarotCore storage]
+    A[RPC call] --> B["eth_sendTransaction"]
+    B --> |Check transaction type| C{Is deploy transaction?}
+    C -- Yes --> D1[Execute initialization code]
+    D1 -->|Set account code to return data| E1[Commit code to Starknet storage]
+    E1 --> F1[Return deployed contract address]
 
-    X[RPC call] --> |"eth_sendTransaction (contract interaction)"| Y(KakarotCore)
-    Y --> Z[Load account code from KakarotCore storage]
-    Z --> ZZ[Execute bytecode]
+    C -- No --> D2[Load account code from KakarotCore storage]
+    D2 --> E2[Execute bytecode]
+    E2 --> F2[Return execution result]
 ```
+
+<span class="caption"> Transaction flow for deploy and execute transactions in
+Kakarot</span>
 
 There are several different ways to store the bytecode of a contract, and this
 document will provide a quick overview of the different options, to choose the
@@ -67,11 +72,12 @@ significant price, as the publication of state diffs on Ethereum accounted for
 [over 93% of the transaction fees paid on Starknet](https://community.starknet.io/t/volition-hybrid-data-availability-solution/97387).
 
 The first choice when storing contract bytecode is to store it as a regular
-storage variable, with its state diff posted on Ethereum acting as the DA Layer.
+variable in the contract account's storage, with its state diff posted on
+Ethereum acting as the DA Layer.
 
 In this case, the following data would reach L1:
 
-- The KakarotCore contract address
+- The Starknet address of the contract account
 - The number of updated keys in that contract
 - The keys to update
 - The new values for these keys
@@ -83,15 +89,15 @@ $$ gas\ price \cdot c_w \cdot (2n + 2m) $$
 
 where $c_w$ is the calldata cost (in gas) per 32-byte word.
 
-In this case, one single contract (the Starknet contract corresponding to the
-ContractAccount) would be updated, with $m$ keys, where $m = (B / 31) + 2$ and
-$B$ is the size of the bytecode to store (see
-[implementation details](./contract_bytecode.md#implementation-details)).
+When storing the EVM bytecode during deployment, one single contract (the
+Starknet contract corresponding to the ContractAccount) would be updated, with
+$m$ keys, where $m = (B / 31) + 2$ and $B$ is the size of the bytecode to store
+(see [implementation details](./contract_bytecode.md#implementation-details)).
 
 Considering a gas price of 34 gwei (average gas price in 2023, according to
-[Etherscan](https://etherscan.io/chart/gasprice)),a calldata cost of 16 per byte
-and the size of a typical ERC20 contract size of 2174 bytes, we would have
-$m = 72$. The associated storage update fee would be:
+[Etherscan](https://etherscan.io/chart/gasprice)), a calldata cost of 16 per
+non-zero byte of calldata and the size of a typical ERC20 contract size of 2174
+bytes, we would have $m = 72$. The associated storage update fee would be:
 
 $$ fee = 34 \cdot (16 \cdot 32) \cdot (2 + 144) = 2,541,468 \text{ gwei}$$
 
@@ -108,7 +114,7 @@ for both L2 and L1 data availability modes. The difference is in the data
 availability guarantees. When a state transition is verified on L1, its
 correctness is ensured - however, the actual state of the L2 is not known on L1.
 By posting state diffs on L1, the current state of Starknet can be reconstructed
-from the beginning, but this has a significant cost.
+from the beginning, but this has a significant cost as mentioned previously.
 
 ![Volition](volition.png)
 
@@ -172,12 +178,12 @@ committed to Ethereum. This solution is the most secure one, as it relies on
 Ethereum as a DA Layer, and thus inherits from Ethereum's security guarantees,
 ensuring that the bytecode of the deployed contract is always available.
 
-A `deploy` transaction is identified by a null `to` address (`Option::None`).
-The data sent to the KakarotCore contract when deploying a new contract will be
-passed as an `Array<u8>` to the entrypoint `eth_send_transaction` of the
-KakarotCore contract. This bytecode will then be packed 31 bytes at a time,
-reducing by 31 the size of the bytecode stored in storage, which is the most
-expensive part of the transaction.
+In Ethereum, a `deploy` transaction is identified by a null `to` address
+(`Option::None`). The calldata sent to the KakarotCore contract when deploying a
+new contract will be passed as an `Array<u8>` to the `eth_send_transaction`
+entrypoint of the KakarotCore contract. This bytecode will then be packed 31
+bytes at a time, reducing by 31 the size of the bytecode stored in storage,
+which is the most expensive part of the transaction.
 
 The contract storage related to a deployed contract is organized as:
 
@@ -192,34 +198,24 @@ struct Storage {
 We use the `List` type from the
 [Alexandria](https://github.com/keep-starknet-strange/alexandria/blob/main/src/storage/src/list.cairo)
 library to store the bytecode, allowing us to store up to 255 31-bytes values
-per `StorageBaseAddress`. For bytecode containing more than 255 31-bytes values,
-the `List` type abstracts the calculations of the next storage address used,
-which is calculated by using poseidon hashes applied on `previous_address+1`.
+per `StorageBaseAddress`. Indeed, the current limitation on the maximal size of
+a complex storage value is 256 field elements, where a field element is the
+native data type of the Cairo VM. If we want to store more than 256 field
+elements, which is the case for bytecode larger than 255 31-bytes values, which
+represents 7.9kB, we need to split the data between multiple storage addresses.
+The `List` type abstracts this process by automatically calculating the next
+storage address to use, by applying poseidon hashes on the base storage address
+of the list with the index of the segment to store the element in.
 
 The logic behind this storage design is to make it very easy to load the
 bytecode in the EVM when we want to execute a program. We will rely on the
 ByteArray type, which is a type from the core library that we can use to access
-individual byte indexes in an array of packed bytes31 values. This type is
-defined as:
+individual byte indexes in an array of packed bytes31 values.
 
-```rust
-struct ByteArray {
-    // Full "words" of 31 bytes each. The first byte of each word in the byte array
-    // is the most significant byte in the word.
-    data: Array<bytes31>,
-    // This felt252 actually represents a bytes31, with < 31 bytes.
-    // It is represented as a felt252 to improve performance of building the byte array.
-    // The number of bytes in here is specified in `pending_word_len`.
-    // The first byte is the most significant byte among the `pending_word_len` bytes in the word.
-    pending_word: felt252,
-    // Should be in range [0, 30].
-    pending_word_len: usize,
-}
-```
-
-The rationale behind this structure is detailed in the code snippet above - but
-you can notice that our stored variables reflect the fields the ByteArray type.
-Once our bytecode is written in storage, we can simply load it by doing so:
+The rationale behind this structure is thoroughly documented in the core library
+code. The variable stored in our contract's storage reflect the fields of the
+ByteArray type. Once our bytecode is written in storage, we can simply load it
+with
 
 ```rust
  let bytecode = ByteArray {
@@ -230,4 +226,5 @@ Once our bytecode is written in storage, we can simply load it by doing so:
 ```
 
 After which the value of the bytecode at offset `i` can be accessed by simply
-doing `bytecode[i]` when executing the bytecode instructions in the EVM.
+doing `bytecode[i]` when executing the bytecode instructions in the EVM - making
+it convenient to iterate over.

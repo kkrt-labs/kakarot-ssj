@@ -463,7 +463,7 @@ fn test_exec_jumpi_invalid_zero() {
 
     // Then
     let pc = machine.pc();
-    // ideally we should assert that it incremented, but incrementing is done by `decode_and_execut`
+    // ideally we should assert that it incremented, but incrementing is done by `decode_and_execute`
     // so we can assume that will be done
     assert(pc == old_pc, 'PC should be same');
 }
@@ -610,7 +610,7 @@ fn test_exec_sstore_finalized() {
     machine.state.commit_storage();
 
     // Then
-    assert(account.fetch_storage(key).unwrap() == value, 'wrong value in journal')
+    assert(account.fetch_storage(key).unwrap() == value, 'wrong committed value')
 }
 
 #[test]

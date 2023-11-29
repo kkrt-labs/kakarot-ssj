@@ -11,7 +11,9 @@ with the project.
 > **[?]** Proceed to describe how to setup local development environment. e.g:
 
 To set up a development environment, please follow the steps from
-[the README.md](../README.md#installation).
+[the README.md](../README.md#installation). Make sure that your Scarb version
+matches the one expected, specified in the [.tool-versions](../.tool-versions)
+file.
 
 ## Issues and feature requests
 
@@ -137,7 +139,7 @@ Kakarot has many data structures, e.g. an Ethereum Transaction (struct), a Stack
 pay attention:
 
 - Should it be a struct?
-- Should it be an enum: this is a new type made availabe in Cairo.
+- Should it be an enum: this is a new type made available in Cairo.
 - Which types to use? Remember! **use unsigned integers as much as possible**.
 - Remember to add traits for specific types instead of utils to write Cairo (&
   Rust) idiomatic code.

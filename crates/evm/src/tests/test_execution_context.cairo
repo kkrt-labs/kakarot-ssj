@@ -63,9 +63,7 @@ fn test_execution_context_new() {
     let return_data: Array<u8> = ArrayTrait::new();
 
     let address: Address = Default::default();
-    let destroyed_contracts: Array<EthAddress> = Default::default();
     let events: Array<Event> = Default::default();
-    let create_addresses: Array<EthAddress> = Default::default();
     let revert_contract_state: Felt252Dict<felt252> = Default::default();
     let reverted: bool = false;
     let read_only: bool = false;
@@ -83,14 +81,6 @@ fn test_execution_context_new() {
     assert(execution_context.stopped() == stopped, 'wrong stopped');
     assert(execution_context.return_data() == Default::default().span(), 'wrong return_data');
     assert(execution_context.address() == address, 'wrong evm_address');
-    assert(
-        execution_context.destroyed_contracts() == destroyed_contracts.span(),
-        'wrong destroyed_contracts'
-    );
-    assert(execution_context.events().len() == events.len(), 'wrong events');
-    assert(
-        execution_context.create_addresses() == create_addresses.span(), 'wrong create_addresses'
-    );
     assert(execution_context.reverted() == reverted, 'wrong reverted');
     assert(execution_context.is_create() == false, 'wrong is_create');
 }

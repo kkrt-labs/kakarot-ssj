@@ -195,30 +195,6 @@ impl MachineImpl of MachineTrait {
     }
 
     #[inline(always)]
-    fn destroyed_contracts(ref self: Machine) -> Span<EthAddress> {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let destroyed_contracts = current_execution_ctx.destroyed_contracts.span();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        destroyed_contracts
-    }
-
-    #[inline(always)]
-    fn events(ref self: Machine) -> Span<Event> {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let events = current_execution_ctx.events.span();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        events
-    }
-
-    #[inline(always)]
-    fn create_addresses(ref self: Machine) -> Span<EthAddress> {
-        let current_execution_ctx = self.current_ctx.unbox();
-        let create_addresses = current_execution_ctx.create_addresses.span();
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
-        create_addresses
-    }
-
-    #[inline(always)]
     fn return_data(ref self: Machine) -> Span<u8> {
         let current_execution_ctx = self.current_ctx.unbox();
         let return_data = current_execution_ctx.return_data;
@@ -261,13 +237,6 @@ impl MachineImpl of MachineTrait {
     fn read_only(ref self: Machine) -> bool {
         let current_call_ctx = self.call_ctx();
         current_call_ctx.read_only()
-    }
-
-    #[inline(always)]
-    fn append_event(ref self: Machine, event: Event) {
-        let mut current_execution_ctx = self.current_ctx.unbox();
-        current_execution_ctx.append_event(event);
-        self.current_ctx = BoxTrait::new(current_execution_ctx);
     }
 
     #[inline(always)]
@@ -345,7 +314,7 @@ impl MachineImpl of MachineTrait {
     }
 
     /// Sets the `return_data` field of the appropriate execution context,
-    /// taking into acount EVM specs: If the current context is the root
+    /// taking into account EVM specs: If the current context is the root
     /// context, sets the return_data field of the root context.  If the current
     /// context is a subcontext, sets the return_data field of the parent.
     /// Should be called when returning from a context.
