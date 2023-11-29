@@ -2,11 +2,11 @@
 
 use box::BoxTrait;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
-use evm::call_helpers::{MachineCallHelpers, CallType};
-use evm::create_helpers::{MachineCreateHelpers, CreateType};
+use evm::call_helpers::{CallHelpers, CallType};
+use evm::create_helpers::{CreateHelpers, CreateType};
 use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL, WRITE_IN_STATIC_CONTEXT};
 use evm::gas;
-use evm::machine::{Machine, MachineTrait};
+use evm::context::{ExecutionContext, ExecutionContextTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
 use evm::model::{Address, Transfer};
@@ -19,24 +19,51 @@ use utils::math::Exponentiation;
 impl SystemOperations of SystemOperationsTrait {
     /// CREATE
     /// # Specification: https://www.evm.codes/#f0?fork=shanghai
-    fn exec_create(ref self: Machine) -> Result<(), EVMError> {
+    fn exec_create(ref self: ExecutionContext) -> Result<(), EVMError> {
         if self.read_only() {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
 
         // TODO: add dynamic gas cost
-        self.increment_gas_used_checked(gas::CREATE)?;
+        self.charge_gas(gas::CREATE)?;
 
         let create_args = self.prepare_create(CreateType::CreateOrDeployTx)?;
 
-        self.init_create_sub_ctx(create_args)
+        // Initialize the sub context.
+        // TODO(elias)
+        // create a new sub context here
+        // with the correct arguments
+        // let result = sub_ctx.process_create_message();
+        // store the return data in the memory of the parent context with the correct offsets and size
+        // store the return data whole in the return data field of the parent context
+        //     if not evm.error:
+        //     contract_code = evm.output
+        //     contract_code_gas = len(contract_code) * GAS_CODE_DEPOSIT
+        //     try:
+        //         if len(contract_code) > 0:
+        //             ensure(contract_code[0] != 0xEF, InvalidContractPrefix)
+        //         charge_gas(evm, contract_code_gas)
+        //         ensure(len(contract_code) <= MAX_CODE_SIZE, OutOfGasError)
+        //     except ExceptionalHalt as error:
+        //         rollback_transaction(env.state)
+        //         evm.gas_left = Uint(0)
+        //         evm.output = b""
+        //         evm.error = error
+        //     else:
+        //         set_code(env.state, message.current_target, contract_code)
+        //         commit_transaction(env.state)
+        // else:
+        //     rollback_transaction(env.state)
+        // return evm
+        self.generic_create(create_args)
     }
+
 
     /// CALL
     /// # Specification: https://www.evm.codes/#f1?fork=shanghai
-    fn exec_call(ref self: Machine) -> Result<(), EVMError> {
+    fn exec_call(ref self: ExecutionContext) -> Result<(), EVMError> {
         // TODO: add dynamic gas cost and handle warm/cold storage
-        self.increment_gas_used_checked(gas::WARM_STORAGE_READ_COST)?;
+        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
 
         let call_args = self.prepare_call(@CallType::Call)?;
         let read_only = self.read_only();
@@ -56,25 +83,38 @@ impl SystemOperations of SystemOperationsTrait {
         }
 
         // Initialize the sub context.
-        self.init_call_sub_ctx(call_args, read_only)
+        // TODO(elias)
+        // create a new sub context here
+        // with the correct arguments
+        // let result = sub_ctx.process_message();
+        // store the return data in the memory of the parent context with the correct offsets and size
+        // store the return data whole in the return data field of the parent context
+        self.generic_call(call_args)
     }
+
 
     /// CALLCODE
     /// # Specification: https://www.evm.codes/#f2?fork=shanghai
-    fn exec_callcode(ref self: Machine) -> Result<(), EVMError> {
+    fn exec_callcode(ref self: ExecutionContext) -> Result<(), EVMError> {
         // TODO: add dynamic gas cost and handle warm/cold storage
-        self.increment_gas_used_checked(gas::WARM_STORAGE_READ_COST)?;
+        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
 
         let call_args = self.prepare_call(@CallType::CallCode)?;
-        let read_only = self.read_only();
 
         // Initialize the sub context.
-        self.init_call_sub_ctx(call_args, read_only)
+        // TODO(elias)
+        // create a new sub context here
+        // with the correct arguments
+        // let result = sub_ctx.process_message();
+        // store the return data in the memory of the parent context with the correct offsets and size
+        // store the return data whole in the return data field of the parent context
+        self.generic_call(call_args)
     }
     /// RETURN
     /// # Specification: https://www.evm.codes/#f3?fork=shanghai
-    fn exec_return(ref self: Machine) -> Result<(), EVMError> {
+    fn exec_return(ref self: ExecutionContext) -> Result<(), EVMError> {
         // TODO: add dynamic gas
+        self.charge_gas(gas::ZERO)?;
 
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
@@ -91,51 +131,87 @@ impl SystemOperations of SystemOperationsTrait {
 
     /// DELEGATECALL
     /// # Specification: https://www.evm.codes/#f4?fork=shanghai
-    fn exec_delegatecall(ref self: Machine) -> Result<(), EVMError> {
+    fn exec_delegatecall(ref self: ExecutionContext) -> Result<(), EVMError> {
         // TODO: add dynamic gas cost and handle warm/cold storage
-        self.increment_gas_used_checked(gas::WARM_STORAGE_READ_COST)?;
+        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
 
         let call_args = self.prepare_call(@CallType::DelegateCall)?;
-        let read_only = self.read_only();
 
         // Initialize the sub context.
-        self.init_call_sub_ctx(call_args, read_only)
+        // TODO(elias)
+        // create a new sub context here
+        // with the correct arguments
+        // let result = sub_ctx.process_message();
+        // store the return data in the memory of the parent context with the correct offsets and size
+        // store the return data whole in the return data field of the parent context
+        self.generic_call(call_args)
     }
 
     /// CREATE2
     /// # Specification: https://www.evm.codes/#f5?fork=shanghai
-    fn exec_create2(ref self: Machine) -> Result<(), EVMError> {
+    fn exec_create2(ref self: ExecutionContext) -> Result<(), EVMError> {
         if self.read_only() {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
 
         // TODO: add dynamic gas costs
-        self.increment_gas_used_checked(gas::CREATE)?;
+        self.charge_gas(gas::CREATE)?;
 
         let create_args = self.prepare_create(CreateType::Create2)?;
 
-        self.init_create_sub_ctx(create_args)
+        // Initialize the sub context.
+        // TODO(elias)
+        // create a new sub context here
+        // with the correct arguments
+        // let result = sub_ctx.process_create_message();
+        // store the return data in the memory of the parent context with the correct offsets and size
+        // store the return data whole in the return data field of the parent context
+        //     if not evm.error:
+        //     contract_code = evm.output
+        //     contract_code_gas = len(contract_code) * GAS_CODE_DEPOSIT
+        //     try:
+        //         if len(contract_code) > 0:
+        //             ensure(contract_code[0] != 0xEF, InvalidContractPrefix)
+        //         charge_gas(evm, contract_code_gas)
+        //         ensure(len(contract_code) <= MAX_CODE_SIZE, OutOfGasError)
+        //     except ExceptionalHalt as error:
+        //         rollback_transaction(env.state)
+        //         evm.gas_left = Uint(0)
+        //         evm.output = b""
+        //         evm.error = error
+        //     else:
+        //         set_code(env.state, message.current_target, contract_code)
+        //         commit_transaction(env.state)
+        // else:
+        //     rollback_transaction(env.state)
+        // return evm
+        self.generic_create(create_args)
     }
 
     /// STATICCALL
     /// # Specification: https://www.evm.codes/#fa?fork=shanghai
-    fn exec_staticcall(ref self: Machine) -> Result<(), EVMError> {
+    fn exec_staticcall(ref self: ExecutionContext) -> Result<(), EVMError> {
         // TODO: add dynamic gas cost and handle warm/cold storage
-        self.increment_gas_used_checked(gas::WARM_STORAGE_READ_COST)?;
+        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
 
         let call_args = self.prepare_call(@CallType::StaticCall)?;
-        let read_only = self.read_only();
 
         // Initialize the sub context.
-        self.init_call_sub_ctx(call_args, read_only)
+        // TODO(elias)
+        // create a new sub context here
+        // with the correct arguments
+        // let result = sub_ctx.process_message();
+        // store the return data in the memory of the parent context with the correct offsets and size
+        // store the return data whole in the return data field of the parent context
+        self.generic_call(call_args)
     }
 
 
     /// REVERT
     /// # Specification: https://www.evm.codes/#fd?fork=shanghai
-    fn exec_revert(ref self: Machine) -> Result<(), EVMError> {
+    fn exec_revert(ref self: ExecutionContext) -> Result<(), EVMError> {
         // TODO: add dynamic gas
-        self.increment_gas_used_checked(gas::ZERO)?;
+        self.charge_gas(gas::ZERO)?;
 
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
@@ -152,20 +228,20 @@ impl SystemOperations of SystemOperationsTrait {
 
     /// INVALID
     /// # Specification: https://www.evm.codes/#fe?fork=shanghai
-    fn exec_invalid(ref self: Machine) -> Result<(), EVMError> {
+    fn exec_invalid(ref self: ExecutionContext) -> Result<(), EVMError> {
         Result::Err(EVMError::InvalidOpcode(0xfe))
     }
 
 
     /// SELFDESTRUCT
     /// # Specification: https://www.evm.codes/#ff?fork=shanghai
-    fn exec_selfdestruct(ref self: Machine) -> Result<(), EVMError> {
+    fn exec_selfdestruct(ref self: ExecutionContext) -> Result<(), EVMError> {
         if self.read_only() {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
 
         // TODO: add dynamic gas costs
-        self.increment_gas_used_checked(gas::SELFDESTRUCT)?;
+        self.charge_gas(gas::SELFDESTRUCT)?;
 
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
         let address = self.stack.pop_eth_address()?;

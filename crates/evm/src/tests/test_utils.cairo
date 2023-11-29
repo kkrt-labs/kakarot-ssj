@@ -5,7 +5,6 @@ use evm::context::{
     DefaultOptionSpanU8
 };
 use evm::errors::{EVMError};
-use evm::machine::{Machine, MachineBuilder, MachineTrait};
 use evm::model::{ContractAccountTrait, Address, Account, AccountType};
 use evm::state::State;
 use evm::{stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}};
@@ -15,60 +14,45 @@ use starknet::{
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
 };
 
+struct ContextBuilder {
+    context: ExecutionContext
+}
+
 #[generate_trait]
-impl MachineBuilderTestImpl of MachineBuilderTestTrait {
-    fn new() -> MachineBuilder {
-        MachineBuilder { machine: Default::default() }
+impl ContextBuilderImpl of ContextBuilderTestTrait {
+    fn new() -> ContextBuilder {
+        ContextBuilder { context: Default::default() }
     }
 
-    fn new_with_presets() -> MachineBuilder {
-        let ctx = preset_execution_context();
-        MachineBuilder {
-            machine: Machine {
-                current_ctx: BoxTrait::new(ctx),
-                ctx_count: 1,
-                state: Default::default(),
-                stack: Default::default(),
-                memory: Default::default(),
-            }
-        }
+    fn new_with_presets() -> ContextBuilder {
+        ContextBuilder { context: preset_execution_context() }
     }
 
-    fn with_return_data(mut self: MachineBuilder, return_data: Span<u8>) -> MachineBuilder {
-        let mut current_ctx = self.machine.current_ctx.unbox();
-        current_ctx.return_data = return_data;
-        self.machine.current_ctx = BoxTrait::new(current_ctx);
+    fn with_return_data(mut self: ContextBuilder, return_data: Span<u8>) -> ContextBuilder {
+        self.context.return_data = return_data;
         self
     }
 
-    fn with_caller(mut self: MachineBuilder, address: Address) -> MachineBuilder {
-        let mut current_ctx = self.machine.current_ctx.unbox();
-        let mut call_ctx = current_ctx.call_ctx();
+    fn with_caller(mut self: ContextBuilder, address: Address) -> ContextBuilder {
+        let mut call_ctx = self.context.call_ctx();
         call_ctx.caller = address;
-        current_ctx.call_ctx = BoxTrait::new(call_ctx);
-        self.machine.current_ctx = BoxTrait::new(current_ctx);
+        self.context.call_ctx = BoxTrait::new(call_ctx);
         self
     }
 
-    fn with_calldata(mut self: MachineBuilder, calldata: Span<u8>) -> MachineBuilder {
-        let mut current_ctx = self.machine.current_ctx.unbox();
-        let mut call_ctx = current_ctx.call_ctx();
+    fn with_calldata(mut self: ContextBuilder, calldata: Span<u8>) -> ContextBuilder {
+        let mut call_ctx = self.context.call_ctx();
         call_ctx.calldata = calldata;
-        current_ctx.call_ctx = BoxTrait::new(call_ctx);
-        self.machine.current_ctx = BoxTrait::new(current_ctx);
+        self.context.call_ctx = BoxTrait::new(call_ctx);
         self
     }
 
-    fn with_read_only(mut self: MachineBuilder) -> MachineBuilder {
-        let mut current_ctx = self.machine.current_ctx.unbox();
-        let mut call_ctx = current_ctx.call_ctx();
-        call_ctx.read_only = true;
-        current_ctx.call_ctx = BoxTrait::new(call_ctx);
-        self.machine.current_ctx = BoxTrait::new(current_ctx);
+    fn with_read_only(mut self: ContextBuilder) -> ContextBuilder {
+        self.context.read_only = true;
         self
     }
 
-    fn with_bytecode(mut self: MachineBuilder, bytecode: Span<u8>) -> MachineBuilder {
+    fn with_bytecode(mut self: ContextBuilder, bytecode: Span<u8>) -> ContextBuilder {
         let mut current_ctx = self.machine.current_ctx.unbox();
         let mut call_ctx = current_ctx.call_ctx();
         call_ctx.bytecode = bytecode;
@@ -77,7 +61,7 @@ impl MachineBuilderTestImpl of MachineBuilderTestTrait {
         self
     }
 
-    fn with_nested_execution_context(mut self: MachineBuilder) -> MachineBuilder {
+    fn with_nested_execution_context(mut self: ContextBuilder) -> ContextBuilder {
         let current_ctx = self.machine.current_ctx.unbox();
 
         // Second Execution Context
@@ -92,14 +76,14 @@ impl MachineBuilderTestImpl of MachineBuilderTestTrait {
         self
     }
 
-    fn with_target(mut self: MachineBuilder, target: Address) -> MachineBuilder {
+    fn with_target(mut self: ContextBuilder, target: Address) -> ContextBuilder {
         let mut current_ctx = self.machine.current_ctx.unbox();
         current_ctx.address = target;
         self.machine.current_ctx = BoxTrait::new(current_ctx);
         self
     }
 
-    fn build(self: MachineBuilder) -> Machine {
+    fn build(self: ContextBuilder) -> Machine {
         return self.machine;
     }
 }
@@ -204,12 +188,20 @@ fn setup_call_context() -> CallContext {
 }
 
 fn preset_execution_context() -> ExecutionContext {
-    let context_id = ExecutionContextType::Root(false);
+    let context_type = ExecutionContextType::Call;
     let call_ctx = setup_call_context();
     let address = test_address();
     let return_data = array![1, 2, 3].span();
 
-    ExecutionContextTrait::new(context_id, address, call_ctx, Default::default(), return_data,)
+    ExecutionContextTrait::new(
+        context_type,
+        address,
+        call_ctx,
+        depth: 0,
+        stack: Default::default(),
+        memory: Default::default(),
+        state: Default::default()
+    )
 }
 
 impl CallContextPartialEq of PartialEq<CallContext> {

@@ -20,7 +20,6 @@ use evm::errors::{
     EVMError, READ_SYSCALL_FAILED, WRITE_SYSCALL_FAILED, ACCOUNT_EXISTS, DEPLOYMENT_FAILED,
     CONTRACT_ACCOUNT_EXISTS, CONTRACT_SYSCALL_FAILED
 };
-use evm::execution::execute;
 use evm::model::{Address, Account, AccountType, AccountTrait};
 use hash::{HashStateTrait, HashStateExTrait};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};

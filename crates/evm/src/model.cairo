@@ -4,7 +4,7 @@ mod eoa;
 
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
-use evm::execution::Status;
+use evm::interpreter::Status;
 use evm::model::account::{Account, AccountTrait};
 use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::eoa::EOATrait;

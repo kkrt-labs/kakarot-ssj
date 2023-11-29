@@ -75,7 +75,7 @@ fn test_increment_gas_checked() {
 
     assert(machine.gas_used() == 0, 'wrong gas_used');
 
-    let result = machine.increment_gas_used_checked(gas_limit());
+    let result = machine.charge_gas(gas_limit());
 
     assert_eq!(result.unwrap_err(), EVMError::OutOfGas);
 }

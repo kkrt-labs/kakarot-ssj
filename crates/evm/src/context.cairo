@@ -1,5 +1,6 @@
 use evm::errors::EVMError;
 use evm::memory::{Memory, MemoryTrait};
+use evm::model::{State};
 use evm::model::Address;
 use evm::model::Event;
 use evm::stack::{Stack, StackTrait};
@@ -7,6 +8,7 @@ use starknet::get_caller_address;
 use starknet::{EthAddress, ContractAddress};
 use utils::helpers::{ArrayExtension, ArrayExtTrait};
 use utils::traits::{SpanDefault, EthAddressDefault, ContractAddressDefault};
+use evm::model::ExecutionResult;
 
 #[derive(Drop, Default, Copy, PartialEq)]
 enum Status {
@@ -27,6 +29,8 @@ enum Status {
 #[derive(Drop, Copy, Default)]
 struct CallContext {
     caller: Address,
+    // The address of the contract that initiated the transaction or call.
+    origin: Address,
     /// The bytecode to execute.
     bytecode: Span<u8>,
     /// The call data.
@@ -39,10 +43,8 @@ struct CallContext {
     gas_limit: u128,
     // Evm gas price for the call
     gas_price: u128,
-    // The offset in memory to store the context return
-    ret_offset: usize,
-    // The size in memory to store the context return
-    ret_size: usize,
+    // If the context should perform a transfer
+    should_transfer: bool,
 }
 
 #[generate_trait]
@@ -50,25 +52,25 @@ impl CallContextImpl of CallContextTrait {
     #[inline(always)]
     fn new(
         caller: Address,
+        origin: Address,
         bytecode: Span<u8>,
         calldata: Span<u8>,
         value: u256,
         read_only: bool,
         gas_limit: u128,
         gas_price: u128,
-        ret_offset: usize,
-        ret_size: usize,
+        should_transfer: bool,
     ) -> CallContext {
         CallContext {
             caller,
+            origin,
             bytecode,
             calldata,
             value,
             read_only,
             gas_limit,
             gas_price,
-            ret_offset,
-            ret_size,
+            should_transfer
         }
     }
 
@@ -76,6 +78,16 @@ impl CallContextImpl of CallContextTrait {
     #[inline(always)]
     fn caller(self: @CallContext) -> Address {
         *self.caller
+    }
+
+    #[inline(always)]
+    fn origin(self: @CallContext) -> Address {
+        *self.origin
+    }
+
+    #[inline(always)]
+    fn should_transfer(self: @CallContext) -> bool {
+        *self.should_transfer
     }
 
 
@@ -130,32 +142,21 @@ impl DefaultOptionSpanU8 of Default<Option<Span<u8>>> {
 
 /// The execution context.
 /// Stores all data relevant to the current execution context.
-#[derive(Drop, Default)]
+#[derive(Destruct, Default)]
 struct ExecutionContext {
-    ctx_type: ExecutionContextType,
     address: Address,
     program_counter: u32,
+    depth: u32,
     status: Status,
     call_ctx: Box<CallContext>,
-    // Return data of a child context.
+    // Return data of a child context, or the return_data of the context right before it returns
     return_data: Span<u8>,
-    parent_ctx: Nullable<ExecutionContext>,
+    stack: Stack,
+    memory: Memory,
+    state: State,
     gas_used: u128,
 }
 
-
-type IsCreate = bool;
-/// In the case of call and create, the execution context requires an id number
-/// to access their respective Stack and Memory; while the Root context always has
-/// id equal to 0.
-/// A context is either: the root, a call sub-context or a create sub-context.
-#[derive(Drop, Default, Copy, PartialEq)]
-enum ExecutionContextType {
-    #[default]
-    Root: IsCreate,
-    Call: usize,
-    Create: usize
-}
 
 impl DefaultBoxExecutionContext of Default<Box<ExecutionContext>> {
     fn default() -> Box<ExecutionContext> {
@@ -171,23 +172,54 @@ impl DefaultBoxExecutionContext of Default<Box<ExecutionContext>> {
 impl ExecutionContextImpl of ExecutionContextTrait {
     /// Create a new execution context instance.
     #[inline(always)]
-    fn new(
-        ctx_type: ExecutionContextType,
-        address: Address,
-        call_ctx: CallContext,
-        parent_ctx: Nullable<ExecutionContext>,
-        return_data: Span<u8>,
-    ) -> ExecutionContext {
+    fn new(address: Address, call_ctx: CallContext, depth: u32, state: State,) -> ExecutionContext {
         ExecutionContext {
-            ctx_type,
             address,
+            depth,
             program_counter: Default::default(),
             status: Default::default(),
             call_ctx: BoxTrait::new(call_ctx),
-            return_data,
-            parent_ctx,
+            return_data: Default::default().span(),
+            stack: Default::default(),
+            memory: Default::default(),
+            state,
             gas_used: Default::default(),
         }
+    }
+
+    #[inline(always)]
+    fn gas_limit(self: @ExecutionContext) -> u128 {
+        self.call_ctx().gas_limit()
+    }
+
+    #[inline(always)]
+    fn gas_price(self: @ExecutionContext) -> u128 {
+        self.call_ctx().gas_price()
+    }
+
+    #[inline(always)]
+    fn caller(self: @ExecutionContext) -> Address {
+        self.call_ctx().caller()
+    }
+
+    #[inline(always)]
+    fn value(self: @ExecutionContext) -> u256 {
+        self.call_ctx().value()
+    }
+
+    #[inline(always)]
+    fn calldata(self: @ExecutionContext) -> Span<u8> {
+        self.call_ctx().calldata()
+    }
+
+    #[inline(always)]
+    fn bytecode(self: @ExecutionContext) -> Span<u8> {
+        self.call_ctx().bytecode()
+    }
+
+    #[inline(always)]
+    fn should_transfer(self: @ExecutionContext) -> bool {
+        self.call_ctx().should_transfer()
     }
 
     // *************************************************************************
@@ -221,6 +253,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         (*self.call_ctx).unbox()
     }
 
+
     #[inline(always)]
     fn return_data(self: @ExecutionContext) -> Span<u8> {
         *self.return_data
@@ -245,7 +278,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     /// Increments the gas_used field of the current execution context by the value amount.
     /// # Error : returns `EVMError::OutOfGas` if gas_used + new_gas >= limit
     #[inline(always)]
-    fn increment_gas_used_checked(ref self: ExecutionContext, value: u128) -> Result<(), EVMError> {
+    fn charge_gas(ref self: ExecutionContext, value: u128) -> Result<(), EVMError> {
         let new_gas_used = self.gas_used() + value;
         if (new_gas_used >= self.call_ctx().gas_limit()) {
             return Result::Err(EVMError::OutOfGas);
@@ -273,6 +306,7 @@ impl ExecutionContextImpl of ExecutionContextTrait {
     fn address(self: @ExecutionContext) -> Address {
         *self.address
     }
+
 
     // *************************************************************************
     //                          ExecutionContext methods
@@ -303,45 +337,31 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         self.call_ctx().read_only()
     }
 
-    #[inline(always)]
-    fn is_call(self: @ExecutionContext) -> bool {
-        match *self.ctx_type {
-            ExecutionContextType::Root(_) => false,
-            ExecutionContextType::Call(_) => true,
-            ExecutionContextType::Create(_) => false,
-        }
-    }
 
     #[inline(always)]
     fn is_root(self: @ExecutionContext) -> bool {
-        match *self.ctx_type {
-            ExecutionContextType::Root(_) => true,
-            ExecutionContextType::Call(_) => false,
-            ExecutionContextType::Create(_) => false,
-        }
+        *self.depth == 0
+    }
+
+
+    #[inline(always)]
+    fn depth(self: @ExecutionContext) -> u32 {
+        *self.depth
     }
 
     #[inline(always)]
-    fn is_create(self: @ExecutionContext) -> bool {
-        match *self.ctx_type {
-            ExecutionContextType::Root(is_create) => is_create,
-            ExecutionContextType::Call(_) => false,
-            ExecutionContextType::Create(_) => true,
-        }
+    fn stack(self: ExecutionContext) -> Stack {
+        self.stack
     }
 
     #[inline(always)]
-    fn ctx_type(self: @ExecutionContext) -> ExecutionContextType {
-        *self.ctx_type
+    fn memory(self: ExecutionContext) -> Memory {
+        self.memory
     }
 
     #[inline(always)]
-    fn id(self: @ExecutionContext) -> usize {
-        match *self.ctx_type {
-            ExecutionContextType::Root(_) => 0,
-            ExecutionContextType::Call(id) => id,
-            ExecutionContextType::Create(id) => id,
-        }
+    fn state(self: ExecutionContext) -> State {
+        self.state
     }
 
     // TODO: Implement print_debug
@@ -356,23 +376,26 @@ impl ExecutionContextImpl of ExecutionContextTrait {
         self.program_counter = value;
     }
 
+    fn set_return_data(ref self: ExecutionContext, return_data: Span<u8>) {
+        self.return_data = return_data;
+    }
+
     #[inline(always)]
     fn pc(self: @ExecutionContext) -> u32 {
         *self.program_counter
     }
 
-    fn origin(self: @ExecutionContext) -> Address {
-        if (self.is_root()) {
-            return self.call_ctx().caller();
+    fn origin(ref self: ExecutionContext) -> Address {
+        self.call_ctx().origin()
+    }
+
+
+    fn into_result(self: ExecutionContext) -> ExecutionResult {
+        ExecutionResult {
+            status: self.status(),
+            return_data: self.return_data(),
+            state: self.state(),
+            address: self.address()
         }
-        // If the current execution context is not root, then it MUST have a parent_context
-        // We're able to deref the nullable pointer without risk of panic
-        let mut parent_context = self.parent_ctx.as_snapshot().deref();
-
-        // Entering a recursion
-        let origin = parent_context.origin();
-
-        // Return self.call_context().caller() where self is the root context
-        origin
     }
 }

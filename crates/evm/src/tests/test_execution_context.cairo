@@ -1,15 +1,13 @@
 use core::box::BoxTrait;
 use core::nullable::{NullableTrait, null};
 use evm::context::{
-    CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
-    DefaultOptionSpanU8
+    CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, DefaultOptionSpanU8
 };
 use evm::errors::{EVMError, DebugEVMError};
-use evm::machine::{MachineTrait};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Event, Address};
 use evm::stack::{Stack, StackTrait};
-use evm::tests::test_utils::{MachineBuilderTestTrait, CallContextPartialEq};
+use evm::tests::test_utils::{ContextBuilderTestTrait, CallContextPartialEq};
 use evm::tests::test_utils;
 use starknet::testing::{set_contract_address, set_caller_address};
 use starknet::{EthAddress, ContractAddress};
@@ -100,14 +98,14 @@ fn test_execution_context_increment_gas_used_unchecked() {
 }
 
 #[test]
-fn test_execution_context_increment_gas_used_checked() {
+fn test_execution_context_charge_gas() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     let mut execution_context = machine.current_ctx.unbox();
 
     // When
     let gas_used = test_utils::gas_limit();
-    let result = execution_context.increment_gas_used_checked(gas_used);
+    let result = execution_context.charge_gas(gas_used);
 
     // Then
     assert_eq!(result.unwrap_err(), EVMError::OutOfGas);
