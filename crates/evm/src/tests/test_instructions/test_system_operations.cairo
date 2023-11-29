@@ -37,12 +37,12 @@ fn test_exec_return() {
         .with_nested_execution_context()
         .build();
     // When
-    machine.stack.push(1000);
-    machine.stack.push(0);
-    machine.exec_mstore();
+    machine.stack.push(1000).expect('push failed');
+    machine.stack.push(0).expect('push failed');
+    machine.exec_mstore().expect('exec_mstore failed');
 
-    machine.stack.push(32);
-    machine.stack.push(0);
+    machine.stack.push(32).expect('push failed');
+    machine.stack.push(0).expect('push failed');
     assert(machine.exec_return().is_ok(), 'Exec return failed');
 
     // Then
@@ -51,7 +51,7 @@ fn test_exec_return() {
     assert(machine.id() == 1, 'wrong ctx id');
 
     // And
-    machine.finalize_calling_context();
+    machine.finalize_calling_context().expect('finalize failed');
 
     // Then
     assert(machine.id() == 0, 'should be parent id');
@@ -64,12 +64,12 @@ fn test_exec_revert() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // When
-    machine.stack.push(1000);
-    machine.stack.push(0);
-    machine.exec_mstore();
+    machine.stack.push(1000).expect('push failed');
+    machine.stack.push(0).expect('push failed');
+    machine.exec_mstore().expect('exec_mstore failed');
 
-    machine.stack.push(32);
-    machine.stack.push(0);
+    machine.stack.push(32).expect('push failed');
+    machine.stack.push(0).expect('push failed');
     assert(machine.exec_revert().is_ok(), 'Exec revert failed');
 
     // Then
@@ -84,12 +84,12 @@ fn test_exec_revert_nested() {
         .with_nested_execution_context()
         .build();
     // When
-    machine.stack.push(1000);
-    machine.stack.push(0);
-    machine.exec_mstore();
+    machine.stack.push(1000).expect('push failed');
+    machine.stack.push(0).expect('push failed');
+    machine.exec_mstore().expect('exec_mstore failed');
 
-    machine.stack.push(32);
-    machine.stack.push(0);
+    machine.stack.push(32).expect('push failed');
+    machine.stack.push(0).expect('push failed');
     assert(machine.exec_revert().is_ok(), 'Exec revert failed');
 
     // Then
@@ -105,12 +105,12 @@ fn test_exec_return_with_offset() {
         .with_nested_execution_context()
         .build();
     // When
-    machine.stack.push(1);
-    machine.stack.push(0);
-    machine.exec_mstore();
+    machine.stack.push(1).expect('push failed');
+    machine.stack.push(0).expect('push failed');
+    machine.exec_mstore().expect('exec_mstore failed');
 
-    machine.stack.push(32);
-    machine.stack.push(1);
+    machine.stack.push(32).expect('push failed');
+    machine.stack.push(1).expect('push failed');
     assert(machine.exec_return().is_ok(), 'Exec return failed');
 
     // Then
@@ -119,7 +119,7 @@ fn test_exec_return_with_offset() {
     assert(machine.id() == 1, 'wrong ctx id');
 
     // And
-    machine.finalize_calling_context();
+    machine.finalize_calling_context().expect('finalize failed');
 
     // Then
     assert(machine.id() == 0, 'should be parent id');
@@ -130,10 +130,10 @@ fn test_exec_return_with_offset() {
 fn test_exec_call() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
-    let eoa = kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_eoa(evm_address);
 
     // Set machine bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -186,10 +186,10 @@ fn test_exec_call() {
 fn test_exec_call_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
-    let eoa = kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_eoa(evm_address);
 
     // Set machine bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -240,10 +240,10 @@ fn test_exec_call_no_return() {
 fn test_exec_staticcall() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
-    let eoa = kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_eoa(evm_address);
 
     // Set machine bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -293,10 +293,10 @@ fn test_exec_staticcall() {
 fn test_exec_staticcall_no_return() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
-    let eoa = kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_eoa(evm_address);
 
     // Set machine bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -345,10 +345,10 @@ fn test_exec_staticcall_no_return() {
 fn test_exec_call_code() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
-    let eoa = kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_eoa(evm_address);
 
     // Set machine bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -426,10 +426,10 @@ fn test_exec_call_code() {
 fn test_exec_delegatecall() {
     // Given
     let mut interpreter = EVMInterpreterTrait::new();
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
-    let eoa = kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_eoa(evm_address);
 
     // Set machine bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -505,7 +505,7 @@ fn test_exec_delegatecall() {
 #[test]
 fn test_exec_create2() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    setup_contracts_for_testing();
 
     let mut machine = MachineBuilderTestTrait::new_with_presets()
         .with_nested_execution_context()
@@ -526,10 +526,10 @@ fn test_exec_create2() {
     let storage_initcode = storage_evm_initcode();
     machine.memory.store_n(storage_initcode, 0);
 
-    machine.stack.push(0).unwrap();
+    machine.stack.push(0).expect('push failed');
     machine.stack.push(storage_initcode.len().into()).unwrap();
-    machine.stack.push(0).unwrap();
-    machine.stack.push(0).unwrap();
+    machine.stack.push(0).expect('push failed');
+    machine.stack.push(0).expect('push failed');
 
     // When
     machine.exec_create2().unwrap();
@@ -558,17 +558,17 @@ fn test_exec_create2() {
 #[test]
 fn test_exec_selfdestruct_existing_ca() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (native_token, _kakarot_core) = setup_contracts_for_testing();
     let destroyed_address = test_address().evm; // address in machine call context
     let ca_address = deploy_contract_account(destroyed_address, array![0x1, 0x2, 0x3].span());
     fund_account_with_native_token(ca_address.starknet, native_token, 1000);
     let recipient = EOATrait::deploy(other_evm_address()).expect('failed deploying eoa');
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_target(ca_address).build();
     // When
-    machine.stack.push(recipient.evm.into());
+    machine.stack.push(recipient.evm.into()).unwrap();
     machine.exec_selfdestruct().expect('selfdestruct failed');
     machine.state.commit_context();
-    machine.state.commit_state();
+    machine.state.commit_state().expect('commit state failed');
     machine.state = Default::default(); //empty state to force re-fetch from SN
     // Then
     let destructed = machine.state.get_account(ca_address.evm);
@@ -577,7 +577,7 @@ fn test_exec_selfdestruct_existing_ca() {
     assert(destructed.balance() == 0, 'destructed balance should be 0');
     assert(destructed.bytecode().len() == 0, 'bytecode should be empty');
 
-    let recipient = machine.state.get_account(recipient.evm);
+    let _recipient = machine.state.get_account(recipient.evm);
 //TODO this assertion fails because of deterministic address calculations.
 // Once addressed in the compiler code, this test should be fixed.
 // in selfdestruct, we execute:
@@ -606,10 +606,10 @@ fn test_selfdestruct_undeployed_ca() {
     ca_account.set_nonce(1);
     machine.state.set_account(ca_account);
     // - call selfdestruct and commit the state
-    machine.stack.push(recipient_address.into());
+    machine.stack.push(recipient_address.into()).expect('push failed');
     machine.exec_selfdestruct().expect('selfdestruct failed');
     machine.state.commit_context();
-    machine.state.commit_state();
+    machine.state.commit_state().expect('commit state failed');
     machine.state = Default::default(); //empty state to force re-fetch from SN
 
     // Then
@@ -624,7 +624,7 @@ fn test_selfdestruct_undeployed_ca() {
 #[test]
 fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (native_token, _) = setup_contracts_for_testing();
 
     // Deploy sender and recipiens EOAs, and CA that will be selfdestructed and funded with 100 tokens
     let sender = EOATrait::deploy('sender'.try_into().unwrap()).expect('failed deploy EOA',);
@@ -635,16 +635,16 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_target(ca_address).build();
 
     // Cache the CA into state
-    let mut ca = machine.state.get_account('contract'.try_into().unwrap());
+    machine.state.get_account('contract'.try_into().unwrap());
 
     // When
-    machine.stack.push(recipient.evm.into());
+    machine.stack.push(recipient.evm.into()).unwrap();
     machine.exec_selfdestruct().expect('selfdestruct failed');
     // Add a transfer from sender to CA - after it was selfdestructed in local state. This transfer should go through.
     let transfer = Transfer { sender, recipient: ca_address, amount: 150 };
     machine.state.add_transfer(transfer).unwrap();
     machine.state.commit_context();
-    machine.state.commit_state();
+    machine.state.commit_state().expect('commit state failed');
     machine.state = Default::default(); //empty state to force re-fetch from SN
 
     // Then

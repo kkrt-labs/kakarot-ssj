@@ -12,7 +12,7 @@ use starknet::testing::set_contract_address;
 
 #[test]
 fn test_eoa_deploy() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
     contract_utils::drop_event(kakarot_core.contract_address);
 
     let eoa_address = EOATrait::deploy(test_utils::evm_address())

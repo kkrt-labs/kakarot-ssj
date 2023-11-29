@@ -30,7 +30,7 @@ trait EVMInterpreterTrait {
     /// Decodes the opcode at `pc` and executes the associated function.
     fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError>;
     fn handle_revert(ref self: Machine, maybe_message: Option<EVMError>);
-    fn finalize_context(ref self: EVMInterpreter, ref machine: Machine);
+    fn finalize_context(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError>;
 }
 
 impl EVMInterpreterImpl of EVMInterpreterTrait {
@@ -61,7 +61,8 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
                 machine.handle_revert(Option::Some(error));
             }
         }
-        self.finalize_context(ref machine);
+        //TODO handle this error gracefully
+        self.finalize_context(ref machine).expect('Failed to finalize context');
     }
 
     fn decode_and_execute(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError> {
@@ -674,7 +675,7 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
 
     /// Finalizes the changes performed during a context by applying them to the
     /// transactional changes.
-    fn finalize_context(ref self: EVMInterpreter, ref machine: Machine) {
+    fn finalize_context(ref self: EVMInterpreter, ref machine: Machine) -> Result<(), EVMError> {
         match machine.ctx_type() {
             ExecutionContextType::Root(is_create) => {
                 // In case of a deploy tx, we need to store the return_data in the account.
@@ -685,14 +686,15 @@ impl EVMInterpreterImpl of EVMInterpreterTrait {
                 }
             },
             ExecutionContextType::Call(_) => {
-                machine.finalize_calling_context();
+                machine.finalize_calling_context()?;
                 self.run(ref machine);
             },
             ExecutionContextType::Create(_) => {
-                machine.finalize_create_context();
+                machine.finalize_create_context()?;
                 self.run(ref machine);
             }
         }
         machine.state.commit_context();
+        Result::Ok(())
     }
 }

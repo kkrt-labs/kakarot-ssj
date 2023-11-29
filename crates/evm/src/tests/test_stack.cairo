@@ -417,7 +417,7 @@ mod swap {
         assert(index0 == 4, 'wrong index0');
 
         // When
-        stack.swap_i(2);
+        stack.swap_i(2).expect('swap failed');
 
         // Then
         let index3 = stack.peek_at(3).unwrap();
@@ -451,7 +451,7 @@ mod swap {
         assert(index0 == 4, 'wrong index0');
 
         // When
-        stack.swap_i(2);
+        stack.swap_i(2).expect('swap failed');
 
         // Then
         assert(stack.active_segment() == 0x999, 'wrong active segment');

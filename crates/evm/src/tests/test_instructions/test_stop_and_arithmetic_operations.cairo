@@ -1,3 +1,4 @@
+use core::result::ResultTrait;
 use evm::context::ExecutionContextTrait;
 use evm::instructions::StopAndArithmeticOperationsTrait;
 use evm::machine::{Machine, MachineTrait};
@@ -13,7 +14,7 @@ fn test_exec_stop() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     // When
-    machine.exec_stop();
+    machine.exec_stop().expect('exec_stop failed');
 
     // Then
     assert(machine.stopped(), 'ctx not stopped');
@@ -23,12 +24,12 @@ fn test_exec_stop() {
 fn test_exec_add() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(1).unwrap();
-    machine.stack.push(2).unwrap();
-    machine.stack.push(3).unwrap();
+    machine.stack.push(1).expect('push failed');
+    machine.stack.push(2).expect('push failed');
+    machine.stack.push(3).expect('push failed');
 
     // When
-    machine.exec_add();
+    machine.exec_add().expect('exec_add failed');
 
     // Then
     assert(machine.stack.len() == 2, 'stack should have two elems');
@@ -41,10 +42,10 @@ fn test_exec_add_overflow() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
-    machine.stack.push(1).unwrap();
+    machine.stack.push(1).expect('push failed');
 
     // When
-    machine.exec_add();
+    machine.exec_add().expect('exec_add failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -55,11 +56,11 @@ fn test_exec_add_overflow() {
 fn test_exec_mul() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(4).unwrap();
-    machine.stack.push(5).unwrap();
+    machine.stack.push(4).expect('push failed');
+    machine.stack.push(5).expect('push failed');
 
     // When
-    machine.exec_mul();
+    machine.exec_mul().expect('exec_mul failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -71,10 +72,10 @@ fn test_exec_mul_overflow() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
-    machine.stack.push(2).unwrap();
+    machine.stack.push(2).expect('push failed');
 
     // When
-    machine.exec_mul();
+    machine.exec_mul().expect('exec_mul failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -85,11 +86,11 @@ fn test_exec_mul_overflow() {
 fn test_exec_sub() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(7).unwrap();
-    machine.stack.push(10).unwrap();
+    machine.stack.push(7).expect('push failed');
+    machine.stack.push(10).expect('push failed');
 
     // When
-    machine.exec_sub();
+    machine.exec_sub().expect('exec_sub failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -100,11 +101,11 @@ fn test_exec_sub() {
 fn test_exec_sub_underflow() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(1).unwrap();
-    machine.stack.push(0).unwrap();
+    machine.stack.push(1).expect('push failed');
+    machine.stack.push(0).expect('push failed');
 
     // When
-    machine.exec_sub();
+    machine.exec_sub().expect('exec_sub failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -118,11 +119,11 @@ fn test_exec_sub_underflow() {
 fn test_exec_div() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(4).unwrap();
-    machine.stack.push(100).unwrap();
+    machine.stack.push(4).expect('push failed');
+    machine.stack.push(100).expect('push failed');
 
     // When
-    machine.exec_div();
+    machine.exec_div().expect('exec_div failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -133,11 +134,11 @@ fn test_exec_div() {
 fn test_exec_div_by_zero() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0).unwrap();
-    machine.stack.push(100).unwrap();
+    machine.stack.push(0).expect('push failed');
+    machine.stack.push(100).expect('push failed');
 
     // When
-    machine.exec_div();
+    machine.exec_div().expect('exec_div failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -148,11 +149,11 @@ fn test_exec_div_by_zero() {
 fn test_exec_sdiv_pos() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(5).unwrap();
-    machine.stack.push(10).unwrap();
+    machine.stack.push(5).expect('push failed');
+    machine.stack.push(10).expect('push failed');
 
     // When
-    machine.exec_sdiv(); // 10 / 5
+    machine.exec_sdiv().expect('exec_sdiv failed'); // 10 / 5
 
     // Then
     assert(machine.stack.len() == 1, 'stack len should be 1');
@@ -164,10 +165,10 @@ fn test_exec_sdiv_neg() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     machine.stack.push(BoundedInt::max()).unwrap();
-    machine.stack.push(2).unwrap();
+    machine.stack.push(2).expect('push failed');
 
     // When
-    machine.exec_sdiv(); // 2 / -1
+    machine.exec_sdiv().expect('exec_sdiv failed'); // 2 / -1
 
     // Then
     assert(machine.stack.len() == 1, 'stack len should be 1');
@@ -178,11 +179,11 @@ fn test_exec_sdiv_neg() {
 fn test_exec_sdiv_by_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0).unwrap();
-    machine.stack.push(10).unwrap();
+    machine.stack.push(0).expect('push failed');
+    machine.stack.push(10).expect('push failed');
 
     // When
-    machine.exec_sdiv();
+    machine.exec_sdiv().expect('exec_sdiv failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack len should be 1');
@@ -193,11 +194,11 @@ fn test_exec_sdiv_by_0() {
 fn test_exec_mod() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(6).unwrap();
-    machine.stack.push(100).unwrap();
+    machine.stack.push(6).expect('push failed');
+    machine.stack.push(100).expect('push failed');
 
     // When
-    machine.exec_mod();
+    machine.exec_mod().expect('exec_mod failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -208,11 +209,11 @@ fn test_exec_mod() {
 fn test_exec_mod_by_zero() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0).unwrap();
-    machine.stack.push(100).unwrap();
+    machine.stack.push(0).expect('push failed');
+    machine.stack.push(100).expect('push failed');
 
     // When
-    machine.exec_smod();
+    machine.exec_smod().expect('exec_smod failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -223,11 +224,11 @@ fn test_exec_mod_by_zero() {
 fn test_exec_smod() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(3).unwrap();
-    machine.stack.push(10).unwrap();
+    machine.stack.push(3).expect('push failed');
+    machine.stack.push(10).expect('push failed');
 
     // When
-    machine.exec_smod();
+    machine.exec_smod().expect('exec_smod failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -248,7 +249,7 @@ fn test_exec_smod_neg() {
         .unwrap(); // -8
 
     // When
-    machine.exec_smod();
+    machine.exec_smod().expect('exec_smod failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -265,11 +266,11 @@ fn test_exec_smod_neg() {
 fn test_exec_smod_zero() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0).unwrap();
-    machine.stack.push(10).unwrap();
+    machine.stack.push(0).expect('push failed');
+    machine.stack.push(10).expect('push failed');
 
     // When
-    machine.exec_mod();
+    machine.exec_mod().expect('exec_mod failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -281,12 +282,12 @@ fn test_exec_smod_zero() {
 fn test_exec_addmod() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(7).unwrap();
-    machine.stack.push(10).unwrap();
-    machine.stack.push(20).unwrap();
+    machine.stack.push(7).expect('push failed');
+    machine.stack.push(10).expect('push failed');
+    machine.stack.push(20).expect('push failed');
 
     // When
-    machine.exec_addmod();
+    machine.exec_addmod().expect('exec_addmod failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -297,12 +298,12 @@ fn test_exec_addmod() {
 fn test_exec_addmod_by_zero() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0).unwrap();
-    machine.stack.push(10).unwrap();
-    machine.stack.push(20).unwrap();
+    machine.stack.push(0).expect('push failed');
+    machine.stack.push(10).expect('push failed');
+    machine.stack.push(20).expect('push failed');
 
     // When
-    machine.exec_addmod();
+    machine.exec_addmod().expect('exec_addmod failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -314,12 +315,12 @@ fn test_exec_addmod_by_zero() {
 fn test_exec_addmod_overflow() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(3).unwrap();
-    machine.stack.push(2).unwrap();
+    machine.stack.push(3).expect('push failed');
+    machine.stack.push(2).expect('push failed');
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
 
     // When
-    machine.exec_addmod();
+    machine.exec_addmod().expect('exec_addmod failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -331,12 +332,12 @@ fn test_exec_addmod_overflow() {
 #[test]
 fn test_mulmod_basic() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(10).unwrap();
-    machine.stack.push(7).unwrap();
-    machine.stack.push(5).unwrap();
+    machine.stack.push(10).expect('push failed');
+    machine.stack.push(7).expect('push failed');
+    machine.stack.push(5).expect('push failed');
 
     // When
-    machine.exec_mulmod();
+    machine.exec_mulmod().expect('exec_mulmod failed');
 
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 5, 'stack top should be 5'); // (5 * 7) % 10 = 5
@@ -345,11 +346,11 @@ fn test_mulmod_basic() {
 #[test]
 fn test_mulmod_zero_modulus() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0).unwrap();
-    machine.stack.push(7).unwrap();
-    machine.stack.push(5).unwrap();
+    machine.stack.push(0).expect('push failed');
+    machine.stack.push(7).expect('push failed');
+    machine.stack.push(5).expect('push failed');
 
-    machine.exec_mulmod();
+    machine.exec_mulmod().expect('exec_mulmod failed');
 
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0, 'stack top should be 0'); // modulus is 0
@@ -358,11 +359,11 @@ fn test_mulmod_zero_modulus() {
 #[test]
 fn test_mulmod_overflow() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(12).unwrap();
+    machine.stack.push(12).expect('push failed');
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
 
-    machine.exec_mulmod();
+    machine.exec_mulmod().expect('exec_mulmod failed');
 
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(
@@ -373,11 +374,11 @@ fn test_mulmod_overflow() {
 #[test]
 fn test_mulmod_zero() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(10).unwrap();
-    machine.stack.push(7).unwrap();
-    machine.stack.push(0).unwrap();
+    machine.stack.push(10).expect('push failed');
+    machine.stack.push(7).expect('push failed');
+    machine.stack.push(0).expect('push failed');
 
-    machine.exec_mulmod();
+    machine.exec_mulmod().expect('exec_mulmod failed');
 
     assert(machine.stack.len() == 1, 'stack should have one element');
     assert(machine.stack.peek().unwrap() == 0, 'stack top should be 0'); // 0 * 7 % 10 = 0
@@ -387,11 +388,11 @@ fn test_mulmod_zero() {
 fn test_exec_exp() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(2).unwrap();
-    machine.stack.push(10).unwrap();
+    machine.stack.push(2).expect('push failed');
+    machine.stack.push(10).expect('push failed');
 
     // When
-    machine.exec_exp();
+    machine.exec_exp().expect('exec exp failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -402,11 +403,11 @@ fn test_exec_exp() {
 fn test_exec_exp_overflow() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(2).unwrap();
+    machine.stack.push(2).expect('push failed');
     machine.stack.push(BoundedInt::<u128>::max().into() + 1).unwrap();
 
     // When
-    machine.exec_exp();
+    machine.exec_exp().expect('exec exp failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -419,11 +420,11 @@ fn test_exec_exp_overflow() {
 fn test_exec_signextend() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0xFF).unwrap();
-    machine.stack.push(0x00).unwrap();
+    machine.stack.push(0xFF).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     // When
-    machine.exec_signextend();
+    machine.exec_signextend().expect('exec_signextend failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -440,11 +441,11 @@ fn test_exec_signextend() {
 fn test_exec_signextend_no_effect() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x7F).unwrap();
-    machine.stack.push(0x00).unwrap();
+    machine.stack.push(0x7F).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     // When
-    machine.exec_signextend();
+    machine.exec_signextend().expect('exec_signextend failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -457,11 +458,14 @@ fn test_exec_signextend_no_effect() {
 fn test_exec_signextend_on_negative() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0001).unwrap();
-    machine.stack.push(0x01).unwrap(); // s = 15, v = 0
+    machine
+        .stack
+        .push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0001)
+        .expect('push failed');
+    machine.stack.push(0x01).expect('push failed'); // s = 15, v = 0
 
     // When
-    machine.exec_signextend();
+    machine.exec_signextend().expect('exec_signextend failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');

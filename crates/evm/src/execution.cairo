@@ -73,7 +73,7 @@ fn execute(
 
     let transfer = Transfer { sender: origin, recipient: target, amount: value };
     match machine.state.add_transfer(transfer) {
-        Result::Ok(x) => {},
+        Result::Ok(_) => {},
         Result::Err(err) => { return reverted_with_err(machine, err); }
     }
 
@@ -102,7 +102,7 @@ fn reverted_with_err(mut machine: Machine, error: EVMError) -> ExecutionResult {
     ExecutionResult {
         address: machine.address(),
         status: Status::Reverted,
-        return_data: Default::default().span(),
+        return_data: return_data,
         state: machine.state,
     }
 }

@@ -42,12 +42,12 @@ fn test_dup1() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup1();
+    machine.exec_dup1().expect('exec_dup1 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -67,13 +67,13 @@ fn test_dup2() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 1);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup2();
+    machine.exec_dup2().expect('exec_dup2 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -93,13 +93,13 @@ fn test_dup3() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 2);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup3();
+    machine.exec_dup3().expect('exec_dup3 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -119,13 +119,13 @@ fn test_dup4() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 3);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup4();
+    machine.exec_dup4().expect('exec_dup4 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -145,13 +145,13 @@ fn test_dup5() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 4);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup5();
+    machine.exec_dup5().expect('exec_dup5 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -171,13 +171,13 @@ fn test_dup6() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 5);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup6();
+    machine.exec_dup6().expect('exec_dup6 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -197,13 +197,13 @@ fn test_dup7() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 6);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup7();
+    machine.exec_dup7().expect('exec_dup7 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -223,13 +223,13 @@ fn test_dup8() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 7);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup8();
+    machine.exec_dup8().expect('exec_dup8 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -249,13 +249,13 @@ fn test_dup9() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 8);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup9();
+    machine.exec_dup9().expect('exec_dup9 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -275,13 +275,13 @@ fn test_dup10() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 9);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup10();
+    machine.exec_dup10().expect('exec_dup10 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -301,13 +301,13 @@ fn test_dup11() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 10);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup11();
+    machine.exec_dup11().expect('exec_dup11 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -327,13 +327,13 @@ fn test_dup12() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 11);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup12();
+    machine.exec_dup12().expect('exec_dup12 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -353,13 +353,13 @@ fn test_dup13() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 12);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup13();
+    machine.exec_dup13().expect('exec_dup13 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -379,13 +379,13 @@ fn test_dup14() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 13);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup14();
+    machine.exec_dup14().expect('exec_dup14 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -405,13 +405,13 @@ fn test_dup15() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 14);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup15();
+    machine.exec_dup15().expect('exec_dup15 failed');
 
     // Then
     let new_stack_len = machine.stack.len();
@@ -431,13 +431,13 @@ fn test_dup16() {
 
     let initial_len = machine.stack.len();
 
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
     push_zeros(ref machine.stack, 15);
 
     let old_stack_len = machine.stack.len();
 
     // When
-    machine.exec_dup16();
+    machine.exec_dup16().expect('exec_dup16 failed');
 
     // Then
     let new_stack_len = machine.stack.len();

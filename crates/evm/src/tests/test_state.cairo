@@ -211,7 +211,7 @@ mod test_state {
     fn test_get_account_when_not_present() {
         let mut state: State = Default::default();
         // Transfer native tokens to sender
-        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+        let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
         let evm_address: EthAddress = test_utils::evm_address();
         let starknet_address = compute_starknet_address(
             kakarot_core.contract_address.into(),
@@ -310,7 +310,7 @@ mod test_state {
     #[available_gas(200000000)]
     fn test_read_state_from_sn_storage() {
         // Transfer native tokens to sender
-        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+        contract_utils::setup_contracts_for_testing();
         let evm_address: EthAddress = test_utils::evm_address();
         let mut ca_address = contract_utils::deploy_contract_account(evm_address, array![].span());
 
@@ -325,7 +325,7 @@ mod test_state {
             balance: 0,
             selfdestruct: false
         };
-        account.store_storage(key, value);
+        account.store_storage(key, value).expect('failed to store');
 
         let read_value = state.read_state(evm_address, key).unwrap();
 
@@ -349,7 +349,7 @@ mod test_state {
     fn test_add_transfer() {
         //Given
         let mut state: State = Default::default();
-        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+        contract_utils::setup_contracts_for_testing();
 
         let sender_evm_address = test_utils::evm_address();
         let sender_starknet_address = contract_utils::deploy_eoa(sender_evm_address)
@@ -387,18 +387,12 @@ mod test_state {
     fn test_add_transfer_with_same_sender_and_recipient() {
         //Given
         let mut state: State = Default::default();
-        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+        contract_utils::setup_contracts_for_testing();
 
         let sender_evm_address = test_utils::evm_address();
         let sender_starknet_address = contract_utils::deploy_eoa(sender_evm_address)
             .contract_address;
         let sender_address = Address { evm: sender_evm_address, starknet: sender_starknet_address };
-        let recipient_evm_address = test_utils::other_evm_address();
-        let recipient_starknet_address = contract_utils::deploy_eoa(recipient_evm_address)
-            .contract_address;
-        let recipient_address = Address {
-            evm: recipient_evm_address, starknet: recipient_starknet_address
-        };
 
         // since sender and recipient is same
         let transfer = Transfer { sender: sender_address, recipient: sender_address, amount: 100 };
@@ -422,7 +416,7 @@ mod test_state {
     fn test_add_transfer_when_amount_is_zero() {
         //Given
         let mut state: State = Default::default();
-        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+        contract_utils::setup_contracts_for_testing();
 
         let sender_evm_address = test_utils::evm_address();
         let sender_starknet_address = contract_utils::deploy_eoa(sender_evm_address)
@@ -460,7 +454,7 @@ mod test_state {
     #[available_gas(200000000)]
     fn test_read_balance_cached() {
         let mut state: State = Default::default();
-        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+        contract_utils::setup_contracts_for_testing();
 
         let evm_address = test_utils::evm_address();
         let starknet_address = contract_utils::deploy_eoa(evm_address).contract_address;

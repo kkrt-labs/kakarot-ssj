@@ -131,13 +131,13 @@ mod ExternallyOwnedAccount {
             let call = calls.at(0);
             let calldata = call.calldata.span().try_into_bytes().expect('conversion failed');
 
-            let EthereumTransaction{nonce,
+            let EthereumTransaction{nonce: _nonce,
             gas_price,
             gas_limit,
             destination,
             amount,
             calldata,
-            chain_id } =
+            chain_id: _chain_id } =
                 EthTransactionTrait::decode(
                 calldata.span()
             )

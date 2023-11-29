@@ -75,7 +75,7 @@ fn test_assert_only_owner_not_owner() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
     testing::set_caller_address(OTHER());
 
-    let result = ownable.assert_only_owner();
+    ownable.assert_only_owner();
 }
 
 #[test]
@@ -84,7 +84,7 @@ fn test_assert_only_owner_zero() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
     testing::set_caller_address(ZERO());
 
-    let result = ownable.assert_only_owner();
+    ownable.assert_only_owner();
 }
 
 #[test]

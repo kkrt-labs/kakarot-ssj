@@ -124,7 +124,7 @@ trait ListTrait<T> {
     /// The storage is not actually cleared, only the length is set to 0.
     /// The values can still be accessible using low-level syscalls, but cannot
     /// be accessed through the list interface.
-    fn clean(ref self: List<T>);
+    fn clean(ref self: List<T>) -> SyscallResult<()>;
 
     /// Removes and returns the first element of the List.
     ///
@@ -226,9 +226,9 @@ impl ListImpl<T, +Copy<T>, +Drop<T>, +Store<T>> of ListTrait<T> {
     }
 
     #[inline(always)]
-    fn clean(ref self: List<T>) {
+    fn clean(ref self: List<T>) -> SyscallResult<()> {
         self.len = 0;
-        Store::write(self.address_domain, self.base, self.len);
+        Store::write(self.address_domain, self.base, self.len)
     }
 
     fn pop_front(ref self: List<T>) -> SyscallResult<Option<T>> {

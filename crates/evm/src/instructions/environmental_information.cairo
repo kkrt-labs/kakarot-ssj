@@ -217,7 +217,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
                     return Result::Err(EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR));
                 }
             },
-            Result::Err(x) => {
+            Result::Err(_) => {
                 return Result::Err(EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR));
             }
         }

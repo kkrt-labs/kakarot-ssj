@@ -56,10 +56,8 @@ mod test_external_owned_account {
     #[test]
     #[available_gas(2000000000)]
     fn test_evm_address() {
-        let owner = contract_address_const::<1>();
         let expected_address: EthAddress = eoa_address();
-        let (_, kakarot) = setup_contracts_for_testing();
-        let kakarot_address = kakarot.contract_address;
+        setup_contracts_for_testing();
 
         let eoa_contract = deploy_eoa(eoa_address());
 
@@ -69,8 +67,7 @@ mod test_external_owned_account {
     #[test]
     #[available_gas(2000000000)]
     fn test_eoa_upgrade() {
-        let (_, kakarot) = setup_contracts_for_testing();
-        let kakarot_address = kakarot.contract_address;
+        setup_contracts_for_testing();
         let eoa_contract = deploy_eoa(eoa_address());
 
         let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH
@@ -92,8 +89,7 @@ mod test_external_owned_account {
     #[available_gas(2000000000)]
     #[should_panic(expected: ('Caller not self', 'ENTRYPOINT_FAILED'))]
     fn test_eoa_upgrade_from_noncontractaddress() {
-        let (_, kakarot) = setup_contracts_for_testing();
-        let kakarot_address = kakarot.contract_address;
+        setup_contracts_for_testing();
         let eoa_contract = deploy_eoa(eoa_address());
         let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH
             .try_into()
@@ -112,7 +108,7 @@ mod test_external_owned_account {
 
         let kakarot_address = kakarot_core.contract_address;
 
-        let account = deploy_contract_account(other_evm_address(), counter_evm_bytecode());
+        deploy_contract_account(other_evm_address(), counter_evm_bytecode());
 
         set_contract_address(eoa);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
@@ -143,7 +139,7 @@ mod test_external_owned_account {
             calldata: encoded_tx.to_felt252_array()
         };
 
-        let result = eoa_contract.__execute__(array![call]);
+        eoa_contract.__execute__(array![call]);
 
         // check counter value has increased
         let return_data = kakarot_core
@@ -163,8 +159,7 @@ mod test_external_owned_account {
     #[available_gas(2000000000)]
     #[should_panic(expected: ('calls length is not 1', 'ENTRYPOINT_FAILED'))]
     fn test___execute___should_fail_with_zero_calls() {
-        let (_, kakarot) = setup_contracts_for_testing();
-        let kakarot_address = kakarot.contract_address;
+        setup_contracts_for_testing();
 
         let eoa_contract = deploy_eoa(eoa_address());
         let eoa_contract = AccountContractDispatcher {

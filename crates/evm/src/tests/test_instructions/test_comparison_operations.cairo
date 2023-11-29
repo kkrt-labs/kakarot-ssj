@@ -7,11 +7,17 @@ use integer::BoundedInt;
 fn test_eq_same_pair() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
-    machine.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
+    machine
+        .stack
+        .push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210)
+        .expect('push failed');
+    machine
+        .stack
+        .push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210)
+        .expect('push failed');
 
     // When
-    machine.exec_eq();
+    machine.exec_eq().expect('exec_eq failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -22,11 +28,17 @@ fn test_eq_same_pair() {
 fn test_eq_different_pair() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0xAB8765432DCBA98765410F149E87610FDCBA98765432543217654DCBA93210F8).unwrap();
-    machine.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
+    machine
+        .stack
+        .push(0xAB8765432DCBA98765410F149E87610FDCBA98765432543217654DCBA93210F8)
+        .expect('push failed');
+    machine
+        .stack
+        .push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210)
+        .expect('push failed');
 
     // When
-    machine.exec_eq();
+    machine.exec_eq().expect('exec_eq failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -37,11 +49,11 @@ fn test_eq_different_pair() {
 fn test_and_zero_and_max() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x00).unwrap();
+    machine.stack.push(0x00).expect('push failed');
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
 
     // When
-    machine.exec_and();
+    machine.exec_and().expect('exec_and failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -56,7 +68,7 @@ fn test_and_max_and_max() {
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
 
     // When
-    machine.exec_and();
+    machine.exec_and().expect('exec_and failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -69,11 +81,17 @@ fn test_and_max_and_max() {
 fn test_and_two_random_uint() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0xAB8765432DCBA98765410F149E87610FDCBA98765432543217654DCBA93210F8).unwrap();
-    machine.stack.push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210).unwrap();
+    machine
+        .stack
+        .push(0xAB8765432DCBA98765410F149E87610FDCBA98765432543217654DCBA93210F8)
+        .expect('push failed');
+    machine
+        .stack
+        .push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210)
+        .expect('push failed');
 
     // When
-    machine.exec_and();
+    machine.exec_and().expect('exec_and failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -91,11 +109,11 @@ fn test_and_two_random_uint() {
 fn test_xor_different_pair() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0b010101).unwrap();
-    machine.stack.push(0b101010).unwrap();
+    machine.stack.push(0b010101).expect('push failed');
+    machine.stack.push(0b101010).expect('push failed');
 
     // When
-    machine.exec_xor();
+    machine.exec_xor().expect('exec_xor failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -106,11 +124,11 @@ fn test_xor_different_pair() {
 fn test_xor_same_pair() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0b000111).unwrap();
-    machine.stack.push(0b000111).unwrap();
+    machine.stack.push(0b000111).expect('push failed');
+    machine.stack.push(0b000111).expect('push failed');
 
     // When
-    machine.exec_xor();
+    machine.exec_xor().expect('exec_xor failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -121,11 +139,11 @@ fn test_xor_same_pair() {
 fn test_xor_half_same_pair() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0b111000).unwrap();
-    machine.stack.push(0b000000).unwrap();
+    machine.stack.push(0b111000).expect('push failed');
+    machine.stack.push(0b000000).expect('push failed');
 
     // When
-    machine.exec_xor();
+    machine.exec_xor().expect('exec_xor failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -137,10 +155,10 @@ fn test_xor_half_same_pair() {
 fn test_not_zero() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x00).unwrap();
+    machine.stack.push(0x00).expect('push failed');
 
     // When
-    machine.exec_not();
+    machine.exec_not().expect('exec_not failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -157,7 +175,7 @@ fn test_not_max_uint() {
     machine.stack.push(BoundedInt::<u256>::max()).unwrap();
 
     // When
-    machine.exec_not();
+    machine.exec_not().expect('exec_not failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -168,10 +186,13 @@ fn test_not_max_uint() {
 fn test_not_random_uint() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x123456789ABCDEF123456789ABCDEF123456789ABCDEF123456789ABCDEF1234).unwrap();
+    machine
+        .stack
+        .push(0x123456789ABCDEF123456789ABCDEF123456789ABCDEF123456789ABCDEF1234)
+        .expect('push failed');
 
     // When
-    machine.exec_not();
+    machine.exec_not().expect('exec_not failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -188,10 +209,10 @@ fn test_not_random_uint() {
 fn test_is_zero_true() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x00).unwrap();
+    machine.stack.push(0x00).expect('push failed');
 
     // When
-    machine.exec_iszero();
+    machine.exec_iszero().expect('exec_iszero failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -202,10 +223,10 @@ fn test_is_zero_true() {
 fn test_is_zero_false() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x01).unwrap();
+    machine.stack.push(0x01).expect('push failed');
 
     // When
-    machine.exec_iszero();
+    machine.exec_iszero().expect('exec_iszero failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -216,11 +237,14 @@ fn test_is_zero_false() {
 fn test_byte_random_u256() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0xf7ec8b2ea4a6b7fd5f4ed41b66197fcc14c4a37d68275ea151d899bb4d7c2ae7).unwrap();
-    machine.stack.push(0x08).unwrap();
+    machine
+        .stack
+        .push(0xf7ec8b2ea4a6b7fd5f4ed41b66197fcc14c4a37d68275ea151d899bb4d7c2ae7)
+        .expect('push failed');
+    machine.stack.push(0x08).expect('push failed');
 
     // When
-    machine.exec_byte();
+    machine.exec_byte().expect('exec_byte failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -231,11 +255,14 @@ fn test_byte_random_u256() {
 fn test_byte_offset_out_of_range() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x01be893aefcfa1592f60622b80d45c2db74281d2b9e10c14b0f6ce7c8f58e209).unwrap();
-    machine.stack.push(32_u256).unwrap();
+    machine
+        .stack
+        .push(0x01be893aefcfa1592f60622b80d45c2db74281d2b9e10c14b0f6ce7c8f58e209)
+        .expect('push failed');
+    machine.stack.push(32_u256).expect('push failed');
 
     // When
-    machine.exec_byte();
+    machine.exec_byte().expect('exec_byte failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -246,11 +273,11 @@ fn test_byte_offset_out_of_range() {
 fn test_exec_gt_true() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(9_u256).unwrap();
-    machine.stack.push(10_u256).unwrap();
+    machine.stack.push(9_u256).expect('push failed');
+    machine.stack.push(10_u256).expect('push failed');
 
     // When
-    machine.exec_gt();
+    machine.exec_gt().expect('exec_gt failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -261,11 +288,14 @@ fn test_exec_gt_true() {
 fn test_exec_shl() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0xff00000000000000000000000000000000000000000000000000000000000000).unwrap();
-    machine.stack.push(4_u256).unwrap();
+    machine
+        .stack
+        .push(0xff00000000000000000000000000000000000000000000000000000000000000)
+        .expect('push failed');
+    machine.stack.push(4_u256).expect('push failed');
 
     // When
-    machine.exec_shl();
+    machine.exec_shl().expect('exec_shl failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -282,11 +312,14 @@ fn test_exec_shl() {
 fn test_exec_shl_wrapping() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0xff00000000000000000000000000000000000000000000000000000000000000).unwrap();
-    machine.stack.push(256_u256).unwrap();
+    machine
+        .stack
+        .push(0xff00000000000000000000000000000000000000000000000000000000000000)
+        .expect('push failed');
+    machine.stack.push(256_u256).expect('push failed');
 
     // When
-    machine.exec_shl();
+    machine.exec_shl().expect('exec_shl failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -297,11 +330,11 @@ fn test_exec_shl_wrapping() {
 fn test_exec_gt_false() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(10_u256).unwrap();
-    machine.stack.push(9_u256).unwrap();
+    machine.stack.push(10_u256).expect('push failed');
+    machine.stack.push(9_u256).expect('push failed');
 
     // When
-    machine.exec_gt();
+    machine.exec_gt().expect('exec_gt failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -312,11 +345,11 @@ fn test_exec_gt_false() {
 fn test_exec_gt_false_equal() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(10_u256).unwrap();
-    machine.stack.push(10_u256).unwrap();
+    machine.stack.push(10_u256).expect('push failed');
+    machine.stack.push(10_u256).expect('push failed');
 
     // When
-    machine.exec_gt();
+    machine.exec_gt().expect('exec_gt failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -556,11 +589,11 @@ fn test_exec_slt() {
 fn assert_slt(b: u256, a: u256, expected: u256) {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(b);
-    machine.stack.push(a);
+    machine.stack.push(b).expect('push failed');
+    machine.stack.push(a).expect('push failed');
 
     // When
-    machine.exec_slt();
+    machine.exec_slt().expect('exec_slt failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -800,11 +833,11 @@ fn test_exec_sgt() {
 fn assert_sgt(b: u256, a: u256, expected: u256) {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(b);
-    machine.stack.push(a);
+    machine.stack.push(b).expect('push failed');
+    machine.stack.push(a).expect('push failed');
 
     // When
-    machine.exec_sgt();
+    machine.exec_sgt().expect('exec_sgt failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -1224,11 +1257,11 @@ fn test_exec_shr() {
 fn assert_shr(a: u256, b: u256, expected: u256) {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(a).unwrap();
-    machine.stack.push(b).unwrap();
+    machine.stack.push(a).expect('push failed');
+    machine.stack.push(b).expect('push failed');
 
     // When
-    machine.exec_shr();
+    machine.exec_shr().expect('exec_shr failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -1648,12 +1681,12 @@ fn test_exec_sar() {
 fn assert_sar(a: u256, b: u256, expected: u256) {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(a).unwrap();
-    machine.stack.push(b).unwrap();
+    machine.stack.push(a).expect('push failed');
+    machine.stack.push(b).expect('push failed');
 
     // When
 
-    machine.exec_sar();
+    machine.exec_sar().expect('exec_sar failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -1664,11 +1697,11 @@ fn assert_sar(a: u256, b: u256, expected: u256) {
 fn test_exec_or_should_pop_0_and_1_and_push_0xCD_when_0_is_0x89_and_1_is_0xC5() {
     //Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x89);
-    machine.stack.push(0xC5);
+    machine.stack.push(0x89).expect('push failed');
+    machine.stack.push(0xC5).expect('push failed');
 
     //When
-    machine.exec_or();
+    machine.exec_or().expect('exec_or failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -1679,11 +1712,11 @@ fn test_exec_or_should_pop_0_and_1_and_push_0xCD_when_0_is_0x89_and_1_is_0xC5() 
 fn test_or_true() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x01).unwrap();
-    machine.stack.push(0x00).unwrap();
+    machine.stack.push(0x01).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     // When
-    machine.exec_or();
+    machine.exec_or().expect('exec_or failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -1694,11 +1727,11 @@ fn test_or_true() {
 fn test_or_false() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x00).unwrap();
-    machine.stack.push(0x00).unwrap();
+    machine.stack.push(0x00).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     // When
-    machine.exec_or();
+    machine.exec_or().expect('exec_or failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -1710,11 +1743,11 @@ fn test_or_false() {
 fn test_exec_lt_true() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(10_u256).unwrap();
-    machine.stack.push(9_u256).unwrap();
+    machine.stack.push(10_u256).expect('push failed');
+    machine.stack.push(9_u256).expect('push failed');
 
     // When
-    machine.exec_lt();
+    machine.exec_lt().expect('exec_lt failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -1725,11 +1758,11 @@ fn test_exec_lt_true() {
 fn test_exec_lt_false() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(10_u256).unwrap();
-    machine.stack.push(20_u256).unwrap();
+    machine.stack.push(10_u256).expect('push failed');
+    machine.stack.push(20_u256).expect('push failed');
 
     // When
-    machine.exec_lt();
+    machine.exec_lt().expect('exec_lt failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -1740,11 +1773,11 @@ fn test_exec_lt_false() {
 fn test_exec_lt_false_eq() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(10_u256).unwrap();
-    machine.stack.push(10_u256).unwrap();
+    machine.stack.push(10_u256).expect('push failed');
+    machine.stack.push(10_u256).expect('push failed');
 
     // When
-    machine.exec_lt();
+    machine.exec_lt().expect('exec_lt failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');

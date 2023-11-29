@@ -1,4 +1,5 @@
 use contracts::tests::test_utils::{setup_contracts_for_testing, deploy_contract_account};
+use core::result::ResultTrait;
 use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION, WRITE_IN_STATIC_CONTEXT};
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
 use evm::machine::{Machine, MachineTrait};
@@ -17,7 +18,7 @@ fn test_pc_basic() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
     // When
-    machine.exec_pc();
+    machine.exec_pc().expect('exec_pc failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -32,7 +33,7 @@ fn test_pc_gets_updated_properly_1() {
 
     // When
     machine.set_pc(9000);
-    machine.exec_pc();
+    machine.exec_pc().expect('exec_pc failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -61,10 +62,10 @@ fn assert_mload(value: u256, offset: u256, expected_value: u256, expected_memory
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     machine.memory.store(value, 0);
 
-    machine.stack.push(offset);
+    machine.stack.push(offset).expect('push failed');
 
     // When
-    machine.exec_mload();
+    machine.exec_mload().expect('exec_mload failed');
 
     // Then
     assert(machine.stack.len() == 1, 'stack should have one element');
@@ -77,8 +78,8 @@ fn test_exec_pop_should_pop_an_item_from_stack() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(0x01);
-    machine.stack.push(0x02);
+    machine.stack.push(0x01).expect('push failed');
+    machine.stack.push(0x02).expect('push failed');
 
     // When
     let result = machine.exec_pop();
@@ -109,8 +110,8 @@ fn test_exec_mstore_should_store_max_uint256_offset_0() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(BoundedInt::<u256>::max());
-    machine.stack.push(0x00);
+    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    machine.stack.push(0x00).expect('push failed');
 
     // When
     let result = machine.exec_mstore();
@@ -127,8 +128,8 @@ fn test_exec_mstore_should_store_max_uint256_offset_1() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(BoundedInt::<u256>::max());
-    machine.stack.push(0x01);
+    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    machine.stack.push(0x01).expect('push failed');
 
     // When
     let result = machine.exec_mstore();
@@ -145,8 +146,8 @@ fn test_exec_mstore8_should_store_uint8_offset_31() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(0xAB);
-    machine.stack.push(31);
+    machine.stack.push(0xAB).expect('push failed');
+    machine.stack.push(31).expect('push failed');
 
     // When
     let result = machine.exec_mstore8();
@@ -163,8 +164,8 @@ fn test_exec_mstore8_should_store_uint8_offset_30() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(0xAB);
-    machine.stack.push(30);
+    machine.stack.push(0xAB).expect('push failed');
+    machine.stack.push(30).expect('push failed');
 
     // When
     let result = machine.exec_mstore8();
@@ -181,10 +182,10 @@ fn test_exec_mstore8_should_store_uint8_offset_31_then_uint8_offset_30() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(0xAB);
-    machine.stack.push(30);
-    machine.stack.push(0xCD);
-    machine.stack.push(31);
+    machine.stack.push(0xAB).expect('push failed');
+    machine.stack.push(30).expect('push failed');
+    machine.stack.push(0xCD).expect('push failed');
+    machine.stack.push(31).expect('push failed');
 
     // When
     let result1 = machine.exec_mstore8();
@@ -202,8 +203,8 @@ fn test_exec_mstore8_should_store_last_uint8_offset_31() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(0x123456789ABCDEF);
-    machine.stack.push(31);
+    machine.stack.push(0x123456789ABCDEF).expect('push failed');
+    machine.stack.push(31).expect('push failed');
 
     // When
     let result = machine.exec_mstore8();
@@ -221,8 +222,8 @@ fn test_exec_mstore8_should_store_last_uint8_offset_63() {
     // Given
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
 
-    machine.stack.push(0x123456789ABCDEF);
-    machine.stack.push(63);
+    machine.stack.push(0x123456789ABCDEF).expect('push failed');
+    machine.stack.push(63).expect('push failed');
 
     // When
     let result = machine.exec_mstore8();
@@ -286,10 +287,10 @@ fn test_exec_jump_valid() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     let counter = 0x03;
-    machine.stack.push(counter);
+    machine.stack.push(counter).expect('push failed');
 
     // When
-    machine.exec_jump();
+    machine.exec_jump().expect('exec_jump failed');
 
     // Then
     let pc = machine.pc();
@@ -305,7 +306,7 @@ fn test_exec_jump_invalid() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     let counter = 0x02;
-    machine.stack.push(counter);
+    machine.stack.push(counter).expect('push failed');
 
     // When
     let result = machine.exec_jump();
@@ -323,7 +324,7 @@ fn test_exec_jump_out_of_bounds() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     let counter = 0xFF;
-    machine.stack.push(counter);
+    machine.stack.push(counter).expect('push failed');
 
     // When
     let result = machine.exec_jump();
@@ -346,7 +347,7 @@ fn test_exec_jump_inside_pushn() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     let counter = 0x01;
-    machine.stack.push(counter);
+    machine.stack.push(counter).expect('push failed');
 
     // When
     let result = machine.exec_jump();
@@ -367,13 +368,12 @@ fn test_exec_jumpi_valid_non_zero_1() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     let b = 0x1;
-    machine.stack.push(b);
+    machine.stack.push(b).expect('push failed');
     let counter = 0x03;
-    machine.stack.push(counter);
-    let old_pc = machine.pc();
+    machine.stack.push(counter).expect('push failed');
 
     // When
-    machine.exec_jumpi();
+    machine.exec_jumpi().expect('exec_jumpi failed');
 
     // Then
     let pc = machine.pc();
@@ -388,13 +388,12 @@ fn test_exec_jumpi_valid_non_zero_2() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     let b = 0x69;
-    machine.stack.push(b);
+    machine.stack.push(b).expect('push failed');
     let counter = 0x03;
-    machine.stack.push(counter);
-    let old_pc = machine.pc();
+    machine.stack.push(counter).expect('push failed');
 
     // When
-    machine.exec_jumpi();
+    machine.exec_jumpi().expect('exec_jumpi failed');
 
     // Then
     let pc = machine.pc();
@@ -409,13 +408,13 @@ fn test_exec_jumpi_valid_zero() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     let b = 0x0;
-    machine.stack.push(b);
+    machine.stack.push(b).expect('push failed');
     let counter = 0x03;
-    machine.stack.push(counter);
+    machine.stack.push(counter).expect('push failed');
     let old_pc = machine.pc();
 
     // When
-    machine.exec_jumpi();
+    machine.exec_jumpi().expect('exec_jumpi failed');
 
     // Then
     let pc = machine.pc();
@@ -432,9 +431,9 @@ fn test_exec_jumpi_invalid_non_zero() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     let b = 0x69;
-    machine.stack.push(b);
+    machine.stack.push(b).expect('push failed');
     let counter = 0x69;
-    machine.stack.push(counter);
+    machine.stack.push(counter).expect('push failed');
 
     // When
     let result = machine.exec_jumpi();
@@ -453,13 +452,13 @@ fn test_exec_jumpi_invalid_zero() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     let b = 0x0;
-    machine.stack.push(b);
+    machine.stack.push(b).expect('push failed');
     let counter = 0x69;
-    machine.stack.push(counter);
+    machine.stack.push(counter).expect('push failed');
     let old_pc = machine.pc();
 
     // When
-    machine.exec_jumpi();
+    machine.exec_jumpi().expect('exec_jumpi failed');
 
     // Then
     let pc = machine.pc();
@@ -481,9 +480,9 @@ fn test_exec_jumpi_inside_pushn() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
 
     let b = 0x00;
-    machine.stack.push(b);
+    machine.stack.push(b).expect('push failed');
     let counter = 0x01;
-    machine.stack.push(counter);
+    machine.stack.push(counter).expect('push failed');
 
     // When
     let result = machine.exec_jumpi();
@@ -505,7 +504,7 @@ fn test_exec_sload_from_state() {
     // `evm_address` must match the one used to instantiate the machine
     machine.state.write_state(machine.address().evm, key, value);
 
-    machine.stack.push(key.into());
+    machine.stack.push(key.into()).expect('push failed');
 
     // When
     let result = machine.exec_sload();
@@ -519,7 +518,7 @@ fn test_exec_sload_from_state() {
 #[test]
 fn test_exec_sload_from_storage() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    setup_contracts_for_testing();
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     let mut ca_address = deploy_contract_account(machine.address().evm, array![].span());
     let account = Account {
@@ -532,9 +531,9 @@ fn test_exec_sload_from_storage() {
     };
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
-    account.store_storage(key, value);
+    account.store_storage(key, value).expect('store failed');
 
-    machine.stack.push(key.into());
+    machine.stack.push(key.into()).expect('push failed');
 
     // When
     let result = machine.exec_sload();
@@ -551,11 +550,11 @@ fn test_exec_sstore_from_state() {
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
-    machine.stack.push(value);
-    machine.stack.push(key);
+    machine.stack.push(value).expect('push failed');
+    machine.stack.push(key).expect('push failed');
 
     // When
-    let result = machine.exec_sstore();
+    machine.exec_sstore().expect('exec sstore failed');
 
     // Then
     assert(machine.state.read_state(evm_address(), key).unwrap() == value, 'wrong value in state')
@@ -567,9 +566,8 @@ fn test_exec_sstore_static_call() {
 
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
-    machine.stack.push(value);
-    machine.stack.push(key);
-    let storage_address = compute_storage_address(key);
+    machine.stack.push(value).expect('push failed');
+    machine.stack.push(key).expect('push failed');
 
     // When
     let result = machine.exec_sstore();
@@ -587,7 +585,7 @@ fn test_exec_sstore_finalized() {
     // Given
     // Setting the contract address is required so that `get_contract_address` in
     // `CA::deploy` returns the kakarot address
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    setup_contracts_for_testing();
     let mut machine = MachineBuilderTestTrait::new_with_presets().build();
     // Deploys the contract account to be able to commit storage changes.
     let ca_address = deploy_contract_account(machine.address().evm, array![].span());
@@ -601,13 +599,13 @@ fn test_exec_sstore_finalized() {
     };
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
-    machine.stack.push(value);
-    machine.stack.push(key);
+    machine.stack.push(value).expect('push failed');
+    machine.stack.push(key).expect('push failed');
 
     // When
-    let result = machine.exec_sstore();
+    machine.exec_sstore().expect('exec_sstore failed');
     machine.state.commit_context();
-    machine.state.commit_storage();
+    machine.state.commit_storage().expect('commit storage failed');
 
     // Then
     assert(account.fetch_storage(key).unwrap() == value, 'wrong committed value')

@@ -510,7 +510,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         // Get first word.
         let w_i = self.items.get(initial_chunk.into());
         let w_i_l = (w_i.into() % mask_i);
-        let elements_first_word = helpers::split_word(w_i_l, 16 - offset_in_chunk_i, ref elements);
+        let _elements_first_word = helpers::split_word(w_i_l, 16 - offset_in_chunk_i, ref elements);
 
         // Get blocks.
         self.load_aligned_words(initial_chunk + 1, final_chunk, ref elements);
@@ -518,7 +518,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         // Get last word.
         let w_f = self.items.get(final_chunk.into());
         let w_f_h = w_f.into() / mask_f;
-        let elements_last_word = helpers::split_word(w_f_h, offset_in_chunk_f, ref elements);
+        //TODO investigate why these two variables are not used
+        let _elements_last_word = helpers::split_word(w_f_h, offset_in_chunk_f, ref elements);
     }
 
 

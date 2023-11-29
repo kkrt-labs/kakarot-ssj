@@ -5,7 +5,7 @@ use evm::tests::test_utils::{ca_address, native_token};
 
 #[test]
 fn test_ca_deploy() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
     let ca_address = deploy_contract_account(ca_address(), Default::default().span());
     let contract_account = IContractAccountDispatcher { contract_address: ca_address.starknet };
 
@@ -19,7 +19,7 @@ fn test_ca_deploy() {
 
 #[test]
 fn test_ca_bytecode() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    setup_contracts_for_testing();
     let bytecode = counter_evm_bytecode();
     let ca_address = deploy_contract_account(ca_address(), bytecode);
     let contract_account = IContractAccountDispatcher { contract_address: ca_address.starknet };
@@ -31,7 +31,7 @@ fn test_ca_bytecode() {
 
 #[test]
 fn test_ca_nonce() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    setup_contracts_for_testing();
     let ca_address = deploy_contract_account(ca_address(), Default::default().span());
     let contract_account = IContractAccountDispatcher { contract_address: ca_address.starknet };
 
@@ -49,7 +49,7 @@ fn test_ca_nonce() {
 
 #[test]
 fn test_ca_storage() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    setup_contracts_for_testing();
     let ca_address = deploy_contract_account(ca_address(), Default::default().span());
     let contract_account = IContractAccountDispatcher { contract_address: ca_address.starknet };
 

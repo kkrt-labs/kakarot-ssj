@@ -80,7 +80,7 @@ impl RLPImpl of RLPTrait {
                         RLPItem::String(string) => {
                             joined_encodings.append_span(RLPTrait::encode_string(*string));
                         },
-                        RLPItem::List(list) => { panic_with_felt252('List encoding unimplemented') }
+                        RLPItem::List(_) => { panic_with_felt252('List encoding unimplemented') }
                     }
                 },
                 Option::None => { break; }

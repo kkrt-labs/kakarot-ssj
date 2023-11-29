@@ -230,7 +230,7 @@ impl StateImpl of StateTrait {
         let internal_key = compute_state_key(evm_address, key);
         let maybe_entry = self.accounts_storage.read(internal_key);
         match maybe_entry {
-            Option::Some((_, key, value)) => { return Result::Ok(value); },
+            Option::Some((_, _, value)) => { return Result::Ok(value); },
             Option::None => {
                 let account = self.get_account(evm_address);
                 return account.read_storage(key);
@@ -317,7 +317,12 @@ impl StateInternalImpl of StateInternalTrait {
                         .get(state_key)
                         .deref();
                     let mut account = self.get_account(evm_address);
-                    account.commit_storage(key, value);
+                    match account.commit_storage(key, value) {
+                        Result::Ok(()) => {},
+                        Result::Err(_) => { //TODO handle error gracefully
+                        // break Result::Err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED));
+                        }
+                    }
                 },
                 Option::None => { break Result::Ok(()); }
             }
@@ -337,7 +342,7 @@ impl StateInternalImpl of StateInternalTrait {
                     Serde::<Array<u8>>::serialize(@event.data, ref data);
                     match emit_event_syscall(keys.span(), data.span()) {
                         Result::Ok(()) => {},
-                        Result::Err(err) => {
+                        Result::Err(_) => {
                             break Result::Err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED));
                         }
                     };
@@ -369,7 +374,12 @@ impl StateInternalImpl of StateInternalTrait {
             match self.accounts.transactional_keyset.pop_front() {
                 Option::Some(evm_address) => {
                     let account = self.accounts.transactional_changes.get(evm_address).deref();
-                    account.commit()
+                    match account.commit() {
+                        Result::Ok(()) => {},
+                        Result::Err(_) => { //TODO handle error gracefully
+                        // break Result::Err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED));
+                        }
+                    };
                 },
                 Option::None => { break Result::Ok(()); }
             };
