@@ -2,12 +2,12 @@
 use evm::errors::{EVMError, INVALID_DESTINATION, READ_SYSCALL_FAILED, WRITE_IN_STATIC_CONTEXT};
 use evm::gas;
 use evm::memory::MemoryTrait;
+use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, compute_state_key};
 use hash::{HashStateTrait, HashStateExTrait};
 use poseidon::PoseidonTrait;
 use starknet::{storage_base_address_from_felt252, Store};
-use evm::model::vm::{VM, VMTrait};
 
 #[generate_trait]
 impl MemoryOperation of MemoryOperationTrait {

@@ -1,14 +1,14 @@
-use evm::interpreter::EVMTrait;
 //! CALL, CALLCODE, DELEGATECALL, STATICCALL opcode helpers
 use cmp::min;
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
 
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
+use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
-use evm::model::{Transfer, Address, Message};
 use evm::model::vm::{VM, VMTrait};
+use evm::model::{Transfer, Address, Message};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use starknet::{EthAddress, get_contract_address};
@@ -123,9 +123,7 @@ impl CallHelpersImpl of CallHelpers {
             depth: self.message().depth + 1
         };
 
-        let state_snapshot = self.env.state;
-        //TODO perform deep copy of the state
-        self.env.state = Default::default();
+        let state_snapshot = self.env.state.clone();
         let result = EVMTrait::process_message(message, ref self.env);
 
         self.return_data = result.return_data;

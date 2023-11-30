@@ -25,8 +25,8 @@ fn test_pow() {
 }
 
 #[test]
+#[available_gas(2000000)]
 #[should_panic(expected: ('Out of gas',))]
-#[available_gas(20000000)]
 fn test_wrapping_slow_pow_runs_out_of_gas() {
     let exp = internal_wrapping_pow_u256::wrapping_fpow(3_u256, 10);
     internal_wrapping_pow_u256::wrapping_spow(3_u256, exp);
@@ -45,7 +45,6 @@ fn test_wrapping_fast_pow() {
 
 #[test]
 #[should_panic(expected: ('u256_mul Overflow',))]
-#[available_gas(20000000)]
 fn test_pow_should_overflow() {
     2_u256.pow(256);
 }

@@ -24,12 +24,13 @@ use core::option::OptionTrait;
 
 
 use core::traits::TryInto;
-use evm::machine::Status;
 use evm::model::contract_account::ContractAccountTrait;
 use evm::model::{AccountType, Address};
 use evm::tests::test_utils;
 use starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};
 use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
+//Required for assert_eq! macro
+use utils::traits::{EthAddressDebug, ContractAddressDebug};
 
 #[test]
 fn test_kakarot_core_owner() {
@@ -144,7 +145,7 @@ fn test_kakarot_core_compute_starknet_address() {
     let expected_starknet_address = kakarot_core.deploy_eoa(evm_address);
 
     let actual_starknet_address = kakarot_core.compute_starknet_address(evm_address);
-    assert(actual_starknet_address == expected_starknet_address, 'wrong starknet address');
+    assert_eq!(actual_starknet_address, expected_starknet_address);
 }
 
 #[test]
@@ -253,7 +254,7 @@ fn test_eth_send_transaction() {
     let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // check counter value is 0 before doing inc
-    let return_data = kakarot_core
+    let (_, return_data) = kakarot_core
         .eth_call(
             origin: evm_address,
             to: Option::Some(account.evm),
@@ -278,7 +279,7 @@ fn test_eth_send_transaction() {
     let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // When
-    let return_data = kakarot_core
+    let (_, return_data) = kakarot_core
         .eth_call(origin: evm_address, :to, :gas_limit, :gas_price, :value, :calldata);
 
     // Then
@@ -307,7 +308,7 @@ fn test_eth_call() {
     let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // When
-    let return_data = kakarot_core
+    let (_, return_data) = kakarot_core
         .eth_call(origin: evm_address, :to, :gas_limit, :gas_price, :value, :calldata);
 
     // Then
@@ -343,11 +344,10 @@ fn test_process_transaction() {
             :gas_price,
             :value,
             :calldata
-        )
-        .expect('process_transaction failed');
+        );
     let return_data = result.return_data;
 
-    assert(result.status == Status::Stopped, 'wrong status');
+    assert!(result.success);
 
     // Then
     assert(return_data == u256_to_bytes_array(0).span(), 'wrong result');
@@ -369,7 +369,7 @@ fn test_eth_send_transaction_deploy_tx() {
     // When
     // Set the contract address to the EOA address, so that the caller of the `eth_send_transaction` is an eoa
     testing::set_contract_address(eoa);
-    let deploy_result = kakarot_core
+    let (_, deploy_result) = kakarot_core
         .eth_send_transaction(
             :to, :gas_limit, :gas_price, :value, calldata: deploy_counter_calldata()
         );
@@ -394,7 +394,7 @@ fn test_eth_send_transaction_deploy_tx() {
     let to = Option::Some(expected_address);
 
     // No need to set address back to eoa, as eth_call doesn't use the caller address.
-    let result = kakarot_core
+    let (_, result) = kakarot_core
         .eth_call(origin: evm_address, :to, :gas_limit, :gas_price, :value, :calldata);
     // Then
     assert(result == u256_to_bytes_array(0).span(), 'wrong result');

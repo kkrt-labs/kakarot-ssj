@@ -1,16 +1,16 @@
 //! Exchange Operations.
 
 use evm::errors::EVMError;
+use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
 use utils::helpers::load_word;
-use evm::model::vm::{VM, VMTrait};
 
 mod internal {
     use evm::errors::EVMError;
     use evm::gas;
+    use evm::model::vm::{VM, VMTrait};
     use evm::stack::StackTrait;
     use utils::helpers::load_word;
-    use evm::model::vm::{VM, VMTrait};
 
     /// Place i bytes items on stack.
     #[inline(always)]

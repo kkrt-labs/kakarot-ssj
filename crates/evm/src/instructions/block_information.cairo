@@ -8,9 +8,9 @@ use evm::errors::{
 };
 
 use evm::gas;
-use evm::model::{Account};
-use evm::model::vm::{VM, VMTrait};
 use evm::model::account::{AccountTrait};
+use evm::model::vm::{VM, VMTrait};
+use evm::model::{Account};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 

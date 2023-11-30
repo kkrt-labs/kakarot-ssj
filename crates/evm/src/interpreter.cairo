@@ -1,14 +1,5 @@
+use evm::call_helpers::is_precompile;
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
-
-use evm::model::account::{AccountTrait};
-use evm::model::{
-    Message, Environment, Address, Transfer, ExecutionSummary, ExecutionResult, AccountType
-};
-use evm::model::vm::{VM, VMTrait};
-use evm::state::{State, StateTrait};
-use starknet::{EthAddress, ContractAddress};
-use utils::helpers::{U256Trait, compute_starknet_address};
-use evm::stack::{Stack, StackTrait};
 
 use evm::instructions::{
     duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
@@ -18,7 +9,15 @@ use evm::instructions::{
     MemoryOperationTrait
 };
 
-use evm::call_helpers::is_precompile;
+use evm::model::account::{AccountTrait};
+use evm::model::vm::{VM, VMTrait};
+use evm::model::{
+    Message, Environment, Address, Transfer, ExecutionSummary, ExecutionResult, AccountType
+};
+use evm::stack::{Stack, StackTrait};
+use evm::state::{State, StateTrait};
+use starknet::{EthAddress, ContractAddress};
+use utils::helpers::{U256Trait, compute_starknet_address, EthAddressExTrait};
 
 #[generate_trait]
 impl EVMImpl of EVMTrait {
@@ -43,10 +42,11 @@ impl EVMImpl of EVMTrait {
             // message processing fails.
             // This needs to be done every time before we call `process_message_create`,
             // that modifies the state.
-            let state_snapshot = env.state;
-            env.state = Default::default(); //TODO deep clone
-            let result = EVMTrait::process_create_message(message, ref env);
-            if !result.success {
+            let state_snapshot = env.state.clone();
+            let mut result = EVMTrait::process_create_message(message, ref env);
+            if result.success {
+                result.return_data = message.target.evm.to_bytes().span();
+            } else {
                 // The `process_create_message` function has mutated the environment state.
                 // Revert state changes using the old snapshot as execution failed.
                 env.state = state_snapshot;
@@ -127,7 +127,7 @@ impl EVMImpl of EVMTrait {
         let bytecode = vm.message().code;
 
         // Check if PC is not out of bounds.
-        if pc >= bytecode.len() || vm.running() == false {
+        if pc >= bytecode.len() || vm.is_running() == false {
             return ExecutionResult {
                 success: true, return_data: vm.return_data(), gas_used: vm.gas_used()
             };
@@ -139,7 +139,7 @@ impl EVMImpl of EVMTrait {
 
         match EVMTrait::execute_opcode(ref vm, opcode) {
             Result::Ok(_) => {
-                if vm.running() {
+                if vm.is_running() {
                     return EVMTrait::execute_code(ref vm);
                 }
                 return ExecutionResult {

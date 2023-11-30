@@ -28,33 +28,22 @@ use utils::traits::{StorageBaseAddressPartialEq, StorageBaseAddressIntoFelt252};
 ///
 /// # Fields
 ///
-/// * `contextual_changes` - A `Felt252Dict` of contextual changes. Tracks the changes applied inside a single execution context.
-/// * `contextual_keyset` - An `Array` of contextual keys.
-/// * `transactional_changes` - A `Felt252Dict` of transactional changes. Tracks
-/// the changes applied in the entire transaction.
-/// * `transactional_keyset` - An `Array` of transactional keys.
+/// * `changes` - A `Felt252Dict` of contextual changes. Tracks the changes applied inside a single execution context.
+/// * `keyset` - An `Array` of contextual keys.
 struct StateChangeLog<T> {
-    contextual_changes: Felt252Dict<Nullable<T>>,
-    contextual_keyset: Array<felt252>,
-    transactional_changes: Felt252Dict<Nullable<T>>,
-    transactional_keyset: Array<felt252>
+    changes: Felt252Dict<Nullable<T>>,
+    keyset: Array<felt252>,
 }
 
 impl StateChangeLogDestruct<T, +Drop<T>> of Destruct<StateChangeLog<T>> {
     fn destruct(self: StateChangeLog<T>) nopanic {
-        self.contextual_changes.squash();
-        self.transactional_changes.squash();
+        self.changes.squash();
     }
 }
 
 impl StateChangeLogDefault<T, +Drop<T>> of Default<StateChangeLog<T>> {
     fn default() -> StateChangeLog<T> {
-        StateChangeLog {
-            contextual_changes: Default::default(),
-            contextual_keyset: Default::default(),
-            transactional_changes: Default::default(),
-            transactional_keyset: Default::default()
-        }
+        StateChangeLog { changes: Default::default(), keyset: Default::default(), }
     }
 }
 
@@ -74,13 +63,8 @@ impl StateChangeLogImpl<T, +Drop<T>, +Copy<T>> of StateChangeLogTrait<T> {
     /// An `Option` containing the value if it exists, or `None` if it does not.
     #[inline(always)]
     fn read(ref self: StateChangeLog<T>, key: felt252) -> Option<T> {
-        match match_nullable(self.contextual_changes.get(key)) {
-            FromNullableResult::Null => {
-                match match_nullable(self.transactional_changes.get(key)) {
-                    FromNullableResult::Null => { Option::None },
-                    FromNullableResult::NotNull(value) => { Option::Some(value.unbox()) }
-                }
-            },
+        match match_nullable(self.changes.get(key)) {
+            FromNullableResult::Null => { Option::None },
             FromNullableResult::NotNull(value) => Option::Some(value.unbox()),
         }
     }
@@ -95,97 +79,24 @@ impl StateChangeLogImpl<T, +Drop<T>, +Copy<T>> of StateChangeLogTrait<T> {
     /// * `value` - The value to write.
     #[inline(always)]
     fn write(ref self: StateChangeLog<T>, key: felt252, value: T) {
-        self.contextual_changes.insert(key, NullableTrait::new(value));
-        self.contextual_keyset.append_unique(key);
+        self.changes.insert(key, NullableTrait::new(value));
+        self.keyset.append_unique(key);
     }
 
-    #[inline(always)]
-    fn transactional_keyset(self: @StateChangeLog<T>) -> Span<felt252> {
-        self.transactional_keyset.span()
-    }
-
-    /// Commits the contextual changes of a `StateChangeLog` to the
-    /// transactional changes.
-    ///
-    /// # Arguments
-    ///
-    /// * `self` - A reference to a `StateChangeLog` instance.
-    fn commit_context(ref self: StateChangeLog<T>) {
+    fn clone(ref self: StateChangeLog<T>) -> StateChangeLog<T> {
+        let mut cloned_changes = Default::default();
+        let mut keyset_span = self.keyset.span();
         loop {
-            match self.contextual_keyset.pop_front() {
+            match keyset_span.pop_front() {
                 Option::Some(key) => {
-                    let value = self.contextual_changes.get(key);
-                    self.transactional_changes.insert(key, value);
-                    self.transactional_keyset.append_unique(key);
+                    let value = self.changes.get(*key).deref();
+                    cloned_changes.insert(*key, NullableTrait::new(value));
                 },
                 Option::None => { break; }
             }
         };
-        self.clear_context();
-    }
 
-    #[inline(always)]
-    fn clear_context(ref self: StateChangeLog<T>) {
-        self.contextual_changes = Default::default();
-        self.contextual_keyset = Default::default();
-    }
-}
-
-
-/// `SimpleLog` is a straightforward logging mechanism.
-///
-/// This structure is designed to manage both contextual and transactional logs of a generic type `T`.
-///
-/// # Fields
-///
-/// - `contextual_logs`: Contains logs that are context-specific.
-/// - `transactional_logs`: Contains logs that are transaction-wide.
-#[derive(Drop)]
-struct SimpleLog<T> {
-    contextual_logs: Array<T>,
-    transactional_logs: Array<T>,
-}
-
-/// `SimpleLogTrait` provides a set of methods for managing logs in `SimpleLog`.
-///
-/// The trait is generic over type `T` which represents the type of logs stored.
-trait SimpleLogTrait<T> {
-    /// Appends a value to the list of contextual logs.
-    ///
-    /// # Arguments
-    ///
-    /// - `value`: The value that needs to be logged contextually.
-    fn append(ref self: SimpleLog<T>, value: T);
-
-    /// Transfers logs from contextual storage to transactional storage.
-    ///
-    /// This is essentially 'finalizing' the contextual logs into the transaction state.
-    fn commit_context(ref self: SimpleLog<T>);
-
-    /// Clears out all contextual logs.
-    ///
-    /// Useful when the context has ended and the logs are no longer required.
-    fn clear_context(ref self: SimpleLog<T>);
-}
-
-impl SimpleLogDefault<T, +Drop<T>> of Default<SimpleLog<T>> {
-    fn default() -> SimpleLog<T> {
-        SimpleLog { contextual_logs: Default::default(), transactional_logs: Default::default() }
-    }
-}
-
-impl TSimpleLogImpl<T, +Drop<T>, +Clone<T>> of SimpleLogTrait<T> {
-    fn append(ref self: SimpleLog<T>, value: T) {
-        self.contextual_logs.append(value)
-    }
-
-    fn commit_context(ref self: SimpleLog<T>) {
-        self.transactional_logs.append_span(self.contextual_logs.span());
-        self.contextual_logs = Default::default();
-    }
-
-    fn clear_context(ref self: SimpleLog<T>) {
-        self.contextual_logs = Default::default();
+        StateChangeLog { changes: cloned_changes, keyset: self.keyset.clone(), }
     }
 }
 
@@ -201,9 +112,9 @@ struct State {
     accounts_storage: StateChangeLog<(EthAddress, u256, u256)>,
     /// Account states
     /// Pending emitted events
-    events: SimpleLog<Event>,
+    events: Array<Event>,
     /// Pending transfers
-    transfers: SimpleLog<Transfer>,
+    transfers: Array<Transfer>,
 }
 
 #[generate_trait]
@@ -281,27 +192,20 @@ impl StateImpl of StateTrait {
     }
 
     #[inline(always)]
-    fn commit_context(ref self: State) {
-        self.accounts.commit_context();
-        self.accounts_storage.commit_context();
-        self.events.commit_context();
-        self.transfers.commit_context();
-    }
-
-    #[inline(always)]
-    fn clear_context(ref self: State) {
-        self.accounts.clear_context();
-        self.accounts_storage.clear_context();
-        self.events.clear_context();
-        self.transfers.clear_context();
-    }
-
-    #[inline(always)]
     fn commit_state(ref self: State) -> Result<(), EVMError> {
         self.commit_accounts()?;
         self.transfer_native_token()?;
         self.commit_storage()?;
         self.emit_events()
+    }
+
+    fn clone(ref self: State) -> State {
+        State {
+            accounts: self.accounts.clone(),
+            accounts_storage: self.accounts_storage.clone(),
+            events: self.events.clone(),
+            transfers: self.transfers.clone(),
+        }
     }
 }
 #[generate_trait]
@@ -311,16 +215,16 @@ impl StateInternalImpl of StateInternalTrait {
     /// commit_storage MUST be called after commit_accounts.
     fn commit_storage(ref self: State) -> Result<(), EVMError> {
         let result = loop {
-            match self.accounts_storage.transactional_keyset.pop_front() {
+            match self.accounts_storage.keyset.pop_front() {
                 Option::Some(state_key) => {
                     let (evm_address, key, value) = self
                         .accounts_storage
-                        .transactional_changes
+                        .changes
                         .get(state_key)
                         .deref();
                     let mut account = self.get_account(evm_address);
                     match account.commit_storage(key, value) {
-                        Result::Ok(()) => {},
+                        Result::Ok(_) => {},
                         Result::Err(_) => { //TODO handle error gracefully
                         // break Result::Err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED));
                         }
@@ -336,7 +240,7 @@ impl StateInternalImpl of StateInternalTrait {
     /// Iterates through the list of events and emits them.
     fn emit_events(ref self: State) -> Result<(), EVMError> {
         loop {
-            match self.events.transactional_logs.pop_front() {
+            match self.events.pop_front() {
                 Option::Some(event) => {
                     let mut keys = Default::default();
                     let mut data = Default::default();
@@ -358,7 +262,7 @@ impl StateInternalImpl of StateInternalTrait {
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
         let native_token = kakarot_state.native_token();
         loop {
-            match self.transfers.transactional_logs.pop_front() {
+            match self.transfers.pop_front() {
                 Option::Some(transfer) => {
                     IERC20CamelDispatcher { contract_address: native_token }
                         .transferFrom(
@@ -373,11 +277,11 @@ impl StateInternalImpl of StateInternalTrait {
 
     fn commit_accounts(ref self: State) -> Result<(), EVMError> {
         loop {
-            match self.accounts.transactional_keyset.pop_front() {
+            match self.accounts.keyset.pop_front() {
                 Option::Some(evm_address) => {
-                    let account = self.accounts.transactional_changes.get(evm_address).deref();
+                    let account = self.accounts.changes.get(evm_address).deref();
                     match account.commit() {
-                        Result::Ok(()) => {},
+                        Result::Ok(_) => {},
                         Result::Err(_) => { //TODO handle error gracefully
                         // break Result::Err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED));
                         }

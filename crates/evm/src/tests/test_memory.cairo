@@ -8,11 +8,10 @@ mod internal {
     use utils::{math::Exponentiation, helpers};
 
     fn load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        offset: usize, low: u128, high: u128, active_segment: usize,
+        offset: usize, low: u128, high: u128
     ) {
         // Given
         let mut memory = MemoryTrait::new();
-        memory.set_active_segment(active_segment);
 
         let value: u256 = u256 { low: low, high: high };
 
@@ -33,7 +32,6 @@ mod internal {
     ) {
         // Given
         let mut memory = MemoryTrait::new();
-        memory.set_active_segment(active_segment);
 
         let value: u256 = u256 { low: low, high: high };
 
@@ -226,123 +224,39 @@ fn test_load_should_load_an_element_from_the_memory() {
 #[test]
 fn test_load_should_load_an_element_from_the_memory_with_offset_8() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        8, 2 * POW_2_64, POW_2_64, 0
+        8, 2 * POW_2_64, POW_2_64
     );
 }
 #[test]
 fn test_load_should_load_an_element_from_the_memory_with_offset_7() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        7, 2 * POW_2_56, POW_2_56, 0
+        7, 2 * POW_2_56, POW_2_56
     );
 }
 #[test]
 fn test_load_should_load_an_element_from_the_memory_with_offset_23() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        23, 3 * POW_2_56, 2 * POW_2_56, 0
+        23, 3 * POW_2_56, 2 * POW_2_56
     );
 }
 
 #[test]
 fn test_load_should_load_an_element_from_the_memory_with_offset_33() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        33, 4 * POW_2_8, 3 * POW_2_8, 0
+        33, 4 * POW_2_8, 3 * POW_2_8
     );
 }
 #[test]
 fn test_load_should_load_an_element_from_the_memory_with_offset_63() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        63, 0, 4 * POW_2_120, 0
+        63, 0, 4 * POW_2_120
     );
 }
 
 #[test]
 fn test_load_should_load_an_element_from_the_memory_with_offset_500() {
     internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        500, 0, 0, 0
-    );
-}
-
-
-#[test]
-fn test_load_should_load_an_element_from_the_memory_with_offset_8_and_active_segment_1() {
-    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        8, 2 * POW_2_64, POW_2_64, 1
-    );
-}
-#[test]
-fn test_load_should_load_an_element_from_the_memory_with_offset_7_and_active_segment_2() {
-    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        7, 2 * POW_2_56, POW_2_56, 2
-    );
-}
-#[test]
-fn test_load_should_load_an_element_from_the_memory_with_offset_23_and_active_segment_3() {
-    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        23, 3 * POW_2_56, 2 * POW_2_56, 3
-    );
-}
-
-#[test]
-fn test_load_should_load_an_element_from_the_memory_with_offset_33_and_active_segment_4() {
-    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        33, 4 * POW_2_8, 3 * POW_2_8, 2
-    );
-}
-#[test]
-#[should_panic(expected: ('u32_mul Overflow',))]
-#[available_gas(200000000)]
-fn test_load_should_load_an_element_from_the_memory_with_offset_63_and_active_segment_usize_max() {
-    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        63, 0, 4 * POW_2_120, BoundedInt::<usize>::max()
-    );
-}
-
-#[test]
-fn test_load_should_load_an_element_from_the_memory_with_offset_500_and_active_segment_1() {
-    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-        500, 0, 0, 1
-    );
-}
-
-
-#[test]
-fn test_load_should_load_an_element_from_the_memory_with_offset_8_and_active_segment_1_with_store() {
-    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
-        8, 2 * POW_2_64, POW_2_64, 1
-    );
-}
-#[test]
-fn test_load_should_load_an_element_from_the_memory_with_offset_7_and_active_segment_2_with_store() {
-    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
-        7, 2 * POW_2_56, POW_2_56, 2
-    );
-}
-#[test]
-fn test_load_should_load_an_element_from_the_memory_with_offset_23_and_active_segment_3_with_store() {
-    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
-        23, 3 * POW_2_56, 2 * POW_2_56, 3
-    );
-}
-
-#[test]
-fn test_load_should_load_an_element_from_the_memory_with_offset_33_and_active_segment_4_with_store() {
-    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
-        33, 4 * POW_2_8, 3 * POW_2_8, 4
-    );
-}
-#[test]
-#[should_panic(expected: ('u32_mul Overflow',))]
-#[available_gas(200000000)]
-fn test_load_should_load_an_element_from_the_memory_with_offset_63_and_active_segment_usize_max_with_store() {
-    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
-        63, 0, 4 * POW_2_120, BoundedInt::<usize>::max()
-    );
-}
-
-#[test]
-fn test_load_should_load_an_element_from_the_memory_with_offset_500_and_active_segment_1_with_store() {
-    internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
-        500, 0, 0, 1
+        500, 0, 0
     );
 }
 
@@ -676,39 +590,4 @@ fn test_store_byte_should_store_byte_at_offset_in_new_word_with_existing_value_i
     assert(memory.items[0] == 0x0100, 'Wrong value in word 0');
     assert(memory.items[1] == 0xffABffffffffffffffffffffffffffff, 'Wrong value in word 1');
     assert(memory.size() == 32, 'Wrong memory length');
-}
-
-#[test]
-fn test_set_active_segment() {
-    // Given
-    let mut memory = MemoryTrait::new();
-    memory.set_active_segment(5);
-
-    // When
-    let active_segment = memory.active_segment();
-
-    // Then
-    assert(active_segment == 5, 'Wrong active segment');
-}
-
-#[test]
-fn test_memory_store_byte_with_active_segment() {
-    // Given
-    let mut memory = MemoryTrait::new();
-    memory.set_active_segment(5);
-
-    // When
-    memory.store_byte(0x01, 32);
-
-    // Start index: divmod(32 + 5 * 131072, 16)
-    let start_index = 40962;
-
-    // Then
-    assert(memory.active_segment() == 5, 'wrong active segment');
-    assert(memory.items[start_index + 1] == 0x0, 'Wrong value for word 0');
-    assert(memory.items[start_index - 1] == 0x0, 'Wrong value for word 1');
-    assert(
-        memory.items[start_index] == 0x01000000000000000000000000000000, 'Wrong value for word 2'
-    );
-    assert(memory.size() == 64, 'Wrong memory length');
 }

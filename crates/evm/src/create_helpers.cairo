@@ -1,26 +1,26 @@
-use evm::interpreter::EVMTrait;
 //! CREATE, CREATE2 opcode helpers
 use cmp::min;
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
+use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
+use evm::model::ExecutionSummary;
 use evm::model::account::{AccountTrait};
 use evm::model::contract_account::{ContractAccountTrait};
-use evm::model::{Message, Address, AccountType, Transfer};
 use evm::model::vm::{VM, VMTrait};
+use evm::model::{Message, Address, AccountType, Transfer};
 use evm::stack::StackTrait;
-use utils::constants;
 use evm::state::StateTrait;
 use keccak::cairo_keccak;
 use starknet::{EthAddress, get_tx_info};
 use utils::address::{compute_contract_address, compute_create2_contract_address};
+use utils::constants;
 use utils::helpers::ArrayExtTrait;
 use utils::helpers::{ResultExTrait, EthAddressExTrait, U256Trait, U8SpanExTrait};
 use utils::traits::{
     BoolIntoNumeric, EthAddressIntoU256, U256TryIntoResult, SpanU8TryIntoResultEthAddress
 };
-use evm::model::ExecutionSummary;
 
 /// Helper struct to prepare CREATE and CREATE2 opcodes
 #[derive(Drop)]
@@ -67,9 +67,7 @@ impl CreateHelpersImpl of CreateHelpers {
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
     fn generic_create(ref self: VM, create_args: CreateArgs) -> Result<(), EVMError> {
-        let state_snapshot = self.env.state;
-        //TODO(eni) state deep copy
-        self.env.state = Default::default();
+        let state_snapshot = self.env.state.clone();
         let mut target_account = self.env.state.get_account(create_args.to);
         let target_address = target_account.address();
 

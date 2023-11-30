@@ -1,11 +1,9 @@
 use contracts::tests::test_utils::{deploy_contract_account};
-use evm::context::DefaultBoxExecutionContext;
-use evm::context::{
-    CallContext, CallContextTrait, ExecutionContext, ExecutionContextType, ExecutionContextTrait,
-    DefaultOptionSpanU8
-};
+use contracts::uninitialized_account::UninitializedAccount;
+use core::traits::TryInto;
 use evm::errors::{EVMError};
-use evm::model::{ContractAccountTrait, Address, Account, AccountType};
+use evm::model::vm::{VM, VMTrait};
+use evm::model::{Message, Environment, ContractAccountTrait, Address, Account, AccountType};
 use evm::state::State;
 use evm::{stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}};
 use nullable::{match_nullable, FromNullableResult};
@@ -14,78 +12,77 @@ use starknet::{
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
 };
 
-struct ContextBuilder {
-    context: ExecutionContext
+#[derive(Destruct)]
+struct VMBuilder {
+    vm: VM
 }
 
 #[generate_trait]
-impl ContextBuilderImpl of ContextBuilderTestTrait {
-    fn new() -> ContextBuilder {
-        ContextBuilder { context: Default::default() }
+impl VMBuilderImpl of VMBuilderTrait {
+    fn new() -> VMBuilder {
+        VMBuilder { vm: Default::default() }
     }
 
-    fn new_with_presets() -> ContextBuilder {
-        ContextBuilder { context: preset_execution_context() }
+    fn new_with_presets() -> VMBuilder {
+        VMBuilder { vm: preset_vm() }
     }
 
-    fn with_return_data(mut self: ContextBuilder, return_data: Span<u8>) -> ContextBuilder {
-        self.context.return_data = return_data;
+    fn with_return_data(mut self: VMBuilder, return_data: Span<u8>) -> VMBuilder {
+        self.vm.set_return_data(return_data);
         self
     }
 
-    fn with_caller(mut self: ContextBuilder, address: Address) -> ContextBuilder {
-        let mut call_ctx = self.context.call_ctx();
-        call_ctx.caller = address;
-        self.context.call_ctx = BoxTrait::new(call_ctx);
+    fn with_caller(mut self: VMBuilder, address: Address) -> VMBuilder {
+        self.vm.message.caller = address;
         self
     }
 
-    fn with_calldata(mut self: ContextBuilder, calldata: Span<u8>) -> ContextBuilder {
-        let mut call_ctx = self.context.call_ctx();
-        call_ctx.calldata = calldata;
-        self.context.call_ctx = BoxTrait::new(call_ctx);
+    fn with_calldata(mut self: VMBuilder, calldata: Span<u8>) -> VMBuilder {
+        self.vm.message.data = calldata;
         self
     }
 
-    fn with_read_only(mut self: ContextBuilder) -> ContextBuilder {
-        self.context.read_only = true;
+    fn with_read_only(mut self: VMBuilder) -> VMBuilder {
+        self.vm.message.read_only = true;
         self
     }
 
-    fn with_bytecode(mut self: ContextBuilder, bytecode: Span<u8>) -> ContextBuilder {
-        let mut current_ctx = self.machine.current_ctx.unbox();
-        let mut call_ctx = current_ctx.call_ctx();
-        call_ctx.bytecode = bytecode;
-        current_ctx.call_ctx = BoxTrait::new(call_ctx);
-        self.machine.current_ctx = BoxTrait::new(current_ctx);
+    fn with_bytecode(mut self: VMBuilder, bytecode: Span<u8>) -> VMBuilder {
+        self.vm.message.code = bytecode;
         self
     }
 
-    fn with_nested_execution_context(mut self: ContextBuilder) -> ContextBuilder {
-        let current_ctx = self.machine.current_ctx.unbox();
+    // fn with_nested_vm(mut self: VMBuilder) -> VMBuilder {
+    //     let current_ctx = self.machine.current_ctx.unbox();
 
-        // Second Execution Context
-        let context_id = ExecutionContextType::Call(1);
-        let mut child_context = preset_execution_context();
-        child_context.ctx_type = context_id;
-        child_context.parent_ctx = NullableTrait::new(current_ctx);
-        let mut call_ctx = child_context.call_ctx();
-        call_ctx.caller = other_address();
-        child_context.call_ctx = BoxTrait::new(call_ctx);
-        self.machine.current_ctx = BoxTrait::new(child_context);
+    //     // Second Execution Context
+    //     let context_id = ExecutionContextType::Call(1);
+    //     let mut child_context = preset_message();
+    //     child_context.ctx_type = context_id;
+    //     child_context.parent_ctx = NullableTrait::new(current_ctx);
+    //     let mut call_ctx = child_context.call_ctx();
+    //     call_ctx.caller = other_address();
+    //     child_context.call_ctx = BoxTrait::new(call_ctx);
+    //     self.machine.current_ctx = BoxTrait::new(child_context);
+    //     self
+    // }
+
+    fn with_target(mut self: VMBuilder, target: Address) -> VMBuilder {
+        self.vm.message.target = target;
         self
     }
 
-    fn with_target(mut self: ContextBuilder, target: Address) -> ContextBuilder {
-        let mut current_ctx = self.machine.current_ctx.unbox();
-        current_ctx.address = target;
-        self.machine.current_ctx = BoxTrait::new(current_ctx);
-        self
+    fn build(self: VMBuilder) -> VM {
+        return self.vm;
     }
+}
 
-    fn build(self: ContextBuilder) -> Machine {
-        return self.machine;
-    }
+fn origin() -> EthAddress {
+    'origin'.try_into().unwrap()
+}
+
+fn coinbase() -> EthAddress {
+    'coinbase'.try_into().unwrap()
 }
 
 fn starknet_address() -> ContractAddress {
@@ -163,86 +160,97 @@ fn ca_address() -> EthAddress {
     evm_address
 }
 
-fn setup_call_context() -> CallContext {
-    let bytecode: Span<u8> = array![0x00].span();
-    let calldata: Span<u8> = array![4, 5, 6].span();
+fn preset_message() -> Message {
+    let code: Span<u8> = array![0x00].span();
+    let data: Span<u8> = array![4, 5, 6].span();
     let value: u256 = callvalue();
-    let caller = test_address();
+    let caller = Address {
+        evm: origin(),
+        starknet: utils::helpers::compute_starknet_address(
+            get_contract_address(),
+            origin(),
+            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
+        )
+    };
     let read_only = false;
-    let gas_price = gas_price();
     let gas_limit = gas_limit();
-    let output_offset = 0;
-    let output_size = 0;
+    let target = test_address();
 
-    CallContextTrait::new(
+    Message {
+        target,
         caller,
-        bytecode,
-        calldata,
+        data,
         value,
-        read_only,
         gas_limit,
-        gas_price,
-        output_offset,
-        output_size,
-    )
+        read_only,
+        code,
+        should_transfer_value: true,
+        depth: 0,
+    }
 }
 
-fn preset_execution_context() -> ExecutionContext {
-    let context_type = ExecutionContextType::Call;
-    let call_ctx = setup_call_context();
-    let address = test_address();
-    let return_data = array![1, 2, 3].span();
+fn preset_environment() -> Environment {
+    let block_info = starknet::get_block_info().unbox();
+    Environment {
+        origin: origin(),
+        gas_price: gas_price(),
+        chain_id: chain_id(),
+        prevrandao: 0,
+        block_number: block_info.block_number,
+        coinbase: coinbase(),
+        timestamp: block_info.block_timestamp,
+        state: Default::default(),
+    }
+}
 
-    ExecutionContextTrait::new(
-        context_type,
-        address,
-        call_ctx,
-        depth: 0,
+fn preset_vm() -> VM {
+    let message = preset_message();
+    let environment = preset_environment();
+    let return_data = array![1, 2, 3].span();
+    VM {
         stack: Default::default(),
         memory: Default::default(),
-        state: Default::default()
-    )
-}
-
-impl CallContextPartialEq of PartialEq<CallContext> {
-    fn eq(lhs: @CallContext, rhs: @CallContext) -> bool {
-        lhs.bytecode() == rhs.bytecode() && lhs.calldata == rhs.calldata && lhs.value == rhs.value
-    }
-    fn ne(lhs: @CallContext, rhs: @CallContext) -> bool {
-        !(lhs == rhs)
+        pc: 0,
+        valid_jumpdests: Default::default().span(),
+        return_data,
+        env: environment,
+        message,
+        gas_used: 0,
+        running: true,
+        error: false
     }
 }
 
-// Simulate return of subcontext where
-/// 1. Set `return_data` field of parent context
-/// 2. make `parent_ctx` of `current_ctx` the current ctx
-fn return_from_subcontext(ref self: Machine, return_data: Span<u8>) {
-    let current_ctx = self.current_ctx.unbox();
-    let mut parent_ctx = current_ctx.parent_ctx.deref();
-    parent_ctx.return_data = return_data;
-    self.current_ctx = BoxTrait::new(parent_ctx);
-}
+// // Simulate return of subcontext where
+// /// 1. Set `return_data` field of parent context
+// /// 2. make `parent_ctx` of `current_ctx` the current ctx
+// fn return_from_subcontext(ref self: Machine, return_data: Span<u8>) {
+//     let current_ctx = self.current_ctx.unbox();
+//     let mut parent_ctx = current_ctx.parent_ctx.deref();
+//     parent_ctx.return_data = return_data;
+//     self.current_ctx = BoxTrait::new(parent_ctx);
+// }
 
-/// Returns the `return_data` field of the parent_ctx of the current_ctx.
-fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
-    let mut current_ctx = self.current_ctx.unbox();
-    let maybe_parent_ctx = current_ctx.parent_ctx;
-    let value = match match_nullable(maybe_parent_ctx) {
-        // Due to ownership mechanism, both branches need to explicitly re-bind the parent_ctx.
-        FromNullableResult::Null => {
-            current_ctx.parent_ctx = Default::default();
-            Default::default().span()
-        },
-        FromNullableResult::NotNull(parent_ctx) => {
-            let mut parent_ctx = parent_ctx.unbox();
-            let value = parent_ctx.return_data();
-            current_ctx.parent_ctx = NullableTrait::new(parent_ctx);
-            value
-        }
-    };
-    self.current_ctx = BoxTrait::new(current_ctx);
-    value
-}
+// /// Returns the `return_data` field of the parent_ctx of the current_ctx.
+// fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
+//     let mut current_ctx = self.current_ctx.unbox();
+//     let maybe_parent_ctx = current_ctx.parent_ctx;
+//     let value = match match_nullable(maybe_parent_ctx) {
+//         // Due to ownership mechanism, both branches need to explicitly re-bind the parent_ctx.
+//         FromNullableResult::Null => {
+//             current_ctx.parent_ctx = Default::default();
+//             Default::default().span()
+//         },
+//         FromNullableResult::NotNull(parent_ctx) => {
+//             let mut parent_ctx = parent_ctx.unbox();
+//             let value = parent_ctx.return_data();
+//             current_ctx.parent_ctx = NullableTrait::new(parent_ctx);
+//             value
+//         }
+//     };
+//     self.current_ctx = BoxTrait::new(current_ctx);
+//     value
+// }
 
 /// Initializes the contract account by setting the bytecode, the storage
 /// and incrementing the nonce to 1.

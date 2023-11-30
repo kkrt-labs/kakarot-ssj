@@ -6,6 +6,33 @@ use starknet::{
 };
 use utils::math::{Zero, One, Bitshift};
 
+mod display_felt252_based {
+    use core::fmt::{Display, Formatter, Error};
+    use core::to_byte_array::AppendFormattedToByteArray;
+    impl TDisplay<T, +Into<T, felt252>, +Copy<T>> of Display<T> {
+        fn fmt(self: @T, ref f: Formatter) -> Result<(), Error> {
+            let value: felt252 = (*self).into();
+            let base: felt252 = 10_u8.into();
+            value.append_formatted_to_byte_array(ref f.buffer, base.try_into().unwrap());
+            Result::Ok(())
+        }
+    }
+}
+
+mod debug_display_based {
+    use core::fmt::{Display, Debug, Formatter, Error};
+    use core::to_byte_array::AppendFormattedToByteArray;
+    impl TDisplay<T, +Display<T>> of Debug<T> {
+        fn fmt(self: @T, ref f: Formatter) -> Result<(), Error> {
+            Display::fmt(self, ref f)
+        }
+    }
+}
+
+impl EthAddressDisplay = display_felt252_based::TDisplay<EthAddress>;
+impl ContractAddressDisplay = display_felt252_based::TDisplay<ContractAddress>;
+impl EthAddressDebug = debug_display_based::TDisplay<EthAddress>;
+impl ContractAddressDebug = debug_display_based::TDisplay<ContractAddress>;
 
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
     #[inline(always)]

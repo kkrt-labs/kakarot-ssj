@@ -47,9 +47,9 @@ mod internal {
     use evm::gas;
     use evm::memory::MemoryTrait;
     use evm::model::Event;
+    use evm::model::vm::{VM, VMTrait};
     use evm::stack::StackTrait;
     use evm::state::StateTrait;
-    use evm::model::vm::{VM, VMTrait};
 
 
     /// Store a new event in the dynamic context using topics

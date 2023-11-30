@@ -26,13 +26,13 @@ mod KakarotCore {
     use core::zeroable::Zeroable;
 
     use evm::errors::{EVMError, EVMErrorTrait, CALLING_FROM_CA, CALLING_FROM_UNDEPLOYED_ACCOUNT};
-    use evm::model::{Message, Environment};
+    use evm::interpreter::{EVMTrait};
     use evm::model::account::{Account, AccountType, AccountTrait};
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::{EOATrait};
     use evm::model::{ExecutionSummary, Address, AddressTrait};
+    use evm::model::{Message, Environment};
     use evm::state::{State, StateTrait};
-    use evm::interpreter::{EVMTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall,
         get_caller_address
@@ -415,12 +415,7 @@ mod KakarotCore {
                 should_transfer_value: true,
             };
 
-            let mut result = EVMTrait::process_message_call(message, env, is_deploy_tx,);
-            //TODO(eni): normally not required, need to check
-            if is_deploy_tx && result.success == true {
-                result.return_data = to.evm.to_bytes().span();
-            }
-            result
+            EVMTrait::process_message_call(message, env, is_deploy_tx)
         }
     }
 }

@@ -8,11 +8,11 @@ use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL, WRITE_IN_STATIC_CONTE
 use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
+use evm::model::vm::{VM, VMTrait};
 use evm::model::{Address, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use utils::math::Exponentiation;
-use evm::model::vm::{VM, VMTrait};
 
 #[generate_trait]
 impl SystemOperations of SystemOperationsTrait {

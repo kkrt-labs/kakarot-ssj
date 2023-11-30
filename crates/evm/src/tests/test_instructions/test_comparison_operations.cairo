@@ -1,102 +1,100 @@
 use evm::instructions::ComparisonAndBitwiseOperationsTrait;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::MachineBuilderTestTrait;
+use evm::tests::test_utils::VMBuilderTrait;
 use integer::BoundedInt;
 
 #[test]
 fn test_eq_same_pair() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm
         .stack
         .push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210)
         .expect('push failed');
-    machine
+    vm
         .stack
         .push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210)
         .expect('push failed');
 
     // When
-    machine.exec_eq().expect('exec_eq failed');
+    vm.exec_eq().expect('exec_eq failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x01, 'stack top should be 0x01');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x01, 'stack top should be 0x01');
 }
 
 #[test]
 fn test_eq_different_pair() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm
         .stack
         .push(0xAB8765432DCBA98765410F149E87610FDCBA98765432543217654DCBA93210F8)
         .expect('push failed');
-    machine
+    vm
         .stack
         .push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210)
         .expect('push failed');
 
     // When
-    machine.exec_eq().expect('exec_eq failed');
+    vm.exec_eq().expect('exec_eq failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
 }
 
 #[test]
 fn test_and_zero_and_max() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x00).expect('push failed');
-    machine.stack.push(BoundedInt::<u256>::max()).unwrap();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(0x00).expect('push failed');
+    vm.stack.push(BoundedInt::<u256>::max()).unwrap();
 
     // When
-    machine.exec_and().expect('exec_and failed');
+    vm.exec_and().expect('exec_and failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
 }
 
 #[test]
 fn test_and_max_and_max() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(BoundedInt::<u256>::max()).unwrap();
-    machine.stack.push(BoundedInt::<u256>::max()).unwrap();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(BoundedInt::<u256>::max()).unwrap();
+    vm.stack.push(BoundedInt::<u256>::max()).unwrap();
 
     // When
-    machine.exec_and().expect('exec_and failed');
+    vm.exec_and().expect('exec_and failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(
-        machine.stack.peek().unwrap() == BoundedInt::<u256>::max(), 'stack top should be 0xFF...FFF'
-    );
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == BoundedInt::<u256>::max(), 'stack top should be 0xFF...FFF');
 }
 
 #[test]
 fn test_and_two_random_uint() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm
         .stack
         .push(0xAB8765432DCBA98765410F149E87610FDCBA98765432543217654DCBA93210F8)
         .expect('push failed');
-    machine
+    vm
         .stack
         .push(0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210)
         .expect('push failed');
 
     // When
-    machine.exec_and().expect('exec_and failed');
+    vm.exec_and().expect('exec_and failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.len() == 1, 'stack should have one element');
     assert(
-        machine
+        vm
             .stack
             .peek()
             .unwrap() == 0xAA8420002440200064400A1016042000DC989810541010101644088820101010,
@@ -108,96 +106,95 @@ fn test_and_two_random_uint() {
 #[test]
 fn test_xor_different_pair() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0b010101).expect('push failed');
-    machine.stack.push(0b101010).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(0b010101).expect('push failed');
+    vm.stack.push(0b101010).expect('push failed');
 
     // When
-    machine.exec_xor().expect('exec_xor failed');
+    vm.exec_xor().expect('exec_xor failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0b111111, 'stack top should be 0xFF');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0b111111, 'stack top should be 0xFF');
 }
 
 #[test]
 fn test_xor_same_pair() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0b000111).expect('push failed');
-    machine.stack.push(0b000111).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(0b000111).expect('push failed');
+    vm.stack.push(0b000111).expect('push failed');
 
     // When
-    machine.exec_xor().expect('exec_xor failed');
+    vm.exec_xor().expect('exec_xor failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
 }
 
 #[test]
 fn test_xor_half_same_pair() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0b111000).expect('push failed');
-    machine.stack.push(0b000000).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(0b111000).expect('push failed');
+    vm.stack.push(0b000000).expect('push failed');
 
     // When
-    machine.exec_xor().expect('exec_xor failed');
+    vm.exec_xor().expect('exec_xor failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0b111000, 'stack top should be 0xFF');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0b111000, 'stack top should be 0xFF');
 }
 
 
 #[test]
 fn test_not_zero() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x00).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(0x00).expect('push failed');
 
     // When
-    machine.exec_not().expect('exec_not failed');
+    vm.exec_not().expect('exec_not failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.len() == 1, 'stack should have one element');
     assert(
-        machine.stack.peek().unwrap() == BoundedInt::<u256>::max(),
-        'stack top should be 0xFFF..FFFF'
+        vm.stack.peek().unwrap() == BoundedInt::<u256>::max(), 'stack top should be 0xFFF..FFFF'
     );
 }
 
 #[test]
 fn test_not_max_uint() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(BoundedInt::<u256>::max()).unwrap();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(BoundedInt::<u256>::max()).unwrap();
 
     // When
-    machine.exec_not().expect('exec_not failed');
+    vm.exec_not().expect('exec_not failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
 }
 
 #[test]
 fn test_not_random_uint() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm
         .stack
         .push(0x123456789ABCDEF123456789ABCDEF123456789ABCDEF123456789ABCDEF1234)
         .expect('push failed');
 
     // When
-    machine.exec_not().expect('exec_not failed');
+    vm.exec_not().expect('exec_not failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.len() == 1, 'stack should have one element');
     assert(
-        machine
+        vm
             .stack
             .peek()
             .unwrap() == 0xEDCBA9876543210EDCBA9876543210EDCBA9876543210EDCBA9876543210EDCB,
@@ -208,99 +205,99 @@ fn test_not_random_uint() {
 #[test]
 fn test_is_zero_true() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x00).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(0x00).expect('push failed');
 
     // When
-    machine.exec_iszero().expect('exec_iszero failed');
+    vm.exec_iszero().expect('exec_iszero failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x01, 'stack top should be true');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x01, 'stack top should be true');
 }
 
 #[test]
 fn test_is_zero_false() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x01).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(0x01).expect('push failed');
 
     // When
-    machine.exec_iszero().expect('exec_iszero failed');
+    vm.exec_iszero().expect('exec_iszero failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x00, 'stack top should be false');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x00, 'stack top should be false');
 }
 
 #[test]
 fn test_byte_random_u256() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm
         .stack
         .push(0xf7ec8b2ea4a6b7fd5f4ed41b66197fcc14c4a37d68275ea151d899bb4d7c2ae7)
         .expect('push failed');
-    machine.stack.push(0x08).expect('push failed');
+    vm.stack.push(0x08).expect('push failed');
 
     // When
-    machine.exec_byte().expect('exec_byte failed');
+    vm.exec_byte().expect('exec_byte failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x5f, 'stack top should be 0x22');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x5f, 'stack top should be 0x22');
 }
 
 #[test]
 fn test_byte_offset_out_of_range() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm
         .stack
         .push(0x01be893aefcfa1592f60622b80d45c2db74281d2b9e10c14b0f6ce7c8f58e209)
         .expect('push failed');
-    machine.stack.push(32_u256).expect('push failed');
+    vm.stack.push(32_u256).expect('push failed');
 
     // When
-    machine.exec_byte().expect('exec_byte failed');
+    vm.exec_byte().expect('exec_byte failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
 }
 
 #[test]
 fn test_exec_gt_true() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(9_u256).expect('push failed');
-    machine.stack.push(10_u256).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(9_u256).expect('push failed');
+    vm.stack.push(10_u256).expect('push failed');
 
     // When
-    machine.exec_gt().expect('exec_gt failed');
+    vm.exec_gt().expect('exec_gt failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 1, 'stack top should be 1');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 1, 'stack top should be 1');
 }
 
 #[test]
 fn test_exec_shl() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm
         .stack
         .push(0xff00000000000000000000000000000000000000000000000000000000000000)
         .expect('push failed');
-    machine.stack.push(4_u256).expect('push failed');
+    vm.stack.push(4_u256).expect('push failed');
 
     // When
-    machine.exec_shl().expect('exec_shl failed');
+    vm.exec_shl().expect('exec_shl failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.len() == 1, 'stack should have one element');
     assert(
-        machine
+        vm
             .stack
             .peek()
             .unwrap() == 0xf000000000000000000000000000000000000000000000000000000000000000,
@@ -311,49 +308,49 @@ fn test_exec_shl() {
 #[test]
 fn test_exec_shl_wrapping() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm
         .stack
         .push(0xff00000000000000000000000000000000000000000000000000000000000000)
         .expect('push failed');
-    machine.stack.push(256_u256).expect('push failed');
+    vm.stack.push(256_u256).expect('push failed');
 
     // When
-    machine.exec_shl().expect('exec_shl failed');
+    vm.exec_shl().expect('exec_shl failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0, 'if shift > 255 should return 0');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0, 'if shift > 255 should return 0');
 }
 
 #[test]
 fn test_exec_gt_false() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(10_u256).expect('push failed');
-    machine.stack.push(9_u256).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(10_u256).expect('push failed');
+    vm.stack.push(9_u256).expect('push failed');
 
     // When
-    machine.exec_gt().expect('exec_gt failed');
+    vm.exec_gt().expect('exec_gt failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0, 'stack top should be 0');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0, 'stack top should be 0');
 }
 
 #[test]
 fn test_exec_gt_false_equal() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(10_u256).expect('push failed');
-    machine.stack.push(10_u256).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(10_u256).expect('push failed');
+    vm.stack.push(10_u256).expect('push failed');
 
     // When
-    machine.exec_gt().expect('exec_gt failed');
+    vm.exec_gt().expect('exec_gt failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0, 'stack top should be 0');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0, 'stack top should be 0');
 }
 
 #[test]
@@ -588,16 +585,16 @@ fn test_exec_slt() {
 
 fn assert_slt(b: u256, a: u256, expected: u256) {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(b).expect('push failed');
-    machine.stack.push(a).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(b).expect('push failed');
+    vm.stack.push(a).expect('push failed');
 
     // When
-    machine.exec_slt().expect('exec_slt failed');
+    vm.exec_slt().expect('exec_slt failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == expected, 'slt failed');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == expected, 'slt failed');
 }
 
 #[test]
@@ -832,16 +829,16 @@ fn test_exec_sgt() {
 
 fn assert_sgt(b: u256, a: u256, expected: u256) {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(b).expect('push failed');
-    machine.stack.push(a).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(b).expect('push failed');
+    vm.stack.push(a).expect('push failed');
 
     // When
-    machine.exec_sgt().expect('exec_sgt failed');
+    vm.exec_sgt().expect('exec_sgt failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == expected, 'sgt failed');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == expected, 'sgt failed');
 }
 
 #[test]
@@ -1256,16 +1253,16 @@ fn test_exec_shr() {
 
 fn assert_shr(a: u256, b: u256, expected: u256) {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(a).expect('push failed');
-    machine.stack.push(b).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(a).expect('push failed');
+    vm.stack.push(b).expect('push failed');
 
     // When
-    machine.exec_shr().expect('exec_shr failed');
+    vm.exec_shr().expect('exec_shr failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == expected, 'shr failed');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == expected, 'shr failed');
 }
 
 #[test]
@@ -1680,106 +1677,106 @@ fn test_exec_sar() {
 
 fn assert_sar(a: u256, b: u256, expected: u256) {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(a).expect('push failed');
-    machine.stack.push(b).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(a).expect('push failed');
+    vm.stack.push(b).expect('push failed');
 
     // When
 
-    machine.exec_sar().expect('exec_sar failed');
+    vm.exec_sar().expect('exec_sar failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == expected, 'sar failed');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == expected, 'sar failed');
 }
 
 #[test]
 fn test_exec_or_should_pop_0_and_1_and_push_0xCD_when_0_is_0x89_and_1_is_0xC5() {
     //Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x89).expect('push failed');
-    machine.stack.push(0xC5).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(0x89).expect('push failed');
+    vm.stack.push(0xC5).expect('push failed');
 
     //When
-    machine.exec_or().expect('exec_or failed');
+    vm.exec_or().expect('exec_or failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0xCD, 'stack top should be 0xCD');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0xCD, 'stack top should be 0xCD');
 }
 
 #[test]
 fn test_or_true() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x01).expect('push failed');
-    machine.stack.push(0x00).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(0x01).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
 
     // When
-    machine.exec_or().expect('exec_or failed');
+    vm.exec_or().expect('exec_or failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x01, 'stack top should be 0x01');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x01, 'stack top should be 0x01');
 }
 
 #[test]
 fn test_or_false() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(0x00).expect('push failed');
-    machine.stack.push(0x00).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(0x00).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
 
     // When
-    machine.exec_or().expect('exec_or failed');
+    vm.exec_or().expect('exec_or failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x00, 'stack top should be 0x00');
 }
 
 
 #[test]
 fn test_exec_lt_true() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(10_u256).expect('push failed');
-    machine.stack.push(9_u256).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(10_u256).expect('push failed');
+    vm.stack.push(9_u256).expect('push failed');
 
     // When
-    machine.exec_lt().expect('exec_lt failed');
+    vm.exec_lt().expect('exec_lt failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x01, 'stack top should be true');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x01, 'stack top should be true');
 }
 
 #[test]
 fn test_exec_lt_false() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(10_u256).expect('push failed');
-    machine.stack.push(20_u256).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(10_u256).expect('push failed');
+    vm.stack.push(20_u256).expect('push failed');
 
     // When
-    machine.exec_lt().expect('exec_lt failed');
+    vm.exec_lt().expect('exec_lt failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x00, 'stack top should be false');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x00, 'stack top should be false');
 }
 
 #[test]
 fn test_exec_lt_false_eq() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
-    machine.stack.push(10_u256).expect('push failed');
-    machine.stack.push(10_u256).expect('push failed');
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    vm.stack.push(10_u256).expect('push failed');
+    vm.stack.push(10_u256).expect('push failed');
 
     // When
-    machine.exec_lt().expect('exec_lt failed');
+    vm.exec_lt().expect('exec_lt failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == 0x00, 'stack top should be false');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == 0x00, 'stack top should be false');
 }

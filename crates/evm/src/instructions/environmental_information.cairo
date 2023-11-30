@@ -5,10 +5,10 @@ use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED}
 use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
+use evm::model::vm::{VM, VMTrait};
 use evm::model::{AccountType, ContractAccountTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use evm::model::vm::{VM, VMTrait};
 use integer::u32_as_non_zero;
 use integer::u32_overflowing_add;
 use keccak::cairo_keccak;

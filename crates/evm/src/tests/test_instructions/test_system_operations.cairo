@@ -6,22 +6,21 @@ use contracts::tests::test_utils::{
 };
 use core::result::ResultTrait;
 use core::traits::TryInto;
-use evm::call_helpers::{MachineCallHelpers, MachineCallHelpersImpl};
-use evm::context::{ExecutionContext, ExecutionContextTrait, ExecutionContextType};
+use evm::call_helpers::{CallHelpers, CallHelpersImpl};
 use evm::errors::EVMErrorTrait;
 use evm::instructions::MemoryOperationTrait;
 use evm::instructions::SystemOperationsTrait;
-use evm::interpreter::EVMInterpreterTrait;
-use evm::machine::{Machine, MachineTrait};
+use evm::interpreter::{EVMTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{Account};
 use evm::model::contract_account::ContractAccountTrait;
 use evm::model::eoa::EOATrait;
+use evm::model::vm::{VM, VMTrait};
 use evm::model::{AccountTrait, Address, AccountType, Transfer};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, State};
 use evm::tests::test_utils::{
-    MachineBuilderTestTrait, initialize_contract_account, native_token, evm_address, test_address,
+    VMBuilderTrait, initialize_contract_account, native_token, evm_address, test_address,
     other_evm_address,
 };
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
@@ -33,109 +32,69 @@ use utils::traits::EthAddressIntoU256;
 #[test]
 fn test_exec_return() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_nested_execution_context()
-        .build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
     // When
-    machine.stack.push(1000).expect('push failed');
-    machine.stack.push(0).expect('push failed');
-    machine.exec_mstore().expect('exec_mstore failed');
+    vm.stack.push(1000).expect('push failed');
+    vm.stack.push(0).expect('push failed');
+    vm.exec_mstore().expect('exec_mstore failed');
 
-    machine.stack.push(32).expect('push failed');
-    machine.stack.push(0).expect('push failed');
-    assert(machine.exec_return().is_ok(), 'Exec return failed');
-
-    // Then
-    assert(1000 == load_word(32, machine.return_data()), 'Wrong return_data');
-    assert(machine.stopped(), 'machine should be stopped');
-    assert(machine.id() == 1, 'wrong ctx id');
-
-    // And
-    machine.finalize_calling_context().expect('finalize failed');
+    vm.stack.push(32).expect('push failed');
+    vm.stack.push(0).expect('push failed');
+    assert(vm.exec_return().is_ok(), 'Exec return failed');
 
     // Then
-    assert(machine.id() == 0, 'should be parent id');
-    assert(1000 == load_word(32, machine.return_data()), 'Wrong return_data');
+    assert(1000 == load_word(32, vm.return_data()), 'Wrong return_data');
+    assert(!vm.is_running(), 'vm should be stopped');
+    assert_eq!(vm.error, false);
 }
-
 
 #[test]
 fn test_exec_revert() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
     // When
-    machine.stack.push(1000).expect('push failed');
-    machine.stack.push(0).expect('push failed');
-    machine.exec_mstore().expect('exec_mstore failed');
+    vm.stack.push(1000).expect('push failed');
+    vm.stack.push(0).expect('push failed');
+    vm.exec_mstore().expect('exec_mstore failed');
 
-    machine.stack.push(32).expect('push failed');
-    machine.stack.push(0).expect('push failed');
-    assert(machine.exec_revert().is_ok(), 'Exec revert failed');
+    vm.stack.push(32).expect('push failed');
+    vm.stack.push(0).expect('push failed');
+    assert(vm.exec_revert().is_ok(), 'Exec revert failed');
 
     // Then
-    assert(1000 == load_word(32, machine.return_data()), 'Wrong return_data');
-    assert(machine.stopped(), 'machine should be stopped')
+    assert(1000 == load_word(32, vm.return_data()), 'Wrong return_data');
+    assert(!vm.is_running(), 'vm should be stopped');
+    assert_eq!(vm.error, true);
 }
-
-#[test]
-fn test_exec_revert_nested() {
-    // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_nested_execution_context()
-        .build();
-    // When
-    machine.stack.push(1000).expect('push failed');
-    machine.stack.push(0).expect('push failed');
-    machine.exec_mstore().expect('exec_mstore failed');
-
-    machine.stack.push(32).expect('push failed');
-    machine.stack.push(0).expect('push failed');
-    assert(machine.exec_revert().is_ok(), 'Exec revert failed');
-
-    // Then
-    assert(1000 == load_word(32, machine.return_data()), 'Wrong return_data');
-    assert(machine.stopped(), 'machine should be stopped')
-}
-
 
 #[test]
 fn test_exec_return_with_offset() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_nested_execution_context()
-        .build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
     // When
-    machine.stack.push(1).expect('push failed');
-    machine.stack.push(0).expect('push failed');
-    machine.exec_mstore().expect('exec_mstore failed');
+    vm.stack.push(1).expect('push failed');
+    vm.stack.push(0).expect('push failed');
+    vm.exec_mstore().expect('exec_mstore failed');
 
-    machine.stack.push(32).expect('push failed');
-    machine.stack.push(1).expect('push failed');
-    assert(machine.exec_return().is_ok(), 'Exec return failed');
-
-    // Then
-    assert(256 == load_word(32, machine.return_data()), 'Wrong return_data');
-    assert(machine.stopped(), 'machine should be stopped');
-    assert(machine.id() == 1, 'wrong ctx id');
-
-    // And
-    machine.finalize_calling_context().expect('finalize failed');
+    vm.stack.push(32).expect('push failed');
+    vm.stack.push(1).expect('push failed');
+    assert(vm.exec_return().is_ok(), 'Exec return failed');
 
     // Then
-    assert(machine.id() == 0, 'should be parent id');
-    assert(256 == load_word(32, machine.return_data()), 'Wrong return_data');
+    assert(256 == load_word(32, vm.return_data()), 'Wrong return_data');
+    assert(!vm.is_running(), 'vm should be stopped');
+    assert_eq!(vm.error, false);
 }
 
 #[test]
 fn test_exec_call() {
     // Given
-    let mut interpreter = EVMInterpreterTrait::new();
     let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     kakarot_core.deploy_eoa(evm_address);
 
-    // Set machine bytecode
+    // Set vm bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
     let bytecode = array![
         0x60,
@@ -161,7 +120,7 @@ fn test_exec_call() {
     ]
         .span();
 
-    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
     // Deploy bytecode at 0x100
     // ret (+ 0x1 0x1)
@@ -174,24 +133,23 @@ fn test_exec_call() {
         .expect('set code failed');
 
     // When
-    interpreter.run(ref machine);
+    EVMTrait::execute_code(ref vm);
 
     // Then
-    assert(machine.stopped(), 'run should be success');
-    assert(2 == load_word(1, machine.return_data()), 'Wrong return_data');
-    assert(machine.stopped(), 'machine should be stopped');
+    assert(!vm.is_running(), 'run should be success');
+    assert(2 == load_word(1, vm.return_data()), 'Wrong return_data');
+    assert(!vm.is_running(), 'vm should be stopped');
 }
 
 #[test]
 fn test_exec_call_no_return() {
     // Given
-    let mut interpreter = EVMInterpreterTrait::new();
     let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     kakarot_core.deploy_eoa(evm_address);
 
-    // Set machine bytecode
+    // Set vm bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
     let bytecode = array![
         0x60,
@@ -217,7 +175,7 @@ fn test_exec_call_no_return() {
     ]
         .span();
 
-    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
     // Deploy bytecode at 0x100
     // (+ 0x1 0x1)
@@ -227,25 +185,23 @@ fn test_exec_call_no_return() {
         .expect('set code failed');
 
     // When
-    interpreter.run(ref machine);
+    EVMTrait::execute_code(ref vm);
 
     // Then
-    assert(machine.stopped(), 'run should be success');
-    assert(machine.return_data().is_empty(), 'Wrong return_data len');
-    assert(machine.stopped(), 'machine should be stopped')
+    assert(!vm.is_running(), 'run should be success');
+    assert(vm.return_data().is_empty(), 'Wrong return_data len');
+    assert(!vm.is_running(), 'vm should be stopped')
 }
-
 
 #[test]
 fn test_exec_staticcall() {
     // Given
-    let mut interpreter = EVMInterpreterTrait::new();
     let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     kakarot_core.deploy_eoa(evm_address);
 
-    // Set machine bytecode
+    // Set vm bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
     let bytecode = array![
         0x60,
@@ -269,7 +225,7 @@ fn test_exec_staticcall() {
     ]
         .span();
 
-    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
     // Deploy bytecode at 0x100
     // ret (+ 0x1 0x1)
     let deployed_bytecode = array![
@@ -281,24 +237,23 @@ fn test_exec_staticcall() {
         .expect('set code failed');
 
     // When
-    interpreter.run(ref machine);
+    EVMTrait::execute_code(ref vm);
 
     // Then
-    assert(2 == load_word(1, machine.return_data()), 'Wrong return_data');
-    assert(machine.stopped(), 'machine should be stopped')
+    assert(2 == load_word(1, vm.return_data()), 'Wrong return_data');
+    assert(!vm.is_running(), 'vm should be stopped')
 }
-
 
 #[test]
 fn test_exec_staticcall_no_return() {
     // Given
-    let mut interpreter = EVMInterpreterTrait::new();
+
     let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     kakarot_core.deploy_eoa(evm_address);
 
-    // Set machine bytecode
+    // Set vm bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
     let bytecode = array![
         0x60,
@@ -324,7 +279,7 @@ fn test_exec_staticcall_no_return() {
     ]
         .span();
 
-    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
     // Deploy bytecode at 0x100
     // (+ 0x1 0x1)
@@ -334,23 +289,23 @@ fn test_exec_staticcall_no_return() {
         .expect('set code failed');
 
     // When
-    interpreter.run(ref machine);
+    EVMTrait::execute_code(ref vm);
 
     // Then
-    assert(machine.return_data().is_empty(), 'Wrong return_data len');
-    assert(machine.stopped(), 'machine should be stopped')
+    assert(vm.return_data().is_empty(), 'Wrong return_data len');
+    assert(!vm.is_running(), 'vm should be stopped')
 }
 
 #[test]
 fn test_exec_call_code() {
     // Given
-    let mut interpreter = EVMInterpreterTrait::new();
+
     let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     kakarot_core.deploy_eoa(evm_address);
 
-    // Set machine bytecode
+    // Set vm bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
     let bytecode = array![
         0x60,
@@ -377,7 +332,7 @@ fn test_exec_call_code() {
         0x00
     ]
         .span();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
     // Deploy bytecode at 0x100
     // ret (+ 0x1 0x1)
     let deployed_bytecode = array![
@@ -406,14 +361,15 @@ fn test_exec_call_code() {
         .expect('set code failed');
 
     // When
-    interpreter.run(ref machine);
+    EVMTrait::execute_code(ref vm);
 
     // Then
-    assert(machine.stopped(), 'run should be success');
-    assert(2 == load_word(1, machine.return_data()), 'Wrong return_data');
-    assert(machine.stopped(), 'machine should be stopped');
+    assert(!vm.is_running(), 'run should be success');
+    assert(2 == load_word(1, vm.return_data()), 'Wrong return_data');
+    assert(!vm.is_running(), 'vm should be stopped');
 
-    let storage_val = machine
+    let storage_val = vm
+        .env
         .state
         .read_state(evm_address, 0x42)
         .expect('failed reading storage slot');
@@ -421,17 +377,16 @@ fn test_exec_call_code() {
     assert(storage_val == 0x42, 'storage value is not 0x42');
 }
 
-
 #[test]
 fn test_exec_delegatecall() {
     // Given
-    let mut interpreter = EVMInterpreterTrait::new();
+
     let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     kakarot_core.deploy_eoa(evm_address);
 
-    // Set machine bytecode
+    // Set vm bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
     let bytecode = array![
         0x60,
@@ -457,7 +412,7 @@ fn test_exec_delegatecall() {
     ]
         .span();
 
-    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
     // ret (+ 0x1 0x1)
     let deployed_bytecode = array![
@@ -486,14 +441,15 @@ fn test_exec_delegatecall() {
         .expect('set code failed');
 
     // When
-    interpreter.run(ref machine);
+    EVMTrait::execute_code(ref vm);
 
     // Then
-    assert(machine.stopped(), 'run should be success');
-    assert(2 == load_word(1, machine.return_data()), 'Wrong return_data');
-    assert(machine.stopped(), 'machine should be stopped');
+    assert(!vm.is_running(), 'run should be success');
+    assert(2 == load_word(1, vm.return_data()), 'Wrong return_data');
+    assert(!vm.is_running(), 'vm should be stopped');
 
-    let storage_val = machine
+    let storage_val = vm
+        .env
         .state
         .read_state(evm_address, 0x42)
         .expect('failed reading storage slot');
@@ -501,43 +457,34 @@ fn test_exec_delegatecall() {
     assert(storage_val == 0x42, 'storage value is not 0x42');
 }
 
-
 #[test]
 fn test_exec_create_no_value_transfer() {
     // Given
     let (native_token, _) = setup_contracts_for_testing();
-
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_nested_execution_context()
-        .build();
-
-    let mut interpreter = EVMInterpreterTrait::new();
-
     let deployed_bytecode = array![0xff].span();
     let eth_address: EthAddress = evm_address();
     let contract_address = deploy_contract_account(eth_address, deployed_bytecode);
-    fund_account_with_native_token(contract_address.starknet, native_token, 2);
 
-    let mut ctx = machine.current_ctx.unbox();
-    ctx.address = contract_address;
-    ctx.ctx_type = ExecutionContextType::Create(ctx.id());
-    machine.current_ctx = BoxTrait::new(ctx);
+    let mut vm = VMBuilderTrait::new_with_presets().with_target(contract_address).build();
+
+    fund_account_with_native_token(contract_address.starknet, native_token, 2);
 
     // Load into memory the bytecode of Storage.sol
     let storage_initcode = storage_evm_initcode();
-    machine.memory.store_n(storage_initcode, 0);
+    vm.memory.store_n(storage_initcode, 0);
 
-    machine.stack.push(storage_initcode.len().into()).unwrap();
-    machine.stack.push(0).expect('push failed');
-    machine.stack.push(0).expect('push failed');
+    vm.stack.push(storage_initcode.len().into()).unwrap();
+    vm.stack.push(0).expect('push failed');
+    vm.stack.push(0).expect('push failed');
 
     // When
-    machine.exec_create().unwrap();
-    interpreter.run(ref machine);
+    vm.exec_create().unwrap();
+    EVMTrait::execute_code(ref vm);
 
     // computed using `compute_create_address` script  
     // run `bun run compute_create_address` -> CREATE -> EthAddress = evm_address() -> nonce = 1  
-    let account = machine
+    let account = vm
+        .env
         .state
         .get_account(0x930b3d8D35621F2e27Db700cA5D16Df771642fdD.try_into().unwrap());
 
@@ -545,7 +492,7 @@ fn test_exec_create_no_value_transfer() {
     assert(account.code == storage_evm_bytecode(), 'wrong bytecode');
     assert_eq!(account.balance(), 0);
 
-    let deployer = machine.state.get_account(eth_address);
+    let deployer = vm.env.state.get_account(eth_address);
     assert_eq!(deployer.nonce(), 2);
     assert_eq!(deployer.balance(), 2);
 }
@@ -557,82 +504,61 @@ fn test_exec_create_failure() {
     // Given
     let (native_token, _) = setup_contracts_for_testing();
 
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_nested_execution_context()
-        .build();
-
-    let mut interpreter = EVMInterpreterTrait::new();
-
     let deployed_bytecode = array![0xFF].span();
     let eth_address: EthAddress = evm_address();
     let contract_address = deploy_contract_account(eth_address, deployed_bytecode);
     fund_account_with_native_token(contract_address.starknet, native_token, 2);
-
-    let mut ctx = machine.current_ctx.unbox();
-    ctx.address = contract_address;
-    ctx.ctx_type = ExecutionContextType::Create(ctx.id());
-    machine.current_ctx = BoxTrait::new(ctx);
+    let mut vm = VMBuilderTrait::new_with_presets().with_target(contract_address).build();
 
     // Load into memory the bytecode to init, which is the revert opcode
     let revert_initcode = array![0xFD].span();
-    machine.memory.store_n(revert_initcode, 0);
+    vm.memory.store_n(revert_initcode, 0);
 
-    machine.stack.push(revert_initcode.len().into()).unwrap();
-    machine.stack.push(0).expect('push failed');
-    machine.stack.push(1).expect('push failed');
+    vm.stack.push(revert_initcode.len().into()).unwrap();
+    vm.stack.push(0).expect('push failed');
+    vm.stack.push(1).expect('push failed');
 
     // When
-    machine.exec_create().expect('exec_create failed');
-    interpreter.run(ref machine);
+    vm.exec_create().expect('exec_create failed');
+    EVMTrait::execute_code(ref vm);
 
     let expected_address = 0x930b3d8D35621F2e27Db700cA5D16Df771642fdD.try_into().unwrap();
 
     // computed using `compute_create_address` script
-    let account = machine.state.get_account(expected_address);
+    let account = vm.env.state.get_account(expected_address);
     assert_eq!(account.nonce(), 0);
     assert_eq!(account.code.len(), 0);
     assert_eq!(account.balance(), 0);
 
-    let deployer = machine.state.get_account(eth_address);
+    let deployer = vm.env.state.get_account(eth_address);
     assert_eq!(deployer.nonce(), 1);
     assert_eq!(deployer.balance(), 2);
 }
-
 
 #[test]
 fn test_exec_create2() {
     // Given
     setup_contracts_for_testing();
 
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_nested_execution_context()
-        .build();
-
-    let mut interpreter = EVMInterpreterTrait::new();
-
     let deployed_bytecode = array![0xff].span();
     let eth_address: EthAddress = evm_address();
     let contract_address = deploy_contract_account(eth_address, deployed_bytecode);
-
-    let mut ctx = machine.current_ctx.unbox();
-    ctx.address = contract_address;
-    ctx.ctx_type = ExecutionContextType::Create(ctx.id());
-    machine.current_ctx = BoxTrait::new(ctx);
+    let mut vm = VMBuilderTrait::new_with_presets().with_caller(contract_address).build();
 
     // Load into memory the bytecode of Storage.sol
     let storage_initcode = storage_evm_initcode();
-    machine.memory.store_n(storage_initcode, 0);
+    vm.memory.store_n(storage_initcode, 0);
 
-    machine.stack.push(0).expect('push failed');
-    machine.stack.push(storage_initcode.len().into()).unwrap();
-    machine.stack.push(0).expect('push failed');
-    machine.stack.push(0).expect('push failed');
+    vm.stack.push(0).expect('push failed');
+    vm.stack.push(storage_initcode.len().into()).unwrap();
+    vm.stack.push(0).expect('push failed');
+    vm.stack.push(0).expect('push failed');
 
     // When
-    machine.exec_create2().unwrap();
-    interpreter.run(ref machine);
+    vm.exec_create2().unwrap();
+    EVMTrait::execute_code(ref vm);
 
-    assert(machine.stopped(), 'run should be success');
+    assert(!vm.is_running(), 'run should be success');
 
     // Add SNJS script to precompute the address of the Storage.sol contract
     //     import { getContractAddress } from 'viem'
@@ -644,7 +570,8 @@ fn test_exec_create2() {
     //   salt: '0x00',
     // });
     // console.log(address)
-    let account = machine
+    let account = vm
+        .env
         .state
         .get_account(0x0f48B8c382B5234b1a92368ee0f6864a429d0Cb8.try_into().unwrap());
 
@@ -656,25 +583,24 @@ fn test_exec_create2() {
 fn test_exec_selfdestruct_existing_ca() {
     // Given
     let (native_token, _kakarot_core) = setup_contracts_for_testing();
-    let destroyed_address = test_address().evm; // address in machine call context
+    let destroyed_address = test_address().evm; // address in vm call context
     let ca_address = deploy_contract_account(destroyed_address, array![0x1, 0x2, 0x3].span());
     fund_account_with_native_token(ca_address.starknet, native_token, 1000);
     let recipient = EOATrait::deploy(other_evm_address()).expect('failed deploying eoa');
-    let mut machine = MachineBuilderTestTrait::new_with_presets().with_target(ca_address).build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_target(ca_address).build();
     // When
-    machine.stack.push(recipient.evm.into()).unwrap();
-    machine.exec_selfdestruct().expect('selfdestruct failed');
-    machine.state.commit_context();
-    machine.state.commit_state().expect('commit state failed');
-    machine.state = Default::default(); //empty state to force re-fetch from SN
+    vm.stack.push(recipient.evm.into()).unwrap();
+    vm.exec_selfdestruct().expect('selfdestruct failed');
+    vm.env.state.commit_state().expect('commit state failed');
+    vm.env.state = Default::default(); //empty state to force re-fetch from SN
     // Then
-    let destructed = machine.state.get_account(ca_address.evm);
+    let destructed = vm.env.state.get_account(ca_address.evm);
 
     assert(destructed.nonce() == 0, 'destructed nonce should be 0');
     assert(destructed.balance() == 0, 'destructed balance should be 0');
     assert(destructed.bytecode().len() == 0, 'bytecode should be empty');
 
-    let _recipient = machine.state.get_account(recipient.evm);
+    let _recipient = vm.env.state.get_account(recipient.evm);
 //TODO this assertion fails because of deterministic address calculations.
 // Once addressed in the compiler code, this test should be fixed.
 // in selfdestruct, we execute:
@@ -694,27 +620,26 @@ fn test_selfdestruct_undeployed_ca() {
     let recipient = deploy_eoa(recipient_address);
     let ca_balance = 1000;
     fund_account_with_native_token(ca_address.starknet, native_token, ca_balance);
-    let mut machine = MachineBuilderTestTrait::new_with_presets().with_target(ca_address).build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_target(ca_address).build();
     // - call `get_account` on an undeployed account, set its type to CA, its nonce to 1, its code to something
     // to mock a cached CA that has not been committed yet.
-    let mut ca_account = machine.state.get_account(ca_address.evm);
+    let mut ca_account = vm.env.state.get_account(ca_address.evm);
     ca_account.set_code(array![0x1, 0x2, 0x3].span());
     ca_account.set_type(AccountType::ContractAccount);
     ca_account.set_nonce(1);
-    machine.state.set_account(ca_account);
+    vm.env.state.set_account(ca_account);
     // - call selfdestruct and commit the state
-    machine.stack.push(recipient_address.into()).expect('push failed');
-    machine.exec_selfdestruct().expect('selfdestruct failed');
-    machine.state.commit_context();
-    machine.state.commit_state().expect('commit state failed');
-    machine.state = Default::default(); //empty state to force re-fetch from SN
+    vm.stack.push(recipient_address.into()).expect('push failed');
+    vm.exec_selfdestruct().expect('selfdestruct failed');
+    vm.env.state.commit_state().expect('commit state failed');
+    vm.env.state = Default::default(); //empty state to force re-fetch from SN
 
     // Then
-    let destructed = machine.state.get_account(ca_address.evm);
+    let destructed = vm.env.state.get_account(ca_address.evm);
     assert(destructed.nonce() == 0, 'destructed nonce should be 0');
     assert(destructed.balance() == 0, 'destructed balance should be 0');
     assert(destructed.bytecode().len() == 0, 'bytecode should be empty');
-    let recipient = machine.state.get_account(recipient_address);
+    let recipient = vm.env.state.get_account(recipient_address);
     assert(recipient.balance() == ca_balance, 'wrong recipient balance');
 }
 
@@ -729,20 +654,19 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     let ca_address = deploy_contract_account('contract'.try_into().unwrap(), array![].span());
     fund_account_with_native_token(sender.starknet, native_token, 150);
     fund_account_with_native_token(ca_address.starknet, native_token, 100);
-    let mut machine = MachineBuilderTestTrait::new_with_presets().with_target(ca_address).build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_target(ca_address).build();
 
     // Cache the CA into state
-    machine.state.get_account('contract'.try_into().unwrap());
+    vm.env.state.get_account('contract'.try_into().unwrap());
 
     // When
-    machine.stack.push(recipient.evm.into()).unwrap();
-    machine.exec_selfdestruct().expect('selfdestruct failed');
+    vm.stack.push(recipient.evm.into()).unwrap();
+    vm.exec_selfdestruct().expect('selfdestruct failed');
     // Add a transfer from sender to CA - after it was selfdestructed in local state. This transfer should go through.
     let transfer = Transfer { sender, recipient: ca_address, amount: 150 };
-    machine.state.add_transfer(transfer).unwrap();
-    machine.state.commit_context();
-    machine.state.commit_state().expect('commit state failed');
-    machine.state = Default::default(); //empty state to force re-fetch from SN
+    vm.env.state.add_transfer(transfer).unwrap();
+    vm.env.state.commit_state().expect('commit state failed');
+    vm.env.state = Default::default(); //empty state to force re-fetch from SN
 
     // Then
     let recipient_balance = native_token.balanceOf(recipient.starknet);
@@ -753,3 +677,4 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     assert(sender_balance == 0, 'sender wrong balance');
     assert(ca_balance == 150, 'ca wrong balance');
 }
+

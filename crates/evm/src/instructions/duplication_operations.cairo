@@ -7,8 +7,8 @@ use evm::model::vm::{VM, VMTrait};
 mod internal {
     use evm::errors::EVMError;
     use evm::gas;
-    use evm::stack::StackTrait;
     use evm::model::vm::{VM, VMTrait};
+    use evm::stack::StackTrait;
 
     /// Generic DUP operation
     #[inline(always)]

@@ -12,9 +12,9 @@ use evm::state::State;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{EthAddress, get_contract_address, ContractAddress};
 use utils::helpers::{ResultExTrait};
-use utils::traits::{EthAddressDefault, ContractAddressDefault};
+use utils::traits::{EthAddressDefault, ContractAddressDefault, SpanDefault};
 
-#[derive(Destruct)]
+#[derive(Destruct, Default)]
 struct Environment {
     origin: EthAddress,
     gas_price: u128,
@@ -25,7 +25,7 @@ struct Environment {
     timestamp: u64,
     state: State
 }
-#[derive(Copy, Drop)]
+#[derive(Copy, Drop, Default, PartialEq)]
 struct Message {
     caller: Address,
     target: Address,
@@ -37,11 +37,6 @@ struct Message {
     depth: usize,
     read_only: bool,
 }
-
-#[generate_trait]
-impl MessageImpl of MessageTrait { //TODO
-}
-
 
 #[derive(Drop)]
 struct ExecutionResult {

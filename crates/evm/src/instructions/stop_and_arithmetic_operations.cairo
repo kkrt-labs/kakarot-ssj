@@ -2,6 +2,7 @@
 
 use evm::errors::EVMError;
 use evm::gas;
+use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
 
 use integer::{
@@ -10,7 +11,6 @@ use integer::{
 };
 use utils::i256::i256;
 use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
-use evm::model::vm::{VM, VMTrait};
 
 #[generate_trait]
 impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {

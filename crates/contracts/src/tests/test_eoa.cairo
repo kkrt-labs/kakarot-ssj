@@ -42,7 +42,6 @@ mod test_external_owned_account {
 
 
     #[test]
-    #[available_gas(2000000000)]
     fn test_kakarot_address() {
         let (_, kakarot) = setup_contracts_for_testing();
         let kakarot_address = kakarot.contract_address;
@@ -53,7 +52,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[available_gas(2000000000)]
     fn test_evm_address() {
         let expected_address: EthAddress = eoa_address();
         setup_contracts_for_testing();
@@ -64,7 +62,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[available_gas(2000000000)]
     fn test_eoa_upgrade() {
         setup_contracts_for_testing();
         let eoa_contract = deploy_eoa(eoa_address());
@@ -85,7 +82,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[available_gas(2000000000)]
     #[should_panic(expected: ('Caller not self', 'ENTRYPOINT_FAILED'))]
     fn test_eoa_upgrade_from_noncontractaddress() {
         setup_contracts_for_testing();
@@ -98,7 +94,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[available_gas(2000000000)]
     fn test___execute__() {
         let (_, kakarot_core) = setup_contracts_for_testing();
 
@@ -117,7 +112,7 @@ mod test_external_owned_account {
         let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
         // check counter value is 0 before doing inc
-        let return_data = kakarot_core
+        let (_, return_data) = kakarot_core
             .eth_call(
                 origin: evm_address,
                 to: Option::Some(other_evm_address()),
@@ -141,7 +136,7 @@ mod test_external_owned_account {
         eoa_contract.__execute__(array![call]);
 
         // check counter value has increased
-        let return_data = kakarot_core
+        let (_, return_data) = kakarot_core
             .eth_call(
                 origin: evm_address,
                 to: Option::Some(other_evm_address()),
@@ -155,7 +150,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[available_gas(2000000000)]
     #[should_panic(expected: ('calls length is not 1', 'ENTRYPOINT_FAILED'))]
     fn test___execute___should_fail_with_zero_calls() {
         setup_contracts_for_testing();
@@ -169,7 +163,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[available_gas(2000000000)]
     #[should_panic(expected: ('Caller not 0', 'ENTRYPOINT_FAILED'))]
     fn test___validate__fail__caller_not_0() {
         let (_, kakarot_core) = setup_contracts_for_testing();
@@ -184,7 +177,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[available_gas(2000000000)]
     #[should_panic(expected: ('call len is not 1', 'ENTRYPOINT_FAILED'))]
     fn test___validate__fail__call_data_len_not_1() {
         let (_, kakarot_core) = setup_contracts_for_testing();
@@ -199,7 +191,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[available_gas(2000000000)]
     #[should_panic(expected: ('to is not kakarot core', 'ENTRYPOINT_FAILED'))]
     fn test___validate__fail__to_address_not_kakarot_core() {
         let (_, kakarot_core) = setup_contracts_for_testing();
@@ -219,7 +210,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[available_gas(2000000000)]
     #[should_panic(
         expected: ("Validate: selector must be eth_send_transaction", 'ENTRYPOINT_FAILED')
     )]
@@ -239,7 +229,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[available_gas(2000000000)]
     fn test___validate__legacy_transaction() {
         let (_, kakarot_core) = setup_contracts_for_testing();
         let evm_address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
@@ -269,7 +258,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[available_gas(2000000000)]
     fn test___validate__eip_2930_transaction() {
         let (_, kakarot_core) = setup_contracts_for_testing();
         let evm_address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
@@ -300,7 +288,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[available_gas(2000000000)]
     fn test___validate__eip_1559_transaction() {
         let (_, kakarot_core) = setup_contracts_for_testing();
         let evm_address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();

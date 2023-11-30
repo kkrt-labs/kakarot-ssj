@@ -1,9 +1,10 @@
 use evm::errors::EVMError;
 use evm::memory::{Memory, MemoryTrait};
-use evm::stack::{Stack, StackTrait};
 use evm::model::{Message, Environment};
+use evm::stack::{Stack, StackTrait};
+use utils::traits::{SpanDefault};
 
-#[derive(Destruct)]
+#[derive(Default, Destruct)]
 struct VM {
     stack: Stack,
     memory: Memory,
@@ -16,6 +17,7 @@ struct VM {
     running: bool,
     error: bool
 }
+
 
 #[generate_trait]
 impl VMImpl of VMTrait {
@@ -59,11 +61,19 @@ impl VMImpl of VMTrait {
         *self.valid_jumpdests
     }
 
+    fn set_valid_jumpdests(ref self: VM, valid_jumpdests: Span<usize>) {
+        self.valid_jumpdests = valid_jumpdests;
+    }
+
     fn return_data(self: @VM) -> Span<u8> {
         *self.return_data
     }
 
-    fn running(self: @VM) -> bool {
+    fn set_return_data(ref self: VM, return_data: Span<u8>) {
+        self.return_data = return_data;
+    }
+
+    fn is_running(self: @VM) -> bool {
         *self.running
     }
 
@@ -100,10 +110,5 @@ impl VMImpl of VMTrait {
     #[inline(always)]
     fn increment_gas_used_unchecked(ref self: VM, value: u128) {
         self.gas_used += value;
-    }
-
-    #[inline(always)]
-    fn set_return_data(ref self: VM, return_data: Span<u8>) {
-        self.return_data = return_data;
     }
 }
