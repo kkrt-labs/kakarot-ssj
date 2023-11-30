@@ -141,6 +141,8 @@ struct ExecutionContext {
     return_data: Span<u8>,
     parent_ctx: Nullable<ExecutionContext>,
     gas_used: u128,
+    is_valid_jump_destinations_set: bool,
+    valid_jump_destinations: Array<u32>
 }
 
 
@@ -187,6 +189,8 @@ impl ExecutionContextImpl of ExecutionContextTrait {
             return_data,
             parent_ctx,
             gas_used: Default::default(),
+            is_valid_jump_destinations_set: false,
+            valid_jump_destinations: Default::default()
         }
     }
 

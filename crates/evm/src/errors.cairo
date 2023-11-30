@@ -62,6 +62,7 @@ enum EVMError {
     InvalidMachineState: felt252,
     DeployError: felt252,
     OriginError: felt252,
+    ValidJumpDestinationsNotSet,
     OutOfGas,
 }
 
@@ -83,6 +84,7 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::InvalidMachineState(error_message) => error_message.into(),
             EVMError::DeployError(error_message) => error_message,
             EVMError::OriginError(error_message) => error_message,
+            EVMError::ValidJumpDestinationsNotSet => 'ValidJumpDestinationsNotSet'.into(),
             EVMError::OutOfGas => 'OutOfGas'.into(),
         }
     }

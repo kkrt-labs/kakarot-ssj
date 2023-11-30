@@ -1,4 +1,6 @@
+use core::array::ArrayTrait;
 use evm::errors::{EVMError, MISSING_PARENT_CONTEXT};
+use evm::instructions::comparison_operations::ComparisonAndBitwiseOperationsTrait;
 use evm::model::Address;
 use evm::state::State;
 use evm::{
@@ -12,6 +14,7 @@ use evm::{
 use nullable::{match_nullable, FromNullableResult};
 
 use starknet::{EthAddress, ContractAddress};
+use utils::helpers::SpanExtTrait;
 
 #[derive(Destruct)]
 struct Machine {
@@ -310,5 +313,70 @@ impl MachineImpl of MachineTrait {
         let mut current_ctx = self.current_ctx.unbox();
         current_ctx.return_data = value;
         self.current_ctx = BoxTrait::new(current_ctx);
+    }
+
+    #[inline(always)]
+    fn is_valid_jump(ref self: Machine, dest: u32) -> Result<bool, EVMError> {
+        if (!self.is_valid_jump_destinations_set()) {
+            return Result::Err(EVMError::ValidJumpDestinationsNotSet);
+        }
+
+        let mut current_ctx = self.current_ctx.unbox();
+        let result = current_ctx.valid_jump_destinations.span().contains(dest);
+        self.current_ctx = BoxTrait::new(current_ctx);
+
+        Result::Ok(result)
+    }
+
+    fn init_valid_jump_destinations(ref self: Machine) -> Result<(), EVMError> {
+        if (self.is_valid_jump_destinations_set()) {
+            return Result::Ok(());
+        }
+
+        let mut current_ctx = self.current_ctx.unbox();
+
+        // Invalid Machine State
+        if (current_ctx.valid_jump_destinations.len() != 0) {
+            self.current_ctx = BoxTrait::new(current_ctx);
+            return Result::Err(EVMError::InvalidMachineState('valid_jump_destinations not 0'));
+        }
+
+        let bytecode = current_ctx.call_ctx().bytecode();
+
+        let mut i = 0;
+        loop {
+            if (i >= bytecode.len()) {
+                break;
+            }
+
+            let opcode = *bytecode.at(i);
+            // checking for PUSH opcode family
+            if (opcode >= 0x5f && opcode <= 0x7f) {
+                let number_of_args = opcode - 0x5f;
+                i += (number_of_args + 1).into();
+                continue;
+            }
+
+            // JUMPDEST
+            if (opcode == 0x5B) {
+                current_ctx.valid_jump_destinations.append(i.into());
+            }
+
+            i += 1;
+        };
+
+        current_ctx.is_valid_jump_destinations_set = true;
+        self.current_ctx = BoxTrait::new(current_ctx);
+
+        Result::Ok(())
+    }
+
+    #[inline(always)]
+    fn is_valid_jump_destinations_set(ref self: Machine) -> bool {
+        let current_ctx = self.current_ctx.unbox();
+        let is_valid_jump_destination = current_ctx.is_valid_jump_destinations_set;
+        self.current_ctx = BoxTrait::new(current_ctx);
+
+        is_valid_jump_destination
     }
 }

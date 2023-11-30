@@ -317,6 +317,24 @@ fn test_exec_jump_invalid() {
 }
 
 #[test]
+fn test_exec_jump_invalid_0x5B_is_push_argument() {
+    // Given
+    let bytecode: Span<u8> = array![0x01, 0x02, 0x60, 0x5B, 0x04, 0x05].span();
+
+    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+
+    let counter = 0x03;
+    machine.stack.push(counter).expect('push failed');
+
+    // When
+    let result = machine.exec_jump();
+
+    // Then
+    assert(result.is_err(), 'invalid jump dest');
+    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+}
+
+#[test]
 fn test_exec_jump_out_of_bounds() {
     // Given
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
