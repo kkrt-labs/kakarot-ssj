@@ -2,8 +2,7 @@ use evm::errors::EVMError;
 //! Logging Operations.
 
 // Internal imports
-use evm::context::{ExecutionContext, ExecutionContextTrait};
-use evm::model::{VM, VMTrait};
+use evm::model::vm::{VM, VMTrait};
 
 #[generate_trait]
 impl LoggingOperations of LoggingOperationsTrait {
@@ -46,12 +45,11 @@ impl LoggingOperations of LoggingOperationsTrait {
 mod internal {
     use evm::errors::{EVMError, WRITE_IN_STATIC_CONTEXT};
     use evm::gas;
-    use evm::context::{ExecutionContext, ExecutionContextTrait};
     use evm::memory::MemoryTrait;
     use evm::model::Event;
     use evm::stack::StackTrait;
     use evm::state::StateTrait;
-    use evm::model::{VM, VMTrait};
+    use evm::model::vm::{VM, VMTrait};
 
 
     /// Store a new event in the dynamic context using topics

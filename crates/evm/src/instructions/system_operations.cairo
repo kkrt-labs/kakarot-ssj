@@ -6,14 +6,13 @@ use evm::call_helpers::{CallHelpers, CallType};
 use evm::create_helpers::{CreateHelpers, CreateType};
 use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL, WRITE_IN_STATIC_CONTEXT};
 use evm::gas;
-use evm::context::{ExecutionContext, ExecutionContextTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
 use evm::model::{Address, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use utils::math::Exponentiation;
-use evm::model::{VM, VMTrait};
+use evm::model::vm::{VM, VMTrait};
 
 #[generate_trait]
 impl SystemOperations of SystemOperationsTrait {
@@ -125,7 +124,7 @@ impl SystemOperations of SystemOperationsTrait {
         // Set the memory data to the parent context return data
         // and halt the context.
         self.set_return_data(return_data.span());
-        self.set_stopped();
+        self.stop();
         Result::Ok(())
     }
 
@@ -222,7 +221,8 @@ impl SystemOperations of SystemOperationsTrait {
         // Set the memory data to the parent context return data
         // and halt the context.
         self.set_return_data(return_data.span());
-        self.set_reverted();
+        self.stop();
+        self.set_error();
         Result::Ok(())
     }
 
@@ -275,7 +275,7 @@ impl SystemOperations of SystemOperationsTrait {
         // Register for selfdestruct
         account.selfdestruct();
         self.env.state.set_account(account);
-        self.set_stopped();
+        self.stop();
         Result::Ok(())
     }
 }

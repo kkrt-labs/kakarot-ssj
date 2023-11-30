@@ -8,11 +8,11 @@ use evm::errors::{
 };
 
 use evm::gas;
-use evm::model::{VM, VMTrait, Account};
+use evm::model::{Account};
+use evm::model::vm::{VM, VMTrait};
 use evm::model::account::{AccountTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use evm::context::{ExecutionContext, ExecutionContextTrait};
 
 // Corelib imports
 use starknet::info::{get_block_number, get_block_timestamp, get_block_info};

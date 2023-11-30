@@ -2,7 +2,6 @@
 
 use evm::errors::EVMError;
 use evm::gas;
-use evm::context::{ExecutionContext, ExecutionContextTrait};
 use evm::stack::StackTrait;
 
 use integer::{
@@ -11,7 +10,7 @@ use integer::{
 };
 use utils::i256::i256;
 use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
-use evm::model::{VM, VMTrait};
+use evm::model::vm::{VM, VMTrait};
 
 #[generate_trait]
 impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
@@ -19,7 +18,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// Halts the execution of the current program.
     /// # Specification: https://www.evm.codes/#00?fork=shanghai
     fn exec_stop(ref self: VM) -> Result<(), EVMError> {
-        self.set_stopped();
+        self.stop();
         Result::Ok(())
     }
 

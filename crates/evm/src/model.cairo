@@ -1,16 +1,14 @@
 mod account;
 mod contract_account;
 mod eoa;
+mod vm;
 
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
-use evm::interpreter::Status;
 use evm::model::account::{Account, AccountTrait};
 use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::eoa::EOATrait;
 use evm::state::State;
-use evm::stack::Stack;
-use evm::memory::Memory;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{EthAddress, get_contract_address, ContractAddress};
 use utils::helpers::{ResultExTrait};
@@ -44,95 +42,12 @@ struct Message {
 impl MessageImpl of MessageTrait { //TODO
 }
 
-#[derive(Destruct)]
-struct VM {
-    stack: Stack,
-    memory: Memory,
-    pc: usize,
-    valid_jumpdests: Span<usize>,
-    return_data: Span<u8>,
-    running: bool,
-    env: Environment,
-    message: Message,
-    gas_used: u128
-}
-
-#[generate_trait]
-impl VMImpl of VMTrait {
-    fn new(message: Message, env: Environment) -> VM {
-        VM {
-            stack: Default::default(),
-            memory: Default::default(),
-            pc: 0,
-            valid_jumpdests: Default::default().span(),
-            return_data: Default::default().span(),
-            running: true,
-            env,
-            message,
-            gas_used: 0
-        }
-    }
-
-    /// Increments the gas_used field of the current execution context by the value amount.
-    /// # Error : returns `EVMError::OutOfGas` if gas_used + new_gas >= limit
-    #[inline(always)]
-    fn charge_gas(ref self: VM, value: u128) -> Result<(), EVMError> {
-        let new_gas_used = self.gas_used + value;
-        if (new_gas_used >= self.message().gas_limit) {
-            return Result::Err(EVMError::OutOfGas);
-        }
-        self.gas_used = new_gas_used;
-        Result::Ok(())
-    }
-
-
-    fn pc(self: @VM) -> usize {
-        *self.pc
-    }
-
-    fn set_pc(ref self: VM, pc: usize) {
-        self.pc = pc;
-    }
-
-    fn valid_jumpdests(self: @VM) -> Span<usize> {
-        *self.valid_jumpdests
-    }
-
-    fn return_data(self: @VM) -> Span<u8> {
-        *self.return_data
-    }
-
-    fn running(self: @VM) -> bool {
-        *self.running
-    }
-
-    fn message(self: @VM) -> Message {
-        *self.message
-    }
-
-    fn gas_used(self: @VM) -> u128 {
-        *self.gas_used
-    }
-
-    /// Reads and return data from bytecode.
-    /// The program counter is incremented accordingly.
-    ///
-    /// # Arguments
-    ///
-    /// * `self` - The `ExecutionContext` instance to read the data from.
-    /// * `len` - The length of the data to read from the bytecode.
-    #[inline(always)]
-    fn read_code(self: @VM, len: usize) -> Span<u8> {
-        // Copy code slice from [pc, pc+len]
-        let code = self.message().code.slice(self.pc(), len);
-        code
-    }
-}
 
 #[derive(Drop)]
 struct ExecutionResult {
     success: bool,
     return_data: Span<u8>,
+    gas_used: u128,
 }
 
 #[derive(Destruct)]

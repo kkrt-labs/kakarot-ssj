@@ -2,10 +2,9 @@ use evm::errors::EVMError;
 use evm::errors::STACK_UNDERFLOW;
 use evm::gas;
 // Internal imports
-use evm::context::{ExecutionContext, ExecutionContextTrait};
 use evm::stack::StackTrait;
 use integer::BoundedInt;
-use evm::model::{VM, VMTrait};
+use evm::model::vm::{VM, VMTrait};
 use utils::constants::{POW_2_127};
 use utils::i256::i256;
 use utils::math::{Exponentiation, Bitshift, WrappingBitshift};

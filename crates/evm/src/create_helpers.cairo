@@ -1,13 +1,16 @@
 use evm::interpreter::EVMTrait;
 //! CREATE, CREATE2 opcode helpers
 use cmp::min;
-use evm::context::{ExecutionContext, Status, CallContext, CallContextTrait, ExecutionContextTrait};
+use contracts::kakarot_core::KakarotCore;
+use contracts::kakarot_core::interface::IKakarotCore;
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
 use evm::model::contract_account::{ContractAccountTrait};
-use evm::model::{Address, AccountType, Transfer};
+use evm::model::{Message, Address, AccountType, Transfer};
+use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
+use utils::constants;
 use evm::state::StateTrait;
 use keccak::cairo_keccak;
 use starknet::{EthAddress, get_tx_info};
@@ -37,7 +40,7 @@ enum CreateType {
 impl CreateHelpersImpl of CreateHelpers {
     ///  Prepare the initialization of a new child or so-called sub-context
     /// As part of the CREATE family of opcodes.
-    fn prepare_create(ref vm: VM, create_type: CreateType) -> Result<CreateArgs, EVMError> {
+    fn prepare_create(ref self: VM, create_type: CreateType) -> Result<CreateArgs, EVMError> {
         let value = self.stack.pop()?;
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
@@ -63,9 +66,14 @@ impl CreateHelpersImpl of CreateHelpers {
     /// The Machine will change its `current_ctx` to point to the
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
-    fn generic_create(ref vm: VM, create_args: CreateArgs) -> Result<(), EVMError> {
+    fn generic_create(ref self: VM, create_args: CreateArgs) -> Result<(), EVMError> {
+        let state_snapshot = self.env.state;
+        //TODO(eni) state deep copy
+        self.env.state = Default::default();
         let mut target_account = self.env.state.get_account(create_args.to);
         let target_address = target_account.address();
+
+        //TODO(gas) charge max message call gas
 
         // The caller in the subcontext is the calling context's current address
         let caller = self.message().target;
@@ -73,12 +81,11 @@ impl CreateHelpersImpl of CreateHelpers {
         let caller_current_nonce = caller_account.nonce();
         let caller_balance = caller_account.balance();
         if caller_balance < create_args.value
-            || target_account.nonce() == integer::BoundedInt::<u64>::max() {
+            || target_account.nonce() == integer::BoundedInt::<u64>::max()
+            || self.message.depth
+            + 1 == constants::STACK_MAX_DEPTH {
             return self.stack.push(0);
         }
-
-        caller_account.set_nonce(caller_current_nonce + 1);
-        self.env.state.set_account(caller_account);
 
         // Collision happens if the target account loaded in state has code or nonce set, meaning
         // - it's deployed on SN and is an active EVM contract
@@ -87,41 +94,34 @@ impl CreateHelpersImpl of CreateHelpers {
             return self.stack.push(0);
         };
 
-        let call_ctx = CallContextTrait::new(
+        //TODO(gas) ensure calldata_len <= 2*MAX_CODE_SIZE
+
+        caller_account.set_nonce(caller_current_nonce + 1);
+        self.env.state.set_account(caller_account);
+
+        let child_message = Message {
             caller,
-            self.origin(),
-            create_args.bytecode,
-            calldata: Default::default().span(),
+            target: target_address,
             value: create_args.value,
-            read_only: false,
+            should_transfer_value: true,
+            code: create_args.bytecode,
+            data: Default::default().span(),
             gas_limit: self.message().gas_limit,
-            gas_price: self.env.gas_price,
-            should_transfer: true,
-        );
-
-        // TODO(elias): Make a deep copy of the state
-        let mut child_ctx = ExecutionContextTrait::new(
-            target_address, call_ctx, self.depth() + 1, self.state
-        );
-
-        let result = child_ctx.process_create_message();
-
-        match result.status {
-            Status::Active => {
-                // TODO: The Execution Result should not share the Status type since it cannot be active
-                // This INVARIANT should be handled by the type system
-                panic!(
-                    "INVARIANT: Status of the Execution Context should not be Active in finalize logic"
-                );
-            },
-            Status::Stopped => {
-                self.stack.push(target_address.evm.into())?;
-                self.return_data = result.return_data;
-                self.state = result.state;
-            },
-            Status::Reverted => { self.stack.push(0)?; },
+            depth: self.message().depth + 1,
+            read_only: false,
         };
 
+        let result = EVMTrait::process_create_message(child_message, ref self.env);
+
+        if result.success {
+            self.return_data = Default::default().span();
+            self.stack.push(target_address.evm.into())?;
+        } else {
+            // The `process_message` function has mutated the environment state.
+            // Revert state changes using the old snapshot as execution failed.
+            self.env.state = state_snapshot;
+            self.stack.push(0)?;
+        }
         Result::Ok(())
     }
 }

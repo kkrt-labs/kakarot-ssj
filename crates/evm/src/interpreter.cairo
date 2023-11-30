@@ -1,11 +1,10 @@
-use evm::context::{CallContext, CallContextTrait, ExecutionContext, ExecutionContextTrait, Status};
 use evm::errors::{EVMError, PC_OUT_OF_BOUNDS, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
 
 use evm::model::account::{AccountTrait};
 use evm::model::{
-    Message, Environment, VM, VMTrait, Address, Transfer, ExecutionSummary, ExecutionResult,
-    AccountType
+    Message, Environment, Address, Transfer, ExecutionSummary, ExecutionResult, AccountType
 };
+use evm::model::vm::{VM, VMTrait};
 use evm::state::{State, StateTrait};
 use starknet::{EthAddress, ContractAddress};
 use utils::helpers::{U256Trait, compute_starknet_address};
@@ -40,7 +39,24 @@ impl EVMImpl of EVMTrait {
                         .to_bytes(),
                 };
             }
-            return EVMTrait::process_create_message(message, env);
+            // Take a snapshot of the environment state so that we can revert if the
+            // message processing fails.
+            // This needs to be done every time before we call `process_message_create`,
+            // that modifies the state.
+            let state_snapshot = env.state;
+            env.state = Default::default(); //TODO deep clone
+            let result = EVMTrait::process_create_message(message, ref env);
+            if !result.success {
+                // The `process_create_message` function has mutated the environment state.
+                // Revert state changes using the old snapshot as execution failed.
+                env.state = state_snapshot;
+            }
+            return ExecutionSummary {
+                state: env.state,
+                address: message.target.evm,
+                success: result.success,
+                return_data: result.return_data,
+            };
         }
 
         // No need to take snapshot of state, as the state is still empty at this point.
@@ -53,16 +69,12 @@ impl EVMImpl of EVMTrait {
         }
     }
 
-    fn process_create_message(message: Message, mut env: Environment) -> ExecutionSummary {
-        // Take a snapshot of the environment state so that we can revert if the
-        // message processing fails.
-        // This needs to be done every time before we call `process_message``
-        let old_state = env.state;
-        env.state = Default::default(); //TODO deep clone
-
+    //TODO(eni) doc - mention state must be saved prior to this.
+    fn process_create_message(message: Message, ref env: Environment) -> ExecutionResult {
         let target_evm_address = message.target.evm;
         let mut target_account = env.state.get_account(target_evm_address);
 
+        // Increment nonce of target
         target_account.set_nonce(1);
         target_account.set_type(AccountType::ContractAccount);
         target_account.address = *(@message.target);
@@ -71,20 +83,13 @@ impl EVMImpl of EVMTrait {
         let result = EVMTrait::process_message(message, ref env);
 
         if result.success {
+            // Write the return_data of the initcode
+            // as the deployed contract's bytecode
             let code = result.return_data;
             target_account.set_code(code);
             env.state.set_account(target_account);
-        } else {
-            // The `process_message` function has mutated the environment state.
-            // Revert state changes using the old snapshot as execution failed.
-            env.state = old_state;
         }
-        return ExecutionSummary {
-            success: result.success,
-            address: target_evm_address,
-            state: env.state,
-            return_data: result.return_data,
-        };
+        result
     }
 
     fn process_message(message: Message, ref env: Environment) -> ExecutionResult {
@@ -123,7 +128,9 @@ impl EVMImpl of EVMTrait {
 
         // Check if PC is not out of bounds.
         if pc >= bytecode.len() || vm.running() == false {
-            return ExecutionResult { success: true, return_data: vm.return_data() };
+            return ExecutionResult {
+                success: true, return_data: vm.return_data(), gas_used: vm.gas_used()
+            };
         }
 
         let opcode: u8 = *bytecode.at(pc);
@@ -135,14 +142,17 @@ impl EVMImpl of EVMTrait {
                 if vm.running() {
                     return EVMTrait::execute_code(ref vm);
                 }
-                return ExecutionResult { success: false, return_data: vm.return_data() };
+                return ExecutionResult {
+                    success: false, return_data: vm.return_data(), gas_used: vm.gas_used()
+                };
             },
             Result::Err(error) => {
                 // If an error occurred, revert execution self.
                 // Currently, revert reason is a Span<u8>.
                 return ExecutionResult {
                     success: false,
-                    return_data: Into::<felt252, u256>::into(error.to_string()).to_bytes()
+                    return_data: Into::<felt252, u256>::into(error.to_string()).to_bytes(),
+                    gas_used: vm.gas_used(),
                 };
             }
         }

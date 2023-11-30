@@ -15,7 +15,6 @@ use contracts::kakarot_core::{
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
-use evm::context::Status;
 use evm::errors::{
     EVMError, READ_SYSCALL_FAILED, WRITE_SYSCALL_FAILED, ACCOUNT_EXISTS, DEPLOYMENT_FAILED,
     CONTRACT_ACCOUNT_EXISTS, CONTRACT_SYSCALL_FAILED

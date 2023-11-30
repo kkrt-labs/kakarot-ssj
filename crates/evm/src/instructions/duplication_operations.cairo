@@ -2,15 +2,13 @@
 
 // Internal imports
 use evm::errors::EVMError;
-use evm::context::{ExecutionContext, ExecutionContextTrait,};
-use evm::model::{VM, VMTrait};
+use evm::model::vm::{VM, VMTrait};
 
 mod internal {
-    use evm::context::{ExecutionContext, ExecutionContextTrait,};
     use evm::errors::EVMError;
     use evm::gas;
     use evm::stack::StackTrait;
-    use evm::model::{VM, VMTrait};
+    use evm::model::vm::{VM, VMTrait};
 
     /// Generic DUP operation
     #[inline(always)]

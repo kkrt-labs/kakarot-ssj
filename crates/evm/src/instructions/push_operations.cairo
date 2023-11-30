@@ -2,17 +2,15 @@
 
 use evm::errors::EVMError;
 use evm::gas;
-use evm::context::{ExecutionContext, ExecutionContextTrait};
 use evm::stack::StackTrait;
-use evm::model::{VM, VMTrait};
+use evm::model::vm::{VM, VMTrait};
 
 mod internal {
     use evm::errors::EVMError;
     use evm::gas;
-    use evm::context::{ExecutionContext, ExecutionContextTrait};
     use evm::stack::StackTrait;
     use utils::helpers::load_word;
-    use evm::model::{VM, VMTrait};
+    use evm::model::vm::{VM, VMTrait};
 
     /// Place i bytes items on stack.
     #[inline(always)]

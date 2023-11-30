@@ -3,12 +3,11 @@
 use evm::errors::EVMError;
 use evm::gas;
 // Internal imports
-use evm::context::{ExecutionContext, ExecutionContextTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use keccak::{cairo_keccak, u128_split};
 use utils::helpers::{ArrayExtTrait, U256Trait};
-use evm::model::{VM, VMTrait};
+use evm::model::vm::{VM, VMTrait};
 
 #[generate_trait]
 impl Sha3Impl of Sha3Trait {
@@ -57,11 +56,10 @@ impl Sha3Impl of Sha3Trait {
 
 
 mod internal {
-    use evm::context::{ExecutionContext, ExecutionContextTrait};
     use evm::memory::MemoryTrait;
     use evm::stack::StackTrait;
     use utils::helpers::U256Trait;
-    use evm::model::{VM, VMTrait};
+    use evm::model::vm::{VM, VMTrait};
 
     /// Computes how many words are read from the memory
     /// and how many words must be filled with zeroes

@@ -25,7 +25,6 @@ mod KakarotCore {
     use core::traits::TryInto;
     use core::zeroable::Zeroable;
 
-    use evm::context::Status;
     use evm::errors::{EVMError, EVMErrorTrait, CALLING_FROM_CA, CALLING_FROM_UNDEPLOYED_ACCOUNT};
     use evm::model::{Message, Environment};
     use evm::model::account::{Account, AccountType, AccountTrait};
@@ -417,6 +416,7 @@ mod KakarotCore {
             };
 
             let mut result = EVMTrait::process_message_call(message, env, is_deploy_tx,);
+            //TODO(eni): normally not required, need to check
             if is_deploy_tx && result.success == true {
                 result.return_data = to.evm.to_bytes().span();
             }

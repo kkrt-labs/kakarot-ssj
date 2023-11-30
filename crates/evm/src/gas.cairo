@@ -43,3 +43,7 @@ pub const WARM_STORAGE_READ_COST: u128 = 100;
 pub const INITCODE_WORD_COST: u128 = 2;
 
 pub const CALL_STIPEND: u128 = 2300;
+
+pub fn max_message_call_gas(gas: u128) -> u128 {
+    gas - (gas / 64)
+}
