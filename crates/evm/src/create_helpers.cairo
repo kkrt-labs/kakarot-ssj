@@ -67,7 +67,6 @@ impl CreateHelpersImpl of CreateHelpers {
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
     fn generic_create(ref self: VM, create_args: CreateArgs) -> Result<(), EVMError> {
-        let state_snapshot = self.env.state.clone();
         let mut target_account = self.env.state.get_account(create_args.to);
         let target_address = target_account.address();
 
@@ -115,9 +114,6 @@ impl CreateHelpersImpl of CreateHelpers {
             self.return_data = Default::default().span();
             self.stack.push(target_address.evm.into())?;
         } else {
-            // The `process_message` function has mutated the environment state.
-            // Revert state changes using the old snapshot as execution failed.
-            self.env.state = state_snapshot;
             self.stack.push(0)?;
         }
         Result::Ok(())

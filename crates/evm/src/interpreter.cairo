@@ -38,18 +38,10 @@ impl EVMImpl of EVMTrait {
                         .to_bytes(),
                 };
             }
-            // Take a snapshot of the environment state so that we can revert if the
-            // message processing fails.
-            // This needs to be done every time before we call `process_message_create`,
-            // that modifies the state.
-            let state_snapshot = env.state.clone();
+
             let mut result = EVMTrait::process_create_message(message, ref env);
             if result.success {
                 result.return_data = message.target.evm.to_bytes().span();
-            } else {
-                // The `process_create_message` function has mutated the environment state.
-                // Revert state changes using the old snapshot as execution failed.
-                env.state = state_snapshot;
             }
             return ExecutionSummary {
                 state: env.state,
@@ -69,8 +61,12 @@ impl EVMImpl of EVMTrait {
         }
     }
 
-    //TODO(eni) doc - mention state must be saved prior to this.
     fn process_create_message(message: Message, ref env: Environment) -> ExecutionResult {
+        //TODO(optimization) - Since the effects of executed code are
+        //reverted in the `process_message` function already,
+        // we only need to revert the changes made to the target account.  Take a
+        // snapshot of the environment state so that we can revert if the
+        let state_snapshot = env.state.clone();
         let target_evm_address = message.target.evm;
         let mut target_account = env.state.get_account(target_evm_address);
 
@@ -85,14 +81,20 @@ impl EVMImpl of EVMTrait {
         if result.success {
             // Write the return_data of the initcode
             // as the deployed contract's bytecode
+            //TODO(gas) charge gas on contract code length
+            // Don't forget to revert the state if the gas charging fails.
             let code = result.return_data;
             target_account.set_code(code);
             env.state.set_account(target_account);
+        } else {
+            // Revert state to the snapshot taken before the create processing.
+            env.state = state_snapshot;
         }
         result
     }
 
     fn process_message(message: Message, ref env: Environment) -> ExecutionResult {
+        let state_snapshot = env.state.clone();
         if message.should_transfer_value && message.value != 0 {
             let transfer = Transfer {
                 sender: message.caller, recipient: message.target, amount: message.value
@@ -111,14 +113,20 @@ impl EVMImpl of EVMTrait {
         // Decode and execute the current opcode.
         // until we have processed all opcodes or until we have stopped.
         // Use a recursive function to allow passing VM by ref - which wouldn't work in a loop;
-        let execution_result = EVMTrait::execute_code(ref vm);
+        let result = EVMTrait::execute_code(ref vm);
 
         // Retrieve ownership of the `env` variable
         // The state in the environment has been modified by the VM.
         // Handling state reverts is done at a higher level, using previously taken state snapshots.
         env = vm.env;
 
-        execution_result
+        if !result.success {
+            // The `process_message` function has mutated the environment state.
+            // Revert state changes using the old snapshot as execution failed.
+            env.state = state_snapshot;
+        }
+
+        result
     }
 
     fn execute_code(ref vm: VM) -> ExecutionResult {

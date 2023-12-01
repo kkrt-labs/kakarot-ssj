@@ -123,7 +123,6 @@ impl CallHelpersImpl of CallHelpers {
             depth: self.message().depth + 1
         };
 
-        let state_snapshot = self.env.state.clone();
         let result = EVMTrait::process_message(message, ref self.env);
 
         self.return_data = result.return_data;
@@ -131,9 +130,7 @@ impl CallHelpersImpl of CallHelpers {
         if result.success {
             self.stack.push(1)?;
         } else {
-            // The `process_message` function has mutated the environment state.
-            // Revert state changes using the old snapshot as execution failed.
-            self.env.state = state_snapshot;
+           
             self.stack.push(0)?;
         }
 
