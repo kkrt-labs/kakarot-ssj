@@ -367,10 +367,10 @@ mod KakarotCore {
             calldata: Span<u8>
         ) -> ExecutionSummary {
             let block_info = starknet::get_block_info().unbox();
-            let eoa = IExternallyOwnedAccountDispatcher {
+            let coinbase = IExternallyOwnedAccountDispatcher {
                 contract_address: block_info.sequencer_address
-            };
-            let coinbase = eoa.evm_address();
+            }
+                .evm_address();
             let mut env = Environment {
                 origin: origin.evm,
                 gas_price,

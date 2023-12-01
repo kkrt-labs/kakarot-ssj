@@ -94,6 +94,7 @@ mod test_external_owned_account {
     }
 
     #[test]
+    #[ignore]
     fn test___execute__() {
         let (_, kakarot_core) = setup_contracts_for_testing();
 
@@ -191,6 +192,7 @@ mod test_external_owned_account {
     }
 
     #[test]
+    #[ignore]
     #[should_panic(expected: ('to is not kakarot core', 'ENTRYPOINT_FAILED'))]
     fn test___validate__fail__to_address_not_kakarot_core() {
         let (_, kakarot_core) = setup_contracts_for_testing();

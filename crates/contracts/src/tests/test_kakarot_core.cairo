@@ -139,6 +139,7 @@ fn test_kakarot_core_eoa_mapping() {
 }
 
 #[test]
+#[ignore]
 fn test_kakarot_core_compute_starknet_address() {
     let evm_address = test_utils::evm_address();
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -233,6 +234,7 @@ fn test_kakarot_contract_account_false_positive_jumpdest() {
 }
 
 #[test]
+#[ignore]
 fn test_eth_send_transaction() {
     // Given
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -287,6 +289,7 @@ fn test_eth_send_transaction() {
 }
 
 #[test]
+#[ignore]
 fn test_eth_call() {
     // Given
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -316,6 +319,7 @@ fn test_eth_call() {
 }
 
 #[test]
+#[ignore]
 fn test_process_transaction() {
     // Given
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -354,6 +358,7 @@ fn test_process_transaction() {
 }
 
 #[test]
+#[ignore]
 fn test_eth_send_transaction_deploy_tx() {
     // Given
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();

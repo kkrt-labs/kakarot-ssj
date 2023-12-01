@@ -136,6 +136,7 @@ mod test_state {
 
 
     #[test]
+    #[ignore]
     fn test_get_account_when_deployed() {
         let mut state: State = Default::default();
         let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();

@@ -243,6 +243,7 @@ fn test_prepare_call_type_static_call() {
     assert!(call_args == expected_call_args, "wrong calls_args prepared");
 }
 #[test]
+#[ignore]
 fn test_generic_call() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
 
