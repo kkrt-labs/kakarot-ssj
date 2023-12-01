@@ -26,34 +26,7 @@ impl SystemOperations of SystemOperationsTrait {
         // TODO: add dynamic gas cost
         self.charge_gas(gas::CREATE)?;
 
-        let create_args = self.prepare_create(CreateType::CreateOrDeployTx)?;
-
-        // Initialize the sub context.
-        // TODO(elias)
-        // create a new sub context here
-        // with the correct arguments
-        // let result = sub_ctx.process_create_message();
-        // store the return data in the memory of the parent context with the correct offsets and size
-        // store the return data whole in the return data field of the parent context
-        //     if not evm.error:
-        //     contract_code = evm.output
-        //     contract_code_gas = len(contract_code) * GAS_CODE_DEPOSIT
-        //     try:
-        //         if len(contract_code) > 0:
-        //             ensure(contract_code[0] != 0xEF, InvalidContractPrefix)
-        //         charge_gas(evm, contract_code_gas)
-        //         ensure(len(contract_code) <= MAX_CODE_SIZE, OutOfGasError)
-        //     except ExceptionalHalt as error:
-        //         rollback_transaction(env.state)
-        //         evm.gas_left = Uint(0)
-        //         evm.output = b""
-        //         evm.error = error
-        //     else:
-        //         set_code(env.state, message.current_target, contract_code)
-        //         commit_transaction(env.state)
-        // else:
-        //     rollback_transaction(env.state)
-        // return evm
+        let create_args = self.prepare_create(CreateType::Create)?;
         self.generic_create(create_args)
     }
 
@@ -100,13 +73,6 @@ impl SystemOperations of SystemOperationsTrait {
 
         let call_args = self.prepare_call(@CallType::CallCode)?;
 
-        // Initialize the sub context.
-        // TODO(elias)
-        // create a new sub context here
-        // with the correct arguments
-        // let result = sub_ctx.process_message();
-        // store the return data in the memory of the parent context with the correct offsets and size
-        // store the return data whole in the return data field of the parent context
         self.generic_call(call_args)
     }
     /// RETURN
@@ -135,14 +101,6 @@ impl SystemOperations of SystemOperationsTrait {
         self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
 
         let call_args = self.prepare_call(@CallType::DelegateCall)?;
-
-        // Initialize the sub context.
-        // TODO(elias)
-        // create a new sub context here
-        // with the correct arguments
-        // let result = sub_ctx.process_message();
-        // store the return data in the memory of the parent context with the correct offsets and size
-        // store the return data whole in the return data field of the parent context
         self.generic_call(call_args)
     }
 
@@ -157,33 +115,6 @@ impl SystemOperations of SystemOperationsTrait {
         self.charge_gas(gas::CREATE)?;
 
         let create_args = self.prepare_create(CreateType::Create2)?;
-
-        // Initialize the sub context.
-        // TODO(elias)
-        // create a new sub context here
-        // with the correct arguments
-        // let result = sub_ctx.process_create_message();
-        // store the return data in the memory of the parent context with the correct offsets and size
-        // store the return data whole in the return data field of the parent context
-        //     if not evm.error:
-        //     contract_code = evm.output
-        //     contract_code_gas = len(contract_code) * GAS_CODE_DEPOSIT
-        //     try:
-        //         if len(contract_code) > 0:
-        //             ensure(contract_code[0] != 0xEF, InvalidContractPrefix)
-        //         charge_gas(evm, contract_code_gas)
-        //         ensure(len(contract_code) <= MAX_CODE_SIZE, OutOfGasError)
-        //     except ExceptionalHalt as error:
-        //         rollback_transaction(env.state)
-        //         evm.gas_left = Uint(0)
-        //         evm.output = b""
-        //         evm.error = error
-        //     else:
-        //         set_code(env.state, message.current_target, contract_code)
-        //         commit_transaction(env.state)
-        // else:
-        //     rollback_transaction(env.state)
-        // return evm
         self.generic_create(create_args)
     }
 
@@ -195,13 +126,6 @@ impl SystemOperations of SystemOperationsTrait {
 
         let call_args = self.prepare_call(@CallType::StaticCall)?;
 
-        // Initialize the sub context.
-        // TODO(elias)
-        // create a new sub context here
-        // with the correct arguments
-        // let result = sub_ctx.process_message();
-        // store the return data in the memory of the parent context with the correct offsets and size
-        // store the return data whole in the return data field of the parent context
         self.generic_call(call_args)
     }
 

@@ -99,7 +99,17 @@ impl EVMImpl of EVMTrait {
             let transfer = Transfer {
                 sender: message.caller, recipient: message.target, amount: message.value
             };
-            env.state.add_transfer(transfer).expect('TODO(ELIAS): handle');
+            match env.state.add_transfer(transfer) {
+                Result::Ok(_) => {},
+                Result::Err(err) => {
+                    return ExecutionResult {
+                        success: false,
+                        //TODO(optimization) avoid converstion to u256 to get bytes
+                        return_data: Into::<felt252, u256>::into(err.to_string()).to_bytes(),
+                        gas_used: 0,
+                    };
+                }
+            }
         }
 
         // Handle precompile logic
@@ -107,7 +117,7 @@ impl EVMImpl of EVMTrait {
             panic!("Not Implemented: Precompiles are not implemented yet");
         }
 
-        // Instanciate a new VM using the to process message and the current environment.
+        // Instantiate a new VM using the to process message and the current environment.
         let mut vm: VM = VMTrait::new(message, env);
 
         // Decode and execute the current opcode.

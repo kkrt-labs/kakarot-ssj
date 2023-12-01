@@ -81,6 +81,10 @@ fn origin() -> EthAddress {
     'origin'.try_into().unwrap()
 }
 
+fn caller() -> EthAddress {
+    'caller'.try_into().unwrap()
+}
+
 fn coinbase() -> EthAddress {
     'coinbase'.try_into().unwrap()
 }

@@ -32,7 +32,7 @@ struct CreateArgs {
 
 #[derive(Drop)]
 enum CreateType {
-    CreateOrDeployTx,
+    Create,
     Create2,
 }
 
@@ -49,7 +49,7 @@ impl CreateHelpersImpl of CreateHelpers {
         self.memory.load_n(size, ref bytecode, offset);
 
         let to = match create_type {
-            CreateType::CreateOrDeployTx => {
+            CreateType::Create => {
                 let nonce = self.env.state.get_account(self.message().target.evm).nonce();
                 compute_contract_address(self.message().target.evm, sender_nonce: nonce)
             },

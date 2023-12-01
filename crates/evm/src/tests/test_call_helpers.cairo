@@ -14,7 +14,7 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{Address, account::{AccountBuilderTrait}, eoa::EOATrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use evm::tests::test_utils::{VMBuilderTrait, test_address, other_evm_address};
+use evm::tests::test_utils::{VMBuilderTrait, test_address, other_evm_address, caller};
 use starknet::testing::set_contract_address;
 use starknet::{contract_address_const, EthAddress, ContractAddress};
 
@@ -242,67 +242,59 @@ fn test_prepare_call_type_static_call() {
 
     assert!(call_args == expected_call_args, "wrong calls_args prepared");
 }
-//TODO(delete) - replace by test_generic_call
-// #[test]
-// fn test_init_call_sub_ctx() {
-//     let (native_token, kakarot_core) = setup_contracts_for_testing();
+#[test]
+fn test_generic_call() {
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
 
-//     set_contract_address(kakarot_core.contract_address);
+    set_contract_address(kakarot_core.contract_address);
 
-//     let caller_address = EthAddress { address: 0xabde2 };
-//     let caller_address = Address {
-//         evm: caller_address, starknet: kakarot_core.compute_starknet_address(caller_address)
-//     };
+    let caller_address = caller();
+    let caller_address = Address {
+        evm: caller_address, starknet: kakarot_core.compute_starknet_address(caller_address)
+    };
 
-//     let mut vm = VMBuilderTrait::new_with_presets().with_caller(caller_address).build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_caller(caller_address).build();
 
-//     let gas: u128 = 1000;
-//     let address = other_evm_address();
-//     let value = 100;
-//     let ret_offset: usize = 15;
-//     let ret_size: usize = 20;
+    let gas: u128 = 1000;
+    let target_address = other_evm_address();
+    let value = 100;
+    let ret_offset: usize = 15;
+    let ret_size: usize = 20;
+    let target = Address {
+        evm: target_address, starknet: kakarot_core.compute_starknet_address(target_address)
+    };
 
-//     let call_args = CallArgs {
-//         caller: test_address(),
-//         code_address: Address {
-//             evm: address, starknet: kakarot_core.compute_starknet_address(address)
-//         },
-//         to: Address { evm: address, starknet: kakarot_core.compute_starknet_address(address) },
-//         gas,
-//         value,
-//         calldata: array![0x0].span(),
-//         ret_offset,
-//         ret_size,
-//         should_transfer: true
-//     };
+    let call_args = CallArgs {
+        caller: caller_address,
+        code_address: target,
+        to: target,
+        gas,
+        value,
+        calldata: array![0x0].span(),
+        ret_offset,
+        ret_size,
+        should_transfer: true,
+        read_only: false
+    };
 
-//     let sender_eoa = EOATrait::deploy(machine.address().evm).expect('failed deploying sender');
-//     fund_account_with_native_token(sender_eoa.starknet, native_token, 0x10000);
+    let sender_eoa = kakarot_core.deploy_eoa(caller_address.evm);
+    fund_account_with_native_token(sender_eoa, native_token, 1000);
 
-//     EOATrait::deploy(address).expect('failed deploying reciever');
+    let receiver_eoa = kakarot_core.deploy_eoa(target.evm);
 
-//     let ctx_count_prev = machine.ctx_count;
-//     let sender_balance_prev = vm.env.state.get_account(sender_eoa.evm).balance;
-//     let reciver_balance_prev = vm.env.state.get_account(address).balance;
+    let sender_balance_prev = vm.env.state.get_account(caller_address.evm).balance;
+    let receiver_balance_prev = vm.env.state.get_account(target.evm).balance;
 
-//     machine.init_call_sub_ctx(call_args, machine.call_ctx().read_only).unwrap();
+    //     machine.init_call_sub_ctx(call_args, machine.call_ctx().read_only).unwrap();
 
-//     let ctx_count_after = machine.ctx_count;
-//     let sender_balance_after = vm.env.state.get_account(sender_eoa.evm).balance;
-//     let reciver_balance_after = vm.env.state.get_account(address).balance;
+    let sender_balance_after = vm.env.state.get_account(caller_address.evm).balance;
+    let receiver_balance_after = vm.env.state.get_account(target.evm).balance;
 
-//     assert!(
-//         machine
-//             .address() == Address {
-//                 evm: address, starknet: kakarot_core.compute_starknet_address(address)
-//             },
-//         "wrong execution context address"
-//     );
+    assert_eq!(vm.stack.peek().expect('stack empty'), 1);
 
-//     assert!(sender_balance_prev - sender_balance_after == 100, "wrong sender balance");
-//     assert!(reciver_balance_after - reciver_balance_prev == 100, "wrong reciever balance");
-
-//     assert!(ctx_count_after - ctx_count_prev == 1, "ctx count increased by wrong value");
-// }
-
+    // No return data for calls to EOAs - only value transfers
+    assert_eq!(vm.return_data().len(), 0);
+    assert_eq!(sender_balance_prev - sender_balance_after, 100);
+    assert_eq!(receiver_balance_after - receiver_balance_prev, 100);
+}
 

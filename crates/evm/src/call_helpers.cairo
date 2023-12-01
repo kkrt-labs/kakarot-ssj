@@ -130,7 +130,6 @@ impl CallHelpersImpl of CallHelpers {
         if result.success {
             self.stack.push(1)?;
         } else {
-           
             self.stack.push(0)?;
         }
 
@@ -138,7 +137,7 @@ impl CallHelpersImpl of CallHelpers {
         let actual_returndata_len = min(result.return_data.len(), call_args.ret_size);
 
         let actual_return_data = result.return_data.slice(0, actual_returndata_len);
-        // TODO: Check if need to padd the memory with zeroes if result.return_data.len() < call_ctx.ret_size and memory is not empty at
+        // TODO: Check if need to pad the memory with zeroes if result.return_data.len() < call_ctx.ret_size and memory is not empty at
         // offset call_args.ret_offset + result.return_data.len()
         self.memory.store_n(actual_return_data, call_args.ret_offset);
 

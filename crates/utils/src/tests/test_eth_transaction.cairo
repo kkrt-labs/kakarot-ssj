@@ -40,7 +40,7 @@ fn test_decode_legacy_tx() {
 
 #[test]
 fn test_decode_eip_2930_tx() {
-    // tx_format (EIP-2930, unsiged): 0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList])
+    // tx_format (EIP-2930, unsigned): 0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList])
     // expected rlp decoding:   [ "0x434841494e5f4944", "0x", "0x3b9aca00", "0x1e8480", "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef", [] ]
     // message_hash: 0xc0227f45fccb86cd5befdffc546c193361174fdf0a08443a874c854e62f60981
     // chain id used: 0x434841494e5f4944
@@ -69,7 +69,7 @@ fn test_decode_eip_2930_tx() {
 
 #[test]
 fn test_decode_eip_1559_tx() {
-    // tx_format (EIP-1559, unsiged):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, destination, amount, data, access_list])
+    // tx_format (EIP-1559, unsigned):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, destination, amount, data, access_list])
     // expected rlp decoding: [ "0x434841494e5f4944", "0x", "0x", "0x3b9aca00", "0x1e8480", "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef", [] ]
     // message_hash: 0xe14268e90788a8e63d8db7f6996dc71dbd9b8ce1314bc9e657735c66137615cc
     // chain id used: 0x434841494e5f4944
