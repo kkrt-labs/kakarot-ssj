@@ -161,7 +161,7 @@ impl EVMImpl of EVMTrait {
                     return EVMTrait::execute_code(ref vm);
                 }
                 return ExecutionResult {
-                    success: false, return_data: vm.return_data(), gas_used: vm.gas_used()
+                    success: true, return_data: vm.return_data(), gas_used: vm.gas_used()
                 };
             },
             Result::Err(error) => {
