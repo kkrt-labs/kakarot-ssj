@@ -11,6 +11,7 @@ use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
 };
+use utils::constants;
 
 #[derive(Destruct)]
 struct VMBuilder {
@@ -147,7 +148,7 @@ fn eoa_address() -> EthAddress {
     evm_address
 }
 
-fn gas_limit() -> u128 {
+fn tx_gas_limit() -> u128 {
     0x100000000000000000
 }
 
@@ -177,7 +178,7 @@ fn preset_message() -> Message {
         )
     };
     let read_only = false;
-    let gas_limit = gas_limit();
+    let tx_gas_limit = tx_gas_limit();
     let target = test_address();
 
     Message {
@@ -185,7 +186,7 @@ fn preset_message() -> Message {
         caller,
         data,
         value,
-        gas_limit,
+        gas_limit: tx_gas_limit,
         read_only,
         code,
         should_transfer_value: true,
@@ -201,8 +202,9 @@ fn preset_environment() -> Environment {
         chain_id: chain_id(),
         prevrandao: 0,
         block_number: block_info.block_number,
+        block_timestamp: block_info.block_timestamp,
+        block_gas_limit: constants::BLOCK_GAS_LIMIT,
         coinbase: coinbase(),
-        timestamp: block_info.block_timestamp,
         state: Default::default(),
     }
 }

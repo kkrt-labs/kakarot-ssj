@@ -40,6 +40,7 @@ mod KakarotCore {
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use super::{StoredAccountType};
     use utils::address::compute_contract_address;
+    use utils::constants;
     use utils::helpers::{compute_starknet_address, EthAddressExTrait};
     use utils::rlp::RLPTrait;
 
@@ -377,8 +378,9 @@ mod KakarotCore {
                 chain_id: self.chain_id.read(),
                 prevrandao: 0,
                 block_number: block_info.block_number,
+                block_timestamp: block_info.block_timestamp,
+                block_gas_limit: constants::BLOCK_GAS_LIMIT,
                 coinbase,
-                timestamp: block_info.block_timestamp,
                 state: Default::default(),
             };
 

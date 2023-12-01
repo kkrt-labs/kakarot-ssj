@@ -247,7 +247,7 @@ fn test_eth_send_transaction() {
     );
 
     let to = Option::Some(test_utils::other_evm_address());
-    let gas_limit = test_utils::gas_limit();
+    let gas_limit = test_utils::tx_gas_limit();
     let gas_price = test_utils::gas_price();
     let value = 0;
 
@@ -304,7 +304,7 @@ fn test_eth_call() {
     counter.set_storage_at(0, 1);
 
     let to = Option::Some(test_utils::other_evm_address());
-    let gas_limit = test_utils::gas_limit();
+    let gas_limit = test_utils::tx_gas_limit();
     let gas_price = test_utils::gas_price();
     let value = 0;
     // selector: function get()
@@ -332,7 +332,7 @@ fn test_process_transaction() {
     );
 
     let to = Option::Some(test_utils::other_evm_address());
-    let gas_limit = test_utils::gas_limit();
+    let gas_limit = test_utils::tx_gas_limit();
     let gas_price = test_utils::gas_price();
     let value = 0;
     // selector: function get()
@@ -367,7 +367,7 @@ fn test_eth_send_transaction_deploy_tx() {
     let eoa = kakarot_core.deploy_eoa(evm_address);
 
     let to = Option::None;
-    let gas_limit = test_utils::gas_limit();
+    let gas_limit = test_utils::tx_gas_limit();
     let gas_price = test_utils::gas_price();
     let value = 0;
 

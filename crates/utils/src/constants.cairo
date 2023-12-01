@@ -8,6 +8,8 @@ const CONTRACT_ADDRESS_PREFIX: felt252 = 'STARKNET_CONTRACT_ADDRESS';
 
 
 // BLOCK
+//TODO(gas): determine correct block gas limit
+const BLOCK_GAS_LIMIT: u128 = 30_000_000;
 // CHAIN_ID = KKRT (0x4b4b5254) in ASCII
 const CHAIN_ID: u256 = 1263227476;
 

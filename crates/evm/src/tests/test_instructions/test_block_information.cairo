@@ -11,12 +11,13 @@ use core::traits::TryInto;
 use evm::instructions::BlockInformationTrait;
 use evm::model::contract_account::ContractAccountTrait;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::{evm_address, VMBuilderTrait, gas_limit, gas_price};
+use evm::tests::test_utils::{evm_address, VMBuilderTrait, tx_gas_limit, gas_price};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::{
     set_block_timestamp, set_block_number, set_contract_address, set_sequencer_address,
     ContractAddress
 };
+use utils::constants;
 
 /// 0x40 - BLOCKHASH
 #[test]
@@ -109,7 +110,7 @@ fn test_gaslimit() {
     // Then
     assert(vm.stack.len() == 1, 'stack should have one element');
     // This value is set in [new_with_presets].
-    assert(vm.stack.peek().unwrap() == gas_limit().into(), 'stack top should be gas_limit');
+    assert_eq!(vm.stack.peek().unwrap(), constants::BLOCK_GAS_LIMIT.into())
 }
 
 // *************************************************************************

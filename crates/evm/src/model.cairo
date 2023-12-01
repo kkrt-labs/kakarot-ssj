@@ -21,8 +21,9 @@ struct Environment {
     chain_id: u128,
     prevrandao: u256,
     block_number: u64,
+    block_gas_limit: u128,
+    block_timestamp: u64,
     coinbase: EthAddress,
-    timestamp: u64,
     state: State
 }
 #[derive(Copy, Drop, Default, PartialEq)]

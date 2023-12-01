@@ -27,7 +27,7 @@ mod test_external_owned_account {
     use evm::model::{Address, AddressTrait, ContractAccountTrait};
     use evm::tests::test_utils::{
         kakarot_address, evm_address, other_evm_address, other_starknet_address, eoa_address,
-        chain_id, gas_limit, gas_price
+        chain_id, tx_gas_limit, gas_price
     };
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
     use starknet::class_hash::Felt252TryIntoClassHash;
@@ -117,7 +117,7 @@ mod test_external_owned_account {
             .eth_call(
                 origin: evm_address,
                 to: Option::Some(other_evm_address()),
-                gas_limit: gas_limit(),
+                gas_limit: tx_gas_limit(),
                 gas_price: gas_price(),
                 value: 0,
                 calldata: data_get_tx
@@ -141,7 +141,7 @@ mod test_external_owned_account {
             .eth_call(
                 origin: evm_address,
                 to: Option::Some(other_evm_address()),
-                gas_limit: gas_limit(),
+                gas_limit: tx_gas_limit(),
                 gas_price: gas_price(),
                 value: 0,
                 calldata: data_get_tx

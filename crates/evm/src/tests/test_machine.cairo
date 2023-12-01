@@ -2,7 +2,7 @@ use evm::errors::DebugEVMError;
 use evm::errors::{EVMError, READ_SYSCALL_FAILED};
 use evm::model::vm::{VM, VMTrait};
 use evm::tests::test_utils::{
-    gas_limit, evm_address, starknet_address, VMBuilderTrait, test_address, gas_price
+    tx_gas_limit, evm_address, starknet_address, VMBuilderTrait, test_address, gas_price
 };
 
 #[test]
@@ -41,9 +41,9 @@ fn test_increment_gas_unchecked() {
 
     assert(vm.gas_used() == 0, 'wrong gas_used');
 
-    vm.increment_gas_used_unchecked(gas_limit());
+    vm.increment_gas_used_unchecked(tx_gas_limit());
 
-    assert(vm.gas_used() == gas_limit(), 'wrong gas_used');
+    assert(vm.gas_used() == tx_gas_limit(), 'wrong gas_used');
 }
 
 #[test]
@@ -52,7 +52,7 @@ fn test_increment_gas_checked() {
 
     assert(vm.gas_used() == 0, 'wrong gas_used');
 
-    let result = vm.charge_gas(gas_limit());
+    let result = vm.charge_gas(tx_gas_limit());
 
     assert_eq!(result.unwrap_err(), EVMError::OutOfGas);
 }

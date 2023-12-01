@@ -98,12 +98,12 @@ impl BlockInformation of BlockInformationTrait {
     }
 
     /// 0x45 - GASLIMIT
-    /// Get gas limit
+    /// Get the block’s gas limit
     /// # Specification: https://www.evm.codes/#45?fork=shanghai
     fn exec_gaslimit(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
 
-        self.stack.push(self.message().gas_limit.into())
+        self.stack.push(self.env.block_gas_limit.into())
     }
 
     /// 0x46 - CHAINID

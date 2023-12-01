@@ -13,7 +13,7 @@ use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
     VMBuilderTrait, evm_address, origin, callvalue, native_token, other_address, gas_price,
-    gas_limit
+    tx_gas_limit
 };
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
