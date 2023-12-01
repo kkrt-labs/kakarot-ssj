@@ -8,9 +8,9 @@ use evm::errors::{
 };
 
 use evm::gas;
-use evm::machine::{Machine, MachineTrait};
-use evm::model::Account;
 use evm::model::account::{AccountTrait};
+use evm::model::vm::{VM, VMTrait};
+use evm::model::{Account};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 
@@ -26,8 +26,8 @@ impl BlockInformation of BlockInformationTrait {
     /// 0x40 - BLOCKHASH
     /// Get the hash of one of the 256 most recent complete blocks.
     /// # Specification: https://www.evm.codes/#40?fork=shanghai
-    fn exec_blockhash(ref self: Machine) -> Result<(), EVMError> {
-        self.increment_gas_used_checked(gas::BLOCKHASH)?;
+    fn exec_blockhash(ref self: VM) -> Result<(), EVMError> {
+        self.charge_gas(gas::BLOCKHASH)?;
 
         let block_number = self.stack.pop_u64()?;
         let current_block = get_block_number();
@@ -55,8 +55,8 @@ impl BlockInformation of BlockInformationTrait {
     /// 0x41 - COINBASE
     /// Get the block's beneficiary address.
     /// # Specification: https://www.evm.codes/#41?fork=shanghai
-    fn exec_coinbase(ref self: Machine) -> Result<(), EVMError> {
-        self.increment_gas_used_checked(gas::BASE)?;
+    fn exec_coinbase(ref self: VM) -> Result<(), EVMError> {
+        self.charge_gas(gas::BASE)?;
 
         let execution_info = get_execution_info_syscall()
             .map_err(EVMError::SyscallFailed(EXECUTION_INFO_SYSCALL_FAILED))?
@@ -72,8 +72,8 @@ impl BlockInformation of BlockInformationTrait {
     /// 0x42 - TIMESTAMP
     /// Get the block’s timestamp
     /// # Specification: https://www.evm.codes/#42?fork=shanghai
-    fn exec_timestamp(ref self: Machine) -> Result<(), EVMError> {
-        self.increment_gas_used_checked(gas::BASE)?;
+    fn exec_timestamp(ref self: VM) -> Result<(), EVMError> {
+        self.charge_gas(gas::BASE)?;
 
         self.stack.push(get_block_timestamp().into())
     }
@@ -81,16 +81,16 @@ impl BlockInformation of BlockInformationTrait {
     /// 0x43 - NUMBER
     /// Get the block number.
     /// # Specification: https://www.evm.codes/#43?fork=shanghai
-    fn exec_number(ref self: Machine) -> Result<(), EVMError> {
-        self.increment_gas_used_checked(gas::BASE)?;
+    fn exec_number(ref self: VM) -> Result<(), EVMError> {
+        self.charge_gas(gas::BASE)?;
 
         self.stack.push(get_block_number().into())
     }
 
     /// 0x44 - PREVRANDAO
     /// # Specification: https://www.evm.codes/#44?fork=shanghai
-    fn exec_prevrandao(ref self: Machine) -> Result<(), EVMError> {
-        self.increment_gas_used_checked(gas::BASE)?;
+    fn exec_prevrandao(ref self: VM) -> Result<(), EVMError> {
+        self.charge_gas(gas::BASE)?;
 
         // PREVRANDAO does not exist in Starknet
         // PREVRANDAO used to be DIFFICULTY, which returns 0 for non-POW chains
@@ -98,19 +98,19 @@ impl BlockInformation of BlockInformationTrait {
     }
 
     /// 0x45 - GASLIMIT
-    /// Get gas limit
+    /// Get the block’s gas limit
     /// # Specification: https://www.evm.codes/#45?fork=shanghai
-    fn exec_gaslimit(ref self: Machine) -> Result<(), EVMError> {
-        self.increment_gas_used_checked(gas::BASE)?;
+    fn exec_gaslimit(ref self: VM) -> Result<(), EVMError> {
+        self.charge_gas(gas::BASE)?;
 
-        self.stack.push(self.gas_limit().into())
+        self.stack.push(self.env.block_gas_limit.into())
     }
 
     /// 0x46 - CHAINID
     /// Get the chain ID.
     /// # Specification: https://www.evm.codes/#46?fork=shanghai
-    fn exec_chainid(ref self: Machine) -> Result<(), EVMError> {
-        self.increment_gas_used_checked(gas::BASE)?;
+    fn exec_chainid(ref self: VM) -> Result<(), EVMError> {
+        self.charge_gas(gas::BASE)?;
 
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
         let chain_id = kakarot_state.chain_id();
@@ -120,12 +120,12 @@ impl BlockInformation of BlockInformationTrait {
     /// 0x47 - SELFBALANCE
     /// Get balance of currently executing contract
     /// # Specification: https://www.evm.codes/#47?fork=shanghai
-    fn exec_selfbalance(ref self: Machine) -> Result<(), EVMError> {
-        self.increment_gas_used_checked(gas::LOW)?;
+    fn exec_selfbalance(ref self: VM) -> Result<(), EVMError> {
+        self.charge_gas(gas::LOW)?;
 
-        let evm_address = self.address().evm;
+        let evm_address = self.message().target.evm;
 
-        let balance = self.state.get_account(evm_address).balance;
+        let balance = self.env.state.get_account(evm_address).balance;
 
         self.stack.push(balance)
     }
@@ -133,11 +133,11 @@ impl BlockInformation of BlockInformationTrait {
     /// 0x48 - BASEFEE
     /// Get base fee.
     /// # Specification: https://www.evm.codes/#48?fork=shanghai
-    fn exec_basefee(ref self: Machine) -> Result<(), EVMError> {
-        self.increment_gas_used_checked(gas::BASE)?;
+    fn exec_basefee(ref self: VM) -> Result<(), EVMError> {
+        self.charge_gas(gas::BASE)?;
 
         // Get the current base fee. (Kakarot doesn't use EIP 1559 so basefee
         //  doesn't really exists there so we just use the gas price)
-        self.stack.push(self.gas_price().into())
+        self.stack.push(self.env.gas_price.into())
     }
 }

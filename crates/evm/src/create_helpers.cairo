@@ -1,20 +1,21 @@
 //! CREATE, CREATE2 opcode helpers
 use cmp::min;
-use evm::context::{
-    ExecutionContext, Status, CallContext, CallContextTrait, ExecutionContextType,
-    ExecutionContextTrait
-};
+use contracts::kakarot_core::KakarotCore;
+use contracts::kakarot_core::interface::IKakarotCore;
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
-use evm::machine::{Machine, MachineTrait};
+use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
+use evm::model::ExecutionSummary;
 use evm::model::account::{AccountTrait};
 use evm::model::contract_account::{ContractAccountTrait};
-use evm::model::{Address, AccountType, Transfer};
+use evm::model::vm::{VM, VMTrait};
+use evm::model::{Message, Address, AccountType, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use keccak::cairo_keccak;
 use starknet::{EthAddress, get_tx_info};
 use utils::address::{compute_contract_address, compute_create2_contract_address};
+use utils::constants;
 use utils::helpers::ArrayExtTrait;
 use utils::helpers::{ResultExTrait, EthAddressExTrait, U256Trait, U8SpanExTrait};
 use utils::traits::{
@@ -31,15 +32,15 @@ struct CreateArgs {
 
 #[derive(Drop)]
 enum CreateType {
-    CreateOrDeployTx,
+    Create,
     Create2,
 }
 
 #[generate_trait]
-impl MachineCreateHelpersImpl of MachineCreateHelpers {
+impl CreateHelpersImpl of CreateHelpers {
     ///  Prepare the initialization of a new child or so-called sub-context
     /// As part of the CREATE family of opcodes.
-    fn prepare_create(ref self: Machine, create_type: CreateType) -> Result<CreateArgs, EVMError> {
+    fn prepare_create(ref self: VM, create_type: CreateType) -> Result<CreateArgs, EVMError> {
         let value = self.stack.pop()?;
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
@@ -48,12 +49,12 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
         self.memory.load_n(size, ref bytecode, offset);
 
         let to = match create_type {
-            CreateType::CreateOrDeployTx => {
-                let nonce = self.state.get_account(self.address().evm).nonce();
-                compute_contract_address(self.address().evm, sender_nonce: nonce)
+            CreateType::Create => {
+                let nonce = self.env.state.get_account(self.message().target.evm).nonce();
+                compute_contract_address(self.message().target.evm, sender_nonce: nonce)
             },
             CreateType::Create2 => compute_create2_contract_address(
-                self.address().evm, salt: self.stack.pop()?, bytecode: bytecode.span()
+                self.message().target.evm, salt: self.stack.pop()?, bytecode: bytecode.span()
             )?,
         };
 
@@ -65,38 +66,23 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
     /// The Machine will change its `current_ctx` to point to the
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
-    fn init_create_sub_ctx(ref self: Machine, create_args: CreateArgs) -> Result<(), EVMError> {
-        let mut target_account = self.state.get_account(create_args.to);
+    fn generic_create(ref self: VM, create_args: CreateArgs) -> Result<(), EVMError> {
+        let mut target_account = self.env.state.get_account(create_args.to);
         let target_address = target_account.address();
 
+        //TODO(gas) charge max message call gas
+
         // The caller in the subcontext is the calling context's current address
-        let caller = self.address();
-        let mut caller_account = self.state.get_account(caller.evm);
+        let caller = self.message().target;
+        let mut caller_account = self.env.state.get_account(caller.evm);
         let caller_current_nonce = caller_account.nonce();
         let caller_balance = caller_account.balance();
         if caller_balance < create_args.value
-            || target_account.nonce() == integer::BoundedInt::<u64>::max() {
+            || target_account.nonce() == integer::BoundedInt::<u64>::max()
+            || self.message.depth
+            + 1 == constants::STACK_MAX_DEPTH {
             return self.stack.push(0);
         }
-        let maybe_transfer = if create_args.value > 0 {
-            Option::Some(
-                Transfer {
-                    sender: self.address(), recipient: target_address, amount: create_args.value,
-                }
-            )
-        } else {
-            Option::None
-        };
-
-        caller_account.set_nonce(caller_current_nonce + 1);
-        self.state.set_account(caller_account);
-
-        //TODO when compiler bug is fixed handle this properly.
-        // It needs to be after self.set_current_ctx(child_ctx);
-        match maybe_transfer {
-            Option::Some(transfer) => { self.state.add_transfer(transfer).expect('transfer'); },
-            Option::None => {}
-        };
 
         // Collision happens if the target account loaded in state has code or nonce set, meaning
         // - it's deployed on SN and is an active EVM contract
@@ -105,78 +91,31 @@ impl MachineCreateHelpersImpl of MachineCreateHelpers {
             return self.stack.push(0);
         };
 
-        target_account.set_nonce(1);
-        target_account.set_type(AccountType::ContractAccount);
-        target_account.address = target_address;
-        self.state.set_account(target_account);
+        //TODO(gas) ensure calldata_len <= 2*MAX_CODE_SIZE
 
-        let call_ctx = CallContextTrait::new(
+        caller_account.set_nonce(caller_current_nonce + 1);
+        self.env.state.set_account(caller_account);
+
+        let child_message = Message {
             caller,
-            create_args.bytecode,
-            calldata: Default::default().span(),
+            target: target_address,
             value: create_args.value,
+            should_transfer_value: true,
+            code: create_args.bytecode,
+            data: Default::default().span(),
+            gas_limit: self.message().gas_limit,
+            depth: self.message().depth + 1,
             read_only: false,
-            gas_limit: self.gas_limit(),
-            gas_price: self.gas_price(),
-            ret_offset: 0,
-            ret_size: 0,
-        );
+        };
 
-        let parent_ctx = NullableTrait::new(self.current_ctx.unbox());
-        let child_ctx = ExecutionContextTrait::new(
-            ExecutionContextType::Create(self.ctx_count),
-            target_address,
-            call_ctx,
-            parent_ctx,
-            Default::default().span()
-        );
+        let result = EVMTrait::process_create_message(child_message, ref self.env);
 
-        // Machine logic
-        self.ctx_count += 1;
-
-        // Satisfy the compiler by setting the current_ctx to a default value
-        // before setting it to its real value - otherwise, "variable moved"
-        //TODO find workaround
-        self.current_ctx = BoxTrait::new(Default::default());
-        self.set_current_ctx(child_ctx);
-
-        Result::Ok(())
-    }
-
-    /// Finalize the create context by:
-    /// - Pushing the deployed contract's address (success) to the Stack or 0 (failure)
-    /// - Set the return data of the parent context
-    /// - Store the bytecode (subcontext's return data) of the newly deployed contract account
-    /// - Return to parent context.
-    fn finalize_create_context(ref self: Machine) -> Result<(), EVMError> {
-        // Put the status of the call on the stack.
-        let status = self.status();
-        let account_address = self.address().evm;
-        match status {
-            Status::Active => {
-                return Result::Err(
-                    EVMError::InvalidMachineState(ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION)
-                );
-            },
-            // Success
-            Status::Stopped => {
-                let mut return_data = self.return_data();
-
-                let mut account = self.state.get_account(account_address);
-                account.set_code(return_data);
-                assert(
-                    account.account_type == AccountType::ContractAccount,
-                    'type should be CA in finalize'
-                );
-                self.state.set_account(account);
-                self.return_to_parent_ctx()?;
-                self.stack.push(account_address.into())
-            },
-            // Failure
-            Status::Reverted => {
-                self.return_to_parent_ctx()?;
-                self.stack.push(0)
-            },
+        if result.success {
+            self.return_data = Default::default().span();
+            self.stack.push(target_address.evm.into())?;
+        } else {
+            self.stack.push(0)?;
         }
+        Result::Ok(())
     }
 }

@@ -70,7 +70,7 @@ trait IKakarotCore<TContractState> {
         gas_price: u128,
         value: u256,
         calldata: Span<u8>
-    ) -> Span<u8>;
+    ) -> (bool, Span<u8>);
 
     /// Transaction entrypoint into the EVM
     /// Executes an EVM transaction and possibly modifies the state
@@ -81,7 +81,7 @@ trait IKakarotCore<TContractState> {
         gas_price: u128,
         value: u256,
         calldata: Span<u8>
-    ) -> Span<u8>;
+    ) -> (bool, Span<u8>);
 
     /// Upgrade the KakarotCore smart contract
     /// Using replace_class_syscall
@@ -171,7 +171,7 @@ trait IExtendedKakarotCore<TContractState> {
         gas_price: u128,
         value: u256,
         calldata: Span<u8>
-    ) -> Span<u8>;
+    ) -> (bool, Span<u8>);
 
     /// Transaction entrypoint into the EVM
     /// Executes an EVM transaction and possibly modifies the state
@@ -182,7 +182,7 @@ trait IExtendedKakarotCore<TContractState> {
         gas_price: u128,
         value: u256,
         calldata: Span<u8>
-    ) -> Span<u8>;
+    ) -> (bool, Span<u8>);
 
     /// Upgrade the KakarotCore smart contract
     /// Using replace_class_syscall

@@ -1,10 +1,10 @@
 mod account;
 mod contract_account;
 mod eoa;
+mod vm;
 
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
-use evm::execution::Status;
 use evm::model::account::{Account, AccountTrait};
 use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::eoa::EOATrait;
@@ -12,7 +12,47 @@ use evm::state::State;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{EthAddress, get_contract_address, ContractAddress};
 use utils::helpers::{ResultExTrait};
-use utils::traits::{EthAddressDefault, ContractAddressDefault};
+use utils::traits::{EthAddressDefault, ContractAddressDefault, SpanDefault};
+
+#[derive(Destruct, Default)]
+struct Environment {
+    origin: EthAddress,
+    gas_price: u128,
+    chain_id: u128,
+    prevrandao: u256,
+    block_number: u64,
+    block_gas_limit: u128,
+    block_timestamp: u64,
+    coinbase: EthAddress,
+    state: State
+}
+#[derive(Copy, Drop, Default, PartialEq)]
+struct Message {
+    caller: Address,
+    target: Address,
+    gas_limit: u128,
+    data: Span<u8>,
+    code: Span<u8>,
+    value: u256,
+    should_transfer_value: bool,
+    depth: usize,
+    read_only: bool,
+}
+
+#[derive(Drop)]
+struct ExecutionResult {
+    success: bool,
+    return_data: Span<u8>,
+    gas_used: u128,
+}
+
+#[derive(Destruct)]
+struct ExecutionSummary {
+    state: State,
+    return_data: Span<u8>,
+    address: EthAddress,
+    success: bool
+}
 
 /// The struct representing an EVM event.
 #[derive(Drop, Clone, Default, PartialEq)]
@@ -29,9 +69,9 @@ struct Address {
 
 #[generate_trait]
 impl AddressImpl of AddressTrait {
-    fn is_deployed(self: EthAddress) -> bool {
+    fn is_deployed(self: @EthAddress) -> bool {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let maybe_account = kakarot_state.address_registry(self);
+        let maybe_account = kakarot_state.address_registry(*self);
         match maybe_account {
             Option::Some(_) => true,
             Option::None => false
@@ -53,14 +93,6 @@ struct Transfer {
     sender: Address,
     recipient: Address,
     amount: u256
-}
-
-#[derive(Destruct)]
-struct ExecutionResult {
-    address: Address,
-    status: Status,
-    return_data: Span<u8>,
-    state: State,
 }
 
 /// An EVM Account is either an EOA or a Contract Account.  In both cases, the

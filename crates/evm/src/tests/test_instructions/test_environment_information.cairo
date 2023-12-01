@@ -5,15 +5,15 @@ use contracts::tests::test_utils::{
 };
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
-use evm::machine::{Machine, MachineTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::model::contract_account::ContractAccountTrait;
+use evm::model::vm::{VM, VMTrait};
 use evm::model::{Account, AccountType};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
-    MachineBuilderTestTrait, evm_address, callvalue, return_from_subcontext, native_token,
-    other_address, gas_price, gas_limit
+    VMBuilderTrait, evm_address, origin, callvalue, native_token, other_address, gas_price,
+    tx_gas_limit
 };
 use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
@@ -29,14 +29,14 @@ use utils::traits::{EthAddressIntoU256};
 #[test]
 fn test_address_basic() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     // When
-    machine.exec_address().expect('exec_address failed');
+    vm.exec_address().expect('exec_address failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.pop_eth_address().unwrap() == evm_address(), 'should be `evm_address`');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.pop_eth_address().unwrap() == evm_address(), 'should be `evm_address`');
 }
 
 #[test]
@@ -58,16 +58,16 @@ fn test_exec_balance_eoa() {
     fund_account_with_native_token(eoa, native_token, 0x1);
 
     // And
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    machine.stack.push(evm_address().into()).unwrap();
+    vm.stack.push(evm_address().into()).unwrap();
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    machine.exec_balance().expect('exec_balance failed');
+    vm.exec_balance().expect('exec_balance failed');
 
     // Then
-    assert(machine.stack.peek().unwrap() == native_token.balanceOf(eoa), 'wrong balance');
+    assert(vm.stack.peek().unwrap() == native_token.balanceOf(eoa), 'wrong balance');
 }
 
 #[test]
@@ -76,16 +76,16 @@ fn test_exec_balance_zero() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
     // And
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    machine.stack.push(evm_address().into()).unwrap();
+    vm.stack.push(evm_address().into()).unwrap();
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    machine.exec_balance().expect('exec_balance failed');
+    vm.exec_balance().expect('exec_balance failed');
 
     // Then
-    assert(machine.stack.peek().unwrap() == 0x00, 'wrong balance');
+    assert(vm.stack.peek().unwrap() == 0x00, 'wrong balance');
 }
 
 #[test]
@@ -97,16 +97,16 @@ fn test_exec_balance_contract_account() {
     fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
 
     // And
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    machine.stack.push(evm_address().into()).unwrap();
+    vm.stack.push(evm_address().into()).unwrap();
 
     // When
     set_contract_address(kakarot_core.contract_address);
-    machine.exec_balance().expect('exec_balance failed');
+    vm.exec_balance().expect('exec_balance failed');
 
     // Then
-    assert(machine.stack.peek().unwrap() == 0x1, 'wrong balance');
+    assert(vm.stack.peek().unwrap() == 0x1, 'wrong balance');
 }
 
 
@@ -116,14 +116,14 @@ fn test_exec_balance_contract_account() {
 #[test]
 fn test_caller() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     // When
-    machine.exec_caller().expect('exec_caller failed');
+    vm.exec_caller().expect('exec_caller failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == evm_address().into(), 'should be evm_address');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == origin().into(), 'should be evm_address');
 }
 
 
@@ -131,34 +131,16 @@ fn test_caller() {
 // 0x32: ORIGIN
 // *************************************************************************
 #[test]
-fn test_origin() {
-    // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_nested_execution_context()
-        .build();
-
-    // When
-    machine.exec_origin().expect('exec_origin failed');
-
-    // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == evm_address().into(), 'should be `evm_address`');
-
-    // And
-    assert(machine.caller() == other_address(), 'should be another_evm_address');
-}
-
-#[test]
 fn test_origin_nested_ctx() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     // When
-    machine.exec_origin().expect('exec_origin failed');
+    vm.exec_origin().expect('exec_origin failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == evm_address().into(), 'should be `evm_address`');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == origin().into(), 'should be `evm_address`');
 }
 
 
@@ -169,14 +151,14 @@ fn test_origin_nested_ctx() {
 #[test]
 fn test_exec_callvalue() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     // When
-    machine.exec_callvalue().expect('exec_callvalue failed');
+    vm.exec_callvalue().expect('exec_callvalue failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.pop().unwrap() == callvalue(), 'should be `123456789');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.pop().unwrap() == callvalue(), 'should be `123456789');
 }
 
 // *************************************************************************
@@ -189,18 +171,16 @@ fn test_calldataload() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_calldata(calldata.span())
-        .build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_calldata(calldata.span()).build();
 
     let offset: u32 = 0;
-    machine.stack.push(offset.into()).expect('push failed');
+    vm.stack.push(offset.into()).expect('push failed');
 
     // When
-    machine.exec_calldataload().expect('exec_calldataload failed');
+    vm.exec_calldataload().expect('exec_calldataload failed');
 
     // Then
-    let result: u256 = machine.stack.pop().unwrap();
+    let result: u256 = vm.stack.pop().unwrap();
     assert(
         result == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
         'wrong data value'
@@ -214,18 +194,16 @@ fn test_calldataload_with_offset() {
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
 
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_calldata(calldata.span())
-        .build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_calldata(calldata.span()).build();
 
     let offset: u32 = 31;
-    machine.stack.push(offset.into()).expect('push failed');
+    vm.stack.push(offset.into()).expect('push failed');
 
     // When
-    machine.exec_calldataload().expect('exec_calldataload failed');
+    vm.exec_calldataload().expect('exec_calldataload failed');
 
     // Then
-    let result: u256 = machine.stack.pop().unwrap();
+    let result: u256 = vm.stack.pop().unwrap();
 
     assert(
         result == 0xFF00000000000000000000000000000000000000000000000000000000000000,
@@ -239,18 +217,16 @@ fn test_calldataload_with_offset_beyond_calldata() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_calldata(calldata.span())
-        .build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_calldata(calldata.span()).build();
 
     let offset: u32 = calldata.len() + 1;
-    machine.stack.push(offset.into()).expect('push failed');
+    vm.stack.push(offset.into()).expect('push failed');
 
     // When
-    machine.exec_calldataload().expect('exec_calldataload failed');
+    vm.exec_calldataload().expect('exec_calldataload failed');
 
     // Then
-    let result: u256 = machine.stack.pop().unwrap();
+    let result: u256 = vm.stack.pop().unwrap();
     assert(result == 0, 'result should be 0');
 }
 
@@ -258,18 +234,16 @@ fn test_calldataload_with_offset_beyond_calldata() {
 fn test_calldataload_with_function_selector() {
     // Given
     let calldata = array![0x6d, 0x4c, 0xe6, 0x3c];
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_calldata(calldata.span())
-        .build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_calldata(calldata.span()).build();
 
     let offset: u32 = 0;
-    machine.stack.push(offset.into()).expect('push failed');
+    vm.stack.push(offset.into()).expect('push failed');
 
     // When
-    machine.exec_calldataload().expect('exec_calldataload failed');
+    vm.exec_calldataload().expect('exec_calldataload failed');
 
     // Then
-    let result: u256 = machine.stack.pop().unwrap();
+    let result: u256 = vm.stack.pop().unwrap();
     assert(
         result == 0x6d4ce63c00000000000000000000000000000000000000000000000000000000, 'wrong result'
     );
@@ -282,14 +256,12 @@ fn test_calldataload_with_offset_conversion_error() {
     let calldata = u256_to_bytes_array(
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     );
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_calldata(calldata.span())
-        .build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_calldata(calldata.span()).build();
     let offset: u256 = 5000000000;
-    machine.stack.push(offset).expect('push failed');
+    vm.stack.push(offset).expect('push failed');
 
     // When
-    let result = machine.exec_calldataload();
+    let result = vm.exec_calldataload();
 
     // Then
     assert(result.is_err(), 'should return error');
@@ -306,16 +278,16 @@ fn test_calldataload_with_offset_conversion_error() {
 #[test]
 fn test_calldata_size() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    let calldata: Span<u8> = machine.calldata();
+    let calldata: Span<u8> = vm.message.data;
 
     // When
-    machine.exec_calldatasize().expect('exec_calldatasize failed');
+    vm.exec_calldatasize().expect('exec_calldatasize failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == calldata.len().into(), 'stack top is not calldatasize');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == calldata.len().into(), 'stack top is not calldatasize');
 }
 
 // *************************************************************************
@@ -325,23 +297,23 @@ fn test_calldata_size() {
 #[test]
 fn test_calldatacopy_type_conversion_error() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    machine
+    vm
         .stack
         .push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
         .expect('push failed');
-    machine
+    vm
         .stack
         .push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
         .expect('push failed');
-    machine
+    vm
         .stack
         .push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
         .expect('push failed');
 
     // When
-    let res = machine.exec_calldatacopy();
+    let res = vm.exec_calldatacopy();
 
     // Then
     assert(res.is_err(), 'should return error');
@@ -381,13 +353,13 @@ fn test_calldatacopy_with_out_of_bound_bytes_multiple_words() {
 
 fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Span<u8>) {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    let _calldata: Span<u8> = machine.calldata();
+    let _calldata: Span<u8> = vm.message.data;
 
-    machine.stack.push(size.into()).expect('push failed');
-    machine.stack.push(offset.into()).expect('push failed');
-    machine.stack.push(dest_offset.into()).expect('push failed');
+    vm.stack.push(size.into()).expect('push failed');
+    vm.stack.push(offset.into()).expect('push failed');
+    vm.stack.push(dest_offset.into()).expect('push failed');
 
     // Memory initialization with a value to verify that if the offset + size is out of the bound bytes, 0's have been copied.
     // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
@@ -397,14 +369,14 @@ fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Spa
             break;
         }
 
-        machine
+        vm
             .memory
             .store(
                 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
                 dest_offset + (i * 32)
             );
 
-        let initial: u256 = machine.memory.load_internal(dest_offset + (i * 32)).into();
+        let initial: u256 = vm.memory.load_internal(dest_offset + (i * 32)).into();
 
         assert(
             initial == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
@@ -415,13 +387,13 @@ fn test_calldatacopy(dest_offset: u32, offset: u32, mut size: u32, expected: Spa
     };
 
     // When
-    machine.exec_calldatacopy().expect('exec_calldatacopy failed');
+    vm.exec_calldatacopy().expect('exec_calldatacopy failed');
 
     // Then
-    assert(machine.stack.is_empty(), 'stack should be empty');
+    assert(vm.stack.is_empty(), 'stack should be empty');
 
     let mut results: Array<u8> = ArrayTrait::new();
-    machine.memory.load_n_internal(size, ref results, dest_offset);
+    vm.memory.load_n_internal(size, ref results, dest_offset);
 
     assert(results.span() == expected, 'wrong data value');
 }
@@ -435,14 +407,14 @@ fn test_codesize() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
 
-    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
     // When
-    machine.exec_codesize().expect('exec_codesize failed');
+    vm.exec_codesize().expect('exec_codesize failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.pop().unwrap() == bytecode.len().into(), 'wrong codesize');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.pop().unwrap() == bytecode.len().into(), 'wrong codesize');
 }
 
 // *************************************************************************
@@ -454,23 +426,23 @@ fn test_codecopy_type_conversion_error() {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
 
-    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
-    machine
+    vm
         .stack
         .push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
         .expect('push failed');
-    machine
+    vm
         .stack
         .push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
         .expect('push failed');
-    machine
+    vm
         .stack
         .push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
         .expect('push failed');
 
     // When
-    let res = machine.exec_codecopy();
+    let res = vm.exec_codecopy();
 
     // Then
     assert(res.is_err(), 'should return error');
@@ -504,32 +476,32 @@ fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
     let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
 
-    let mut machine = MachineBuilderTestTrait::new_with_presets().with_bytecode(bytecode).build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
     if (size == 0) {
         size = bytecode.len() - offset;
     }
 
-    machine.stack.push(size.into()).expect('push failed');
-    machine.stack.push(offset.into()).expect('push failed');
-    machine.stack.push(dest_offset.into()).expect('push failed');
+    vm.stack.push(size.into()).expect('push failed');
+    vm.stack.push(offset.into()).expect('push failed');
+    vm.stack.push(dest_offset.into()).expect('push failed');
 
-    machine
+    vm
         .memory
         .store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, dest_offset);
-    let initial: u256 = machine.memory.load_internal(dest_offset).into();
+    let initial: u256 = vm.memory.load_internal(dest_offset).into();
     assert(
         initial == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
         'memory has not been initialized'
     );
 
     // When
-    machine.exec_codecopy().expect('exec_codecopy failed');
+    vm.exec_codecopy().expect('exec_codecopy failed');
 
     // Then
-    assert(machine.stack.is_empty(), 'stack should be empty');
+    assert(vm.stack.is_empty(), 'stack should be empty');
 
-    let result: u256 = machine.memory.load_internal(dest_offset).into();
+    let result: u256 = vm.memory.load_internal(dest_offset).into();
     let mut results: Array<u8> = u256_to_bytes_array(result);
 
     let mut i = 0;
@@ -556,14 +528,14 @@ fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
 #[test]
 fn test_gasprice() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     // When
-    machine.exec_gasprice().expect('exec_gasprice failed');
+    vm.exec_gasprice().expect('exec_gasprice failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.peek().unwrap() == gas_price().into(), 'stack top should be gas_price');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.peek().unwrap() == gas_price().into(), 'stack top should be gas_price');
 }
 
 // *************************************************************************
@@ -573,17 +545,17 @@ fn test_gasprice() {
 fn test_exec_extcodesize_eoa() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let (_, kakarot_core) = setup_contracts_for_testing();
     let _expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
-    machine.stack.push(evm_address.into()).expect('push failed');
+    vm.stack.push(evm_address.into()).expect('push failed');
 
     // When
-    machine.exec_extcodesize().unwrap();
+    vm.exec_extcodesize().unwrap();
 
     // Then
-    assert(machine.stack.peek().unwrap() == 0, 'expected code size 0');
+    assert(vm.stack.peek().unwrap() == 0, 'expected code size 0');
 }
 
 
@@ -591,20 +563,20 @@ fn test_exec_extcodesize_eoa() {
 fn test_exec_extcodesize_ca_empty() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     setup_contracts_for_testing();
 
     // The bytecode remains empty, and we expect the empty hash in return
     let _ca_address = deploy_contract_account(evm_address(), array![].span());
 
-    machine.stack.push(evm_address.into()).expect('push failed');
+    vm.stack.push(evm_address.into()).expect('push failed');
 
     // When
-    machine.exec_extcodesize().unwrap();
+    vm.exec_extcodesize().unwrap();
 
     // Then
-    assert(machine.stack.peek().unwrap() == 0, 'expected code size 0');
+    assert(vm.stack.peek().unwrap() == 0, 'expected code size 0');
 }
 
 
@@ -612,20 +584,20 @@ fn test_exec_extcodesize_ca_empty() {
 fn test_exec_extcodesize_ca_with_bytecode() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
     deploy_contract_account(evm_address(), counter_evm_bytecode());
 
-    machine.stack.push(evm_address.into()).expect('push failed');
+    vm.stack.push(evm_address.into()).expect('push failed');
     // When
-    machine.exec_extcodesize().unwrap();
+    vm.exec_extcodesize().unwrap();
 
     // Then
     assert(
-        machine.stack.peek() // extcodesize(Counter.sol) := 275 (source: remix)
+        vm.stack.peek() // extcodesize(Counter.sol) := 275 (source: remix)
         .unwrap() == 473,
         'expected counter SC code size'
     );
@@ -636,7 +608,7 @@ fn test_exec_extcodesize_ca_with_bytecode() {
 fn test_exec_extcodecopy_ca() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     setup_contracts_for_testing();
 
@@ -644,19 +616,19 @@ fn test_exec_extcodecopy_ca() {
     deploy_contract_account(evm_address(), counter_evm_bytecode());
 
     // size
-    machine.stack.push(50).expect('push failed');
+    vm.stack.push(50).expect('push failed');
     // offset
-    machine.stack.push(200).expect('push failed');
+    vm.stack.push(200).expect('push failed');
     // destOffset (memory offset)
-    machine.stack.push(20).expect('push failed');
-    machine.stack.push(evm_address.into()).unwrap();
+    vm.stack.push(20).expect('push failed');
+    vm.stack.push(evm_address.into()).unwrap();
 
     // When
-    machine.exec_extcodecopy().unwrap();
+    vm.exec_extcodecopy().unwrap();
 
     // Then
     let mut bytecode_slice = array![];
-    machine.memory.load_n(50, ref bytecode_slice, 20);
+    vm.memory.load_n(50, ref bytecode_slice, 20);
     assert(bytecode_slice.span() == counter_evm_bytecode().slice(200, 50), 'wrong bytecode');
 }
 
@@ -667,7 +639,7 @@ fn test_exec_extcodecopy_ca() {
 fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     setup_contracts_for_testing();
 
@@ -675,43 +647,43 @@ fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
     deploy_contract_account(evm_address(), counter_evm_bytecode());
 
     // size
-    machine.stack.push(5).expect('push failed');
+    vm.stack.push(5).expect('push failed');
     // offset
-    machine.stack.push(5000).expect('push failed');
+    vm.stack.push(5000).expect('push failed');
     // destOffset
-    machine.stack.push(20).expect('push failed');
-    machine.stack.push(evm_address.into()).expect('push failed');
+    vm.stack.push(20).expect('push failed');
+    vm.stack.push(evm_address.into()).expect('push failed');
 
     // When
-    machine.exec_extcodecopy().unwrap();
+    vm.exec_extcodecopy().unwrap();
     // Then
     let mut bytecode_slice = array![];
-    machine.memory.load_n(5, ref bytecode_slice, 20);
+    vm.memory.load_n(5, ref bytecode_slice, 20);
     assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
 }
 
 fn test_exec_extcodecopy_eoa() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let (_, kakarot_core) = setup_contracts_for_testing();
     kakarot_core.deploy_eoa(evm_address);
 
     // size
-    machine.stack.push(5).expect('push failed');
+    vm.stack.push(5).expect('push failed');
     // offset
-    machine.stack.push(5000).expect('push failed');
+    vm.stack.push(5000).expect('push failed');
     // destOffset
-    machine.stack.push(20).expect('push failed');
-    machine.stack.push(evm_address.into()).expect('push failed');
+    vm.stack.push(20).expect('push failed');
+    vm.stack.push(evm_address.into()).expect('push failed');
 
     // When
-    machine.exec_extcodecopy().unwrap();
+    vm.exec_extcodecopy().unwrap();
 
     // Then
     let mut bytecode_slice = array![];
-    machine.memory.load_n(5, ref bytecode_slice, 20);
+    vm.memory.load_n(5, ref bytecode_slice, 20);
     assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
 }
 
@@ -719,45 +691,42 @@ fn test_exec_extcodecopy_eoa() {
 fn test_exec_extcodecopy_account_none() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     setup_contracts_for_testing();
 
     // size
-    machine.stack.push(5).expect('push failed');
+    vm.stack.push(5).expect('push failed');
     // offset
-    machine.stack.push(5000).expect('push failed');
+    vm.stack.push(5000).expect('push failed');
     // destOffset
-    machine.stack.push(20).expect('push failed');
-    machine.stack.push(evm_address.into()).expect('push failed');
+    vm.stack.push(20).expect('push failed');
+    vm.stack.push(evm_address.into()).expect('push failed');
 
     // When
-    machine.exec_extcodecopy().unwrap();
+    vm.exec_extcodecopy().unwrap();
 
     // Then
     let mut bytecode_slice = array![];
-    machine.memory.load_n(5, ref bytecode_slice, 20);
+    vm.memory.load_n(5, ref bytecode_slice, 20);
     assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
 }
 
 
 #[test]
-fn test_returndatasize() {
+fn test_exec_returndatasize() {
     // Given
     let return_data: Array<u8> = array![1, 2, 3, 4, 5];
     let size = return_data.len();
 
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_nested_execution_context()
-        .build();
+    let mut vm = VMBuilderTrait::new_with_presets().with_return_data(return_data.span()).build();
+    println!("vmdata: {:?}", vm.return_data().len());
 
-    return_from_subcontext(ref machine, return_data.span());
-
-    machine.exec_returndatasize().expect('exec_returndatasize failed');
+    vm.exec_returndatasize().expect('exec_returndatasize failed');
 
     // Then
-    assert(machine.stack.len() == 1, 'stack should have one element');
-    assert(machine.stack.pop().unwrap() == size.into(), 'wrong returndatasize');
+    assert(vm.stack.len() == 1, 'stack should have one element');
+    assert(vm.stack.pop().unwrap() == size.into(), 'wrong returndatasize');
 }
 
 // *************************************************************************
@@ -767,23 +736,24 @@ fn test_returndatasize() {
 #[test]
 fn test_returndata_copy_type_conversion_error() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let return_data: Array<u8> = array![1, 2, 3, 4, 5];
+    let mut vm = VMBuilderTrait::new_with_presets().with_return_data(return_data.span()).build();
 
-    machine
+    vm
         .stack
         .push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
         .expect('push failed');
-    machine
+    vm
         .stack
         .push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
         .expect('push failed');
-    machine
+    vm
         .stack
         .push(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
         .expect('push failed');
 
     // When
-    let res = machine.exec_returndatacopy();
+    let res = vm.exec_returndatacopy();
 
     // Then
     assert(
@@ -819,11 +789,7 @@ fn test_returndata_copy_with_multiple_words() {
 
 fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets()
-        .with_nested_execution_context()
-        .build();
     // Set the return data of the current context
-
     let return_data = array![
         1,
         2,
@@ -862,23 +828,21 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         35,
         36
     ];
-
-    return_from_subcontext(ref machine, return_data.span());
-    let return_data: Span<u8> = machine.return_data();
+    let mut vm = VMBuilderTrait::new_with_presets().with_return_data(return_data.span()).build();
 
     if (size == 0) {
         size = return_data.len() - offset;
     }
 
-    machine.stack.push(size.into()).expect('push failed');
-    machine.stack.push(offset.into()).expect('push failed');
-    machine.stack.push(dest_offset.into()).expect('push failed');
+    vm.stack.push(size.into()).expect('push failed');
+    vm.stack.push(offset.into()).expect('push failed');
+    vm.stack.push(dest_offset.into()).expect('push failed');
 
     // When
-    let res = machine.exec_returndatacopy();
+    let res = vm.exec_returndatacopy();
 
     // Then
-    assert(machine.stack.is_empty(), 'stack should be empty');
+    assert(vm.stack.is_empty(), 'stack should be empty');
 
     match u32_overflowing_add(offset, size) {
         Result::Ok(x) => {
@@ -899,7 +863,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         }
     }
 
-    let _result: u256 = machine.memory.load_internal(dest_offset).into();
+    let _result: u256 = vm.memory.load_internal(dest_offset).into();
     let mut results: Array<u8> = ArrayTrait::new();
 
     let mut i = 0;
@@ -908,7 +872,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
             break;
         }
 
-        let result: u256 = machine.memory.load_internal(dest_offset + (i * 32)).into();
+        let result: u256 = vm.memory.load_internal(dest_offset + (i * 32)).into();
         let result_span = u256_to_bytes_array(result).span();
 
         if ((i + 1) * 32 > size) {
@@ -919,7 +883,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
 
         i += 1;
     };
-    assert(results.span() == return_data.slice(offset, size), 'wrong data value');
+    assert(results.span() == return_data.span().slice(offset, size), 'wrong data value');
 }
 
 // *************************************************************************
@@ -929,25 +893,25 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
 fn test_exec_extcodehash_precompile() {
     // Given
     let evm_address = 0x05.try_into().unwrap();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let (_, kakarot_core) = setup_contracts_for_testing();
     kakarot_core.deploy_eoa(evm_address);
-    machine.stack.push(evm_address.into()).expect('push failed');
+    vm.stack.push(evm_address.into()).expect('push failed');
     set_contract_address(kakarot_core.contract_address);
 
     // When
-    machine.exec_extcodehash().unwrap();
+    vm.exec_extcodehash().unwrap();
 
     // Then
-    assert(machine.stack.peek().unwrap() == 0, 'expected 0');
+    assert(vm.stack.peek().unwrap() == 0, 'expected 0');
 }
 
 #[test]
 fn test_exec_extcodehash_selfdestructed() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     setup_contracts_for_testing();
 
@@ -963,14 +927,14 @@ fn test_exec_extcodehash_selfdestructed() {
     };
     account.selfdestruct().expect('CA selfdestruct failed');
 
-    machine.stack.push(evm_address.into()).expect('push failed');
+    vm.stack.push(evm_address.into()).expect('push failed');
 
     // When
-    machine.exec_extcodehash().unwrap();
+    vm.exec_extcodehash().unwrap();
 
     // Then
     assert(
-        machine
+        vm
             .stack
             .peek()
             .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
@@ -982,18 +946,18 @@ fn test_exec_extcodehash_selfdestructed() {
 fn test_exec_extcodehash_eoa() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let (_, kakarot_core) = setup_contracts_for_testing();
     kakarot_core.deploy_eoa(evm_address);
-    machine.stack.push(evm_address.into()).expect('push failed');
+    vm.stack.push(evm_address.into()).expect('push failed');
 
     // When
-    machine.exec_extcodehash().unwrap();
+    vm.exec_extcodehash().unwrap();
 
     // Then
     assert(
-        machine
+        vm
             .stack
             .peek()
             .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
@@ -1006,20 +970,20 @@ fn test_exec_extcodehash_eoa() {
 fn test_exec_extcodehash_ca_empty() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     setup_contracts_for_testing();
     // The bytecode remains empty, and we expect the empty hash in return
     deploy_contract_account(evm_address(), array![].span());
 
-    machine.stack.push(evm_address.into()).expect('push failed');
+    vm.stack.push(evm_address.into()).expect('push failed');
 
     // When
-    machine.exec_extcodehash().unwrap();
+    vm.exec_extcodehash().unwrap();
 
     // Then
     assert(
-        machine
+        vm
             .stack
             .peek()
             .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
@@ -1031,37 +995,37 @@ fn test_exec_extcodehash_ca_empty() {
 fn test_exec_extcodehash_unknown_account() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     setup_contracts_for_testing();
 
-    machine.stack.push(evm_address.into()).expect('push failed');
+    vm.stack.push(evm_address.into()).expect('push failed');
 
     // When
-    machine.exec_extcodehash().unwrap();
+    vm.exec_extcodehash().unwrap();
 
     // Then
-    assert(machine.stack.peek().unwrap() == 0, 'expected stack top to be 0');
+    assert(vm.stack.peek().unwrap() == 0, 'expected stack top to be 0');
 }
 
 #[test]
 fn test_exec_extcodehash_ca_with_bytecode() {
     // Given
     let evm_address = evm_address();
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
     setup_contracts_for_testing();
 
     // The bytecode stored is the bytecode of a Counter.sol smart contract
     deploy_contract_account(evm_address(), counter_evm_bytecode());
 
-    machine.stack.push(evm_address.into()).expect('push failed');
+    vm.stack.push(evm_address.into()).expect('push failed');
     // When
-    machine.exec_extcodehash().unwrap();
+    vm.exec_extcodehash().unwrap();
 
     // Then
     assert(
-        machine
+        vm
             .stack
             .peek()
             // extcodehash(Counter.sol) := 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275 (source: remix)
@@ -1074,7 +1038,7 @@ fn test_exec_extcodehash_ca_with_bytecode() {
 #[test]
 fn test_exec_extcodehash_precompiles() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
     setup_contracts_for_testing();
 
     let mut i = 0;
@@ -1082,12 +1046,12 @@ fn test_exec_extcodehash_precompiles() {
         if i == 0x10 {
             break;
         }
-        machine.stack.push(i.into()).expect('push failed');
+        vm.stack.push(i.into()).expect('push failed');
         // When
-        machine.exec_extcodehash().unwrap();
+        vm.exec_extcodehash().unwrap();
 
         // Then
-        assert(machine.stack.pop().unwrap() == 0, 'expected 0 for precompiles');
+        assert(vm.stack.pop().unwrap() == 0, 'expected 0 for precompiles');
         i += 1;
     };
 }

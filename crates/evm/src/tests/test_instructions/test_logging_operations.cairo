@@ -1,31 +1,30 @@
 use evm::errors::{EVMError, WRITE_IN_STATIC_CONTEXT, TYPE_CONVERSION_ERROR};
 use evm::instructions::LoggingOperationsTrait;
-use evm::machine::{Machine, MachineTrait};
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use evm::tests::test_utils::{MachineBuilderTestTrait};
+use evm::tests::test_utils::{VMBuilderTrait};
 use integer::BoundedInt;
 use utils::helpers::u256_to_bytes_array;
 
 #[test]
 fn test_exec_log0() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    machine.memory.store(BoundedInt::<u256>::max(), 0);
+    vm.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(0x1F).expect('push failed');
-    machine.stack.push(0x00).expect('push failed');
+    vm.stack.push(0x1F).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
 
     // When
-    let result = machine.exec_log0();
+    let result = vm.exec_log0();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(machine.stack.len() == 0, 'stack should be empty');
+    assert(vm.stack.len() == 0, 'stack should be empty');
 
-    let mut events = machine.state.events.contextual_logs;
+    let mut events = vm.env.state.events;
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -39,22 +38,22 @@ fn test_exec_log0() {
 #[test]
 fn test_exec_log1() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    machine.memory.store(BoundedInt::<u256>::max(), 0);
+    vm.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
-    machine.stack.push(0x20).expect('push failed');
-    machine.stack.push(0x00).expect('push failed');
+    vm.stack.push(0x0123456789ABCDEF).expect('push failed');
+    vm.stack.push(0x20).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
 
     // When
-    let result = machine.exec_log1();
+    let result = vm.exec_log1();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(machine.stack.len() == 0, 'stack should be empty');
+    assert(vm.stack.len() == 0, 'stack should be empty');
 
-    let mut events = machine.state.events.contextual_logs;
+    let mut events = vm.env.state.events;
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -69,23 +68,23 @@ fn test_exec_log1() {
 #[test]
 fn test_exec_log2() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    machine.memory.store(BoundedInt::<u256>::max(), 0);
+    vm.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
-    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
-    machine.stack.push(0x05).expect('push failed');
-    machine.stack.push(0x05).expect('push failed');
+    vm.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    vm.stack.push(0x0123456789ABCDEF).expect('push failed');
+    vm.stack.push(0x05).expect('push failed');
+    vm.stack.push(0x05).expect('push failed');
 
     // When
-    let result = machine.exec_log2();
+    let result = vm.exec_log2();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(machine.stack.len() == 0, 'stack should be empty');
+    assert(vm.stack.len() == 0, 'stack should be empty');
 
-    let mut events = machine.state.events.contextual_logs;
+    let mut events = vm.env.state.events;
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -101,25 +100,25 @@ fn test_exec_log2() {
 #[test]
 fn test_exec_log3() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    machine.memory.store(BoundedInt::<u256>::max(), 0);
-    machine.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
+    vm.memory.store(BoundedInt::<u256>::max(), 0);
+    vm.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
 
-    machine.stack.push(0x00).expect('push failed');
-    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
-    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
-    machine.stack.push(0x28).expect('push failed');
-    machine.stack.push(0x00).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
+    vm.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    vm.stack.push(0x0123456789ABCDEF).expect('push failed');
+    vm.stack.push(0x28).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
 
     // When
-    let result = machine.exec_log3();
+    let result = vm.exec_log3();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(machine.stack.len() == 0, 'stack should be empty');
+    assert(vm.stack.len() == 0, 'stack should be empty');
 
-    let mut events = machine.state.events.contextual_logs;
+    let mut events = vm.env.state.events;
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -138,26 +137,26 @@ fn test_exec_log3() {
 #[test]
 fn test_exec_log4() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    machine.memory.store(BoundedInt::<u256>::max(), 0);
-    machine.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
+    vm.memory.store(BoundedInt::<u256>::max(), 0);
+    vm.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
 
-    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
-    machine.stack.push(0x00).expect('push failed');
-    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
-    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
-    machine.stack.push(0x0A).expect('push failed');
-    machine.stack.push(0x20).expect('push failed');
+    vm.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
+    vm.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    vm.stack.push(0x0123456789ABCDEF).expect('push failed');
+    vm.stack.push(0x0A).expect('push failed');
+    vm.stack.push(0x20).expect('push failed');
 
     // When
-    let result = machine.exec_log4();
+    let result = vm.exec_log4();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(machine.stack.len() == 0, 'stack should be empty');
+    assert(vm.stack.len() == 0, 'stack should be empty');
 
-    let mut events = machine.state.events.contextual_logs;
+    let mut events = vm.env.state.events;
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -175,16 +174,16 @@ fn test_exec_log4() {
 #[test]
 fn test_exec_log1_read_only_context() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new().with_read_only().build();
+    let mut vm = VMBuilderTrait::new().with_read_only().build();
 
-    machine.memory.store(BoundedInt::<u256>::max(), 0);
+    vm.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
-    machine.stack.push(0x20).expect('push failed');
-    machine.stack.push(0x00).expect('push failed');
+    vm.stack.push(0x0123456789ABCDEF).expect('push failed');
+    vm.stack.push(0x20).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
 
     // When
-    let result = machine.exec_log1();
+    let result = vm.exec_log1();
 
     // Then
     assert(result.is_err(), 'should have returned an error');
@@ -197,22 +196,22 @@ fn test_exec_log1_read_only_context() {
 #[test]
 fn test_exec_log1_size_0_offset_0() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    machine.memory.store(BoundedInt::<u256>::max(), 0);
+    vm.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
-    machine.stack.push(0x00).expect('push failed');
-    machine.stack.push(0x00).expect('push failed');
+    vm.stack.push(0x0123456789ABCDEF).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
 
     // When
-    let result = machine.exec_log1();
+    let result = vm.exec_log1();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(machine.stack.len() == 0, 'stack should be empty');
+    assert(vm.stack.len() == 0, 'stack should be empty');
 
-    let mut events = machine.state.events.contextual_logs;
+    let mut events = vm.env.state.events;
     assert(events.len() == 1, 'context should have one event');
 
     let event = events.pop_front().unwrap();
@@ -225,16 +224,16 @@ fn test_exec_log1_size_0_offset_0() {
 #[test]
 fn test_exec_log1_size_too_big() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    machine.memory.store(BoundedInt::<u256>::max(), 0);
+    vm.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
-    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
-    machine.stack.push(0x00).expect('push failed');
+    vm.stack.push(0x0123456789ABCDEF).expect('push failed');
+    vm.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
 
     // When
-    let result = machine.exec_log1();
+    let result = vm.exec_log1();
 
     // Then
     assert(result.is_err(), 'should return an error');
@@ -247,16 +246,16 @@ fn test_exec_log1_size_too_big() {
 #[test]
 fn test_exec_log1_offset_too_big() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    machine.memory.store(BoundedInt::<u256>::max(), 0);
+    vm.memory.store(BoundedInt::<u256>::max(), 0);
 
-    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
-    machine.stack.push(0x20).expect('push failed');
-    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    vm.stack.push(0x0123456789ABCDEF).expect('push failed');
+    vm.stack.push(0x20).expect('push failed');
+    vm.stack.push(BoundedInt::<u256>::max()).expect('push failed');
 
     // When
-    let result = machine.exec_log1();
+    let result = vm.exec_log1();
 
     // Then
     assert(result.is_err(), 'should return an error');
@@ -269,32 +268,32 @@ fn test_exec_log1_offset_too_big() {
 #[test]
 fn test_exec_log_multiple_events() {
     // Given
-    let mut machine = MachineBuilderTestTrait::new_with_presets().build();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    machine.memory.store(BoundedInt::<u256>::max(), 0);
-    machine.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
+    vm.memory.store(BoundedInt::<u256>::max(), 0);
+    vm.memory.store(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
 
-    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
-    machine.stack.push(0x00).expect('push failed');
-    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
-    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
-    machine.stack.push(0x0A).expect('push failed');
-    machine.stack.push(0x20).expect('push failed');
-    machine.stack.push(0x00).expect('push failed');
-    machine.stack.push(BoundedInt::<u256>::max()).expect('push failed');
-    machine.stack.push(0x0123456789ABCDEF).expect('push failed');
-    machine.stack.push(0x28).expect('push failed');
-    machine.stack.push(0x00).expect('push failed');
+    vm.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
+    vm.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    vm.stack.push(0x0123456789ABCDEF).expect('push failed');
+    vm.stack.push(0x0A).expect('push failed');
+    vm.stack.push(0x20).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
+    vm.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+    vm.stack.push(0x0123456789ABCDEF).expect('push failed');
+    vm.stack.push(0x28).expect('push failed');
+    vm.stack.push(0x00).expect('push failed');
 
     // When
-    let result = machine.exec_log3();
-    let result = machine.exec_log4();
+    let result = vm.exec_log3();
+    let result = vm.exec_log4();
 
     // Then
     assert(result.is_ok(), 'should have succeeded');
-    assert(machine.stack.len() == 0, 'stack size should be 0');
+    assert(vm.stack.len() == 0, 'stack size should be 0');
 
-    let mut events = machine.state.events.contextual_logs;
+    let mut events = vm.env.state.events;
     assert(events.len() == 2, 'context should have 2 events');
 
     let event1 = events.pop_front().unwrap();

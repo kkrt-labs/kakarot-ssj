@@ -15,12 +15,10 @@ use contracts::kakarot_core::{
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
-use evm::context::Status;
 use evm::errors::{
     EVMError, READ_SYSCALL_FAILED, WRITE_SYSCALL_FAILED, ACCOUNT_EXISTS, DEPLOYMENT_FAILED,
     CONTRACT_ACCOUNT_EXISTS, CONTRACT_SYSCALL_FAILED
 };
-use evm::execution::execute;
 use evm::model::{Address, Account, AccountType, AccountTrait};
 use hash::{HashStateTrait, HashStateExTrait};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
@@ -97,7 +95,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     #[inline(always)]
     fn selfdestruct(self: @Account) -> Result<(), EVMError> {
         let contract_account = IContractAccountSafeDispatcher {
-            contract_address: self.address().starknet
+            contract_address: self.starknet_address()
         };
         contract_account.selfdestruct().map_err(EVMError::SyscallFailed(CONTRACT_SYSCALL_FAILED))
     }
@@ -126,7 +124,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// Fetches the nonce of a contract account.
     fn fetch_nonce(self: @Account) -> Result<u64, EVMError> {
         let contract_account = IContractAccountDispatcher {
-            contract_address: self.address().starknet
+            contract_address: self.starknet_address()
         };
         Result::Ok(contract_account.nonce())
     }
@@ -140,7 +138,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     #[inline(always)]
     fn store_nonce(self: @Account, nonce: u64) -> Result<(), EVMError> {
         let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.address().starknet
+            contract_address: self.starknet_address()
         };
         contract_account.set_nonce(nonce);
         Result::Ok(())
@@ -152,7 +150,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     #[inline(always)]
     fn fetch_storage(self: @Account, key: u256) -> Result<u256, EVMError> {
         let contract_account = IContractAccountDispatcher {
-            contract_address: self.address().starknet
+            contract_address: self.starknet_address()
         };
         Result::Ok(contract_account.storage_at(key))
     }
@@ -167,7 +165,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     #[inline(always)]
     fn store_storage(self: @Account, key: u256, value: u256) -> Result<(), EVMError> {
         let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.address().starknet
+            contract_address: self.starknet_address()
         };
         contract_account.set_storage_at(key, value);
         Result::Ok(())
@@ -180,7 +178,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `bytecode` - The bytecode to store
     fn store_bytecode(self: @Account, bytecode: Span<u8>) -> Result<(), EVMError> {
         let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.address().starknet
+            contract_address: self.starknet_address()
         };
         contract_account.set_bytecode(bytecode);
         Result::Ok(())
@@ -197,7 +195,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     #[inline(always)]
     fn is_false_positive_jumpdest(self: @Account, offset: usize) -> Result<bool, EVMError> {
         let contract_account = IContractAccountDispatcher {
-            contract_address: self.address().starknet
+            contract_address: self.starknet_address()
         };
         let is_false_positive_jumpdest = contract_account.is_false_positive_jumpdest(offset);
         Result::Ok(is_false_positive_jumpdest)
@@ -211,7 +209,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     #[inline(always)]
     fn set_false_positive_jumpdest(self: @Account, offset: usize) -> Result<(), EVMError> {
         let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.address().starknet
+            contract_address: self.starknet_address()
         };
         contract_account.set_false_positive_jumpdest(offset);
         Result::Ok(())

@@ -443,7 +443,6 @@ fn test_span_u8_to_64_words_full() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_eth_signature_to_felt252_array() {
     let signature_1 = Signature {
         r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
@@ -481,7 +480,6 @@ fn test_eth_signature_to_felt252_array() {
 }
 
 #[test]
-#[available_gas(2000000000)]
 fn test_felt252_array_to_eth_signature() {
     let signature_1 = Signature {
         r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,

@@ -17,16 +17,13 @@ const MEMORY_SEGMENT_SIZE: usize = 131072;
 
 #[derive(Destruct, Default)]
 struct Memory {
-    active_segment: usize,
     items: Felt252Dict<u128>,
-    bytes_len: Felt252Dict<usize>,
+    bytes_len: usize,
 }
 
 trait MemoryTrait {
     fn new() -> Memory;
-    fn set_active_segment(ref self: Memory, active_segment: usize);
-    fn size(ref self: Memory) -> usize;
-    fn active_segment(ref self: Memory) -> felt252;
+    fn size(self: @Memory) -> usize;
     fn store(ref self: Memory, element: u256, offset: usize);
     fn store_byte(ref self: Memory, value: u8, offset: usize);
     fn store_n(ref self: Memory, elements: Span<u8>, offset: usize);
@@ -34,34 +31,18 @@ trait MemoryTrait {
     fn ensure_length(ref self: Memory, length: usize);
     fn load(ref self: Memory, offset: usize) -> u256;
     fn load_n(ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize);
-    fn compute_active_segment_offset(ref self: Memory, offset: usize) -> usize;
 }
 
 impl MemoryImpl of MemoryTrait {
     /// Initializes a new `Memory` instance.
     #[inline(always)]
     fn new() -> Memory {
-        Memory { active_segment: 0, items: Default::default(), bytes_len: Default::default() }
+        Memory { items: Default::default(), bytes_len: Default::default() }
     }
-
-    /// Sets the current active segment for the `Memory` instance.
-    /// Active segment are implementation-specific concepts that reflect
-    /// the execution context being currently executed.
-    #[inline(always)]
-    fn set_active_segment(ref self: Memory, active_segment: usize) {
-        self.active_segment = active_segment;
-    }
-
     /// Returns the size of the memory.
     #[inline(always)]
-    fn size(ref self: Memory) -> usize {
-        self.bytes_len.get(self.active_segment.into())
-    }
-
-    /// Returns the Memory's active segment
-    #[inline(always)]
-    fn active_segment(ref self: Memory) -> felt252 {
-        self.active_segment.into()
+    fn size(self: @Memory) -> usize {
+        *self.bytes_len
     }
 
     /// Stores a 32-bytes element into the memory.
@@ -76,14 +57,10 @@ impl MemoryImpl of MemoryTrait {
     fn store(ref self: Memory, element: u256, offset: usize) {
         let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(offset + 32);
 
-        self.bytes_len.insert(self.active_segment(), cmp::max(new_min_bytes_len, self.size()));
-
-        // Compute actual offset in the dict, given active_segment of Memory (current Execution Context id)
-        // And Memory Segment Size
-        let internal_offset = self.compute_active_segment_offset(offset);
+        self.bytes_len = cmp::max(new_min_bytes_len, self.size());
 
         // Check alignment of offset to bytes16 chunks
-        let (chunk_index, offset_in_chunk) = u32_safe_divmod(internal_offset, u32_as_non_zero(16));
+        let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
 
         if offset_in_chunk == 0 {
             // Offset is aligned. This is the simplest and most efficient case,
@@ -115,14 +92,13 @@ impl MemoryImpl of MemoryTrait {
     #[inline(always)]
     fn store_byte(ref self: Memory, value: u8, offset: usize) {
         let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(offset + 1);
-        self.bytes_len.insert(self.active_segment(), cmp::max(new_min_bytes_len, self.size()));
+        self.bytes_len = cmp::max(new_min_bytes_len, self.size());
 
         // Compute actual offset in Memory, given active_segment of Memory (current Execution Context id)
         // And Memory Segment Size
-        let internal_offset = self.compute_active_segment_offset(offset);
 
         // Get offset's memory word index and left-based offset of byte in word.
-        let (chunk_index, left_offset) = u32_safe_divmod(internal_offset, u32_as_non_zero(16));
+        let (chunk_index, left_offset) = u32_safe_divmod(offset, u32_as_non_zero(16));
 
         // As the memory words are in big-endian order, we need to convert our left-based offset
         // to a right-based one.a
@@ -162,18 +138,15 @@ impl MemoryImpl of MemoryTrait {
         let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(
             offset + elements.len()
         );
-        self.bytes_len.insert(self.active_segment(), cmp::max(new_min_bytes_len, self.size()));
+        self.bytes_len = cmp::max(new_min_bytes_len, self.size());
 
         // Compute the offset inside the Memory, given its active segment, following the formula:
         // index = offset + self.active_segment * 125000
-        let internal_offset = self.compute_active_segment_offset(offset);
 
         // Check alignment of offset to bytes16 chunks.
-        let (initial_chunk, offset_in_chunk_i) = u32_safe_divmod(
-            internal_offset, u32_as_non_zero(16)
-        );
+        let (initial_chunk, offset_in_chunk_i) = u32_safe_divmod(offset, u32_as_non_zero(16));
         let (final_chunk, mut offset_in_chunk_f) = u32_safe_divmod(
-            internal_offset + elements.len() - 1, u32_as_non_zero(16)
+            offset + elements.len() - 1, u32_as_non_zero(16)
         );
         offset_in_chunk_f += 1;
         let mask_i: u256 = helpers::pow256_rev(offset_in_chunk_i);
@@ -259,12 +232,6 @@ impl MemoryImpl of MemoryTrait {
         self.ensure_length(elements_len + offset);
 
         self.load_n_internal(elements_len, ref elements, offset);
-    }
-
-    /// Computes the offset in dict to write data given the active segment (active ExecutionContext) and offset
-    #[inline(always)]
-    fn compute_active_segment_offset(ref self: Memory, offset: usize) -> usize {
-        offset + self.active_segment * MEMORY_SEGMENT_SIZE
     }
 }
 
@@ -426,9 +393,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     fn load_internal(ref self: Memory, offset: usize) -> u256 {
         // Compute the offset inside the dict, given its active segment, following the formula:
         // index = offset + self.active_segment * 125000
-        let internal_offset = self.compute_active_segment_offset(offset);
 
-        let (chunk_index, offset_in_chunk) = u32_safe_divmod(internal_offset, u32_as_non_zero(16));
+        let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
 
         if offset_in_chunk == 0 {
             // Offset is aligned. This is the simplest and most efficient case,
@@ -484,14 +450,11 @@ impl InternalMemoryMethods of InternalMemoryTrait {
 
         // Compute the offset inside the Memory, given its active segment, following the formula:
         // index = offset + self.active_segment * 125000
-        let internal_offset = self.compute_active_segment_offset(offset);
 
         // Check alignment of offset to bytes16 chunks.
-        let (initial_chunk, offset_in_chunk_i) = u32_safe_divmod(
-            internal_offset, u32_as_non_zero(16)
-        );
+        let (initial_chunk, offset_in_chunk_i) = u32_safe_divmod(offset, u32_as_non_zero(16));
         let (final_chunk, mut offset_in_chunk_f) = u32_safe_divmod(
-            internal_offset + elements_len - 1, u32_as_non_zero(16)
+            offset + elements_len - 1, u32_as_non_zero(16)
         );
         offset_in_chunk_f += 1;
         let mask_i: u256 = helpers::pow256_rev(offset_in_chunk_i);
@@ -542,7 +505,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         let new_bytes_len = self.size() + adjusted_length;
 
         // Update memory size.
-        self.bytes_len.insert(self.active_segment(), new_bytes_len);
+        self.bytes_len = new_bytes_len;
     }
 
 

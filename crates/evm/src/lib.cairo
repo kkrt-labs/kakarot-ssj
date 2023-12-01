@@ -1,18 +1,11 @@
 // Call opcodes helpers
 mod call_helpers;
 
-
-// Context module
-mod context;
-
 // Create opcodes helpers
 mod create_helpers;
 
 // Errors module
 mod errors;
-
-// Kakarot main module
-mod execution;
 
 // Gas module
 mod gas;
@@ -22,9 +15,6 @@ mod instructions;
 
 // interpreter module
 mod interpreter;
-
-// Machine module
-mod machine;
 
 // Memory module
 mod memory;

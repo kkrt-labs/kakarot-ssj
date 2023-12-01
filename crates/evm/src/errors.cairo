@@ -63,6 +63,7 @@ enum EVMError {
     DeployError: felt252,
     OriginError: felt252,
     OutOfGas,
+    Assertion
 }
 
 #[generate_trait]
@@ -84,6 +85,7 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::DeployError(error_message) => error_message,
             EVMError::OriginError(error_message) => error_message,
             EVMError::OutOfGas => 'OutOfGas'.into(),
+            EVMError::Assertion => 'Assertion failed'.into(),
         }
     }
 }

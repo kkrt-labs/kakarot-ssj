@@ -147,12 +147,12 @@ mod ExternallyOwnedAccount {
                 contract_address: self.kakarot_core_address()
             };
 
-            let result = kakarot_core_dispatcher
+            let (_, return_data) = kakarot_core_dispatcher
                 .eth_send_transaction(
                     Option::Some(destination), gas_limit, gas_price, amount, calldata
                 );
 
-            array![result.to_felt252_array().span()]
+            array![return_data.to_felt252_array().span()]
         }
     }
 

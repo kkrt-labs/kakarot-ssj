@@ -3,8 +3,8 @@
 use evm::errors::EVMError;
 use evm::gas;
 // Internal imports
-use evm::machine::{Machine, MachineTrait};
 use evm::memory::MemoryTrait;
+use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
 use keccak::{cairo_keccak, u128_split};
 use utils::helpers::{ArrayExtTrait, U256Trait};
@@ -19,9 +19,9 @@ impl Sha3Impl of Sha3Trait {
     /// * `size` - The amount of bytes to read
     ///
     /// # Specification: https://www.evm.codes/#20?fork=shanghai
-    fn exec_sha3(ref self: Machine) -> Result<(), EVMError> {
+    fn exec_sha3(ref self: VM) -> Result<(), EVMError> {
         // TODO: Add dynamic gas
-        self.increment_gas_used_checked(gas::KECCAK256)?;
+        self.charge_gas(gas::KECCAK256)?;
 
         let offset: usize = self.stack.pop_usize()?;
         let mut size: usize = self.stack.pop_usize()?;
@@ -56,8 +56,8 @@ impl Sha3Impl of Sha3Trait {
 
 
 mod internal {
-    use evm::machine::Machine;
     use evm::memory::MemoryTrait;
+    use evm::model::vm::{VM, VMTrait};
     use evm::stack::StackTrait;
     use utils::helpers::U256Trait;
 
@@ -102,7 +102,7 @@ mod internal {
     /// * `amount` - The amount of words to read from memory
     /// Return the new offset
     fn fill_array_with_memory_words(
-        ref self: Machine, ref to_hash: Array<u64>, mut offset: u32, mut amount: u32
+        ref self: VM, ref to_hash: Array<u64>, mut offset: u32, mut amount: u32
     ) -> u32 {
         loop {
             if amount == 0 {

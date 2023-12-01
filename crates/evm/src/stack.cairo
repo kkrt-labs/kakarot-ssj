@@ -1,3 +1,4 @@
+use core::fmt::{Debug, Formatter, Error, Display};
 //! Stack implementation.
 //! # Example
 //! ```
@@ -22,16 +23,15 @@ use utils::i256::i256;
 use utils::traits::{TryIntoResult};
 
 
+//TODO(optimization): make len `felt252` based to avoid un-necessary checks
 #[derive(Destruct, Default)]
 struct Stack {
-    active_segment: usize,
     items: Felt252Dict<Nullable<u256>>,
-    len: Felt252Dict<usize>,
+    len: usize,
 }
 
 trait StackTrait {
     fn new() -> Stack;
-    fn set_active_segment(ref self: Stack, active_segment: usize);
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError>;
     fn pop(ref self: Stack) -> Result<u256, EVMError>;
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError>;
@@ -43,24 +43,14 @@ trait StackTrait {
     fn peek(ref self: Stack) -> Option<u256>;
     fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError>;
     fn swap_i(ref self: Stack, index: usize) -> Result<(), EVMError>;
-    fn len(ref self: Stack) -> usize;
-    fn is_empty(ref self: Stack) -> bool;
-    fn active_segment(self: @Stack) -> usize;
-    fn compute_active_segment_index(self: @Stack, index: usize) -> felt252;
+    fn len(self: @Stack) -> usize;
+    fn is_empty(self: @Stack) -> bool;
 }
 
 impl StackImpl of StackTrait {
     #[inline(always)]
     fn new() -> Stack {
         Default::default()
-    }
-
-    /// Sets the current active segment for the `Stack` instance.
-    /// Active segment are implementation-specific concepts that reflect
-    /// the execution context being currently executed.
-    #[inline(always)]
-    fn set_active_segment(ref self: Stack, active_segment: usize) {
-        self.active_segment = active_segment;
     }
 
     /// Pushes a new bytes32 word onto the stack.
@@ -81,9 +71,9 @@ impl StackImpl of StackTrait {
         if length == constants::STACK_MAX_DEPTH {
             return Result::Err(EVMError::StackError(STACK_OVERFLOW));
         }
-        let index = self.compute_active_segment_index(length);
+        let index = length.into();
         self.items.insert(index, NullableTrait::new(item));
-        self.len.insert(self.active_segment().into(), length + 1);
+        self.len += 1;
         Result::Ok(())
     }
 
@@ -98,9 +88,8 @@ impl StackImpl of StackTrait {
         if length == 0 {
             return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
         }
-        self.len.insert(self.active_segment().into(), length - 1);
-        let internal_index = self.compute_active_segment_index(self.len());
-        let item = self.items.get(internal_index);
+        self.len -= 1;
+        let item = self.items.get(self.len().into());
         Result::Ok(item.deref())
     }
 
@@ -208,7 +197,7 @@ impl StackImpl of StackTrait {
         if self.len() == 0 {
             Option::None(())
         } else {
-            let last_index = self.compute_active_segment_index(self.len() - 1);
+            let last_index = self.len() - 1;
             let item = self.items.get(last_index.into());
             Option::Some(item.deref())
         }
@@ -226,7 +215,7 @@ impl StackImpl of StackTrait {
             return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
         }
 
-        let position = self.compute_active_segment_index(self.len() - 1 - index);
+        let position = self.len() - 1 - index;
         let item = self.items.get(position.into());
 
         Result::Ok(item.deref())
@@ -239,7 +228,7 @@ impl StackImpl of StackTrait {
         if index >= self.len() {
             return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
         }
-        let position_0: felt252 = self.compute_active_segment_index(self.len() - 1);
+        let position_0: felt252 = self.len().into() - 1;
         let position_item: felt252 = position_0 - index.into();
         let top_item = self.items.get(position_0);
         let swapped_item = self.items.get(position_item);
@@ -250,26 +239,13 @@ impl StackImpl of StackTrait {
 
     /// Returns the length of the stack.
     #[inline(always)]
-    fn len(ref self: Stack) -> usize {
-        self.len.get(self.active_segment.into())
+    fn len(self: @Stack) -> usize {
+        *self.len
     }
 
     /// Returns true if the stack is empty.
     #[inline(always)]
-    fn is_empty(ref self: Stack) -> bool {
+    fn is_empty(self: @Stack) -> bool {
         self.len() == 0
-    }
-
-    /// Returns the current active segment, i.e. the current active execution context's id
-    #[inline(always)]
-    fn active_segment(self: @Stack) -> usize {
-        *self.active_segment
-    }
-
-    /// Computes the internal index to access the Stack of the current execution context
-    #[inline(always)]
-    fn compute_active_segment_index(self: @Stack, index: usize) -> felt252 {
-        let internal_index = index + self.active_segment() * constants::STACK_MAX_DEPTH;
-        internal_index.into()
     }
 }

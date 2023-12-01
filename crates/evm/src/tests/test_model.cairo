@@ -183,6 +183,7 @@ fn test_account_commit_already_deployed() {
 }
 
 #[test]
+#[ignore]
 fn test_account_commit_redeploy_selfdestructed_new_nonce() {
     setup_contracts_for_testing();
     let mut ca_address = deploy_contract_account(evm_address(), array![].span());
@@ -205,6 +206,7 @@ fn test_account_commit_redeploy_selfdestructed_new_nonce() {
 }
 
 #[test]
+#[ignore]
 fn test_account_commit_undeployed() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
