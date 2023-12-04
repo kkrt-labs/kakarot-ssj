@@ -3,6 +3,7 @@ use cmp::min;
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
+use evm::gas;
 use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
 use evm::model::ExecutionSummary;
@@ -17,7 +18,7 @@ use starknet::{EthAddress, get_tx_info};
 use utils::address::{compute_contract_address, compute_create2_contract_address};
 use utils::constants;
 use utils::helpers::ArrayExtTrait;
-use utils::helpers::{ResultExTrait, EthAddressExTrait, U256Trait, U8SpanExTrait};
+use utils::helpers::{ResultExTrait, EthAddressExTrait, U256Trait, U8SpanExTrait, ceil32};
 use utils::traits::{
     BoolIntoNumeric, EthAddressIntoU256, U256TryIntoResult, SpanU8TryIntoResultEthAddress
 };
@@ -30,7 +31,7 @@ struct CreateArgs {
     bytecode: Span<u8>,
 }
 
-#[derive(Drop)]
+#[derive(Copy, Drop)]
 enum CreateType {
     Create,
     Create2,
@@ -44,6 +45,20 @@ impl CreateHelpersImpl of CreateHelpers {
         let value = self.stack.pop()?;
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
+
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + size);
+        let init_code_gas = gas::init_code_cost(size);
+        let charged_gas = match create_type {
+            CreateType::Create => gas::CREATE + expand_memory_cost + init_code_gas,
+            CreateType::Create2 => {
+                let calldata_words = ceil32(size) / 32;
+                gas::CREATE
+                    + gas::KECCAK256WORD * calldata_words.into()
+                    + expand_memory_cost
+                    + init_code_gas
+            },
+        };
+        self.charge_gas(gas::CREATE + expand_memory_cost + init_code_gas)?;
 
         let mut bytecode = Default::default();
         self.memory.load_n(size, ref bytecode, offset);

@@ -50,6 +50,7 @@ mod internal {
     use evm::model::vm::{VM, VMTrait};
     use evm::stack::StackTrait;
     use evm::state::StateTrait;
+    use utils::helpers::ceil32;
 
 
     /// Store a new event in the dynamic context using topics
@@ -65,12 +66,19 @@ mod internal {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
 
-        // TODO: Add dynamic memory gas
-        self.charge_gas(gas::LOG + gas::LOGTOPIC * topics_len.into())?;
-
+        // TODO(optimization): check benefits of n `pop` instead of `pop_n`
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
         let topics: Array<u256> = self.stack.pop_n(topics_len.into())?;
+
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + size);
+        self
+            .charge_gas(
+                gas::LOG
+                    + topics_len.into() * gas::LOGTOPIC
+                    + size.into() * gas::LOGDATA
+                    + expand_memory_cost
+            )?;
 
         let mut data: Array<u8> = Default::default();
         self.memory.load_n(size, ref data, offset);

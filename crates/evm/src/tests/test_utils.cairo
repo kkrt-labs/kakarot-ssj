@@ -149,7 +149,7 @@ fn eoa_address() -> EthAddress {
 }
 
 fn tx_gas_limit() -> u128 {
-    0x100000000000000000
+    0x100000000000000000000
 }
 
 fn gas_price() -> u128 {

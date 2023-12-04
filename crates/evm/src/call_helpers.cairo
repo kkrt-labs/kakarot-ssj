@@ -4,6 +4,7 @@ use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
 
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
+use evm::gas;
 use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
@@ -77,9 +78,28 @@ impl CallHelpersImpl of CallHelpers {
 
         let args_offset = self.stack.pop_usize()?;
         let args_size = self.stack.pop_usize()?;
+        let args_max_offset = args_offset + args_size;
 
         let ret_offset = self.stack.pop_usize()?;
         let ret_size = self.stack.pop_usize()?;
+        let ret_max_offset = ret_offset + ret_size;
+
+        let max_memory_size = if args_max_offset > ret_max_offset {
+            args_max_offset
+        } else {
+            ret_max_offset
+        };
+
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), max_memory_size);
+        let access_gas_cost = 0; //TODO(gas): access gas cost
+        let transfer_gas_cost = if should_transfer && value != 0 {
+            gas::CALLVALUE
+        } else {
+            0
+        };
+        let create_gas_cost = 0; //TODO(gas)
+        let message_call_gas = 0; //TODO(gas)
+        self.charge_gas(message_call_gas + expand_memory_cost)?;
 
         let mut calldata = Default::default();
         self.memory.load_n(args_size, ref calldata, args_offset);
