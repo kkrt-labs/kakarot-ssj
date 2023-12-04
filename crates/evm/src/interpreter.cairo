@@ -140,6 +140,9 @@ impl EVMImpl of EVMTrait {
     }
 
     fn execute_code(ref vm: VM) -> ExecutionResult {
+        // initalize valid jumpdests
+        vm.init_valid_jump_destinations();
+
         // Retrieve the current program counter.
         let pc = vm.pc();
         let bytecode = vm.message().code;

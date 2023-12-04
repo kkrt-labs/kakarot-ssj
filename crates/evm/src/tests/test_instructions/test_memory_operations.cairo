@@ -285,6 +285,7 @@ fn test_exec_jump_valid() {
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
     let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
+    vm.init_valid_jump_destinations();
 
     let counter = 0x03;
     vm.stack.push(counter).expect('push failed');
@@ -336,10 +337,7 @@ fn test_exec_jump_out_of_bounds() {
 
 // TODO: This is third edge case in which `0x5B` is part of PUSHN instruction and hence
 // not a valid opcode to jump to
-//
-// Remove ignore once its handled
 #[test]
-#[should_panic(expected: ('exec_jump should throw error',))]
 fn test_exec_jump_inside_pushn() {
     // Given
     let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
@@ -366,6 +364,7 @@ fn test_exec_jumpi_valid_non_zero_1() {
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
     let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
+    vm.init_valid_jump_destinations();
 
     let b = 0x1;
     vm.stack.push(b).expect('push failed');
@@ -386,6 +385,7 @@ fn test_exec_jumpi_valid_non_zero_2() {
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
     let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
+    vm.init_valid_jump_destinations();
 
     let b = 0x69;
     vm.stack.push(b).expect('push failed');

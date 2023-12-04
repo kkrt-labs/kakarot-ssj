@@ -1,5 +1,6 @@
 mod test_contract_account;
 mod test_eoa;
+mod test_vm;
 use contracts::contract_account::{IContractAccountDispatcherTrait, IContractAccountDispatcher};
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_utils::{

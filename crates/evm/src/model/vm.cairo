@@ -63,12 +63,46 @@ impl VMImpl of VMTrait {
         self.pc = pc;
     }
 
+    fn init_valid_jump_destinations(ref self: VM) {
+        let bytecode = self.message.code;
+        let mut valid_jumpdests: Array<usize> = array![];
+
+        let mut i = 0;
+        loop {
+            if (i >= bytecode.len()) {
+                break;
+            }
+
+            let opcode = *bytecode.at(i);
+            // checking for PUSH opcode family
+            if (opcode >= 0x5f && opcode <= 0x7f) {
+                let number_of_args = opcode - 0x5f;
+                i += (number_of_args + 1).into();
+                continue;
+            }
+
+            // JUMPDEST
+            if (opcode == 0x5B) {
+                valid_jumpdests.append(i.into());
+            }
+
+            i += 1;
+        };
+
+        self.set_valid_jumpdests(valid_jumpdests.span());
+    }
+
     fn valid_jumpdests(self: @VM) -> Span<usize> {
         *self.valid_jumpdests
     }
 
     fn set_valid_jumpdests(ref self: VM, valid_jumpdests: Span<usize>) {
         self.valid_jumpdests = valid_jumpdests;
+    }
+
+    #[inline(always)]
+    fn is_valid_jump(self: @VM, dest: u32) -> bool {
+        self.valid_jumpdests().contains(dest)
     }
 
     fn return_data(self: @VM) -> Span<u8> {
