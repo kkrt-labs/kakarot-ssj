@@ -14,10 +14,10 @@ fn test_is_valid_jump_destinations() {
 
     vm.init_valid_jump_destinations();
 
-    let expected_valid_jump_destinations = array![0x3, 0x9].span();
+    let expected_valid_jump_destinations = array![3, 9].span();
     assert!(
         vm.valid_jumpdests == expected_valid_jump_destinations,
-        "expected valid_jump_destinations to be [0x3, 0x9]"
+        "expected valid_jump_destinations to be [3, 9]"
     );
 
     assert!(vm.is_valid_jump(0x3) == true, "expected jump to be valid");
@@ -28,8 +28,7 @@ fn test_is_valid_jump_destinations() {
 }
 
 #[test]
-fn test_valid_jump_destination_failing() {
-    // PUSH1, 0x03, JUMP, JUMPDEST, PUSH1, 0x09, JUMP, PUSH1 0x2, JUMPDDEST, PUSH1 0x2
+fn test_valid_jump_destination_inside_jumpn() {
     let bytecode: Array<u8> = array![0x60, 0x5B, 0x60, 0x00];
     let mut message: Message = Default::default();
     message.code = bytecode.span();
