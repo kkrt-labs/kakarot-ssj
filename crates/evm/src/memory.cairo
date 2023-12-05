@@ -55,8 +55,8 @@ impl MemoryImpl of MemoryTrait {
     /// index = Y + i * MEMORY_SEGMENT_SIZE
     #[inline(always)]
     fn store(ref self: Memory, element: u256, offset: usize) {
-        let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(offset + 32);
-
+        //TODO(optimization): new bytes len was already compute when charging the gas
+        let new_min_bytes_len = helpers::ceil32(offset + 32);
         self.bytes_len = cmp::max(new_min_bytes_len, self.size());
 
         // Check alignment of offset to bytes16 chunks
@@ -91,7 +91,7 @@ impl MemoryImpl of MemoryTrait {
     /// * `offset` - The offset within memory to store the byte at.
     #[inline(always)]
     fn store_byte(ref self: Memory, value: u8, offset: usize) {
-        let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(offset + 1);
+        let new_min_bytes_len = helpers::ceil32(offset + 1);
         self.bytes_len = cmp::max(new_min_bytes_len, self.size());
 
         // Compute actual offset in Memory, given active_segment of Memory (current Execution Context id)
@@ -135,9 +135,7 @@ impl MemoryImpl of MemoryTrait {
         }
 
         // Compute new bytes_len.
-        let new_min_bytes_len = helpers::ceil_bytes_len_to_next_32_bytes_word(
-            offset + elements.len()
-        );
+        let new_min_bytes_len = helpers::ceil32(offset + elements.len());
         self.bytes_len = cmp::max(new_min_bytes_len, self.size());
 
         // Compute the offset inside the Memory, given its active segment, following the formula:

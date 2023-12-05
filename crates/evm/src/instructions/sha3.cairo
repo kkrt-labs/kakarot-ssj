@@ -7,7 +7,7 @@ use evm::memory::MemoryTrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
 use keccak::{cairo_keccak, u128_split};
-use utils::helpers::{ArrayExtTrait, U256Trait};
+use utils::helpers::{ArrayExtTrait, U256Trait, ceil32};
 
 #[generate_trait]
 impl Sha3Impl of Sha3Trait {
@@ -20,11 +20,13 @@ impl Sha3Impl of Sha3Trait {
     ///
     /// # Specification: https://www.evm.codes/#20?fork=shanghai
     fn exec_sha3(ref self: VM) -> Result<(), EVMError> {
-        // TODO: Add dynamic gas
-        self.charge_gas(gas::KECCAK256)?;
-
         let offset: usize = self.stack.pop_usize()?;
         let mut size: usize = self.stack.pop_usize()?;
+
+        let words_size: u128 = (ceil32(size) / 32).into();
+        let word_gas_cost = gas::KECCAK256WORD * words_size;
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + size);
+        self.charge_gas(gas::KECCAK256 + word_gas_cost + expand_memory_cost)?;
 
         let mut to_hash: Array<u64> = Default::default();
 

@@ -8,6 +8,7 @@ use evm::state::{StateTrait, compute_state_key};
 use hash::{HashStateTrait, HashStateExTrait};
 use poseidon::PoseidonTrait;
 use starknet::{storage_base_address_from_felt252, Store};
+use utils::helpers::U256Trait;
 
 #[generate_trait]
 impl MemoryOperation of MemoryOperationTrait {
@@ -25,10 +26,11 @@ impl MemoryOperation of MemoryOperationTrait {
     /// MLOAD operation.
     /// Load word from memory and push to stack.
     fn exec_mload(ref self: VM) -> Result<(), EVMError> {
-        // TODO: add dynamic gas
-        self.charge_gas(gas::VERYLOW)?;
-
         let offset: usize = self.stack.pop_usize()?;
+
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + 32);
+        self.charge_gas(gas::VERYLOW + expand_memory_cost)?;
+
         let result = self.memory.load(offset);
         self.stack.push(result)
     }
@@ -37,11 +39,10 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#52?fork=shanghai
     fn exec_mstore(ref self: VM) -> Result<(), EVMError> {
-        // TODO: add dynamic gas
-        self.charge_gas(gas::VERYLOW)?;
-
         let offset: usize = self.stack.pop_usize()?;
         let value: u256 = self.stack.pop()?;
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + 32);
+        self.charge_gas(gas::VERYLOW + expand_memory_cost)?;
 
         self.memory.store(value, offset);
         Result::Ok(())
@@ -51,12 +52,13 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save single byte to memory
     /// # Specification: https://www.evm.codes/#53?fork=shanghai
     fn exec_mstore8(ref self: VM) -> Result<(), EVMError> {
-        // TODO: add dynamic gas
-        self.charge_gas(gas::VERYLOW)?;
-
         let offset = self.stack.pop_usize()?;
         let value = self.stack.pop()?;
         let value: u8 = (value.low & 0xFF).try_into().unwrap();
+
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + 1);
+        self.charge_gas(gas::VERYLOW + expand_memory_cost)?;
+
         self.memory.store_byte(value, offset);
 
         Result::Ok(())

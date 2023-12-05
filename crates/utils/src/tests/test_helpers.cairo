@@ -1,9 +1,3 @@
-use starknet::eth_signature::Signature;
-use utils::helpers::{
-    SpanExtension, SpanExtTrait, ArrayExtension, ArrayExtTrait, U256Trait, U32Trait, U8SpanExTrait,
-    EthAddressSignatureTrait, TryIntoEthSignature
-};
-use utils::helpers::{ByteArrayExTrait};
 use utils::helpers;
 
 #[test]
@@ -155,363 +149,433 @@ fn test_split_word() {
     };
 }
 
-#[test]
-fn test_append_n() {
-    // Given
-    let mut original: Array<u8> = array![1, 2, 3, 4];
+mod test_array_ext {
+    use utils::helpers::{ArrayExtTrait};
+    #[test]
+    fn test_append_n() {
+        // Given
+        let mut original: Array<u8> = array![1, 2, 3, 4];
 
-    // When
-    original.append_n(9, 3);
+        // When
+        original.append_n(9, 3);
 
-    // Then
-    assert(original == array![1, 2, 3, 4, 9, 9, 9], 'append_n failed');
+        // Then
+        assert(original == array![1, 2, 3, 4, 9, 9, 9], 'append_n failed');
+    }
+
+    #[test]
+    fn test_append_unique() {
+        let mut arr = array![1, 2, 3];
+        arr.append_unique(4);
+        assert(arr == array![1, 2, 3, 4], 'should have appended');
+        arr.append_unique(2);
+        assert(arr == array![1, 2, 3, 4], 'shouldnt have appended');
+    }
 }
 
-#[test]
-fn test_append_unique() {
-    let mut arr = array![1, 2, 3];
-    arr.append_unique(4);
-    assert(arr == array![1, 2, 3, 4], 'should have appended');
-    arr.append_unique(2);
-    assert(arr == array![1, 2, 3, 4], 'shouldnt have appended');
-}
+mod u32_test {
+    use utils::helpers::Bitshift;
+    use utils::helpers::U32Trait;
 
-#[test]
-fn test_reverse_bytes_u256() {
-    let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
-    let res = value.reverse_endianness();
-    assert(
-        res == 0x0000450000DEFA0000200400000000ADDE00000077000000E5000000FFFFFFFA,
-        'reverse mismatch'
-    );
-}
+    #[test]
+    fn test_u32_from_bytes() {
+        let input: Array<u8> = array![0xf4, 0x32, 0x15, 0x62];
+        let res: Option<u32> = U32Trait::from_bytes(input.span());
 
-#[test]
-fn test_split_u256_into_u64_little() {
-    let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
-    let ((high_h, low_h), (high_l, low_l)) = value.split_into_u64_le();
-    assert(high_h == 0xDE00000077000000, 'split mismatch');
-    assert(low_h == 0xE5000000FFFFFFFA, 'split mismatch');
-    assert(high_l == 0x0000450000DEFA00, 'split mismatch');
-    assert(low_l == 0x00200400000000AD, 'split mismatch');
-}
+        assert(res.is_some(), 'should have a value');
+        assert(res.unwrap() == 0xf4321562, 'wrong result value');
+    }
 
-#[test]
-fn test_pack_bytes_le_bytes31() {
-    let mut arr = array![0x11, 0x22, 0x33, 0x44];
-    let res = ByteArrayExTrait::from_bytes(arr.span());
+    #[test]
+    fn test_u32_from_bytes_too_big() {
+        let input: Array<u8> = array![0xf4, 0x32, 0x15, 0x62, 0x01];
+        let res: Option<u32> = U32Trait::from_bytes(input.span());
 
-    // Ensure that the result is complete and keeps the same order
-    let mut i = 0;
-    loop {
-        if i == arr.len() {
-            break;
+        assert(res.is_none(), 'should not have a value');
+    }
+
+    #[test]
+    fn test_u32_to_bytes_full() {
+        let input: u32 = 0xf4321562;
+        let res: Span<u8> = input.to_bytes();
+
+        assert(res.len() == 4, 'wrong result length');
+        assert(*res[0] == 0xf4, 'wrong result value');
+        assert(*res[1] == 0x32, 'wrong result value');
+        assert(*res[2] == 0x15, 'wrong result value');
+        assert(*res[3] == 0x62, 'wrong result value');
+    }
+
+    #[test]
+    fn test_u32_to_bytes_partial() {
+        let input: u32 = 0xf43215;
+        let res: Span<u8> = input.to_bytes();
+
+        assert(res.len() == 3, 'wrong result length');
+        assert(*res[0] == 0xf4, 'wrong result value');
+        assert(*res[1] == 0x32, 'wrong result value');
+        assert(*res[2] == 0x15, 'wrong result value');
+    }
+
+
+    #[test]
+    fn test_u32_to_bytes_leading_zeros() {
+        let input: u32 = 0x00f432;
+        let res: Span<u8> = input.to_bytes();
+
+        assert(res.len() == 2, 'wrong result length');
+        assert(*res[0] == 0xf4, 'wrong result value');
+        assert(*res[1] == 0x32, 'wrong result value');
+    }
+
+
+    #[test]
+    fn test_u32_bytes_used() {
+        assert_eq!(0x00_u32.bytes_used(), 0);
+        let mut value = 0xff;
+        let mut i = 1;
+        loop {
+            assert_eq!(value.bytes_used(), i);
+            if i == 4 {
+                break;
+            };
+            i += 1;
+            value = value.shl(8);
         };
-        assert(*arr[i] == res[i], 'byte mismatch');
-        i += 1;
-    };
+    }
+
+    #[test]
+    fn test_u32_bytes_used_leading_zeroes() {
+        let len = 0x001234;
+        let bytes_count = len.bytes_used();
+
+        assert(bytes_count == 2, 'wrong bytes count');
+    }
 }
 
-#[test]
-fn test_pack_bytes_ge_bytes31() {
-    let mut arr = array![
-        0x01,
-        0x02,
-        0x03,
-        0x04,
-        0x05,
-        0x06,
-        0x07,
-        0x08,
-        0x09,
-        0x0A,
-        0x0B,
-        0x0C,
-        0x0D,
-        0x0E,
-        0x0F,
-        0x10,
-        0x11,
-        0x12,
-        0x13,
-        0x14,
-        0x15,
-        0x16,
-        0x17,
-        0x18,
-        0x19,
-        0x1A,
-        0x1B,
-        0x1C,
-        0x1D,
-        0x1E,
-        0x1F,
-        0x20,
-        0x21 // 33 elements
-    ];
+mod u64_test {
+    use utils::helpers::Bitshift;
+    use utils::helpers::U64Trait;
 
-    let res = ByteArrayExTrait::from_bytes(arr.span());
-
-    // Ensure that the result is complete and keeps the same order
-    let mut i = 0;
-    loop {
-        if i == arr.len() {
-            break;
+    #[test]
+    fn test_u64_bytes_used() {
+        assert_eq!(0x00_u64.bytes_used(), 0);
+        let mut value = 0xff;
+        let mut i = 1;
+        loop {
+            assert_eq!(value.bytes_used(), i);
+            if i == 8 {
+                break;
+            };
+            i += 1;
+            value = value.shl(8);
         };
-        assert(*arr[i] == res[i], 'byte mismatch');
-        i += 1;
-    };
+    }
 }
 
-#[test]
-fn test_bytearray_append_span_bytes() {
-    let bytes = array![0x01, 0x02, 0x03, 0x04];
-    let mut byte_arr: ByteArray = Default::default();
-    byte_arr.append_byte(0xFF);
-    byte_arr.append_byte(0xAA);
-    byte_arr.append_span_bytes(bytes.span());
-    assert(byte_arr.len() == 6, 'wrong length');
-    assert(byte_arr[0] == 0xFF, 'wrong value');
-    assert(byte_arr[1] == 0xAA, 'wrong value');
-    assert(byte_arr[2] == 0x01, 'wrong value');
-    assert(byte_arr[3] == 0x02, 'wrong value');
-    assert(byte_arr[4] == 0x03, 'wrong value');
-    assert(byte_arr[5] == 0x04, 'wrong value');
+mod u128_test {
+    use utils::helpers::Bitshift;
+    use utils::helpers::U128Trait;
+
+
+    #[test]
+    fn test_u128_bytes_used() { //TODO: test
+    }
 }
 
-#[test]
-fn test_byte_array_into_bytes() {
-    let input = array![
-        0x01,
-        0x02,
-        0x03,
-        0x04,
-        0x05,
-        0x06,
-        0x07,
-        0x08,
-        0x09,
-        0x0A,
-        0x0B,
-        0x0C,
-        0x0D,
-        0x0E,
-        0x0F,
-        0x10,
-        0x11,
-        0x12,
-        0x13,
-        0x14,
-        0x15,
-        0x16,
-        0x17,
-        0x18,
-        0x19,
-        0x1A,
-        0x1B,
-        0x1C,
-        0x1D,
-        0x1E,
-        0x1F,
-        0x20,
-        0x21 // 33 elements
-    ];
-    let byte_array = ByteArrayExTrait::from_bytes(input.span());
-    let res = byte_array.into_bytes();
+mod u256_test {
+    use utils::helpers::Bitshift;
+    use utils::helpers::U256Trait;
+    #[test]
+    fn test_reverse_bytes_u256() {
+        let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
+        let res = value.reverse_endianness();
+        assert(
+            res == 0x0000450000DEFA0000200400000000ADDE00000077000000E5000000FFFFFFFA,
+            'reverse mismatch'
+        );
+    }
 
-    // Ensure that the elements are correct
-    assert(res == input.span(), 'bytes mismatch');
-}
+    #[test]
+    fn test_split_u256_into_u64_little() {
+        let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
+        let ((high_h, low_h), (high_l, low_l)) = value.split_into_u64_le();
+        assert(high_h == 0xDE00000077000000, 'split mismatch');
+        assert(low_h == 0xE5000000FFFFFFFA, 'split mismatch');
+        assert(high_l == 0x0000450000DEFA00, 'split mismatch');
+        assert(low_l == 0x00200400000000AD, 'split mismatch');
+    }
 
-#[test]
-fn test_u32_from_bytes() {
-    let input: Array<u8> = array![0xf4, 0x32, 0x15, 0x62];
-    let res: Option<u32> = U32Trait::from_bytes(input.span());
-
-    assert(res.is_some(), 'should have a value');
-    assert(res.unwrap() == 0xf4321562, 'wrong result value');
-}
-
-#[test]
-fn test_u32_from_bytes_too_big() {
-    let input: Array<u8> = array![0xf4, 0x32, 0x15, 0x62, 0x01];
-    let res: Option<u32> = U32Trait::from_bytes(input.span());
-
-    assert(res.is_none(), 'should not have a value');
-}
-
-#[test]
-fn test_u32_to_bytes_full() {
-    let input: u32 = 0xf4321562;
-    let res: Span<u8> = input.to_bytes();
-
-    assert(res.len() == 4, 'wrong result length');
-    assert(*res[0] == 0xf4, 'wrong result value');
-    assert(*res[1] == 0x32, 'wrong result value');
-    assert(*res[2] == 0x15, 'wrong result value');
-    assert(*res[3] == 0x62, 'wrong result value');
-}
-
-#[test]
-fn test_u32_to_bytes_partial() {
-    let input: u32 = 0xf43215;
-    let res: Span<u8> = input.to_bytes();
-
-    assert(res.len() == 3, 'wrong result length');
-    assert(*res[0] == 0xf4, 'wrong result value');
-    assert(*res[1] == 0x32, 'wrong result value');
-    assert(*res[2] == 0x15, 'wrong result value');
+    #[test]
+    fn test_u256_bytes_used() { //TODO: test
+    }
 }
 
 
-#[test]
-fn test_u32_to_bytes_leading_zeros() {
-    let input: u32 = 0x00f432;
-    let res: Span<u8> = input.to_bytes();
+mod bytearray_test {
+    use utils::helpers::ByteArrayExTrait;
 
-    assert(res.len() == 2, 'wrong result length');
-    assert(*res[0] == 0xf4, 'wrong result value');
-    assert(*res[1] == 0x32, 'wrong result value');
+
+    #[test]
+    fn test_pack_bytes_ge_bytes31() {
+        let mut arr = array![
+            0x01,
+            0x02,
+            0x03,
+            0x04,
+            0x05,
+            0x06,
+            0x07,
+            0x08,
+            0x09,
+            0x0A,
+            0x0B,
+            0x0C,
+            0x0D,
+            0x0E,
+            0x0F,
+            0x10,
+            0x11,
+            0x12,
+            0x13,
+            0x14,
+            0x15,
+            0x16,
+            0x17,
+            0x18,
+            0x19,
+            0x1A,
+            0x1B,
+            0x1C,
+            0x1D,
+            0x1E,
+            0x1F,
+            0x20,
+            0x21 // 33 elements
+        ];
+
+        let res = ByteArrayExTrait::from_bytes(arr.span());
+
+        // Ensure that the result is complete and keeps the same order
+        let mut i = 0;
+        loop {
+            if i == arr.len() {
+                break;
+            };
+            assert(*arr[i] == res[i], 'byte mismatch');
+            i += 1;
+        };
+    }
+
+    #[test]
+    fn test_bytearray_append_span_bytes() {
+        let bytes = array![0x01, 0x02, 0x03, 0x04];
+        let mut byte_arr: ByteArray = Default::default();
+        byte_arr.append_byte(0xFF);
+        byte_arr.append_byte(0xAA);
+        byte_arr.append_span_bytes(bytes.span());
+        assert(byte_arr.len() == 6, 'wrong length');
+        assert(byte_arr[0] == 0xFF, 'wrong value');
+        assert(byte_arr[1] == 0xAA, 'wrong value');
+        assert(byte_arr[2] == 0x01, 'wrong value');
+        assert(byte_arr[3] == 0x02, 'wrong value');
+        assert(byte_arr[4] == 0x03, 'wrong value');
+        assert(byte_arr[5] == 0x04, 'wrong value');
+    }
+
+    #[test]
+    fn test_byte_array_into_bytes() {
+        let input = array![
+            0x01,
+            0x02,
+            0x03,
+            0x04,
+            0x05,
+            0x06,
+            0x07,
+            0x08,
+            0x09,
+            0x0A,
+            0x0B,
+            0x0C,
+            0x0D,
+            0x0E,
+            0x0F,
+            0x10,
+            0x11,
+            0x12,
+            0x13,
+            0x14,
+            0x15,
+            0x16,
+            0x17,
+            0x18,
+            0x19,
+            0x1A,
+            0x1B,
+            0x1C,
+            0x1D,
+            0x1E,
+            0x1F,
+            0x20,
+            0x21 // 33 elements
+        ];
+        let byte_array = ByteArrayExTrait::from_bytes(input.span());
+        let res = byte_array.into_bytes();
+
+        // Ensure that the elements are correct
+        assert(res == input.span(), 'bytes mismatch');
+    }
+
+    #[test]
+    fn test_pack_bytes_le_bytes31() {
+        let mut arr = array![0x11, 0x22, 0x33, 0x44];
+        let res = ByteArrayExTrait::from_bytes(arr.span());
+
+        // Ensure that the result is complete and keeps the same order
+        let mut i = 0;
+        loop {
+            if i == arr.len() {
+                break;
+            };
+            assert(*arr[i] == res[i], 'byte mismatch');
+            i += 1;
+        };
+    }
+
+
+    #[test]
+    fn test_bytearray_to_64_words_partial() {
+        let input = ByteArrayExTrait::from_bytes(array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span());
+        let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
+        assert(pending_word == 6618611909121, 'wrong pending word');
+        assert(pending_word_len == 6, 'wrong pending word length');
+        assert(u64_words.len() == 0, 'wrong u64 words length');
+    }
+
+    #[test]
+    fn test_bytearray_to_64_words_full() {
+        let input = ByteArrayExTrait::from_bytes(
+            array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span()
+        );
+        let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
+
+        assert(pending_word == 0, 'wrong pending word');
+        assert(pending_word_len == 0, 'wrong pending word length');
+        assert(u64_words.len() == 1, 'wrong u64 words length');
+        assert(*u64_words[0] == 578437695752307201, 'wrong u64 words length');
+    }
 }
 
+mod span_u8_test {
+    use utils::helpers::{U32Trait, U8SpanExTrait};
 
-#[test]
-fn test_u32_bytes_used() {
-    let len = 0x1234;
-    let bytes_count = len.bytes_used();
+    #[test]
+    fn test_span_u8_to_64_words_partial() {
+        let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span();
+        let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
+        assert(pending_word == 6618611909121, 'wrong pending word');
+        assert(pending_word_len == 6, 'wrong pending word length');
+        assert(u64_words.len() == 0, 'wrong u64 words length');
+    }
 
-    assert(bytes_count == 2, 'wrong bytes count');
+    #[test]
+    fn test_span_u8_to_64_words_full() {
+        let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span();
+        let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
+
+        assert(pending_word == 0, 'wrong pending word');
+        assert(pending_word_len == 0, 'wrong pending word length');
+        assert(u64_words.len() == 1, 'wrong u64 words length');
+        assert(*u64_words[0] == 578437695752307201, 'wrong u64 words length');
+    }
+
+
+    #[test]
+    fn test_compute_msg_hash() {
+        let msg = 0xabcdef_u32.to_bytes();
+        let expected_hash = 0x800d501693feda2226878e1ec7869eef8919dbc5bd10c2bcd031b94d73492860;
+        let hash = msg.compute_keccak256_hash();
+
+        assert_eq!(hash, expected_hash);
+    }
 }
 
-#[test]
-fn test_u32_bytes_used_leading_zeroes() {
-    let len = 0x001234;
-    let bytes_count = len.bytes_used();
+mod eth_signature_test {
+    use starknet::eth_signature::Signature;
+    use utils::helpers::{EthAddressSignatureTrait, TryIntoEthSignature};
 
-    assert(bytes_count == 2, 'wrong bytes count');
-}
+    #[test]
+    fn test_eth_signature_to_felt252_array() {
+        let signature_1 = Signature {
+            r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
+            s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
+            y_parity: true
+        };
 
-#[test]
-fn test_compute_msg_hash() {
-    let msg = 0xabcdef_u32.to_bytes();
-    let expected_hash = 0x800d501693feda2226878e1ec7869eef8919dbc5bd10c2bcd031b94d73492860_u256;
-    let hash = msg.compute_keccak256_hash();
+        let signature_2 = Signature {
+            r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
+            s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
+            y_parity: false
+        };
 
-    assert(hash == expected_hash, 'msg_hash is incorrect');
-}
+        let expected_signature_1: Array<felt252> = array![
+            signature_1.r.low.into(),
+            signature_1.r.high.into(),
+            signature_1.s.low.into(),
+            signature_1.s.high.into(),
+            0x01_felt252,
+        ];
 
-#[test]
-fn test_bytearray_to_64_words_partial() {
-    let input = ByteArrayExTrait::from_bytes(array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span());
-    let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
-    assert(pending_word == 6618611909121, 'wrong pending word');
-    assert(pending_word_len == 6, 'wrong pending word length');
-    assert(u64_words.len() == 0, 'wrong u64 words length');
-}
+        let expected_signature_2: Array<felt252> = array![
+            signature_1.r.low.into(),
+            signature_1.r.high.into(),
+            signature_1.s.low.into(),
+            signature_1.s.high.into(),
+            0x0_felt252,
+        ];
 
-#[test]
-fn test_bytearray_to_64_words_full() {
-    let input = ByteArrayExTrait::from_bytes(
-        array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span()
-    );
-    let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
+        let result = signature_1.to_felt252_array();
+        assert(result == expected_signature_1, 'wrong signature conversion');
 
-    assert(pending_word == 0, 'wrong pending word');
-    assert(pending_word_len == 0, 'wrong pending word length');
-    assert(u64_words.len() == 1, 'wrong u64 words length');
-    assert(*u64_words[0] == 578437695752307201, 'wrong u64 words length');
-}
+        let result = signature_2.to_felt252_array();
+        assert(result == expected_signature_2, 'wrong signature conversion');
+    }
 
-#[test]
-fn test_span_u8_to_64_words_partial() {
-    let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span();
-    let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
-    assert(pending_word == 6618611909121, 'wrong pending word');
-    assert(pending_word_len == 6, 'wrong pending word length');
-    assert(u64_words.len() == 0, 'wrong u64 words length');
-}
+    #[test]
+    fn test_felt252_array_to_eth_signature() {
+        let signature_1 = Signature {
+            r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
+            s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
+            y_parity: true
+        };
 
-#[test]
-fn test_span_u8_to_64_words_full() {
-    let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span();
-    let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
+        let signature_2 = Signature {
+            r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
+            s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
+            y_parity: false
+        };
 
-    assert(pending_word == 0, 'wrong pending word');
-    assert(pending_word_len == 0, 'wrong pending word length');
-    assert(u64_words.len() == 1, 'wrong u64 words length');
-    assert(*u64_words[0] == 578437695752307201, 'wrong u64 words length');
-}
+        let signature_1_felt252_arr: Array<felt252> = array![
+            signature_1.r.low.into(),
+            signature_1.r.high.into(),
+            signature_1.s.low.into(),
+            signature_1.s.high.into(),
+            0x01_felt252,
+        ];
 
-#[test]
-fn test_eth_signature_to_felt252_array() {
-    let signature_1 = Signature {
-        r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
-        s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
-        y_parity: true
-    };
+        let signature_2_felt252_arr: Array<felt252> = array![
+            signature_1.r.low.into(),
+            signature_1.r.high.into(),
+            signature_1.s.low.into(),
+            signature_1.s.high.into(),
+            0x0_felt252,
+        ];
 
-    let signature_2 = Signature {
-        r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
-        s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
-        y_parity: false
-    };
+        let result = signature_1_felt252_arr.span().try_into().unwrap();
+        assert(result == signature_1, 'wrong signature extracted');
 
-    let expected_signature_1: Array<felt252> = array![
-        signature_1.r.low.into(),
-        signature_1.r.high.into(),
-        signature_1.s.low.into(),
-        signature_1.s.high.into(),
-        0x01_felt252,
-    ];
-
-    let expected_signature_2: Array<felt252> = array![
-        signature_1.r.low.into(),
-        signature_1.r.high.into(),
-        signature_1.s.low.into(),
-        signature_1.s.high.into(),
-        0x0_felt252,
-    ];
-
-    let result = signature_1.to_felt252_array();
-    assert(result == expected_signature_1, 'wrong signature conversion');
-
-    let result = signature_2.to_felt252_array();
-    assert(result == expected_signature_2, 'wrong signature conversion');
-}
-
-#[test]
-fn test_felt252_array_to_eth_signature() {
-    let signature_1 = Signature {
-        r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
-        s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
-        y_parity: true
-    };
-
-    let signature_2 = Signature {
-        r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
-        s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
-        y_parity: false
-    };
-
-    let signature_1_felt252_arr: Array<felt252> = array![
-        signature_1.r.low.into(),
-        signature_1.r.high.into(),
-        signature_1.s.low.into(),
-        signature_1.s.high.into(),
-        0x01_felt252,
-    ];
-
-    let signature_2_felt252_arr: Array<felt252> = array![
-        signature_1.r.low.into(),
-        signature_1.r.high.into(),
-        signature_1.s.low.into(),
-        signature_1.s.high.into(),
-        0x0_felt252,
-    ];
-
-    let result = signature_1_felt252_arr.span().try_into().unwrap();
-    assert(result == signature_1, 'wrong signature extracted');
-
-    let result = signature_2_felt252_arr.span().try_into().unwrap();
-    assert(result == signature_2, 'wrong signature extracted');
+        let result = signature_2_felt252_arr.span().try_into().unwrap();
+        assert(result == signature_2, 'wrong signature extracted');
+    }
 }

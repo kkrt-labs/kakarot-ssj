@@ -16,7 +16,8 @@ use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDi
 use pedersen::{PedersenTrait, HashState};
 use starknet::{Store, storage_base_address_from_felt252, ContractAddress, get_contract_address};
 use utils::constants::EMPTY_KECCAK;
-use utils::helpers::{load_word, U256Trait, U8SpanExTrait};
+use utils::helpers::ResultExTrait;
+use utils::helpers::{ceil32, load_word, U256Trait, U8SpanExTrait};
 use utils::math::BitshiftImpl;
 use utils::traits::{EthAddressIntoU256};
 
@@ -118,12 +119,14 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#37?fork=shanghai
     fn exec_calldatacopy(ref self: VM) -> Result<(), EVMError> {
-        // TODO: Add dynamic gas
-        self.charge_gas(gas::VERYLOW)?;
-
         let dest_offset = self.stack.pop_usize()?;
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
+
+        let words_size: u128 = (ceil32(size) / 32).into();
+        let copy_gas_cost = gas::COPY * words_size;
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), dest_offset + size);
+        self.charge_gas(gas::VERYLOW + copy_gas_cost + expand_memory_cost)?;
 
         let calldata: Span<u8> = self.message().data;
 
@@ -151,12 +154,14 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Copies slice of bytecode to memory.
     /// # Specification: https://www.evm.codes/#39?fork=shanghai
     fn exec_codecopy(ref self: VM) -> Result<(), EVMError> {
-        // TODO: Add dynamic gas
-        self.charge_gas(gas::VERYLOW)?;
-
         let dest_offset = self.stack.pop_usize()?;
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
+
+        let words_size: u128 = (ceil32(size) / 32).into();
+        let copy_gas_cost = gas::COPY * words_size;
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), dest_offset + size);
+        self.charge_gas(gas::VERYLOW + copy_gas_cost + expand_memory_cost)?;
 
         let bytecode: Span<u8> = self.message().code;
 
@@ -198,13 +203,16 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Copy an account's code to memory
     /// # Specification: https://www.evm.codes/#3c?fork=shanghai
     fn exec_extcodecopy(ref self: VM) -> Result<(), EVMError> {
-        // TODO: Add Warm / Cold storage costs
-        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
-
         let evm_address = self.stack.pop_eth_address()?;
         let dest_offset = self.stack.pop_usize()?;
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
+
+        let words_size: u128 = (ceil32(size) / 32).into();
+        let copy_gas_cost = gas::COPY * words_size;
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), dest_offset + size);
+        //TODO: Add Warm / Cold storage costs
+        self.charge_gas(gas::WARM_STORAGE_READ_COST + copy_gas_cost + expand_memory_cost)?;
 
         let bytecode = self.env.state.get_account(evm_address).code;
         let bytecode_len = bytecode.len();
@@ -230,13 +238,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#3e?fork=shanghai
     fn exec_returndatacopy(ref self: VM) -> Result<(), EVMError> {
-        // TODO: Add dynamic gas
-        self.charge_gas(gas::VERYLOW)?;
-
         let dest_offset = self.stack.pop_usize()?;
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
-
         let return_data: Span<u8> = self.return_data();
 
         match u32_overflowing_add(offset, size) {
@@ -249,6 +253,13 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
                 return Result::Err(EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR));
             }
         }
+
+        //TODO: handle overflow in ceil32 function.
+        let words_size: u128 = (ceil32(size.into()) / 32).into();
+        let copy_gas_cost = gas::COPY * words_size;
+        let max_memory_size = u32_overflowing_add(dest_offset, size).map_err(EVMError::OutOfGas)?;
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), max_memory_size);
+        self.charge_gas(gas::VERYLOW + copy_gas_cost + expand_memory_cost)?;
 
         let data_to_copy: Span<u8> = return_data.slice(offset, size);
         self.memory.store_n(data_to_copy, dest_offset);

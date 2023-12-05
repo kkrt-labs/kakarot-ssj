@@ -720,7 +720,6 @@ fn test_exec_returndatasize() {
     let size = return_data.len();
 
     let mut vm = VMBuilderTrait::new_with_presets().with_return_data(return_data.span()).build();
-    println!("vmdata: {:?}", vm.return_data().len());
 
     vm.exec_returndatasize().expect('exec_returndatasize failed');
 

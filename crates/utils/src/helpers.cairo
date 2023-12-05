@@ -2,9 +2,10 @@ use cmp::min;
 use core::hash::{HashStateExTrait, HashStateTrait};
 use core::num::traits::{Zero, One};
 use core::pedersen::{HashState, PedersenTrait};
-
-use integer::U32TryIntoNonZero;
+use core::traits::TryInto;
 use integer::u32_as_non_zero;
+
+use integer::{BoundedInt, U32TryIntoNonZero};
 use keccak::{cairo_keccak, u128_split};
 use starknet::{
     EthAddress, EthAddressIntoFelt252, ContractAddress, ClassHash,
@@ -17,24 +18,33 @@ use utils::constants::{
     POW_256_16,
 };
 use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
-use utils::math::{Bitshift, WrappingBitshift};
+use utils::math::{Bitshift, WrappingBitshift, Exponentiation};
 use utils::traits::{
     U256TryIntoContractAddress, EthAddressIntoU256, U256TryIntoEthAddress, TryIntoResult,
 };
-/// Ceils a number of bits to the next word (32 bytes)
+
+
+/// Converts a value to the next closest multiple of 32
 ///
 /// # Arguments
-/// * `bytes_len` - The number of bits to ceil
+/// * `value` - The value to ceil to the next multiple of 32
 ///
 /// # Returns
-/// The number of bytes that are needed to store `bytes_len` bits in 32-bytes words.
-///
+/// The same value if it's a perfect multiple of 32
+/// else it returns the smallest multiple of 32 
+/// that is greater than `value`.
+/// 
 /// # Examples
-/// ceil_bytes_len_to_next_32_bytes_word(2) = 32
-/// ceil_bytes_len_to_next_32_bytes_word(34) = 64
-fn ceil_bytes_len_to_next_32_bytes_word(bytes_len: usize) -> usize {
-    let q = (bytes_len + 31) / 32;
-    return q * 32;
+/// ceil32(2) = 32
+/// ceil32(34) = 64
+fn ceil32(value: usize) -> usize {
+    let ceiling = 32_u32;
+    let (q, r) = DivRem::div_rem(value, ceiling.try_into().unwrap());
+    if r == 0_u8.into() {
+        return value;
+    } else {
+        return (value + ceiling - r).into();
+    }
 }
 
 /// Computes 256 ** (16 - i) for 0 <= i <= 16.
@@ -671,7 +681,7 @@ impl U32Impl of U32Trait {
             }
             return 2;
         } else {
-            if self < 0x1000000 { // 256^6
+            if self < 0x1000000 { // 256^3
                 return 3;
             }
             return 4;
@@ -709,29 +719,23 @@ impl U64Impl of U64Trait {
     /// # Returns
     /// The number of bytes used to represent the value.
     fn bytes_used(self: u64) -> u8 {
-        if self < 0x10000 { // 256^2
-            if self < 0x100 { // 256^1
-                return if self == 0 {
-                    0
-                } else {
-                    1
-                };
-            } else {
-                return if self < 0x1000 {
-                    2
-                } else {
-                    3
-                };
-            }
+        if self <= BoundedInt::<u32>::max().into() { // 256^4
+            return U32Trait::bytes_used(self.try_into().unwrap());
         } else {
-            if self < 0x1000000 { // 256^6
-                return if self < 0x100000 {
-                    4
-                } else {
-                    5
-                };
-            } else {
+            if self < 0x1000000000000 { // 256^6
+                if self < 0x10000000000 {
+                    if self < 0x100000000 {
+                        return 4;
+                    }
+                    return 5;
+                }
                 return 6;
+            } else {
+                if self < 0x100000000000000 { // 256^7
+                    return 7;
+                } else {
+                    return 8;
+                }
             }
         }
     }
@@ -790,6 +794,8 @@ impl U256Impl of U256Trait {
     // Returns a u256 representation as bytes: `Span<u8>`
     // This slice is padded of zeros if the u256 representation does not take up to 32 bytes
     fn to_bytes(self: u256) -> Span<u8> {
+        //TODO(audit): check why we pad this with zeroes instead of returning the
+        // actual number of bytes used
         let bytes_used: u256 = 32;
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;

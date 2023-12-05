@@ -23,9 +23,6 @@ impl SystemOperations of SystemOperationsTrait {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
 
-        // TODO: add dynamic gas cost
-        self.charge_gas(gas::CREATE)?;
-
         let create_args = self.prepare_create(CreateType::Create)?;
         self.generic_create(create_args)
     }
@@ -34,7 +31,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// CALL
     /// # Specification: https://www.evm.codes/#f1?fork=shanghai
     fn exec_call(ref self: VM) -> Result<(), EVMError> {
-        // TODO: add dynamic gas cost and handle warm/cold storage
+        // TODO: handle warm/cold storage
         self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
 
         let call_args = self.prepare_call(@CallType::Call)?;
@@ -78,11 +75,10 @@ impl SystemOperations of SystemOperationsTrait {
     /// RETURN
     /// # Specification: https://www.evm.codes/#f3?fork=shanghai
     fn exec_return(ref self: VM) -> Result<(), EVMError> {
-        // TODO: add dynamic gas
-        self.charge_gas(gas::ZERO)?;
-
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + size);
+        self.charge_gas(gas::ZERO + expand_memory_cost)?;
 
         let mut return_data = Default::default();
         self.memory.load_n(size, ref return_data, offset);
@@ -133,11 +129,11 @@ impl SystemOperations of SystemOperationsTrait {
     /// REVERT
     /// # Specification: https://www.evm.codes/#fd?fork=shanghai
     fn exec_revert(ref self: VM) -> Result<(), EVMError> {
-        // TODO: add dynamic gas
-        self.charge_gas(gas::ZERO)?;
-
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
+
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + size);
+        self.charge_gas(expand_memory_cost)?;
 
         let mut return_data = Default::default();
         self.memory.load_n(size, ref return_data, offset);
