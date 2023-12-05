@@ -10,7 +10,7 @@ use evm::model::ExecutionSummary;
 use evm::model::account::{AccountTrait};
 use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{Message, Address, AccountType, Transfer};
+use evm::model::{Message, MessageTrait, Address, AccountType, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use keccak::cairo_keccak;
@@ -111,17 +111,17 @@ impl CreateHelpersImpl of CreateHelpers {
         caller_account.set_nonce(caller_current_nonce + 1);
         self.env.state.set_account(caller_account);
 
-        let child_message = Message {
+        let child_message = MessageTrait::new(
             caller,
             target: target_address,
+            gas_limit: self.message().gas_limit,
+            data: Default::default().span(),
+            code: create_args.bytecode,
             value: create_args.value,
             should_transfer_value: true,
-            code: create_args.bytecode,
-            data: Default::default().span(),
-            gas_limit: self.message().gas_limit,
             depth: self.message().depth + 1,
             read_only: false,
-        };
+        );
 
         let result = EVMTrait::process_create_message(child_message, ref self.env);
 

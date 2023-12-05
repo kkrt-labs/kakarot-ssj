@@ -10,6 +10,7 @@ mod math;
 mod num;
 mod rlp;
 mod storage;
+mod set;
 
 #[cfg(test)]
 mod tests;

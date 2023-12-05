@@ -9,7 +9,7 @@ use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{Transfer, Address, Message};
+use evm::model::{Transfer, Address, Message, MessageTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use starknet::{EthAddress, get_contract_address};
@@ -131,17 +131,17 @@ impl CallHelpersImpl of CallHelpers {
         // We enter the standard flow
         let code = self.env.state.get_account(call_args.code_address.evm).code;
         self.return_data = Default::default().span();
-        let message = Message {
+        let message = MessageTrait::new(
             caller: call_args.caller,
             target: call_args.to,
             gas_limit: call_args.gas,
-            value: call_args.value,
-            read_only: call_args.read_only,
-            should_transfer_value: call_args.should_transfer,
             data: call_args.calldata,
-            code,
-            depth: self.message().depth + 1
-        };
+            code: code,
+            value: call_args.value,
+            should_transfer_value: call_args.should_transfer,
+            depth: self.message().depth + 1,
+            read_only: call_args.read_only,
+        );
 
         let result = EVMTrait::process_message(message, ref self.env);
 

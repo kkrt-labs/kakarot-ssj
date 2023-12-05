@@ -17,6 +17,7 @@ use starknet::{
 };
 use utils::helpers::{ArrayExtTrait, ResultExTrait};
 use utils::traits::{StorageBaseAddressPartialEq, StorageBaseAddressIntoFelt252};
+use utils::set::{Set, SetTrait};
 
 /// The `StateChangeLog` tracks the changes applied to storage during the execution of a transaction.
 /// Upon exiting an execution context, contextual changes must be finalized into transactional changes.
@@ -32,7 +33,7 @@ use utils::traits::{StorageBaseAddressPartialEq, StorageBaseAddressIntoFelt252};
 /// * `keyset` - An `Array` of contextual keys.
 struct StateChangeLog<T> {
     changes: Felt252Dict<Nullable<T>>,
-    keyset: Array<felt252>,
+    keyset: Set<felt252>,
 }
 
 impl StateChangeLogDestruct<T, +Drop<T>> of Destruct<StateChangeLog<T>> {
@@ -80,12 +81,12 @@ impl StateChangeLogImpl<T, +Drop<T>, +Copy<T>> of StateChangeLogTrait<T> {
     #[inline(always)]
     fn write(ref self: StateChangeLog<T>, key: felt252, value: T) {
         self.changes.insert(key, NullableTrait::new(value));
-        self.keyset.append_unique(key);
+        self.keyset.add(key);
     }
 
     fn clone(ref self: StateChangeLog<T>) -> StateChangeLog<T> {
         let mut cloned_changes = Default::default();
-        let mut keyset_span = self.keyset.span();
+        let mut keyset_span = self.keyset.to_span();
         loop {
             match keyset_span.pop_front() {
                 Option::Some(key) => {
@@ -214,13 +215,14 @@ impl StateInternalImpl of StateInternalTrait {
     /// state changes to Starknet Storage.
     /// commit_storage MUST be called after commit_accounts.
     fn commit_storage(ref self: State) -> Result<(), EVMError> {
+        let mut storage_keys = self.accounts_storage.keyset.to_span();
         let result = loop {
-            match self.accounts_storage.keyset.pop_front() {
+            match storage_keys.pop_front() {
                 Option::Some(state_key) => {
                     let (evm_address, key, value) = self
                         .accounts_storage
                         .changes
-                        .get(state_key)
+                        .get(*state_key)
                         .deref();
                     let mut account = self.get_account(evm_address);
                     match account.commit_storage(key, value) {
@@ -276,10 +278,11 @@ impl StateInternalImpl of StateInternalTrait {
     }
 
     fn commit_accounts(ref self: State) -> Result<(), EVMError> {
+        let mut account_keys = self.accounts.keyset.to_span();
         loop {
-            match self.accounts.keyset.pop_front() {
+            match account_keys.pop_front() {
                 Option::Some(evm_address) => {
-                    let account = self.accounts.changes.get(evm_address).deref();
+                    let account = self.accounts.changes.get(*evm_address).deref();
                     match account.commit() {
                         Result::Ok(_) => {},
                         Result::Err(_) => { //TODO handle error gracefully

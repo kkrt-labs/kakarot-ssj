@@ -509,6 +509,16 @@ impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
         }
         self.append(value);
     }
+
+    // Concatenates two arrays by adding the elements of arr2 to arr1.
+    fn concat_unique<+Copy<T>, +PartialEq<T>>(ref self: Array<T>, mut arr2: Span<T>) {
+        loop {
+            match arr2.pop_front() {
+                Option::Some(elem) => self.append_unique(*elem),
+                Option::None => { break; }
+            };
+        };
+    }
 }
 
 #[generate_trait]
@@ -522,6 +532,20 @@ impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
                 } },
                 Option::None => { break false; }
             }
+        }
+    }
+
+    // Returns the index of an item in the array.
+    fn index_of<+PartialEq<T>>(mut self: Span<T>, value: T) -> u128 {
+        let mut i = 0;
+        loop {
+            match self.pop_front() {
+                Option::Some(elem) => { if *elem == value {
+                    break i;
+                } },
+                Option::None => { break BoundedInt::<u128>::max(); }
+            }
+            i += 1;
         }
     }
 }

@@ -1,8 +1,10 @@
+use utils::helpers::ArrayExtTrait;
 use evm::errors::EVMError;
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Message, Environment};
 use evm::stack::{Stack, StackTrait};
 use utils::traits::{SpanDefault};
+use starknet::EthAddress;
 
 #[derive(Default, Destruct)]
 struct VM {
@@ -15,7 +17,8 @@ struct VM {
     message: Message,
     gas_used: u128,
     running: bool,
-    error: bool
+    error: bool,
+    accessed_addresses: Array<EthAddress>
 }
 
 
@@ -32,7 +35,8 @@ impl VMImpl of VMTrait {
             message,
             gas_used: 0,
             running: true,
-            error: false
+            error: false,
+            accessed_addresses: Default::default()
         }
     }
 
@@ -110,5 +114,12 @@ impl VMImpl of VMTrait {
     #[inline(always)]
     fn increment_gas_used_unchecked(ref self: VM, value: u128) {
         self.gas_used += value;
+    }
+
+    fn merge_child(ref self: VM, other: VM){
+        //TODO rest of the return logic
+        if !self.error {
+            self.accessed_addresses.concat_unique(other.accessed_addresses.span());
+        }
     }
 }
