@@ -4,8 +4,8 @@ use evm::model::{Message, Environment};
 use evm::stack::{Stack, StackTrait};
 use starknet::EthAddress;
 use utils::helpers::ArrayExtTrait;
-use utils::traits::{SpanDefault};
 use utils::set::{Set, SetTrait};
+use utils::traits::{SpanDefault};
 
 #[derive(Default, Destruct)]
 struct VM {
