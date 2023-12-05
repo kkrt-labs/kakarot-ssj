@@ -1,10 +1,10 @@
-use utils::helpers::ArrayExtTrait;
 use evm::errors::EVMError;
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Message, Environment};
 use evm::stack::{Stack, StackTrait};
-use utils::traits::{SpanDefault};
 use starknet::EthAddress;
+use utils::helpers::ArrayExtTrait;
+use utils::traits::{SpanDefault};
 
 #[derive(Default, Destruct)]
 struct VM {
@@ -116,7 +116,7 @@ impl VMImpl of VMTrait {
         self.gas_used += value;
     }
 
-    fn merge_child(ref self: VM, other: VM){
+    fn merge_child(ref self: VM, other: VM) {
         //TODO rest of the return logic
         if !self.error {
             self.accessed_addresses.concat_unique(other.accessed_addresses.span());

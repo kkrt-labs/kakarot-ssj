@@ -33,8 +33,8 @@ fn test_compute_state_key() {
 mod test_state_changelog {
     use evm::state::{StateChangeLog, StateChangeLogTrait};
     use evm::tests::test_utils;
-    use utils::traits::StorageBaseAddressIntoFelt252;
     use utils::set::{Set, SetTrait};
+    use utils::traits::StorageBaseAddressIntoFelt252;
 
 
     #[test]

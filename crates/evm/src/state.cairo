@@ -16,8 +16,8 @@ use starknet::{
     emit_event_syscall
 };
 use utils::helpers::{ArrayExtTrait, ResultExTrait};
-use utils::traits::{StorageBaseAddressPartialEq, StorageBaseAddressIntoFelt252};
 use utils::set::{Set, SetTrait};
+use utils::traits::{StorageBaseAddressPartialEq, StorageBaseAddressIntoFelt252};
 
 /// The `StateChangeLog` tracks the changes applied to storage during the execution of a transaction.
 /// Upon exiting an execution context, contextual changes must be finalized into transactional changes.

@@ -1,6 +1,6 @@
 use utils::helpers::{SpanExtTrait, ArrayExtTrait};
 
-#[derive(Default, Drop)]
+#[derive(Default, Drop, PartialEq)]
 struct Set<T> {
     inner: Array<T>
 }
@@ -79,6 +79,18 @@ impl SpanSetImpl<T, +Copy<T>, +Drop<T>, +PartialEq<T>> of SpanSetTrait<T> {
     #[inline]
     fn to_span(self: SpanSet<T>) -> Span<T> {
         self.inner
+    }
+
+    fn clone_set(self: SpanSet<T>) -> Set<T> {
+        let mut response: Array<T> = Default::default();
+        let mut span = self.inner;
+        loop {
+            match span.pop_front() {
+                Option::Some(v) => { response.append(*v); },
+                Option::None => { break (); },
+            };
+        };
+        Set { inner: response }
     }
 
     #[inline]

@@ -3,9 +3,7 @@ use core::hash::{HashStateExTrait, HashStateTrait};
 use core::num::traits::{Zero, One};
 use core::pedersen::{HashState, PedersenTrait};
 use core::traits::TryInto;
-use integer::u32_as_non_zero;
-
-use integer::{BoundedInt, U32TryIntoNonZero};
+use integer::{BoundedInt, u32_as_non_zero, U32TryIntoNonZero};
 use keccak::{cairo_keccak, u128_split};
 use starknet::{
     EthAddress, EthAddressIntoFelt252, ContractAddress, ClassHash,
