@@ -231,12 +231,12 @@ mod u32_test {
 
     #[test]
     fn test_u32_bytes_used() {
-        assert_eq!(0x00_32.bytes_used(), 0);
+        assert_eq!(0x00_u32.bytes_used(), 0);
         let mut value = 0xff;
         let mut i = 1;
         loop {
             assert_eq!(value.bytes_used(), i);
-            if i == 8 {
+            if i == 4 {
                 break;
             };
             i += 1;
@@ -468,7 +468,7 @@ mod bytearray_test {
 }
 
 mod span_u8_test {
-    use utils::helpers::U8SpanExTrait;
+    use utils::helpers::{U32Trait, U8SpanExTrait};
 
     #[test]
     fn test_span_u8_to_64_words_partial() {
@@ -493,11 +493,11 @@ mod span_u8_test {
 
     #[test]
     fn test_compute_msg_hash() {
-        let msg = array![0xa, 0xbc, 0xde, 0x0f].span();
-        let expected_hash = 0x800d501693feda2226878e1ec7869eef8919dbc5bd10c2bcd031b94d73492860_u256;
+        let msg = 0xabcdef_u32.to_bytes();
+        let expected_hash = 0x800d501693feda2226878e1ec7869eef8919dbc5bd10c2bcd031b94d73492860;
         let hash = msg.compute_keccak256_hash();
 
-        assert(hash == expected_hash, 'msg_hash is incorrect');
+        assert_eq!(hash, expected_hash);
     }
 }
 
