@@ -534,14 +534,14 @@ impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
     }
 
     // Returns the index of an item in the array.
-    fn index_of<+PartialEq<T>>(mut self: Span<T>, value: T) -> u128 {
+    fn index_of<+PartialEq<T>>(mut self: Span<T>, value: T) -> Option<u128> {
         let mut i = 0;
         loop {
             match self.pop_front() {
                 Option::Some(elem) => { if *elem == value {
-                    break i;
+                    break Option::Some(i);
                 } },
-                Option::None => { break BoundedInt::<u128>::max(); }
+                Option::None => { break Option::None; }
             }
             i += 1;
         }
