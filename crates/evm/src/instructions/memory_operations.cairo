@@ -116,17 +116,9 @@ impl MemoryOperation of MemoryOperationTrait {
 
         let index = self.stack.pop_usize()?;
 
-        // TODO: Currently this doesn't check that byte is actually `JUMPDEST`
-        // and not `0x5B` that is a part of PUSHN instruction
-        //
-        // That can be done by storing all valid jump locations during contract deployment
-        // which would also simplify the logic because we would be just checking if idx is
-        // present in that list
-        //
-        // Check if idx in bytecode points to `JUMPDEST` opcode
         match self.message().code.get(index) {
             Option::Some(opcode) => {
-                if *opcode.unbox() != 0x5B {
+                if !self.is_valid_jump(index) {
                     return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
                 }
             },
