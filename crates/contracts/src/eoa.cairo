@@ -112,7 +112,7 @@ mod ExternallyOwnedAccount {
             let validation_result = EthTransactionTrait::validate_eth_tx(
                 tx_metadata, encoded_tx.span()
             )
-                .unwrap();
+                .expect('failed to validate eth tx');
 
             assert(validation_result, 'transaction validation failed');
 

@@ -403,8 +403,6 @@ mod KakarotCore {
                 },
             };
 
-            let code = env.state.get_account(to.evm).code;
-
             let message = MessageTrait::new(
                 caller: origin,
                 target: to,
