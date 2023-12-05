@@ -157,9 +157,12 @@ impl VMImpl of VMTrait {
     }
 
     fn merge_child(ref self: VM, child: @ExecutionResult) {
-        //TODO(gas) merge child gas
-        if !self.error {
+        if *child.success {
+            //TODO: merge accessed storage
             self.accessed_addresses.extend(*child.accessed_addresses);
         }
+    //TODO(gas) handle error case
+
+    //TODO(gas) merge child gas left
     }
 }
