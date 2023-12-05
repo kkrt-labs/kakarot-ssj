@@ -143,6 +143,7 @@ impl CallHelpersImpl of CallHelpers {
             depth: self.message().depth + 1,
             read_only: call_args.read_only,
             accessed_addresses: self.accessed_addresses.clone().spanset(),
+            accessed_storage_keys: self.accessed_storage_keys.clone().spanset(),
         };
 
         let result = EVMTrait::process_message(message, ref self.env);

@@ -19,14 +19,15 @@ struct VM {
     gas_used: u128,
     running: bool,
     error: bool,
-    accessed_addresses: Set<EthAddress>
+    accessed_addresses: Set<EthAddress>,
+    accessed_storage_keys: Set<(EthAddress, u256)>,
 }
 
 
 #[generate_trait]
 impl VMImpl of VMTrait {
+    #[inline(always)]
     fn new(message: Message, env: Environment) -> VM {
-        let accessed_addresses: Set<EthAddress> = message.accessed_addresses.inner.clone();
         VM {
             stack: Default::default(),
             memory: Default::default(),
@@ -38,7 +39,8 @@ impl VMImpl of VMTrait {
             gas_used: 0,
             running: true,
             error: false,
-            accessed_addresses
+            accessed_addresses: message.accessed_addresses.inner.clone(),
+            accessed_storage_keys: message.accessed_storage_keys.inner.clone(),
         }
     }
 
@@ -55,10 +57,12 @@ impl VMImpl of VMTrait {
     }
 
 
+    #[inline(always)]
     fn pc(self: @VM) -> usize {
         *self.pc
     }
 
+    #[inline(always)]
     fn set_pc(ref self: VM, pc: usize) {
         self.pc = pc;
     }
@@ -92,10 +96,12 @@ impl VMImpl of VMTrait {
         self.set_valid_jumpdests(valid_jumpdests.span());
     }
 
+    #[inline(always)]
     fn valid_jumpdests(self: @VM) -> Span<usize> {
         *self.valid_jumpdests
     }
 
+    #[inline(always)]
     fn set_valid_jumpdests(ref self: VM, valid_jumpdests: Span<usize>) {
         self.valid_jumpdests = valid_jumpdests;
     }
@@ -105,36 +111,49 @@ impl VMImpl of VMTrait {
         self.valid_jumpdests().contains(dest)
     }
 
+    #[inline(always)]
     fn return_data(self: @VM) -> Span<u8> {
         *self.return_data
     }
 
+    #[inline(always)]
     fn set_return_data(ref self: VM, return_data: Span<u8>) {
         self.return_data = return_data;
     }
 
+    #[inline(always)]
     fn is_running(self: @VM) -> bool {
         *self.running
     }
 
+    #[inline(always)]
     fn stop(ref self: VM) {
         self.running = false;
     }
 
+    #[inline(always)]
     fn set_error(ref self: VM) {
         self.error = true;
     }
 
+    #[inline(always)]
     fn message(self: @VM) -> Message {
         *self.message
     }
 
+    #[inline(always)]
     fn gas_used(self: @VM) -> u128 {
         *self.gas_used
     }
 
+    #[inline(always)]
     fn accessed_addresses(self: @VM) -> SpanSet<EthAddress> {
         self.accessed_addresses.spanset()
+    }
+
+    #[inline(always)]
+    fn accessed_storage_keys(self: @VM) -> SpanSet<(EthAddress, u256)> {
+        self.accessed_storage_keys.spanset()
     }
 
     /// Reads and return data from bytecode.
@@ -156,10 +175,12 @@ impl VMImpl of VMTrait {
         self.gas_used += value;
     }
 
+    #[inline(always)]
     fn merge_child(ref self: VM, child: @ExecutionResult) {
         if *child.success {
             //TODO: merge accessed storage
             self.accessed_addresses.extend(*child.accessed_addresses);
+            self.accessed_storage_keys.extend(*child.accessed_storage_keys);
         }
     //TODO(gas) handle error case
 

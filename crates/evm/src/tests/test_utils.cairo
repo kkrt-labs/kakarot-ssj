@@ -192,6 +192,7 @@ fn preset_message() -> Message {
         should_transfer_value: true,
         depth: 0,
         accessed_addresses: Default::default(),
+        accessed_storage_keys: Default::default(),
     }
 }
 
@@ -226,6 +227,7 @@ fn preset_vm() -> VM {
         running: true,
         error: false,
         accessed_addresses: Default::default(),
+        accessed_storage_keys: Default::default(),
     }
 }
 

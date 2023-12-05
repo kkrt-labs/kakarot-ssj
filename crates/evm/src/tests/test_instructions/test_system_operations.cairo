@@ -303,7 +303,7 @@ fn test_exec_call_code() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
-    kakarot_core.deploy_eoa(evm_address);
+    deploy_contract_account(evm_address, array![].span());
 
     // Set vm bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -384,7 +384,7 @@ fn test_exec_delegatecall() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
-    kakarot_core.deploy_eoa(evm_address);
+    deploy_contract_account(evm_address, array![].span());
 
     // Set vm bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
