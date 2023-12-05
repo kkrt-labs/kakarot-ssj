@@ -107,6 +107,7 @@ impl EVMImpl of EVMTrait {
                         //TODO(optimization) avoid converstion to u256 to get bytes
                         return_data: Into::<felt252, u256>::into(err.to_string()).to_bytes(),
                         gas_used: 0,
+                        accessed_addresses: Default::default(),
                     };
                 }
             }
@@ -150,7 +151,10 @@ impl EVMImpl of EVMTrait {
         // Check if PC is not out of bounds.
         if pc >= bytecode.len() || vm.is_running() == false {
             return ExecutionResult {
-                success: true, return_data: vm.return_data(), gas_used: vm.gas_used()
+                success: true,
+                return_data: vm.return_data(),
+                gas_used: vm.gas_used(),
+                accessed_addresses: vm.accessed_addresses(),
             };
         }
 
@@ -164,7 +168,10 @@ impl EVMImpl of EVMTrait {
                     return EVMTrait::execute_code(ref vm);
                 }
                 return ExecutionResult {
-                    success: true, return_data: vm.return_data(), gas_used: vm.gas_used()
+                    success: true,
+                    return_data: vm.return_data(),
+                    gas_used: vm.gas_used(),
+                    accessed_addresses: vm.accessed_addresses(),
                 };
             },
             Result::Err(error) => {
@@ -174,6 +181,7 @@ impl EVMImpl of EVMTrait {
                     success: false,
                     return_data: Into::<felt252, u256>::into(error.to_string()).to_bytes(),
                     gas_used: vm.gas_used(),
+                    accessed_addresses: vm.accessed_addresses(),
                 };
             }
         }

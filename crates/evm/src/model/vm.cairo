@@ -1,10 +1,10 @@
 use evm::errors::EVMError;
 use evm::memory::{Memory, MemoryTrait};
-use evm::model::{Message, Environment};
+use evm::model::{Message, Environment, ExecutionResult};
 use evm::stack::{Stack, StackTrait};
 use starknet::EthAddress;
-use utils::helpers::{SpanExtension, ArrayExtTrait};
-use utils::set::{Set, SetTrait};
+use utils::helpers::{SpanExtTrait, ArrayExtTrait};
+use utils::set::{Set, SetTrait, SpanSet};
 use utils::traits::{SpanDefault};
 
 #[derive(Default, Destruct)]
@@ -133,6 +133,10 @@ impl VMImpl of VMTrait {
         *self.gas_used
     }
 
+    fn accessed_addresses(self: @VM) -> SpanSet<EthAddress> {
+        self.accessed_addresses.spanset()
+    }
+
     /// Reads and return data from bytecode.
     /// The program counter is incremented accordingly.
     ///
@@ -152,10 +156,10 @@ impl VMImpl of VMTrait {
         self.gas_used += value;
     }
 
-    fn merge_child(ref self: VM, child: VM) {
+    fn merge_child(ref self: VM, child: @ExecutionResult) {
         //TODO(gas) merge child gas
         if !self.error {
-            self.accessed_addresses.extend(child.accessed_addresses.spanset());
+            self.accessed_addresses.extend(*child.accessed_addresses);
         }
     }
 }

@@ -14,6 +14,7 @@ use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use starknet::{EthAddress, get_contract_address};
 use utils::helpers::compute_starknet_address;
+use utils::set::SetTrait;
 use utils::traits::{BoolIntoNumeric, U256TryIntoResult};
 
 /// CallArgs is a subset of CallContext
@@ -141,10 +142,11 @@ impl CallHelpersImpl of CallHelpers {
             should_transfer_value: call_args.should_transfer,
             depth: self.message().depth + 1,
             read_only: call_args.read_only,
-            accessed_addresses: self.message().accessed_addresses.clone(),
+            accessed_addresses: self.accessed_addresses.clone().spanset(),
         };
 
         let result = EVMTrait::process_message(message, ref self.env);
+        self.merge_child(@result);
 
         self.return_data = result.return_data;
         self.gas_used += result.gas_used;

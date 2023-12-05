@@ -412,7 +412,6 @@ mod KakarotCore {
             accessed_addresses.add(origin.evm);
             accessed_addresses.extend(constants::precompile_addresses().spanset());
 
-            //TODO(gas) add preaccess list here
             let message = Message {
                 caller: origin,
                 target: to,

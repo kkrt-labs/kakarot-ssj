@@ -46,6 +46,7 @@ struct ExecutionResult {
     success: bool,
     return_data: Span<u8>,
     gas_used: u128,
+    accessed_addresses: SpanSet<EthAddress>,
 }
 
 #[derive(Destruct)]
