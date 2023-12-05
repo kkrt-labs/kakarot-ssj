@@ -77,8 +77,7 @@ fn calculate_memory_gas_cost(size_in_bytes: usize) -> u128 {
     let (q1, r1) = DivRem::div_rem(r0 * r0, _512);
     let quadratic_cost = 512 * q0 * q0 + q0 * r0 + q1;
 
-    let total_gas_cost = linear_cost + quadratic_cost;
-    total_gas_cost
+    linear_cost + quadratic_cost
 }
 
 
@@ -103,6 +102,7 @@ fn memory_expansion_cost(memory_size: usize, max_offset: usize) -> u128 {
 /// # Returns
 ///
 /// * `init_code_gas` - The gas to be charged for the init code.
+#[inline(always)]
 fn init_code_cost(code_size: usize) -> u128 {
     let code_size_in_words = helpers::ceil32(code_size) / 32;
     code_size_in_words.into() * INITCODE_WORD_COST

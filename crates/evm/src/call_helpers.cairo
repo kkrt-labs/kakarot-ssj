@@ -99,7 +99,7 @@ impl CallHelpersImpl of CallHelpers {
         };
         let create_gas_cost = 0; //TODO(gas)
         let message_call_gas = 0; //TODO(gas)
-        self.charge_gas(message_call_gas + expand_memory_cost)?;
+        self.charge_gas(expand_memory_cost)?; //TODO(gas)
 
         let mut calldata = Default::default();
         self.memory.load_n(args_size, ref calldata, args_offset);

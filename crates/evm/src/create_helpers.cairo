@@ -58,7 +58,7 @@ impl CreateHelpersImpl of CreateHelpers {
                     + init_code_gas
             },
         };
-        self.charge_gas(gas::CREATE + expand_memory_cost + init_code_gas)?;
+        self.charge_gas(charged_gas)?;
 
         let mut bytecode = Default::default();
         self.memory.load_n(size, ref bytecode, offset);
