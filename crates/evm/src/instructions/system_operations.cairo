@@ -13,6 +13,7 @@ use evm::model::{Address, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use utils::math::Exponentiation;
+use utils::set::SetTrait;
 
 #[generate_trait]
 impl SystemOperations of SystemOperationsTrait {
@@ -31,10 +32,16 @@ impl SystemOperations of SystemOperationsTrait {
     /// CALL
     /// # Specification: https://www.evm.codes/#f1?fork=shanghai
     fn exec_call(ref self: VM) -> Result<(), EVMError> {
-        // TODO: handle warm/cold storage
-        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
-
         let call_args = self.prepare_call(@CallType::Call)?;
+
+        // GAS
+        if self.accessed_addresses.contains(call_args.to.evm) {
+            self.charge_gas(gas::WARM_ACCESS_COST)?;
+        } else {
+            self.accessed_addresses.add(call_args.to.evm);
+            self.charge_gas(gas::COLD_ACCOUNT_ACCESS_COST)?
+        }
+
         let read_only = self.message().read_only;
         let value = call_args.value;
 
@@ -65,10 +72,15 @@ impl SystemOperations of SystemOperationsTrait {
     /// CALLCODE
     /// # Specification: https://www.evm.codes/#f2?fork=shanghai
     fn exec_callcode(ref self: VM) -> Result<(), EVMError> {
-        // TODO: add dynamic gas cost and handle warm/cold storage
-        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
-
         let call_args = self.prepare_call(@CallType::CallCode)?;
+
+        // GAS
+        if self.accessed_addresses.contains(call_args.to.evm) {
+            self.charge_gas(gas::WARM_ACCESS_COST)?;
+        } else {
+            self.accessed_addresses.add(call_args.to.evm);
+            self.charge_gas(gas::COLD_ACCOUNT_ACCESS_COST)?
+        }
 
         self.generic_call(call_args)
     }
@@ -93,10 +105,15 @@ impl SystemOperations of SystemOperationsTrait {
     /// DELEGATECALL
     /// # Specification: https://www.evm.codes/#f4?fork=shanghai
     fn exec_delegatecall(ref self: VM) -> Result<(), EVMError> {
-        // TODO: add dynamic gas cost and handle warm/cold storage
-        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
-
         let call_args = self.prepare_call(@CallType::DelegateCall)?;
+
+        // GAS
+        if self.accessed_addresses.contains(call_args.to.evm) {
+            self.charge_gas(gas::WARM_ACCESS_COST)?;
+        } else {
+            self.accessed_addresses.add(call_args.to.evm);
+            self.charge_gas(gas::COLD_ACCOUNT_ACCESS_COST)?
+        }
         self.generic_call(call_args)
     }
 
@@ -117,10 +134,15 @@ impl SystemOperations of SystemOperationsTrait {
     /// STATICCALL
     /// # Specification: https://www.evm.codes/#fa?fork=shanghai
     fn exec_staticcall(ref self: VM) -> Result<(), EVMError> {
-        // TODO: add dynamic gas cost and handle warm/cold storage
-        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
-
         let call_args = self.prepare_call(@CallType::StaticCall)?;
+
+        // GAS
+        if self.accessed_addresses.contains(call_args.to.evm) {
+            self.charge_gas(gas::WARM_ACCESS_COST)?;
+        } else {
+            self.accessed_addresses.add(call_args.to.evm);
+            self.charge_gas(gas::COLD_ACCOUNT_ACCESS_COST)?
+        }
 
         self.generic_call(call_args)
     }
@@ -165,6 +187,18 @@ impl SystemOperations of SystemOperationsTrait {
 
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
         let address = self.stack.pop_eth_address()?;
+
+        // GAS
+        let mut gas_cost = gas::SELFDESTRUCT;
+        if !self.accessed_addresses.contains(address) {
+            gas_cost += gas::COLD_ACCOUNT_ACCESS_COST;
+        };
+
+        if (!self.env.state.is_account_alive(address)
+            && self.env.state.get_account(address).balance() != 0) {
+            gas_cost += gas::NEWACCOUNT;
+        }
+        self.charge_gas(gas_cost)?;
 
         //TODO Remove this when https://eips.ethereum.org/EIPS/eip-6780 is validated
         let recipient_evm_address = if (address == self.message().target.evm) {

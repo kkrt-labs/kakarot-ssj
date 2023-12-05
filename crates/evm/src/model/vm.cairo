@@ -26,7 +26,7 @@ struct VM {
 #[generate_trait]
 impl VMImpl of VMTrait {
     fn new(message: Message, env: Environment) -> VM {
-        let accessed_addresses: Set<EthAddress> = Default::default();
+        let accessed_addresses: Set<EthAddress> = message.accessed_addresses.inner.clone();
         VM {
             stack: Default::default(),
             memory: Default::default(),
@@ -152,10 +152,10 @@ impl VMImpl of VMTrait {
         self.gas_used += value;
     }
 
-    fn merge_child(ref self: VM, other: VM) {
-        //TODO rest of the return logic
+    fn merge_child(ref self: VM, child: VM) {
+        //TODO(gas) merge child gas
         if !self.error {
-            self.accessed_addresses.extend(other.accessed_addresses.spanset());
+            self.accessed_addresses.extend(child.accessed_addresses.spanset());
         }
     }
 }

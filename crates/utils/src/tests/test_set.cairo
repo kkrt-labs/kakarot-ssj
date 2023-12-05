@@ -41,7 +41,7 @@ fn test_spanset_clone_set() {
     let mut set: Set<u8> = Default::default();
     set.add(1);
     set.add(2);
-    let span_set = SpanSet { inner: set.to_span() };
+    let span_set = SpanSet { inner: @set };
     let set2 = span_set.clone_set();
     assert!(set == set2);
 }

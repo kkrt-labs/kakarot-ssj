@@ -38,36 +38,7 @@ struct Message {
     should_transfer_value: bool,
     depth: usize,
     read_only: bool,
-    accessed_addresses: SpanSet<Address>,
-}
-
-#[generate_trait]
-impl MessageImpl of MessageTrait {
-    #[inline(always)]
-    fn new(
-        caller: Address,
-        target: Address,
-        gas_limit: u128,
-        data: Span<u8>,
-        code: Span<u8>,
-        value: u256,
-        should_transfer_value: bool,
-        depth: usize,
-        read_only: bool,
-    ) -> Message {
-        Message {
-            caller,
-            target,
-            gas_limit,
-            data,
-            code,
-            value,
-            should_transfer_value,
-            depth,
-            read_only,
-            accessed_addresses: Default::default()
-        }
-    }
+    accessed_addresses: SpanSet<EthAddress>,
 }
 
 #[derive(Drop)]

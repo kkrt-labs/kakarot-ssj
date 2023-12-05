@@ -70,7 +70,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// # Specification: https://www.evm.codes/#54?fork=shanghai
     fn exec_sload(ref self: VM) -> Result<(), EVMError> {
         // TODO: Add Warm / Cold storage costs
-        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
+        self.charge_gas(gas::WARM_ACCESS_COST)?;
 
         let key = self.stack.pop()?;
         let evm_address = self.message().target.evm;
@@ -89,7 +89,7 @@ impl MemoryOperation of MemoryOperationTrait {
         }
 
         // TODO: Add Warm / Cold storage costs
-        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
+        self.charge_gas(gas::WARM_ACCESS_COST)?;
 
         let key = self.stack.pop()?;
         let value = self.stack.pop()?;

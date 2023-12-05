@@ -55,7 +55,7 @@ impl SetImpl<T, +Drop<T>, +PartialEq<T>, +Copy<T>> of SetTrait<T> {
 
     #[inline]
     fn spanset(self: @Set<T>) -> SpanSet<T> {
-        SpanSet { inner: self.inner.span() }
+        SpanSet { inner: self }
     }
 
     #[inline]
@@ -80,14 +80,14 @@ impl SetTCloneImpl<T, +Clone<T>, +Drop<T>, +PartialEq<T>, +Copy<T>> of Clone<Set
 
 #[derive(Copy, Drop, PartialEq)]
 struct SpanSet<T> {
-    inner: Span<T>
+    inner: @Set<T>
 }
 
 impl SpanSetDefault<T, +Drop<T>> of Default<SpanSet<T>> {
     #[inline]
     fn default() -> SpanSet<T> {
-        let arr: Array<T> = Default::default();
-        SpanSet { inner: arr.span() }
+        let set: Set<T> = Default::default();
+        SpanSet { inner: @set }
     }
 }
 
@@ -104,12 +104,12 @@ impl SpanSetImpl<T, +Copy<T>, +Drop<T>, +PartialEq<T>> of SpanSetTrait<T> {
 
     #[inline]
     fn to_span(self: SpanSet<T>) -> Span<T> {
-        self.inner
+        self.inner.to_span()
     }
 
     fn clone_set(self: SpanSet<T>) -> Set<T> {
         let mut response: Array<T> = Default::default();
-        let mut span = self.inner;
+        let mut span = self.to_span();
         loop {
             match span.pop_front() {
                 Option::Some(v) => { response.append(*v); },
