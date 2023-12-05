@@ -63,7 +63,7 @@ trait WrappingExponentiation<T> {
 impl U128WrappingExponentiationImpl of WrappingExponentiation<u128> {
     fn wrapping_pow(self: u128, mut exponent: u128) -> u128 {
         if self == 0 {
-            return 0;
+            return 1;
         }
         if exponent > 10 {
             internal_wrapping_pow_u128::wrapping_fpow(self, exponent)
