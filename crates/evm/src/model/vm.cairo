@@ -3,7 +3,7 @@ use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Message, Environment};
 use evm::stack::{Stack, StackTrait};
 use starknet::EthAddress;
-use utils::helpers::ArrayExtTrait;
+use utils::helpers::{SpanExtension, ArrayExtTrait};
 use utils::set::{Set, SetTrait};
 use utils::traits::{SpanDefault};
 
