@@ -1,24 +1,45 @@
 use utils::helpers::{SpanExtTrait, ArrayExtTrait};
 
-#[derive(Default, Drop, PartialEq)]
+#[derive(Drop, PartialEq)]
 struct Set<T> {
     inner: Array<T>
 }
 
+impl SetDefault<T, +Drop<T>> of Default<Set<T>> {
+    #[inline]
+    fn default() -> Set<T> {
+        let arr: Array<T> = Default::default();
+        Set { inner: arr }
+    }
+}
+
+
 #[generate_trait]
-impl SetImpl<T, +Drop<T>, +PartialEq<T>> of SetTrait<T> {
+impl SetImpl<T, +Drop<T>, +PartialEq<T>, +Copy<T>> of SetTrait<T> {
     #[inline]
     fn new() -> Set<T> {
         Set { inner: Default::default() }
     }
 
     #[inline]
-    fn add<+Copy<T>,>(ref self: Set<T>, item: T) {
+    fn add(ref self: Set<T>, item: T) {
         self.inner.append_unique(item);
     }
 
+
     #[inline]
-    fn contains<+Copy<T>>(self: @Set<T>, item: T) -> bool {
+    fn extend(ref self: Set<T>, other: SpanSet<T>) {
+        let mut span = other.to_span();
+        loop {
+            match span.pop_front() {
+                Option::Some(v) => { self.add(*v); },
+                Option::None => { break (); },
+            };
+        };
+    }
+
+    #[inline]
+    fn contains(self: @Set<T>, item: T) -> bool {
         self.inner.span().contains(item)
     }
 
@@ -33,18 +54,23 @@ impl SetImpl<T, +Drop<T>, +PartialEq<T>> of SetTrait<T> {
     }
 
     #[inline]
+    fn spanset(self: @Set<T>) -> SpanSet<T> {
+        SpanSet { inner: self.inner.span() }
+    }
+
+    #[inline]
     fn len(self: @Set<T>) -> usize {
         self.inner.span().len()
     }
 }
 
-impl SetTCloneImpl<T, +Clone<T>, +Drop<T>, +PartialEq<T>> of Clone<Set<T>> {
+impl SetTCloneImpl<T, +Clone<T>, +Drop<T>, +PartialEq<T>, +Copy<T>> of Clone<Set<T>> {
     fn clone(self: @Set<T>) -> Set<T> {
         let mut response: Array<T> = Default::default();
         let mut span = self.to_span();
         loop {
             match span.pop_front() {
-                Option::Some(v) => { response.append(v.clone()); },
+                Option::Some(v) => { response.append(*v); },
                 Option::None => { break (); },
             };
         };

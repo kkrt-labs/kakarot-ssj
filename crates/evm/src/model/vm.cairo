@@ -5,6 +5,7 @@ use evm::stack::{Stack, StackTrait};
 use starknet::EthAddress;
 use utils::helpers::ArrayExtTrait;
 use utils::traits::{SpanDefault};
+use utils::set::{Set, SetTrait};
 
 #[derive(Default, Destruct)]
 struct VM {
@@ -18,13 +19,14 @@ struct VM {
     gas_used: u128,
     running: bool,
     error: bool,
-    accessed_addresses: Array<EthAddress>
+    accessed_addresses: Set<EthAddress>
 }
 
 
 #[generate_trait]
 impl VMImpl of VMTrait {
     fn new(message: Message, env: Environment) -> VM {
+        let accessed_addresses: Set<EthAddress> = Default::default();
         VM {
             stack: Default::default(),
             memory: Default::default(),
@@ -36,7 +38,7 @@ impl VMImpl of VMTrait {
             gas_used: 0,
             running: true,
             error: false,
-            accessed_addresses: Default::default()
+            accessed_addresses
         }
     }
 
@@ -119,7 +121,7 @@ impl VMImpl of VMTrait {
     fn merge_child(ref self: VM, other: VM) {
         //TODO rest of the return logic
         if !self.error {
-            self.accessed_addresses.concat_unique(other.accessed_addresses.span());
+            self.accessed_addresses.extend(other.accessed_addresses.spanset());
         }
     }
 }
