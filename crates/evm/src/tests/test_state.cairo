@@ -33,7 +33,9 @@ fn test_compute_state_key() {
 mod test_state_changelog {
     use evm::state::{StateChangeLog, StateChangeLogTrait};
     use evm::tests::test_utils;
+    use utils::set::{Set, SetTrait};
     use utils::traits::StorageBaseAddressIntoFelt252;
+
 
     #[test]
     fn test_read_empty_log() {
@@ -78,6 +80,8 @@ mod test_state {
     use starknet::EthAddress;
     use starknet::testing::set_contract_address;
     use utils::helpers::compute_starknet_address;
+    use utils::set::{Set, SetTrait};
+
 
     #[test]
     fn test_get_account_when_not_present() {

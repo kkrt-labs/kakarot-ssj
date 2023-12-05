@@ -9,6 +9,7 @@ mod i256;
 mod math;
 mod num;
 mod rlp;
+mod set;
 mod storage;
 
 #[cfg(test)]

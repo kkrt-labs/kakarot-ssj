@@ -191,6 +191,7 @@ fn preset_message() -> Message {
         code,
         should_transfer_value: true,
         depth: 0,
+        accessed_addresses: Default::default(),
     }
 }
 
@@ -223,7 +224,8 @@ fn preset_vm() -> VM {
         message,
         gas_used: 0,
         running: true,
-        error: false
+        error: false,
+        accessed_addresses: Default::default(),
     }
 }
 
