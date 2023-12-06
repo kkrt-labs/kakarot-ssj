@@ -151,11 +151,6 @@ impl VMImpl of VMTrait {
         code
     }
 
-    #[inline(always)]
-    fn increment_gas_used_unchecked(ref self: VM, value: u128) {
-        self.gas_used += value;
-    }
-
     fn merge_child(ref self: VM, child: @ExecutionResult) {
         if *child.success {
             //TODO: merge accessed storage

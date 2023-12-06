@@ -611,7 +611,7 @@ fn test_exec_sstore_finalized() {
 }
 
 #[test]
-fn test_gas_should_push_gas_used_to_stack() {
+fn test_gas_should_push_gas_remaining_to_stack() {
     // Given
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -620,5 +620,7 @@ fn test_gas_should_push_gas_used_to_stack() {
 
     // Then
     let result = vm.stack.peek().unwrap();
-    assert(result == vm.gas_used().into(), 'stack top should be gas_limit');
+    assert(
+        result == (vm.message().gas_limit - vm.gas_used()).into(), 'stack top should be gas_limit'
+    );
 }
