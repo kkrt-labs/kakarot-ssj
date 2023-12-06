@@ -6,7 +6,7 @@ use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
 
-use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
+use evm::errors::{EVMError, ensure, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
 use evm::model::{Address, AddressTrait};
 use starknet::{EthAddress, ContractAddress, get_contract_address, deploy_syscall};
 
@@ -20,9 +20,7 @@ impl EOAImpl of EOATrait {
     fn deploy(evm_address: EthAddress) -> Result<Address, EVMError> {
         // Unlike CAs, there is not check for the existence of an EOA prealably to calling `EOATrait::deploy` - therefore, we need to check that there is no collision.
         let mut is_deployed = evm_address.is_deployed();
-        if is_deployed {
-            return Result::Err(EVMError::DeployError(EOA_EXISTS));
-        }
+        ensure(!is_deployed, EVMError::DeployError(EOA_EXISTS))?;
 
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
         let account_class_hash = kakarot_state.account_class_hash();

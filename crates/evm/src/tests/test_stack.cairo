@@ -43,7 +43,7 @@ fn test_len_should_return_the_length_of_the_stack() {
 
 #[cfg(test)]
 mod push {
-    use evm::errors::{EVMError, STACK_OVERFLOW};
+    use evm::errors::{EVMError};
     use super::StackTrait;
 
     use super::constants;
@@ -84,15 +84,13 @@ mod push {
         let res = stack.push(1);
         assert(stack.len() == constants::STACK_MAX_DEPTH, 'wrong length');
         assert(res.is_err(), 'should return error');
-        assert(
-            res.unwrap_err() == EVMError::StackError(STACK_OVERFLOW), 'should return StackOverflow'
-        );
+        assert(res.unwrap_err() == EVMError::StackOverflow, 'should return StackOverflow');
     }
 }
 
 #[cfg(test)]
 mod pop {
-    use evm::errors::{EVMError, STACK_UNDERFLOW, TYPE_CONVERSION_ERROR};
+    use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
     use starknet::storage_base_address_const;
     use super::StackTrait;
     use utils::traits::StorageBaseAddressPartialEq;
@@ -142,10 +140,7 @@ mod pop {
         // When & Then
         let result = stack.pop();
         assert(result.is_err(), 'should return Err ');
-        assert(
-            result.unwrap_err() == EVMError::StackError(STACK_UNDERFLOW),
-            'should return StackUnderflow'
-        );
+        assert(result.unwrap_err() == EVMError::StackUnderflow, 'should return StackUnderflow');
     }
 
     #[test]
@@ -157,16 +152,13 @@ mod pop {
         // When & Then
         let result = stack.pop_n(2);
         assert(result.is_err(), 'should return Error');
-        assert(
-            result.unwrap_err() == EVMError::StackError(STACK_UNDERFLOW),
-            'should return StackUnderflow'
-        );
+        assert(result.unwrap_err() == EVMError::StackUnderflow, 'should return StackUnderflow');
     }
 }
 
 #[cfg(test)]
 mod peek {
-    use evm::errors::{EVMError, STACK_UNDERFLOW};
+    use evm::errors::{EVMError};
     use super::StackTrait;
 
     #[test]
@@ -223,16 +215,13 @@ mod peek {
         let result = stack.peek_at(1);
 
         assert(result.is_err(), 'should return an EVMError');
-        assert(
-            result.unwrap_err() == EVMError::StackError(STACK_UNDERFLOW),
-            'should return StackUnderflow'
-        );
+        assert(result.unwrap_err() == EVMError::StackUnderflow, 'should return StackUnderflow');
     }
 }
 
 #[cfg(test)]
 mod swap {
-    use evm::errors::{EVMError, STACK_UNDERFLOW};
+    use evm::errors::{EVMError};
     use super::StackTrait;
 
     #[test]
@@ -275,10 +264,7 @@ mod swap {
         let result = stack.swap_i(1);
 
         assert(result.is_err(), 'should return an EVMError');
-        assert(
-            result.unwrap_err() == EVMError::StackError(STACK_UNDERFLOW),
-            'should return StackUnderflow'
-        );
+        assert(result.unwrap_err() == EVMError::StackUnderflow, 'should return StackUnderflow');
     }
 
     #[test]
@@ -291,9 +277,6 @@ mod swap {
         let result = stack.swap_i(2);
 
         assert(result.is_err(), 'should return an EVMError');
-        assert(
-            result.unwrap_err() == EVMError::StackError(STACK_UNDERFLOW),
-            'should return StackUnderflow'
-        );
+        assert(result.unwrap_err() == EVMError::StackUnderflow, 'should return StackUnderflow');
     }
 }

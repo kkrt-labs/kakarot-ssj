@@ -1,4 +1,4 @@
-use evm::errors::{EVMError, WRITE_IN_STATIC_CONTEXT, TYPE_CONVERSION_ERROR};
+use evm::errors::{EVMError, EVMErrorTrait, TYPE_CONVERSION_ERROR};
 use evm::instructions::LoggingOperationsTrait;
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
@@ -187,10 +187,7 @@ fn test_exec_log1_read_only_context() {
 
     // Then
     assert(result.is_err(), 'should have returned an error');
-    assert(
-        result.unwrap_err() == EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT),
-        'err != WriteInStaticContext'
-    );
+    assert(result.unwrap_err() == EVMError::WriteInStaticContext, 'err != WriteInStaticContext');
 }
 
 #[test]

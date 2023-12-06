@@ -1,4 +1,4 @@
-use evm::errors::EVMError;
+use evm::errors::{EVMError, ensure};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Message, Environment, ExecutionResult};
 use evm::stack::{Stack, StackTrait};
@@ -134,6 +134,11 @@ impl VMImpl of VMTrait {
     #[inline(always)]
     fn set_error(ref self: VM) {
         self.error = true;
+    }
+
+    #[inline(always)]
+    fn is_error(self: @VM) -> bool {
+        *self.error
     }
 
     #[inline(always)]

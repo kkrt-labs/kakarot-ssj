@@ -1,5 +1,5 @@
 //! Stack Memory Storage and Flow Operations.
-use evm::errors::{EVMError, INVALID_DESTINATION, READ_SYSCALL_FAILED, WRITE_IN_STATIC_CONTEXT};
+use evm::errors::{EVMError, ensure, INVALID_DESTINATION, READ_SYSCALL_FAILED};
 use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::contract_account::ContractAccountTrait;
@@ -94,6 +94,9 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save 32-byte word to storage.
     /// # Specification: https://www.evm.codes/#55?fork=shanghai
     fn exec_sstore(ref self: VM) -> Result<(), EVMError> {
+        ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
+        ensure(self.gas_left() > gas::CALL_STIPEND, EVMError::OutOfGas)?; //EIP-1706
+
         let key = self.stack.pop()?;
         let new_value = self.stack.pop()?;
         let evm_address = self.message().target.evm;
@@ -121,11 +124,6 @@ impl MemoryOperation of MemoryOperationTrait {
         //TODO(gas) gas refunds
         self.charge_gas(gas_cost)?;
 
-        //TODO(invariant) use `ensure` to check `readonly`
-        if self.message().read_only {
-            return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
-        }
-
         self.env.state.write_state(:evm_address, :key, value: new_value);
         Result::Ok(())
     }
@@ -149,12 +147,8 @@ impl MemoryOperation of MemoryOperationTrait {
         let index = self.stack.pop_usize()?;
 
         match self.message().code.get(index) {
-            Option::Some(opcode) => {
-                if !self.is_valid_jump(index) {
-                    return Result::Err(EVMError::JumpError(INVALID_DESTINATION));
-                }
-            },
-            Option::None => { return Result::Err(EVMError::JumpError(INVALID_DESTINATION)); }
+            Option::Some(_) => { ensure(self.is_valid_jump(index), EVMError::InvalidJump)?; },
+            Option::None => { return Result::Err(EVMError::InvalidJump); }
         }
         self.set_pc(index);
         Result::Ok(())

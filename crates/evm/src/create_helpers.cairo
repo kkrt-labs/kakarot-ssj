@@ -2,7 +2,9 @@
 use cmp::min;
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
-use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
+use evm::errors::{
+    ensure, EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION
+};
 use evm::gas;
 use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
@@ -64,6 +66,8 @@ impl CreateHelpersImpl of CreateHelpers {
         let mut bytecode = Default::default();
         self.memory.load_n(size, ref bytecode, offset);
 
+        ensure(bytecode.len() <= constants::MAX_INITCODE_SIZE, EVMError::OutOfGas)?;
+
         let to = match create_type {
             CreateType::Create => {
                 let nonce = self.env.state.get_account(self.message().target.evm).nonce();
@@ -106,8 +110,6 @@ impl CreateHelpersImpl of CreateHelpers {
         if target_account.has_code_or_nonce() {
             return self.stack.push(0);
         };
-
-        //TODO(gas) ensure calldata_len <= 2*MAX_CODE_SIZE
 
         caller_account.set_nonce(caller_current_nonce + 1);
         self.env.state.set_account(caller_account);

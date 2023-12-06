@@ -1,6 +1,6 @@
 use contracts::tests::test_utils::{setup_contracts_for_testing, deploy_contract_account};
 use core::result::ResultTrait;
-use evm::errors::{EVMError, STACK_UNDERFLOW, INVALID_DESTINATION, WRITE_IN_STATIC_CONTEXT};
+use evm::errors::{EVMError, INVALID_DESTINATION};
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::model::contract_account::{ContractAccountTrait};
@@ -100,9 +100,7 @@ fn test_exec_pop_should_stack_underflow() {
 
     // Then
     assert(result.is_err(), 'should return Err ');
-    assert(
-        result.unwrap_err() == EVMError::StackError(STACK_UNDERFLOW), 'should return StackUnderflow'
-    );
+    assert(result.unwrap_err() == EVMError::StackUnderflow, 'should return StackUnderflow');
 }
 
 #[test]
@@ -314,7 +312,7 @@ fn test_exec_jump_invalid() {
 
     // Then
     assert(result.is_err(), 'invalid jump dest');
-    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+    assert(result.unwrap_err() == EVMError::InvalidJump, 'invalid jump dest');
 }
 
 #[test]
@@ -332,7 +330,7 @@ fn test_exec_jump_out_of_bounds() {
 
     // Then
     assert(result.is_err(), 'invalid jump dest');
-    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+    assert(result.unwrap_err() == EVMError::InvalidJump, 'invalid jump dest');
 }
 
 // TODO: This is third edge case in which `0x5B` is part of PUSHN instruction and hence
@@ -352,10 +350,7 @@ fn test_exec_jump_inside_pushn() {
 
     // Then
     assert(result.is_err(), 'exec_jump should throw error');
-    assert(
-        result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION),
-        'jump dest should be invalid'
-    );
+    assert(result.unwrap_err() == EVMError::InvalidJump, 'jump dest should be invalid');
 }
 
 #[test]
@@ -440,7 +435,7 @@ fn test_exec_jumpi_invalid_non_zero() {
 
     // Then
     assert(result.is_err(), 'invalid jump dest');
-    assert(result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION), 'invalid jump dest');
+    assert(result.unwrap_err() == EVMError::InvalidJump, 'invalid jump dest');
 }
 
 
@@ -489,10 +484,7 @@ fn test_exec_jumpi_inside_pushn() {
 
     // Then
     assert(result.is_err(), 'exec_jump should throw error');
-    assert(
-        result.unwrap_err() == EVMError::JumpError(INVALID_DESTINATION),
-        'jump dest should be invalid'
-    );
+    assert(result.unwrap_err() == EVMError::InvalidJump, 'jump dest should be invalid');
 }
 
 #[test]
@@ -577,10 +569,7 @@ fn test_exec_sstore_static_call() {
 
     // Then
     assert(result.is_err(), 'should have errored');
-    assert(
-        result.unwrap_err() == EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT),
-        'wrong error variant'
-    );
+    assert(result.unwrap_err() == EVMError::WriteInStaticContext, 'wrong error variant');
 }
 
 #[test]

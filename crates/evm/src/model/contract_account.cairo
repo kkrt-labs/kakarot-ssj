@@ -16,7 +16,7 @@ use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
 use evm::errors::{
-    EVMError, READ_SYSCALL_FAILED, WRITE_SYSCALL_FAILED, ACCOUNT_EXISTS, DEPLOYMENT_FAILED,
+    EVMError, ensure, READ_SYSCALL_FAILED, WRITE_SYSCALL_FAILED, ACCOUNT_EXISTS, DEPLOYMENT_FAILED,
     CONTRACT_ACCOUNT_EXISTS, CONTRACT_SYSCALL_FAILED
 };
 use evm::model::{Address, Account, AccountType, AccountTrait};
@@ -66,9 +66,7 @@ impl ContractAccountImpl of ContractAccountTrait {
             let result_address = deploy_syscall(
                 account_class_hash, evm_address.into(), calldata, false
             );
-            if result_address.is_err() {
-                return Result::Err(EVMError::SyscallFailed(DEPLOYMENT_FAILED));
-            };
+            ensure(result_address.is_ok(), EVMError::SyscallFailed(DEPLOYMENT_FAILED))?;
             let (starknet_address, _) = result_address.unwrap();
             // Initialize the account
             IUninitializedAccountDispatcher { contract_address: starknet_address }
