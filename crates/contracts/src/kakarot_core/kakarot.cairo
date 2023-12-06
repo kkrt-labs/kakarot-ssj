@@ -31,7 +31,7 @@ mod KakarotCore {
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::{EOATrait};
     use evm::model::{ExecutionSummary, Address, AddressTrait};
-    use evm::model::{Message, MessageTrait, Environment};
+    use evm::model::{Message, Environment};
     use evm::state::{State, StateTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall,
@@ -43,6 +43,7 @@ mod KakarotCore {
     use utils::constants;
     use utils::helpers::{compute_starknet_address, EthAddressExTrait};
     use utils::rlp::RLPTrait;
+    use utils::set::{Set, SetTrait};
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
@@ -403,17 +404,26 @@ mod KakarotCore {
                 },
             };
 
-            let message = MessageTrait::new(
+            let mut accessed_addresses: Set<EthAddress> = Default::default();
+            accessed_addresses.add(env.coinbase);
+            //TODO(gas) handle preaccessed storage keys
+            //TOOD(gas) handle AccessListTransactoin and FeeMarketTransaction preaccessed_addresses
+            accessed_addresses.add(to.evm);
+            accessed_addresses.add(origin.evm);
+            accessed_addresses.extend(constants::precompile_addresses().spanset());
+
+            let message = Message {
                 caller: origin,
                 target: to,
-                :gas_limit,
+                gas_limit,
                 data: calldata,
-                :code,
-                :value,
+                code,
+                value,
                 should_transfer_value: true,
                 depth: 0,
                 read_only: false,
-            );
+                accessed_addresses: accessed_addresses.spanset(),
+            };
 
             EVMTrait::process_message_call(message, env, is_deploy_tx)
         }

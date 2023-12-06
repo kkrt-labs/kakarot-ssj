@@ -1,10 +1,10 @@
 use evm::errors::EVMError;
 use evm::memory::{Memory, MemoryTrait};
-use evm::model::{Message, Environment};
+use evm::model::{Message, Environment, ExecutionResult};
 use evm::stack::{Stack, StackTrait};
 use starknet::EthAddress;
-use utils::helpers::{SpanExtension, ArrayExtTrait};
-use utils::set::{Set, SetTrait};
+use utils::helpers::{SpanExtTrait, ArrayExtTrait};
+use utils::set::{Set, SetTrait, SpanSet};
 use utils::traits::{SpanDefault};
 
 #[derive(Default, Destruct)]
@@ -26,7 +26,7 @@ struct VM {
 #[generate_trait]
 impl VMImpl of VMTrait {
     fn new(message: Message, env: Environment) -> VM {
-        let accessed_addresses: Set<EthAddress> = Default::default();
+        let accessed_addresses: Set<EthAddress> = message.accessed_addresses.inner.clone();
         VM {
             stack: Default::default(),
             memory: Default::default(),
@@ -133,6 +133,10 @@ impl VMImpl of VMTrait {
         *self.gas_used
     }
 
+    fn accessed_addresses(self: @VM) -> SpanSet<EthAddress> {
+        self.accessed_addresses.spanset()
+    }
+
     /// Reads and return data from bytecode.
     /// The program counter is incremented accordingly.
     ///
@@ -152,10 +156,13 @@ impl VMImpl of VMTrait {
         self.gas_used += value;
     }
 
-    fn merge_child(ref self: VM, other: VM) {
-        //TODO rest of the return logic
-        if !self.error {
-            self.accessed_addresses.extend(other.accessed_addresses.spanset());
+    fn merge_child(ref self: VM, child: @ExecutionResult) {
+        if *child.success {
+            //TODO: merge accessed storage
+            self.accessed_addresses.extend(*child.accessed_addresses);
         }
+    //TODO(gas) handle error case
+
+    //TODO(gas) merge child gas left
     }
 }

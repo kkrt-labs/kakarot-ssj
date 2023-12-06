@@ -208,6 +208,17 @@ impl StateImpl of StateTrait {
             transfers: self.transfers.clone(),
         }
     }
+
+    // Check whether is an account is both in the state and non empty.
+    fn is_account_alive(ref self: State, evm_address: EthAddress) -> bool {
+        let account = self.accounts.read(evm_address.into());
+        match account {
+            Option::Some(acc) => {
+                return !(acc.nonce == 0 && acc.code.len() == 0 && acc.balance == 0);
+            },
+            Option::None => { return false; }
+        }
+    }
 }
 #[generate_trait]
 impl StateInternalImpl of StateInternalTrait {

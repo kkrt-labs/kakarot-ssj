@@ -19,6 +19,7 @@ use utils::constants::EMPTY_KECCAK;
 use utils::helpers::ResultExTrait;
 use utils::helpers::{ceil32, load_word, U256Trait, U8SpanExTrait};
 use utils::math::BitshiftImpl;
+use utils::set::SetTrait;
 use utils::traits::{EthAddressIntoU256};
 
 
@@ -36,10 +37,15 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get ETH balance of the specified address.
     /// # Specification: https://www.evm.codes/#31?fork=shanghai
     fn exec_balance(ref self: VM) -> Result<(), EVMError> {
-        // TODO: Add warm / cold storage costs
-        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
-
         let evm_address = self.stack.pop_eth_address()?;
+
+        // GAS
+        if self.accessed_addresses.contains(evm_address) {
+            self.charge_gas(gas::WARM_ACCESS_COST)?;
+        } else {
+            self.accessed_addresses.add(evm_address);
+            self.charge_gas(gas::COLD_ACCOUNT_ACCESS_COST)?
+        }
 
         let balance = self.env.state.get_account(evm_address).balance();
         self.stack.push(balance)
@@ -190,10 +196,15 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Get size of an account's code.
     /// # Specification: https://www.evm.codes/#3b?fork=shanghai
     fn exec_extcodesize(ref self: VM) -> Result<(), EVMError> {
-        // TODO: Add Warm / Cold storage costs
-        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
-
         let evm_address = self.stack.pop_eth_address()?;
+
+        // GAS
+        if self.accessed_addresses.contains(evm_address) {
+            self.charge_gas(gas::WARM_ACCESS_COST)?;
+        } else {
+            self.accessed_addresses.add(evm_address);
+            self.charge_gas(gas::COLD_ACCOUNT_ACCESS_COST)?
+        }
 
         let account = self.env.state.get_account(evm_address);
         self.stack.push(account.code.len().into())
@@ -208,11 +219,17 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
+        // GAS
         let words_size: u128 = (ceil32(size) / 32).into();
-        let copy_gas_cost = gas::COPY * words_size;
         let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), dest_offset + size);
-        //TODO: Add Warm / Cold storage costs
-        self.charge_gas(gas::WARM_STORAGE_READ_COST + copy_gas_cost + expand_memory_cost)?;
+        let copy_gas_cost = gas::COPY * words_size;
+        let access_gas_cost = if self.accessed_addresses.contains(evm_address) {
+            gas::WARM_ACCESS_COST
+        } else {
+            self.accessed_addresses.add(evm_address);
+            gas::COLD_ACCOUNT_ACCESS_COST
+        };
+        self.charge_gas(access_gas_cost + copy_gas_cost + expand_memory_cost)?;
 
         let bytecode = self.env.state.get_account(evm_address).code;
         let bytecode_len = bytecode.len();
@@ -275,10 +292,15 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     // Else return, the hash of the account's code
     /// # Specification: https://www.evm.codes/#3f?fork=shanghai
     fn exec_extcodehash(ref self: VM) -> Result<(), EVMError> {
-        // TODO: Add Warm / Cold storage costs
-        self.charge_gas(gas::WARM_STORAGE_READ_COST)?;
-
         let evm_address = self.stack.pop_eth_address()?;
+
+        // GAS
+        if self.accessed_addresses.contains(evm_address) {
+            self.charge_gas(gas::WARM_ACCESS_COST)?;
+        } else {
+            self.accessed_addresses.add(evm_address);
+            self.charge_gas(gas::COLD_ACCOUNT_ACCESS_COST)?
+        }
 
         let account = self.env.state.get_account(evm_address);
         // UnknownAccount can either be

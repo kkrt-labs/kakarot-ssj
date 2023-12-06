@@ -166,3 +166,10 @@ impl U256TryIntoEthAddress of TryInto<u256, EthAddress> {
         }
     }
 }
+
+impl U8IntoEthAddress of Into<u8, EthAddress> {
+    fn into(self: u8) -> EthAddress {
+        let value: felt252 = self.into();
+        EthAddress { address: value }
+    }
+}
