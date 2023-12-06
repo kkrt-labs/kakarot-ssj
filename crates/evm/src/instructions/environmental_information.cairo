@@ -223,12 +223,13 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let words_size: u128 = (ceil32(size) / 32).into();
         let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), dest_offset + size);
         let copy_gas_cost = gas::COPY * words_size;
-        if self.accessed_addresses.contains(evm_address) {
-            self.charge_gas(gas::WARM_ACCESS_COST + copy_gas_cost + expand_memory_cost)?;
+        let access_gas_cost = if self.accessed_addresses.contains(evm_address) {
+            gas::WARM_ACCESS_COST
         } else {
             self.accessed_addresses.add(evm_address);
-            self.charge_gas(gas::COLD_ACCOUNT_ACCESS_COST + copy_gas_cost + expand_memory_cost)?;
-        }
+            gas::COLD_ACCOUNT_ACCESS_COST
+        };
+        self.charge_gas(access_gas_cost + copy_gas_cost + expand_memory_cost)?;
 
         let bytecode = self.env.state.get_account(evm_address).code;
         let bytecode_len = bytecode.len();
