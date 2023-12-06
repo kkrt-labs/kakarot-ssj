@@ -3,7 +3,9 @@ use cmp::min;
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
 
-use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
+use evm::errors::{
+    ensure, EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION
+};
 use evm::gas;
 use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
@@ -13,6 +15,7 @@ use evm::model::{Transfer, Address, Message};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use starknet::{EthAddress, get_contract_address};
+use utils::constants;
 use utils::helpers::compute_starknet_address;
 use utils::set::SetTrait;
 use utils::traits::{BoolIntoNumeric, U256TryIntoResult};
@@ -126,12 +129,15 @@ impl CallHelpersImpl of CallHelpers {
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
     fn generic_call(ref self: VM, call_args: CallArgs) -> Result<(), EVMError> {
-        // check if depth is too high
+        self.return_data = Default::default().span();
+        if self.message().depth >= constants::STACK_MAX_DEPTH {
+            self.gas_used += self.message().gas_limit;
+            return self.stack.push(0);
+        }
 
         // Case 2: `to` address is not a precompile
         // We enter the standard flow
         let code = self.env.state.get_account(call_args.code_address.evm).code;
-        self.return_data = Default::default().span();
         let message = Message {
             caller: call_args.caller,
             target: call_args.to,

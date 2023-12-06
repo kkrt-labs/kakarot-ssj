@@ -101,6 +101,15 @@ impl EVMImpl of EVMTrait {
     }
 
     fn process_message(message: Message, ref env: Environment) -> ExecutionResult {
+        if (message.depth > constants::STACK_MAX_DEPTH) {
+            return ExecutionResult {
+                success: false,
+                return_data: Into::<felt252, u256>::into(EVMError::DepthLimit.to_string())
+                    .to_bytes(),
+                gas_used: 0,
+                accessed_addresses: Default::default(),
+            };
+        }
         let state_snapshot = env.state.clone();
         if message.should_transfer_value && message.value != 0 {
             let transfer = Transfer {

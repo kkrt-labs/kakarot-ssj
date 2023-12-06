@@ -66,8 +66,6 @@ impl CreateHelpersImpl of CreateHelpers {
         let mut bytecode = Default::default();
         self.memory.load_n(size, ref bytecode, offset);
 
-        ensure(bytecode.len() <= constants::MAX_INITCODE_SIZE, EVMError::OutOfGas)?;
-
         let to = match create_type {
             CreateType::Create => {
                 let nonce = self.env.state.get_account(self.message().target.evm).nonce();
@@ -87,37 +85,45 @@ impl CreateHelpersImpl of CreateHelpers {
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
     fn generic_create(ref self: VM, create_args: CreateArgs) -> Result<(), EVMError> {
-        let mut target_account = self.env.state.get_account(create_args.to);
-        let target_address = target_account.address();
+        self.accessed_addresses.add(create_args.to);
 
-        //TODO(gas) charge max message call gas
+        //TODO(gas) compute and charge create message gas
 
-        // The caller in the subcontext is the calling context's current address
-        let caller = self.message().target;
-        let mut caller_account = self.env.state.get_account(caller.evm);
-        let caller_current_nonce = caller_account.nonce();
-        let caller_balance = caller_account.balance();
-        if caller_balance < create_args.value
-            || target_account.nonce() == integer::BoundedInt::<u64>::max()
+        ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
+        self.return_data = Default::default().span();
+
+        // The sender in the subcontext is the message's target
+        let sender_address = self.message().target;
+        let mut sender = self.env.state.get_account(sender_address.evm);
+        let sender_current_nonce = sender.nonce();
+        if sender.balance() < create_args.value
+            || sender_current_nonce == integer::BoundedInt::<u64>::max()
             || self.message.depth
-            + 1 == constants::STACK_MAX_DEPTH {
+            + 1 > constants::STACK_MAX_DEPTH {
+            //TODO(gas) reimburse charged message gas
             return self.stack.push(0);
         }
 
+        let mut target_account = self.env.state.get_account(create_args.to);
+        let target_address = target_account.address();
         // Collision happens if the target account loaded in state has code or nonce set, meaning
         // - it's deployed on SN and is an active EVM contract
         // - it's not deployed on SN and is an active EVM contract in the Kakarot cache
         if target_account.has_code_or_nonce() {
+            target_account.set_nonce(target_account.nonce() + 1);
+            self.env.state.set_account(target_account);
             return self.stack.push(0);
         };
 
-        caller_account.set_nonce(caller_current_nonce + 1);
-        self.env.state.set_account(caller_account);
+        ensure(create_args.bytecode.len() <= constants::MAX_INITCODE_SIZE, EVMError::OutOfGas)?;
+
+        sender.set_nonce(sender_current_nonce + 1);
+        self.env.state.set_account(sender);
 
         let child_message = Message {
-            caller,
+            caller: sender_address,
             target: target_address,
-            gas_limit: self.message().gas_limit,
+            gas_limit: self.message().gas_limit, //TODO(gas): fix by using computed create gas above
             data: Default::default().span(),
             code: create_args.bytecode,
             value: create_args.value,
@@ -135,6 +141,7 @@ impl CreateHelpersImpl of CreateHelpers {
             self.return_data = Default::default().span();
             self.stack.push(target_address.evm.into())?;
         } else {
+            self.return_data = result.return_data;
             self.stack.push(0)?;
         }
         Result::Ok(())

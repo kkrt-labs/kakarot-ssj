@@ -56,7 +56,8 @@ enum EVMError {
     WriteInStaticContext,
     DeployError: felt252,
     OutOfGas,
-    Assertion
+    Assertion,
+    DepthLimit
 }
 
 #[generate_trait]
@@ -79,6 +80,7 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::DeployError(error_message) => error_message,
             EVMError::OutOfGas => 'out of gas'.into(),
             EVMError::Assertion => 'assertion failed'.into(),
+            EVMError::DepthLimit => 'max call depth exceeded'.into(),
         }
     }
 }
