@@ -108,6 +108,7 @@ impl EVMImpl of EVMTrait {
                     .to_bytes(),
                 gas_used: 0,
                 accessed_addresses: Default::default(),
+                accessed_storage_keys: Default::default()
             };
         }
         let state_snapshot = env.state.clone();
