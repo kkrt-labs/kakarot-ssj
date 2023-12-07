@@ -794,6 +794,15 @@ impl U128Impl of U128Trait {
         };
         Option::Some(result)
     }
+
+    fn bytes_used(self: u128) -> u8 {
+        let (u64high, u64low) = u128_split(self);
+        if u64high == 0 {
+            return U64Trait::bytes_used(u64low.try_into().unwrap());
+        } else {
+            return U64Trait::bytes_used(u64high.try_into().unwrap()) + 8;
+        }
+    }
 }
 
 #[generate_trait]
@@ -814,10 +823,28 @@ impl U256Impl of U256Trait {
     }
 
     // Returns a u256 representation as bytes: `Span<u8>`
-    // This slice is padded of zeros if the u256 representation does not take up to 32 bytes
+    // If the u256 representation does not take up to 32 bytes, 
+    // the size of the returned slice is equal to the number of bytes used
     fn to_bytes(self: u256) -> Span<u8> {
-        //TODO(audit): check why we pad this with zeroes instead of returning the
-        // actual number of bytes used
+        let bytes_used: u256 = self.bytes_used().into();
+        let mut bytes: Array<u8> = Default::default();
+        let mut i = 0;
+        loop {
+            if i == bytes_used {
+                break ();
+            }
+            let val = self.shr(8 * (bytes_used - i - 1));
+            bytes.append((val & 0xFF).try_into().unwrap());
+            i += 1;
+        };
+
+        bytes.span()
+    }
+
+    // Returns a u256 representation as bytes: `Span<u8>`
+    // This slice is padded of zeros if the u256 representation does not take up to 32 bytes
+    // The size of the returned slice is always 32
+    fn to_padded_bytes(self: u256) -> Span<u8> {
         let bytes_used: u256 = 32;
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
@@ -860,6 +887,14 @@ impl U256Impl of U256Trait {
             i += 1;
         };
         Option::Some(result)
+    }
+
+    fn bytes_used(self: u256) -> u8 {
+        if self.high == 0 {
+            return U128Trait::bytes_used(self.low.try_into().unwrap());
+        } else {
+            return U128Trait::bytes_used(self.high.try_into().unwrap()) + 16;
+        }
     }
 }
 

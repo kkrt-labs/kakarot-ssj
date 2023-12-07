@@ -13,12 +13,7 @@ fn test_compute_create2_contract_address() {
     let address = compute_create2_contract_address(from, salt, bytecode)
         .expect('create2_contract_address fail');
 
-    assert(
-        address == 0x088a44D7CdD8DEA4d1Db6E3F4059c70c405a0C97
-            .try_into()
-            .expect('Wrong Eth Address'),
-        'wrong create2 address'
-    );
+    assert_eq!(address.into(), 0x088a44D7CdD8DEA4d1Db6E3F4059c70c405a0C97);
 }
 
 #[test]
