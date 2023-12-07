@@ -404,13 +404,14 @@ mod KakarotCore {
                 },
             };
 
+            //TODO(gas) handle AccessListTransactoin and FeeMarketTransaction accessed_addresses and accessed_storage_keys
             let mut accessed_addresses: Set<EthAddress> = Default::default();
             accessed_addresses.add(env.coinbase);
-            //TODO(gas) handle preaccessed storage keys
-            //TOOD(gas) handle AccessListTransactoin and FeeMarketTransaction preaccessed_addresses
             accessed_addresses.add(to.evm);
             accessed_addresses.add(origin.evm);
             accessed_addresses.extend(constants::precompile_addresses().spanset());
+
+            let mut accessed_storage_keys: Set<(EthAddress, u256)> = Default::default();
 
             let message = Message {
                 caller: origin,
@@ -423,6 +424,7 @@ mod KakarotCore {
                 depth: 0,
                 read_only: false,
                 accessed_addresses: accessed_addresses.spanset(),
+                accessed_storage_keys: accessed_storage_keys.spanset(),
             };
 
             EVMTrait::process_message_call(message, env, is_deploy_tx)

@@ -39,6 +39,7 @@ struct Message {
     depth: usize,
     read_only: bool,
     accessed_addresses: SpanSet<EthAddress>,
+    accessed_storage_keys: SpanSet<(EthAddress, u256)>,
 }
 
 #[derive(Drop)]
@@ -47,6 +48,7 @@ struct ExecutionResult {
     return_data: Span<u8>,
     gas_used: u128,
     accessed_addresses: SpanSet<EthAddress>,
+    accessed_storage_keys: SpanSet<(EthAddress, u256)>,
 }
 
 #[derive(Destruct)]

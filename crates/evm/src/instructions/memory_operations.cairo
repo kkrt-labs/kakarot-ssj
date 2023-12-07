@@ -2,6 +2,7 @@
 use evm::errors::{EVMError, INVALID_DESTINATION, READ_SYSCALL_FAILED, WRITE_IN_STATIC_CONTEXT};
 use evm::gas;
 use evm::memory::MemoryTrait;
+use evm::model::contract_account::ContractAccountTrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, compute_state_key};
@@ -9,6 +10,7 @@ use hash::{HashStateTrait, HashStateExTrait};
 use poseidon::PoseidonTrait;
 use starknet::{storage_base_address_from_felt252, Store};
 use utils::helpers::U256Trait;
+use utils::set::SetTrait;
 
 #[generate_trait]
 impl MemoryOperation of MemoryOperationTrait {
@@ -75,6 +77,14 @@ impl MemoryOperation of MemoryOperationTrait {
         let key = self.stack.pop()?;
         let evm_address = self.message().target.evm;
 
+        // GAS
+        if self.accessed_storage_keys.contains((evm_address, key)) {
+            self.charge_gas(gas::WARM_ACCESS_COST)?;
+        } else {
+            self.accessed_storage_keys.add((evm_address, key));
+            self.charge_gas(gas::COLD_SLOAD_COST);
+        }
+
         let value = self.env.state.read_state(evm_address, key)?;
         self.stack.push(value)
     }
@@ -84,17 +94,39 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save 32-byte word to storage.
     /// # Specification: https://www.evm.codes/#55?fork=shanghai
     fn exec_sstore(ref self: VM) -> Result<(), EVMError> {
+        let key = self.stack.pop()?;
+        let new_value = self.stack.pop()?;
+        let evm_address = self.message().target.evm;
+        let account = self.env.state.get_account(evm_address);
+        let original_value = account.fetch_storage(key)?;
+        let current_value = self.env.state.read_state(evm_address, key)?;
+
+        // GAS
+        let mut gas_cost = 0;
+        if !self.accessed_storage_keys.contains((evm_address, key)) {
+            self.accessed_storage_keys.add((evm_address, key));
+            gas_cost += gas::COLD_SLOAD_COST;
+        }
+
+        if original_value == current_value && current_value != new_value {
+            if original_value == 0 {
+                gas_cost += gas::SSTORE_SET
+            } else {
+                gas_cost += gas::SSTORE_RESET - gas::COLD_SLOAD_COST;
+            }
+        } else {
+            gas_cost += gas::WARM_ACCESS_COST;
+        }
+
+        //TODO(gas) gas refunds
+        self.charge_gas(gas_cost)?;
+
+        //TODO(invariant) use `ensure` to check `readonly`
         if self.message().read_only {
             return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
         }
 
-        // TODO: Add Warm / Cold storage costs
-        self.charge_gas(gas::WARM_ACCESS_COST)?;
-
-        let key = self.stack.pop()?;
-        let value = self.stack.pop()?;
-        let evm_address = self.message().target.evm;
-        self.env.state.write_state(:evm_address, :key, :value);
+        self.env.state.write_state(:evm_address, :key, value: new_value);
         Result::Ok(())
     }
 

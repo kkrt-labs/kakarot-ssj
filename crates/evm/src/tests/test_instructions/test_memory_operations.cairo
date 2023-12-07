@@ -547,7 +547,9 @@ fn test_exec_sload_from_storage() {
 #[test]
 fn test_exec_sstore_from_state() {
     // Given
+    setup_contracts_for_testing();
     let mut vm = VMBuilderTrait::new_with_presets().build();
+    let mut ca_address = deploy_contract_account(vm.message().target.evm, array![].span());
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
     vm.stack.push(value).expect('push failed');
@@ -562,8 +564,9 @@ fn test_exec_sstore_from_state() {
 #[test]
 fn test_exec_sstore_static_call() {
     // Given
+    setup_contracts_for_testing();
     let mut vm = VMBuilderTrait::new_with_presets().with_read_only().build();
-
+    let mut ca_address = deploy_contract_account(vm.message().target.evm, array![].span());
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
     vm.stack.push(value).expect('push failed');

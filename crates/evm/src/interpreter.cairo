@@ -108,6 +108,7 @@ impl EVMImpl of EVMTrait {
                         return_data: Into::<felt252, u256>::into(err.to_string()).to_bytes(),
                         gas_used: 0,
                         accessed_addresses: Default::default(),
+                        accessed_storage_keys: Default::default(),
                     };
                 }
             }
@@ -155,6 +156,7 @@ impl EVMImpl of EVMTrait {
                 return_data: vm.return_data(),
                 gas_used: vm.gas_used(),
                 accessed_addresses: vm.accessed_addresses(),
+                accessed_storage_keys: vm.accessed_storage_keys(),
             };
         }
 
@@ -172,6 +174,7 @@ impl EVMImpl of EVMTrait {
                     return_data: vm.return_data(),
                     gas_used: vm.gas_used(),
                     accessed_addresses: vm.accessed_addresses(),
+                    accessed_storage_keys: vm.accessed_storage_keys(),
                 };
             },
             Result::Err(error) => {
@@ -182,6 +185,7 @@ impl EVMImpl of EVMTrait {
                     return_data: Into::<felt252, u256>::into(error.to_string()).to_bytes(),
                     gas_used: vm.gas_used(),
                     accessed_addresses: vm.accessed_addresses(),
+                    accessed_storage_keys: vm.accessed_storage_keys(),
                 };
             }
         }

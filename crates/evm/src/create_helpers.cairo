@@ -123,6 +123,7 @@ impl CreateHelpersImpl of CreateHelpers {
             depth: self.message().depth + 1,
             read_only: false,
             accessed_addresses: self.accessed_addresses.clone().spanset(),
+            accessed_storage_keys: self.accessed_storage_keys.clone().spanset(),
         };
 
         let result = EVMTrait::process_create_message(child_message, ref self.env);
