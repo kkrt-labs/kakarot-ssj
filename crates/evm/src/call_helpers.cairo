@@ -131,7 +131,7 @@ impl CallHelpersImpl of CallHelpers {
     fn generic_call(ref self: VM, call_args: CallArgs) -> Result<(), EVMError> {
         self.return_data = Default::default().span();
         if self.message().depth >= constants::STACK_MAX_DEPTH {
-            self.gas_used += self.message().gas_limit;
+            self.gas_used += call_args.gas;
             return self.stack.push(0);
         }
 

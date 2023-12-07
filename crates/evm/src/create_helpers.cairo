@@ -110,8 +110,8 @@ impl CreateHelpersImpl of CreateHelpers {
         // - it's deployed on SN and is an active EVM contract
         // - it's not deployed on SN and is an active EVM contract in the Kakarot cache
         if target_account.has_code_or_nonce() {
-            target_account.set_nonce(target_account.nonce() + 1);
-            self.env.state.set_account(target_account);
+            sender.set_nonce(sender.nonce() + 1);
+            self.env.state.set_account(sender);
             return self.stack.push(0);
         };
 
