@@ -45,30 +45,30 @@ impl RLPImpl of RLPTrait {
         } else if prefix < 0xc0 { // Long String
             let len_bytes_count: u32 = (prefix - 0xb7).into();
             if input_len <= len_bytes_count {
-                return Result::Err(RLPError::InvalidInput);
+                return Result::Err(RLPError::InputTooShort);
             }
             let string_len_bytes = input.slice(1, len_bytes_count);
             let string_len: u32 = U32Trait::from_bytes(string_len_bytes).unwrap();
             if input_len <= len_bytes_count + string_len {
-                return Result::Err(RLPError::InvalidInput);
+                return Result::Err(RLPError::InputTooShort);
             }
 
             Result::Ok((RLPType::String, 1 + len_bytes_count, string_len))
         } else if prefix < 0xf8 { // Short List
             let list_len: u32 = prefix.into() - 0xc0;
             if input_len <= list_len {
-                return Result::Err(RLPError::InvalidInput);
+                return Result::Err(RLPError::InputTooShort);
             }
             Result::Ok((RLPType::List, 1, list_len))
         } else if prefix <= 0xff { // Long List
             let len_bytes_count = prefix.into() - 0xf7;
             if input.len() <= len_bytes_count {
-                return Result::Err(RLPError::InvalidInput);
+                return Result::Err(RLPError::InputTooShort);
             }
             let list_len_bytes = input.slice(1, len_bytes_count);
             let list_len: u32 = U32Trait::from_bytes(list_len_bytes).unwrap();
             if input_len <= len_bytes_count + list_len {
-                return Result::Err(RLPError::InvalidInput);
+                return Result::Err(RLPError::InputTooShort);
             }
             Result::Ok((RLPType::List, 1 + len_bytes_count, list_len))
         } else {

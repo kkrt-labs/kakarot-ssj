@@ -71,7 +71,7 @@ fn test_rlp_decode_type_long_list_len_too_short() {
     let res = RLPTrait::decode_type(arr.span());
 
     assert(res.is_err(), 'Wrong type');
-    assert!(res.unwrap_err() == RLPError::InvalidInput);
+    assert!(res.unwrap_err() == RLPError::InputTooShort);
 }
 
 #[test]
@@ -609,7 +609,7 @@ fn test_rlp_decode_long_string_with_input_too_short() {
 
     let res = RLPTrait::decode(arr.span());
     assert(res.is_err(), 'should return an RLPError');
-    assert!(res.unwrap_err() == RLPError::InvalidInput);
+    assert!(res.unwrap_err() == RLPError::InputTooShort);
 }
 
 #[test]
@@ -896,7 +896,7 @@ fn test_rlp_decode_long_string_with_payload_len_too_short() {
 
     let res = RLPTrait::decode(arr.span());
     assert(res.is_err(), 'should return an RLPError');
-    assert!(res.unwrap_err() == RLPError::InvalidInput);
+    assert!(res.unwrap_err() == RLPError::InputTooShort);
 }
 
 #[test]
@@ -948,7 +948,7 @@ fn test_rlp_decode_short_list_with_input_too_short() {
 
     let res = RLPTrait::decode(arr.span());
     assert(res.is_err(), 'should return an RLPError');
-    assert!(res.unwrap_err() == RLPError::InvalidInput);
+    assert!(res.unwrap_err() == RLPError::InputTooShort);
 }
 
 #[test]
@@ -2144,7 +2144,7 @@ fn test_rlp_decode_long_list_with_input_too_short() {
 
     let res = RLPTrait::decode(arr.span());
     assert(res.is_err(), 'should return an RLPError');
-    assert!(res.unwrap_err() == RLPError::InvalidInput);
+    assert!(res.unwrap_err() == RLPError::InputTooShort);
 }
 
 #[test]
@@ -2153,5 +2153,5 @@ fn test_rlp_decode_long_list_with_len_too_short() {
 
     let res = RLPTrait::decode(arr.span());
     assert(res.is_err(), 'should return an RLPError');
-    assert!(res.unwrap_err() == RLPError::InvalidInput);
+    assert!(res.unwrap_err() == RLPError::InputTooShort);
 }
