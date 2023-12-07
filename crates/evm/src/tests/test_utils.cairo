@@ -223,7 +223,7 @@ fn preset_vm() -> VM {
         return_data,
         env: environment,
         message,
-        gas_used: 0,
+        gas_left: message.gas_limit,
         running: true,
         error: false,
         accessed_addresses: Default::default(),

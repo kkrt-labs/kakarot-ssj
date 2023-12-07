@@ -106,7 +106,7 @@ impl EVMImpl of EVMTrait {
                         success: false,
                         //TODO(optimization) avoid converstion to u256 to get bytes
                         return_data: Into::<felt252, u256>::into(err.to_string()).to_bytes(),
-                        gas_used: 0,
+                        gas_left: 0,
                         accessed_addresses: Default::default(),
                         accessed_storage_keys: Default::default(),
                     };
@@ -154,7 +154,7 @@ impl EVMImpl of EVMTrait {
             return ExecutionResult {
                 success: true,
                 return_data: vm.return_data(),
-                gas_used: vm.gas_used(),
+                gas_left: vm.gas_left(),
                 accessed_addresses: vm.accessed_addresses(),
                 accessed_storage_keys: vm.accessed_storage_keys(),
             };
@@ -172,7 +172,7 @@ impl EVMImpl of EVMTrait {
                 return ExecutionResult {
                     success: true,
                     return_data: vm.return_data(),
-                    gas_used: vm.gas_used(),
+                    gas_left: vm.gas_left(),
                     accessed_addresses: vm.accessed_addresses(),
                     accessed_storage_keys: vm.accessed_storage_keys(),
                 };
@@ -183,7 +183,7 @@ impl EVMImpl of EVMTrait {
                 return ExecutionResult {
                     success: false,
                     return_data: Into::<felt252, u256>::into(error.to_string()).to_bytes(),
-                    gas_used: vm.gas_used(),
+                    gas_left: 0,
                     accessed_addresses: vm.accessed_addresses(),
                     accessed_storage_keys: vm.accessed_storage_keys(),
                 };

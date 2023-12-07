@@ -150,7 +150,6 @@ impl CallHelpersImpl of CallHelpers {
         self.merge_child(@result);
 
         self.return_data = result.return_data;
-        self.gas_used += result.gas_used;
         if result.success {
             self.stack.push(1)?;
         } else {

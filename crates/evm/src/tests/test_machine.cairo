@@ -12,7 +12,7 @@ fn test_vm_default() {
     assert!(vm.pc() == 0);
     assert!(vm.is_running());
     assert!(!vm.error);
-    assert_eq!(vm.gas_used(), 0);
+    assert_eq!(vm.gas_left(), vm.message().gas_limit);
 }
 
 
@@ -36,21 +36,10 @@ fn test_error() {
 }
 
 #[test]
-fn test_increment_gas_unchecked() {
-    let mut vm = VMTrait::new(Default::default(), Default::default());
-
-    assert(vm.gas_used() == 0, 'wrong gas_used');
-
-    vm.increment_gas_used_unchecked(tx_gas_limit());
-
-    assert(vm.gas_used() == tx_gas_limit(), 'wrong gas_used');
-}
-
-#[test]
 fn test_increment_gas_checked() {
     let mut vm = VMTrait::new(Default::default(), Default::default());
 
-    assert(vm.gas_used() == 0, 'wrong gas_used');
+    assert_eq!(vm.gas_left(), vm.message().gas_limit);
 
     let result = vm.charge_gas(tx_gas_limit());
 
