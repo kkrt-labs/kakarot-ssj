@@ -172,8 +172,5 @@ impl CallHelpersImpl of CallHelpers {
 /// Check whether an address for a call-family opcode is a precompile.
 fn is_precompile(self: EthAddress) -> bool {
     let self: felt252 = self.into();
-    if self.into() < 10_u256 {
-        return true;
-    }
-    false
+    return (self != 0 && self.into() < 10_u256);
 }
