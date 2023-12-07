@@ -44,11 +44,11 @@ fn compute_contract_address(sender_address: EthAddress, sender_nonce: u64) -> Et
 fn compute_create2_contract_address(
     sender_address: EthAddress, salt: u256, bytecode: Span<u8>
 ) -> Result<EthAddress, EVMError> {
-    let hash = bytecode.compute_keccak256_hash().to_bytes();
+    let hash = bytecode.compute_keccak256_hash().to_padded_bytes();
 
     let sender_address = sender_address.to_bytes().span();
 
-    let salt = salt.to_bytes();
+    let salt = salt.to_padded_bytes();
 
     let mut preimage: Array<u8> = array![];
 
@@ -57,7 +57,7 @@ fn compute_create2_contract_address(
     preimage.append_span(salt);
     preimage.append_span(hash);
 
-    let address_hash = preimage.span().compute_keccak256_hash().to_bytes();
+    let address_hash = preimage.span().compute_keccak256_hash().to_padded_bytes();
 
     let address: EthAddress = address_hash.slice(12, 20).try_into_result()?;
 

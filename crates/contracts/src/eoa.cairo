@@ -148,9 +148,7 @@ mod ExternallyOwnedAccount {
             };
 
             let (_, return_data) = kakarot_core_dispatcher
-                .eth_send_transaction(
-                    Option::Some(destination), gas_limit, gas_price, amount, calldata
-                );
+                .eth_send_transaction(destination, gas_limit, gas_price, amount, calldata);
 
             array![return_data.to_felt252_array().span()]
         }

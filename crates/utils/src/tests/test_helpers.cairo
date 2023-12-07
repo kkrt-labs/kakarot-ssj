@@ -277,9 +277,19 @@ mod u128_test {
     use utils::helpers::Bitshift;
     use utils::helpers::U128Trait;
 
-
     #[test]
-    fn test_u128_bytes_used() { //TODO: test
+    fn test_u128_bytes_used() {
+        assert_eq!(0x00_u128.bytes_used(), 0);
+        let mut value = 0xff;
+        let mut i = 1;
+        loop {
+            assert_eq!(value.bytes_used(), i);
+            if i == 16 {
+                break;
+            };
+            i += 1;
+            value = value.shl(8);
+        };
     }
 }
 
@@ -307,7 +317,18 @@ mod u256_test {
     }
 
     #[test]
-    fn test_u256_bytes_used() { //TODO: test
+    fn test_u256_bytes_used() {
+        assert_eq!(0x00_u256.bytes_used(), 0);
+        let mut value = 0xff;
+        let mut i = 1;
+        loop {
+            assert_eq!(value.bytes_used(), i);
+            if i == 32 {
+                break;
+            };
+            i += 1;
+            value = value.shl(8);
+        };
     }
 }
 

@@ -25,7 +25,7 @@ struct EthereumTransaction {
     nonce: u128,
     gas_price: u128,
     gas_limit: u128,
-    destination: EthAddress,
+    destination: Option<EthAddress>,
     amount: u256,
     calldata: Span<u8>,
     chain_id: u128,
@@ -119,16 +119,14 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
                 let nonce = (*val.at(nonce_idx)).parse_u128_from_string().map_err()?;
                 let gas_price = (*val.at(gas_price_idx)).parse_u128_from_string().map_err()?;
                 let gas_limit = (*val.at(gas_limit_idx)).parse_u128_from_string().map_err()?;
-                let to = (*val.at(to_idx)).parse_u256_from_string().map_err()?;
+                let to = (*val.at(to_idx)).parse_address_from_string().map_err()?;
                 let amount = (*val.at(value_idx)).parse_u256_from_string().map_err()?;
                 let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
                 let chain_id = (*val.at(chain_id_idx)).parse_u128_from_string().map_err()?;
 
-                let destination: EthAddress = to.into();
-
                 Result::Ok(
                     EthereumTransaction {
-                        nonce, gas_price, gas_limit, destination, amount, calldata, chain_id
+                        nonce, gas_price, gas_limit, destination: to, amount, calldata, chain_id
                     }
                 )
             }
@@ -184,11 +182,9 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
                 let nonce = (*val.at(nonce_idx)).parse_u128_from_string().map_err()?;
                 let gas_price = (*val.at(gas_price_idx)).parse_u128_from_string().map_err()?;
                 let gas_limit = (*val.at(gas_limit_idx)).parse_u128_from_string().map_err()?;
-                let to = (*val.at(to_idx)).parse_u256_from_string().map_err()?;
+                let to = (*val.at(to_idx)).parse_address_from_string().map_err()?;
                 let amount = (*val.at(value_idx)).parse_u256_from_string().map_err()?;
                 let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
-
-                let destination: EthAddress = to.into();
 
                 Result::Ok(
                     EthereumTransaction {
@@ -196,7 +192,7 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
                         nonce: nonce,
                         gas_price: gas_price,
                         gas_limit: gas_limit,
-                        destination,
+                        destination: to,
                         amount,
                         calldata,
                     }

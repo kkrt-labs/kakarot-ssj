@@ -64,6 +64,45 @@ fn legacy_rlp_encoded_tx() -> Span<u8> {
         .span()
 }
 
+fn legacy_rlp_encoded_deploy_tx() -> Span<u8> {
+    // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0, 0]
+    // expected rlp decoding:  ["0x","0x0a","0x061a80","0x","0x0186a0","0x600160010a5060006000f3","0x4b4b5254","0x","0x"]
+    array![
+        0xde,
+        0x80,
+        0x0a,
+        0x83,
+        0x06,
+        0x1a,
+        0x80,
+        0x80,
+        0x83,
+        0x01,
+        0x86,
+        0xa0,
+        0x8b,
+        0x60,
+        0x01,
+        0x60,
+        0x01,
+        0x0a,
+        0x50,
+        0x60,
+        0x00,
+        0x60,
+        0x00,
+        0xf3,
+        0x84,
+        0x4b,
+        0x4b,
+        0x52,
+        0x54,
+        0x80,
+        0x80
+    ]
+        .span()
+}
+
 
 fn eip_2930_encoded_tx() -> Span<u8> {
     // tx_format (EIP-2930, unsigned): 0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList])

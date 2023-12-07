@@ -1,7 +1,8 @@
 use core::byte_array::ByteArrayTrait;
 use core::result::ResultTrait;
+use starknet::EthAddress;
 use utils::errors::{RLPError, RLPHelpersError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
-use utils::helpers::{U32Trait, U256Impl, U128Impl, ArrayExtension};
+use utils::helpers::{U32Trait, EthAddressExTrait, U256Impl, U128Impl, ArrayExtension};
 
 // Possible RLP types
 #[derive(Drop, PartialEq)]
@@ -32,35 +33,46 @@ impl RLPImpl of RLPTrait {
     fn decode_type(input: Span<u8>) -> Result<(RLPType, u32, u32), RLPError> {
         let input_len = input.len();
         if input_len == 0 {
-            return Result::Err(RLPError::EmptyInput(RLP_EMPTY_INPUT));
+            return Result::Err(RLPError::EmptyInput);
         }
 
-        let prefix_byte = *input[0];
+        let prefix = *input[0];
 
-        if prefix_byte < 0x80 { // Char
+        if prefix < 0x80 { // Char
             Result::Ok((RLPType::String, 0, 1))
-        } else if prefix_byte < 0xb8 { // Short String
-            Result::Ok((RLPType::String, 1, prefix_byte.into() - 0x80))
-        } else if prefix_byte < 0xc0 { // Long String
-            let len_bytes_count: u32 = (prefix_byte - 0xb7).into();
+        } else if prefix < 0xb8 { // Short String
+            Result::Ok((RLPType::String, 1, prefix.into() - 0x80))
+        } else if prefix < 0xc0 { // Long String
+            let len_bytes_count: u32 = (prefix - 0xb7).into();
             if input_len <= len_bytes_count {
-                return Result::Err(RLPError::InputTooShort(RLP_INPUT_TOO_SHORT));
+                return Result::Err(RLPError::InvalidInput);
             }
             let string_len_bytes = input.slice(1, len_bytes_count);
             let string_len: u32 = U32Trait::from_bytes(string_len_bytes).unwrap();
-
-            Result::Ok((RLPType::String, 1 + len_bytes_count, string_len))
-        } else if prefix_byte < 0xf8 { // Short List
-            Result::Ok((RLPType::List, 1, prefix_byte.into() - 0xc0))
-        } else { // Long List
-            let len_bytes_count = prefix_byte.into() - 0xf7;
-            if input.len() <= len_bytes_count {
-                return Result::Err(RLPError::InputTooShort(RLP_INPUT_TOO_SHORT));
+            if input_len <= len_bytes_count + string_len {
+                return Result::Err(RLPError::InvalidInput);
             }
 
+            Result::Ok((RLPType::String, 1 + len_bytes_count, string_len))
+        } else if prefix < 0xf8 { // Short List
+            let list_len: u32 = prefix.into() - 0xc0;
+            if input_len <= list_len {
+                return Result::Err(RLPError::InvalidInput);
+            }
+            Result::Ok((RLPType::List, 1, list_len))
+        } else if prefix <= 0xff { // Long List
+            let len_bytes_count = prefix.into() - 0xf7;
+            if input.len() <= len_bytes_count {
+                return Result::Err(RLPError::InvalidInput);
+            }
             let list_len_bytes = input.slice(1, len_bytes_count);
             let list_len: u32 = U32Trait::from_bytes(list_len_bytes).unwrap();
+            if input_len <= len_bytes_count + list_len {
+                return Result::Err(RLPError::InvalidInput);
+            }
             Result::Ok((RLPType::List, 1 + len_bytes_count, list_len))
+        } else {
+            Result::Err(RLPError::InvalidInput)
         }
     }
 
@@ -153,7 +165,7 @@ impl RLPImpl of RLPTrait {
         let (rlp_type, offset, len) = RLPTrait::decode_type(input)?;
 
         if input_len < offset + len {
-            return Result::Err(RLPError::InputTooShort(RLP_INPUT_TOO_SHORT));
+            return Result::Err(RLPError::InputTooShort);
         }
 
         match rlp_type {
@@ -165,11 +177,11 @@ impl RLPImpl of RLPTrait {
                 }
             },
             RLPType::List => {
-                if len > 0 {
+                if len == 0 {
+                    output.append(RLPItem::List(array![].span()));
+                } else {
                     let res = RLPTrait::decode(input.slice(offset, len))?;
                     output.append(RLPItem::List(res));
-                } else {
-                    output.append(RLPItem::List(array![].span()));
                 }
             }
         };
@@ -197,6 +209,22 @@ impl RLPHelpersImpl of RLPHelpersTrait {
                 }
                 let value = U128Impl::from_bytes(bytes).ok_or(RLPHelpersError::FailedParsingU128)?;
                 Result::Ok(value)
+            },
+            RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
+        }
+    }
+
+    fn parse_address_from_string(self: RLPItem) -> Result<Option<EthAddress>, RLPHelpersError> {
+        match self {
+            RLPItem::String(bytes) => {
+                if bytes.len() == 0 {
+                    return Result::Ok(Option::None);
+                }
+                if bytes.len() == 20 {
+                    let value = EthAddressExTrait::from_bytes(bytes);
+                    return Result::Ok(Option::Some(value));
+                }
+                return Result::Err(RLPHelpersError::FailedParsingAddress);
             },
             RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
         }

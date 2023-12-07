@@ -3,10 +3,14 @@ use core::starknet::eth_signature::{EthAddress, Signature};
 
 use utils::eth_transaction::{
     EthTransactionTrait, EncodedTransactionTrait, EncodedTransaction, TransactionMetadata,
-    EthTransactionError
+    EthTransactionError, EthereumTransaction
 };
+use utils::helpers::U256Trait;
 use utils::helpers::{U32Trait};
-use utils::tests::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
+use utils::rlp::{RLPTrait, RLPItem, RLPHelpersTrait};
+use utils::tests::test_data::{
+    legacy_rlp_encoded_tx, legacy_rlp_encoded_deploy_tx, eip_2930_encoded_tx, eip_1559_encoded_tx
+};
 
 
 #[test]
@@ -23,20 +27,39 @@ fn test_decode_legacy_tx() {
 
     let tx = encoded_tx.decode().expect('decode failed');
 
-    assert(tx.chain_id == chain_id(), 'chain_id not 0x434841494e5f4944');
-    assert(tx.nonce == 0, 'nonce is not 0');
-    assert(tx.gas_price == 0x3b9aca00, 'gas_price is not 0x3b9aca00');
-    assert(tx.gas_limit == 0x1e8480, 'gas_limit is not 0x1e8480');
-    assert(
-        tx.destination.address == 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984,
-        'destination is not 0x1f9840...'
-    );
-    assert(tx.amount == 0x016345785d8a0000, 'amount is not 0x016345785d8...');
+    assert_eq!(tx.chain_id, chain_id());
+    assert_eq!(tx.nonce, 0);
+    assert_eq!(tx.gas_price, 0x3b9aca00);
+    assert_eq!(tx.gas_limit, 0x1e8480);
+    assert_eq!(tx.destination.unwrap().into(), 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984,);
+    assert_eq!(tx.amount, 0x016345785d8a0000);
 
     let expected_calldata = 0xabcdef_u32.to_bytes();
     assert(tx.calldata == expected_calldata, 'calldata is not 0xabcdef');
 }
 
+#[test]
+fn test_decode_legacy_deploy_tx() {
+    // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0, 0]
+    // expected rlp decoding:  ["0x","0x0a","0x061a80","0x","0x0186a0","0x600160010a5060006000f3","0x4b4b5254","0x","0x"]
+    let data = legacy_rlp_encoded_deploy_tx();
+
+    let encoded_tx: Option<EncodedTransaction> = data.try_into();
+    let encoded_tx = encoded_tx.unwrap();
+    assert(encoded_tx == EncodedTransaction::Legacy(data), 'encoded_tx is not Legacy');
+
+    let tx = encoded_tx.decode().expect('decode failed');
+
+    assert_eq!(tx.chain_id, 'KKRT'.try_into().unwrap());
+    assert_eq!(tx.nonce, 0);
+    assert_eq!(tx.gas_price, 0x0a);
+    assert_eq!(tx.gas_limit, 0x061a80);
+    assert!(tx.destination.is_none());
+    assert_eq!(tx.amount, 0x0186a0);
+
+    let expected_calldata = 0x600160010a5060006000f3_u256.to_bytes();
+    assert(tx.calldata == expected_calldata, 'calldata is not 0xabcdef');
+}
 
 #[test]
 fn test_decode_eip_2930_tx() {
@@ -52,15 +75,12 @@ fn test_decode_eip_2930_tx() {
 
     let tx = encoded_tx.decode().expect('decode failed');
 
-    assert(tx.chain_id == chain_id(), 'chain id not 0x434841494e5f4944');
-    assert(tx.nonce == 0, 'nonce is not 0');
-    assert(tx.gas_price == 0x3b9aca00, 'gas_price is not 0x3b9aca00');
-    assert(tx.gas_limit == 0x1e8480, 'gas_limit is not 0x1e8480');
-    assert(
-        tx.destination.address == 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984,
-        'destination is not 0x1f9840...'
-    );
-    assert(tx.amount == 0x016345785d8a0000, 'amount is not 0x016345785d8...');
+    assert_eq!(tx.chain_id, chain_id());
+    assert_eq!(tx.nonce, 0);
+    assert_eq!(tx.gas_price, 0x3b9aca00);
+    assert_eq!(tx.gas_limit, 0x1e8480);
+    assert_eq!(tx.destination.unwrap().into(), 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984);
+    assert_eq!(tx.amount, 0x016345785d8a0000);
 
     let expected_calldata = 0xabcdef_u32.to_bytes();
     assert(tx.calldata == expected_calldata, 'calldata is not 0xabcdef');
@@ -81,19 +101,17 @@ fn test_decode_eip_1559_tx() {
 
     let tx = encoded_tx.decode().expect('decode failed');
 
-    assert(tx.chain_id == chain_id(), 'chain id not 0x434841494e5f4944');
-    assert(tx.nonce == 0, 'nonce is not 0');
-    assert(tx.gas_price == 0x3b9aca00, 'gas_price is not 0x3b9aca00');
-    assert(tx.gas_limit == 0x1e8480, 'gas_limit is not 0x1e8480');
-    assert(
-        tx.destination.address == 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984,
-        'destination is not 0x1f9840...'
-    );
-    assert(tx.amount == 0x016345785d8a0000, 'amount is not 0x016345785d8...');
+    assert_eq!(tx.chain_id, chain_id());
+    assert_eq!(tx.nonce, 0);
+    assert_eq!(tx.gas_price, 0x3b9aca00);
+    assert_eq!(tx.gas_limit, 0x1e8480);
+    assert_eq!(tx.destination.unwrap().into(), 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984);
+    assert_eq!(tx.amount, 0x016345785d8a0000);
 
     let expected_calldata = 0xabcdef_u32.to_bytes();
     assert(tx.calldata == expected_calldata, 'calldata is not 0xabcdef');
 }
+
 
 #[test]
 fn test_is_legacy_tx_eip_155_tx() {
@@ -242,3 +260,4 @@ fn test_validate_should_fail_for_wrong_chain_id() {
         .expect_err('expected to fail');
     assert(result == EthTransactionError::IncorrectChainId, 'result is not true');
 }
+
