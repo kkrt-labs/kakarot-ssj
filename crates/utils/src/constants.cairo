@@ -88,3 +88,12 @@ const POW_2_120: u128 = 0x1000000000000000000000000000000;
 const POW_2_127: u128 = 0x80000000000000000000000000000000;
 
 const MAX_ADDRESS: u256 = 0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+
+// EVM GAS
+const GAS_INIT_CODE_WORD_COST: usize = 2;
+
+// TRANSACTION GAS COSTS
+const TX_BASE_COST: u128 = 21000;
+const TX_CREATE_COST: u128 = 32000;
+const TX_DATA_COST_PER_ZERO: u128 = 4;
+const TX_DATA_COST_PER_NON_ZERO: u128 = 16;

@@ -3,7 +3,7 @@ use core::starknet::eth_signature::{EthAddress, Signature};
 
 use utils::eth_transaction::{
     EthTransactionTrait, EncodedTransactionTrait, EncodedTransaction, TransactionMetadata,
-    EthTransactionError, EthereumTransaction
+    EthTransactionError, EthereumTransaction, calculate_intrinsic_cost
 };
 use utils::helpers::U256Trait;
 use utils::helpers::{U32Trait};
@@ -261,3 +261,14 @@ fn test_validate_should_fail_for_wrong_chain_id() {
     assert(result == EthTransactionError::IncorrectChainId, 'result is not true');
 }
 
+#[test]
+fn test_calculate_intrinsic_cost() {
+    let data = legacy_rlp_encoded_tx();
+
+    let encoded_tx: Option<EncodedTransaction> = data.try_into();
+    let encoded_tx: EncodedTransaction = encoded_tx.unwrap();
+    let tx: EthereumTransaction = encoded_tx.decode().expect('decode failed');
+
+    let cost: u128 = calculate_intrinsic_cost(@tx);
+    assert(cost > 0, 'cant be zero');
+}

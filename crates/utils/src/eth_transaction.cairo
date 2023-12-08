@@ -12,6 +12,12 @@ use utils::helpers::{U256Trait, U256Impl, ByteArrayExt, U8SpanExTrait};
 use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
 
+use utils::math::ceil32;
+use utils::constants::{
+    TX_BASE_COST, TX_CREATE_COST, TX_DATA_COST_PER_NON_ZERO, TX_DATA_COST_PER_ZERO,
+    GAS_INIT_CODE_WORD_COST
+};
+
 #[derive(Drop)]
 struct TransactionMetadata {
     address: EthAddress,
@@ -268,4 +274,53 @@ impl EthTransactionImpl of EthTransactionTrait {
 
         Result::Ok(true)
     }
+}
+
+/// Calculates the gas to be charged for the init code in CREAT*
+/// opcodes as well as create transactions.
+fn init_code_cost(init_code_length: usize) -> usize {
+    GAS_INIT_CODE_WORD_COST * ceil32(init_code_length) / 32
+}
+
+/// Calculates the gas that is charged before execution is started.
+///
+/// The intrinsic cost of the transaction is charged before execution has
+/// begun. Functions/operations in the EVM cost money to execute so this
+/// intrinsic cost is for the operations that need to be paid for as part of
+/// the transaction. Data transfer, for example, is part of this intrinsic
+/// cost. It costs ether to send data over the wire and that ether is
+/// accounted for in the intrinsic cost calculated in this function. This
+/// intrinsic cost must be calculated and paid for before execution in order
+/// for all operations to be implemented.
+///
+/// Reference:
+/// https://github.com/ethereum/execution-specs/blob/master/src/ethereum/shanghai/fork.py#L689
+fn calculate_intrinsic_cost(tx: @EthereumTransaction) -> u128 {
+    let mut create_cost: u128 = 0;
+    let mut data_cost: u128 = 0;
+    // TODO: access_list not handled yet
+    let mut access_list_cost: u128 = 0;
+
+    let mut calldata_cpy: Span<u8> = *tx.calldata;
+    let calldata_len: usize = calldata_cpy.len();
+
+    loop {
+        match calldata_cpy.pop_front() {
+            Option::Some(data) => {
+                data_cost +=
+                    if *data == 0 {
+                        TX_DATA_COST_PER_ZERO
+                    } else {
+                        TX_DATA_COST_PER_NON_ZERO
+                    };
+            },
+            Option::None => { break; },
+        }
+    };
+
+    if tx.destination.is_none() {
+        create_cost += TX_CREATE_COST * init_code_cost(calldata_len).into() / 32;
+    }
+
+    TX_BASE_COST + data_cost + create_cost + access_list_cost
 }
