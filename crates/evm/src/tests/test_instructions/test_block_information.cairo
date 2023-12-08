@@ -1,3 +1,4 @@
+use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
 use contracts::kakarot_core::interface::{
     IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
@@ -13,15 +14,13 @@ use evm::model::contract_account::ContractAccountTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{evm_address, VMBuilderTrait, tx_gas_limit, gas_price};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
+
+use starknet::EthAddress;
 use starknet::testing::{
     set_block_timestamp, set_block_number, set_contract_address, set_sequencer_address,
     ContractAddress
 };
 use utils::constants;
-
-use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
-
-use starknet::EthAddress;
 use utils::traits::{EthAddressIntoU256};
 
 
