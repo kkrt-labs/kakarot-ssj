@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod test_external_owned_account {
+    use contracts::eoa::ExternallyOwnedAccount::TransactionExecuted;
     use contracts::eoa::{
         IExternallyOwnedAccount, ExternallyOwnedAccount, IExternallyOwnedAccountDispatcher,
         IExternallyOwnedAccountDispatcherTrait
@@ -15,13 +16,14 @@ mod test_external_owned_account {
         MockContractUpgradeableV1
     };
     use contracts::tests::test_utils::{
-        setup_contracts_for_testing, deploy_eoa, deploy_contract_account
+        setup_contracts_for_testing, deploy_eoa, deploy_contract_account, pop_log
     };
     use contracts::uninitialized_account::{
         IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount,
         IUninitializedAccount
     };
     use core::array::SpanTrait;
+    use core::box::BoxTrait;
     use core::starknet::account::{Call, AccountContractDispatcher, AccountContractDispatcherTrait};
 
     use evm::model::{Address, AddressTrait, ContractAccountTrait};
@@ -34,7 +36,7 @@ mod test_external_owned_account {
     use starknet::testing::{set_caller_address, set_contract_address, set_signature};
     use starknet::{
         deploy_syscall, ContractAddress, ClassHash, VALIDATED, get_contract_address,
-        contract_address_const, EthAddress, eth_signature::{Signature}
+        contract_address_const, EthAddress, eth_signature::{Signature}, get_tx_info
     };
     use utils::helpers::EthAddressSignatureTrait;
     use utils::helpers::{U8SpanExTrait, u256_to_bytes_array};
@@ -134,7 +136,26 @@ mod test_external_owned_account {
             calldata: encoded_tx.to_felt252_array()
         };
 
-        eoa_contract.__execute__(array![call]);
+        let result = eoa_contract.__execute__(array![call]);
+        assert!(result.len() == 1, "expected result to be of length 1");
+
+        let tx_info = get_tx_info().unbox();
+
+        let event = pop_log::<TransactionExecuted>(kakarot_core.contract_address).unwrap();
+
+        assert!(
+            event.hash == tx_info.transaction_hash,
+            "expected {}, got {}",
+            tx_info.transaction_hash,
+            event.hash
+        );
+        assert!(
+            event.response == result.span(),
+            "expected {}, got {}",
+            tx_info.transaction_hash,
+            event.hash
+        );
+        assert!(event.success == true, "expected `success` to be `true`");
 
         // check counter value has increased
         let (_, return_data) = kakarot_core
