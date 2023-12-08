@@ -242,5 +242,5 @@ fn test_exec_coinbase() {
     let coinbase_address = vm.stack.pop().unwrap();
 
     // Then
-    assert(vm.env.coinbase.into() == coinbase_address, 'wrong sequencer_address');
+    assert(vm.env.coinbase.into() == coinbase_address, 'wrong coinbase address');
 }
