@@ -1,4 +1,3 @@
-use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
 use contracts::kakarot_core::interface::{
     IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
@@ -14,13 +13,12 @@ use evm::model::contract_account::ContractAccountTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{evm_address, VMBuilderTrait, tx_gas_limit, gas_price};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-
-use starknet::EthAddress;
 use starknet::testing::{
     set_block_timestamp, set_block_number, set_contract_address, set_sequencer_address,
     ContractAddress
 };
 use utils::constants;
+
 use utils::traits::{EthAddressIntoU256};
 
 
@@ -232,25 +230,18 @@ fn test_randao_should_push_zero_to_stack() {
 #[test]
 fn test_exec_coinbase() {
     // Given
-    let (_, kakarot_core) = setup_contracts_for_testing();
-    let sequencer_eoa = kakarot_core.deploy_eoa(evm_address());
-
-    let sequencer_evm_address = IExternallyOwnedAccountDispatcher {
-        contract_address: sequencer_eoa
-    }
-        .evm_address();
-
-    // And
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    vm.env.coinbase = sequencer_evm_address;
+    let (_, kakarot_core) = setup_contracts_for_testing();
+    let sequencer_eoa = kakarot_core.deploy_eoa(vm.env.coinbase);
+
+    set_sequencer_address(sequencer_eoa);
 
     // When
     vm.exec_coinbase().unwrap();
 
-    let coinbase = vm.stack.pop().unwrap();
-    let coinbase_address: EthAddress = coinbase.into();
+    let sequencer_address = vm.stack.pop().unwrap();
 
     // Then
-    assert(coinbase_address == sequencer_evm_address, 'wrong coinbase address');
+    assert(vm.env.coinbase.into() == sequencer_address, 'wrong sequencer_address');
 }
