@@ -18,6 +18,8 @@ use starknet::testing::{
     ContractAddress
 };
 use utils::constants;
+use utils::traits::{EthAddressIntoU256};
+
 
 /// 0x40 - BLOCKHASH
 #[test]
@@ -54,10 +56,11 @@ fn test_exec_blockhash_above_bounds() {
 // https://github.com/starkware-libs/cairo/blob/77a7e7bc36aa1c317bb8dd5f6f7a7e6eef0ab4f3/crates/cairo-lang-starknet/cairo_level_tests/interoperability.cairo#L173
 #[test]
 fn test_exec_blockhash_within_bounds() {
+    // If not set the default block number is 0.
+    set_block_number(500);
+
     // Given
     let mut vm = VMBuilderTrait::new_with_presets().build();
-
-    set_block_number(500);
 
     // When
     vm.stack.push(244).expect('push failed');
@@ -73,11 +76,13 @@ fn test_exec_blockhash_within_bounds() {
 
 #[test]
 fn test_block_timestamp_set_to_1692873993() {
-    // Given
-    let mut vm = VMBuilderTrait::new_with_presets().build();
     // 24/08/2023 12h46 33s
     // If not set the default timestamp is 0.
     set_block_timestamp(1692873993);
+
+    // Given
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+
     // When
     vm.exec_timestamp().unwrap();
 
@@ -88,10 +93,12 @@ fn test_block_timestamp_set_to_1692873993() {
 
 #[test]
 fn test_block_number_set_to_32() {
-    // Given
-    let mut vm = VMBuilderTrait::new_with_presets().build();
     // If not set the default block number is 0.
     set_block_number(32);
+
+    // Given
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+
     // When
     vm.exec_number().unwrap();
 
@@ -222,18 +229,13 @@ fn test_randao_should_push_zero_to_stack() {
 #[test]
 fn test_exec_coinbase() {
     // Given
-    let (_, kakarot_core) = setup_contracts_for_testing();
-    let sequencer_eoa = kakarot_core.deploy_eoa(evm_address());
-
-    // And
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
     // When
-    set_sequencer_address(sequencer_eoa);
     vm.exec_coinbase().unwrap();
 
-    let sequencer_address = vm.stack.pop().unwrap();
+    let coinbase_address = vm.stack.pop().unwrap();
 
     // Then
-    assert(evm_address().address.into() == sequencer_address, 'wrong sequencer_address');
+    assert(vm.env.coinbase.into() == coinbase_address, 'wrong coinbase address');
 }
