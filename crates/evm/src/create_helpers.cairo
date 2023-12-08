@@ -98,8 +98,7 @@ impl CreateHelpersImpl of CreateHelpers {
         let sender_current_nonce = sender.nonce();
         if sender.balance() < create_args.value
             || sender_current_nonce == integer::BoundedInt::<u64>::max()
-            || self.message.depth
-            + 1 > constants::STACK_MAX_DEPTH {
+            || self.message.depth == constants::STACK_MAX_DEPTH {
             //TODO(gas) reimburse charged message gas
             return self.stack.push(0);
         }

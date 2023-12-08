@@ -140,7 +140,7 @@ mod pop {
         // When & Then
         let result = stack.pop();
         assert(result.is_err(), 'should return Err ');
-        assert(result.unwrap_err() == EVMError::StackUnderflow, 'should return StackUnderflow');
+        assert!(result.unwrap_err() == EVMError::StackUnderflow, "should return StackUnderflow");
     }
 
     #[test]
@@ -152,7 +152,7 @@ mod pop {
         // When & Then
         let result = stack.pop_n(2);
         assert(result.is_err(), 'should return Error');
-        assert(result.unwrap_err() == EVMError::StackUnderflow, 'should return StackUnderflow');
+        assert!(result.unwrap_err() == EVMError::StackUnderflow, "should return StackUnderflow");
     }
 }
 
@@ -215,7 +215,7 @@ mod peek {
         let result = stack.peek_at(1);
 
         assert(result.is_err(), 'should return an EVMError');
-        assert(result.unwrap_err() == EVMError::StackUnderflow, 'should return StackUnderflow');
+        assert!(result.unwrap_err() == EVMError::StackUnderflow, "should return StackUnderflow");
     }
 }
 
@@ -264,7 +264,7 @@ mod swap {
         let result = stack.swap_i(1);
 
         assert(result.is_err(), 'should return an EVMError');
-        assert(result.unwrap_err() == EVMError::StackUnderflow, 'should return StackUnderflow');
+        assert!(result.unwrap_err() == EVMError::StackUnderflow, "should return StackUnderflow");
     }
 
     #[test]
@@ -277,6 +277,6 @@ mod swap {
         let result = stack.swap_i(2);
 
         assert(result.is_err(), 'should return an EVMError');
-        assert(result.unwrap_err() == EVMError::StackUnderflow, 'should return StackUnderflow');
+        assert!(result.unwrap_err() == EVMError::StackUnderflow, "should return StackUnderflow");
     }
 }

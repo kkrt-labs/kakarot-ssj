@@ -100,7 +100,7 @@ fn test_exec_pop_should_stack_underflow() {
 
     // Then
     assert(result.is_err(), 'should return Err ');
-    assert(result.unwrap_err() == EVMError::StackUnderflow, 'should return StackUnderflow');
+    assert!(result.unwrap_err() == EVMError::StackUnderflow, "should return StackUnderflow");
 }
 
 #[test]
