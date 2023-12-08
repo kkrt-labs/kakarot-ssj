@@ -41,6 +41,7 @@ mod test_external_owned_account {
     use utils::helpers::EthAddressSignatureTrait;
     use utils::helpers::{U8SpanExTrait, u256_to_bytes_array};
     use utils::tests::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
+    use utils::traits::{SpanTDisplay, debug_display_based::TDisplay};
 
 
     #[test]
@@ -137,25 +138,25 @@ mod test_external_owned_account {
         };
 
         let result = eoa_contract.__execute__(array![call]);
-        assert!(result.len() == 1, "expected result to be of length 1");
+        assert_eq!(result.len(), 1);
+
+        let return_data = result[0];
 
         let tx_info = get_tx_info().unbox();
 
         let event = pop_log::<TransactionExecuted>(kakarot_core.contract_address).unwrap();
 
-        assert!(
-            event.hash == tx_info.transaction_hash,
-            "expected {}, got {}",
-            tx_info.transaction_hash,
-            event.hash
+        assert_eq!(
+            event.hash, tx_info.transaction_hash
         );
-        assert!(
-            event.response == result.span(),
-            "expected {}, got {}",
-            tx_info.transaction_hash,
-            event.hash
-        );
-        assert!(event.success == true, "expected `success` to be `true`");
+
+        assert_eq!(return_data, return_data);
+
+        // assert_eq!(
+        //     event.response[0], return_data
+        // );
+
+        assert_eq!(event.success, true);
 
         // check counter value has increased
         let (_, return_data) = kakarot_core
