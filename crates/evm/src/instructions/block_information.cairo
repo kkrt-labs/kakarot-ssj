@@ -30,7 +30,7 @@ impl BlockInformation of BlockInformationTrait {
         self.charge_gas(gas::BLOCKHASH)?;
 
         let block_number = self.stack.pop_u64()?;
-        let current_block = get_block_number();
+        let current_block = self.env.block_number;
 
         // If input block number is lower than current_block - 256, return 0
         // If input block number is higher than current_block - 10, return 0
@@ -58,14 +58,7 @@ impl BlockInformation of BlockInformationTrait {
     fn exec_coinbase(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
 
-        let execution_info = get_execution_info_syscall()
-            .map_err(EVMError::SyscallFailed(EXECUTION_INFO_SYSCALL_FAILED))?
-            .unbox();
-
-        let coinbase = execution_info.block_info.unbox().sequencer_address;
-        let eoa = IExternallyOwnedAccountDispatcher { contract_address: coinbase };
-
-        let coinbase = eoa.evm_address();
+        let coinbase = self.env.coinbase;
         self.stack.push(coinbase.into())
     }
 
@@ -75,7 +68,7 @@ impl BlockInformation of BlockInformationTrait {
     fn exec_timestamp(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
 
-        self.stack.push(get_block_timestamp().into())
+        self.stack.push(self.env.block_timestamp.into())
     }
 
     /// 0x43 - NUMBER
@@ -84,7 +77,7 @@ impl BlockInformation of BlockInformationTrait {
     fn exec_number(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
 
-        self.stack.push(get_block_number().into())
+        self.stack.push(self.env.block_number.into())
     }
 
     /// 0x44 - PREVRANDAO
