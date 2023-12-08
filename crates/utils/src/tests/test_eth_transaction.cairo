@@ -260,3 +260,4 @@ fn test_validate_should_fail_for_wrong_chain_id() {
         .expect_err('expected to fail');
     assert(result == EthTransactionError::IncorrectChainId, 'result is not true');
 }
+
