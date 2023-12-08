@@ -6,6 +6,7 @@ use starknet::{
     ContractAddress, Store, SyscallResult
 };
 use utils::math::{Zero, One, Bitshift};
+use core::fmt::{Display, Debug, Formatter, Error};
 
 mod display_felt252_based {
     use core::fmt::{Display, Formatter, Error};
@@ -26,6 +27,24 @@ mod debug_display_based {
     impl TDisplay<T, +Display<T>> of Debug<T> {
         fn fmt(self: @T, ref f: Formatter) -> Result<(), Error> {
             Display::fmt(self, ref f)
+        }
+    }
+}
+
+impl OptionDisplay<T, +Display<T>, +Drop<T>, +Copy<T>> of Display<Option<T>> {
+    fn fmt(self: @Option<T>, ref f: Formatter) -> Result<(), Error> {
+        match *self {
+            Option::Some(value) => Display::fmt(@value, ref f),
+            Option::None => Display::<felt252>::fmt(@'Option::None', ref f),
+        }
+    }
+}
+
+impl OptionDebug<T, +Display<T>, +Drop<T>, +Copy<T>> of Debug<Option<T>> {
+    fn fmt(self: @Option<T>, ref f: Formatter) -> Result<(), Error> {
+        match *self {
+            Option::Some(value) => Display::fmt(@value, ref f),
+            Option::None => Display::<felt252>::fmt(@'Option::None', ref f),
         }
     }
 }

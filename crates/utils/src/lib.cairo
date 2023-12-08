@@ -11,6 +11,7 @@ mod num;
 mod rlp;
 mod set;
 mod storage;
+mod checked_math;
 
 #[cfg(test)]
 mod tests;
