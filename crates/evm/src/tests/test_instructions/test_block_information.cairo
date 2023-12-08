@@ -19,6 +19,12 @@ use starknet::testing::{
 };
 use utils::constants;
 
+use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
+
+use starknet::EthAddress;
+use utils::traits::{EthAddressIntoU256};
+
+
 /// 0x40 - BLOCKHASH
 #[test]
 fn test_exec_blockhash_below_bounds() {
@@ -230,16 +236,22 @@ fn test_exec_coinbase() {
     let (_, kakarot_core) = setup_contracts_for_testing();
     let sequencer_eoa = kakarot_core.deploy_eoa(evm_address());
 
-    set_sequencer_address(sequencer_eoa);
+    let sequencer_evm_address = IExternallyOwnedAccountDispatcher {
+        contract_address: sequencer_eoa
+    }
+        .evm_address();
 
     // And
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
+    vm.env.coinbase = sequencer_evm_address;
+
     // When
     vm.exec_coinbase().unwrap();
 
-    let sequencer_address = vm.stack.pop().unwrap();
+    let coinbase = vm.stack.pop().unwrap();
+    let coinbase_address: EthAddress = coinbase.into();
 
     // Then
-    assert(evm_address().address.into() == sequencer_address, 'wrong sequencer_address');
+    assert(coinbase_address == sequencer_evm_address, 'wrong coinbase address');
 }
