@@ -52,6 +52,7 @@ impl EthAddressDisplay = display_felt252_based::TDisplay<EthAddress>;
 impl ContractAddressDisplay = display_felt252_based::TDisplay<ContractAddress>;
 impl EthAddressDebug = debug_display_based::TDisplay<EthAddress>;
 impl ContractAddressDebug = debug_display_based::TDisplay<ContractAddress>;
+impl SpanDebug<T, +Display<T>, +Copy<T>> = debug_display_based::TDisplay<Span<T>>;
 
 impl SpanTDisplay<T, +Display<T>, +Copy<T>> of Display<Span<T>> {
     fn fmt(self: @Span<T>, ref f: Formatter) -> Result<(), Error> {
