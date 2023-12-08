@@ -86,8 +86,8 @@ impl U256CheckedSub of CheckedSub<u256> {
 
 #[cfg(test)]
 mod tests {
-    use super::{CheckedAdd, CheckedSub};
     use integer::BoundedInt;
+    use super::{CheckedAdd, CheckedSub};
     use utils::traits::OptionDebug;
 
     #[test]

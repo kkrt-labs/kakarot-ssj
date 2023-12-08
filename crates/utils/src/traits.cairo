@@ -1,11 +1,11 @@
 use core::array::SpanTrait;
+use core::fmt::{Display, Debug, Formatter, Error};
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use starknet::{
     StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
     ContractAddress, Store, SyscallResult
 };
 use utils::math::{Zero, One, Bitshift};
-use core::fmt::{Display, Debug, Formatter, Error};
 
 mod display_felt252_based {
     use core::fmt::{Display, Formatter, Error};
