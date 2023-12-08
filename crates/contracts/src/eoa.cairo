@@ -19,6 +19,7 @@ mod ExternallyOwnedAccount {
     use contracts::components::upgradeable::upgradeable_component;
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use core::option::OptionTrait;
+    use core::starknet::event::EventEmitter;
 
     use starknet::account::{Call, AccountContract};
 
