@@ -4,19 +4,19 @@ use core::traits::TryInto;
 
 use keccak::cairo_keccak;
 use starknet::{EthAddress, eth_signature::{Signature, verify_eth_signature}};
+use utils::constants::{
+    TX_BASE_COST, TX_CREATE_COST, TX_DATA_COST_PER_NON_ZERO, TX_DATA_COST_PER_ZERO,
+    GAS_INIT_CODE_WORD_COST
+};
 use utils::errors::RLPErrorTrait;
 
 use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl, RLPHelpersErrorTrait};
 use utils::helpers::{U256Trait, U256Impl, ByteArrayExt, U8SpanExTrait};
 
+use utils::math::ceil32;
+
 use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
-
-use utils::math::ceil32;
-use utils::constants::{
-    TX_BASE_COST, TX_CREATE_COST, TX_DATA_COST_PER_NON_ZERO, TX_DATA_COST_PER_ZERO,
-    GAS_INIT_CODE_WORD_COST
-};
 
 #[derive(Drop)]
 struct TransactionMetadata {
