@@ -124,7 +124,7 @@ fn init_code_cost(code_size: usize) -> u128 {
 ///
 /// Reference:
 /// https://github.com/ethereum/execution-specs/blob/master/src/ethereum/shanghai/fork.py#L689
-fn calculate_intrinsic_cost(tx: @EthereumTransaction) -> u128 {
+fn calculate_intrinsic_gas_cost(tx: @EthereumTransaction) -> u128 {
     let mut data_cost: u128 = 0;
     // TODO(gas): access_list not handled yet
     let mut access_list_cost: u128 = 0;
@@ -147,7 +147,7 @@ fn calculate_intrinsic_cost(tx: @EthereumTransaction) -> u128 {
     };
 
     let create_cost = if tx.destination.is_none() {
-        TRANSACTION_CREATE_COST * init_code_cost(calldata_len).into() / 32
+        TRANSACTION_CREATE_COST + init_code_cost(calldata_len)
     } else {
         0
     };
