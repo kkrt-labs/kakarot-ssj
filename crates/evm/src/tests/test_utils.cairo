@@ -21,7 +21,7 @@ struct VMBuilder {
 #[generate_trait]
 impl VMBuilderImpl of VMBuilderTrait {
     fn new() -> VMBuilder {
-        VMBuilder { vm: Default::default() }
+        VMBuilder { vm: Default::default() }.with_gas_limit(0x100000000000000000000)
     }
 
     fn new_with_presets() -> VMBuilder {
@@ -50,6 +50,11 @@ impl VMBuilderImpl of VMBuilderTrait {
 
     fn with_bytecode(mut self: VMBuilder, bytecode: Span<u8>) -> VMBuilder {
         self.vm.message.code = bytecode;
+        self
+    }
+
+    fn with_gas_limit(mut self: VMBuilder, gas_limit: u128) -> VMBuilder {
+        self.vm.message.gas_limit = gas_limit;
         self
     }
 

@@ -1,5 +1,6 @@
 use core::array::SpanTrait;
-use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
+use core::fmt::{Display, Debug, Formatter, Error};
+use evm::errors::{EVMError, ensure, TYPE_CONVERSION_ERROR};
 use starknet::{
     StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
     ContractAddress, Store, SyscallResult
@@ -29,10 +30,50 @@ mod debug_display_based {
     }
 }
 
+impl OptionDisplay<T, +Display<T>, +Drop<T>, +Copy<T>> of Display<Option<T>> {
+    fn fmt(self: @Option<T>, ref f: Formatter) -> Result<(), Error> {
+        match *self {
+            Option::Some(value) => Display::fmt(@value, ref f),
+            Option::None => Display::<felt252>::fmt(@'Option::None', ref f),
+        }
+    }
+}
+
+impl OptionDebug<T, +Display<T>, +Drop<T>, +Copy<T>> of Debug<Option<T>> {
+    fn fmt(self: @Option<T>, ref f: Formatter) -> Result<(), Error> {
+        match *self {
+            Option::Some(value) => Display::fmt(@value, ref f),
+            Option::None => Display::<felt252>::fmt(@'Option::None', ref f),
+        }
+    }
+}
+
 impl EthAddressDisplay = display_felt252_based::TDisplay<EthAddress>;
 impl ContractAddressDisplay = display_felt252_based::TDisplay<ContractAddress>;
 impl EthAddressDebug = debug_display_based::TDisplay<EthAddress>;
 impl ContractAddressDebug = debug_display_based::TDisplay<ContractAddress>;
+
+impl SpanTDisplay<T, +Display<T>, +Copy<T>> of Display<Span<T>> {
+    fn fmt(self: @Span<T>, ref f: Formatter) -> Result<(), Error> {
+        let mut self = *self;
+        write!(f, "[")?;
+        loop {
+            match self.pop_front() {
+                Option::Some(value) => {
+                    if Display::fmt(value, ref f).is_err() {
+                        break Result::Err(Error {});
+                    };
+                    if write!(f, ", ").is_err() {
+                        break Result::Err(Error {});
+                    };
+                },
+                Option::None => { break Result::Ok(()); }
+            };
+        }?;
+        write!(f, "]")?;
+        Result::Ok(())
+    }
+}
 
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
     #[inline(always)]
@@ -120,9 +161,7 @@ impl SpanU8TryIntoResultEthAddress of TryIntoResult<Span<u8>, EthAddress> {
         if len == 0 {
             return Result::Ok(EthAddress { address: 0 });
         }
-        if len > 20 {
-            return Result::Err(EVMError::TypeConversionError(TYPE_CONVERSION_ERROR));
-        }
+        ensure(!(len > 20), EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))?;
         let offset: u32 = len.into() - 1;
         let mut result: u256 = 0;
         let mut i: u32 = 0;

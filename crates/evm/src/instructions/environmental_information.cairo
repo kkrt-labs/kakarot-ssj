@@ -1,7 +1,7 @@
 use contracts::kakarot_core::interface::{IKakarotCore};
 use contracts::kakarot_core::{KakarotCore};
 use core::hash::{HashStateExTrait, HashStateTrait};
-use evm::errors::{EVMError, RETURNDATA_OUT_OF_BOUNDS_ERROR, READ_SYSCALL_FAILED};
+use evm::errors::{ensure, EVMError, READ_SYSCALL_FAILED};
 use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
@@ -260,16 +260,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let size = self.stack.pop_usize()?;
         let return_data: Span<u8> = self.return_data();
 
-        match u32_overflowing_add(offset, size) {
-            Result::Ok(x) => {
-                if (x > return_data.len()) {
-                    return Result::Err(EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR));
-                }
-            },
-            Result::Err(_) => {
-                return Result::Err(EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR));
-            }
-        }
+        let last_returndata_index = u32_overflowing_add(offset, size)
+            .map_err(EVMError::ReturnDataOutOfBounds)?;
+        ensure(!(last_returndata_index > return_data.len()), EVMError::ReturnDataOutOfBounds)?;
 
         //TODO: handle overflow in ceil32 function.
         let words_size: u128 = (ceil32(size.into()) / 32).into();

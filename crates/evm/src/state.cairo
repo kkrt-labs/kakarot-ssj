@@ -1,8 +1,6 @@
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
 
-use evm::errors::{
-    EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, INSUFFICIENT_BALANCE, BALANCE_OVERFLOW
-};
+use evm::errors::{ensure, EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, BALANCE_OVERFLOW};
 use evm::model::account::{AccountTrait};
 use evm::model::contract_account::ContractAccountTrait;
 use evm::model::{Event, Transfer, Account, AccountType, Address, AddressTrait};
@@ -172,15 +170,12 @@ impl StateImpl of StateTrait {
         let mut recipient = self.get_account(transfer.recipient.evm);
 
         let (new_sender_balance, underflow) = u256_overflow_sub(sender.balance(), transfer.amount);
-        if underflow {
-            return Result::Err(EVMError::NumericOperations(INSUFFICIENT_BALANCE));
-        }
+        ensure(!underflow, EVMError::InsufficientBalance)?;
+
         let (new_recipient_balance, overflow) = u256_overflowing_add(
             recipient.balance, transfer.amount
         );
-        if overflow {
-            return Result::Err(EVMError::NumericOperations(BALANCE_OVERFLOW));
-        }
+        ensure(!overflow, EVMError::NumericOperations(BALANCE_OVERFLOW))?;
 
         sender.set_balance(new_sender_balance);
         recipient.set_balance(new_recipient_balance);

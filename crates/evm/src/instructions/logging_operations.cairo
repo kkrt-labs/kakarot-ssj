@@ -43,7 +43,7 @@ impl LoggingOperations of LoggingOperationsTrait {
 }
 
 mod internal {
-    use evm::errors::{EVMError, WRITE_IN_STATIC_CONTEXT};
+    use evm::errors::{EVMError, ensure};
     use evm::gas;
     use evm::memory::MemoryTrait;
     use evm::model::Event;
@@ -62,9 +62,7 @@ mod internal {
     /// * `topics_len` - The amount of topics to pop from the stack
     fn exec_log_i(ref self: VM, topics_len: u8) -> Result<(), EVMError> {
         // Revert if the transaction is in a read only context
-        if self.message().read_only {
-            return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
-        }
+        ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
 
         // TODO(optimization): check benefits of n `pop` instead of `pop_n`
         let offset = self.stack.pop_usize()?;

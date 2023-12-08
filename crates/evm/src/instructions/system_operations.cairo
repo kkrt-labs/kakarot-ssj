@@ -4,7 +4,7 @@ use box::BoxTrait;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::call_helpers::{CallHelpers, CallType};
 use evm::create_helpers::{CreateHelpers, CreateType};
-use evm::errors::{EVMError, VALUE_TRANSFER_IN_STATIC_CALL, WRITE_IN_STATIC_CONTEXT};
+use evm::errors::{ensure, EVMError, VALUE_TRANSFER_IN_STATIC_CALL};
 use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
@@ -20,9 +20,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// CREATE
     /// # Specification: https://www.evm.codes/#f0?fork=shanghai
     fn exec_create(ref self: VM) -> Result<(), EVMError> {
-        if self.message().read_only {
-            return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
-        }
+        ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
 
         let create_args = self.prepare_create(CreateType::Create)?;
         self.generic_create(create_args)
@@ -46,9 +44,8 @@ impl SystemOperations of SystemOperationsTrait {
         let value = call_args.value;
 
         // Check if current context is read only that value == 0.
-        if read_only && (value != 0) {
-            return Result::Err(EVMError::WriteInStaticContext(VALUE_TRANSFER_IN_STATIC_CALL));
-        }
+        // De Morgan's law: !(read_only && value != 0) == !read_only || value == 0
+        ensure(!read_only || value == 0, EVMError::WriteInStaticContext)?;
 
         // If sender_balance < value, return early, pushing
         // 0 on the stack to indicate call failure.
@@ -120,9 +117,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// CREATE2
     /// # Specification: https://www.evm.codes/#f5?fork=shanghai
     fn exec_create2(ref self: VM) -> Result<(), EVMError> {
-        if self.message().read_only {
-            return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
-        }
+        ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
 
         // TODO: add dynamic gas costs
         self.charge_gas(gas::CREATE)?;
@@ -178,9 +173,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// SELFDESTRUCT
     /// # Specification: https://www.evm.codes/#ff?fork=shanghai
     fn exec_selfdestruct(ref self: VM) -> Result<(), EVMError> {
-        if self.message().read_only {
-            return Result::Err(EVMError::WriteInStaticContext(WRITE_IN_STATIC_CONTEXT));
-        }
+        ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
 
         // TODO: add dynamic gas costs
         self.charge_gas(gas::SELFDESTRUCT)?;
