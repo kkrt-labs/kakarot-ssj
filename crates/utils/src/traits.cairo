@@ -30,6 +30,24 @@ mod debug_display_based {
     }
 }
 
+impl OptionDisplay<T, +Display<T>, +Drop<T>, +Copy<T>> of Display<Option<T>> {
+    fn fmt(self: @Option<T>, ref f: Formatter) -> Result<(), Error> {
+        match *self {
+            Option::Some(value) => Display::fmt(@value, ref f),
+            Option::None => Display::<felt252>::fmt(@'Option::None', ref f),
+        }
+    }
+}
+
+impl OptionDebug<T, +Display<T>, +Drop<T>, +Copy<T>> of Debug<Option<T>> {
+    fn fmt(self: @Option<T>, ref f: Formatter) -> Result<(), Error> {
+        match *self {
+            Option::Some(value) => Display::fmt(@value, ref f),
+            Option::None => Display::<felt252>::fmt(@'Option::None', ref f),
+        }
+    }
+}
+
 impl EthAddressDisplay = display_felt252_based::TDisplay<EthAddress>;
 impl ContractAddressDisplay = display_felt252_based::TDisplay<ContractAddress>;
 impl EthAddressDebug = debug_display_based::TDisplay<EthAddress>;
