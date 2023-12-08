@@ -231,11 +231,6 @@ fn test_exec_coinbase() {
     // Given
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    let (_, kakarot_core) = setup_contracts_for_testing();
-    let sequencer_eoa = kakarot_core.deploy_eoa(vm.env.coinbase);
-
-    set_sequencer_address(sequencer_eoa);
-
     // When
     vm.exec_coinbase().unwrap();
 
