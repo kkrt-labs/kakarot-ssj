@@ -1,6 +1,7 @@
 //! Utilities for kakarot standard library.
 
 mod address;
+mod checked_math;
 mod constants;
 mod errors;
 mod eth_transaction;
@@ -11,7 +12,6 @@ mod num;
 mod rlp;
 mod set;
 mod storage;
-mod checked_math;
 
 #[cfg(test)]
 mod tests;

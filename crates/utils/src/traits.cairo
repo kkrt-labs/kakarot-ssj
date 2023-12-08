@@ -6,7 +6,6 @@ use starknet::{
     ContractAddress, Store, SyscallResult
 };
 use utils::math::{Zero, One, Bitshift};
-use core::fmt::{Display, Debug, Formatter, Error};
 
 mod display_felt252_based {
     use core::fmt::{Display, Formatter, Error};
