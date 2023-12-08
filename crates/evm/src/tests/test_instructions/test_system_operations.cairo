@@ -27,7 +27,8 @@ use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDi
 use starknet::EthAddress;
 use starknet::testing::set_contract_address;
 use utils::helpers::load_word;
-use utils::traits::EthAddressIntoU256;
+use utils::traits::{SpanTDisplay, EthAddressIntoU256};
+
 
 #[test]
 fn test_exec_return() {
@@ -559,7 +560,7 @@ fn test_exec_create2() {
     vm.exec_create2().unwrap();
     EVMTrait::execute_code(ref vm);
 
-    assert(!vm.is_running(), 'run should be success');
+    assert!(!vm.is_running() && !vm.is_error());
 
     // Add SNJS script to precompute the address of the Storage.sol contract
     //     import { getContractAddress } from 'viem'

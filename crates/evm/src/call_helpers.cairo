@@ -13,6 +13,7 @@ use evm::model::{Transfer, Address, Message};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use starknet::{EthAddress, get_contract_address};
+use utils::constants;
 use utils::helpers::compute_starknet_address;
 use utils::set::SetTrait;
 use utils::traits::{BoolIntoNumeric, U256TryIntoResult};
@@ -126,12 +127,15 @@ impl CallHelpersImpl of CallHelpers {
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
     fn generic_call(ref self: VM, call_args: CallArgs) -> Result<(), EVMError> {
-        // check if depth is too high
+        self.return_data = Default::default().span();
+        if self.message().depth >= constants::STACK_MAX_DEPTH {
+            self.gas_left += call_args.gas;
+            return self.stack.push(0);
+        }
 
         // Case 2: `to` address is not a precompile
         // We enter the standard flow
         let code = self.env.state.get_account(call_args.code_address.evm).code;
-        self.return_data = Default::default().span();
         let message = Message {
             caller: call_args.caller,
             target: call_args.to,

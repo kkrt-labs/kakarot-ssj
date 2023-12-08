@@ -14,7 +14,7 @@ use core::fmt::{Debug, Formatter, Error, Display};
 
 //! let value = stack.pop()?;
 //! ```
-use evm::errors::{EVMError, STACK_OVERFLOW, STACK_UNDERFLOW, TYPE_CONVERSION_ERROR};
+use evm::errors::{ensure, EVMError, TYPE_CONVERSION_ERROR};
 use nullable::{nullable_from_box, NullableTrait};
 use starknet::{StorageBaseAddress, EthAddress};
 
@@ -68,11 +68,9 @@ impl StackImpl of StackTrait {
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError> {
         let length = self.len();
         // we can store at most 1024 256-bits words
-        if length == constants::STACK_MAX_DEPTH {
-            return Result::Err(EVMError::StackError(STACK_OVERFLOW));
-        }
-        let index = length.into();
-        self.items.insert(index, NullableTrait::new(item));
+        ensure(length != constants::STACK_MAX_DEPTH, EVMError::StackOverflow)?;
+
+        self.items.insert(length.into(), NullableTrait::new(item));
         self.len += 1;
         Result::Ok(())
     }
@@ -84,10 +82,8 @@ impl StackImpl of StackTrait {
     /// If the stack is empty, returns with a StackOverflow error.
     #[inline(always)]
     fn pop(ref self: Stack) -> Result<u256, EVMError> {
-        let length = self.len();
-        if length == 0 {
-            return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
-        }
+        ensure(self.len() != 0, EVMError::StackUnderflow)?;
+
         self.len -= 1;
         let item = self.items.get(self.len().into());
         Result::Ok(item.deref())
@@ -173,9 +169,7 @@ impl StackImpl of StackTrait {
     ///
     /// If the stack length is less than than N, returns with a StackUnderflow error.
     fn pop_n(ref self: Stack, mut n: usize) -> Result<Array<u256>, EVMError> {
-        if n > self.len() {
-            return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
-        }
+        ensure(!(n > self.len()), EVMError::StackUnderflow)?;
         let mut popped_items = ArrayTrait::<u256>::new();
         loop {
             if n == 0 {
@@ -211,9 +205,7 @@ impl StackImpl of StackTrait {
     /// If the index is greater than the stack length, returns with a StackUnderflow error.
     #[inline(always)]
     fn peek_at(ref self: Stack, index: usize) -> Result<u256, EVMError> {
-        if index >= self.len() {
-            return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
-        }
+        ensure(index < self.len(), EVMError::StackUnderflow)?;
 
         let position = self.len() - 1 - index;
         let item = self.items.get(position.into());
@@ -225,9 +217,8 @@ impl StackImpl of StackTrait {
     /// index is 0-based, 0 being the top of the stack (unallocated).
     #[inline(always)]
     fn swap_i(ref self: Stack, index: usize) -> Result<(), EVMError> {
-        if index >= self.len() {
-            return Result::Err(EVMError::StackError(STACK_UNDERFLOW));
-        }
+        ensure(index < self.len(), EVMError::StackUnderflow)?;
+
         let position_0: felt252 = self.len().into() - 1;
         let position_item: felt252 = position_0 - index.into();
         let top_item = self.items.get(position_0);

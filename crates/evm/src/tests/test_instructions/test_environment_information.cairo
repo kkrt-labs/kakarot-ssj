@@ -3,7 +3,7 @@ use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_utils::{
     setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
 };
-use evm::errors::{EVMError, TYPE_CONVERSION_ERROR, RETURNDATA_OUT_OF_BOUNDS_ERROR};
+use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::model::contract_account::ContractAccountTrait;
@@ -847,7 +847,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         Result::Ok(x) => {
             if (x > return_data.len()) {
                 assert(
-                    res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
+                    res.unwrap_err() == EVMError::ReturnDataOutOfBounds,
                     'should return out of bounds'
                 );
                 return;
@@ -855,8 +855,7 @@ fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
         },
         Result::Err(_) => {
             assert(
-                res.unwrap_err() == EVMError::ReturnDataError(RETURNDATA_OUT_OF_BOUNDS_ERROR),
-                'should return out of bounds'
+                res.unwrap_err() == EVMError::ReturnDataOutOfBounds, 'should return out of bounds'
             );
             return;
         }

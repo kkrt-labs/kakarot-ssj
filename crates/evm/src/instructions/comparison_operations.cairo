@@ -1,5 +1,4 @@
 use evm::errors::EVMError;
-use evm::errors::STACK_UNDERFLOW;
 use evm::gas;
 use evm::model::vm::{VM, VMTrait};
 // Internal imports

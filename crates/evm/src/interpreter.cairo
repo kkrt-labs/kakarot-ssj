@@ -1,5 +1,5 @@
 use evm::call_helpers::is_precompile;
-use evm::errors::{EVMError, PC_OUT_OF_BOUNDS, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
+use evm::errors::{EVMError, ensure, PC_OUT_OF_BOUNDS, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
 
 use evm::instructions::{
     duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
@@ -17,6 +17,7 @@ use evm::model::{
 use evm::stack::{Stack, StackTrait};
 use evm::state::{State, StateTrait};
 use starknet::{EthAddress, ContractAddress};
+use utils::constants;
 use utils::helpers::{U256Trait, compute_starknet_address, EthAddressExTrait};
 
 #[generate_trait]
@@ -84,6 +85,12 @@ impl EVMImpl of EVMTrait {
             //TODO(gas) charge gas on contract code length
             // Don't forget to revert the state if the gas charging fails.
             let code = result.return_data;
+            //TODO(gas) consume all remaining gas (gas=message.gas_limit) if any of the following operation fails.
+            // You will need to properly handle the error case for `ensure`, which might require using a sub-function.
+            if code.len() != 0 {
+                ensure(*code[0] != 0xEF, EVMError::InvalidCode);
+            }
+            ensure(code.len() <= constants::MAX_CODE_SIZE, EVMError::OutOfGas);
             target_account.set_code(code);
             env.state.set_account(target_account);
         } else {
@@ -94,6 +101,16 @@ impl EVMImpl of EVMTrait {
     }
 
     fn process_message(message: Message, ref env: Environment) -> ExecutionResult {
+        if (message.depth > constants::STACK_MAX_DEPTH) {
+            return ExecutionResult {
+                success: false,
+                return_data: Into::<felt252, u256>::into(EVMError::DepthLimit.to_string())
+                    .to_bytes(),
+                gas_left: 0,
+                accessed_addresses: Default::default(),
+                accessed_storage_keys: Default::default()
+            };
+        }
         let state_snapshot = env.state.clone();
         if message.should_transfer_value && message.value != 0 {
             let transfer = Transfer {
