@@ -163,6 +163,15 @@ impl AccountImpl of AccountTrait {
         account
     }
 
+    #[inline(always)]
+    fn fetch_original_storage(self: @Account, key: u256) -> Result<u256, EVMError> {
+        if !self.address().evm.is_deployed() {
+            return Result::Ok(0);
+        }
+        return self.fetch_storage(key);
+    }
+
+
     /// Returns whether an account exists at the given address by checking
     /// whether it has code or a nonce.
     ///

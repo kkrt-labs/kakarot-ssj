@@ -6,7 +6,6 @@ mod vm;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
 use evm::model::account::{Account, AccountTrait};
-use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::eoa::EOATrait;
 use evm::state::State;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};

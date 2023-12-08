@@ -6,7 +6,7 @@ use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{AccountType, ContractAccountTrait};
+use evm::model::{AccountType};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use integer::u32_as_non_zero;
