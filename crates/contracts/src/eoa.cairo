@@ -19,6 +19,7 @@ mod ExternallyOwnedAccount {
     use contracts::components::upgradeable::upgradeable_component;
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use core::option::OptionTrait;
+    use core::starknet::event::EventEmitter;
 
     use starknet::account::{Call, AccountContract};
 
@@ -49,6 +50,21 @@ mod ExternallyOwnedAccount {
     #[derive(Drop, starknet::Event)]
     enum Event {
         UpgradeableEvent: upgradeable_component::Event,
+        TransactionExecuted: TransactionExecuted
+    }
+
+    /// event representing execution of transaction, should be emmitted inside `__execute__` of an EOA
+    ///
+    /// # Arguments
+    /// * `hash`: the transaction hash { can be obtained from `get_tx_info` }
+    /// * `response`: represents the return data obtained by applying the transaction
+    /// * `success`: represents whether the transaction succeeded or not
+    #[derive(Drop, starknet::Event)]
+    struct TransactionExecuted {
+        #[key]
+        hash: felt252,
+        response: Span<Span<felt252>>,
+        success: bool
     }
 
 
@@ -147,10 +163,22 @@ mod ExternallyOwnedAccount {
                 contract_address: self.kakarot_core_address()
             };
 
-            let (_, return_data) = kakarot_core_dispatcher
+            let (success, return_data) = kakarot_core_dispatcher
                 .eth_send_transaction(destination, gas_limit, gas_price, amount, calldata);
+            let return_data = return_data.to_felt252_array().span();
 
-            array![return_data.to_felt252_array().span()]
+            let tx_info = get_tx_info().unbox();
+            // see argent -> https://github.com/argentlabs/argent-contracts-starknet/blob/4070f39a039c85df4d7a32003030db598c17d27d/contracts/account/src/argent_account.cairo#L231C10-L231C10
+            self
+                .emit(
+                    TransactionExecuted {
+                        hash: tx_info.transaction_hash,
+                        response: array![return_data].span(),
+                        success
+                    }
+                );
+
+            array![return_data]
         }
     }
 
