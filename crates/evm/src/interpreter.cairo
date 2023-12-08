@@ -106,7 +106,7 @@ impl EVMImpl of EVMTrait {
                 success: false,
                 return_data: Into::<felt252, u256>::into(EVMError::DepthLimit.to_string())
                     .to_bytes(),
-                gas_used: 0,
+                gas_left: 0,
                 accessed_addresses: Default::default(),
                 accessed_storage_keys: Default::default()
             };
