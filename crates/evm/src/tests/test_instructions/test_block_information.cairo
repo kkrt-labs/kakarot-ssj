@@ -18,7 +18,6 @@ use starknet::testing::{
     ContractAddress
 };
 use utils::constants;
-
 use utils::traits::{EthAddressIntoU256};
 
 
