@@ -46,7 +46,7 @@ struct Message {
 struct ExecutionResult {
     success: bool,
     return_data: Span<u8>,
-    gas_used: u128,
+    gas_left: u128,
     accessed_addresses: SpanSet<EthAddress>,
     accessed_storage_keys: SpanSet<(EthAddress, u256)>,
 }

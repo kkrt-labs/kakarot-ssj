@@ -210,7 +210,7 @@ impl MemoryOperation of MemoryOperationTrait {
     /// # Specification: https://www.evm.codes/#5a?fork=shanghai
     fn exec_gas(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
-        self.stack.push(self.gas_used().into())
+        self.stack.push(self.gas_left().into())
     }
 
 

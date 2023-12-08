@@ -2,6 +2,7 @@ use evm::errors::EVMError;
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Message, Environment, ExecutionResult};
 use evm::stack::{Stack, StackTrait};
+use integer::u128_overflowing_sub;
 use starknet::EthAddress;
 use utils::helpers::{SpanExtTrait, ArrayExtTrait};
 use utils::set::{Set, SetTrait, SpanSet};
@@ -16,7 +17,7 @@ struct VM {
     return_data: Span<u8>,
     env: Environment,
     message: Message,
-    gas_used: u128,
+    gas_left: u128,
     running: bool,
     error: bool,
     accessed_addresses: Set<EthAddress>,
@@ -36,7 +37,7 @@ impl VMImpl of VMTrait {
             return_data: Default::default().span(),
             env,
             message,
-            gas_used: 0,
+            gas_left: message.gas_limit,
             running: true,
             error: false,
             accessed_addresses: message.accessed_addresses.inner.clone(),
@@ -44,15 +45,14 @@ impl VMImpl of VMTrait {
         }
     }
 
-    /// Increments the gas_used field of the current execution context by the value amount.
-    /// # Error : returns `EVMError::OutOfGas` if gas_used + new_gas >= limit
+    /// Increments the gas_left field of the current execution context by the value amount.
+    /// # Error : returns `EVMError::OutOfGas` if gas_left - value < 0
     #[inline(always)]
     fn charge_gas(ref self: VM, value: u128) -> Result<(), EVMError> {
-        let new_gas_used = self.gas_used + value;
-        if (new_gas_used >= self.message().gas_limit) {
-            return Result::Err(EVMError::OutOfGas);
-        }
-        self.gas_used = new_gas_used;
+        self.gas_left = match u128_overflowing_sub(self.gas_left, value) {
+            Result::Ok(gas_left) => gas_left,
+            Result::Err(_) => { return Result::Err(EVMError::OutOfGas); },
+        };
         Result::Ok(())
     }
 
@@ -142,8 +142,8 @@ impl VMImpl of VMTrait {
     }
 
     #[inline(always)]
-    fn gas_used(self: @VM) -> u128 {
-        *self.gas_used
+    fn gas_left(self: @VM) -> u128 {
+        *self.gas_left
     }
 
     #[inline(always)]
@@ -171,19 +171,14 @@ impl VMImpl of VMTrait {
     }
 
     #[inline(always)]
-    fn increment_gas_used_unchecked(ref self: VM, value: u128) {
-        self.gas_used += value;
-    }
-
-    #[inline(always)]
     fn merge_child(ref self: VM, child: @ExecutionResult) {
         if *child.success {
             //TODO: merge accessed storage
             self.accessed_addresses.extend(*child.accessed_addresses);
             self.accessed_storage_keys.extend(*child.accessed_storage_keys);
         }
-    //TODO(gas) handle error case
+        //TODO(gas) handle error case
 
-    //TODO(gas) merge child gas left
+        self.gas_left += *child.gas_left;
     }
 }
