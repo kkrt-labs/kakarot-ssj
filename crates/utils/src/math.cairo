@@ -279,14 +279,3 @@ fn u256_wide_add(a: u256, b: u256) -> u512 {
 
     u512 { limb0, limb1, limb2, limb3 }
 }
-
-/// Converts an unsigned integer to the next closest multiple of 32.
-fn ceil32(value: usize) -> usize {
-    let ceiling: u32 = 32;
-    let remainder = value % ceiling;
-    if remainder == 0 {
-        value
-    } else {
-        value + ceiling - remainder
-    }
-}

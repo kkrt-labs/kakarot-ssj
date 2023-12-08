@@ -1,4 +1,5 @@
 use core::traits::TryInto;
+use utils::eth_transaction::EthereumTransaction;
 //! Gas costs for EVM operations
 //! Code is based on alloy project
 //! Source: <https://github.com/bluealloy/revm/blob/main/crates/interpreter/src/gas/constants.rs>
@@ -33,6 +34,8 @@ const REFUND_SSTORE_CLEARS: u128 = 15000;
 const TRANSACTION_ZERO_DATA: u128 = 4;
 const TRANSACTION_NON_ZERO_DATA_INIT: u128 = 16;
 const TRANSACTION_NON_ZERO_DATA_FRONTIER: u128 = 68;
+const TRANSACTION_BASE_COST: u128 = 21000;
+const TRANSACTION_CREATE_COST: u128 = 32000;
 
 // Berlin EIP-2929 constants
 const ACCESS_LIST_ADDRESS: u128 = 2400;
@@ -106,4 +109,48 @@ fn memory_expansion_cost(memory_size: usize, max_offset: usize) -> u128 {
 fn init_code_cost(code_size: usize) -> u128 {
     let code_size_in_words = helpers::ceil32(code_size) / 32;
     code_size_in_words.into() * INITCODE_WORD_COST
+}
+
+/// Calculates the gas that is charged before execution is started.
+///
+/// The intrinsic cost of the transaction is charged before execution has
+/// begun. Functions/operations in the EVM cost money to execute so this
+/// intrinsic cost is for the operations that need to be paid for as part of
+/// the transaction. Data transfer, for example, is part of this intrinsic
+/// cost. It costs ether to send data over the wire and that ether is
+/// accounted for in the intrinsic cost calculated in this function. This
+/// intrinsic cost must be calculated and paid for before execution in order
+/// for all operations to be implemented.
+///
+/// Reference:
+/// https://github.com/ethereum/execution-specs/blob/master/src/ethereum/shanghai/fork.py#L689
+fn calculate_intrinsic_cost(tx: @EthereumTransaction) -> u128 {
+    let mut data_cost: u128 = 0;
+    // TODO(gas): access_list not handled yet
+    let mut access_list_cost: u128 = 0;
+
+    let mut calldata_cpy: Span<u8> = *tx.calldata;
+    let calldata_len: usize = calldata_cpy.len();
+
+    loop {
+        match calldata_cpy.pop_front() {
+            Option::Some(data) => {
+                data_cost +=
+                    if *data == 0 {
+                        TRANSACTION_ZERO_DATA
+                    } else {
+                        TRANSACTION_NON_ZERO_DATA_INIT
+                    };
+            },
+            Option::None => { break; },
+        }
+    };
+
+    let create_cost = if tx.destination.is_none() {
+        TRANSACTION_CREATE_COST * init_code_cost(calldata_len).into() / 32
+    } else {
+        0
+    };
+
+    TRANSACTION_BASE_COST + data_cost + create_cost + access_list_cost
 }
