@@ -24,7 +24,6 @@ use core::option::OptionTrait;
 
 
 use core::traits::TryInto;
-use evm::model::contract_account::ContractAccountTrait;
 use evm::model::{AccountType, Address};
 use evm::tests::test_utils;
 use starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};

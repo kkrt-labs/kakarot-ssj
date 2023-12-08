@@ -7,9 +7,7 @@ use contracts::tests::test_utils::{
     setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
 };
 use evm::model::account::AccountTrait;
-use evm::model::{
-    Address, Account, ContractAccountTrait, AccountType, eoa::{EOATrait}, AddressTrait
-};
+use evm::model::{Address, Account, AccountType, eoa::{EOATrait}, AddressTrait};
 use evm::tests::test_utils::{evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::set_contract_address;

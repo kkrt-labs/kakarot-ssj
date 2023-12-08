@@ -10,7 +10,6 @@ use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
 use evm::model::ExecutionSummary;
 use evm::model::account::{AccountTrait};
-use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{Message, Address, AccountType, Transfer};
 use evm::stack::StackTrait;

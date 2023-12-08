@@ -553,6 +553,24 @@ fn test_exec_sstore_from_state() {
     // Then
     assert(vm.env.state.read_state(evm_address(), key).unwrap() == value, 'wrong value in state')
 }
+
+#[test]
+fn test_exec_sstore_on_undeployed_account() {
+    // Given
+    setup_contracts_for_testing();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    let key: u256 = 0x100000000000000000000000000000001;
+    let value: u256 = 0xABDE1E11A5;
+    vm.stack.push(value).expect('push failed');
+    vm.stack.push(key).expect('push failed');
+
+    // When
+    vm.exec_sstore().expect('exec sstore failed');
+
+    // Then
+    assert(vm.env.state.read_state(evm_address(), key).unwrap() == value, 'wrong value in state')
+}
+
 #[test]
 fn test_exec_sstore_static_call() {
     // Given
