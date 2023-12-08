@@ -53,9 +53,12 @@ mod ExternallyOwnedAccount {
         TransactionExecuted: TransactionExecuted
     }
 
-    /// @notice Emitted when the account executes a transaction
-    /// @param hash The transaction hash
-    /// @param response The data returned by the methods called
+    /// event representing execution of transaction, should be emmitted inside `__execute__` of an EOA
+    ///
+    /// # Arguments
+    /// * `hash`: the transaction hash { can be obtained from `get_tx_info` }
+    /// * `response`: represents the return data obtained by applying the transaction
+    /// * `success`: represents whether the transaction succeeded or not
     #[derive(Drop, starknet::Event)]
     struct TransactionExecuted {
         #[key]
