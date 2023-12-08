@@ -54,13 +54,17 @@ struct ExecutionResult {
 
 #[generate_trait]
 impl ExecutionResultImpl of ExecutionResultTrait {
-    fn exceptional_failure(error: Span<u8>) -> ExecutionResult {
+    fn exceptional_failure(
+        error: Span<u8>,
+        accessed_addresses: SpanSet<EthAddress>,
+        accessed_storage_keys: SpanSet<(EthAddress, u256)>
+    ) -> ExecutionResult {
         ExecutionResult {
             success: false,
             return_data: error,
             gas_left: 0,
-            accessed_addresses: Default::default(),
-            accessed_storage_keys: Default::default()
+            accessed_addresses,
+            accessed_storage_keys
         }
     }
 

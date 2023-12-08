@@ -89,7 +89,9 @@ impl EVMImpl of EVMTrait {
                 Result::Err(err) => {
                     env.state = state_snapshot;
                     result.return_data = Default::default().span();
-                    return ExecutionResultTrait::exceptional_failure(err.to_bytes());
+                    return ExecutionResultTrait::exceptional_failure(
+                        err.to_bytes(), result.accessed_addresses, result.accessed_storage_keys
+                    );
                 }
             };
         } else {
@@ -101,7 +103,11 @@ impl EVMImpl of EVMTrait {
 
     fn process_message(message: Message, ref env: Environment) -> ExecutionResult {
         if (message.depth > constants::STACK_MAX_DEPTH) {
-            return ExecutionResultTrait::exceptional_failure(EVMError::DepthLimit.to_bytes());
+            // Because the failure happens before any modification to warm address/storage,
+            // we can pass an empty set
+            return ExecutionResultTrait::exceptional_failure(
+                EVMError::DepthLimit.to_bytes(), Default::default(), Default::default()
+            );
         }
 
         let state_snapshot = env.state.clone();
@@ -112,7 +118,9 @@ impl EVMImpl of EVMTrait {
             match env.state.add_transfer(transfer) {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
-                    return ExecutionResultTrait::exceptional_failure(err.to_bytes());
+                    return ExecutionResultTrait::exceptional_failure(
+                        err.to_bytes(), Default::default(), Default::default()
+                    );
                 }
             }
         }
@@ -204,7 +212,9 @@ impl EVMImpl of EVMTrait {
             Result::Err(error) => {
                 // If an error occurred, revert execution self.
                 // Currently, revert reason is a Span<u8>.
-                return ExecutionResultTrait::exceptional_failure(error.to_bytes());
+                return ExecutionResultTrait::exceptional_failure(
+                    error.to_bytes(), vm.accessed_addresses(), vm.accessed_storage_keys()
+                );
             }
         }
     }
