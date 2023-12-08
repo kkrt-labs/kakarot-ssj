@@ -1,4 +1,5 @@
 use evm::call_helpers::is_precompile;
+use evm::create_helpers::CreateHelpers;
 use evm::errors::{EVMError, ensure, PC_OUT_OF_BOUNDS, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
 
 use evm::instructions::{
@@ -12,7 +13,8 @@ use evm::instructions::{
 use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{
-    Message, Environment, Address, Transfer, ExecutionSummary, ExecutionResult, AccountType
+    Message, Environment, Address, Transfer, ExecutionSummary, ExecutionResult,
+    ExecutionResultTrait, AccountType
 };
 use evm::stack::{Stack, StackTrait};
 use evm::state::{State, StateTrait};
@@ -74,25 +76,22 @@ impl EVMImpl of EVMTrait {
         // Increment nonce of target
         target_account.set_nonce(1);
         target_account.set_type(AccountType::ContractAccount);
-        target_account.address = *(@message.target);
+        target_account.address = message.target;
         env.state.set_account(target_account);
 
-        let result = EVMTrait::process_message(message, ref env);
+        let mut result = EVMTrait::process_message(message, ref env);
 
         if result.success {
             // Write the return_data of the initcode
-            // as the deployed contract's bytecode
-            //TODO(gas) charge gas on contract code length
-            // Don't forget to revert the state if the gas charging fails.
-            let code = result.return_data;
-            //TODO(gas) consume all remaining gas (gas=message.gas_limit) if any of the following operation fails.
-            // You will need to properly handle the error case for `ensure`, which might require using a sub-function.
-            if code.len() != 0 {
-                ensure(*code[0] != 0xEF, EVMError::InvalidCode);
-            }
-            ensure(code.len() <= constants::MAX_CODE_SIZE, EVMError::OutOfGas);
-            target_account.set_code(code);
-            env.state.set_account(target_account);
+            // as the deployed contract's bytecode and charge gas
+            match result.finalize_creation(target_account) {
+                Result::Ok(account_created) => { env.state.set_account(account_created) },
+                Result::Err(err) => {
+                    env.state = state_snapshot;
+                    result.return_data = Default::default().span();
+                    return ExecutionResultTrait::exceptional_failure(err.to_bytes());
+                }
+            };
         } else {
             // Revert state to the snapshot taken before the create processing.
             env.state = state_snapshot;
@@ -102,15 +101,9 @@ impl EVMImpl of EVMTrait {
 
     fn process_message(message: Message, ref env: Environment) -> ExecutionResult {
         if (message.depth > constants::STACK_MAX_DEPTH) {
-            return ExecutionResult {
-                success: false,
-                return_data: Into::<felt252, u256>::into(EVMError::DepthLimit.to_string())
-                    .to_bytes(),
-                gas_left: 0,
-                accessed_addresses: Default::default(),
-                accessed_storage_keys: Default::default()
-            };
+            return ExecutionResultTrait::exceptional_failure(EVMError::DepthLimit.to_bytes());
         }
+
         let state_snapshot = env.state.clone();
         if message.should_transfer_value && message.value != 0 {
             let transfer = Transfer {
@@ -119,14 +112,7 @@ impl EVMImpl of EVMTrait {
             match env.state.add_transfer(transfer) {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
-                    return ExecutionResult {
-                        success: false,
-                        //TODO(optimization) avoid converstion to u256 to get bytes
-                        return_data: Into::<felt252, u256>::into(err.to_string()).to_bytes(),
-                        gas_left: 0,
-                        accessed_addresses: Default::default(),
-                        accessed_storage_keys: Default::default(),
-                    };
+                    return ExecutionResultTrait::exceptional_failure(err.to_bytes());
                 }
             }
         }
@@ -136,7 +122,7 @@ impl EVMImpl of EVMTrait {
             panic!("Not Implemented: Precompiles are not implemented yet");
         }
 
-        // Instantiate a new VM using the to process message and the current environment.
+        // Instantiate a new VM using the message to process and the current environment.
         let mut vm: VM = VMTrait::new(message, env);
 
         // Decode and execute the current opcode.
@@ -146,7 +132,6 @@ impl EVMImpl of EVMTrait {
 
         // Retrieve ownership of the `env` variable
         // The state in the environment has been modified by the VM.
-        // Handling state reverts is done at a higher level, using previously taken state snapshots.
         env = vm.env;
 
         if !result.success {
@@ -168,6 +153,17 @@ impl EVMImpl of EVMTrait {
 
         // Check if PC is not out of bounds.
         if pc >= bytecode.len() || vm.is_running() == false {
+            // REVERT opcode case
+            if vm.is_error() {
+                return ExecutionResult {
+                    success: false,
+                    return_data: vm.return_data(),
+                    gas_left: vm.gas_left(),
+                    accessed_addresses: vm.accessed_addresses(),
+                    accessed_storage_keys: vm.accessed_storage_keys(),
+                };
+            };
+            // Success case
             return ExecutionResult {
                 success: true,
                 return_data: vm.return_data(),
@@ -186,6 +182,17 @@ impl EVMImpl of EVMTrait {
                 if vm.is_running() {
                     return EVMTrait::execute_code(ref vm);
                 }
+                // REVERT opcode case
+                if vm.is_error() {
+                    return ExecutionResult {
+                        success: false,
+                        return_data: vm.return_data(),
+                        gas_left: vm.gas_left(),
+                        accessed_addresses: vm.accessed_addresses(),
+                        accessed_storage_keys: vm.accessed_storage_keys(),
+                    };
+                };
+                // Success case
                 return ExecutionResult {
                     success: true,
                     return_data: vm.return_data(),
@@ -197,13 +204,7 @@ impl EVMImpl of EVMTrait {
             Result::Err(error) => {
                 // If an error occurred, revert execution self.
                 // Currently, revert reason is a Span<u8>.
-                return ExecutionResult {
-                    success: false,
-                    return_data: Into::<felt252, u256>::into(error.to_string()).to_bytes(),
-                    gas_left: 0,
-                    accessed_addresses: vm.accessed_addresses(),
-                    accessed_storage_keys: vm.accessed_storage_keys(),
-                };
+                return ExecutionResultTrait::exceptional_failure(error.to_bytes());
             }
         }
     }
