@@ -45,7 +45,7 @@ impl VMImpl of VMTrait {
         }
     }
 
-    /// Increments the gas_left field of the current execution context by the value amount.
+    /// Decrements the gas_left field of the current vm by the value amount.
     /// # Error : returns `EVMError::OutOfGas` if gas_left - value < 0
     #[inline(always)]
     fn charge_gas(ref self: VM, value: u128) -> Result<(), EVMError> {

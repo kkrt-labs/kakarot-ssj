@@ -11,6 +11,7 @@ use evm::model::eoa::EOATrait;
 use evm::state::State;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{EthAddress, get_contract_address, ContractAddress};
+use utils::checked_math::CheckedSub;
 use utils::helpers::{ResultExTrait};
 use utils::set::{Set, SpanSet};
 use utils::traits::{EthAddressDefault, ContractAddressDefault, SpanDefault};
@@ -49,6 +50,31 @@ struct ExecutionResult {
     gas_left: u128,
     accessed_addresses: SpanSet<EthAddress>,
     accessed_storage_keys: SpanSet<(EthAddress, u256)>,
+}
+
+#[generate_trait]
+impl ExecutionResultImpl of ExecutionResultTrait {
+    fn exceptional_failure(
+        error: Span<u8>,
+        accessed_addresses: SpanSet<EthAddress>,
+        accessed_storage_keys: SpanSet<(EthAddress, u256)>
+    ) -> ExecutionResult {
+        ExecutionResult {
+            success: false,
+            return_data: error,
+            gas_left: 0,
+            accessed_addresses,
+            accessed_storage_keys
+        }
+    }
+
+    /// Decrements the gas_left field of the current execution context by the value amount.
+    /// # Error : returns `EVMError::OutOfGas` if gas_left - value < 0
+    #[inline(always)]
+    fn charge_gas(ref self: ExecutionResult, value: u128) -> Result<(), EVMError> {
+        self.gas_left = self.gas_left.checked_sub(value).ok_or(EVMError::OutOfGas)?;
+        Result::Ok(())
+    }
 }
 
 #[derive(Destruct)]

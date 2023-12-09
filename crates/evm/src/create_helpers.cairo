@@ -8,10 +8,9 @@ use evm::errors::{
 use evm::gas;
 use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
-use evm::model::ExecutionSummary;
-use evm::model::account::{AccountTrait};
-use evm::model::contract_account::{ContractAccountTrait};
+use evm::model::account::{Account, AccountTrait};
 use evm::model::vm::{VM, VMTrait};
+use evm::model::{ExecutionResult, ExecutionResultTrait, ExecutionSummary, Environment};
 use evm::model::{Message, Address, AccountType, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
@@ -144,5 +143,30 @@ impl CreateHelpersImpl of CreateHelpers {
             self.stack.push(0)?;
         }
         Result::Ok(())
+    }
+
+    /// Finalizes the creation of an account contract by
+    /// setting its code and charging the gas for the code deposit.
+    /// Since we don't have access to the child vm anymore, we charge the gas on
+    /// the returned ExecutionResult of the childVM.
+    ///
+    /// # Arguments
+    /// * `self` - The ExecutionResult to charge the gas on.
+    /// * `account` - The Account to finalize
+    #[inline(always)]
+    fn finalize_creation(
+        ref self: ExecutionResult, mut account: Account
+    ) -> Result<Account, EVMError> {
+        let code = self.return_data;
+        let contract_code_gas = code.len().into() * gas::CODEDEPOSIT;
+
+        if code.len() != 0 {
+            ensure(*code[0] != 0xEF, EVMError::InvalidCode)?;
+        }
+        self.charge_gas(contract_code_gas)?;
+        ensure(code.len() <= constants::MAX_CODE_SIZE, EVMError::OutOfGas)?;
+
+        account.set_code(code);
+        Result::Ok(account)
     }
 }
