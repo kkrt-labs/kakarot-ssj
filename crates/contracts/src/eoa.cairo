@@ -10,15 +10,14 @@ trait IExternallyOwnedAccount<TContractState> {
     /// Upgrade the ExternallyOwnedAccount smart contract
     /// Using replace_class_syscall
     fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
-    fn set_chain_id(ref self: TContractState, chain_id: u128);
 }
 
 #[starknet::contract]
 mod ExternallyOwnedAccount {
+    use core::traits::TryInto;
     use contracts::components::upgradeable::IUpgradeable;
     use contracts::components::upgradeable::upgradeable_component;
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
-    use core::option::OptionTrait;
     use core::starknet::event::EventEmitter;
 
     use starknet::account::{Call, AccountContract};
@@ -40,7 +39,6 @@ mod ExternallyOwnedAccount {
     struct Storage {
         evm_address: EthAddress,
         kakarot_core_address: ContractAddress,
-        chain_id: u128,
         #[substorage(v0)]
         upgradeable: upgradeable_component::Storage,
     }
@@ -78,20 +76,12 @@ mod ExternallyOwnedAccount {
         }
 
         fn chain_id(self: @ContractState) -> u128 {
-            self.chain_id.read()
+            get_tx_info().unbox().chain_id.try_into().unwrap()
         }
         // TODO: add some security methods to make sure that only some specific upgrades can be made ( low priority )
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
             self.assert_only_self();
             self.upgradeable.upgrade_contract(new_class_hash);
-        }
-
-        fn set_chain_id(ref self: ContractState, chain_id: u128) {
-            assert(
-                get_caller_address() == self.kakarot_core_address.read(),
-                'Caller not kakarot address'
-            );
-            self.chain_id.write(chain_id);
         }
     }
 
