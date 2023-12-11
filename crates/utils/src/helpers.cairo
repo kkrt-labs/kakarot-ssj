@@ -21,6 +21,7 @@ use utils::eth_transaction::{TransactionType};
 use utils::math::{Bitshift, WrappingBitshift, Exponentiation};
 use utils::traits::{
     U256TryIntoContractAddress, EthAddressIntoU256, U256TryIntoEthAddress, TryIntoResult,
+    BoolIntoNumeric
 };
 
 
@@ -1159,34 +1160,27 @@ fn compute_y_parity(v: u128, chain_id: u128) -> Option<bool> {
         return Option::Some(y_parity == 1);
     }
 
-    let y_parity = v - (chain_id * 2 + 36);
-    if (y_parity == 0 || y_parity == 1) {
-        return Option::Some(y_parity == 1);
-    }
-
     return Option::None;
 }
 
 
 #[generate_trait]
 impl TryIntoEthSignatureImpl of TryIntoEthSignatureTrait {
-    // format: [tx_type, r_low, r_high, s_low, s_high, v || yParity]
+    // format: [r_low, r_high, s_low, s_high, v || yParity]
     fn try_into_eth_signature(self: Span<felt252>, chain_id: u128) -> Option<EthSignature> {
-        if (self.len() != 6) {
+        if (self.len() != 5) {
             return Option::None;
         }
 
-        let tx_type: u128 = (*self.at(0)).try_into()?;
+        let r_low: u128 = (*self.at(0)).try_into()?;
+        let r_high: u128 = (*self.at(1)).try_into()?;
 
-        let r_low: u128 = (*self.at(1)).try_into()?;
-        let r_high: u128 = (*self.at(2)).try_into()?;
-
-        let s_low: u128 = (*self.at(3)).try_into()?;
-        let s_high: u128 = (*self.at(4)).try_into()?;
+        let s_low: u128 = (*self.at(2)).try_into()?;
+        let s_high: u128 = (*self.at(3)).try_into()?;
 
         let y_parity = {
-            let value: u128 = (*self.at(5)).try_into()?;
-            if (tx_type != 0) {
+            let value: u128 = (*self.at(4)).try_into()?;
+            if (value == 0 || value == 1) {
                 value == 1
             } else {
                 compute_y_parity(value, chain_id)?
@@ -1202,31 +1196,22 @@ impl TryIntoEthSignatureImpl of TryIntoEthSignatureTrait {
 
 #[generate_trait]
 impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
-    // pass v, when dealing with legacy transaction { type_0 }
     fn to_felt252_array(
-        self: EthSignature, tx_type: TransactionType, v: Option<u128>
+        self: EthSignature, tx_type: TransactionType, chain_id: u128
     ) -> Option<Array<felt252>> {
         let tx_type: u8 = tx_type.into();
 
         let mut res: Array<felt252> = array![
-            tx_type.into(),
-            self.r.low.into(),
-            self.r.high.into(),
-            self.s.low.into(),
-            self.s.high.into()
+            self.r.low.into(), self.r.high.into(), self.s.low.into(), self.s.high.into()
         ];
 
-        match v {
-            Option::Some(v) => { res.append(v.into()); },
-            Option::None => {
-                if (tx_type == 0) {
-                    return Option::None;
-                }
-
-                let y_parity: felt252 = self.y_parity.into();
-                res.append(y_parity);
-            }
-        }
+        if (tx_type == 0) {
+            let v = self.y_parity.into() + 2 * chain_id + 35;
+            res.append(v.into());
+        } else {
+            let y_parity: u128 = self.y_parity.into();
+            res.append(y_parity.into())
+        };
 
         Option::Some(res)
     }
