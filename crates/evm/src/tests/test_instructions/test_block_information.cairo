@@ -110,6 +110,7 @@ fn test_block_number_set_to_32() {
 fn test_gaslimit() {
     // Given
     let mut vm = VMBuilderTrait::new_with_presets().build();
+
     // When
     vm.exec_gaslimit().unwrap();
 
@@ -179,6 +180,7 @@ fn test_exec_selfbalance_contract_account() {
 fn test_basefee() {
     // Given
     let mut vm = VMBuilderTrait::new_with_presets().build();
+
     // When
     vm.exec_basefee().unwrap();
 
@@ -189,23 +191,15 @@ fn test_basefee() {
 
 #[test]
 fn test_chainid_should_push_chain_id_to_stack() {
-    let (_, kakarot_core) = setup_contracts_for_testing();
-
     // Given
     let mut vm = VMBuilderTrait::new_with_presets().build();
-
-    let chain_id: u256 = IExtendedKakarotCoreDispatcher {
-        contract_address: kakarot_core.contract_address
-    }
-        .chain_id()
-        .into();
 
     // When
     vm.exec_chainid().unwrap();
 
     // Then
-    let result = vm.stack.peek().unwrap();
-    assert(result == chain_id, 'stack should have chain id');
+    let chain_id = vm.stack.peek().unwrap();
+    assert(vm.env.chain_id.into() == chain_id, 'stack should have chain id');
 }
 
 
@@ -233,8 +227,7 @@ fn test_exec_coinbase() {
     // When
     vm.exec_coinbase().unwrap();
 
-    let coinbase_address = vm.stack.pop().unwrap();
-
     // Then
+    let coinbase_address = vm.stack.peek().unwrap();
     assert(vm.env.coinbase.into() == coinbase_address, 'wrong coinbase address');
 }

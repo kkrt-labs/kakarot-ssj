@@ -15,6 +15,7 @@ enum StoredAccountType {
 
 #[starknet::contract]
 mod KakarotCore {
+    use core::option::OptionTrait;
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
@@ -376,7 +377,7 @@ mod KakarotCore {
             let mut env = Environment {
                 origin: origin.evm,
                 gas_price,
-                chain_id: self.chain_id.read(),
+                chain_id: get_tx_info().unbox().chain_id.try_into().unwrap(),
                 prevrandao: 0,
                 block_number: block_info.block_number,
                 block_timestamp: block_info.block_timestamp,

@@ -15,8 +15,8 @@ use evm::stack::StackTrait;
 use evm::state::StateTrait;
 
 // Corelib imports
-use starknet::info::{get_block_number, get_block_timestamp, get_block_info};
-use starknet::{get_block_hash_syscall, get_execution_info_syscall, EthAddress};
+use starknet::info::get_block_number;
+use starknet::{get_block_hash_syscall, EthAddress};
 
 use utils::helpers::ResultExTrait;
 use utils::traits::{EthAddressTryIntoResultContractAddress, EthAddressIntoU256};
@@ -105,8 +105,7 @@ impl BlockInformation of BlockInformationTrait {
     fn exec_chainid(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
 
-        let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let chain_id = kakarot_state.chain_id();
+        let chain_id = self.env.chain_id;
         self.stack.push(chain_id.into())
     }
 
