@@ -5,9 +5,6 @@ use contracts::kakarot_core::interface::{
 use contracts::tests::test_utils::{
     setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account,
 };
-use core::clone::Clone;
-use core::result::ResultTrait;
-use core::traits::TryInto;
 use evm::instructions::BlockInformationTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{evm_address, VMBuilderTrait, tx_gas_limit, gas_price};

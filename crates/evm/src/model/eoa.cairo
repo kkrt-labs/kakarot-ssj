@@ -1,7 +1,3 @@
-use core::option::OptionTrait;
-use core::traits::TryInto;
-use core::box::BoxTrait;
-use core::result::ResultTrait;
 use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
 use contracts::kakarot_core::kakarot::KakarotCore::{ContractStateEventEmitter, EOADeployed};
 use contracts::kakarot_core::kakarot::StoredAccountType;

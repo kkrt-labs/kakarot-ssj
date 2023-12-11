@@ -15,16 +15,12 @@ enum StoredAccountType {
 
 #[starknet::contract]
 mod KakarotCore {
-    use core::option::OptionTrait;
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
     use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
     use contracts::kakarot_core::interface::IKakarotCore;
-    use contracts::kakarot_core::interface;
     use core::starknet::SyscallResultTrait;
-    use core::traits::TryInto;
-    use core::zeroable::Zeroable;
 
     use evm::errors::{EVMError, EVMErrorTrait, CALLING_FROM_CA, CALLING_FROM_UNDEPLOYED_ACCOUNT};
     use evm::interpreter::{EVMTrait};
@@ -147,7 +143,7 @@ mod KakarotCore {
     }
 
     #[abi(embed_v0)]
-    impl KakarotCoreImpl of interface::IKakarotCore<ContractState> {
+    impl KakarotCoreImpl of IKakarotCore<ContractState> {
         fn set_native_token(ref self: ContractState, native_token: ContractAddress) {
             self.ownable.assert_only_owner();
             self.native_token.write(native_token);
