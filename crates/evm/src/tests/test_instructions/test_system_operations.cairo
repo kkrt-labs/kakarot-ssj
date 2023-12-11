@@ -13,7 +13,6 @@ use evm::instructions::SystemOperationsTrait;
 use evm::interpreter::{EVMTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{Account};
-use evm::model::contract_account::ContractAccountTrait;
 use evm::model::eoa::EOATrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{AccountTrait, Address, AccountType, Transfer};

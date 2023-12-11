@@ -9,7 +9,6 @@ use core::clone::Clone;
 use core::result::ResultTrait;
 use core::traits::TryInto;
 use evm::instructions::BlockInformationTrait;
-use evm::model::contract_account::ContractAccountTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{evm_address, VMBuilderTrait, tx_gas_limit, gas_price};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
