@@ -1,5 +1,3 @@
-mod test_call_helpers;
-
 mod test_create_helpers;
 
 mod test_gas;

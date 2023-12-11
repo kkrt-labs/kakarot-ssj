@@ -30,18 +30,53 @@ impl SystemOperations of SystemOperationsTrait {
     /// CALL
     /// # Specification: https://www.evm.codes/#f1?fork=shanghai
     fn exec_call(ref self: VM) -> Result<(), EVMError> {
-        let call_args = self.prepare_call(@CallType::Call)?;
+        let gas = self.stack.pop_u128()?;
+        let to = self.stack.pop_eth_address()?;
+        let value = self.stack.pop()?;
+        let args_offset = self.stack.pop_usize()?;
+        let args_size = self.stack.pop_usize()?;
+        let ret_offset = self.stack.pop_usize()?;
+        let ret_size = self.stack.pop_usize()?;
+
+        let args_max_offset = args_offset + args_size;
+        let ret_max_offset = ret_offset + ret_size;
+
+        let max_memory_size = if args_max_offset > ret_max_offset {
+            args_max_offset
+        } else {
+            ret_max_offset
+        };
 
         // GAS
-        if self.accessed_addresses.contains(call_args.to.evm) {
-            self.charge_gas(gas::WARM_ACCESS_COST)?;
+        //TODO(optimization): if we know how much the memory is going to be expanded,
+        // we can return the new size and save a computation later.
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), max_memory_size);
+
+        let access_gas_cost = if self.accessed_addresses.contains(to) {
+            gas::WARM_ACCESS_COST
         } else {
-            self.accessed_addresses.add(call_args.to.evm);
-            self.charge_gas(gas::COLD_ACCOUNT_ACCESS_COST)?
-        }
+            self.accessed_addresses.add(to);
+            gas::COLD_ACCOUNT_ACCESS_COST
+        };
+
+        let create_gas_cost = 0; //TODO(gas)
+        let transfer_gas_cost = if value != 0 {
+            gas::CALLVALUE
+        } else {
+            0
+        };
+
+        let message_call_gas = gas::calculate_message_call_gas(
+            value,
+            gas,
+            self.gas_left(),
+            expand_memory_cost,
+            access_gas_cost + transfer_gas_cost + create_gas_cost
+        );
+        self.charge_gas(message_call_gas.cost + expand_memory_cost)?;
+        // Only the transfer gas is left to charge.
 
         let read_only = self.message().read_only;
-        let value = call_args.value;
 
         // Check if current context is read only that value == 0.
         // De Morgan's law: !(read_only && value != 0) == !read_only || value == 0
@@ -49,9 +84,11 @@ impl SystemOperations of SystemOperationsTrait {
 
         // If sender_balance < value, return early, pushing
         // 0 on the stack to indicate call failure.
-        let caller_address = self.message().target;
-        let sender_balance = self.env.state.get_account(caller_address.evm).balance();
+        // The gas cost relative to the transfer is refunded.
+        let sender_balance = self.env.state.get_account(self.message().target.evm).balance();
         if sender_balance < value {
+            self.return_data = Default::default().span();
+            self.gas_left += message_call_gas.stipend;
             return self.stack.push(0);
         }
 
@@ -62,24 +99,92 @@ impl SystemOperations of SystemOperationsTrait {
         // let result = sub_ctx.process_message();
         // store the return data in the memory of the parent context with the correct offsets and size
         // store the return data whole in the return data field of the parent context
-        self.generic_call(call_args)
+        self
+            .generic_call(
+                gas: message_call_gas.stipend,
+                :value,
+                caller: self.message().target.evm,
+                :to,
+                code_address: to,
+                should_transfer_value: true,
+                is_staticcall: false,
+                :args_offset,
+                :args_size,
+                :ret_offset,
+                :ret_size,
+            )
     }
 
 
     /// CALLCODE
     /// # Specification: https://www.evm.codes/#f2?fork=shanghai
     fn exec_callcode(ref self: VM) -> Result<(), EVMError> {
-        let call_args = self.prepare_call(@CallType::CallCode)?;
+        let gas = self.stack.pop_u128()?;
+        let code_address = self.stack.pop_eth_address()?;
+        let value = self.stack.pop()?;
+        let args_offset = self.stack.pop_usize()?;
+        let args_size = self.stack.pop_usize()?;
+        let ret_offset = self.stack.pop_usize()?;
+        let ret_size = self.stack.pop_usize()?;
+
+        let args_max_offset = args_offset + args_size;
+        let ret_max_offset = ret_offset + ret_size;
+
+        let to = self.message().target.evm;
+
+        let max_memory_size = if args_max_offset > ret_max_offset {
+            args_max_offset
+        } else {
+            ret_max_offset
+        };
 
         // GAS
-        if self.accessed_addresses.contains(call_args.to.evm) {
-            self.charge_gas(gas::WARM_ACCESS_COST)?;
+        //TODO(optimization): if we know how much the memory is going to be expanded,
+        // we can return the new size and save a computation later.
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), max_memory_size);
+
+        let access_gas_cost = if self.accessed_addresses.contains(code_address) {
+            gas::WARM_ACCESS_COST
         } else {
-            self.accessed_addresses.add(call_args.to.evm);
-            self.charge_gas(gas::COLD_ACCOUNT_ACCESS_COST)?
+            self.accessed_addresses.add(code_address);
+            gas::COLD_ACCOUNT_ACCESS_COST
+        };
+
+        let transfer_gas_cost = if value != 0 {
+            gas::CALLVALUE
+        } else {
+            0
+        };
+
+        let message_call_gas = gas::calculate_message_call_gas(
+            value, gas, self.gas_left(), expand_memory_cost, access_gas_cost + transfer_gas_cost
+        );
+        self.charge_gas(message_call_gas.cost + expand_memory_cost)?;
+
+        // If sender_balance < value, return early, pushing
+        // 0 on the stack to indicate call failure.
+        // The gas cost relative to the transfer is refunded.
+        let sender_balance = self.env.state.get_account(self.message().target.evm).balance();
+        if sender_balance < value {
+            self.return_data = Default::default().span();
+            self.gas_left += message_call_gas.stipend;
+            return self.stack.push(0);
         }
 
-        self.generic_call(call_args)
+        self
+            .generic_call(
+                message_call_gas.stipend,
+                value,
+                self.message().target.evm,
+                to,
+                code_address,
+                true,
+                false,
+                args_offset,
+                args_size,
+                ret_offset,
+                ret_size,
+            )
     }
     /// RETURN
     /// # Specification: https://www.evm.codes/#f3?fork=shanghai
@@ -102,16 +207,53 @@ impl SystemOperations of SystemOperationsTrait {
     /// DELEGATECALL
     /// # Specification: https://www.evm.codes/#f4?fork=shanghai
     fn exec_delegatecall(ref self: VM) -> Result<(), EVMError> {
-        let call_args = self.prepare_call(@CallType::DelegateCall)?;
+        let gas = self.stack.pop_u128()?;
+        let code_address = self.stack.pop_eth_address()?;
+        let args_offset = self.stack.pop_usize()?;
+        let args_size = self.stack.pop_usize()?;
+        let ret_offset = self.stack.pop_usize()?;
+        let ret_size = self.stack.pop_usize()?;
+
+        let args_max_offset = args_offset + args_size;
+        let ret_max_offset = ret_offset + ret_size;
+
+        let max_memory_size = if args_max_offset > ret_max_offset {
+            args_max_offset
+        } else {
+            ret_max_offset
+        };
 
         // GAS
-        if self.accessed_addresses.contains(call_args.to.evm) {
-            self.charge_gas(gas::WARM_ACCESS_COST)?;
+        //TODO(optimization): if we know how much the memory is going to be expanded,
+        // we can return the new size and save a computation later.
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), max_memory_size);
+
+        let access_gas_cost = if self.accessed_addresses.contains(code_address) {
+            gas::WARM_ACCESS_COST
         } else {
-            self.accessed_addresses.add(call_args.to.evm);
-            self.charge_gas(gas::COLD_ACCOUNT_ACCESS_COST)?
-        }
-        self.generic_call(call_args)
+            self.accessed_addresses.add(code_address);
+            gas::COLD_ACCOUNT_ACCESS_COST
+        };
+
+        let message_call_gas = gas::calculate_message_call_gas(
+            0, gas, self.gas_left(), expand_memory_cost, access_gas_cost
+        );
+        self.charge_gas(message_call_gas.cost + expand_memory_cost)?;
+
+        self
+            .generic_call(
+                message_call_gas.stipend,
+                self.message().value,
+                self.message().caller.evm,
+                self.message().target.evm,
+                code_address,
+                false,
+                false,
+                args_offset,
+                args_size,
+                ret_offset,
+                ret_size,
+            )
     }
 
     /// CREATE2
@@ -129,17 +271,53 @@ impl SystemOperations of SystemOperationsTrait {
     /// STATICCALL
     /// # Specification: https://www.evm.codes/#fa?fork=shanghai
     fn exec_staticcall(ref self: VM) -> Result<(), EVMError> {
-        let call_args = self.prepare_call(@CallType::StaticCall)?;
+        let gas = self.stack.pop_u128()?;
+        let to = self.stack.pop_eth_address()?;
+        let args_offset = self.stack.pop_usize()?;
+        let args_size = self.stack.pop_usize()?;
+        let ret_offset = self.stack.pop_usize()?;
+        let ret_size = self.stack.pop_usize()?;
+
+        let args_max_offset = args_offset + args_size;
+        let ret_max_offset = ret_offset + ret_size;
+
+        let max_memory_size = if args_max_offset > ret_max_offset {
+            args_max_offset
+        } else {
+            ret_max_offset
+        };
 
         // GAS
-        if self.accessed_addresses.contains(call_args.to.evm) {
-            self.charge_gas(gas::WARM_ACCESS_COST)?;
-        } else {
-            self.accessed_addresses.add(call_args.to.evm);
-            self.charge_gas(gas::COLD_ACCOUNT_ACCESS_COST)?
-        }
+        //TODO(optimization): if we know how much the memory is going to be expanded,
+        // we can return the new size and save a computation later.
+        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), max_memory_size);
 
-        self.generic_call(call_args)
+        let access_gas_cost = if self.accessed_addresses.contains(to) {
+            gas::WARM_ACCESS_COST
+        } else {
+            self.accessed_addresses.add(to);
+            gas::COLD_ACCOUNT_ACCESS_COST
+        };
+
+        let message_call_gas = gas::calculate_message_call_gas(
+            0, gas, self.gas_left(), expand_memory_cost, access_gas_cost
+        );
+        self.charge_gas(message_call_gas.cost + expand_memory_cost)?;
+
+        self
+            .generic_call(
+                message_call_gas.stipend,
+                0,
+                self.message().target.evm,
+                to,
+                to,
+                true,
+                true,
+                args_offset,
+                args_size,
+                ret_offset,
+                ret_size,
+            )
     }
 
 
