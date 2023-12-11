@@ -401,8 +401,9 @@ mod KakarotCore {
                 }
             };
 
-            let gas = match gas_limit.checked_sub(gas::calculate_intrinsic_gas_cost(to, calldata)) {
-                Option::Some(gas) => gas,
+            let gas_left =
+                match gas_limit.checked_sub(gas::calculate_intrinsic_gas_cost(to, calldata)) {
+                Option::Some(gas_left) => gas_left,
                 Option::None => {
                     return ExecutionSummaryTrait::exceptional_failure(
                         EVMError::OutOfGas.to_bytes()
@@ -441,7 +442,7 @@ mod KakarotCore {
             let message = Message {
                 caller: origin,
                 target: to,
-                gas_limit: gas,
+                gas_limit: gas_left,
                 data: calldata,
                 code,
                 value,
