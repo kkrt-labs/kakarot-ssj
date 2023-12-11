@@ -129,6 +129,9 @@ const main = async () => {
       : parseInt(v, 16) == 1;
   console.log("r: ", r);
   console.log("s: ", s);
+  if (tx_type == 0) {
+    console.log("v: ", v);
+  }
   console.log("y parity: ", y_parity);
 
   process.exit(0);

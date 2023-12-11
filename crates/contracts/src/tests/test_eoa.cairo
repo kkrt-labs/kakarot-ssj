@@ -38,6 +38,7 @@ mod test_external_owned_account {
         deploy_syscall, ContractAddress, ClassHash, VALIDATED, get_contract_address,
         contract_address_const, EthAddress, eth_signature::{Signature}, get_tx_info
     };
+    use utils::eth_transaction::TransactionType;
     use utils::helpers::EthAddressSignatureTrait;
     use utils::helpers::{U8SpanExTrait, u256_to_bytes_array};
     use utils::tests::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
@@ -254,12 +255,18 @@ mod test_external_owned_account {
         // to reproduce locally:
         // run: cp .env.example .env
         // bun install & bun run scripts/compute_rlp_encoding.ts
+        // v -> 0x869082929cbe92ac
         let signature = Signature {
             r: 0xaae7c4f6e4caa03257e37a6879ed5b51a6f7db491d559d10a0594f804aa8d797,
             s: 0x2f3d9634f8cb9b9a43b048ee3310be91c2d3dc3b51a3313b473ef2260bbf6bc7,
             y_parity: true
         };
-        set_signature(signature.to_felt252_array().span());
+        set_signature(
+            signature
+                .to_felt252_array(TransactionType::Legacy, Option::Some(0x869082929cbe92ac))
+                .unwrap()
+                .span()
+        );
 
         set_contract_address(contract_address_const::<0>());
 
@@ -289,7 +296,9 @@ mod test_external_owned_account {
             y_parity: true
         };
 
-        set_signature(signature.to_felt252_array().span());
+        set_signature(
+            signature.to_felt252_array(TransactionType::EIP2930, Option::None).unwrap().span()
+        );
 
         set_contract_address(contract_address_const::<0>());
 
@@ -319,7 +328,9 @@ mod test_external_owned_account {
             y_parity: true
         };
 
-        set_signature(signature.to_felt252_array().span());
+        set_signature(
+            signature.to_felt252_array(TransactionType::EIP1559, Option::None).unwrap().span()
+        );
 
         set_contract_address(contract_address_const::<0>());
 
