@@ -1196,7 +1196,7 @@ impl TryIntoEthSignatureImpl of TryIntoEthSignatureTrait {
 
 #[generate_trait]
 impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
-    fn to_felt252_array(
+    fn try_into_felt252_array(
         self: EthSignature, tx_type: TransactionType, chain_id: u128
     ) -> Option<Array<felt252>> {
         let mut res: Array<felt252> = array![

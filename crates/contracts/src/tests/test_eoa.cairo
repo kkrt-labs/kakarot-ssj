@@ -262,7 +262,7 @@ mod test_external_owned_account {
             y_parity: true
         };
         set_signature(
-            signature.to_felt252_array(TransactionType::Legacy, chain_id).unwrap().span()
+            signature.try_into_felt252_array(TransactionType::Legacy, chain_id).unwrap().span()
         );
 
         set_contract_address(contract_address_const::<0>());
@@ -295,7 +295,7 @@ mod test_external_owned_account {
         };
 
         set_signature(
-            signature.to_felt252_array(TransactionType::EIP2930, chain_id).unwrap().span()
+            signature.try_into_felt252_array(TransactionType::EIP2930, chain_id).unwrap().span()
         );
 
         set_contract_address(contract_address_const::<0>());
@@ -328,7 +328,7 @@ mod test_external_owned_account {
         };
 
         set_signature(
-            signature.to_felt252_array(TransactionType::EIP1559, chain_id).unwrap().span()
+            signature.try_into_felt252_array(TransactionType::EIP1559, chain_id).unwrap().span()
         );
 
         set_contract_address(contract_address_const::<0>());

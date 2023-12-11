@@ -591,19 +591,19 @@ mod eth_signature_test {
             .span();
 
         let result = signature_0
-            .to_felt252_array(TransactionType::Legacy, CHAIN_ID)
+            .try_into_felt252_array(TransactionType::Legacy, CHAIN_ID)
             .unwrap()
             .span();
         assert_eq!(result, expected_signature_0);
 
         let result = signature_1
-            .to_felt252_array(TransactionType::EIP2930, CHAIN_ID)
+            .try_into_felt252_array(TransactionType::EIP2930, CHAIN_ID)
             .unwrap()
             .span();
         assert_eq!(result, expected_signature_1);
 
         let result = signature_2
-            .to_felt252_array(TransactionType::EIP1559, CHAIN_ID)
+            .try_into_felt252_array(TransactionType::EIP1559, CHAIN_ID)
             .unwrap()
             .span();
         assert_eq!(result, expected_signature_2);
