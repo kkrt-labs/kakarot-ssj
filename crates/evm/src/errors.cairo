@@ -99,6 +99,7 @@ impl DebugEVMError of Debug<EVMError> {
     }
 }
 
+#[inline(always)]
 fn ensure(cond: bool, err: EVMError) -> Result<(), EVMError> {
     if cond {
         Result::Ok(())

@@ -11,7 +11,7 @@ use evm::model::eoa::EOATrait;
 use evm::state::State;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{EthAddress, get_contract_address, ContractAddress};
-use utils::checked_math::CheckedSub;
+use utils::checked_math::CheckedMath;
 use utils::helpers::{ResultExTrait};
 use utils::set::{Set, SpanSet};
 use utils::traits::{EthAddressDefault, ContractAddressDefault, SpanDefault};
@@ -81,8 +81,14 @@ impl ExecutionResultImpl of ExecutionResultTrait {
 struct ExecutionSummary {
     state: State,
     return_data: Span<u8>,
-    address: EthAddress,
     success: bool
+}
+
+#[generate_trait]
+impl ExecutionSummaryImpl of ExecutionSummaryTrait {
+    fn exceptional_failure(error: Span<u8>) -> ExecutionSummary {
+        ExecutionSummary { state: Default::default(), return_data: error, success: false }
+    }
 }
 
 /// The struct representing an EVM event.

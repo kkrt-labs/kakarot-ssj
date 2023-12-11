@@ -25,12 +25,13 @@ mod KakarotCore {
     use core::traits::TryInto;
     use core::zeroable::Zeroable;
 
-    use evm::errors::{EVMError, EVMErrorTrait, CALLING_FROM_CA, CALLING_FROM_UNDEPLOYED_ACCOUNT};
+    use evm::errors::{EVMError, ensure, EVMErrorTrait,};
+    use evm::gas;
     use evm::interpreter::{EVMTrait};
     use evm::model::account::{Account, AccountType, AccountTrait};
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::{EOATrait};
-    use evm::model::{ExecutionSummary, Address, AddressTrait};
+    use evm::model::{ExecutionSummary, ExecutionSummaryTrait, Address, AddressTrait};
     use evm::model::{Message, Environment};
     use evm::state::{State, StateTrait};
     use starknet::{
@@ -40,6 +41,7 @@ mod KakarotCore {
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use super::{StoredAccountType};
     use utils::address::compute_contract_address;
+    use utils::checked_math::CheckedMath;
     use utils::constants;
     use utils::helpers::{compute_starknet_address, EthAddressExTrait};
     use utils::rlp::RLPTrait;
@@ -261,7 +263,7 @@ mod KakarotCore {
 
             let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
 
-            let ExecutionSummary{state: _, return_data, address: _, success } = self
+            let ExecutionSummary{state: _, return_data, success } = self
                 .process_transaction(:origin, :to, :gas_limit, :gas_price, :value, :calldata);
             (success, return_data)
         }
@@ -291,7 +293,7 @@ mod KakarotCore {
                 .expect('Fetching EOA failed');
             assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
 
-            let ExecutionSummary{mut state, return_data, address: _, success } = self
+            let ExecutionSummary{mut state, return_data, success } = self
                 .process_transaction(:origin, :to, :gas_limit, :gas_price, :value, :calldata);
             state.commit_state().expect('Committing state failed');
             (success, return_data)
@@ -385,6 +387,29 @@ mod KakarotCore {
                 state: Default::default(),
             };
 
+            //TODO(gas) handle FeeMarketTransaction
+            let gas_fee = gas_limit * gas_price;
+
+            let sender = env.origin;
+            let sender_account = env.state.get_account(sender);
+            match ensure(
+                sender_account.balance() >= gas_fee.into() + value, EVMError::InsufficientBalance
+            ) {
+                Result::Ok(_) => {},
+                Result::Err(err) => {
+                    return ExecutionSummaryTrait::exceptional_failure(err.to_bytes());
+                }
+            };
+
+            let gas = match gas_limit.checked_sub(gas::calculate_intrinsic_gas_cost(to, calldata)) {
+                Option::Some(gas) => gas,
+                Option::None => {
+                    return ExecutionSummaryTrait::exceptional_failure(
+                        EVMError::OutOfGas.to_bytes()
+                    );
+                }
+            };
+
             let (to, is_deploy_tx, code, calldata) = match to {
                 Option::Some(to) => {
                     let target_starknet_address = self.compute_starknet_address(to);
@@ -416,7 +441,7 @@ mod KakarotCore {
             let message = Message {
                 caller: origin,
                 target: to,
-                gas_limit,
+                gas_limit: gas,
                 data: calldata,
                 code,
                 value,

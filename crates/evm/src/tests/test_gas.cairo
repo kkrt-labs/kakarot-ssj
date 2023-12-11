@@ -31,7 +31,7 @@ fn test_calculate_intrinsic_gas_cost() {
     };
 
     let expected_cost: u128 = 21136;
-    let out_cost: u128 = calculate_intrinsic_gas_cost(@tx);
+    let out_cost: u128 = calculate_intrinsic_gas_cost(tx.destination, tx.calldata);
 
     assert(out_cost == expected_cost, 'wrong cost');
 }
@@ -61,7 +61,7 @@ fn test_calculate_intrinsic_gas_cost_without_destination() {
     };
 
     let expected_cost: u128 = 53138;
-    let out_cost: u128 = calculate_intrinsic_gas_cost(@tx);
+    let out_cost: u128 = calculate_intrinsic_gas_cost(tx.destination, tx.calldata);
 
     assert(out_cost == expected_cost, 'wrong cost');
 }
