@@ -564,7 +564,6 @@ mod eth_signature_test {
         };
 
         let expected_signature_0: Span<felt252> = array![
-            0x0,
             signature_0.r.low.into(),
             signature_0.r.high.into(),
             signature_0.s.low.into(),
@@ -574,7 +573,6 @@ mod eth_signature_test {
             .span();
 
         let expected_signature_1: Span<felt252> = array![
-            0x1,
             signature_1.r.low.into(),
             signature_1.r.high.into(),
             signature_1.s.low.into(),
@@ -584,7 +582,6 @@ mod eth_signature_test {
             .span();
 
         let expected_signature_2: Span<felt252> = array![
-            0x2,
             signature_2.r.low.into(),
             signature_2.r.high.into(),
             signature_2.s.low.into(),
@@ -594,19 +591,19 @@ mod eth_signature_test {
             .span();
 
         let result = signature_0
-            .to_felt252_array(TransactionType::Legacy, Option::Some(0x9696a4cb))
+            .to_felt252_array(TransactionType::Legacy, CHAIN_ID)
             .unwrap()
             .span();
         assert_eq!(result, expected_signature_0);
 
         let result = signature_1
-            .to_felt252_array(TransactionType::EIP2930, Option::None)
+            .to_felt252_array(TransactionType::EIP2930, CHAIN_ID)
             .unwrap()
             .span();
         assert_eq!(result, expected_signature_1);
 
         let result = signature_2
-            .to_felt252_array(TransactionType::EIP1559, Option::None)
+            .to_felt252_array(TransactionType::EIP1559, CHAIN_ID)
             .unwrap()
             .span();
         assert_eq!(result, expected_signature_2);
@@ -647,7 +644,6 @@ mod eth_signature_test {
         };
 
         let signature_0_felt252_arr: Array<felt252> = array![
-            0x0,
             signature_0.r.low.into(),
             signature_0.r.high.into(),
             signature_0.s.low.into(),
@@ -656,7 +652,6 @@ mod eth_signature_test {
         ];
 
         let signature_1_felt252_arr: Array<felt252> = array![
-            0x1,
             signature_1.r.low.into(),
             signature_1.r.high.into(),
             signature_1.s.low.into(),
@@ -665,7 +660,6 @@ mod eth_signature_test {
         ];
 
         let signature_2_felt252_arr: Array<felt252> = array![
-            0x2,
             signature_2.r.low.into(),
             signature_2.r.high.into(),
             signature_2.s.low.into(),
