@@ -1199,20 +1199,17 @@ impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
     fn to_felt252_array(
         self: EthSignature, tx_type: TransactionType, chain_id: u128
     ) -> Option<Array<felt252>> {
-        let tx_type: u8 = tx_type.into();
-
         let mut res: Array<felt252> = array![
             self.r.low.into(), self.r.high.into(), self.s.low.into(), self.s.high.into()
         ];
 
-        if (tx_type == 0) {
-            let v = self.y_parity.into() + 2 * chain_id + 35;
-            res.append(v.into());
-        } else {
-            let y_parity: u128 = self.y_parity.into();
-            res.append(y_parity.into())
+        let value = match tx_type {
+            TransactionType::Legacy => { self.y_parity.into() + 2 * chain_id + 35 },
+            TransactionType::EIP2930 => { self.y_parity.into() },
+            TransactionType::EIP1559 => { self.y_parity.into() }
         };
 
+        res.append(value.into());
         Option::Some(res)
     }
 }
