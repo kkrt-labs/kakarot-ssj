@@ -219,6 +219,39 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
     }
 }
 
+#[derive(Drop, PartialEq)]
+enum TransactionType {
+    Legacy,
+    EIP2930,
+    EIP1559
+}
+
+impl TranscationTypeIntoU8Impl of Into<TransactionType, u8> {
+    fn into(self: TransactionType) -> u8 {
+        match self {
+            TransactionType::Legacy => { 0 },
+            TransactionType::EIP2930 => { 1 },
+            TransactionType::EIP1559 => { 2 }
+        }
+    }
+}
+
+impl TryIntoTransactionTypeImpl of TryInto<u128, TransactionType> {
+    fn try_into(self: u128) -> Option<TransactionType> {
+        if (self == 0) {
+            return Option::Some(TransactionType::Legacy);
+        }
+        if (self == 1) {
+            return Option::Some(TransactionType::EIP2930);
+        }
+        if (self == 2) {
+            return Option::Some(TransactionType::EIP1559);
+        }
+
+        Option::None
+    }
+}
+
 #[generate_trait]
 impl EthTransactionImpl of EthTransactionTrait {
     /// Decode a raw Ethereum transaction

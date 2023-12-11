@@ -3,7 +3,7 @@ use core::fmt::{Display, Debug, Formatter, Error};
 use evm::errors::{EVMError, ensure, TYPE_CONVERSION_ERROR};
 use starknet::{
     StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
-    ContractAddress, Store, SyscallResult
+    ContractAddress, Store, SyscallResult, eth_signature::Signature as EthSignature
 };
 use utils::math::{Zero, One, Bitshift};
 
@@ -53,6 +53,16 @@ impl ContractAddressDisplay = display_felt252_based::TDisplay<ContractAddress>;
 impl EthAddressDebug = debug_display_based::TDisplay<EthAddress>;
 impl ContractAddressDebug = debug_display_based::TDisplay<ContractAddress>;
 impl SpanDebug<T, +Display<T>, +Copy<T>> = debug_display_based::TDisplay<Span<T>>;
+
+impl EthSignatureDisplay of Display<EthSignature> {
+    fn fmt(self: @EthSignature, ref f: Formatter) -> Result<(), Error> {
+        write!(f, "r: {}", *self.r);
+        write!(f, "s: {}", *self.s);
+        write!(f, "y_parity: {}", *self.y_parity);
+
+        Result::Ok(())
+    }
+}
 
 impl SpanTDisplay<T, +Display<T>, +Copy<T>> of Display<Span<T>> {
     fn fmt(self: @Span<T>, ref f: Formatter) -> Result<(), Error> {

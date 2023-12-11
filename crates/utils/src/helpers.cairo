@@ -1,4 +1,5 @@
 use cmp::min;
+use core::array::ArrayTrait;
 use core::hash::{HashStateExTrait, HashStateTrait};
 use core::num::traits::{Zero, One};
 use core::pedersen::{HashState, PedersenTrait};
@@ -16,6 +17,7 @@ use utils::constants::{
     POW_256_16,
 };
 use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
+use utils::eth_transaction::{TransactionType};
 use utils::math::{Bitshift, WrappingBitshift, Exponentiation};
 use utils::traits::{
     U256TryIntoContractAddress, EthAddressIntoU256, U256TryIntoEthAddress, TryIntoResult,
@@ -29,9 +31,9 @@ use utils::traits::{
 ///
 /// # Returns
 /// The same value if it's a perfect multiple of 32
-/// else it returns the smallest multiple of 32 
+/// else it returns the smallest multiple of 32
 /// that is greater than `value`.
-/// 
+///
 /// # Examples
 /// ceil32(2) = 32
 /// ceil32(34) = 64
@@ -823,7 +825,7 @@ impl U256Impl of U256Trait {
     }
 
     // Returns a u256 representation as bytes: `Span<u8>`
-    // If the u256 representation does not take up to 32 bytes, 
+    // If the u256 representation does not take up to 32 bytes,
     // the size of the returned slice is equal to the number of bytes used
     fn to_bytes(self: u256) -> Span<u8> {
         let bytes_used: u256 = self.bytes_used().into();
@@ -1151,20 +1153,45 @@ impl EthAddressExImpl of EthAddressExTrait {
     }
 }
 
-impl TryIntoEthSignature of TryInto<Span<felt252>, EthSignature> {
-    // format: [r_low, r_high, s_low, s_high, yParity]
-    fn try_into(self: Span<felt252>) -> Option<EthSignature> {
-        if (self.len() != 5) {
+fn compute_y_parity(v: u128, chain_id: u128) -> Option<bool> {
+    let y_parity = v - (chain_id * 2 + 35);
+    if (y_parity == 0 || y_parity == 1) {
+        return Option::Some(y_parity == 1);
+    }
+
+    let y_parity = v - (chain_id * 2 + 36);
+    if (y_parity == 0 || y_parity == 1) {
+        return Option::Some(y_parity == 1);
+    }
+
+    return Option::None;
+}
+
+
+#[generate_trait]
+impl TryIntoEthSignatureImpl of TryIntoEthSignatureTrait {
+    // format: [tx_type, r_low, r_high, s_low, s_high, v || yParity]
+    fn try_into_eth_signature(self: Span<felt252>, chain_id: u128) -> Option<EthSignature> {
+        if (self.len() != 6) {
             return Option::None;
         }
 
-        let r_low: u128 = (*self.at(0)).try_into()?;
-        let r_high: u128 = (*self.at(1)).try_into()?;
+        let tx_type: u128 = (*self.at(0)).try_into()?;
 
-        let s_low: u128 = (*self.at(2)).try_into()?;
-        let s_high: u128 = (*self.at(3)).try_into()?;
+        let r_low: u128 = (*self.at(1)).try_into()?;
+        let r_high: u128 = (*self.at(2)).try_into()?;
 
-        let y_parity = (*self.at(4)) == 1;
+        let s_low: u128 = (*self.at(3)).try_into()?;
+        let s_high: u128 = (*self.at(4)).try_into()?;
+
+        let y_parity = {
+            let value: u128 = (*self.at(5)).try_into()?;
+            if (tx_type != 0) {
+                value == 1
+            } else {
+                compute_y_parity(value, chain_id)?
+            }
+        };
 
         let r = u256 { low: r_low, high: r_high };
         let s = u256 { low: s_low, high: s_high };
@@ -1175,11 +1202,32 @@ impl TryIntoEthSignature of TryInto<Span<felt252>, EthSignature> {
 
 #[generate_trait]
 impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
-    fn to_felt252_array(self: EthSignature) -> Array<felt252> {
-        let y_parity: felt252 = self.y_parity.into();
+    // pass v, when dealing with legacy transaction { type_0 }
+    fn to_felt252_array(
+        self: EthSignature, tx_type: TransactionType, v: Option<u128>
+    ) -> Option<Array<felt252>> {
+        let tx_type: u8 = tx_type.into();
 
-        array![
-            self.r.low.into(), self.r.high.into(), self.s.low.into(), self.s.high.into(), y_parity,
-        ]
+        let mut res: Array<felt252> = array![
+            tx_type.into(),
+            self.r.low.into(),
+            self.r.high.into(),
+            self.s.low.into(),
+            self.s.high.into()
+        ];
+
+        match v {
+            Option::Some(v) => { res.append(v.into()); },
+            Option::None => {
+                if (tx_type == 0) {
+                    return Option::None;
+                }
+
+                let y_parity: felt252 = self.y_parity.into();
+                res.append(y_parity);
+            }
+        }
+
+        Option::Some(res)
     }
 }
