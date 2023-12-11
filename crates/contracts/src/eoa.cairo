@@ -28,7 +28,7 @@ mod ExternallyOwnedAccount {
     };
     use utils::eth_transaction::{EthTransactionTrait, EthereumTransaction, TransactionMetadata};
     use utils::helpers::{
-        Felt252SpanExTrait, U8SpanExTrait, EthAddressSignatureTrait, TryIntoEthSignature
+        Felt252SpanExTrait, U8SpanExTrait, EthAddressSignatureTrait, TryIntoEthSignatureTrait
     };
 
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
@@ -103,12 +103,15 @@ mod ExternallyOwnedAccount {
             );
 
             let signature = tx_info.signature;
+            let chain_id = self.chain_id();
 
             let tx_metadata = TransactionMetadata {
                 address: self.evm_address(),
-                chain_id: self.chain_id(),
+                chain_id,
                 account_nonce: tx_info.nonce.try_into().unwrap(),
-                signature: signature.try_into().expect('signature extraction failed')
+                signature: signature
+                    .try_into_eth_signature(chain_id)
+                    .expect('signature extraction failed')
             };
 
             let encoded_tx = (call.calldata)

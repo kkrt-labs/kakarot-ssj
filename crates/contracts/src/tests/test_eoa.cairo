@@ -38,6 +38,7 @@ mod test_external_owned_account {
         deploy_syscall, ContractAddress, ClassHash, VALIDATED, get_contract_address,
         contract_address_const, EthAddress, eth_signature::{Signature}, get_tx_info
     };
+    use utils::eth_transaction::TransactionType;
     use utils::helpers::EthAddressSignatureTrait;
     use utils::helpers::{U8SpanExTrait, u256_to_bytes_array};
     use utils::tests::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
@@ -250,6 +251,7 @@ mod test_external_owned_account {
         let evm_address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
+        let chain_id = kakarot_core.chain_id();
 
         // to reproduce locally:
         // run: cp .env.example .env
@@ -259,7 +261,9 @@ mod test_external_owned_account {
             s: 0x2f3d9634f8cb9b9a43b048ee3310be91c2d3dc3b51a3313b473ef2260bbf6bc7,
             y_parity: true
         };
-        set_signature(signature.to_felt252_array().span());
+        set_signature(
+            signature.try_into_felt252_array(TransactionType::Legacy, chain_id).unwrap().span()
+        );
 
         set_contract_address(contract_address_const::<0>());
 
@@ -279,6 +283,7 @@ mod test_external_owned_account {
         let evm_address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
+        let chain_id = kakarot_core.chain_id();
 
         // to reproduce locally:
         // run: cp .env.example .env
@@ -289,7 +294,9 @@ mod test_external_owned_account {
             y_parity: true
         };
 
-        set_signature(signature.to_felt252_array().span());
+        set_signature(
+            signature.try_into_felt252_array(TransactionType::EIP2930, chain_id).unwrap().span()
+        );
 
         set_contract_address(contract_address_const::<0>());
 
@@ -309,6 +316,7 @@ mod test_external_owned_account {
         let evm_address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
+        let chain_id = kakarot_core.chain_id();
 
         // to reproduce locally:
         // run: cp .env.example .env
@@ -319,7 +327,9 @@ mod test_external_owned_account {
             y_parity: true
         };
 
-        set_signature(signature.to_felt252_array().span());
+        set_signature(
+            signature.try_into_felt252_array(TransactionType::EIP1559, chain_id).unwrap().span()
+        );
 
         set_contract_address(contract_address_const::<0>());
 
