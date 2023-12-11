@@ -32,6 +32,7 @@ struct CallArgs {
     ret_size: usize,
     read_only: bool,
     should_transfer: bool,
+    max_memory_size: usize,
 }
 
 #[derive(Drop)]
@@ -44,108 +45,57 @@ enum CallType {
 
 #[generate_trait]
 impl CallHelpersImpl of CallHelpers {
-    ///  Prepare the initialization of a new child or so-called sub-context
-    /// As part of the CALL family of opcodes.
-    fn prepare_call(ref self: VM, call_type: @CallType) -> Result<CallArgs, EVMError> {
-        let gas = self.stack.pop_u128()?;
-
-        let code_address = self.stack.pop_eth_address()?;
-        let to = match call_type {
-            CallType::Call => code_address,
-            CallType::DelegateCall => self.message().target.evm,
-            CallType::CallCode => self.message().target.evm,
-            CallType::StaticCall => code_address
-        };
-
-        let kakarot_core = KakarotCore::unsafe_new_contract_state();
-
-        let code_address = Address {
-            evm: code_address, starknet: kakarot_core.compute_starknet_address(code_address)
-        };
-
-        let to = Address { evm: to, starknet: kakarot_core.compute_starknet_address(to) };
-
-        let (value, caller, should_transfer, read_only) = match call_type {
-            CallType::Call => (
-                self.stack.pop()?, self.message().target, true, self.message().read_only
-            ),
-            CallType::DelegateCall => (
-                self.message().value, self.message().caller, false, self.message().read_only
-            ),
-            CallType::CallCode => (
-                self.stack.pop()?, self.message().target, false, self.message().read_only
-            ),
-            CallType::StaticCall => (0, self.message().target, false, true),
-        };
-
-        let args_offset = self.stack.pop_usize()?;
-        let args_size = self.stack.pop_usize()?;
-        let args_max_offset = args_offset + args_size;
-
-        let ret_offset = self.stack.pop_usize()?;
-        let ret_size = self.stack.pop_usize()?;
-        let ret_max_offset = ret_offset + ret_size;
-
-        let max_memory_size = if args_max_offset > ret_max_offset {
-            args_max_offset
-        } else {
-            ret_max_offset
-        };
-
-        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), max_memory_size);
-        let access_gas_cost = 0; //TODO(gas): access gas cost
-        let transfer_gas_cost = if should_transfer && value != 0 {
-            gas::CALLVALUE
-        } else {
-            0
-        };
-        let create_gas_cost = 0; //TODO(gas)
-        let message_call_gas = 0; //TODO(gas)
-        self.charge_gas(expand_memory_cost)?; //TODO(gas)
-
-        let mut calldata = Default::default();
-        self.memory.load_n(args_size, ref calldata, args_offset);
-
-        Result::Ok(
-            CallArgs {
-                caller,
-                code_address,
-                to,
-                value,
-                gas,
-                calldata: calldata.span(),
-                ret_offset,
-                ret_size,
-                should_transfer,
-                read_only,
-            }
-        )
-    }
-
     /// Initializes and enters into a new sub-context
     /// The Machine will change its `current_ctx` to point to the
     /// newly created sub-context.
     /// Then, the EVM execution loop will start on this new execution context.
-    fn generic_call(ref self: VM, call_args: CallArgs) -> Result<(), EVMError> {
+    fn generic_call(
+        ref self: VM,
+        gas: u128,
+        value: u256,
+        caller: EthAddress,
+        to: EthAddress,
+        code_address: EthAddress,
+        should_transfer_value: bool,
+        is_staticcall: bool,
+        args_offset: usize,
+        args_size: usize,
+        ret_offset: usize,
+        ret_size: usize
+    ) -> Result<(), EVMError> {
         self.return_data = Default::default().span();
         if self.message().depth >= constants::STACK_MAX_DEPTH {
-            self.gas_left += call_args.gas;
+            self.gas_left += gas;
             return self.stack.push(0);
         }
 
+        let mut calldata = Default::default();
+        self.memory.load_n(args_size, ref calldata, args_offset);
+
         // Case 2: `to` address is not a precompile
         // We enter the standard flow
-        let code = self.env.state.get_account(call_args.code_address.evm).code;
+        let code = self.env.state.get_account(code_address).code;
+        let read_only = is_staticcall || self.message.read_only;
+
+        let kakarot_core = KakarotCore::unsafe_new_contract_state();
+        let code_address = Address {
+            evm: code_address, starknet: kakarot_core.compute_starknet_address(code_address)
+        };
+        let to = Address { evm: to, starknet: kakarot_core.compute_starknet_address(to) };
+        let caller = Address {
+            evm: caller, starknet: kakarot_core.compute_starknet_address(caller)
+        };
+
         let message = Message {
-            caller: call_args.caller,
-            target: call_args.to,
-            gas_limit: call_args.gas,
-            data: call_args.calldata,
+            caller: caller,
+            target: to,
+            gas_limit: gas,
+            data: calldata.span(),
             code: code,
-            value: call_args.value,
-            should_transfer_value: call_args.should_transfer,
+            value: value,
+            should_transfer_value: should_transfer_value,
             depth: self.message().depth + 1,
-            read_only: call_args.read_only,
+            read_only: read_only,
             accessed_addresses: self.accessed_addresses.clone().spanset(),
             accessed_storage_keys: self.accessed_storage_keys.clone().spanset(),
         };
@@ -161,12 +111,12 @@ impl CallHelpersImpl of CallHelpers {
         }
 
         // Get the min between len(return_data) and call_ctx.ret_size.
-        let actual_returndata_len = min(result.return_data.len(), call_args.ret_size);
+        let actual_returndata_len = min(result.return_data.len(), ret_size);
 
         let actual_return_data = result.return_data.slice(0, actual_returndata_len);
         // TODO: Check if need to pad the memory with zeroes if result.return_data.len() < call_ctx.ret_size and memory is not empty at
         // offset call_args.ret_offset + result.return_data.len()
-        self.memory.store_n(actual_return_data, call_args.ret_offset);
+        self.memory.store_n(actual_return_data, ret_offset);
 
         Result::Ok(())
     }
