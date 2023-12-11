@@ -236,8 +236,8 @@ impl TranscationTypeIntoU8Impl of Into<TransactionType, u8> {
     }
 }
 
-impl TryIntoTransactionTypeImpl of TryInto<u128, TransactionType> {
-    fn try_into(self: u128) -> Option<TransactionType> {
+impl TryIntoTransactionTypeImpl of TryInto<u8, TransactionType> {
+    fn try_into(self: u8) -> Option<TransactionType> {
         if (self == 0) {
             return Option::Some(TransactionType::Legacy);
         }
