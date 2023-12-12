@@ -59,7 +59,12 @@ impl SystemOperations of SystemOperationsTrait {
             gas::COLD_ACCOUNT_ACCESS_COST
         };
 
-        let create_gas_cost = 0; //TODO(gas)
+        let create_gas_cost = if self.env.state.is_account_alive(to) || value == 0 {
+            0
+        } else {
+            gas::NEWACCOUNT
+        };
+        
         let transfer_gas_cost = if value != 0 {
             gas::CALLVALUE
         } else {
