@@ -145,9 +145,9 @@ mod test_external_owned_account {
 
         let event = pop_log::<TransactionExecuted>(kakarot_core.contract_address).unwrap();
 
-        assert_eq!(event.hash, tx_info.transaction_hash);
+        assert_eq!(event.hash, tx_info.transaction_hash.into());
 
-        assert_eq!(event.response, result.span());
+        assert_eq!(event.response, *result.span()[0]);
 
         assert_eq!(event.success, true);
 
