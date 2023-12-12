@@ -40,7 +40,6 @@ impl EOAImpl of EOATrait {
                 };
                 account.initialize(kakarot_state.eoa_class_hash());
                 let eoa = IExternallyOwnedAccountDispatcher { contract_address: starknet_address };
-                let chain_id = get_tx_info().unbox().chain_id;
                 kakarot_state
                     .set_address_registry(evm_address, StoredAccountType::EOA(starknet_address));
                 kakarot_state.emit(EOADeployed { evm_address, starknet_address });
