@@ -14,7 +14,6 @@ trait IExternallyOwnedAccount<TContractState> {
 
 #[starknet::contract]
 mod ExternallyOwnedAccount {
-    use core::traits::TryInto;
     use contracts::components::upgradeable::IUpgradeable;
     use contracts::components::upgradeable::upgradeable_component;
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
