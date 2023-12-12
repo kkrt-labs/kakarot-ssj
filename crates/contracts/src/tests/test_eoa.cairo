@@ -252,7 +252,7 @@ mod test_external_owned_account {
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
 
-        set_chain_id(1263227476);
+        set_chain_id(chain_id().into());
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let chain_id = vm.env.chain_id;
 
@@ -287,7 +287,7 @@ mod test_external_owned_account {
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
 
-        set_chain_id(1263227476);
+        set_chain_id(chain_id().into());
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let chain_id = vm.env.chain_id;
 
@@ -323,7 +323,7 @@ mod test_external_owned_account {
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
 
-        set_chain_id(1263227476);
+        set_chain_id(chain_id().into());
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let chain_id = vm.env.chain_id;
 
