@@ -33,7 +33,6 @@ impl EVMImpl of EVMTrait {
             if target_account.has_code_or_nonce() {
                 return ExecutionSummary {
                     state: env.state,
-                    address: message.target.evm,
                     success: false,
                     return_data: Into::<
                         felt252, u256
@@ -47,20 +46,14 @@ impl EVMImpl of EVMTrait {
                 result.return_data = message.target.evm.to_bytes().span();
             }
             return ExecutionSummary {
-                state: env.state,
-                address: message.target.evm,
-                success: result.success,
-                return_data: result.return_data,
+                state: env.state, success: result.success, return_data: result.return_data,
             };
         }
 
         // No need to take snapshot of state, as the state is still empty at this point.
         let result = EVMTrait::process_message(message, ref env);
         ExecutionSummary {
-            success: result.success,
-            address: message.target.evm,
-            state: env.state,
-            return_data: result.return_data,
+            success: result.success, state: env.state, return_data: result.return_data,
         }
     }
 
