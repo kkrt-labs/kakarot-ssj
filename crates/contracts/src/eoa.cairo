@@ -139,8 +139,6 @@ mod ExternallyOwnedAccount {
             let call = calls.at(0);
             let calldata = call.calldata.span().try_into_bytes().expect('conversion failed').span();
 
-            let msg_hash = calldata.compute_keccak256_hash();
-
             let EthereumTransaction{nonce: _nonce,
             gas_price,
             gas_limit,
@@ -162,7 +160,12 @@ mod ExternallyOwnedAccount {
             let return_data = return_data.to_felt252_array().span();
 
             let tx_info = get_tx_info().unbox();
-            self.emit(TransactionExecuted { hash: msg_hash, response: return_data, success });
+            self
+                .emit(
+                    TransactionExecuted {
+                        hash: tx_info.transaction_hash.into(), response: return_data, success
+                    }
+                );
 
             array![return_data]
         }
