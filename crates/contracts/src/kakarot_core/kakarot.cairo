@@ -20,10 +20,7 @@ mod KakarotCore {
     use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
     use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
     use contracts::kakarot_core::interface::IKakarotCore;
-    use contracts::kakarot_core::interface;
     use core::starknet::SyscallResultTrait;
-    use core::traits::TryInto;
-    use core::zeroable::Zeroable;
 
     use evm::errors::{EVMError, ensure, EVMErrorTrait,};
     use evm::gas;
@@ -148,7 +145,7 @@ mod KakarotCore {
     }
 
     #[abi(embed_v0)]
-    impl KakarotCoreImpl of interface::IKakarotCore<ContractState> {
+    impl KakarotCoreImpl of IKakarotCore<ContractState> {
         fn set_native_token(ref self: ContractState, native_token: ContractAddress) {
             self.ownable.assert_only_owner();
             self.native_token.write(native_token);
@@ -378,7 +375,7 @@ mod KakarotCore {
             let mut env = Environment {
                 origin: origin.evm,
                 gas_price,
-                chain_id: self.chain_id.read(),
+                chain_id: get_tx_info().unbox().chain_id.try_into().unwrap(),
                 prevrandao: 0,
                 block_number: block_info.block_number,
                 block_timestamp: block_info.block_timestamp,

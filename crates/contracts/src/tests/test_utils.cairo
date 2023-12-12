@@ -128,7 +128,6 @@ fn deploy_eoa(eoa_address: EthAddress) -> IExternallyOwnedAccountDispatcher {
 
     account.initialize(ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap());
     let eoa = IExternallyOwnedAccountDispatcher { contract_address: starknet_address };
-    eoa.set_chain_id(chain_id());
     eoa
 }
 
