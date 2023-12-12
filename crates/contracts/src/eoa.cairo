@@ -59,8 +59,8 @@ mod ExternallyOwnedAccount {
     #[derive(Drop, starknet::Event)]
     struct TransactionExecuted {
         #[key]
-        hash: felt252,
-        response: Span<Span<felt252>>,
+        hash: u256,
+        response: Span<felt252>,
         success: bool
     }
 
@@ -137,7 +137,9 @@ mod ExternallyOwnedAccount {
             assert(calls.len() == 1, 'calls length is not 1');
 
             let call = calls.at(0);
-            let calldata = call.calldata.span().try_into_bytes().expect('conversion failed');
+            let calldata = call.calldata.span().try_into_bytes().expect('conversion failed').span();
+
+            let msg_hash = calldata.compute_keccak256_hash();
 
             let EthereumTransaction{nonce: _nonce,
             gas_price,
@@ -147,7 +149,7 @@ mod ExternallyOwnedAccount {
             calldata,
             chain_id: _chain_id } =
                 EthTransactionTrait::decode(
-                calldata.span()
+                calldata
             )
                 .expect('rlp decoding of tx failed');
 
@@ -160,15 +162,7 @@ mod ExternallyOwnedAccount {
             let return_data = return_data.to_felt252_array().span();
 
             let tx_info = get_tx_info().unbox();
-            // see argent -> https://github.com/argentlabs/argent-contracts-starknet/blob/4070f39a039c85df4d7a32003030db598c17d27d/contracts/account/src/argent_account.cairo#L231C10-L231C10
-            self
-                .emit(
-                    TransactionExecuted {
-                        hash: tx_info.transaction_hash,
-                        response: array![return_data].span(),
-                        success
-                    }
-                );
+            self.emit(TransactionExecuted { hash: msg_hash, response: return_data, success });
 
             array![return_data]
         }
