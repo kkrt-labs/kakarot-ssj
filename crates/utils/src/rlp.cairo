@@ -1,7 +1,11 @@
+use core::array::ArrayTrait;
+use core::array::SpanTrait;
 use core::byte_array::ByteArrayTrait;
 use core::result::ResultTrait;
 use starknet::EthAddress;
+use utils::errors::RLPHelpersErrorTrait;
 use utils::errors::{RLPError, RLPHelpersError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
+use utils::eth_transaction::AccessList;
 use utils::helpers::{U32Trait, EthAddressExTrait, U256Impl, U128Impl, ArrayExtension};
 
 // Possible RLP types
@@ -214,6 +218,7 @@ impl RLPHelpersImpl of RLPHelpersTrait {
         }
     }
 
+    //todo(harsh): change name to `try_parse_address_from_string`
     fn parse_address_from_string(self: RLPItem) -> Result<Option<EthAddress>, RLPHelpersError> {
         match self {
             RLPItem::String(bytes) => {
@@ -249,6 +254,73 @@ impl RLPHelpersImpl of RLPHelpersTrait {
         match self {
             RLPItem::String(bytes) => { Result::Ok(bytes) },
             RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
+        }
+    }
+
+    //todo(harsh): add testing for this
+    fn parse_access_list(self: RLPItem) -> Result<AccessList, RLPHelpersError> {
+        match self {
+            RLPItem::String(_) => { Result::Err(RLPHelpersError::NotAList) },
+            RLPItem::List(list) => {
+                // since access list is a list of tuples of 2 elements
+                // accessList: Span<(EthAddress, Span<u256>)>
+                if !(list.len() % 2 == 0) {
+                    return Result::Err(RLPHelpersError::FailedParsingAccessList);
+                }
+
+                let mut i = 0;
+                let res: Result<AccessList, RLPHelpersError> = loop {
+                    let mut access_list: Array<(EthAddress, Span<u256>)> = array![];
+
+                    if (i == access_list.len()) {
+                        break Result::Ok(access_list.span());
+                    }
+
+                    let ethereum_address = match ((*list.at(i)).parse_address_from_string()) {
+                        Result::Ok(v) => {
+                            match (v) {
+                                Option::Some(v) => { v },
+                                Option::None => {
+                                    break Result::Err(RLPHelpersError::FailedParsingAccessList);
+                                }
+                            }
+                        },
+                        Result::Err(err) => { break Result::Err(err); }
+                    };
+
+                    let storage_keys: Span<u256> = match (*list.at(i + 1)) {
+                        RLPItem::String(_) => { break Result::Err(RLPHelpersError::NotAList); },
+                        RLPItem::List(mut list) => {
+                            let storage_keys: Result<Span<u256>, RLPHelpersError> = loop {
+                                let mut storage_keys: Array<u256> = array![];
+
+                                match list.pop_front() {
+                                    Option::Some(v) => {
+                                        let storage_key = match ((*v).parse_u256_from_string()) {
+                                            Result::Ok(v) => { v },
+                                            Result::Err(err) => { break Result::Err(err); }
+                                        };
+
+                                        storage_keys.append(storage_key);
+                                    },
+                                    Option::None => { break Result::Ok(storage_keys.span()); }
+                                }
+                            };
+
+                            match storage_keys {
+                                Result::Ok(v) => { v },
+                                Result::Err(err) => { break Result::Err(err); }
+                            }
+                        }
+                    };
+
+                    access_list.append((ethereum_address, storage_keys));
+
+                    i += 2;
+                };
+
+                res
+            }
         }
     }
 }
