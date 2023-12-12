@@ -29,11 +29,11 @@ mod test_external_owned_account {
     use evm::model::{Address, AddressTrait};
     use evm::tests::test_utils::{
         kakarot_address, evm_address, other_evm_address, other_starknet_address, eoa_address,
-        chain_id, tx_gas_limit, gas_price
+        chain_id, tx_gas_limit, gas_price, VMBuilderTrait
     };
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
     use starknet::class_hash::Felt252TryIntoClassHash;
-    use starknet::testing::{set_caller_address, set_contract_address, set_signature};
+    use starknet::testing::{set_caller_address, set_contract_address, set_signature, set_chain_id};
     use starknet::{
         deploy_syscall, ContractAddress, ClassHash, VALIDATED, get_contract_address,
         contract_address_const, EthAddress, eth_signature::{Signature}, get_tx_info
@@ -251,7 +251,10 @@ mod test_external_owned_account {
         let evm_address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
-        let chain_id = kakarot_core.chain_id();
+
+        set_chain_id(1263227476);
+        let mut vm = VMBuilderTrait::new_with_presets().build();
+        let chain_id = vm.env.chain_id;
 
         // to reproduce locally:
         // run: cp .env.example .env
@@ -283,7 +286,10 @@ mod test_external_owned_account {
         let evm_address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
-        let chain_id = kakarot_core.chain_id();
+
+        set_chain_id(1263227476);
+        let mut vm = VMBuilderTrait::new_with_presets().build();
+        let chain_id = vm.env.chain_id;
 
         // to reproduce locally:
         // run: cp .env.example .env
@@ -316,7 +322,10 @@ mod test_external_owned_account {
         let evm_address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
         let eoa = kakarot_core.deploy_eoa(evm_address);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
-        let chain_id = kakarot_core.chain_id();
+
+        set_chain_id(1263227476);
+        let mut vm = VMBuilderTrait::new_with_presets().build();
+        let chain_id = vm.env.chain_id;
 
         // to reproduce locally:
         // run: cp .env.example .env
