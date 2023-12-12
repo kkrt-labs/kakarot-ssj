@@ -72,7 +72,6 @@ impl CallHelpersImpl of CallHelpers {
         let mut calldata = Default::default();
         self.memory.load_n(args_size, ref calldata, args_offset);
 
-        // Case 2: `to` address is not a precompile
         // We enter the standard flow
         let code = self.env.state.get_account(code_address).code;
         let read_only = is_staticcall || self.message.read_only;
@@ -87,11 +86,11 @@ impl CallHelpersImpl of CallHelpers {
         };
 
         let message = Message {
-            caller: caller,
+            caller,
             target: to,
             gas_limit: gas,
             data: calldata.span(),
-            code: code,
+            code,
             value: value,
             should_transfer_value: should_transfer_value,
             depth: self.message().depth + 1,
