@@ -102,7 +102,7 @@ mod ExternallyOwnedAccount {
             );
 
             let signature = tx_info.signature;
-            let chain_id = tx_info.chain_id.try_into().unwrap();
+            let chain_id = self.chain_id();
 
             let tx_metadata = TransactionMetadata {
                 address: self.evm_address(),
