@@ -1,6 +1,7 @@
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use evm::model::AccountType;
 use starknet::{ContractAddress, EthAddress, ClassHash};
+use utils::eth_transaction::EthereumTransaction;
 
 #[starknet::interface]
 trait IKakarotCore<TContractState> {
@@ -63,25 +64,12 @@ trait IKakarotCore<TContractState> {
     /// Performs view calls into the blockchain
     /// It cannot modify the state of the chain
     fn eth_call(
-        self: @TContractState,
-        origin: EthAddress,
-        to: Option<EthAddress>,
-        gas_limit: u128,
-        gas_price: u128,
-        value: u256,
-        calldata: Span<u8>
+        self: @TContractState, origin: EthAddress, tx: EthereumTransaction
     ) -> (bool, Span<u8>);
 
     /// Transaction entrypoint into the EVM
     /// Executes an EVM transaction and possibly modifies the state
-    fn eth_send_transaction(
-        ref self: TContractState,
-        to: Option<EthAddress>,
-        gas_limit: u128,
-        gas_price: u128,
-        value: u256,
-        calldata: Span<u8>
-    ) -> (bool, Span<u8>);
+    fn eth_send_transaction(ref self: TContractState, tx: EthereumTransaction) -> (bool, Span<u8>);
 
     /// Upgrade the KakarotCore smart contract
     /// Using replace_class_syscall
