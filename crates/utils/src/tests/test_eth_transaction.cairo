@@ -28,7 +28,7 @@ fn test_decode_legacy_tx() {
 
     let tx = encoded_tx.decode().expect('decode failed');
     let tx = match (tx) {
-        EthereumTransaction::LegacyTransaction(v) => { v },
+        EthereumTransaction::LegacyTransaction(tx) => { tx },
         EthereumTransaction::AccessListTransaction(_) => {
             return panic!("Not Legacy Transaction");
         },
