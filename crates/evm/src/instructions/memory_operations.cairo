@@ -4,6 +4,7 @@ use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::account::AccountTrait;
 use evm::model::vm::{VM, VMTrait};
+use evm::model::{AddressTrait};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, compute_state_key};
 use hash::{HashStateTrait, HashStateExTrait};
@@ -101,7 +102,9 @@ impl MemoryOperation of MemoryOperationTrait {
         let new_value = self.stack.pop()?;
         let evm_address = self.message().target.evm;
         let account = self.env.state.get_account(evm_address);
-        let original_value = account.fetch_original_storage(key)?;
+        //TODO(bug) restore check for `is_deployed` inside `read_storage`
+        let is_deployed = evm_address.is_deployed();
+        let original_value = account.read_storage(key, is_deployed)?;
         let current_value = self.env.state.read_state(evm_address, key)?;
 
         // GAS
