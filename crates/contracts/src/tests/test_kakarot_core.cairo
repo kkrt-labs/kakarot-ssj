@@ -27,6 +27,7 @@ use core::traits::TryInto;
 use evm::model::{AccountType, Address};
 use evm::tests::test_utils;
 use starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};
+use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, LegacyTransaction};
 use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
 //Required for assert_eq! macro
 use utils::traits::{EthAddressDebug, ContractAddressDebug};
@@ -325,11 +326,13 @@ fn test_process_transaction() {
 
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
+    let chain_id = kakarot_core.chain_id();
 
     let _account = contract_utils::deploy_contract_account(
         test_utils::other_evm_address(), counter_evm_bytecode()
     );
 
+    let nonce = 0;
     let to = Option::Some(test_utils::other_evm_address());
     let gas_limit = test_utils::tx_gas_limit();
     let gas_price = test_utils::gas_price();
@@ -337,17 +340,16 @@ fn test_process_transaction() {
     // selector: function get()
     let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
+    let tx = EthereumTransaction::LegacyTransaction(
+        LegacyTransaction {
+            chain_id, nonce, destination: to, amount: value, gas_price, gas_limit, calldata
+        }
+    );
+
     // When
     let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
     let result = kakarot_core
-        .process_transaction(
-            origin: Address { evm: evm_address, starknet: eoa },
-            :to,
-            :gas_limit,
-            :gas_price,
-            :value,
-            :calldata
-        );
+        .process_transaction(origin: Address { evm: evm_address, starknet: eoa }, :tx);
     let return_data = result.return_data;
 
     assert!(result.success);

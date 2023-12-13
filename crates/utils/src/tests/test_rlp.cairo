@@ -3,8 +3,11 @@ use core::option::OptionTrait;
 use core::traits::Into;
 
 use result::ResultTrait;
+
+use starknet::eth_address::EthAddress;
 use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
-use utils::rlp::{RLPType, RLPTrait, RLPItem};
+use utils::eth_transaction::AccessListItem;
+use utils::rlp::{RLPType, RLPTrait, RLPItem, RLPHelpersTrait};
 
 // Tests source : https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
 //                https://github.com/ethereum/tests/blob/develop/RLPTests/rlptest.json
@@ -2154,4 +2157,57 @@ fn test_rlp_decode_long_list_with_len_too_short() {
     let res = RLPTrait::decode(arr.span());
     assert(res.is_err(), 'should return an RLPError');
     assert!(res.unwrap_err() == RLPError::InputTooShort);
+}
+
+#[test]
+fn test_rlp_item_parse_access_list() {
+    // [ [ "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", [ "0x01", "0x02", "0x03", "0x04", "0x05" ] ]]
+    let rlp_encoded_access_list: Span<u8> = array![
+        220,
+        219,
+        148,
+        31,
+        152,
+        64,
+        168,
+        93,
+        90,
+        245,
+        191,
+        29,
+        23,
+        98,
+        249,
+        37,
+        189,
+        173,
+        220,
+        66,
+        1,
+        249,
+        132,
+        197,
+        1,
+        2,
+        3,
+        4,
+        5
+    ]
+        .span();
+    let decoded_data = RLPTrait::decode(rlp_encoded_access_list).unwrap();
+    assert_eq!(decoded_data.len(), 1);
+
+    let rlp_item = *decoded_data[0];
+
+    let expected_access_list_item = AccessListItem {
+        ethereum_address: EthAddress { address: 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984 },
+        storage_keys: array![0x1, 0x2, 0x3, 0x4, 0x5].span()
+    };
+
+    let expected_access_list = array![expected_access_list_item].span();
+
+    let res = rlp_item.parse_access_list().unwrap();
+    assert_eq!(res.len(), 1);
+
+    assert!(res == expected_access_list, "access list are not equal");
 }
