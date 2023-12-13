@@ -258,6 +258,30 @@ impl RLPHelpersImpl of RLPHelpersTrait {
         }
     }
 
+    fn parse_storage_keys_from_rlp_item(self: RLPItem) -> Result<Span<u256>, RLPHelpersError> {
+        match self {
+            RLPItem::String(_) => { return Result::Err(RLPHelpersError::NotAList); },
+            RLPItem::List(mut keys) => {
+                let mut storage_keys: Array<u256> = array![];
+                let storage_keys: Result<Span<u256>, RLPHelpersError> = loop {
+                    match keys.pop_front() {
+                        Option::Some(rlp_item) => {
+                            let storage_key = match ((*rlp_item).parse_u256_from_string()) {
+                                Result::Ok(storage_key) => { storage_key },
+                                Result::Err(err) => { break Result::Err(err); }
+                            };
+
+                            storage_keys.append(storage_key);
+                        },
+                        Option::None => { break Result::Ok(storage_keys.span()); }
+                    }
+                };
+
+                storage_keys
+            }
+        }
+    }
+
     fn parse_access_list(self: RLPItem) -> Result<Span<AccessListItem>, RLPHelpersError> {
         match self {
             RLPItem::String(_) => { Result::Err(RLPHelpersError::NotAList) },
@@ -294,30 +318,10 @@ impl RLPHelpersImpl of RLPHelpersTrait {
                         Result::Err(err) => { break Result::Err(err); }
                     };
 
-                    let storage_keys: Span<u256> = match (*list.at(1)) {
-                        RLPItem::String(_) => { break Result::Err(RLPHelpersError::NotAList); },
-                        RLPItem::List(mut keys) => {
-                            let mut storage_keys: Array<u256> = array![];
-                            let storage_keys: Result<Span<u256>, RLPHelpersError> = loop {
-                                match keys.pop_front() {
-                                    Option::Some(rlp_item) => {
-                                        let storage_key =
-                                            match ((*rlp_item).parse_u256_from_string()) {
-                                            Result::Ok(storage_key) => { storage_key },
-                                            Result::Err(err) => { break Result::Err(err); }
-                                        };
-
-                                        storage_keys.append(storage_key);
-                                    },
-                                    Option::None => { break Result::Ok(storage_keys.span()); }
-                                }
-                            };
-
-                            match storage_keys {
-                                Result::Ok(storage_keys) => { storage_keys },
-                                Result::Err(err) => { break Result::Err(err); }
-                            }
-                        }
+                    let storage_keys: Span<u256> =
+                        match (*list.at(1)).parse_storage_keys_from_rlp_item() {
+                        Result::Ok(storage_keys) => storage_keys,
+                        Result::Err(err) => { break Result::Err(err); }
                     };
 
                     access_list.append(AccessListItem { ethereum_address, storage_keys });
