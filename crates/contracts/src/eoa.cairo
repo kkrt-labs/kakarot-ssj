@@ -139,8 +139,7 @@ mod ExternallyOwnedAccount {
             let call = calls.at(0);
             let calldata = call.calldata.span().try_into_bytes().expect('conversion failed').span();
 
-            let tx = EthTransactionTrait::decode(calldata.span())
-                .expect('rlp decoding of tx failed');
+            let tx = EthTransactionTrait::decode(calldata).expect('rlp decoding of tx failed');
 
             let kakarot_core_dispatcher = IKakarotCoreDispatcher {
                 contract_address: self.kakarot_core_address()

@@ -38,7 +38,7 @@ mod KakarotCore {
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use super::{StoredAccountType};
     use utils::address::compute_contract_address;
-    use utils::checked_math::CheckedMath;
+    use utils::checked_math::checked_math::CheckedMath;
     use utils::constants;
     use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait};
     use utils::helpers::{compute_starknet_address, EthAddressExTrait};
@@ -255,7 +255,7 @@ mod KakarotCore {
 
             let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
 
-            let ExecutionSummary{state: _, return_data, address: _, success } = self
+            let ExecutionSummary{state: _, return_data, success } = self
                 .process_transaction(origin, tx);
 
             (success, return_data)
@@ -281,7 +281,7 @@ mod KakarotCore {
                 .expect('Fetching EOA failed');
             assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
 
-            let ExecutionSummary{mut state, return_data, address: _, success } = self
+            let ExecutionSummary{mut state, return_data, success } = self
                 .process_transaction(origin, tx);
             state.commit_state().expect('Committing state failed');
             (success, return_data)
@@ -357,9 +357,16 @@ mod KakarotCore {
                 contract_address: block_info.sequencer_address
             }
                 .evm_address();
+
+            let gas_price = tx.gas_price();
+            let gas_limit = tx.gas_limit();
+            let value = tx.value();
+            let to = tx.destination();
+            let calldata = tx.calldata();
+
             let mut env = Environment {
                 origin: origin.evm,
-                gas_price: tx.gas_price(),
+                gas_price,
                 chain_id: get_tx_info().unbox().chain_id.try_into().unwrap(),
                 prevrandao: 0,
                 block_number: block_info.block_number,
@@ -375,7 +382,8 @@ mod KakarotCore {
             let sender = env.origin;
             let sender_account = env.state.get_account(sender);
             match ensure(
-                sender_account.balance() >= gas_fee.into() + value, EVMError::InsufficientBalance
+                sender_account.balance() >= gas_fee.into() + tx.value(),
+                EVMError::InsufficientBalance
             ) {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
