@@ -554,8 +554,9 @@ fn test_exec_sstore_from_state() {
     assert(vm.env.state.read_state(evm_address(), key).unwrap() == value, 'wrong value in state')
 }
 
+
 #[test]
-fn test_exec_sstore_on_undeployed_account() {
+fn test_exec_sstore_on_account_undeployed() {
     // Given
     setup_contracts_for_testing();
     let mut vm = VMBuilderTrait::new_with_presets().build();
@@ -570,6 +571,34 @@ fn test_exec_sstore_on_undeployed_account() {
     // Then
     assert(vm.env.state.read_state(evm_address(), key).unwrap() == value, 'wrong value in state')
 }
+
+#[test]
+fn test_exec_sstore_on_contract_account_alive() {
+    // Given
+    setup_contracts_for_testing();
+    let mut vm = VMBuilderTrait::new_with_presets().build();
+    let key: u256 = 0x100000000000000000000000000000001;
+    let value: u256 = 0xABDE1E11A5;
+    vm.stack.push(value).expect('push failed');
+    vm.stack.push(key).expect('push failed');
+
+    // When
+    let account = Account {
+        account_type: AccountType::ContractAccount,
+        address: vm.message().target,
+        code: array![].span(),
+        nonce: 1,
+        balance: 0,
+        selfdestruct: false
+    };
+    vm.env.state.set_account(account);
+    assert!(vm.env.state.is_account_alive(account.address.evm));
+    vm.exec_sstore().expect('exec sstore failed');
+
+    // Then
+    assert(vm.env.state.read_state(evm_address(), key).unwrap() == value, 'wrong value in state')
+}
+
 
 #[test]
 fn test_exec_sstore_static_call() {

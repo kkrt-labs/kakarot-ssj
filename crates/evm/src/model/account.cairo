@@ -4,13 +4,13 @@ use contracts::contract_account::{
 use contracts::kakarot_core::kakarot::KakarotCore::KakarotCoreInternal;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
-
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
-use evm::model::contract_account::{ContractAccountTrait};
+use evm::model::contract_account::ContractAccountTrait;
 use evm::model::{Address, AddressTrait, AccountType};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{ContractAddress, EthAddress, get_contract_address};
 use utils::helpers::{ResultExTrait, ByteArrayExTrait, compute_starknet_address};
+
 
 #[derive(Copy, Drop, PartialEq)]
 struct Account {
@@ -163,14 +163,6 @@ impl AccountImpl of AccountTrait {
         account
     }
 
-    #[inline(always)]
-    fn fetch_original_storage(self: @Account, key: u256) -> Result<u256, EVMError> {
-        if !self.address().evm.is_deployed() {
-            return Result::Ok(0);
-        }
-        return self.fetch_storage(key);
-    }
-
 
     /// Returns whether an account exists at the given address by checking
     /// whether it has code or a nonce.
@@ -320,8 +312,9 @@ impl AccountImpl of AccountTrait {
         *self.code
     }
 
-    /// Reads the value stored at the given key for the corresponding account.
-    /// If not there, reads the contract storage and cache the result.
+    /// Fetches the value stored at the given key for the corresponding contract accounts.
+    /// If the account is not deployed (in case of a create/deploy transaction), returns 0.
+    /// If the account is an EOA, returns 0.
     /// # Arguments
     ///
     /// * `self` The account to read from.
@@ -330,13 +323,11 @@ impl AccountImpl of AccountTrait {
     /// # Returns
     ///
     /// A `Result` containing the value stored at the given key or an `EVMError` if there was an error.
-    #[inline(always)]
-    fn read_storage(self: @Account, key: u256) -> Result<u256, EVMError> {
-        match self.account_type {
-            AccountType::EOA => Result::Ok(0),
-            AccountType::ContractAccount => self.fetch_storage(key),
-            AccountType::Unknown(_) => Result::Ok(0),
+    fn read_storage(self: @Account, key: u256, is_deployed: bool) -> Result<u256, EVMError> {
+        if *self.account_type == AccountType::ContractAccount && is_deployed {
+            return ContractAccountTrait::fetch_storage(self, key);
         }
+        return Result::Ok(0);
     }
 
     #[inline(always)]

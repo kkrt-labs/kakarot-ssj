@@ -140,11 +140,14 @@ impl StateImpl of StateTrait {
     fn read_state(ref self: State, evm_address: EthAddress, key: u256) -> Result<u256, EVMError> {
         let internal_key = compute_state_key(evm_address, key);
         let maybe_entry = self.accounts_storage.read(internal_key);
+        // TODO(bug): Due to a compiler bug, we pass is_deployed to the read_storage
+        // function instead of calling it inside `read_storage` directly.
+        let is_deployed = evm_address.is_deployed();
         match maybe_entry {
             Option::Some((_, _, value)) => { return Result::Ok(value); },
             Option::None => {
                 let account = self.get_account(evm_address);
-                return account.read_storage(key);
+                return account.read_storage(key, is_deployed);
             }
         }
     }
