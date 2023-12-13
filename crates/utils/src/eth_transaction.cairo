@@ -12,7 +12,9 @@ use utils::helpers::{U256Trait, U256Impl, ByteArrayExt, U8SpanExTrait};
 use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
 
-#[derive(Copy, Clone, Drop, Serde, PartialEq, Display)]
+use utils::traits::{EthAddressDebug, SpanDebug};
+
+#[derive(Copy, Clone, Drop, Serde, PartialEq, Debug)]
 struct AccessListItem {
     ethereum_address: EthAddress,
     storage_keys: Span<u256>
