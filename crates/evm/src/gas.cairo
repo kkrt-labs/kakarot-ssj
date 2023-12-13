@@ -1,4 +1,5 @@
 use core::traits::TryInto;
+use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait};
 use starknet::EthAddress;
 //! Gas costs for EVM operations
 //! Code is based on alloy project
@@ -128,7 +129,9 @@ fn calculate_intrinsic_gas_cost(target: Option<EthAddress>, mut calldata: Span<u
     let mut data_cost: u128 = 0;
     // TODO(gas): access_list not handled yet
     let mut access_list_cost: u128 = 0;
-    let calldata_len = calldata.len();
+
+    let mut calldata_cpy: Span<u8> = tx.calldata();
+    let calldata_len: usize = calldata_cpy.len();
 
     loop {
         match calldata.pop_front() {
@@ -144,7 +147,7 @@ fn calculate_intrinsic_gas_cost(target: Option<EthAddress>, mut calldata: Span<u
         }
     };
 
-    let create_cost = if target.is_none() {
+    let create_cost = if tx.destination().is_none() {
         TRANSACTION_CREATE_COST + init_code_cost(calldata_len)
     } else {
         0

@@ -12,7 +12,12 @@ use utils::helpers::{U256Trait, U256Impl, ByteArrayExt, U8SpanExTrait};
 use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
 
-type AccessList = Span<(EthAddress, Span<u256>)>;
+#[derive(Copy, Clone, Drop, Serde, PartialEq, Display)]
+struct AccessListItem {
+    ethereum_address: EthAddress,
+    storage_keys: Span<u256>
+}
+
 
 #[derive(Drop)]
 struct TransactionMetadata {
@@ -22,7 +27,7 @@ struct TransactionMetadata {
     signature: Signature,
 }
 
-#[derive(Drop)]
+#[derive(Drop, Copy, Clone, Serde)]
 struct LegacyTransaction {
     chain_id: u128,
     nonce: u128,
@@ -33,7 +38,7 @@ struct LegacyTransaction {
     calldata: Span<u8>
 }
 
-#[derive(Drop)]
+#[derive(Drop, Copy, Clone, Serde)]
 struct AccessListTransaction {
     chain_id: u128,
     nonce: u128,
@@ -42,10 +47,10 @@ struct AccessListTransaction {
     destination: Option<EthAddress>,
     amount: u256,
     calldata: Span<u8>,
-    access_list: AccessList
+    access_list: Span<AccessListItem>
 }
 
-#[derive(Drop)]
+#[derive(Drop, Copy, Clone, Serde)]
 struct FeeMarketTransaction {
     chain_id: u128,
     nonce: u128,
@@ -55,10 +60,10 @@ struct FeeMarketTransaction {
     destination: Option<EthAddress>,
     amount: u256,
     calldata: Span<u8>,
-    access_list: AccessList
+    access_list: Span<AccessListItem>
 }
 
-#[derive(Drop)]
+#[derive(Drop, Serde)]
 enum EthereumTransaction {
     LegacyTransaction: LegacyTransaction,
     AccessListTransaction: AccessListTransaction,
@@ -80,6 +85,72 @@ impl EthereumTransactionImpl of EthereumTransactionTrait {
             EthereumTransaction::LegacyTransaction(v) => { *v.nonce },
             EthereumTransaction::AccessListTransaction(v) => { *v.nonce },
             EthereumTransaction::FeeMarketTransaction(v) => { *v.nonce }
+        }
+    }
+
+    fn value(self: @EthereumTransaction) -> u256 {
+        match self {
+            EthereumTransaction::LegacyTransaction(v) => { *v.amount },
+            EthereumTransaction::AccessListTransaction(v) => { *v.amount },
+            EthereumTransaction::FeeMarketTransaction(v) => { *v.amount }
+        }
+    }
+
+    fn calldata(self: @EthereumTransaction) -> Span<u8> {
+        match self {
+            EthereumTransaction::LegacyTransaction(v) => { *v.calldata },
+            EthereumTransaction::AccessListTransaction(v) => { *v.calldata },
+            EthereumTransaction::FeeMarketTransaction(v) => { *v.calldata }
+        }
+    }
+
+    fn destination(self: @EthereumTransaction) -> Option<EthAddress> {
+        match self {
+            EthereumTransaction::LegacyTransaction(v) => { *v.destination },
+            EthereumTransaction::AccessListTransaction(v) => { *v.destination },
+            EthereumTransaction::FeeMarketTransaction(v) => { *v.destination }
+        }
+    }
+
+    fn gas_price(self: @EthereumTransaction) -> u128 {
+        match self {
+            EthereumTransaction::LegacyTransaction(v) => { *v.gas_price },
+            EthereumTransaction::AccessListTransaction(v) => { *v.gas_price },
+            EthereumTransaction::FeeMarketTransaction(v) => { *v.max_fee_per_gas }
+        }
+    }
+
+    fn gas_limit(self: @EthereumTransaction) -> u128 {
+        match self {
+            EthereumTransaction::LegacyTransaction(v) => { *v.gas_limit },
+            EthereumTransaction::AccessListTransaction(v) => { *v.gas_limit },
+            EthereumTransaction::FeeMarketTransaction(v) => { *v.gas_limit }
+        }
+    }
+
+    fn try_into_legacy_transaction(self: @EthereumTransaction) -> Option<LegacyTransaction> {
+        match self {
+            EthereumTransaction::LegacyTransaction(v) => { Option::Some(*v) },
+            EthereumTransaction::AccessListTransaction(_) => { Option::None },
+            EthereumTransaction::FeeMarketTransaction(_) => { Option::None }
+        }
+    }
+
+    fn try_into_access_list_transaction(
+        self: @EthereumTransaction
+    ) -> Option<AccessListTransaction> {
+        match self {
+            EthereumTransaction::LegacyTransaction(_) => { Option::None },
+            EthereumTransaction::AccessListTransaction(v) => { Option::Some(*v) },
+            EthereumTransaction::FeeMarketTransaction(_) => { Option::None }
+        }
+    }
+
+    fn try_into_fee_market_transaction(self: @EthereumTransaction) -> Option<FeeMarketTransaction> {
+        match self {
+            EthereumTransaction::LegacyTransaction(_) => { Option::None },
+            EthereumTransaction::AccessListTransaction(_) => { Option::None },
+            EthereumTransaction::FeeMarketTransaction(v) => { Option::Some(*v) }
         }
     }
 }
@@ -172,7 +243,7 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
                 let nonce = (*val.at(nonce_idx)).parse_u128_from_string().map_err()?;
                 let gas_price = (*val.at(gas_price_idx)).parse_u128_from_string().map_err()?;
                 let gas_limit = (*val.at(gas_limit_idx)).parse_u128_from_string().map_err()?;
-                let to = (*val.at(to_idx)).parse_address_from_string().map_err()?;
+                let to = (*val.at(to_idx)).try_parse_address_from_string().map_err()?;
                 let amount = (*val.at(value_idx)).parse_u256_from_string().map_err()?;
                 let calldata = (*val.at(calldata_idx)).parse_bytes_from_string().map_err()?;
                 let chain_id = (*val.at(chain_id_idx)).parse_u128_from_string().map_err()?;
@@ -232,11 +303,10 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
                 let nonce = (*decoded_data.at(1)).parse_u128_from_string().map_err()?;
                 let gas_price = (*decoded_data.at(2)).parse_u128_from_string().map_err()?;
                 let gas_limit = (*decoded_data.at(3)).parse_u128_from_string().map_err()?;
-                let to = (*decoded_data.at(4)).parse_address_from_string().map_err()?;
+                let to = (*decoded_data.at(4)).try_parse_address_from_string().map_err()?;
                 let amount = (*decoded_data.at(5)).parse_u256_from_string().map_err()?;
                 let calldata = (*decoded_data.at(6)).parse_bytes_from_string().map_err()?;
-
-                let access_list = (*decoded_data.at(6)).parse_access_list().map_err()?;
+                let access_list = (*decoded_data.at(7)).parse_access_list().map_err()?;
 
                 Result::Ok(
                     EthereumTransaction::AccessListTransaction(
@@ -262,7 +332,7 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
                     .map_err()?;
                 let max_fee_per_gas = (*decoded_data.at(3)).parse_u128_from_string().map_err()?;
                 let gas_limit = (*decoded_data.at(4)).parse_u128_from_string().map_err()?;
-                let to = (*decoded_data.at(5)).parse_address_from_string().map_err()?;
+                let to = (*decoded_data.at(5)).try_parse_address_from_string().map_err()?;
                 let amount = (*decoded_data.at(6)).parse_u256_from_string().map_err()?;
                 let calldata = (*decoded_data.at(7)).parse_bytes_from_string().map_err()?;
 

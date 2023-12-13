@@ -1,8 +1,9 @@
 // This js script helps in creating unsigned and signed RLP data for tests
 
-import { ethers } from "ethers";
+import { ethers, toBeArray } from "ethers";
 import dotevn from "dotenv";
 import readline from "readline";
+import { readFileSync } from "fs";
 
 dotevn.config();
 
@@ -33,16 +34,6 @@ const main = async () => {
   const wallet = new Wallet(process.env.PRIVATE_KEY);
   console.log("address of the wallet is", wallet.address);
 
-  console.log("\nenter transaction details\n");
-
-  const to = await question("enter `to` address: ");
-  const value = await question("enter `value` in wei: ");
-  const gasLimit = await question("enter `gasLimit` in wei: ");
-  const gasPrice = await question("enter `gasPrice`, in wei: ");
-  const nonce = await question("enter `nonce`, hex: ");
-  const chainId = await question("enter `chainId`, in hex: ");
-  const data = await question("enter `data`, i.e calldata, in hex: ");
-
   const tx_type = parseInt(
     await question("enter `tx_type`, 0: legacy, 1: 2930, 2:1559 : "),
   );
@@ -50,31 +41,26 @@ const main = async () => {
   // for type 0 and type 1
   let tx;
 
-  if (tx_type === 0 || tx_type === 1) {
-    tx = {
-      to,
-      value,
-      gasLimit,
-      gasPrice,
-      nonce,
-      chainId,
-      data,
-    };
-  } else {
-    if (tx_type == 2) {
-      tx = {
-        to,
-        value,
-        gasLimit,
-        maxFeePerGas: gasPrice,
-        nonce,
-        chainId,
-        data,
-      };
-    } else {
-      console.log("tx_type not supported");
-      process.exit(1);
-    }
+  switch (tx_type) {
+    case 0:
+      tx = JSON.parse(
+        readFileSync("./scripts/data/input_legacy_tx.json", "utf-8"),
+      );
+      break;
+    case 1:
+      tx = JSON.parse(
+        readFileSync("./scripts/data/input_access_list_tx.json", "utf-8"),
+      );
+      break;
+    case 2:
+      tx = JSON.parse(
+        readFileSync("./scripts/data/input_fee_tx.json", "utf-8"),
+      );
+      break;
+    default:
+      throw new Error(
+        `transaction type ${tx_type} isn't a valid transaction type`,
+      );
   }
 
   const transaction = Transaction.from(tx);
@@ -102,7 +88,6 @@ const main = async () => {
   console.log("decoded RLP is for unsigned transaction ....\n", decodedRlp);
 
   let bytes3 = getBytes(signed_tx);
-  bytes3 = Uint8Array.from(transaction.type == 0 ? bytes3 : bytes3.slice(1));
 
   console.log("signed RLP encoded bytes for the transaction: ");
 
@@ -112,6 +97,7 @@ const main = async () => {
   });
   console.log("\n");
 
+  bytes3 = Uint8Array.from(transaction.type == 0 ? bytes3 : bytes3.slice(1));
   decodedRlp = decodeRlp(bytes3);
   console.log("signed decoded RLP for signed transaction ....\n", decodedRlp);
 
@@ -125,7 +111,7 @@ const main = async () => {
 
   const y_parity =
     tx_type == 0
-      ? get_y_parity(BigInt(v), BigInt(chainId))
+      ? get_y_parity(BigInt(v), BigInt(tx.chainId))
       : parseInt(v, 16) == 1;
   console.log("r: ", r);
   console.log("s: ", s);
