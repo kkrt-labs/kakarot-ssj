@@ -101,7 +101,7 @@ impl MemoryOperation of MemoryOperationTrait {
         let new_value = self.stack.pop()?;
         let evm_address = self.message().target.evm;
         let account = self.env.state.get_account(evm_address);
-        let original_value = account.fetch_original_storage(key)?;
+        let original_value = account.read_storage(key)?;
         let current_value = self.env.state.read_state(evm_address, key)?;
 
         // GAS
