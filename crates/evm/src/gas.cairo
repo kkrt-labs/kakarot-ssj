@@ -49,9 +49,60 @@ const INITCODE_WORD_COST: u128 = 2;
 
 const CALL_STIPEND: u128 = 2300;
 
+/// Defines the gas cost and stipend for executing call opcodes.
+///
+/// # Struct fields
+///
+/// * `cost`: The non-refundable portion of gas reserved for executing the call opcode.
+/// * `stipend`: The portion of gas available to sub-calls that is refundable if not consumed.
+#[derive(Drop)]
+struct MessageCallGas {
+    cost: u128,
+    stipend: u128,
+}
+
+/// Calculates the maximum gas that is allowed for making a message call.
+///
+/// # Arguments
+/// * `gas`: The gas available for the message call.
+///
+/// # Returns
+/// * The maximum gas allowed for the message call.
 fn max_message_call_gas(gas: u128) -> u128 {
     gas - (gas / 64)
 }
+
+/// Calculates the MessageCallGas (cost and stipend) for executing call Opcodes.
+///
+/// # Parameters
+///
+/// * `value`: The amount of native token that needs to be transferred.
+/// * `gas`: The amount of gas provided to the message-call.
+/// * `gas_left`: The amount of gas left in the current frame.
+/// * `memory_cost`: The amount needed to extend the memory in the current frame.
+/// * `extra_gas`: The amount of gas needed for transferring value + creating a new account inside a message call.
+/// * `call_stipend`: The amount of stipend provided to a message call to execute code while transferring value(native token).
+///
+/// # Returns
+///
+/// * `message_call_gas`: `MessageCallGas`
+fn calculate_message_call_gas(
+    value: u256, gas: u128, gas_left: u128, memory_cost: u128, extra_gas: u128
+) -> MessageCallGas {
+    let call_stipend = if value == 0 {
+        0
+    } else {
+        CALL_STIPEND
+    };
+    let gas = if gas_left < extra_gas + memory_cost {
+        gas
+    } else {
+        cmp::min(gas, max_message_call_gas(gas_left - memory_cost - extra_gas))
+    };
+
+    return MessageCallGas { cost: gas + extra_gas, stipend: gas + call_stipend };
+}
+
 
 /// Calculates the gas cost for allocating memory
 /// to the smallest multiple of 32 bytes,
