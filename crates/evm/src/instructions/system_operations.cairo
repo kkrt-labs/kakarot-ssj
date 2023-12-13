@@ -64,7 +64,7 @@ impl SystemOperations of SystemOperationsTrait {
         } else {
             gas::NEWACCOUNT
         };
-        
+
         let transfer_gas_cost = if value != 0 {
             gas::CALLVALUE
         } else {
