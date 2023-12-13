@@ -37,6 +37,7 @@ enum RLPHelpersError {
     FailedParsingU128,
     FailedParsingU256,
     FailedParsingAddress,
+    FailedParsingAccessList,
     NotAList
 }
 

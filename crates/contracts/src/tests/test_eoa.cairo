@@ -295,9 +295,9 @@ mod test_external_owned_account {
         // run: cp .env.example .env
         // bun install & bun run scripts/compute_rlp_encoding.ts
         let signature = Signature {
-            r: 0x96a5512ce388874338c3825959674c130a7cde2317ab0c2312e9e687d15fc373,
-            s: 0x12d0b91acc6c7683186f746b8d0a39991911cca2ab99fc84b2a1652792a15249,
-            y_parity: true
+            r: 0xae2dbf7b1e1bdee326066be5afcfb673fe3d1287ef5d5973d4a83025b72bad1e,
+            s: 0x48ecf8bc7153513fce782a1f369a8cd3ee9132fc062eb0558cf7102973624774,
+            y_parity: false
         };
 
         set_signature(
@@ -331,9 +331,9 @@ mod test_external_owned_account {
         // run: cp .env.example .env
         // bun install & bun run scripts/compute_rlp_encoding.ts
         let signature = Signature {
-            r: 0x3e1d21af857363cb69f565cf5a791b6e326186250815570c80bd2b7f465802f8,
-            s: 0x37a9cec24f7d5c8916ded76f702fcf2b93a20b28a7db8f27d7f4e6e11288bda4,
-            y_parity: true
+            r: 0x141615694556f9078d9da3249e8aa1987524f57153121599cf36d7681b809858,
+            s: 0x052052478f912dbe80339e3f198be8c9e1cd44eaabb295d912087d975ef38192,
+            y_parity: false
         };
 
         set_signature(

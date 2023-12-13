@@ -2,7 +2,7 @@ use core::option::OptionTrait;
 
 use evm::gas::calculate_intrinsic_gas_cost;
 use starknet::EthAddress;
-use utils::eth_transaction::EthereumTransaction;
+use utils::eth_transaction::{EthereumTransaction, LegacyTransaction, EthereumTransactionTrait};
 use utils::helpers::U256Trait;
 
 #[test]
@@ -20,18 +20,20 @@ fn test_calculate_intrinsic_gas_cost() {
     let calldata = rlp_encoded.to_bytes();
     let destination: Option<EthAddress> = 'vitalik.eth'.try_into();
 
-    let tx: EthereumTransaction = EthereumTransaction {
-        nonce: 0,
-        gas_price: 50,
-        gas_limit: 433926,
-        destination: destination,
-        amount: 1,
-        calldata: calldata,
-        chain_id: 0x1
-    };
+    let tx: EthereumTransaction = EthereumTransaction::LegacyTransaction(
+        LegacyTransaction {
+            nonce: 0,
+            gas_price: 50,
+            gas_limit: 433926,
+            destination: destination,
+            amount: 1,
+            calldata: calldata,
+            chain_id: 0x1
+        }
+    );
 
     let expected_cost: u128 = 21136;
-    let out_cost: u128 = calculate_intrinsic_gas_cost(tx.destination, tx.calldata);
+    let out_cost: u128 = calculate_intrinsic_gas_cost(tx.destination(), tx.calldata());
 
     assert(out_cost == expected_cost, 'wrong cost');
 }
@@ -50,18 +52,20 @@ fn test_calculate_intrinsic_gas_cost_without_destination() {
 
     let calldata = rlp_encoded.to_bytes();
 
-    let tx: EthereumTransaction = EthereumTransaction {
-        nonce: 0,
-        gas_price: 50,
-        gas_limit: 433926,
-        destination: Option::None(()),
-        amount: 1,
-        calldata: calldata,
-        chain_id: 0x1
-    };
+    let tx: EthereumTransaction = EthereumTransaction::LegacyTransaction(
+        LegacyTransaction {
+            nonce: 0,
+            gas_price: 50,
+            gas_limit: 433926,
+            destination: Option::None(()),
+            amount: 1,
+            calldata: calldata,
+            chain_id: 0x1
+        }
+    );
 
     let expected_cost: u128 = 53138;
-    let out_cost: u128 = calculate_intrinsic_gas_cost(tx.destination, tx.calldata);
+    let out_cost: u128 = calculate_intrinsic_gas_cost(tx.destination(), tx.calldata());
 
     assert(out_cost == expected_cost, 'wrong cost');
 }

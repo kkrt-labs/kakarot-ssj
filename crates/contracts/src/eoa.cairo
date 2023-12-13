@@ -139,24 +139,13 @@ mod ExternallyOwnedAccount {
             let call = calls.at(0);
             let calldata = call.calldata.span().try_into_bytes().expect('conversion failed').span();
 
-            let EthereumTransaction{nonce: _nonce,
-            gas_price,
-            gas_limit,
-            destination,
-            amount,
-            calldata,
-            chain_id: _chain_id } =
-                EthTransactionTrait::decode(
-                calldata
-            )
-                .expect('rlp decoding of tx failed');
+            let tx = EthTransactionTrait::decode(calldata).expect('rlp decoding of tx failed');
 
             let kakarot_core_dispatcher = IKakarotCoreDispatcher {
                 contract_address: self.kakarot_core_address()
             };
 
-            let (success, return_data) = kakarot_core_dispatcher
-                .eth_send_transaction(destination, gas_limit, gas_price, amount, calldata);
+            let (success, return_data) = kakarot_core_dispatcher.eth_send_transaction(tx);
             let return_data = return_data.to_felt252_array().span();
 
             let tx_info = get_tx_info().unbox();
