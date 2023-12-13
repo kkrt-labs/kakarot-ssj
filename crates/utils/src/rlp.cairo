@@ -261,16 +261,16 @@ impl RLPHelpersImpl of RLPHelpersTrait {
     fn parse_access_list(self: RLPItem) -> Result<Span<AccessListItem>, RLPHelpersError> {
         match self {
             RLPItem::String(_) => { Result::Err(RLPHelpersError::NotAList) },
-            RLPItem::List(mut v) => {
+            RLPItem::List(mut list) => {
                 let res: Result<Span<AccessListItem>, RLPHelpersError> = loop {
                     let mut access_list: Array<AccessListItem> = array![];
-                    let list = match v.pop_front() {
-                        Option::Some(v) => {
-                            match v {
+                    let list = match list.pop_front() {
+                        Option::Some(rlp_item) => {
+                            match rlp_item {
                                 RLPItem::String(_) => {
                                     break Result::Err(RLPHelpersError::NotAList);
                                 },
-                                RLPItem::List(v) => *v,
+                                RLPItem::List(list) => *list,
                             }
                         },
                         Option::None => { break Result::Ok(access_list.span()); }
@@ -283,9 +283,9 @@ impl RLPHelpersImpl of RLPHelpersTrait {
                     }
 
                     let ethereum_address = match ((*list.at(0)).try_parse_address_from_string()) {
-                        Result::Ok(v) => {
-                            match (v) {
-                                Option::Some(v) => { v },
+                        Result::Ok(maybe_eth_address) => {
+                            match (maybe_eth_address) {
+                                Option::Some(eth_address) => { eth_address },
                                 Option::None => {
                                     break Result::Err(RLPHelpersError::FailedParsingAccessList);
                                 }
@@ -296,13 +296,14 @@ impl RLPHelpersImpl of RLPHelpersTrait {
 
                     let storage_keys: Span<u256> = match (*list.at(1)) {
                         RLPItem::String(_) => { break Result::Err(RLPHelpersError::NotAList); },
-                        RLPItem::List(mut list) => {
+                        RLPItem::List(mut keys) => {
                             let mut storage_keys: Array<u256> = array![];
                             let storage_keys: Result<Span<u256>, RLPHelpersError> = loop {
-                                match list.pop_front() {
-                                    Option::Some(v) => {
-                                        let storage_key = match ((*v).parse_u256_from_string()) {
-                                            Result::Ok(v) => { v },
+                                match keys.pop_front() {
+                                    Option::Some(rlp_item) => {
+                                        let storage_key =
+                                            match ((*rlp_item).parse_u256_from_string()) {
+                                            Result::Ok(storage_key) => { storage_key },
                                             Result::Err(err) => { break Result::Err(err); }
                                         };
 
@@ -313,7 +314,7 @@ impl RLPHelpersImpl of RLPHelpersTrait {
                             };
 
                             match storage_keys {
-                                Result::Ok(v) => { v },
+                                Result::Ok(storage_keys) => { storage_keys },
                                 Result::Err(err) => { break Result::Err(err); }
                             }
                         }

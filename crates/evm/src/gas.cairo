@@ -130,8 +130,7 @@ fn calculate_intrinsic_gas_cost(target: Option<EthAddress>, mut calldata: Span<u
     // TODO(gas): access_list not handled yet
     let mut access_list_cost: u128 = 0;
 
-    let mut calldata_cpy: Span<u8> = calldata;
-    let calldata_len: usize = calldata_cpy.len();
+    let calldata_len: usize = calldata.len();
 
     loop {
         match calldata.pop_front() {

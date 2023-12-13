@@ -38,7 +38,7 @@ mod KakarotCore {
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use super::{StoredAccountType};
     use utils::address::compute_contract_address;
-    use utils::checked_math::checked_math::CheckedMath;
+    use utils::checked_math::CheckedMath;
     use utils::constants;
     use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait};
     use utils::helpers::{compute_starknet_address, EthAddressExTrait};
@@ -456,7 +456,7 @@ mod KakarotCore {
             let message = Message {
                 caller: origin,
                 target: to,
-                gas_limit: tx.gas_limit(),
+                gas_limit: gas_left,
                 data: calldata,
                 code,
                 value: tx.value(),

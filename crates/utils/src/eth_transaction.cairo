@@ -285,8 +285,7 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
             return Result::Err(EthTransactionError::TopLevelRlpListWrongLength(decoded_data.len()));
         }
 
-        let decoded_data = *decoded_data.at(0);
-        let decoded_data = match decoded_data {
+        let decoded_data = match *decoded_data.at(0) {
             RLPItem::String => {
                 return Result::Err(EthTransactionError::ExpectedRLPItemToBeList);
             },
