@@ -20,6 +20,25 @@ struct AccessListItem {
     storage_keys: Span<u256>
 }
 
+#[generate_trait]
+impl AccessListItemImpl of AccessListItemTrait {
+    fn to_storage_keys(self: @AccessListItem) -> Span<(EthAddress, u256)> {
+        let AccessListItem{ethereum_address, mut storage_keys } = *self;
+
+        let mut storage_keys_arr = array![];
+        loop {
+            match storage_keys.pop_front() {
+                Option::Some(storage_key) => {
+                    storage_keys_arr.append((ethereum_address, *storage_key));
+                },
+                Option::None => { break; }
+            }
+        };
+
+        storage_keys_arr.span()
+    }
+}
+
 
 #[derive(Drop)]
 struct TransactionMetadata {
@@ -127,6 +146,14 @@ impl EthereumTransactionImpl of EthereumTransactionTrait {
             EthereumTransaction::LegacyTransaction(v) => { *v.gas_limit },
             EthereumTransaction::AccessListTransaction(v) => { *v.gas_limit },
             EthereumTransaction::FeeMarketTransaction(v) => { *v.gas_limit }
+        }
+    }
+
+    fn try_access_list(self: @EthereumTransaction) -> Option<Span<AccessListItem>> {
+        match self {
+            EthereumTransaction::LegacyTransaction => { Option::None },
+            EthereumTransaction::AccessListTransaction(tx) => { Option::Some(*tx.access_list) },
+            EthereumTransaction::FeeMarketTransaction(tx) => { Option::Some(*tx.access_list) }
         }
     }
 
