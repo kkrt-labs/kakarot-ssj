@@ -86,7 +86,8 @@ impl CreateHelpersImpl of CreateHelpers {
     fn generic_create(ref self: VM, create_args: CreateArgs) -> Result<(), EVMError> {
         self.accessed_addresses.add(create_args.to);
 
-        //TODO(gas) compute and charge create message gas
+        let create_message_gas = gas::max_message_call_gas(self.gas_left);
+        self.gas_left -= create_message_gas;
 
         ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
         self.return_data = Default::default().span();
@@ -98,7 +99,7 @@ impl CreateHelpersImpl of CreateHelpers {
         if sender.balance() < create_args.value
             || sender_current_nonce == integer::BoundedInt::<u64>::max()
             || self.message.depth == constants::STACK_MAX_DEPTH {
-            //TODO(gas) reimburse charged message gas
+            self.gas_left += create_message_gas;
             return self.stack.push(0);
         }
 
