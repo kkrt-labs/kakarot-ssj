@@ -20,6 +20,7 @@ mod KakarotCore {
     use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
     use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
     use contracts::kakarot_core::interface::IKakarotCore;
+    use core::array::SpanTrait;
     use core::starknet::SyscallResultTrait;
 
     use evm::errors::{EVMError, ensure, EVMErrorTrait,};
@@ -40,7 +41,8 @@ mod KakarotCore {
     use utils::address::compute_contract_address;
     use utils::checked_math::CheckedMath;
     use utils::constants;
-    use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait};
+    use utils::eth_transaction::AccessListItemTrait;
+    use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, AccessListItem};
     use utils::helpers::{compute_starknet_address, EthAddressExTrait};
     use utils::rlp::RLPTrait;
     use utils::set::{Set, SetTrait};
@@ -391,8 +393,7 @@ mod KakarotCore {
                 }
             };
 
-            let gas_left =
-                match gas_limit.checked_sub(gas::calculate_intrinsic_gas_cost(to, calldata)) {
+            let gas_left = match gas_limit.checked_sub(gas::calculate_intrinsic_gas_cost(@tx)) {
                 Option::Some(gas_left) => gas_left,
                 Option::None => {
                     return ExecutionSummaryTrait::exceptional_failure(
@@ -415,8 +416,7 @@ mod KakarotCore {
                 }
             };
 
-            let gas_left =
-                match gas_limit.checked_sub(gas::calculate_intrinsic_gas_cost(to, calldata)) {
+            let gas_left = match gas_limit.checked_sub(gas::calculate_intrinsic_gas_cost(@tx)) {
                 Option::Some(gas_left) => gas_left,
                 Option::None => {
                     return ExecutionSummaryTrait::exceptional_failure(
@@ -444,7 +444,6 @@ mod KakarotCore {
                 },
             };
 
-            //TODO(gas) handle AccessListTransactoin and FeeMarketTransaction accessed_addresses and accessed_storage_keys
             let mut accessed_addresses: Set<EthAddress> = Default::default();
             accessed_addresses.add(env.coinbase);
             accessed_addresses.add(to.evm);
@@ -452,6 +451,25 @@ mod KakarotCore {
             accessed_addresses.extend(constants::precompile_addresses().spanset());
 
             let mut accessed_storage_keys: Set<(EthAddress, u256)> = Default::default();
+
+            match tx.try_access_list() {
+                Option::Some(mut access_list) => {
+                    loop {
+                        match access_list.pop_front() {
+                            Option::Some(access_list_item) => {
+                                let AccessListItem{ethereum_address, storage_keys } =
+                                    *access_list_item;
+                                let storage_keys = access_list_item.to_storage_keys();
+
+                                accessed_addresses.add(ethereum_address);
+                                accessed_storage_keys.extend_from_span(storage_keys);
+                            },
+                            Option::None => { break; }
+                        }
+                    }
+                },
+                Option::None => {}
+            };
 
             let message = Message {
                 caller: origin,

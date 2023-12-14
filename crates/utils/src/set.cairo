@@ -29,9 +29,13 @@ impl SetImpl<T, +Drop<T>, +PartialEq<T>, +Copy<T>> of SetTrait<T> {
 
     #[inline]
     fn extend(ref self: Set<T>, other: SpanSet<T>) {
-        let mut span = other.to_span();
+        self.extend_from_span(other.to_span());
+    }
+
+    #[inline]
+    fn extend_from_span(ref self: Set<T>, mut other: Span<T>) {
         loop {
-            match span.pop_front() {
+            match other.pop_front() {
                 Option::Some(v) => { self.add(*v); },
                 Option::None => { break (); },
             };

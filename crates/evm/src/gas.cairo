@@ -1,6 +1,10 @@
+use core::array::SpanTrait;
 use core::traits::TryInto;
+
+//todo(harsh): remove
+use debug::PrintTrait;
 use starknet::EthAddress;
-use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait};
+use utils::eth_transaction::{AccessListItem, EthereumTransaction, EthereumTransactionTrait};
 //! Gas costs for EVM operations
 //! Code is based on alloy project
 //! Source: <https://github.com/bluealloy/revm/blob/main/crates/interpreter/src/gas/constants.rs>
@@ -176,11 +180,11 @@ fn init_code_cost(code_size: usize) -> u128 {
 ///
 /// Reference:
 /// https://github.com/ethereum/execution-specs/blob/master/src/ethereum/shanghai/fork.py#L689
-fn calculate_intrinsic_gas_cost(target: Option<EthAddress>, mut calldata: Span<u8>) -> u128 {
+fn calculate_intrinsic_gas_cost(tx: @EthereumTransaction) -> u128 {
     let mut data_cost: u128 = 0;
-    // TODO(gas): access_list not handled yet
-    let mut access_list_cost: u128 = 0;
 
+    let target = tx.destination();
+    let mut calldata = tx.calldata();
     let calldata_len: usize = calldata.len();
 
     loop {
@@ -201,6 +205,23 @@ fn calculate_intrinsic_gas_cost(target: Option<EthAddress>, mut calldata: Span<u
         TRANSACTION_CREATE_COST + init_code_cost(calldata_len)
     } else {
         0
+    };
+
+    let access_list_cost = match tx.try_access_list() {
+        Option::Some(mut access_list) => {
+            let mut access_list_cost = 0;
+            loop {
+                match access_list.pop_front() {
+                    Option::Some(access_list_item) => {
+                        let AccessListItem{ethereum_address, storage_keys } = access_list_item;
+                        access_list_cost += ACCESS_LIST_ADDRESS
+                            + (ACCESS_LIST_STORAGE_KEY * (*storage_keys).len().into());
+                    },
+                    Option::None => { break access_list_cost; }
+                }
+            }
+        },
+        Option::None => { 0 }
     };
 
     TRANSACTION_BASE_COST + data_cost + create_cost + access_list_cost
