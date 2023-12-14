@@ -131,7 +131,7 @@ fn calculate_memory_gas_cost(size_in_bytes: usize) -> u128 {
     let linear_cost = size_in_words.into() * MEMORY;
 
     let (q0, r0) = DivRem::div_rem(size_in_words.into(), _512);
-    let (q1, r1) = DivRem::div_rem(r0 * r0, _512);
+    let (q1, _) = DivRem::div_rem(r0 * r0, _512);
     let quadratic_cost = 512 * q0 * q0 + q0 * r0 + q1;
 
     linear_cost + quadratic_cost
@@ -211,7 +211,7 @@ fn calculate_intrinsic_gas_cost(tx: @EthereumTransaction) -> u128 {
             loop {
                 match access_list.pop_front() {
                     Option::Some(access_list_item) => {
-                        let AccessListItem{ethereum_address, storage_keys } = access_list_item;
+                        let AccessListItem{ethereum_address: _, storage_keys } = access_list_item;
                         access_list_cost += ACCESS_LIST_ADDRESS
                             + (ACCESS_LIST_STORAGE_KEY * (*storage_keys).len().into());
                     },

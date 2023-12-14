@@ -42,7 +42,6 @@ mod test_external_owned_account {
     use utils::helpers::EthAddressSignatureTrait;
     use utils::helpers::{U8SpanExTrait, u256_to_bytes_array};
     use utils::tests::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
-    use utils::traits::SpanDebug;
 
 
     #[test]
@@ -98,7 +97,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[ignore]
     fn test___execute__() {
         let (_, kakarot_core) = setup_contracts_for_testing();
 
@@ -117,6 +115,7 @@ mod test_external_owned_account {
         let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
         // check counter value is 0 before doing inc
+        
         let (_, return_data) = kakarot_core
             .eth_call(
                 origin: evm_address,
@@ -137,6 +136,8 @@ mod test_external_owned_account {
             selector: selector!("eth_send_transaction"),
             calldata: encoded_tx.to_felt252_array()
         };
+
+        println!("call before");
 
         let result = eoa_contract.__execute__(array![call]);
         assert_eq!(result.len(), 1);
@@ -207,7 +208,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[ignore]
     #[should_panic(expected: ('to is not kakarot core', 'ENTRYPOINT_FAILED'))]
     fn test___validate__fail__to_address_not_kakarot_core() {
         let (_, kakarot_core) = setup_contracts_for_testing();

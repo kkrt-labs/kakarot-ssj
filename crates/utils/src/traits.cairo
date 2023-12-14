@@ -30,35 +30,16 @@ mod debug_display_based {
     }
 }
 
-impl OptionDisplay<T, +Display<T>, +Drop<T>, +Copy<T>> of Display<Option<T>> {
-    fn fmt(self: @Option<T>, ref f: Formatter) -> Result<(), Error> {
-        match *self {
-            Option::Some(value) => Display::fmt(@value, ref f),
-            Option::None => Display::<felt252>::fmt(@'Option::None', ref f),
-        }
-    }
-}
-
-impl OptionDebug<T, +Display<T>, +Drop<T>, +Copy<T>> of Debug<Option<T>> {
-    fn fmt(self: @Option<T>, ref f: Formatter) -> Result<(), Error> {
-        match *self {
-            Option::Some(value) => Display::fmt(@value, ref f),
-            Option::None => Display::<felt252>::fmt(@'Option::None', ref f),
-        }
-    }
-}
-
 impl EthAddressDisplay = display_felt252_based::TDisplay<EthAddress>;
 impl ContractAddressDisplay = display_felt252_based::TDisplay<ContractAddress>;
 impl EthAddressDebug = debug_display_based::TDisplay<EthAddress>;
 impl ContractAddressDebug = debug_display_based::TDisplay<ContractAddress>;
-impl SpanDebug<T, +Display<T>, +Copy<T>> = debug_display_based::TDisplay<Span<T>>;
 
-impl EthSignatureDisplay of Display<EthSignature> {
+impl EthSignatureDebug of Debug<EthSignature> {
     fn fmt(self: @EthSignature, ref f: Formatter) -> Result<(), Error> {
-        write!(f, "r: {}", *self.r);
-        write!(f, "s: {}", *self.s);
-        write!(f, "y_parity: {}", *self.y_parity);
+        write!(f, "r: {}", *self.r)?;
+        write!(f, "s: {}", *self.s)?;
+        write!(f, "y_parity: {}", *self.y_parity)?;
 
         Result::Ok(())
     }

@@ -300,7 +300,7 @@ fn test_exec_staticcall_no_return() {
 fn test_exec_call_code() {
     // Given
 
-    let (_, kakarot_core) = setup_contracts_for_testing();
+    let (_, _) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     deploy_contract_account(evm_address, array![].span());
@@ -381,7 +381,7 @@ fn test_exec_call_code() {
 fn test_exec_delegatecall() {
     // Given
 
-    let (_, kakarot_core) = setup_contracts_for_testing();
+    let (_, _) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
     deploy_contract_account(evm_address, array![].span());
@@ -584,7 +584,7 @@ fn test_exec_create2() {
 #[ignore]
 fn test_exec_selfdestruct_existing_ca() {
     // Given
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (native_token, _) = setup_contracts_for_testing();
     let destroyed_address = test_address().evm; // address in vm call context
     let ca_address = deploy_contract_account(destroyed_address, array![0x1, 0x2, 0x3].span());
     fund_account_with_native_token(ca_address.starknet, native_token, 1000);
@@ -603,7 +603,6 @@ fn test_exec_selfdestruct_existing_ca() {
     assert(destructed.bytecode().len() == 0, 'bytecode should be empty');
 
     let recipient = vm.env.state.get_account(recipient.evm);
-    let recipient_starknet_address = kakarot_core.compute_starknet_address(recipient.address.evm);
     assert_eq!(recipient.balance(), 1000);
 }
 
@@ -616,7 +615,7 @@ fn test_selfdestruct_undeployed_ca() {
         evm: evm_address, starknet: kakarot_core.compute_starknet_address(evm_address)
     };
     let recipient_address: EthAddress = 'recipient_address'.try_into().unwrap();
-    let recipient = deploy_eoa(recipient_address);
+    deploy_eoa(recipient_address);
     let ca_balance = 1000;
     fund_account_with_native_token(ca_address.starknet, native_token, ca_balance);
     let mut vm = VMBuilderTrait::new_with_presets().with_target(ca_address).build();
