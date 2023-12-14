@@ -1,8 +1,5 @@
 use core::option::OptionTrait;
 
-//todo(harsh): remove
-use debug::PrintTrait;
-
 use evm::gas::{calculate_intrinsic_gas_cost, ACCESS_LIST_ADDRESS, ACCESS_LIST_STORAGE_KEY};
 use evm::tests::test_utils::evm_address;
 use starknet::EthAddress;

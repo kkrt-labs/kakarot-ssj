@@ -1,8 +1,6 @@
 use core::array::SpanTrait;
 use core::traits::TryInto;
 
-//todo(harsh): remove
-use debug::PrintTrait;
 use starknet::EthAddress;
 use utils::eth_transaction::{AccessListItem, EthereumTransaction, EthereumTransactionTrait};
 //! Gas costs for EVM operations
