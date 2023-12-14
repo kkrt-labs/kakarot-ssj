@@ -122,7 +122,7 @@ impl CreateHelpersImpl of CreateHelpers {
         let child_message = Message {
             caller: sender_address,
             target: target_address,
-            gas_limit: self.message().gas_limit, //TODO(gas): fix by using computed create gas above
+            gas_limit: create_message_gas,
             data: Default::default().span(),
             code: create_args.bytecode,
             value: create_args.value,
