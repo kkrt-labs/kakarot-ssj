@@ -354,9 +354,6 @@ mod KakarotCore {
 
             let gas_price = tx.gas_price();
             let gas_limit = tx.gas_limit();
-            let value = tx.value();
-            let to = tx.destination();
-            let calldata = tx.calldata();
 
             let mut env = Environment {
                 origin: origin.evm,
@@ -394,28 +391,7 @@ mod KakarotCore {
                 }
             };
 
-            //TODO(gas) handle FeeMarketTransaction
-            let gas_fee = gas_limit * gas_price;
-
-            let sender = env.origin;
-            let sender_account = env.state.get_account(sender);
-            match ensure(
-                sender_account.balance() >= gas_fee.into() + value, EVMError::InsufficientBalance
-            ) {
-                Result::Ok(_) => {},
-                Result::Err(err) => {
-                    return ExecutionSummaryTrait::exceptional_failure(err.to_bytes());
-                }
-            };
-
-            let gas_left = match gas_limit.checked_sub(gas::calculate_intrinsic_gas_cost(@tx)) {
-                Option::Some(gas_left) => gas_left,
-                Option::None => {
-                    return ExecutionSummaryTrait::exceptional_failure(
-                        EVMError::OutOfGas.to_bytes()
-                    );
-                }
-            };
+            
 
             let (to, is_deploy_tx, code, calldata) = match tx.destination() {
                 Option::Some(to) => {
@@ -449,7 +425,7 @@ mod KakarotCore {
                     loop {
                         match access_list.pop_front() {
                             Option::Some(access_list_item) => {
-                                let AccessListItem{ethereum_address, storage_keys } =
+                                let AccessListItem{ethereum_address, storage_keys: _ } =
                                     *access_list_item;
                                 let storage_keys = access_list_item.to_storage_keys();
 

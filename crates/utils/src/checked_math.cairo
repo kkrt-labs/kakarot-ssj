@@ -120,7 +120,6 @@ mod checked_sub {
 mod tests {
     use integer::BoundedInt;
     use super::{checked_math::CheckedMath};
-    use utils::traits::OptionDebug;
 
     #[test]
     fn test_u8_checked_add() {

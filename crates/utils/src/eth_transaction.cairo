@@ -12,7 +12,7 @@ use utils::helpers::{U256Trait, U256Impl, ByteArrayExt, U8SpanExTrait};
 use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
 
-use utils::traits::{EthAddressDebug, SpanDebug};
+use utils::traits::{EthAddressDebug};
 
 #[derive(Copy, Clone, Drop, Serde, PartialEq, Debug)]
 struct AccessListItem {

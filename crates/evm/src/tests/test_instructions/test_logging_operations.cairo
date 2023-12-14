@@ -1,3 +1,4 @@
+use core::result::ResultTrait;
 use evm::errors::{EVMError, EVMErrorTrait, TYPE_CONVERSION_ERROR};
 use evm::instructions::LoggingOperationsTrait;
 use evm::memory::MemoryTrait;
@@ -283,11 +284,10 @@ fn test_exec_log_multiple_events() {
     vm.stack.push(0x00).expect('push failed');
 
     // When
-    let result = vm.exec_log3();
-    let result = vm.exec_log4();
+    vm.exec_log3().expect('exec_log3 failed');
+    vm.exec_log4().expect('exec_log4 failed');
 
     // Then
-    assert(result.is_ok(), 'should have succeeded');
     assert(vm.stack.len() == 0, 'stack size should be 0');
 
     let mut events = vm.env.state.events;
