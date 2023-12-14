@@ -2,6 +2,7 @@ use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountD
 //! Block Information.
 
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
+use core::starknet::SyscallResultTrait;
 
 use evm::errors::{
     EVMError, BLOCK_HASH_SYSCALL_FAILED, EXECUTION_INFO_SYSCALL_FAILED, TYPE_CONVERSION_ERROR
@@ -42,14 +43,7 @@ impl BlockInformation of BlockInformationTrait {
             return self.stack.push(0);
         }
 
-        let maybe_block_hash = get_block_hash_syscall(block_number);
-        match maybe_block_hash {
-            Result::Ok(block_hash) => self.stack.push(block_hash.into()),
-            // This syscall should not error out, as we made sure block_number =< current_block - 10
-            // In case of failed syscall, we can either return 0, or revert.
-            // Since this situation would be highly breaking, we choose to revert.
-            Result::Err(_) => Result::Err(EVMError::SyscallFailed(BLOCK_HASH_SYSCALL_FAILED)),
-        }
+        self.stack.push(get_block_hash_syscall(block_number).unwrap_syscall().into())
     }
 
     /// 0x41 - COINBASE

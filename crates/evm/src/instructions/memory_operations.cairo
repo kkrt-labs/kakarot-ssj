@@ -86,7 +86,7 @@ impl MemoryOperation of MemoryOperationTrait {
             self.charge_gas(gas::COLD_SLOAD_COST);
         }
 
-        let value = self.env.state.read_state(evm_address, key)?;
+        let value = self.env.state.read_state(evm_address, key);
         self.stack.push(value)
     }
 
@@ -104,8 +104,8 @@ impl MemoryOperation of MemoryOperationTrait {
         let account = self.env.state.get_account(evm_address);
         //TODO(bug) restore check for `is_deployed` inside `read_storage`
         let is_deployed = evm_address.is_deployed();
-        let original_value = account.read_storage(key, is_deployed)?;
-        let current_value = self.env.state.read_state(evm_address, key)?;
+        let original_value = account.read_storage(key, is_deployed);
+        let current_value = self.env.state.read_state(evm_address, key);
 
         // GAS
         let mut gas_cost = 0;

@@ -192,9 +192,7 @@ mod KakarotCore {
         }
 
         fn contract_account_nonce(self: @ContractState, evm_address: EthAddress) -> u64 {
-            let ca_address = ContractAccountTrait::at(evm_address)
-                .expect('Fetching CA failed')
-                .expect('No CA found');
+            let ca_address = ContractAccountTrait::at(evm_address).expect('Fetching CA failed');
             let contract_account = IContractAccountDispatcher {
                 contract_address: ca_address.starknet
             };
@@ -211,9 +209,7 @@ mod KakarotCore {
         fn contract_account_storage_at(
             self: @ContractState, evm_address: EthAddress, key: u256
         ) -> u256 {
-            let ca_address = ContractAccountTrait::at(evm_address)
-                .expect('Fetching CA failed')
-                .expect('No CA found');
+            let ca_address = ContractAccountTrait::at(evm_address).expect('No CA found');
             let contract_account = IContractAccountDispatcher {
                 contract_address: ca_address.starknet
             };
@@ -221,9 +217,7 @@ mod KakarotCore {
         }
 
         fn contract_account_bytecode(self: @ContractState, evm_address: EthAddress) -> Span<u8> {
-            let ca_address = ContractAccountTrait::at(evm_address)
-                .expect('Fetching CA failed')
-                .expect('No CA found');
+            let ca_address = ContractAccountTrait::at(evm_address).expect('No CA found');
             let contract_account = IContractAccountDispatcher {
                 contract_address: ca_address.starknet
             };
@@ -233,9 +227,7 @@ mod KakarotCore {
         fn contract_account_false_positive_jumpdest(
             self: @ContractState, evm_address: EthAddress, offset: usize
         ) -> bool {
-            let ca_address = ContractAccountTrait::at(evm_address)
-                .expect('Fetching CA failed')
-                .expect('No CA found');
+            let ca_address = ContractAccountTrait::at(evm_address).expect('No CA found');
             let contract_account = IContractAccountDispatcher {
                 contract_address: ca_address.starknet
             };

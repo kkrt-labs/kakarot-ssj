@@ -171,7 +171,7 @@ fn test_account_commit_already_deployed() {
     let mut account = AccountTrait::fetch(evm_address()).unwrap();
     account.nonce = 420;
     account.code = array![0x1].span();
-    account.commit().unwrap();
+    account.commit();
 
     // Then
     let account_dispatcher = IContractAccountDispatcher { contract_address: ca_address.starknet };
@@ -194,7 +194,7 @@ fn test_account_commit_redeploy_selfdestructed_new_nonce() {
     let mut account = AccountTrait::fetch(evm_address()).unwrap();
     account.nonce = 420;
     account.code = array![0x1].span();
-    account.commit().unwrap();
+    account.commit();
 
     // Then
     let account_dispatcher = IContractAccountDispatcher { contract_address: ca_address.starknet };
@@ -222,7 +222,7 @@ fn test_account_commit_undeployed() {
     };
     account.nonce = 420;
     account.code = array![0x1].span();
-    account.commit().unwrap();
+    account.commit();
 
     // Then
     let account_dispatcher = IContractAccountDispatcher { contract_address: starknet };

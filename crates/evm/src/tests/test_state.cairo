@@ -175,7 +175,7 @@ mod test_state {
         let value = 100;
 
         state.write_state(evm_address, key, value);
-        let read_value = state.read_state(evm_address, key).unwrap();
+        let read_value = state.read_state(evm_address, key);
 
         assert(value == read_value, 'Storage mismatch');
     }
@@ -198,9 +198,9 @@ mod test_state {
             balance: 0,
             selfdestruct: false
         };
-        account.store_storage(key, value).expect('failed to store');
+        account.store_storage(key, value);
 
-        let read_value = state.read_state(evm_address, key).unwrap();
+        let read_value = state.read_state(evm_address, key);
 
         assert(value == read_value, 'Storage mismatch');
     }
