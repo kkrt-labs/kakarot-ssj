@@ -1,0 +1,62 @@
+name: CI
+
+on: [push]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: read-all
+
+jobs:
+  ef-tests:
+    # trunk-ignore(actionlint/runner-label)
+    runs-on: ubuntu-latest-32-cores
+    steps:
+      - name: Checkout ef-tests
+        uses: actions/checkout@v3
+        with:
+          repository: kkrt-labs/ef-tests
+      - name: Checkout local skip file
+        uses: actions/checkout@v3
+        with:
+          sparse-checkout: |
+            blockchain-tests-skip.yml
+          sparse-checkout-cone-mode: false
+          path: skip-file
+      - name: Replace the skip files
+        run: |
+          mv skip-file/blockchain-tests-skip.yml blockchain-tests-skip.yml
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+      - name: setup
+        run: make setup
+      - uses: taiki-e/install-action@nextest
+
+      # we do that to get the ERC20 token artifact
+      - name: Setup Kakarot V0
+        run: make setup-kakarot-v0
+
+      - name: Download Kakarot build artifacts in v0
+        uses: actions/download-artifact@v3
+        with:
+          name: dev-artifacts
+          path: ./build/v1
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+      - name: run tests
+        run: make ef-test-v1 2>&1 | tee test_v1.out
+      - name: Retrieve ef-tests execution resources
+        run: python scripts/compute_resources.py
+        env:
+          KAKAROT_VERSION: v1
+      - name: upload resources
+        uses: actions/upload-artifact@v3
+        with:
+          path: resources
+          name: resources
