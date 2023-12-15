@@ -40,13 +40,11 @@ jobs:
       - name: setup
         run: make setup
 
-      # we do that to get the ERC20 token artifact
-      - name: Setup Kakarot V0
-        run: |
-          @curl -sL -o kakarot-build.zip -H "Authorization: token $(GITHUB_TOKEN)" "$(KKRT_V0_BUILD_ARTIFACT_URL)"
-
-      - name: Setup Kakarot V1
-        run: make setup-kakarot-v1
+      # we setup kakarot-v0 to get ERC20 token artifact
+      - name: Setup Kakarot
+        run: make setup-kakarot-v0 && setup-kakarot-v1
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
