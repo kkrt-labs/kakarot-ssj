@@ -42,9 +42,9 @@ jobs:
 
       # we setup kakarot-v0 to get ERC20 token artifact
       - name: Setup Kakarot
-        run: make setup-kakarot-v0 && setup-kakarot-v1
+        run: make setup-kakarot-v0 && make setup-kakarot-v1
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
