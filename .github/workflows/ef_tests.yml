@@ -42,7 +42,7 @@ jobs:
 
       # we do that to get the ERC20 token artifact
       - name: Setup Kakarot V0
-        run: make setup-kakarot-v0
+        run: ls && make setup-kakarot-v0
 
       - name: Setup Kakarot V1
         run: make setup-kakarot-v1
