@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -36,7 +39,6 @@ jobs:
           cache-on-failure: "true"
       - name: setup
         run: make setup
-      - uses: taiki-e/install-action@nextest
 
       # we do that to get the ERC20 token artifact
       - name: Setup Kakarot V0
