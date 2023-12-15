@@ -95,9 +95,11 @@ impl EVMImpl of EVMTrait {
     }
 
     fn process_message(message: Message, ref env: Environment) -> ExecutionResult {
+        println!("Process message: {:?}", message);
         if (message.depth > constants::STACK_MAX_DEPTH) {
             // Because the failure happens before any modification to warm address/storage,
             // we can pass an empty set
+            println!("Process message: Depth limit reached");
             return ExecutionResultTrait::exceptional_failure(
                 EVMError::DepthLimit.to_bytes(), Default::default(), Default::default()
             );
@@ -111,6 +113,7 @@ impl EVMImpl of EVMTrait {
             match env.state.add_transfer(transfer) {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
+                    println!("Process message: Couldnt transfer value");
                     return ExecutionResultTrait::exceptional_failure(
                         err.to_bytes(), Default::default(), Default::default()
                     );
@@ -138,8 +141,10 @@ impl EVMImpl of EVMTrait {
         if !result.success {
             // The `process_message` function has mutated the environment state.
             // Revert state changes using the old snapshot as execution failed.
+            println!("Code execution failed:  {:?} with result {:?}", message, result);
             env.state = state_snapshot;
         }
+        println!("Code execution result: {:?}", result);
 
         result
     }

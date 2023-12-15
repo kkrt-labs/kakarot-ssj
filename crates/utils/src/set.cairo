@@ -15,25 +15,25 @@ impl SetDefault<T, +Drop<T>> of Default<Set<T>> {
 
 
 #[generate_trait]
-impl SetImpl<T, +Drop<T>, +PartialEq<T>, +Copy<T>> of SetTrait<T> {
+impl SetImpl<T, +Drop<T>, +Copy<T>> of SetTrait<T> {
     #[inline]
     fn new() -> Set<T> {
         Set { inner: Default::default() }
     }
 
     #[inline]
-    fn add(ref self: Set<T>, item: T) {
+    fn add<+PartialEq<T>>(ref self: Set<T>, item: T) {
         self.inner.append_unique(item);
     }
 
 
     #[inline]
-    fn extend(ref self: Set<T>, other: SpanSet<T>) {
+    fn extend<+PartialEq<T>>(ref self: Set<T>, other: SpanSet<T>) {
         self.extend_from_span(other.to_span());
     }
 
     #[inline]
-    fn extend_from_span(ref self: Set<T>, mut other: Span<T>) {
+    fn extend_from_span<+PartialEq<T>>(ref self: Set<T>, mut other: Span<T>) {
         loop {
             match other.pop_front() {
                 Option::Some(v) => { self.add(*v); },
@@ -43,7 +43,7 @@ impl SetImpl<T, +Drop<T>, +PartialEq<T>, +Copy<T>> of SetTrait<T> {
     }
 
     #[inline]
-    fn contains(self: @Set<T>, item: T) -> bool {
+    fn contains<+PartialEq<T>>(self: @Set<T>, item: T) -> bool {
         self.inner.span().contains(item)
     }
 
@@ -100,9 +100,9 @@ impl SpanSetDefault<T, +Drop<T>> of Default<SpanSet<T>> {
 // impl SpanSetDrop<T> of Drop<SpanSet<T>>;
 
 #[generate_trait]
-impl SpanSetImpl<T, +Copy<T>, +Drop<T>, +PartialEq<T>> of SpanSetTrait<T> {
+impl SpanSetImpl<T, +Copy<T>, +Drop<T>> of SpanSetTrait<T> {
     #[inline]
-    fn contains(self: SpanSet<T>, item: T) -> bool {
+    fn contains<+PartialEq<T>>(self: SpanSet<T>, item: T) -> bool {
         self.inner.contains(item)
     }
 

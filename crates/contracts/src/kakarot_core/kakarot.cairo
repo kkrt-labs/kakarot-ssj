@@ -43,6 +43,7 @@ mod KakarotCore {
     use utils::constants;
     use utils::eth_transaction::AccessListItemTrait;
     use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, AccessListItem};
+    use utils::fmt::EthAddressDebug;
     use utils::helpers::{compute_starknet_address, EthAddressExTrait};
     use utils::rlp::RLPTrait;
     use utils::set::{Set, SetTrait};
@@ -378,6 +379,7 @@ mod KakarotCore {
             ) {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
+                    println!("process_transaction: Insufficient balance for fees");
                     return ExecutionSummaryTrait::exceptional_failure(err.to_bytes());
                 }
             };
@@ -385,13 +387,12 @@ mod KakarotCore {
             let gas_left = match gas_limit.checked_sub(gas::calculate_intrinsic_gas_cost(@tx)) {
                 Option::Some(gas_left) => gas_left,
                 Option::None => {
+                    println!("process_transaction: Out of gas");
                     return ExecutionSummaryTrait::exceptional_failure(
                         EVMError::OutOfGas.to_bytes()
                     );
                 }
             };
-
-            
 
             let (to, is_deploy_tx, code, calldata) = match tx.destination() {
                 Option::Some(to) => {
@@ -452,6 +453,8 @@ mod KakarotCore {
                 accessed_addresses: accessed_addresses.spanset(),
                 accessed_storage_keys: accessed_storage_keys.spanset(),
             };
+
+            println!("Initial message: {:?}", message);
 
             EVMTrait::process_message_call(message, env, is_deploy_tx)
         }

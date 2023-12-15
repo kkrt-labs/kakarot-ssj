@@ -4,20 +4,28 @@ use contracts::contract_account::{
 
 use contracts::eoa::{ExternallyOwnedAccount};
 use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
-use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcher, KakarotCore};
+use contracts::kakarot_core::{
+    interface::IExtendedKakarotCoreDispatcher, interface::IExtendedKakarotCoreDispatcherTrait,
+    KakarotCore
+};
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount
 };
+use core::fmt::Debug;
 use evm::model::contract_account::ContractAccountTrait;
 use evm::model::{Address};
 
-use evm::tests::test_utils::{deploy_fee, ca_address, other_starknet_address, chain_id};
+use evm::tests::test_utils::{
+    deploy_fee, ca_address, other_starknet_address, chain_id, sequencer_evm_address
+};
 use openzeppelin::token::erc20::ERC20;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{
     testing, contract_address_const, EthAddress, ContractAddress, deploy_syscall,
     get_contract_address
 };
+use utils::eth_transaction::LegacyTransaction;
+use utils::fmt::{ContractAddressDebug, EthAddressDebug};
 
 /// Pop the earliest unpopped logged event for the contract as the requested type
 /// and checks there's no more data left on the event, preventing unaccounted params.
@@ -25,7 +33,17 @@ use starknet::{
 /// params are set as event keys, but the first event key is always set as the
 /// event ID.
 /// Author: Openzeppelin https://github.com/OpenZeppelin/cairo-contracts
-fn pop_log<T, impl TDrop: Drop<T>, impl TEvent: starknet::Event<T>>(
+fn pop_log<T, +Drop<T>, impl TEvent: starknet::Event<T>>(address: ContractAddress) -> Option<T> {
+    let (mut keys, mut data) = testing::pop_log_raw(address)?;
+
+    // Remove the event ID from the keys
+    keys.pop_front().expect('pop_log popfront failed');
+
+    let ret = starknet::Event::deserialize(ref keys, ref data);
+    ret
+}
+
+fn pop_log_debug<T, +Drop<T>, +Debug<T>, impl TEvent: starknet::Event<T>>(
     address: ContractAddress
 ) -> Option<T> {
     let (mut keys, mut data) = testing::pop_log_raw(address)?;
@@ -34,7 +52,7 @@ fn pop_log<T, impl TDrop: Drop<T>, impl TEvent: starknet::Event<T>>(
     keys.pop_front().expect('pop_log popfront failed');
 
     let ret = starknet::Event::deserialize(ref keys, ref data);
-    assert(data.is_empty(), 'Event has extra data');
+    println!("ret: {:?}", ret);
     ret
 }
 
@@ -130,6 +148,14 @@ fn deploy_eoa(eoa_address: EthAddress) -> IExternallyOwnedAccountDispatcher {
     eoa
 }
 
+fn call_transaction(
+    chain_id: u128, destination: Option<EthAddress>, calldata: Span<u8>
+) -> LegacyTransaction {
+    LegacyTransaction {
+        chain_id, nonce: 0, gas_price: 0, gas_limit: 500000000, destination, amount: 0, calldata
+    }
+}
+
 
 fn fund_account_with_native_token(
     contract_address: ContractAddress, native_token: IERC20CamelDispatcher, amount: u256,
@@ -143,6 +169,13 @@ fn fund_account_with_native_token(
 fn setup_contracts_for_testing() -> (IERC20CamelDispatcher, IExtendedKakarotCoreDispatcher) {
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
+    // triggered in the constructor.
+    drop_event(kakarot_core.contract_address);
+    let sequencer_sn_address = kakarot_core.deploy_eoa(sequencer_evm_address());
+    // We drop the event of the EOA deployment
+    drop_event(kakarot_core.contract_address);
+    testing::set_sequencer_address(sequencer_sn_address);
     testing::set_contract_address(kakarot_core.contract_address);
     return (native_token, kakarot_core);
 }

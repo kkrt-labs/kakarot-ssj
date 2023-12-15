@@ -114,6 +114,7 @@ impl CreateHelpersImpl of CreateHelpers {
             return self.stack.push(0);
         };
 
+        println!("Checking initcode size ");
         ensure(create_args.bytecode.len() <= constants::MAX_INITCODE_SIZE, EVMError::OutOfGas)?;
 
         sender.set_nonce(sender_current_nonce + 1);
@@ -132,6 +133,8 @@ impl CreateHelpersImpl of CreateHelpers {
             accessed_addresses: self.accessed_addresses.clone().spanset(),
             accessed_storage_keys: self.accessed_storage_keys.clone().spanset(),
         };
+
+        println!("Create Message: {:?}", child_message);
 
         let result = EVMTrait::process_create_message(child_message, ref self.env);
         self.merge_child(@result);
@@ -165,6 +168,7 @@ impl CreateHelpersImpl of CreateHelpers {
             ensure(*code[0] != 0xEF, EVMError::InvalidCode)?;
         }
         self.charge_gas(contract_code_gas)?;
+        println!("finalize");
         ensure(code.len() <= constants::MAX_CODE_SIZE, EVMError::OutOfGas)?;
 
         account.set_code(code);
