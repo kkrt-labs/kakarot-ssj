@@ -42,7 +42,8 @@ jobs:
 
       # we do that to get the ERC20 token artifact
       - name: Setup Kakarot V0
-        run: ls && make setup-kakarot-v0
+        run:  |
+          @curl -sL -o kakarot-build.zip -H "Authorization: token $(GITHUB_TOKEN)" "$(KKRT_V0_BUILD_ARTIFACT_URL)"
 
       - name: Setup Kakarot V1
         run: make setup-kakarot-v1
