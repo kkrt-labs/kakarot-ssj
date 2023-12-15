@@ -923,7 +923,7 @@ fn test_exec_extcodehash_selfdestructed() {
         balance: 1,
         selfdestruct: false
     };
-    account.selfdestruct().expect('CA selfdestruct failed');
+    account.selfdestruct();
 
     vm.stack.push(evm_address.into()).expect('push failed');
 

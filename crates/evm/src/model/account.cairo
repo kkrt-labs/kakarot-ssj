@@ -197,14 +197,14 @@ impl AccountImpl of AccountTrait {
     /// # Returns
     ///
     /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
-    fn commit(self: @Account) -> Result<(), EVMError> {
+    fn commit(self: @Account) {
         let is_deployed = self.evm_address().is_deployed();
         let is_ca = self.is_ca();
 
         // If a Starknet account is already deployed for this evm address, we
         // should "EVM-Deploy" only if the nonce is different.
         let should_deploy = if is_deployed && is_ca {
-            let deployed_nonce = ContractAccountTrait::fetch_nonce(self)?;
+            let deployed_nonce = ContractAccountTrait::fetch_nonce(self);
             if (deployed_nonce == 0 && deployed_nonce != *self.nonce) {
                 true
             } else {
@@ -229,14 +229,14 @@ impl AccountImpl of AccountTrait {
                 initial_nonce,
                 initial_code,
                 deploy_starknet_contract: !is_deployed
-            )?;
+            );
         //Storage is handled outside of the account and must be committed after all accounts are committed.
         //TODO(bug) uncommenting this bugs, needs to be removed when fixed in the compiler
-        // return Result::Ok(());
+        // return;
         };
 
         if should_deploy {
-            return Result::Ok(());
+            return;
         };
 
         // If the account was not scheduled for deployment - then update it if it's deployed.
@@ -245,14 +245,13 @@ impl AccountImpl of AccountTrait {
             if *self.selfdestruct {
                 return ContractAccountTrait::selfdestruct(self);
             }
-            self.store_nonce(*self.nonce)?;
+            self.store_nonce(*self.nonce);
         };
-        return Result::Ok(());
     }
 
-    fn commit_storage(self: @Account, key: u256, value: u256) -> Result<(), EVMError> {
+    fn commit_storage(self: @Account, key: u256, value: u256) {
         if self.is_selfdestruct() {
-            return Result::Ok(());
+            return;
         }
         match self.account_type {
             AccountType::EOA => { panic_with_felt252('EOA account commitment') },
@@ -323,11 +322,11 @@ impl AccountImpl of AccountTrait {
     /// # Returns
     ///
     /// A `Result` containing the value stored at the given key or an `EVMError` if there was an error.
-    fn read_storage(self: @Account, key: u256, is_deployed: bool) -> Result<u256, EVMError> {
+    fn read_storage(self: @Account, key: u256, is_deployed: bool) -> u256 {
         if *self.account_type == AccountType::ContractAccount && is_deployed {
             return ContractAccountTrait::fetch_storage(self, key);
         }
-        return Result::Ok(0);
+        0
     }
 
     #[inline(always)]

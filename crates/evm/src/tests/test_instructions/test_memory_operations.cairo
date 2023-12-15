@@ -523,7 +523,7 @@ fn test_exec_sload_from_storage() {
     };
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
-    account.store_storage(key, value).expect('store failed');
+    account.store_storage(key, value);
 
     vm.stack.push(key.into()).expect('push failed');
 
@@ -551,7 +551,7 @@ fn test_exec_sstore_from_state() {
     vm.exec_sstore().expect('exec sstore failed');
 
     // Then
-    assert(vm.env.state.read_state(evm_address(), key).unwrap() == value, 'wrong value in state')
+    assert(vm.env.state.read_state(evm_address(), key) == value, 'wrong value in state')
 }
 
 
@@ -569,7 +569,7 @@ fn test_exec_sstore_on_account_undeployed() {
     vm.exec_sstore().expect('exec sstore failed');
 
     // Then
-    assert(vm.env.state.read_state(evm_address(), key).unwrap() == value, 'wrong value in state')
+    assert(vm.env.state.read_state(evm_address(), key) == value, 'wrong value in state')
 }
 
 #[test]
@@ -596,7 +596,7 @@ fn test_exec_sstore_on_contract_account_alive() {
     vm.exec_sstore().expect('exec sstore failed');
 
     // Then
-    assert(vm.env.state.read_state(evm_address(), key).unwrap() == value, 'wrong value in state')
+    assert(vm.env.state.read_state(evm_address(), key) == value, 'wrong value in state')
 }
 
 
@@ -646,7 +646,7 @@ fn test_exec_sstore_finalized() {
     vm.env.state.commit_storage().expect('commit storage failed');
 
     // Then
-    assert(account.fetch_storage(key).unwrap() == value, 'wrong committed value')
+    assert(account.fetch_storage(key) == value, 'wrong committed value')
 }
 
 #[test]

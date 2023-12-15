@@ -368,11 +368,7 @@ fn test_exec_call_code() {
     assert(2 == load_word(1, vm.return_data()), 'Wrong return_data');
     assert(!vm.is_running(), 'vm should be stopped');
 
-    let storage_val = vm
-        .env
-        .state
-        .read_state(evm_address, 0x42)
-        .expect('failed reading storage slot');
+    let storage_val = vm.env.state.read_state(evm_address, 0x42);
 
     assert(storage_val == 0x42, 'storage value is not 0x42');
 }
@@ -448,11 +444,7 @@ fn test_exec_delegatecall() {
     assert(2 == load_word(1, vm.return_data()), 'Wrong return_data');
     assert(!vm.is_running(), 'vm should be stopped');
 
-    let storage_val = vm
-        .env
-        .state
-        .read_state(evm_address, 0x42)
-        .expect('failed reading storage slot');
+    let storage_val = vm.env.state.read_state(evm_address, 0x42);
 
     assert(storage_val == 0x42, 'storage value is not 0x42');
 }

@@ -44,9 +44,7 @@ fn test_at_contract_account_deployed() {
 
     contract_utils::deploy_contract_account(evm_address, Default::default().span());
 
-    let ca_address = ContractAccountTrait::at(evm_address)
-        .unwrap()
-        .expect('contract account should exist');
+    let ca_address = ContractAccountTrait::at(evm_address).unwrap();
     assert(ca_address.evm == evm_address, 'evm_address incorrect');
     let (registered_type, registered_address) = kakarot_core
         .address_registry(evm_address)
@@ -60,7 +58,7 @@ fn test_at_contract_account_deployed() {
 #[test]
 fn test_at_contract_account_undeployed() {
     let evm_address = EVM_ADDRESS();
-    let maybe_ca = ContractAccountTrait::at(evm_address).unwrap();
+    let maybe_ca = ContractAccountTrait::at(evm_address);
     assert(maybe_ca.is_none(), 'contract account shouldnt exist');
 }
 
@@ -80,7 +78,7 @@ fn test_fetch_nonce() {
         selfdestruct: false,
     };
 
-    let nonce = account.fetch_nonce().expect('cant fetch nonce');
+    let nonce = account.fetch_nonce();
     assert(nonce == 1, 'wrong nonce');
 }
 //TODO add a test with huge amount of bytecode - using SNFoundry and loading data from txt

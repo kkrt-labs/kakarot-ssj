@@ -106,8 +106,7 @@ fn deploy_kakarot_core(native_token: ContractAddress) -> IExtendedKakarotCoreDis
 }
 
 fn deploy_contract_account(evm_address: EthAddress, bytecode: Span<u8>) -> Address {
-    let ca_address = ContractAccountTrait::deploy(evm_address, 1, bytecode, true)
-        .expect('deploy CA failed');
+    let ca_address = ContractAccountTrait::deploy(evm_address, 1, bytecode, true);
     ca_address
 }
 

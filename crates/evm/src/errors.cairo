@@ -53,7 +53,6 @@ enum EVMError {
     InvalidCode,
     NotImplemented,
     InvalidOpcode: u8,
-    SyscallFailed: felt252,
     WriteInStaticContext,
     DeployError: felt252,
     OutOfGas,
@@ -76,7 +75,6 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::NotImplemented => 'not implemented',
             // TODO: refactor with dynamic strings once supported
             EVMError::InvalidOpcode => 'invalid opcode'.into(),
-            EVMError::SyscallFailed(error_message) => error_message.into(),
             EVMError::WriteInStaticContext => 'write protection',
             EVMError::DeployError(error_message) => error_message,
             EVMError::OutOfGas => 'out of gas'.into(),

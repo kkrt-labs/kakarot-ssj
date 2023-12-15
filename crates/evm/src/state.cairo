@@ -137,14 +137,14 @@ impl StateImpl of StateTrait {
     }
 
     #[inline(always)]
-    fn read_state(ref self: State, evm_address: EthAddress, key: u256) -> Result<u256, EVMError> {
+    fn read_state(ref self: State, evm_address: EthAddress, key: u256) -> u256 {
         let internal_key = compute_state_key(evm_address, key);
         let maybe_entry = self.accounts_storage.read(internal_key);
         // TODO(bug): Due to a compiler bug, we pass is_deployed to the read_storage
         // function instead of calling it inside `read_storage` directly.
         let is_deployed = evm_address.is_deployed();
         match maybe_entry {
-            Option::Some((_, _, value)) => { return Result::Ok(value); },
+            Option::Some((_, _, value)) => { return value; },
             Option::None => {
                 let account = self.get_account(evm_address);
                 return account.read_storage(key, is_deployed);
@@ -233,12 +233,7 @@ impl StateInternalImpl of StateInternalTrait {
                         .get(*state_key)
                         .deref();
                     let mut account = self.get_account(evm_address);
-                    match account.commit_storage(key, value) {
-                        Result::Ok(_) => {},
-                        Result::Err(_) => { //TODO handle error gracefully
-                        // break Result::Err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED));
-                        }
-                    }
+                    account.commit_storage(key, value);
                 },
                 Option::None => { break Result::Ok(()); }
             }
@@ -256,12 +251,7 @@ impl StateInternalImpl of StateInternalTrait {
                     let mut data = Default::default();
                     Serde::<Array<u256>>::serialize(@event.keys, ref keys);
                     Serde::<Array<u8>>::serialize(@event.data, ref data);
-                    match emit_event_syscall(keys.span(), data.span()) {
-                        Result::Ok(()) => {},
-                        Result::Err(_) => {
-                            break Result::Err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED));
-                        }
-                    };
+                    emit_event_syscall(keys.span(), data.span());
                 },
                 Option::None => { break Result::Ok(()); }
             }
@@ -291,12 +281,7 @@ impl StateInternalImpl of StateInternalTrait {
             match account_keys.pop_front() {
                 Option::Some(evm_address) => {
                     let account = self.accounts.changes.get(*evm_address).deref();
-                    match account.commit() {
-                        Result::Ok(_) => {},
-                        Result::Err(_) => { //TODO handle error gracefully
-                        // break Result::Err(EVMError::SyscallFailed(WRITE_SYSCALL_FAILED));
-                        }
-                    };
+                    account.commit();
                 },
                 Option::None => { break Result::Ok(()); }
             };
