@@ -26,7 +26,7 @@ use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDi
 use starknet::EthAddress;
 use starknet::testing::set_contract_address;
 use utils::helpers::load_word;
-use utils::traits::{SpanTDisplay, EthAddressIntoU256};
+use utils::traits::{EthAddressIntoU256};
 
 
 #[test]

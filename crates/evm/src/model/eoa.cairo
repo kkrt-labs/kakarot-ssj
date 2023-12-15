@@ -5,6 +5,7 @@ use contracts::kakarot_core::{IKakarotCore, KakarotCore, KakarotCore::KakarotCor
 use contracts::uninitialized_account::{
     IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
+use core::starknet::SyscallResultTrait;
 
 use evm::errors::{EVMError, ensure, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
 use evm::model::{Address, AddressTrait};
@@ -27,24 +28,15 @@ impl EOAImpl of EOATrait {
         let kakarot_address = get_contract_address();
         let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
 
-        let maybe_address = deploy_syscall(account_class_hash, evm_address.into(), calldata, false);
+        let (starknet_address, _) = deploy_syscall(
+            account_class_hash, evm_address.into(), calldata, false
+        )
+            .unwrap_syscall();
 
-        // Panic with err as syscall failure can't be caught, so we can't manage
-        // the error
-        match maybe_address {
-            Result::Ok((
-                starknet_address, _
-            )) => {
-                let account = IUninitializedAccountDispatcher {
-                    contract_address: starknet_address
-                };
-                account.initialize(kakarot_state.eoa_class_hash());
-                kakarot_state
-                    .set_address_registry(evm_address, StoredAccountType::EOA(starknet_address));
-                kakarot_state.emit(EOADeployed { evm_address, starknet_address });
-                Result::Ok(Address { evm: evm_address, starknet: starknet_address })
-            },
-            Result::Err(err) => panic(err)
-        }
+        let account = IUninitializedAccountDispatcher { contract_address: starknet_address };
+        account.initialize(kakarot_state.eoa_class_hash());
+        kakarot_state.set_address_registry(evm_address, StoredAccountType::EOA(starknet_address));
+        kakarot_state.emit(EOADeployed { evm_address, starknet_address });
+        Result::Ok(Address { evm: evm_address, starknet: starknet_address })
     }
 }

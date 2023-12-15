@@ -149,17 +149,21 @@ fn kakarot_address() -> ContractAddress {
     contract_address_const::<'kakarot'>()
 }
 
+fn sequencer_evm_address() -> EthAddress {
+    'sequencer'.try_into().unwrap()
+}
+
 fn eoa_address() -> EthAddress {
     let evm_address: EthAddress = 0xe0a.try_into().unwrap();
     evm_address
 }
 
 fn tx_gas_limit() -> u128 {
-    0x100000000000000000000
+    15000000000
 }
 
 fn gas_price() -> u128 {
-    0xf00000000000000000
+    32
 }
 
 fn value() -> u256 {
@@ -237,36 +241,6 @@ fn preset_vm() -> VM {
     }
 }
 
-// // Simulate return of subcontext where
-// /// 1. Set `return_data` field of parent context
-// /// 2. make `parent_ctx` of `current_ctx` the current ctx
-// fn return_from_subcontext(ref self: Machine, return_data: Span<u8>) {
-//     let current_ctx = self.current_ctx.unbox();
-//     let mut parent_ctx = current_ctx.parent_ctx.deref();
-//     parent_ctx.return_data = return_data;
-//     self.current_ctx = BoxTrait::new(parent_ctx);
-// }
-
-// /// Returns the `return_data` field of the parent_ctx of the current_ctx.
-// fn parent_ctx_return_data(ref self: Machine) -> Span<u8> {
-//     let mut current_ctx = self.current_ctx.unbox();
-//     let maybe_parent_ctx = current_ctx.parent_ctx;
-//     let value = match match_nullable(maybe_parent_ctx) {
-//         // Due to ownership mechanism, both branches need to explicitly re-bind the parent_ctx.
-//         FromNullableResult::Null => {
-//             current_ctx.parent_ctx = Default::default();
-//             Default::default().span()
-//         },
-//         FromNullableResult::NotNull(parent_ctx) => {
-//             let mut parent_ctx = parent_ctx.unbox();
-//             let value = parent_ctx.return_data();
-//             current_ctx.parent_ctx = NullableTrait::new(parent_ctx);
-//             value
-//         }
-//     };
-//     self.current_ctx = BoxTrait::new(current_ctx);
-//     value
-// }
 
 /// Initializes the contract account by setting the bytecode, the storage
 /// and incrementing the nonce to 1.

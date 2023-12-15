@@ -11,6 +11,7 @@ use evm::state::State;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{EthAddress, get_contract_address, ContractAddress};
 use utils::checked_math::CheckedMath;
+use utils::fmt::{EthAddressDebug, ContractAddressDebug, TSpanSetDebug};
 use utils::helpers::{ResultExTrait};
 use utils::set::{Set, SpanSet};
 use utils::traits::{EthAddressDefault, ContractAddressDefault, SpanDefault};
@@ -27,7 +28,7 @@ struct Environment {
     coinbase: EthAddress,
     state: State
 }
-#[derive(Copy, Drop, Default, PartialEq)]
+#[derive(Copy, Drop, Default, PartialEq, Debug)]
 struct Message {
     caller: Address,
     target: Address,
@@ -42,7 +43,7 @@ struct Message {
     accessed_storage_keys: SpanSet<(EthAddress, u256)>,
 }
 
-#[derive(Drop)]
+#[derive(Drop, Debug)]
 struct ExecutionResult {
     success: bool,
     return_data: Span<u8>,
@@ -71,6 +72,7 @@ impl ExecutionResultImpl of ExecutionResultTrait {
     /// # Error : returns `EVMError::OutOfGas` if gas_left - value < 0
     #[inline(always)]
     fn charge_gas(ref self: ExecutionResult, value: u128) -> Result<(), EVMError> {
+        println!("charge_gas on result: gas_left: {}, value: {}", self.gas_left, value);
         self.gas_left = self.gas_left.checked_sub(value).ok_or(EVMError::OutOfGas)?;
         Result::Ok(())
     }
@@ -97,7 +99,7 @@ struct Event {
     data: Array<u8>,
 }
 
-#[derive(Copy, Drop, PartialEq, Default)]
+#[derive(Copy, Drop, PartialEq, Default, Debug)]
 struct Address {
     evm: EthAddress,
     starknet: ContractAddress,

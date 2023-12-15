@@ -28,9 +28,9 @@ use evm::model::{AccountType, Address};
 use evm::tests::test_utils;
 use starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};
 use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, LegacyTransaction};
-use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
 //Required for assert_eq! macro
-use utils::traits::{EthAddressDebug, ContractAddressDebug};
+use utils::fmt::{EthAddressDebug, ContractAddressDebug};
+use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
 
 #[test]
 fn test_kakarot_core_owner() {
@@ -94,13 +94,10 @@ fn test_kakarot_core_set_native_token() {
 fn test_kakarot_core_deploy_eoa() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
-    // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
-    // triggered in the constructor
-    contract_utils::drop_event(kakarot_core.contract_address);
 
     let event = contract_utils::pop_log::<KakarotCore::EOADeployed>(kakarot_core.contract_address)
         .unwrap();
-    assert(event.starknet_address == eoa_starknet_address, 'wrong starknet address');
+    assert_eq!(event.starknet_address, eoa_starknet_address);
 }
 
 #[test]
@@ -233,18 +230,20 @@ fn test_kakarot_contract_account_false_positive_jumpdest() {
 }
 
 #[test]
-fn test_eth_send_transaction() {
+#[available_gas(2000000000000000000)]
+fn test_eth_send_transaction_non_deploy_tx() {
     // Given
-    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
-
-    let account = contract_utils::deploy_contract_account(
-        test_utils::other_evm_address(), counter_evm_bytecode()
+    contract_utils::fund_account_with_native_token(
+        eoa, native_token, 0xfffffffffffffffffffffffffff
     );
 
-    let to = Option::Some(test_utils::other_evm_address());
+    let counter_address = 'counter_contract'.try_into().unwrap();
+    let account = contract_utils::deploy_contract_account(counter_address, counter_evm_bytecode());
+
     let gas_limit = test_utils::tx_gas_limit();
     let gas_price = test_utils::gas_price();
     let value = 0;
@@ -254,35 +253,49 @@ fn test_eth_send_transaction() {
     let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // check counter value is 0 before doing inc
+    let tx = contract_utils::call_transaction(
+        kakarot_core.chain_id(), Option::Some(counter_address), data_get_tx
+    );
     let (_, return_data) = kakarot_core
-        .eth_call(
-            origin: evm_address,
-            to: Option::Some(account.evm),
-            gas_limit: gas_limit,
-            gas_price: gas_price,
-            value: 0,
-            calldata: data_get_tx
-        );
+        .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
 
-    assert(return_data == u256_to_bytes_array(0).span(), 'counter value not 0');
+    assert_eq!(return_data, u256_to_bytes_array(0).span());
 
     // selector: function inc()
-    let calldata = array![0x37, 0x13, 0x03, 0xc0].span();
+    let data_increment_counter = array![0x37, 0x13, 0x03, 0xc0].span();
 
     // When
     testing::set_contract_address(eoa);
-    kakarot_core.eth_send_transaction(:to, :gas_limit, :gas_price, :value, :calldata);
+
+    let tx = LegacyTransaction {
+        chain_id: kakarot_core.chain_id(),
+        nonce: 0,
+        destination: Option::Some(counter_address),
+        amount: value,
+        gas_price,
+        gas_limit,
+        calldata: data_increment_counter
+    };
+
+    let (success, _) = kakarot_core
+        .eth_send_transaction(EthereumTransaction::LegacyTransaction(tx));
+    assert!(success);
 
     // Then
     // selector: function get()
-    let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+    let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
-    // When
+    // check counter value is 1
+    let tx = contract_utils::call_transaction(
+        kakarot_core.chain_id(), Option::Some(counter_address), data_get_tx
+    );
     let (_, return_data) = kakarot_core
-        .eth_call(origin: evm_address, :to, :gas_limit, :gas_price, :value, :calldata);
+        .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
+    let (_, return_data) = kakarot_core
+        .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
 
     // Then
-    assert(return_data == u256_to_bytes_array(1).span(), 'counter value is not 1');
+    assert_eq!(return_data, u256_to_bytes_array(1).span());
 }
 
 #[test]
@@ -300,27 +313,29 @@ fn test_eth_call() {
     counter.set_storage_at(0, 1);
 
     let to = Option::Some(test_utils::other_evm_address());
-    let gas_limit = test_utils::tx_gas_limit();
-    let gas_price = test_utils::gas_price();
-    let value = 0;
     // selector: function get()
     let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // When
-    let (_, return_data) = kakarot_core
-        .eth_call(origin: evm_address, :to, :gas_limit, :gas_price, :value, :calldata);
+    let tx = contract_utils::call_transaction(kakarot_core.chain_id(), to, calldata);
+    let (success, return_data) = kakarot_core
+        .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
 
     // Then
-    assert(return_data == u256_to_bytes_array(1).span(), 'wrong result');
+    assert_eq!(success, true);
+    assert_eq!(return_data, u256_to_bytes_array(1).span());
 }
 
 #[test]
 fn test_process_transaction() {
     // Given
-    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
+    contract_utils::fund_account_with_native_token(
+        eoa, native_token, 0xfffffffffffffffffffffffffff
+    );
     let chain_id = kakarot_core.chain_id();
 
     let _account = contract_utils::deploy_contract_account(
@@ -347,32 +362,40 @@ fn test_process_transaction() {
         .process_transaction(origin: Address { evm: evm_address, starknet: eoa }, :tx);
     let return_data = result.return_data;
 
-    assert!(result.success);
-
     // Then
+    assert!(result.success);
     assert(return_data == u256_to_bytes_array(0).span(), 'wrong result');
 }
 
 #[test]
 fn test_eth_send_transaction_deploy_tx() {
     // Given
-    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     let evm_address = test_utils::evm_address();
     let eoa = kakarot_core.deploy_eoa(evm_address);
+    contract_utils::fund_account_with_native_token(
+        eoa, native_token, 0xfffffffffffffffffffffffffff
+    );
 
-    let to = Option::None;
     let gas_limit = test_utils::tx_gas_limit();
     let gas_price = test_utils::gas_price();
     let value = 0;
 
     // When
     // Set the contract address to the EOA address, so that the caller of the `eth_send_transaction` is an eoa
+    let tx = LegacyTransaction {
+        chain_id: kakarot_core.chain_id(),
+        nonce: 0,
+        destination: Option::None,
+        amount: value,
+        gas_price,
+        gas_limit,
+        calldata: deploy_counter_calldata()
+    };
     testing::set_contract_address(eoa);
     let (_, deploy_result) = kakarot_core
-        .eth_send_transaction(
-            :to, :gas_limit, :gas_price, :value, calldata: deploy_counter_calldata()
-        );
+        .eth_send_transaction(EthereumTransaction::LegacyTransaction(tx));
 
     // Then
     let expected_address: EthAddress = 0x19587b345dcadfe3120272bd0dbec24741891759
@@ -394,17 +417,24 @@ fn test_eth_send_transaction_deploy_tx() {
     let to = Option::Some(expected_address);
 
     // No need to set address back to eoa, as eth_call doesn't use the caller address.
+    let tx = LegacyTransaction {
+        chain_id: kakarot_core.chain_id(),
+        nonce: 0,
+        destination: to,
+        amount: value,
+        gas_price,
+        gas_limit,
+        calldata
+    };
     let (_, result) = kakarot_core
-        .eth_call(origin: evm_address, :to, :gas_limit, :gas_price, :value, :calldata);
+        .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
     // Then
     assert(result == u256_to_bytes_array(0).span(), 'wrong result');
 }
+
 #[test]
 fn test_contract_account_class_hash() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
-    // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
-    // triggered in the constructor
-    contract_utils::drop_event(kakarot_core.contract_address);
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     let class_hash = kakarot_core.ca_class_hash();
 
@@ -425,10 +455,7 @@ fn test_contract_account_class_hash() {
 
 #[test]
 fn test_account_class_hash() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
-    // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
-    // triggered in the constructor
-    contract_utils::drop_event(kakarot_core.contract_address);
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     let class_hash = kakarot_core.account_class_hash();
 
@@ -451,10 +478,7 @@ fn test_account_class_hash() {
 
 #[test]
 fn test_eoa_class_hash() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
-    // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
-    // triggered in the constructor
-    contract_utils::drop_event(kakarot_core.contract_address);
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     let class_hash = kakarot_core.eoa_class_hash();
 

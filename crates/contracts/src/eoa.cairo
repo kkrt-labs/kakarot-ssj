@@ -26,6 +26,7 @@ mod ExternallyOwnedAccount {
         get_tx_info
     };
     use utils::eth_transaction::{EthTransactionTrait, EthereumTransaction, TransactionMetadata};
+    use utils::helpers::ArrayExtTrait;
     use utils::helpers::{
         Felt252SpanExTrait, U8SpanExTrait, EthAddressSignatureTrait, TryIntoEthSignatureTrait
     };
@@ -56,14 +57,13 @@ mod ExternallyOwnedAccount {
     /// * `hash`: the transaction hash { can be obtained from `get_tx_info` }
     /// * `response`: represents the return data obtained by applying the transaction
     /// * `success`: represents whether the transaction succeeded or not
-    #[derive(Drop, starknet::Event)]
+    #[derive(Drop, Debug, starknet::Event)]
     struct TransactionExecuted {
         #[key]
         hash: u256,
         response: Span<felt252>,
         success: bool
     }
-
 
     #[abi(embed_v0)]
     impl ExternallyOwnedAccount of super::IExternallyOwnedAccount<ContractState> {
@@ -152,7 +152,9 @@ mod ExternallyOwnedAccount {
             self
                 .emit(
                     TransactionExecuted {
-                        hash: tx_info.transaction_hash.into(), response: return_data, success
+                        hash: tx_info.transaction_hash.into(),
+                        response: return_data,
+                        success: success
                     }
                 );
 
