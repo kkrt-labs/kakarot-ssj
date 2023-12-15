@@ -13,6 +13,9 @@ mod gas;
 // instructions module
 mod instructions;
 
+// instructions module
+mod precompiles;
+
 // interpreter module
 mod interpreter;
 
