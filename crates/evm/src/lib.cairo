@@ -13,9 +13,6 @@ mod gas;
 // instructions module
 mod instructions;
 
-// instructions module
-mod precompiles;
-
 // interpreter module
 mod interpreter;
 
@@ -24,6 +21,9 @@ mod memory;
 
 // Data Models module
 mod model;
+
+// instructions module
+mod precompiles;
 
 // Stack module
 mod stack;

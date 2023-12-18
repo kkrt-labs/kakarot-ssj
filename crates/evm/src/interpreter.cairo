@@ -16,6 +16,8 @@ use evm::model::{
     Message, Environment, Address, Transfer, ExecutionSummary, ExecutionResult,
     ExecutionResultTrait, AccountType
 };
+use evm::precompiles::lib::PrecompileTrait;
+use evm::precompiles;
 use evm::stack::{Stack, StackTrait};
 use evm::state::{State, StateTrait};
 use starknet::{EthAddress, ContractAddress};
@@ -121,13 +123,13 @@ impl EVMImpl of EVMTrait {
             }
         }
 
-        // Handle precompile logic
-        if is_precompile(message.target.evm) {
-            panic!("Not Implemented: Precompiles are not implemented yet");
-        }
-
         // Instantiate a new VM using the message to process and the current environment.
         let mut vm: VM = VMTrait::new(message, env);
+
+        // Handle precompile logic
+        if is_precompile(message.target.evm) {
+            PrecompileTrait::exec_precompile(ref vm);
+        }
 
         // Decode and execute the current opcode.
         // until we have processed all opcodes or until we have stopped.
