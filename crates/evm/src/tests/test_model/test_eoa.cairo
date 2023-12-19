@@ -13,7 +13,6 @@ use starknet::testing::{set_contract_address, set_chain_id};
 #[test]
 fn test_eoa_deploy() {
     let (_, kakarot_core) = setup_contracts_for_testing();
-    contract_utils::drop_event(kakarot_core.contract_address);
 
     let eoa_address = EOATrait::deploy(evm_address()).expect('deployment of EOA failed');
 

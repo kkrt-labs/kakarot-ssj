@@ -7,12 +7,12 @@ use starknet::{EthAddress, eth_signature::{Signature, verify_eth_signature}};
 use utils::errors::RLPErrorTrait;
 
 use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl, RLPHelpersErrorTrait};
+
+use utils::fmt::{EthAddressDebug};
 use utils::helpers::{U256Trait, U256Impl, ByteArrayExt, U8SpanExTrait};
 
 use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
-
-use utils::traits::{EthAddressDebug, SpanDebug};
 
 #[derive(Copy, Clone, Drop, Serde, PartialEq, Debug)]
 struct AccessListItem {

@@ -526,8 +526,8 @@ mod eth_signature_test {
     use starknet::eth_signature::Signature;
     use utils::constants::CHAIN_ID;
     use utils::eth_transaction::TransactionType;
+    use utils::fmt::{EthSignatureDebug};
     use utils::helpers::{EthAddressSignatureTrait, TryIntoEthSignatureTrait};
-    use utils::traits::{EthSignatureDisplay, debug_display_based::TDisplay, SpanDebug};
 
     #[test]
     fn test_eth_signature_to_felt252_array() {

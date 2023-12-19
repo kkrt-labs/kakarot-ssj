@@ -1,90 +1,10 @@
 use core::array::SpanTrait;
-use core::fmt::{Display, Debug, Formatter, Error};
 use evm::errors::{EVMError, ensure, TYPE_CONVERSION_ERROR};
 use starknet::{
     StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
     ContractAddress, Store, SyscallResult, eth_signature::Signature as EthSignature
 };
 use utils::math::{Zero, One, Bitshift};
-
-mod display_felt252_based {
-    use core::fmt::{Display, Formatter, Error};
-    use core::to_byte_array::AppendFormattedToByteArray;
-    impl TDisplay<T, +Into<T, felt252>, +Copy<T>> of Display<T> {
-        fn fmt(self: @T, ref f: Formatter) -> Result<(), Error> {
-            let value: felt252 = (*self).into();
-            let base: felt252 = 10_u8.into();
-            value.append_formatted_to_byte_array(ref f.buffer, base.try_into().unwrap());
-            Result::Ok(())
-        }
-    }
-}
-
-mod debug_display_based {
-    use core::fmt::{Display, Debug, Formatter, Error};
-    use core::to_byte_array::AppendFormattedToByteArray;
-    impl TDisplay<T, +Display<T>> of Debug<T> {
-        fn fmt(self: @T, ref f: Formatter) -> Result<(), Error> {
-            Display::fmt(self, ref f)
-        }
-    }
-}
-
-impl OptionDisplay<T, +Display<T>, +Drop<T>, +Copy<T>> of Display<Option<T>> {
-    fn fmt(self: @Option<T>, ref f: Formatter) -> Result<(), Error> {
-        match *self {
-            Option::Some(value) => Display::fmt(@value, ref f),
-            Option::None => Display::<felt252>::fmt(@'Option::None', ref f),
-        }
-    }
-}
-
-impl OptionDebug<T, +Display<T>, +Drop<T>, +Copy<T>> of Debug<Option<T>> {
-    fn fmt(self: @Option<T>, ref f: Formatter) -> Result<(), Error> {
-        match *self {
-            Option::Some(value) => Display::fmt(@value, ref f),
-            Option::None => Display::<felt252>::fmt(@'Option::None', ref f),
-        }
-    }
-}
-
-impl EthAddressDisplay = display_felt252_based::TDisplay<EthAddress>;
-impl ContractAddressDisplay = display_felt252_based::TDisplay<ContractAddress>;
-impl EthAddressDebug = debug_display_based::TDisplay<EthAddress>;
-impl ContractAddressDebug = debug_display_based::TDisplay<ContractAddress>;
-impl SpanDebug<T, +Display<T>, +Copy<T>> = debug_display_based::TDisplay<Span<T>>;
-
-impl EthSignatureDisplay of Display<EthSignature> {
-    fn fmt(self: @EthSignature, ref f: Formatter) -> Result<(), Error> {
-        write!(f, "r: {}", *self.r);
-        write!(f, "s: {}", *self.s);
-        write!(f, "y_parity: {}", *self.y_parity);
-
-        Result::Ok(())
-    }
-}
-
-impl SpanTDisplay<T, +Display<T>, +Copy<T>> of Display<Span<T>> {
-    fn fmt(self: @Span<T>, ref f: Formatter) -> Result<(), Error> {
-        let mut self = *self;
-        write!(f, "[")?;
-        loop {
-            match self.pop_front() {
-                Option::Some(value) => {
-                    if Display::fmt(value, ref f).is_err() {
-                        break Result::Err(Error {});
-                    };
-                    if write!(f, ", ").is_err() {
-                        break Result::Err(Error {});
-                    };
-                },
-                Option::None => { break Result::Ok(()); }
-            };
-        }?;
-        write!(f, "]")?;
-        Result::Ok(())
-    }
-}
 
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
     #[inline(always)]

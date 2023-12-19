@@ -14,10 +14,6 @@ use starknet::testing::set_contract_address;
 #[test]
 fn test_contract_account_deploy() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
-    // triggered in the constructor
-    contract_utils::drop_event(kakarot_core.contract_address);
-
     set_contract_address(kakarot_core.contract_address);
 
     let bytecode = counter_evm_bytecode();

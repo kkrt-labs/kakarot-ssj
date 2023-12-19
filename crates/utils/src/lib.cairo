@@ -5,6 +5,7 @@ mod checked_math;
 mod constants;
 mod errors;
 mod eth_transaction;
+mod fmt;
 mod helpers;
 mod i256;
 mod math;

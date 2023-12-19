@@ -215,7 +215,6 @@ fn test_rlp_encode_sequence_empty() {
 
 #[test]
 fn test_rlp_encode_sequence() {
-    let mut input: Array<Span<u8>> = Default::default();
     let cat = RLPItem::String(array![0x63, 0x61, 0x74].span());
     let dog = RLPItem::String(array![0x64, 0x6f, 0x67].span());
     let input = array![cat, dog];

@@ -16,11 +16,12 @@ mod test_external_owned_account {
         MockContractUpgradeableV1
     };
     use contracts::tests::test_utils::{
-        setup_contracts_for_testing, deploy_eoa, deploy_contract_account, pop_log
+        setup_contracts_for_testing, deploy_eoa, deploy_contract_account, pop_log, pop_log_debug,
+        fund_account_with_native_token, call_transaction
     };
     use contracts::uninitialized_account::{
         IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount,
-        IUninitializedAccount
+        IUninitializedAccount, UninitializedAccount::upgradeable_component
     };
     use core::array::SpanTrait;
     use core::box::BoxTrait;
@@ -38,11 +39,12 @@ mod test_external_owned_account {
         deploy_syscall, ContractAddress, ClassHash, VALIDATED, get_contract_address,
         contract_address_const, EthAddress, eth_signature::{Signature}, get_tx_info
     };
-    use utils::eth_transaction::TransactionType;
+    use utils::eth_transaction::{
+        TransactionType, EthereumTransaction, EthereumTransactionTrait, LegacyTransaction
+    };
     use utils::helpers::EthAddressSignatureTrait;
     use utils::helpers::{U8SpanExTrait, u256_to_bytes_array};
     use utils::tests::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
-    use utils::traits::SpanDebug;
 
 
     #[test]
@@ -98,16 +100,20 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[ignore]
+    #[available_gas(200000000000000)]
     fn test___execute__() {
-        let (_, kakarot_core) = setup_contracts_for_testing();
+        let (native_token, kakarot_core) = setup_contracts_for_testing();
 
         let evm_address = evm_address();
         let eoa = kakarot_core.deploy_eoa(evm_address);
+        fund_account_with_native_token(eoa, native_token, 0xfffffffffffffffffffffffffff);
+
+        pop_log::<upgradeable_component::ContractUpgraded>(eoa)
+            .unwrap(); // pop ContractUpgraded event from event log
 
         let kakarot_address = kakarot_core.contract_address;
 
-        deploy_contract_account(other_evm_address(), counter_evm_bytecode());
+        let deployed_address = deploy_contract_account(other_evm_address(), counter_evm_bytecode());
 
         set_contract_address(eoa);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };
@@ -117,17 +123,14 @@ mod test_external_owned_account {
         let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
         // check counter value is 0 before doing inc
-        let (_, return_data) = kakarot_core
-            .eth_call(
-                origin: evm_address,
-                to: Option::Some(other_evm_address()),
-                gas_limit: tx_gas_limit(),
-                gas_price: gas_price(),
-                value: 0,
-                calldata: data_get_tx
-            );
+        let tx = call_transaction(
+            kakarot_core.chain_id(), Option::Some(other_evm_address()), data_get_tx
+        );
 
-        assert(return_data == u256_to_bytes_array(0).span(), 'counter value not 0');
+        let (_, return_data) = kakarot_core
+            .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx),);
+
+        assert_eq!(return_data, u256_to_bytes_array(0).span());
 
         // perform inc on the counter
         let encoded_tx = eip_2930_rlp_encoded_counter_inc_tx();
@@ -138,12 +141,13 @@ mod test_external_owned_account {
             calldata: encoded_tx.to_felt252_array()
         };
 
+        starknet::testing::set_transaction_hash(selector!("transaction_hash"));
         let result = eoa_contract.__execute__(array![call]);
         assert_eq!(result.len(), 1);
 
         let tx_info = get_tx_info().unbox();
 
-        let event = pop_log::<TransactionExecuted>(kakarot_core.contract_address).unwrap();
+        let event = pop_log_debug::<TransactionExecuted>(eoa).unwrap();
 
         assert_eq!(event.hash, tx_info.transaction_hash.into());
 
@@ -152,17 +156,12 @@ mod test_external_owned_account {
         assert_eq!(event.success, true);
 
         // check counter value has increased
+        let tx = call_transaction(
+            kakarot_core.chain_id(), Option::Some(other_evm_address()), data_get_tx
+        );
         let (_, return_data) = kakarot_core
-            .eth_call(
-                origin: evm_address,
-                to: Option::Some(other_evm_address()),
-                gas_limit: tx_gas_limit(),
-                gas_price: gas_price(),
-                value: 0,
-                calldata: data_get_tx
-            );
-
-        assert(return_data == u256_to_bytes_array(1).span(), 'counter value not 1');
+            .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx),);
+        assert_eq!(return_data, u256_to_bytes_array(1).span());
     }
 
     #[test]
@@ -207,7 +206,6 @@ mod test_external_owned_account {
     }
 
     #[test]
-    #[ignore]
     #[should_panic(expected: ('to is not kakarot core', 'ENTRYPOINT_FAILED'))]
     fn test___validate__fail__to_address_not_kakarot_core() {
         let (_, kakarot_core) = setup_contracts_for_testing();

@@ -83,7 +83,7 @@ impl MemoryOperation of MemoryOperationTrait {
             self.charge_gas(gas::WARM_ACCESS_COST)?;
         } else {
             self.accessed_storage_keys.add((evm_address, key));
-            self.charge_gas(gas::COLD_SLOAD_COST);
+            self.charge_gas(gas::COLD_SLOAD_COST)?;
         }
 
         let value = self.env.state.read_state(evm_address, key);

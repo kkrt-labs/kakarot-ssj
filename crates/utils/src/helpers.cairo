@@ -40,7 +40,7 @@ use utils::traits::{
 /// ceil32(34) = 64
 fn ceil32(value: usize) -> usize {
     let ceiling = 32_u32;
-    let (q, r) = DivRem::div_rem(value, ceiling.try_into().unwrap());
+    let (_q, r) = DivRem::div_rem(value, ceiling.try_into().unwrap());
     if r == 0_u8.into() {
         return value;
     } else {
