@@ -1,3 +1,4 @@
+use core::starknet::SyscallResultTrait;
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
 
 use evm::errors::{ensure, EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, BALANCE_OVERFLOW};
@@ -251,7 +252,7 @@ impl StateInternalImpl of StateInternalTrait {
                     let mut data = Default::default();
                     Serde::<Array<u256>>::serialize(@event.keys, ref keys);
                     Serde::<Array<u8>>::serialize(@event.data, ref data);
-                    emit_event_syscall(keys.span(), data.span());
+                    emit_event_syscall(keys.span(), data.span()).unwrap_syscall();
                 },
                 Option::None => { break Result::Ok(()); }
             }

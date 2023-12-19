@@ -126,11 +126,6 @@ impl EVMImpl of EVMTrait {
         // Instantiate a new VM using the message to process and the current environment.
         let mut vm: VM = VMTrait::new(message, env);
 
-        // Handle precompile logic
-        if is_precompile(message.target.evm) {
-            PrecompileTrait::exec_precompile(ref vm);
-        }
-
         // Decode and execute the current opcode.
         // until we have processed all opcodes or until we have stopped.
         // Use a recursive function to allow passing VM by ref - which wouldn't work in a loop;
@@ -152,6 +147,31 @@ impl EVMImpl of EVMTrait {
     }
 
     fn execute_code(ref vm: VM) -> ExecutionResult {
+        // Handle precompile logic
+        if is_precompile(vm.message.target.evm) {
+            let result = PrecompileTrait::exec_precompile(ref vm);
+
+            match result {
+                Result::Ok(_) => {
+                    // Success case
+                    return ExecutionResult {
+                        success: true,
+                        return_data: vm.return_data(),
+                        gas_left: vm.gas_left(),
+                        accessed_addresses: vm.accessed_addresses(),
+                        accessed_storage_keys: vm.accessed_storage_keys(),
+                    };
+                },
+                Result::Err(error) => {
+                    // If an error occurred, revert execution self.
+                    // Currently, revert reason is a Span<u8>.
+                    return ExecutionResultTrait::exceptional_failure(
+                        error.to_bytes(), vm.accessed_addresses(), vm.accessed_storage_keys()
+                    );
+                }
+            }
+        }
+
         // initalize valid jumpdests
         vm.init_valid_jump_destinations();
 
