@@ -1,5 +1,5 @@
-use core::starknet::SyscallResultTrait;
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
+use core::starknet::SyscallResultTrait;
 
 use evm::errors::{ensure, EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, BALANCE_OVERFLOW};
 use evm::model::account::{AccountTrait};
