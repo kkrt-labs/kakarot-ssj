@@ -153,7 +153,6 @@ impl EVMImpl of EVMTrait {
 
             match result {
                 Result::Ok(_) => {
-                    // Success case
                     return ExecutionResult {
                         success: true,
                         return_data: vm.return_data(),

@@ -1,1 +1,1 @@
-mod test_identity_precompile;
+mod test_identity;

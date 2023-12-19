@@ -15,7 +15,6 @@ impl IdentityPrecompileTraitImpl of IdentityPrecompileTrait {
 
     #[inline(always)]
     fn exec(ref vm: VM) -> Result<(), EVMError> {
-        let gas_limit = vm.gas_left();
         let input = vm.message().data;
 
         let data_word_size: u128 = ((input.len() + 31) / 32).into();
@@ -23,7 +22,7 @@ impl IdentityPrecompileTraitImpl of IdentityPrecompileTrait {
         let gas: u128 = IDENTITY_PRECOMPILE_BASE_COST.into()
             + (data_word_size * IDENTITY_PRECOMPILE_COST_PER_WORD.into());
 
-        if (gas > gas_limit) {
+        if (gas > vm.gas_left()) {
             Result::Err(EVMError::OutOfGas)
         } else {
             vm.charge_gas(gas)?;
