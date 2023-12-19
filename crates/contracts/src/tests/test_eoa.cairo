@@ -113,7 +113,7 @@ mod test_external_owned_account {
 
         let kakarot_address = kakarot_core.contract_address;
 
-        let deployed_address = deploy_contract_account(other_evm_address(), counter_evm_bytecode());
+        deploy_contract_account(other_evm_address(), counter_evm_bytecode());
 
         set_contract_address(eoa);
         let eoa_contract = AccountContractDispatcher { contract_address: eoa };

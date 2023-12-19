@@ -16,6 +16,8 @@ use evm::model::{
     Message, Environment, Address, Transfer, ExecutionSummary, ExecutionResult,
     ExecutionResultTrait, AccountType
 };
+use evm::precompiles::lib::PrecompileTrait;
+use evm::precompiles;
 use evm::stack::{Stack, StackTrait};
 use evm::state::{State, StateTrait};
 use starknet::{EthAddress, ContractAddress};
@@ -121,11 +123,6 @@ impl EVMImpl of EVMTrait {
             }
         }
 
-        // Handle precompile logic
-        if is_precompile(message.target.evm) {
-            panic!("Not Implemented: Precompiles are not implemented yet");
-        }
-
         // Instantiate a new VM using the message to process and the current environment.
         let mut vm: VM = VMTrait::new(message, env);
 
@@ -150,6 +147,30 @@ impl EVMImpl of EVMTrait {
     }
 
     fn execute_code(ref vm: VM) -> ExecutionResult {
+        // Handle precompile logic
+        if is_precompile(vm.message.target.evm) {
+            let result = PrecompileTrait::exec_precompile(ref vm);
+
+            match result {
+                Result::Ok(_) => {
+                    return ExecutionResult {
+                        success: true,
+                        return_data: vm.return_data(),
+                        gas_left: vm.gas_left(),
+                        accessed_addresses: vm.accessed_addresses(),
+                        accessed_storage_keys: vm.accessed_storage_keys(),
+                    };
+                },
+                Result::Err(error) => {
+                    // If an error occurred, revert execution self.
+                    // Currently, revert reason is a Span<u8>.
+                    return ExecutionResultTrait::exceptional_failure(
+                        error.to_bytes(), vm.accessed_addresses(), vm.accessed_storage_keys()
+                    );
+                }
+            }
+        }
+
         // initalize valid jumpdests
         vm.init_valid_jump_destinations();
 

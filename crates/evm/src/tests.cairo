@@ -10,6 +10,8 @@ mod test_memory;
 
 mod test_model;
 
+mod test_precompiles;
+
 mod test_stack;
 
 mod test_state;

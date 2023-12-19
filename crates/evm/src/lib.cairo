@@ -22,6 +22,9 @@ mod memory;
 // Data Models module
 mod model;
 
+// instructions module
+mod precompiles;
+
 // Stack module
 mod stack;
 

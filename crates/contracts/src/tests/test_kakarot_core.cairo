@@ -242,7 +242,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
     );
 
     let counter_address = 'counter_contract'.try_into().unwrap();
-    let account = contract_utils::deploy_contract_account(counter_address, counter_evm_bytecode());
+    contract_utils::deploy_contract_account(counter_address, counter_evm_bytecode());
 
     let gas_limit = test_utils::tx_gas_limit();
     let gas_price = test_utils::gas_price();
@@ -289,7 +289,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
     let tx = contract_utils::call_transaction(
         kakarot_core.chain_id(), Option::Some(counter_address), data_get_tx
     );
-    let (_, return_data) = kakarot_core
+    let (_, _) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
     let (_, return_data) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
