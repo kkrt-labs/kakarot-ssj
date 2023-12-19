@@ -8,11 +8,9 @@ use evm::stack::StackTrait;
 use evm::tests::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
 use starknet::testing::set_contract_address;
 
-use utils::traits::SpanDebug;
-
 #[test]
 fn test_identity_precompile() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, _) = setup_contracts_for_testing();
 
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -30,16 +28,16 @@ fn test_identity_precompile() {
 
 #[test]
 fn test_identity_precompile_static_call() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let (_, _) = setup_contracts_for_testing();
 
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    vm.stack.push(0x20); // retSize
-    vm.stack.push(0x3F); // retOffset
-    vm.stack.push(0x20); // argsSize
-    vm.stack.push(0x1F); // argsOffset
-    vm.stack.push(0x4); // address
-    vm.stack.push(0xFFFFFFFF); // gas
+    vm.stack.push(0x20).unwrap(); // retSize
+    vm.stack.push(0x3F).unwrap(); // retOffset
+    vm.stack.push(0x20).unwrap(); // argsSize
+    vm.stack.push(0x1F).unwrap(); // argsOffset
+    vm.stack.push(0x4).unwrap(); // address
+    vm.stack.push(0xFFFFFFFF).unwrap(); // gas
 
     vm.memory.store(0x2A, 0x1F);
 
