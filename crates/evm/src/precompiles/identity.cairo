@@ -13,7 +13,6 @@ impl IdentityPrecompileTraitImpl of IdentityPrecompileTrait {
         EthAddress { address: 0x4 }
     }
 
-    #[inline(always)]
     fn exec(ref vm: VM) -> Result<(), EVMError> {
         let input = vm.message().data;
 
