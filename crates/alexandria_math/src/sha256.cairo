@@ -1,3 +1,6 @@
+// note: the code has been take from <https://github.com/keep-starknet-strange/alexandria/blob/main/src/math/src/sha256.cairo>
+// this has been done to make the code work with our scarb version, this is a temporary solution, and we should rely on adding alexandria as a dependency
+
 use integer::{u32_wrapping_add, BoundedInt};
 
 fn ch(x: u32, y: u32, z: u32) -> u32 {
