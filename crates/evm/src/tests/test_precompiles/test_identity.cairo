@@ -10,8 +10,6 @@ use starknet::testing::set_contract_address;
 
 #[test]
 fn test_identity_precompile() {
-    let (_, _) = setup_contracts_for_testing();
-
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let calldata = array![0x2A].span();
