@@ -8,6 +8,7 @@ version = "0.1.0"
 starknet.workspace = true
 utils = { path = "../utils" }
 contracts = { path = "../contracts" }
+alexandria_math = { path = "../alexandria_math" }
 openzeppelin = { path = "../openzeppelin" }
 
 [tool]

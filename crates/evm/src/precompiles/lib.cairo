@@ -5,6 +5,7 @@ use evm::model::vm::VMTrait;
 use evm::precompiles::ec_recover::EcRecoverPrecompileTrait;
 
 use evm::precompiles::identity::IdentityPrecompileTrait;
+use evm::precompiles::sha256::Sha256PrecompileTrait;
 use starknet::EthAddress;
 
 #[generate_trait]
