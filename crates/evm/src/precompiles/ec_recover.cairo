@@ -14,12 +14,10 @@ const EC_RECOVER_PRECOMPILE_GAS_COST: u128 = 3000;
 
 #[generate_trait]
 impl EcRecoverPrecompileTraitImpl of EcRecoverPrecompileTrait {
-    #[inline(always)]
     fn address() -> EthAddress {
         EthAddress { address: 0x1 }
     }
 
-    #[inline(always)]
     fn exec(ref vm: VM) -> Result<(), EVMError> {
         let gas: u128 = EC_RECOVER_PRECOMPILE_GAS_COST;
 
