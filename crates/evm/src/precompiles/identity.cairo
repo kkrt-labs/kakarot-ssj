@@ -8,6 +8,7 @@ const IDENTITY_PRECOMPILE_COST_PER_WORD: u8 = 3;
 
 #[generate_trait]
 impl IdentityPrecompileTraitImpl of IdentityPrecompileTrait {
+    #[inline(always)]
     fn address() -> EthAddress {
         EthAddress { address: 0x4 }
     }
