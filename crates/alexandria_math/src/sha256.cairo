@@ -17,6 +17,7 @@ fn bsig0(x: u32) -> u32 {
     let x2 = (x / 0x2000) | (x * 0x80000);
     let x3 = (x / 0x400000) | (x * 0x400);
     let result = (x1 ^ x2 ^ x3) & BoundedInt::<u32>::max().into();
+    // safe unwrap as at end we do an & with max u32, hence the number can be max 2**32 which can fit into a u32
     result.try_into().unwrap()
 }
 
@@ -26,6 +27,7 @@ fn bsig1(x: u32) -> u32 {
     let x2 = (x / 0x800) | (x * 0x200000);
     let x3 = (x / 0x2000000) | (x * 0x80);
     let result = (x1 ^ x2 ^ x3) & BoundedInt::<u32>::max().into();
+    // safe unwrap as at end we do an & with max u32, hence the number can be max 2**32 which can fit into a u32
     result.try_into().unwrap()
 }
 
@@ -35,6 +37,7 @@ fn ssig0(x: u32) -> u32 {
     let x2 = (x / 0x40000) | (x * 0x4000);
     let x3 = (x / 0x8);
     let result = (x1 ^ x2 ^ x3) & BoundedInt::<u32>::max().into();
+    // safe unwrap as at end we do an & with max u32, hence the number can be max 2**32 which can fit into a u32
     result.try_into().unwrap()
 }
 
@@ -61,6 +64,7 @@ fn sha256(mut data: Array<u8>) -> Array<u8> {
     };
 
     // add length to the end
+    // all these are safe unwraps, the max number we can end up with via these operations is 2**8, which can fit in u32
     let mut res = (data_len & 0xff00000000000000) / 0x100000000000000;
     data.append(res.try_into().unwrap());
     res = (data_len.into() & 0xff000000000000) / 0x1000000000000;
@@ -91,6 +95,7 @@ fn from_u32Array_to_u8Array(mut data: Span<u32>) -> Array<u8> {
     loop {
         match data.pop_front() {
             Option::Some(val) => {
+                // all these are safe unwraps, the max number we can end up with via these operations is 2**8, which can fit in u8
                 let mut res = (*val & 0xff000000) / 0x1000000;
                 result.append(res.try_into().unwrap());
                 res = (*val & 0xff0000) / 0x10000;
@@ -182,6 +187,7 @@ fn from_u8Array_to_u32Array(mut data: Span<u8>) -> Array<u32> {
     loop {
         match data.pop_front() {
             Option::Some(val1) => {
+                // these are safe unwraps as the message will always be of length 512
                 let val2 = data.pop_front().unwrap();
                 let val3 = data.pop_front().unwrap();
                 let val4 = data.pop_front().unwrap();
