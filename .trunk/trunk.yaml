@@ -14,6 +14,8 @@ runtimes:
     - node@18.12.1
     - python@3.10.8
 lint:
+  disabled:
+    - yamllint
   files:
     - name: cairo
       extensions:
@@ -43,7 +45,6 @@ lint:
     - shfmt@3.6.0
     - taplo@0.8.1
     - trivy@0.47.0
-    - yamllint@1.33.0
 actions:
   disabled:
     - trunk-announce
