@@ -211,7 +211,7 @@ impl MemoryImpl of MemoryTrait {
             self.expand(length - self.size())
         } else {
             return;
-    }
+        }
     }
 
     /// Expands memory if necessary, then load 32 bytes from it at the given offset.
