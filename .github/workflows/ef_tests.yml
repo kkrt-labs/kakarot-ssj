@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  # trunk-ignore(yamllint/empty-values)
   workflow_dispatch:
 
 concurrency:
@@ -38,6 +39,7 @@ jobs:
       - name: Create empty skip file
         if: github.event_name == 'workflow_dispatch'
         run: |
+          rm blockchain-tests-skip.yml
           echo 'filename:' >> blockchain-tests-skip.yml
           echo '  None:' >> blockchain-tests-skip.yml
           echo '    - None' >> blockchain-tests-skip.yml
@@ -80,11 +82,12 @@ jobs:
           name: resources
 
       - name: generate blockchain-tests-skip.yml file
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         run: |
           mv test_v1.out data.txt
           make generate-skip-file
       - name: upload skip file
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v3
         with:
           path: blockchain-tests-skip.yml

@@ -43,6 +43,7 @@ lint:
     - shfmt@3.6.0
     - taplo@0.8.1
     - trivy@0.47.0
+    - yamllint@1.33.0
 actions:
   disabled:
     - trunk-announce
