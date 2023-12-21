@@ -28,7 +28,7 @@ impl Sha256PrecompileTraitImpl of Sha256PrecompileTrait {
 
         vm.charge_gas(gas)?;
 
-        let result = sha256(input.into());
+        let result = sha256(input);
         vm.return_data = result.span();
         Result::Ok(())
     }
