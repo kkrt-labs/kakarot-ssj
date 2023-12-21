@@ -3,8 +3,8 @@ use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 use starknet::EthAddress;
 
-const IDENTITY_PRECOMPILE_BASE_COST: u8 = 15;
-const IDENTITY_PRECOMPILE_COST_PER_WORD: u8 = 3;
+const IDENTITY_PRECOMPILE_BASE_COST: u128 = 15;
+const IDENTITY_PRECOMPILE_COST_PER_WORD: u128 = 3;
 
 #[generate_trait]
 impl IdentityPrecompileTraitImpl of IdentityPrecompileTrait {
@@ -18,8 +18,8 @@ impl IdentityPrecompileTraitImpl of IdentityPrecompileTrait {
 
         let data_word_size: u128 = ((input.len() + 31) / 32).into();
 
-        let gas: u128 = IDENTITY_PRECOMPILE_BASE_COST.into()
-            + (data_word_size * IDENTITY_PRECOMPILE_COST_PER_WORD.into());
+        let gas: u128 = IDENTITY_PRECOMPILE_BASE_COST
+            + (data_word_size * IDENTITY_PRECOMPILE_COST_PER_WORD);
 
         if (gas > vm.gas_left()) {
             Result::Err(EVMError::OutOfGas)

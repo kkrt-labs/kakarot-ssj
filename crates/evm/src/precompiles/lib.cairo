@@ -5,6 +5,7 @@ use evm::model::vm::VMTrait;
 use evm::precompiles::ec_recover::EcRecoverPrecompileTrait;
 
 use evm::precompiles::identity::IdentityPrecompileTrait;
+use evm::precompiles::sha256::Sha256PrecompileTrait;
 use starknet::EthAddress;
 
 #[generate_trait]
@@ -18,12 +19,7 @@ impl PrecompileTraitImpl of PrecompileTrait {
                 panic!("pre-compile address can't be 0")
             },
             1 => { EcRecoverPrecompileTrait::exec(ref vm) },
-            2 => {
-                // we should never reach this branch!
-                panic!(
-                    "pre-compile at address {} isn't implemented yet", precompile_address.address
-                )
-            },
+            2 => { Sha256PrecompileTrait::exec(ref vm) },
             3 => {
                 // we should never reach this branch!
                 panic!(
