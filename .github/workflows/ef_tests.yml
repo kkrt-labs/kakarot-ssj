@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -21,15 +22,34 @@ jobs:
         with:
           repository: kkrt-labs/ef-tests
       - name: Checkout local skip file
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/checkout@v3
         with:
           sparse-checkout: |
             blockchain-tests-skip.yml
           sparse-checkout-cone-mode: false
           path: skip-file
+
       - name: Replace the skip files
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           mv skip-file/blockchain-tests-skip.yml blockchain-tests-skip.yml
+
+      - name: Create empty skip file
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo 'filename:' >> blockchain-tests-skip.yml
+          echo '  None:' >> blockchain-tests-skip.yml
+          echo '    - None' >> blockchain-tests-skip.yml
+          echo '' >> blockchain-tests-skip.yml
+          echo 'testname:' >> blockchain-tests-skip.yml
+          echo '  None:' >> blockchain-tests-skip.yml
+          echo '    - None' >> blockchain-tests-skip.yml
+          echo '' >> blockchain-tests-skip.yml
+          echo 'regex:' >> blockchain-tests-skip.yml
+          echo '  None:' >> blockchain-tests-skip.yml
+          echo '    - None' >> blockchain-tests-skip.yml
+
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
@@ -58,3 +78,14 @@ jobs:
         with:
           path: resources
           name: resources
+
+      - name: generate blockchain-tests-skip.yml file
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          mv test_v1.out data.txt
+          make generate-skip-file
+      - name: upload skip file
+        uses: actions/upload-artifact@v3
+        with:
+          path: blockchain-tests-skip.yml
+          name: blockchain-tests-skip
