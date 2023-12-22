@@ -97,7 +97,7 @@ def get_current_gas_snapshot():
     """Execute command and return current gas snapshots."""
     # trunk-ignore(bandit/B602)
     # trunk-ignore(bandit/B607)
-    output = subprocess.check_output("scarb cairo-test", shell=True).decode("utf-8")
+    output = subprocess.check_output("scarb test", shell=True).decode("utf-8")
     pattern = r"test ([\w\:]+).*gas usage est\.\: (\d+)"
     matches = re.findall(pattern, output)
     matches.sort()
