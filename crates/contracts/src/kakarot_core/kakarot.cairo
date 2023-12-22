@@ -30,7 +30,7 @@ mod KakarotCore {
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::{EOATrait};
     use evm::model::{ExecutionSummary, ExecutionSummaryTrait, Address, AddressTrait};
-    use evm::model::{Message, Environment};
+    use evm::model::{Transfer, Message, Environment};
     use evm::state::{State, StateTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall,
@@ -348,6 +348,8 @@ mod KakarotCore {
             self: @ContractState, origin: Address, tx: EthereumTransaction
         ) -> ExecutionSummary {
             let block_info = starknet::get_block_info().unbox();
+            //TODO(optimization): the coinbase account is deployed from a specific `evm_address` which is specified upon deployment
+            // and specific to the chain. Rather than reading from a contract, we could directly use this constant.
             let coinbase = IExternallyOwnedAccountDispatcher {
                 contract_address: block_info.sequencer_address
             }
@@ -379,12 +381,29 @@ mod KakarotCore {
             ) {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
-                    println!("process_transaction: Insufficient balance for fees");
+                    println!("process_transaction: Insufficient balance for fees and transfer");
                     return ExecutionSummaryTrait::exceptional_failure(err.to_bytes());
                 }
             };
-            sender_account.set_balance(sender_balance - gas_fee.into());
-            env.state.set_account(sender_account);
+
+            // The gas fee is withdrawn from the sender's account and transferred to the coinbase address.
+            match env
+                .state
+                .add_transfer(
+                    Transfer {
+                        sender: origin,
+                        recipient: Address {
+                            evm: coinbase, starknet: block_info.sequencer_address,
+                        },
+                        amount: gas_fee.into()
+                    }
+                ) {
+                Result::Ok(_) => {},
+                Result::Err(err) => {
+                    println!("process_transaction: sequencer couldn't withdraw fees");
+                    return ExecutionSummaryTrait::exceptional_failure(err.to_bytes());
+                }
+            };
 
             let gas_left = match gas_limit.checked_sub(gas::calculate_intrinsic_gas_cost(@tx)) {
                 Option::Some(gas_left) => gas_left,
@@ -466,10 +485,23 @@ mod KakarotCore {
             let gas_refund = gas_used
                 / 5; //TODO(gas) the refund gas should be min(gas_used//5, refund_counter)
             let gas_refund_amount = (summary.gas_left + gas_refund) * gas_price;
-            let mut sender_account = summary.state.get_account(origin.evm);
-            let sender_balance_after_refund = sender_account.balance() + gas_refund_amount.into();
-            sender_account.set_balance(sender_balance_after_refund);
-            summary.state.set_account(sender_account);
+
+            // The refunded gas is transferred to the sender's account from the sequencer.
+            match summary
+                .state
+                .add_transfer(
+                    Transfer {
+                        sender: Address { evm: coinbase, starknet: block_info.sequencer_address, },
+                        recipient: origin,
+                        amount: gas_refund_amount.into()
+                    }
+                ) {
+                Result::Ok(_) => {},
+                Result::Err(err) => {
+                    println!("process_transaction: sequencer couldn't refund gas");
+                    return ExecutionSummaryTrait::exceptional_failure(err.to_bytes());
+                }
+            };
 
             summary
         }

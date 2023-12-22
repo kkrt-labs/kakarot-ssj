@@ -260,10 +260,6 @@ impl AccountImpl of AccountTrait {
         }
     }
 
-    #[inline(always)]
-    fn set_balance(ref self: Account, value: u256) {
-        self.balance = value;
-    }
 
     #[inline(always)]
     fn balance(self: @Account) -> u256 {
@@ -369,5 +365,13 @@ impl AccountImpl of AccountTrait {
     #[inline(always)]
     fn is_selfdestruct(self: @Account) -> bool {
         *self.selfdestruct
+    }
+}
+
+#[generate_trait]
+impl AccountInternals of AccountInternalTrait {
+    #[inline(always)]
+    fn set_balance(ref self: Account, value: u256) {
+        self.balance = value;
     }
 }

@@ -70,7 +70,7 @@ mod test_state {
     use contracts::kakarot_core::interface::{IExtendedKakarotCoreDispatcherTrait};
     use contracts::tests::test_utils as contract_utils;
     use contracts::uninitialized_account::UninitializedAccount;
-    use evm::model::account::{Account, AccountType, AccountTrait};
+    use evm::model::account::{Account, AccountType, AccountTrait, AccountInternalTrait};
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::EOATrait;
     use evm::model::{Event, Transfer, Address};
