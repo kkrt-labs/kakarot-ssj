@@ -369,13 +369,14 @@ mod KakarotCore {
             };
 
             //TODO(gas) handle FeeMarketTransaction
+            // Gas
             let gas_fee = gas_limit * gas_price;
 
             let sender = env.origin;
-            let sender_account = env.state.get_account(sender);
+            let mut sender_account = env.state.get_account(sender);
+            let sender_balance = sender_account.balance();
             match ensure(
-                sender_account.balance() >= gas_fee.into() + tx.value(),
-                EVMError::InsufficientBalance
+                sender_balance >= gas_fee.into() + tx.value(), EVMError::InsufficientBalance
             ) {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
@@ -383,6 +384,9 @@ mod KakarotCore {
                     return ExecutionSummaryTrait::exceptional_failure(err.to_bytes());
                 }
             };
+
+            sender_account.set_balance(sender_balance - gas_fee.into());
+            env.state.set_account(sender_account);
 
             let gas_left = match gas_limit.checked_sub(gas::calculate_intrinsic_gas_cost(@tx)) {
                 Option::Some(gas_left) => gas_left,
