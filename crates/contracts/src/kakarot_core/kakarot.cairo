@@ -138,6 +138,7 @@ mod KakarotCore {
         ca_class_hash: ClassHash,
         owner: ContractAddress,
         chain_id: u128,
+        pre_deployed_eoas: Span<EthAddress>,
     ) {
         self.native_token.write(native_token);
         self.deploy_fee.write(deploy_fee);
@@ -146,6 +147,15 @@ mod KakarotCore {
         self.ca_class_hash.write(ca_class_hash);
         self.ownable.initializer(owner);
         self.chain_id.write(chain_id);
+
+        let mut i: usize = 0;
+        loop {
+            if (i == pre_deployed_eoas.len()) {
+                break;
+            }
+            self.deploy_eoa(*pre_deployed_eoas.at(i));
+            i += 1;
+        }
     }
 
     #[abi(embed_v0)]
