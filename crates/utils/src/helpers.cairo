@@ -656,14 +656,14 @@ impl U32Impl of U32Trait {
         }
         let mut result: u32 = 0;
         let mut i: u32 = 0;
+        let mut offset = len - 1;
         let mut shifts = array![0x1, 0x100, 0x10000, 0x1000000];
         loop {
             if i == len {
                 break ();
             }
             let byte: u32 = (*input.at(i)).into();
-            result += byte * *shifts[i];
-
+            result += byte * *shifts[offset - i];
             i += 1;
         };
         Option::Some(result)
