@@ -654,15 +654,15 @@ impl U32Impl of U32Trait {
         if len > 4 {
             return Option::None;
         }
-        let offset: u32 = len - 1;
         let mut result: u32 = 0;
         let mut i: u32 = 0;
+        let mut shifts = array![0x1, 0x100, 0x10000, 0x1000000];
         loop {
             if i == len {
                 break ();
             }
             let byte: u32 = (*input.at(i)).into();
-            result += byte.shl(8 * (offset - i));
+            result += byte * *shifts[i];
 
             i += 1;
         };
