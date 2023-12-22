@@ -250,7 +250,7 @@ mod KakarotCore {
 
             let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
 
-            let ExecutionSummary{state: _, return_data, success } = self
+            let ExecutionSummary{success, return_data, gas_left: _, state: _, } = self
                 .process_transaction(origin, tx);
 
             (success, return_data)
@@ -276,7 +276,7 @@ mod KakarotCore {
                 .expect('Fetching EOA failed');
             assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
 
-            let ExecutionSummary{mut state, return_data, success } = self
+            let ExecutionSummary{success, return_data, gas_left: _, mut state } = self
                 .process_transaction(origin, tx);
             state.commit_state().expect('Committing state failed');
             (success, return_data)
@@ -369,11 +369,10 @@ mod KakarotCore {
             };
 
             //TODO(gas) handle FeeMarketTransaction
-            // Gas
-            let gas_fee = gas_limit * gas_price;
 
-            let sender = env.origin;
-            let mut sender_account = env.state.get_account(sender);
+            // TX Gas
+            let gas_fee = gas_limit * gas_price;
+            let mut sender_account = env.state.get_account(origin.evm);
             let sender_balance = sender_account.balance();
             match ensure(
                 sender_balance >= gas_fee.into() + tx.value(), EVMError::InsufficientBalance
@@ -384,7 +383,6 @@ mod KakarotCore {
                     return ExecutionSummaryTrait::exceptional_failure(err.to_bytes());
                 }
             };
-
             sender_account.set_balance(sender_balance - gas_fee.into());
             env.state.set_account(sender_account);
 
@@ -398,6 +396,7 @@ mod KakarotCore {
                 }
             };
 
+            // Handle deploy/non-deploy transaction cases
             let (to, is_deploy_tx, code, calldata) = match tx.destination() {
                 Option::Some(to) => {
                     let target_starknet_address = self.compute_starknet_address(to);
@@ -460,7 +459,19 @@ mod KakarotCore {
 
             println!("Initial message: {:?}", message);
 
-            EVMTrait::process_message_call(message, env, is_deploy_tx)
+            let mut summary = EVMTrait::process_message_call(message, env, is_deploy_tx);
+
+            // Gas refunds
+            let gas_used = tx.gas_limit() - summary.gas_left;
+            let gas_refund = gas_used
+                / 5; //TODO(gas) the refund gas should be min(gas_used//5, refund_counter)
+            let gas_refund_amount = (summary.gas_left + gas_refund) * gas_price;
+            let mut sender_account = summary.state.get_account(origin.evm);
+            let sender_balance_after_refund = sender_account.balance() + gas_refund_amount.into();
+            sender_account.set_balance(sender_balance_after_refund);
+            summary.state.set_account(sender_account);
+
+            summary
         }
     }
 }

@@ -80,15 +80,18 @@ impl ExecutionResultImpl of ExecutionResultTrait {
 
 #[derive(Destruct)]
 struct ExecutionSummary {
-    state: State,
+    success: bool,
     return_data: Span<u8>,
-    success: bool
+    gas_left: u128,
+    state: State,
 }
 
 #[generate_trait]
 impl ExecutionSummaryImpl of ExecutionSummaryTrait {
     fn exceptional_failure(error: Span<u8>) -> ExecutionSummary {
-        ExecutionSummary { state: Default::default(), return_data: error, success: false }
+        ExecutionSummary {
+            success: false, return_data: error, gas_left: 0, state: Default::default(),
+        }
     }
 }
 

@@ -13,8 +13,8 @@ use evm::instructions::{
 use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{
-    Message, Environment, Address, Transfer, ExecutionSummary, ExecutionResult,
-    ExecutionResultTrait, AccountType
+    Message, Environment, Address, Transfer, ExecutionSummary, ExecutionSummaryTrait,
+    ExecutionResult, ExecutionResultTrait, AccountType
 };
 use evm::precompiles::lib::PrecompileTrait;
 use evm::precompiles;
@@ -33,14 +33,9 @@ impl EVMImpl of EVMTrait {
         if is_deploy_tx {
             // Check collision
             if target_account.has_code_or_nonce() {
-                return ExecutionSummary {
-                    state: env.state,
-                    success: false,
-                    return_data: Into::<
-                        felt252, u256
-                    >::into(EVMError::DeployError(CONTRACT_ACCOUNT_EXISTS).to_string())
-                        .to_bytes(),
-                };
+                ExecutionSummaryTrait::exceptional_failure(
+                    EVMError::DeployError(CONTRACT_ACCOUNT_EXISTS).to_bytes(),
+                );
             }
 
             let mut result = EVMTrait::process_create_message(message, ref env);
@@ -48,14 +43,20 @@ impl EVMImpl of EVMTrait {
                 result.return_data = message.target.evm.to_bytes().span();
             }
             return ExecutionSummary {
-                state: env.state, success: result.success, return_data: result.return_data,
+                success: result.success,
+                return_data: result.return_data,
+                gas_left: result.gas_left,
+                state: env.state,
             };
         }
 
         // No need to take snapshot of state, as the state is still empty at this point.
         let result = EVMTrait::process_message(message, ref env);
         ExecutionSummary {
-            success: result.success, state: env.state, return_data: result.return_data,
+            success: result.success,
+            return_data: result.return_data,
+            gas_left: result.gas_left,
+            state: env.state,
         }
     }
 
