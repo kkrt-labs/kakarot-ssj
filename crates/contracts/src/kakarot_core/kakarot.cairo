@@ -150,7 +150,7 @@ mod KakarotCore {
 
         loop {
             match eoas_to_deploy.pop_front() {
-                Option::Some(eoa_address) => self.deploy_eoa(*eoa_address),
+                Option::Some(eoa) => self.deploy_eoa(*eoa),
                 Option::None => { break; },
             };
         }
