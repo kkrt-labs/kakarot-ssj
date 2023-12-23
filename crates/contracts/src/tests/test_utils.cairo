@@ -109,7 +109,8 @@ fn deploy_kakarot_core(native_token: ContractAddress) -> IExtendedKakarotCoreDis
         ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(),
         ContractAccount::TEST_CLASS_HASH.try_into().unwrap(),
         other_starknet_address().into(),
-        chain_id().into()
+        chain_id().into(),
+        0,
     ];
     let maybe_address = deploy_syscall(
         KakarotCore::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
