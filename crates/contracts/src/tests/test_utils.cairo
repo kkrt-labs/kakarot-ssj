@@ -101,8 +101,10 @@ fn deploy_native_token() -> IERC20CamelDispatcher {
         Result::Err(err) => panic(err)
     }
 }
-fn deploy_kakarot_core(native_token: ContractAddress) -> IExtendedKakarotCoreDispatcher {
-    let calldata: Array<felt252> = array![
+fn deploy_kakarot_core(
+    native_token: ContractAddress, mut eoas: Span<EthAddress>
+) -> IExtendedKakarotCoreDispatcher {
+    let mut calldata: Array<felt252> = array![
         native_token.into(),
         deploy_fee().into(),
         UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(),
@@ -110,8 +112,10 @@ fn deploy_kakarot_core(native_token: ContractAddress) -> IExtendedKakarotCoreDis
         ContractAccount::TEST_CLASS_HASH.try_into().unwrap(),
         other_starknet_address().into(),
         chain_id().into(),
-        0,
     ];
+
+    Serde::serialize(@eoas, ref calldata);
+
     let maybe_address = deploy_syscall(
         KakarotCore::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
     );
@@ -169,11 +173,16 @@ fn fund_account_with_native_token(
 
 fn setup_contracts_for_testing() -> (IERC20CamelDispatcher, IExtendedKakarotCoreDispatcher) {
     let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(native_token.contract_address);
+    let kakarot_core = deploy_kakarot_core(
+        native_token.contract_address, array![sequencer_evm_address()].span()
+    );
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
     // triggered in the constructor.
     drop_event(kakarot_core.contract_address);
-    let sequencer_sn_address = kakarot_core.deploy_eoa(sequencer_evm_address());
+
+    let sequencer: EthAddress = sequencer_evm_address();
+
+    let (_, sequencer_sn_address) = kakarot_core.address_registry(sequencer).unwrap();
     // We drop the event of the EOA deployment
     drop_event(kakarot_core.contract_address);
     testing::set_sequencer_address(sequencer_sn_address);

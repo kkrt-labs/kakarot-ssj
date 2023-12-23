@@ -26,6 +26,7 @@ use core::option::OptionTrait;
 use core::traits::TryInto;
 use evm::model::{AccountType, Address};
 use evm::tests::test_utils;
+use evm::tests::test_utils::sequencer_evm_address;
 use starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};
 use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, LegacyTransaction};
 //Required for assert_eq! macro
@@ -34,14 +35,15 @@ use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
 
 #[test]
 fn test_kakarot_core_owner() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     assert(kakarot_core.owner() == test_utils::other_starknet_address(), 'wrong owner')
 }
 
 #[test]
 fn test_kakarot_core_transfer_ownership() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+
     assert(kakarot_core.owner() == test_utils::other_starknet_address(), 'wrong owner');
     testing::set_contract_address(test_utils::other_starknet_address());
     kakarot_core.transfer_ownership(test_utils::starknet_address());
@@ -50,7 +52,8 @@ fn test_kakarot_core_transfer_ownership() {
 
 #[test]
 fn test_kakarot_core_renounce_ownership() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+
     assert(kakarot_core.owner() == test_utils::other_starknet_address(), 'wrong owner');
     testing::set_contract_address(test_utils::other_starknet_address());
     kakarot_core.renounce_ownership();
@@ -59,19 +62,22 @@ fn test_kakarot_core_renounce_ownership() {
 
 #[test]
 fn test_kakarot_core_deploy_fee() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+
     assert(kakarot_core.deploy_fee() == contract_utils::deploy_fee(), 'wrong deploy_fee');
 }
 
 #[test]
 fn test_kakarot_core_chain_id() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+
     assert(kakarot_core.chain_id() == contract_utils::chain_id(), 'wrong chain id');
 }
 
 #[test]
 fn test_kakarot_core_set_deploy_fee() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+
     assert(kakarot_core.deploy_fee() == contract_utils::deploy_fee(), 'wrong deploy_fee');
     testing::set_contract_address(test_utils::other_starknet_address());
     kakarot_core.set_deploy_fee(0x100);
@@ -80,8 +86,9 @@ fn test_kakarot_core_set_deploy_fee() {
 
 #[test]
 fn test_kakarot_core_set_native_token() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
-    assert(kakarot_core.native_token() == test_utils::native_token(), 'wrong native_token');
+    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
+
+    assert(kakarot_core.native_token() == native_token.contract_address, 'wrong native_token');
 
     testing::set_contract_address(test_utils::other_starknet_address());
     kakarot_core.set_native_token(contract_address_const::<0xdead>());
@@ -147,7 +154,8 @@ fn test_kakarot_core_compute_starknet_address() {
 
 #[test]
 fn test_kakarot_core_upgrade_contract() {
-    let kakarot_core = contract_utils::deploy_kakarot_core(test_utils::native_token());
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+
     let class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
 
     testing::set_contract_address(test_utils::other_starknet_address());
