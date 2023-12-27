@@ -127,16 +127,6 @@ impl U256TryIntoResult<U, +TryInto<u256, U>> of TryIntoResult<u256, U> {
     }
 }
 
-impl U256TryIntoEthAddress of TryInto<u256, EthAddress> {
-    fn try_into(self: u256) -> Option<EthAddress> {
-        let maybe_value: Option<felt252> = self.try_into();
-        match maybe_value {
-            Option::Some(value) => value.try_into(),
-            Option::None => Option::None,
-        }
-    }
-}
-
 impl U8IntoEthAddress of Into<u8, EthAddress> {
     fn into(self: u8) -> EthAddress {
         let value: felt252 = self.into();

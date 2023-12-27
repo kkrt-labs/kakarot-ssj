@@ -97,13 +97,6 @@ impl SystemOperations of SystemOperationsTrait {
             return self.stack.push(0);
         }
 
-        // Initialize the sub context.
-        // TODO(elias)
-        // create a new sub context here
-        // with the correct arguments
-        // let result = sub_ctx.process_message();
-        // store the return data in the memory of the parent context with the correct offsets and size
-        // store the return data whole in the return data field of the parent context
         self
             .generic_call(
                 gas: message_call_gas.stipend,

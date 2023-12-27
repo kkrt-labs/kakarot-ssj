@@ -72,9 +72,6 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Load from storage.
     /// # Specification: https://www.evm.codes/#54?fork=shanghai
     fn exec_sload(ref self: VM) -> Result<(), EVMError> {
-        // TODO: Add Warm / Cold storage costs
-        self.charge_gas(gas::WARM_ACCESS_COST)?;
-
         let key = self.stack.pop()?;
         let evm_address = self.message().target.evm;
 
@@ -102,9 +99,7 @@ impl MemoryOperation of MemoryOperationTrait {
         let new_value = self.stack.pop()?;
         let evm_address = self.message().target.evm;
         let account = self.env.state.get_account(evm_address);
-        //TODO(bug) restore check for `is_deployed` inside `read_storage`
-        let is_deployed = evm_address.is_deployed();
-        let original_value = account.read_storage(key, is_deployed);
+        let original_value = account.read_storage(key);
         let current_value = self.env.state.read_state(evm_address, key);
 
         // GAS
