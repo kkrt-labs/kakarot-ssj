@@ -29,8 +29,10 @@ mod KakarotCore {
     use evm::model::account::{Account, AccountType, AccountTrait};
     use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::eoa::{EOATrait};
-    use evm::model::{ExecutionSummary, ExecutionSummaryTrait, Address, AddressTrait};
-    use evm::model::{Transfer, Message, Environment};
+    use evm::model::{
+        Transfer, Message, Environment, TransactionResult, TransactionResultTrait, ExecutionSummary,
+        ExecutionSummaryTrait, Address, AddressTrait
+    };
     use evm::state::{State, StateTrait};
     use starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall,
@@ -258,7 +260,7 @@ mod KakarotCore {
 
             let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
 
-            let ExecutionSummary{success, return_data, gas_left: _, state: _, gas_refund: _ } = self
+            let TransactionResult{success, return_data, gas_used, state: _ } = self
                 .process_transaction(origin, tx);
 
             (success, return_data)
@@ -284,8 +286,7 @@ mod KakarotCore {
                 .expect('Fetching EOA failed');
             assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
 
-            let ExecutionSummary{success, return_data, gas_left: _, mut state, gas_refund: _ } =
-                self
+            let TransactionResult{success, return_data, gas_used, mut state } = self
                 .process_transaction(origin, tx);
             state.commit_state().expect('Committing state failed');
             (success, return_data)
@@ -355,7 +356,7 @@ mod KakarotCore {
 
         fn process_transaction(
             self: @ContractState, origin: Address, tx: EthereumTransaction
-        ) -> ExecutionSummary {
+        ) -> TransactionResult {
             let block_info = starknet::get_block_info().unbox();
             //TODO(optimization): the coinbase account is deployed from a specific `evm_address` which is specified upon deployment
             // and specific to the chain. Rather than reading from a contract, we could directly use this constant.
@@ -393,7 +394,9 @@ mod KakarotCore {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
                     println!("process_transaction: Insufficient balance for fees and transfer");
-                    return ExecutionSummaryTrait::exceptional_failure(err.to_bytes());
+                    return TransactionResultTrait::exceptional_failure(
+                        err.to_bytes(), tx.gas_limit()
+                    );
                 }
             };
 
@@ -401,8 +404,8 @@ mod KakarotCore {
                 Option::Some(gas_left) => gas_left,
                 Option::None => {
                     println!("process_transaction: Out of gas");
-                    return ExecutionSummaryTrait::exceptional_failure(
-                        EVMError::OutOfGas.to_bytes()
+                    return TransactionResultTrait::exceptional_failure(
+                        EVMError::OutOfGas.to_bytes(), tx.gas_limit()
                     );
                 }
             };
@@ -501,11 +504,18 @@ mod KakarotCore {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
                     println!("process_transaction: sequencer couldn't charge gas");
-                    return ExecutionSummaryTrait::exceptional_failure(err.to_bytes());
+                    return TransactionResultTrait::exceptional_failure(
+                        err.to_bytes(), tx.gas_limit()
+                    );
                 }
             };
 
-            summary
+            TransactionResult {
+                success: summary.success,
+                return_data: summary.return_data,
+                gas_used: gas_used,
+                state: summary.state,
+            }
         }
     }
 }
