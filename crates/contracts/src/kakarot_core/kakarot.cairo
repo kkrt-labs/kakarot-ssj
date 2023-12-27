@@ -258,7 +258,7 @@ mod KakarotCore {
 
             let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
 
-            let ExecutionSummary{success, return_data, gas_left: _, state: _, } = self
+            let ExecutionSummary{success, return_data, gas_left: _, state: _, gas_refund: _ } = self
                 .process_transaction(origin, tx);
 
             (success, return_data)
@@ -284,7 +284,8 @@ mod KakarotCore {
                 .expect('Fetching EOA failed');
             assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
 
-            let ExecutionSummary{success, return_data, gas_left: _, mut state } = self
+            let ExecutionSummary{success, return_data, gas_left: _, mut state, gas_refund: _ } =
+                self
                 .process_transaction(origin, tx);
             state.commit_state().expect('Committing state failed');
             (success, return_data)
@@ -366,6 +367,8 @@ mod KakarotCore {
             let gas_price = tx.gas_price();
             let gas_limit = tx.gas_limit();
 
+            // tx.gas_price and env.gas_price have the same values here
+            // - this is not always true in EVM transactions
             let mut env = Environment {
                 origin: origin.evm,
                 gas_price,
@@ -390,25 +393,6 @@ mod KakarotCore {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
                     println!("process_transaction: Insufficient balance for fees and transfer");
-                    return ExecutionSummaryTrait::exceptional_failure(err.to_bytes());
-                }
-            };
-
-            // The gas fee is withdrawn from the sender's account and transferred to the coinbase address.
-            match env
-                .state
-                .add_transfer(
-                    Transfer {
-                        sender: origin,
-                        recipient: Address {
-                            evm: coinbase, starknet: block_info.sequencer_address,
-                        },
-                        amount: gas_fee.into()
-                    }
-                ) {
-                Result::Ok(_) => {},
-                Result::Err(err) => {
-                    println!("process_transaction: sequencer couldn't withdraw fees");
                     return ExecutionSummaryTrait::exceptional_failure(err.to_bytes());
                 }
             };
@@ -490,23 +474,33 @@ mod KakarotCore {
 
             // Gas refunds
             let gas_used = tx.gas_limit() - summary.gas_left;
-            let gas_refund = gas_used
-                / 5; //TODO(gas) the refund gas should be min(gas_used//5, refund_counter)
-            let gas_refund_amount = (summary.gas_left + gas_refund) * gas_price;
+            let gas_refund = cmp::min(gas_used / 5, summary.gas_refund);
 
-            // The refunded gas is transferred to the sender's account from the sequencer.
+            // Charging gas fees to the sender
+            // At the end of the tx, the sender must have paid 
+            // (gas_used - gas_refund) * gas_price to the miner 
+            // Because tx.gas_price == env.gas_price, and we checked the sender has enough balance to cover
+            // the gas fees + the value transfer, this transfer should never fail.
+            // We can thus directly charge the sender for the effective gas fees,
+            // without pre-emtively charging for the tx gas fee and then refund.
+            // This is not true for EIP-1559 transactions - not supported yet.
+            let total_gas_used = gas_used - gas_refund;
+            let transaction_fee = total_gas_used * gas_price;
+
             match summary
                 .state
                 .add_transfer(
                     Transfer {
-                        sender: Address { evm: coinbase, starknet: block_info.sequencer_address, },
-                        recipient: origin,
-                        amount: gas_refund_amount.into()
+                        sender: origin,
+                        recipient: Address {
+                            evm: coinbase, starknet: block_info.sequencer_address,
+                        },
+                        amount: transaction_fee.into()
                     }
                 ) {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
-                    println!("process_transaction: sequencer couldn't refund gas");
+                    println!("process_transaction: sequencer couldn't charge gas");
                     return ExecutionSummaryTrait::exceptional_failure(err.to_bytes());
                 }
             };
