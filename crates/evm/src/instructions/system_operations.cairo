@@ -356,11 +356,6 @@ impl SystemOperations of SystemOperationsTrait {
     /// SELFDESTRUCT
     /// # Specification: https://www.evm.codes/#ff?fork=shanghai
     fn exec_selfdestruct(ref self: VM) -> Result<(), EVMError> {
-        ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
-
-        // TODO: add dynamic gas costs
-        self.charge_gas(gas::SELFDESTRUCT)?;
-
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
         let address = self.stack.pop_eth_address()?;
 
@@ -375,6 +370,8 @@ impl SystemOperations of SystemOperationsTrait {
             gas_cost += gas::NEWACCOUNT;
         }
         self.charge_gas(gas_cost)?;
+
+        ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
 
         //TODO Remove this when https://eips.ethereum.org/EIPS/eip-6780 is validated
         let recipient_evm_address = if (address == self.message().target.evm) {
