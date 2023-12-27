@@ -20,6 +20,7 @@ const CREATE: u128 = 32000;
 const CALLVALUE: u128 = 9000;
 const NEWACCOUNT: u128 = 25000;
 const EXP: u128 = 10;
+const EXP_GAS_PER_BYTE: u128 = 50;
 const MEMORY: u128 = 3;
 const LOG: u128 = 375;
 const LOGDATA: u128 = 8;
