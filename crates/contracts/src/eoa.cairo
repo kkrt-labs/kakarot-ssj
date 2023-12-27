@@ -12,7 +12,7 @@ trait IExternallyOwnedAccount<TContractState> {
     fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
 }
 
-#[starknet::contract]
+#[starknet::contract(account)]
 mod ExternallyOwnedAccount {
     use contracts::components::upgradeable::IUpgradeable;
     use contracts::components::upgradeable::upgradeable_component;
