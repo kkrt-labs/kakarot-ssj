@@ -513,7 +513,7 @@ mod KakarotCore {
             TransactionResult {
                 success: summary.success,
                 return_data: summary.return_data,
-                gas_used: gas_used,
+                gas_used: total_gas_used,
                 state: summary.state,
             }
         }
