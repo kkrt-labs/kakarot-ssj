@@ -260,7 +260,7 @@ mod KakarotCore {
 
             let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
 
-            let TransactionResult{success, return_data, gas_used, state: _ } = self
+            let TransactionResult{success, return_data, gas_used: _, state: _ } = self
                 .process_transaction(origin, tx);
 
             (success, return_data)
@@ -286,7 +286,7 @@ mod KakarotCore {
                 .expect('Fetching EOA failed');
             assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
 
-            let TransactionResult{success, return_data, gas_used, mut state } = self
+            let TransactionResult{success, return_data, gas_used: _, mut state } = self
                 .process_transaction(origin, tx);
             state.commit_state().expect('Committing state failed');
             (success, return_data)
@@ -488,27 +488,29 @@ mod KakarotCore {
             // without pre-emtively charging for the tx gas fee and then refund.
             // This is not true for EIP-1559 transactions - not supported yet.
             let total_gas_used = gas_used - gas_refund;
-            let transaction_fee = total_gas_used * gas_price;
+            let _transaction_fee = total_gas_used * gas_price;
 
-            match summary
-                .state
-                .add_transfer(
-                    Transfer {
-                        sender: origin,
-                        recipient: Address {
-                            evm: coinbase, starknet: block_info.sequencer_address,
-                        },
-                        amount: transaction_fee.into()
-                    }
-                ) {
-                Result::Ok(_) => {},
-                Result::Err(err) => {
-                    println!("process_transaction: sequencer couldn't charge gas");
-                    return TransactionResultTrait::exceptional_failure(
-                        err.to_bytes(), tx.gas_limit()
-                    );
-                }
-            };
+            //TODO(gas): EF-tests doesn't yet support in-EVM gas charging, they assume that the gas charged is always correct for now.
+            // As correct gas accounting is not an immediate priority, we can just ignore the gas charging for now.
+            // match summary
+            //     .state
+            //     .add_transfer(
+            //         Transfer {
+            //             sender: origin,
+            //             recipient: Address {
+            //                 evm: coinbase, starknet: block_info.sequencer_address,
+            //             },
+            //             amount: transaction_fee.into()
+            //         }
+            //     ) {
+            //     Result::Ok(_) => {},
+            //     Result::Err(err) => {
+            //         println!("process_transaction: sequencer couldn't charge gas");
+            //         return TransactionResultTrait::exceptional_failure(
+            //             err.to_bytes(), tx.gas_limit()
+            //         );
+            //     }
+            // };
 
             TransactionResult {
                 success: summary.success,
