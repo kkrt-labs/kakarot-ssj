@@ -9,6 +9,7 @@ use integer::{
     u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod,
     u512_safe_div_rem_by_u256, u256_try_as_non_zero
 };
+use utils::helpers::U256Trait;
 use utils::i256::i256;
 use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
 
@@ -199,12 +200,15 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a ** b: integer result of raising a to the bth power modulo 2^256.
     /// # Specification: https://www.evm.codes/#0a?fork=shanghai
     fn exec_exp(ref self: VM) -> Result<(), EVMError> {
-        // TODO: Add dynamic gas
         self.charge_gas(gas::HIGH)?;
-        let a = self.stack.pop()?;
-        let b = self.stack.pop()?;
+        let base = self.stack.pop()?;
+        let exponent = self.stack.pop()?;
 
-        let result = a.wrapping_pow(b);
+        // Gas
+        let bytes_used = exponent.bytes_used();
+        self.charge_gas(gas::EXP + gas::EXP_GAS_PER_BYTE * bytes_used.into())?;
+
+        let result = base.wrapping_pow(exponent);
 
         self.stack.push(result)
     }
