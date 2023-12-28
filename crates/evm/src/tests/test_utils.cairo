@@ -238,6 +238,7 @@ fn preset_vm() -> VM {
         error: false,
         accessed_addresses: Default::default(),
         accessed_storage_keys: Default::default(),
+        gas_refund: 0,
     }
 }
 

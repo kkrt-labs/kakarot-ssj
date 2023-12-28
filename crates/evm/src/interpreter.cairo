@@ -30,33 +30,29 @@ impl EVMImpl of EVMTrait {
         message: Message, mut env: Environment, is_deploy_tx: bool,
     ) -> ExecutionSummary {
         let mut target_account = env.state.get_account(message.target.evm);
-        if is_deploy_tx {
+        let result = if is_deploy_tx {
             // Check collision
             if target_account.has_code_or_nonce() {
-                ExecutionSummaryTrait::exceptional_failure(
+                return ExecutionSummaryTrait::exceptional_failure(
                     EVMError::DeployError(CONTRACT_ACCOUNT_EXISTS).to_bytes(),
                 );
             }
-
             let mut result = EVMTrait::process_create_message(message, ref env);
             if result.success {
                 result.return_data = message.target.evm.to_bytes().span();
             }
-            return ExecutionSummary {
-                success: result.success,
-                return_data: result.return_data,
-                gas_left: result.gas_left,
-                state: env.state,
-            };
-        }
+            result
+        } else {
+            EVMTrait::process_message(message, ref env)
+        };
 
         // No need to take snapshot of state, as the state is still empty at this point.
-        let result = EVMTrait::process_message(message, ref env);
         ExecutionSummary {
             success: result.success,
+            state: env.state,
             return_data: result.return_data,
             gas_left: result.gas_left,
-            state: env.state,
+            gas_refund: result.gas_refund
         }
     }
 
@@ -160,6 +156,7 @@ impl EVMImpl of EVMTrait {
                         gas_left: vm.gas_left(),
                         accessed_addresses: vm.accessed_addresses(),
                         accessed_storage_keys: vm.accessed_storage_keys(),
+                        gas_refund: vm.gas_refund()
                     };
                 },
                 Result::Err(error) => {
@@ -189,6 +186,7 @@ impl EVMImpl of EVMTrait {
                     gas_left: vm.gas_left(),
                     accessed_addresses: vm.accessed_addresses(),
                     accessed_storage_keys: vm.accessed_storage_keys(),
+                    gas_refund: 0
                 };
             };
             // Success case
@@ -198,6 +196,7 @@ impl EVMImpl of EVMTrait {
                 gas_left: vm.gas_left(),
                 accessed_addresses: vm.accessed_addresses(),
                 accessed_storage_keys: vm.accessed_storage_keys(),
+                gas_refund: vm.gas_refund()
             };
         }
 
@@ -218,6 +217,7 @@ impl EVMImpl of EVMTrait {
                         gas_left: vm.gas_left(),
                         accessed_addresses: vm.accessed_addresses(),
                         accessed_storage_keys: vm.accessed_storage_keys(),
+                        gas_refund: 0
                     };
                 };
                 // Success case
@@ -227,6 +227,7 @@ impl EVMImpl of EVMTrait {
                     gas_left: vm.gas_left(),
                     accessed_addresses: vm.accessed_addresses(),
                     accessed_storage_keys: vm.accessed_storage_keys(),
+                    gas_refund: vm.gas_refund()
                 };
             },
             Result::Err(error) => {

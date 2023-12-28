@@ -22,6 +22,7 @@ struct VM {
     error: bool,
     accessed_addresses: Set<EthAddress>,
     accessed_storage_keys: Set<(EthAddress, u256)>,
+    gas_refund: u128
 }
 
 
@@ -42,6 +43,7 @@ impl VMImpl of VMTrait {
             error: false,
             accessed_addresses: message.accessed_addresses.inner.clone(),
             accessed_storage_keys: message.accessed_storage_keys.inner.clone(),
+            gas_refund: 0
         }
     }
 
@@ -152,6 +154,11 @@ impl VMImpl of VMTrait {
     }
 
     #[inline(always)]
+    fn gas_refund(self: @VM) -> u128 {
+        *self.gas_refund
+    }
+
+    #[inline(always)]
     fn accessed_addresses(self: @VM) -> SpanSet<EthAddress> {
         self.accessed_addresses.spanset()
     }
@@ -181,6 +188,7 @@ impl VMImpl of VMTrait {
             //TODO: merge accessed storage
             self.accessed_addresses.extend(*child.accessed_addresses);
             self.accessed_storage_keys.extend(*child.accessed_storage_keys);
+            self.gas_refund += *child.gas_refund;
         }
         //TODO(gas) handle error case
 

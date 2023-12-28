@@ -124,7 +124,33 @@ impl MemoryOperation of MemoryOperationTrait {
             gas_cost += gas::WARM_ACCESS_COST;
         }
 
-        //TODO(gas) gas refunds
+        // Gas refunds
+        if current_value != new_value {
+            if original_value != 0 && current_value != 0 && new_value == 0 {
+                // Storage is cleared for the first time in the transaction
+                self.gas_refund += gas::REFUND_SSTORE_CLEARS;
+            }
+
+            if original_value != 0 && current_value == 0 {
+                // Earlier gas refund needs to be reversed
+                self.gas_refund -= gas::REFUND_SSTORE_CLEARS;
+            }
+
+            if original_value == new_value {
+                // Restoring slot to original value (used as transient storage)
+                if original_value == 0 {
+                    // The access cost is still charged but the SSTORE cost is refunded
+                    self.gas_refund += (gas::SSTORE_SET - gas::WARM_ACCESS_COST);
+                } else {
+                    // Slot was originally non-empty and was updated earlier
+                    // cold sload cost and warm access cost are not refunded
+                    self
+                        .gas_refund +=
+                            (gas::SSTORE_RESET - gas::COLD_SLOAD_COST - gas::WARM_ACCESS_COST);
+                }
+            }
+        }
+
         self.charge_gas(gas_cost)?;
 
         self.env.state.write_state(:evm_address, :key, value: new_value);

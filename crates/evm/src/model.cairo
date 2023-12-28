@@ -50,6 +50,7 @@ struct ExecutionResult {
     gas_left: u128,
     accessed_addresses: SpanSet<EthAddress>,
     accessed_storage_keys: SpanSet<(EthAddress, u256)>,
+    gas_refund: u128,
 }
 
 #[generate_trait]
@@ -64,7 +65,8 @@ impl ExecutionResultImpl of ExecutionResultTrait {
             return_data: error,
             gas_left: 0,
             accessed_addresses,
-            accessed_storage_keys
+            accessed_storage_keys,
+            gas_refund: 0,
         }
     }
 
@@ -84,13 +86,34 @@ struct ExecutionSummary {
     return_data: Span<u8>,
     gas_left: u128,
     state: State,
+    gas_refund: u128
 }
 
 #[generate_trait]
 impl ExecutionSummaryImpl of ExecutionSummaryTrait {
     fn exceptional_failure(error: Span<u8>) -> ExecutionSummary {
         ExecutionSummary {
-            success: false, return_data: error, gas_left: 0, state: Default::default(),
+            success: false,
+            return_data: error,
+            gas_left: 0,
+            state: Default::default(),
+            gas_refund: 0
+        }
+    }
+}
+
+struct TransactionResult {
+    success: bool,
+    return_data: Span<u8>,
+    gas_used: u128,
+    state: State
+}
+
+#[generate_trait]
+impl TransactionResultImpl of TransactionResultTrait {
+    fn exceptional_failure(error: Span<u8>, gas_used: u128) -> TransactionResult {
+        TransactionResult {
+            success: false, return_data: error, gas_used, state: Default::default()
         }
     }
 }
