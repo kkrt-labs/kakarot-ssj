@@ -25,7 +25,6 @@ use starknet::{
     get_contract_address
 };
 use utils::eth_transaction::LegacyTransaction;
-use utils::fmt::{ContractAddressDebug, EthAddressDebug};
 
 /// Pop the earliest unpopped logged event for the contract as the requested type
 /// and checks there's no more data left on the event, preventing unaccounted params.

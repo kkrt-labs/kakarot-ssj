@@ -29,8 +29,6 @@ use evm::tests::test_utils::sequencer_evm_address;
 use evm::tests::test_utils;
 use starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};
 use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, LegacyTransaction};
-//Required for assert_eq! macro
-use utils::fmt::{EthAddressDebug, ContractAddressDebug};
 use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
 
 #[test]

@@ -7,7 +7,7 @@ use utils::errors::RLPErrorTrait;
 use utils::helpers::{U8SpanExTrait, U64Trait, U256Trait, EthAddressExTrait, ArrayExtTrait};
 use utils::math::WrappingBitshift;
 use utils::rlp::{RLPTrait, RLPItem};
-use utils::traits::{TryIntoResult, U256TryIntoEthAddress};
+use utils::traits::{TryIntoResult};
 /// Computes the address of the new account that needs to be created.
 ///
 /// # Arguments

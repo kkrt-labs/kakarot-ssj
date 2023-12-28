@@ -45,7 +45,6 @@ mod KakarotCore {
     use utils::constants;
     use utils::eth_transaction::AccessListItemTrait;
     use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, AccessListItem};
-    use utils::fmt::EthAddressDebug;
     use utils::helpers::{compute_starknet_address, EthAddressExTrait};
     use utils::rlp::RLPTrait;
     use utils::set::{Set, SetTrait};

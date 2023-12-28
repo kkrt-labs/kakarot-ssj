@@ -11,7 +11,7 @@ use evm::state::State;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{EthAddress, get_contract_address, ContractAddress};
 use utils::checked_math::CheckedMath;
-use utils::fmt::{EthAddressDebug, ContractAddressDebug, TSpanSetDebug};
+use utils::fmt::{TSpanSetDebug};
 use utils::helpers::{ResultExTrait};
 use utils::set::{Set, SpanSet};
 use utils::traits::{EthAddressDefault, ContractAddressDefault, SpanDefault};

@@ -26,21 +26,6 @@ mod debug_display_based {
     }
 }
 
-impl EthAddressDisplay = display_felt252_based::TDisplay<EthAddress>;
-impl ContractAddressDisplay = display_felt252_based::TDisplay<ContractAddress>;
-impl EthAddressDebug = debug_display_based::TDisplay<EthAddress>;
-impl ContractAddressDebug = debug_display_based::TDisplay<ContractAddress>;
-
-impl EthSignatureDebug of Debug<EthSignature> {
-    fn fmt(self: @EthSignature, ref f: Formatter) -> Result<(), Error> {
-        write!(f, "r: {}", *self.r)?;
-        write!(f, "s: {}", *self.s)?;
-        write!(f, "y_parity: {}", *self.y_parity)?;
-
-        Result::Ok(())
-    }
-}
-
 impl TSpanSetDebug<T, +Debug<T>, +Copy<T>, +Drop<T>> of Debug<SpanSet<T>> {
     fn fmt(self: @SpanSet<T>, ref f: Formatter) -> Result<(), Error> {
         // For a reason I don't understand, the following code doesn't compile:
