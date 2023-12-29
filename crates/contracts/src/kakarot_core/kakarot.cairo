@@ -392,7 +392,6 @@ mod KakarotCore {
             ) {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
-                    println!("process_transaction: Insufficient balance for fees and transfer");
                     return TransactionResultTrait::exceptional_failure(
                         err.to_bytes(), tx.gas_limit()
                     );
@@ -402,7 +401,6 @@ mod KakarotCore {
             let gas_left = match gas_limit.checked_sub(gas::calculate_intrinsic_gas_cost(@tx)) {
                 Option::Some(gas_left) => gas_left,
                 Option::None => {
-                    println!("process_transaction: Out of gas");
                     return TransactionResultTrait::exceptional_failure(
                         EVMError::OutOfGas.to_bytes(), tx.gas_limit()
                     );
@@ -470,8 +468,6 @@ mod KakarotCore {
                 accessed_storage_keys: accessed_storage_keys.spanset(),
             };
 
-            println!("Initial message: {:?}", message);
-
             let mut summary = EVMTrait::process_message_call(message, env, is_deploy_tx);
 
             // Gas refunds
@@ -504,7 +500,7 @@ mod KakarotCore {
             //     ) {
             //     Result::Ok(_) => {},
             //     Result::Err(err) => {
-            //         println!("process_transaction: sequencer couldn't charge gas");
+            //         
             //         return TransactionResultTrait::exceptional_failure(
             //             err.to_bytes(), tx.gas_limit()
             //         );

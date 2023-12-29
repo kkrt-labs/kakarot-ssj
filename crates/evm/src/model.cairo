@@ -74,7 +74,6 @@ impl ExecutionResultImpl of ExecutionResultTrait {
     /// # Error : returns `EVMError::OutOfGas` if gas_left - value < 0
     #[inline(always)]
     fn charge_gas(ref self: ExecutionResult, value: u128) -> Result<(), EVMError> {
-        println!("charge_gas on result: gas_left: {}, value: {}", self.gas_left, value);
         self.gas_left = self.gas_left.checked_sub(value).ok_or(EVMError::OutOfGas)?;
         Result::Ok(())
     }

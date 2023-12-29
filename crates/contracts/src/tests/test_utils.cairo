@@ -51,7 +51,7 @@ fn pop_log_debug<T, +Drop<T>, +Debug<T>, impl TEvent: starknet::Event<T>>(
     keys.pop_front().expect('pop_log popfront failed');
 
     let ret = starknet::Event::deserialize(ref keys, ref data);
-    println!("ret: {:?}", ret);
+
     ret
 }
 

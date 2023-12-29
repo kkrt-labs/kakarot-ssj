@@ -267,9 +267,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         //TODO: handle overflow in ceil32 function.
         let words_size: u128 = (ceil32(size.into()) / 32).into();
         let copy_gas_cost = gas::COPY * words_size;
-        println!("copy_gas_cost: {}", copy_gas_cost);
+
         let max_memory_size = u32_overflowing_add(dest_offset, size).map_err(EVMError::OutOfGas)?;
-        println!("max_memory_size: {}", max_memory_size);
+
         let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), max_memory_size);
         self.charge_gas(gas::VERYLOW + copy_gas_cost + expand_memory_cost)?;
 

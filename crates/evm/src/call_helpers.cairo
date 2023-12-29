@@ -96,8 +96,6 @@ impl CallHelpersImpl of CallHelpers {
             accessed_storage_keys: self.accessed_storage_keys.clone().spanset(),
         };
 
-        println!("Subcall: message: {:?}", message);
-
         let result = EVMTrait::process_message(message, ref self.env);
         self.merge_child(@result);
 
