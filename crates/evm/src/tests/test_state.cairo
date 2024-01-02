@@ -20,7 +20,7 @@ fn test_compute_state_key() {
     //         ];
     //     let values_to_hash = [keys[0],keys[1],keys[2]];
     //     let hash = poseidon_hash_many(&values_to_hash);
-    //     println!("hash: {}", hash);
+    //     
     // }
     //
     let address = compute_state_key(evm_address, key);
