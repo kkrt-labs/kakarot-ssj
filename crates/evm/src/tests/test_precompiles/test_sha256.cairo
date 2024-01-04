@@ -21,7 +21,7 @@ fn test_sha_256_precompile() {
     Sha256PrecompileTrait::exec(ref vm).unwrap();
     let gas_after = vm.gas_left;
 
-    let result = U256Trait::from_bytes(vm.return_data).unwrap();
+    let result = U256Trait::from_be_bytes(vm.return_data).unwrap();
     let expected_result = 0xa8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89;
 
     assert_eq!(result, expected_result);

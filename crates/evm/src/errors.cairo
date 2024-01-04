@@ -40,6 +40,12 @@ const DEPLOYMENT_FAILED: felt252 = 'KKT: deployment failed';
 const CALLING_FROM_UNDEPLOYED_ACCOUNT: felt252 = 'EOA: from is undeployed EOA';
 const CALLING_FROM_CA: felt252 = 'EOA: from is a contract account';
 
+#[derive(Drop, Copy, PartialEq)]
+enum PrecompileError {
+    Blake2WrongLength,
+    Blake2WrongFinalIndicatorFlag
+}
+
 
 #[derive(Drop, Copy, PartialEq)]
 enum EVMError {
@@ -57,7 +63,18 @@ enum EVMError {
     DeployError: felt252,
     OutOfGas,
     Assertion,
-    DepthLimit
+    DepthLimit,
+    PrecompileError: PrecompileError
+}
+
+#[generate_trait]
+impl PrecompileErrorImpl of PrecompileErrorTrait {
+    fn to_string(self: PrecompileError) -> felt252 {
+        match self {
+            PrecompileError::Blake2WrongLength => 'blake2 wrong length',
+            PrecompileError::Blake2WrongFinalIndicatorFlag => 'blake2 wrong indicator flag'
+        }
+    }
 }
 
 #[generate_trait]
@@ -80,6 +97,7 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::OutOfGas => 'out of gas'.into(),
             EVMError::Assertion => 'assertion failed'.into(),
             EVMError::DepthLimit => 'max call depth exceeded'.into(),
+            EVMError::PrecompileError(err) => err.to_string()
         }
     }
 

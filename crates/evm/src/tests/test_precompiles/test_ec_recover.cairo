@@ -39,7 +39,7 @@ fn test_ec_recover_precompile() {
     EcRecoverPrecompileTrait::exec(ref vm).unwrap();
     let gas_after = vm.gas_left;
 
-    let result = U256Trait::from_bytes(vm.return_data).unwrap();
+    let result = U256Trait::from_be_bytes(vm.return_data).unwrap();
     assert_eq!(result, 0x7156526fbd7a3c72969b54f64e42c10fbb768c8a);
     assert_eq!(gas_before - gas_after, 3000);
 }

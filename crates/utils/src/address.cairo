@@ -20,7 +20,7 @@ use utils::traits::{TryIntoResult};
 /// The computed address of the new account.
 fn compute_contract_address(sender_address: EthAddress, sender_nonce: u64) -> EthAddress {
     let mut sender_address: RLPItem = RLPItem::String(sender_address.to_bytes().span());
-    let sender_nonce: RLPItem = RLPItem::String(sender_nonce.to_bytes().span());
+    let sender_nonce: RLPItem = RLPItem::String(sender_nonce.to_be_bytes().span());
     let computed_address = U8SpanExTrait::compute_keccak256_hash(
         RLPTrait::encode_sequence(array![sender_address, sender_nonce].span())
     );
