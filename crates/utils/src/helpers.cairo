@@ -1,6 +1,6 @@
-use core::array::SpanTrait;
 use cmp::min;
 use core::array::ArrayTrait;
+use core::array::SpanTrait;
 use core::hash::{HashStateExTrait, HashStateTrait};
 use core::num::traits::{Zero, One};
 use core::pedersen::{HashState, PedersenTrait};
@@ -689,7 +689,7 @@ impl U32Impl of U32Trait {
             if i == len {
                 break ();
             }
-            let byte: u32 = (*input[(len -1) - i]).into();
+            let byte: u32 = (*input[(len - 1) - i]).into();
             result += byte * *shifts[offset - i];
             i += 1;
         };
@@ -744,7 +744,6 @@ impl U32Impl of U32Trait {
 
 #[generate_trait]
 impl U64Impl of U64Trait {
-
     /// Packs 8 bytes into a u64 from big endian bytes
     /// # Arguments
     /// * `input` a Span<u8> of len <=8
@@ -857,7 +856,7 @@ impl U64Impl of U64Trait {
 
         let i = 0;
         loop {
-            if i == (8 - res.len()){
+            if i == (8 - res.len()) {
                 break;
             }
 
@@ -875,19 +874,18 @@ impl U64Impl of U64Trait {
     /// * The bytes array representation of the value.
     fn to_le_bytes_padded(mut self: u64) -> Array<u8> {
         let mut bytes: Array<u8> = Default::default();
-        let res = self.to_be_bytes().span();
+        let res = self.to_le_bytes().span();
 
         bytes.append_span(res);
 
         let i = 0;
         loop {
-            if i == (8 - res.len()){
+            if i == (8 - res.len()) {
                 break;
             }
 
             bytes.append(0);
         };
-
 
         bytes
     }
@@ -1096,7 +1094,7 @@ impl U256Impl of U256Trait {
                 break ();
             }
             let byte: u256 = (*input.at(i)).into();
-            result += byte.shl((8 *  i).into());
+            result += byte.shl((8 * i).into());
 
             i += 1;
         };

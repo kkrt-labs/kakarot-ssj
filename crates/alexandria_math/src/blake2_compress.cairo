@@ -1,9 +1,9 @@
 use core::option::OptionTrait;
 use integer::{BoundedInt, u64_wrapping_add, U64BitNot};
 use alexandria_storage::vec::{Felt252Vec, VecTrait};
-use utils::math::Bitshift;
+use utils::math::{Bitshift, WrappingBitshift};
 
-/// SIGMA from spec: https://datatracker.ietf.org/doc/html/rfc7693#section-2.7
+/// SIGMA from [spec](https://datatracker.ietf.org/doc/html/rfc7693#section-2.7)
 fn SIGMA() -> Span<Span<usize>> {
     array![
         array![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].span(),
@@ -20,7 +20,7 @@ fn SIGMA() -> Span<Span<usize>> {
         .span()
 }
 
-/// got IV from: https://en.wikipedia.org/wiki/BLAKE_(hash_function)
+/// got IV from [here](https://en.wikipedia.org/wiki/BLAKE_(hash_function))
 fn IV() -> Span<u64> {
     array![
         0x6a09e667f3bcc908,
@@ -41,12 +41,33 @@ fn rotate_right(value: u64, n: u32) -> u64 {
     } else {
         let bits = 64; // The number of bits in a u64
         let n = n % bits; // Ensure n is less than 64
-        value.shr(n.into()) | value.shl((bits - n).into())
+
+        let res = value.wrapping_shr(n.into()) | value.wrapping_shl((bits - n).into());
+        res
     }
 }
 
+/// compression function: [see](https://datatracker.ietf.org/doc/html/rfc7693#section-3.2)
+/// # Parameters
+/// * `rounds` - number of rounds for mixing
+/// * `h` - state vector
+/// * `m` - message block, padded with 0s to full block size
+/// * `t` - 2w-bit counter
+/// * `f` - final block indicator flag
+/// # Returns
+/// updated state vector
 fn compress(rounds: usize, h: Span<u64>, m: Span<u64>, t: Span<u64>, f: bool) -> Span<u64> {
     let mut v = VecTrait::<Felt252Vec, u64>::new();
+    let mut i = 0;
+    loop {
+        if i == 16 {
+            break;
+        }
+        v.push(0);
+
+        i += 1;
+    };
+
     let IV = IV();
 
     let mut i = 0;
@@ -61,11 +82,11 @@ fn compress(rounds: usize, h: Span<u64>, m: Span<u64>, t: Span<u64>, f: bool) ->
         i += 1;
     };
 
-    v.set(12, v.get(12).unwrap() ^ *t[0]);
-    v.set(13, v.get(13).unwrap() ^ *t[1]);
+    v.set(12, v[12] ^ *t[0]);
+    v.set(13, v[13] ^ *t[1]);
 
     if f {
-        v.set(14, U64BitNot::bitnot((v.get(14).unwrap())));
+        v.set(14, U64BitNot::bitnot((v[14])));
     }
 
     let mut i = 0;
@@ -97,7 +118,7 @@ fn compress(rounds: usize, h: Span<u64>, m: Span<u64>, t: Span<u64>, f: bool) ->
             break;
         }
 
-        result.append(*h[i] ^ (v.get(i).unwrap() ^ v.get(i + 8).unwrap()));
+        result.append(*h[i] ^ (v[i] ^ v[i + 8]));
 
         i += 1;
     };
@@ -105,20 +126,46 @@ fn compress(rounds: usize, h: Span<u64>, m: Span<u64>, t: Span<u64>, f: bool) ->
     result.span()
 }
 
-fn g(ref v: Felt252Vec<u64>, a: usize, b: usize, c: usize, d: usize, x: u64, y: u64) {
-    let mut v_a = v.get(a).unwrap();
-    let mut v_b = v.get(b).unwrap();
-    let mut v_c = v.get(c).unwrap();
-    let mut v_d = v.get(d).unwrap();
+// TODO: remove once https://github.com/starkware-libs/cairo/issues/4744 is resolved
+#[inline(never)]
+fn no_op() {}
 
-    v_a = u64_wrapping_add(u64_wrapping_add(v_a, v_b), x);
+
+// TODO: remove use no_op() and tmp once https://github.com/starkware-libs/cairo/issues/4744 is resolved
+/// Mixing Function G
+/// It mixes input words into four words indexed by "a", "b", "c", and "d" in the working vector, see [spec](https://datatracker.ietf.org/doc/html/rfc7693#section-3.1)
+///
+/// # Parameters
+/// * `v` - working vector
+/// * `a`- index of word v[a]
+/// * `b`- index of word v[b]
+/// * `c`- index of word v[c]
+/// * `d`- index of word v[d]
+/// * `x` - input word x to be used for mixing
+/// * `y` - input word y to be used for mixing
+fn g(ref v: Felt252Vec<u64>, a: usize, b: usize, c: usize, d: usize, x: u64, y: u64) {
+    let mut v_a = v[a];
+    let mut v_b = v[b];
+    let mut v_c = v[c];
+    let mut v_d = v[d];
+
+    let tmp = u64_wrapping_add(v_a, v_b);
+    no_op();
+    v_a = u64_wrapping_add(tmp, x);
+    no_op();
     v_d = rotate_right(v_d ^ v_a, 32);
     v_c = u64_wrapping_add(v_c, v_d);
+    no_op();
     v_b = rotate_right(v_b ^ v_c, 24);
-    v_a = u64_wrapping_add(u64_wrapping_add(v_a, v_b), y);
+
+    let tmp = u64_wrapping_add(v_a, v_b);
+    no_op();
+    v_a = u64_wrapping_add(tmp, y);
+    no_op();
     v_d = rotate_right(v_d ^ v_a, 16);
     v_c = u64_wrapping_add(v_c, v_d);
-    v_b = rotate_right(v[b] ^ v[c], 63);
+    no_op();
+    v_b = rotate_right(v_b ^ v_c, 63);
 
     v.set(a, v_a);
     v.set(b, v_b);

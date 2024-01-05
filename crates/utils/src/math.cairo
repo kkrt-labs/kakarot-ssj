@@ -1,6 +1,7 @@
 use core::num::traits::{Zero, One};
 use integer::{
-    u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt, u128_overflowing_mul
+    u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt, u128_overflowing_mul,
+    u64_wide_mul, u64_to_felt252
 };
 use utils::num::{SizeOf};
 
@@ -59,6 +60,60 @@ trait WrappingExponentiation<T> {
     /// * `T` - The result of base raised to the power of exp modulo MAX<T>.
     fn wrapping_pow(self: T, exponent: T) -> T;
 }
+
+mod internal_wrapping_pow_u64 {
+    use super::u64_overflow_mul;
+
+    fn wrapping_spow(base: u64, exponent: u64) -> u64 {
+        let mut exponent = exponent;
+        let mut base = base;
+        let mut result = 1;
+
+        loop {
+            if exponent == 0 {
+                break result;
+            }
+            let (new_result, _) = u64_overflow_mul(result, base);
+            result = new_result;
+            exponent -= 1;
+        }
+    }
+    fn wrapping_fpow(base: u64, exponent: u64) -> u64 {
+        let mut result = 1;
+        let mut base = base;
+        let mut exponent = exponent;
+
+        loop {
+            if exponent % 2 != 0 {
+                let (new_result, _) = u64_overflow_mul(result, base);
+                result = new_result;
+            }
+
+            exponent = exponent / 2;
+            if exponent == 0 {
+                break result;
+            }
+
+            let (new_base, _) = u64_overflow_mul(base, base);
+            base = new_base;
+        }
+    }
+}
+
+
+impl U64WrappingExponentiationImpl of WrappingExponentiation<u64> {
+    fn wrapping_pow(self: u64, mut exponent: u64) -> u64 {
+        if self == 0 {
+            return 1;
+        }
+        if exponent > 10 {
+            internal_wrapping_pow_u64::wrapping_fpow(self, exponent)
+        } else {
+            internal_wrapping_pow_u64::wrapping_spow(self, exponent)
+        }
+    }
+}
+
 
 impl U128WrappingExponentiationImpl of WrappingExponentiation<u128> {
     fn wrapping_pow(self: u128, mut exponent: u128) -> u128 {
@@ -222,6 +277,23 @@ trait WrappingBitshift<T> {
     fn wrapping_shr(self: T, shift: T) -> T;
 }
 
+impl u64WrappingBitshiftImpl of WrappingBitshift<u64> {
+    fn wrapping_shl(self: u64, shift: u64) -> u64 {
+        let (result, _) = u64_overflow_mul(self, 2.wrapping_pow(shift));
+        result
+    }
+
+    fn wrapping_shr(self: u64, shift: u64) -> u64 {
+        // if we shift by more than 255 bits, the result is 0 (the type is 128 bits wide)
+        // we early return to save gas
+        // and prevent unexpected behavior, e.g. 2.pow(128) == 0 mod 2^128, given we can't divide by zero
+        if shift > 63 {
+            return 0;
+        }
+        self / 2.pow(shift)
+    }
+}
+
 impl U128WrappingBitshiftImpl of WrappingBitshift<u128> {
     fn wrapping_shl(self: u128, shift: u128) -> u128 {
         let (result, _) = u128_overflowing_mul(self, 2.wrapping_pow(shift));
@@ -277,4 +349,21 @@ fn u256_wide_add(a: u256, b: u256) -> u512 {
     let limb3 = 0;
 
     u512 { limb0, limb1, limb2, limb3 }
+}
+
+fn u64_overflow_mul(lhs: u64, rhs: u64) -> (u64, bool) {
+    let result = u64_wide_mul(lhs, rhs);
+    let (top_word, bottom_word) = split_u128_into_u64(result);
+
+    match u64_to_felt252(top_word) {
+        0 => (bottom_word, false),
+        _ => (bottom_word, true),
+    }
+}
+
+fn split_u128_into_u64(v: u128) -> (u64, u64) {
+    let bottom_word: u64 = (v & 0xFFFFFFFFFFFFFFFF).try_into().unwrap();
+    let top_word = (v.shr(64) & 0xFFFFFFFFFFFFFFFF).try_into().unwrap();
+
+    (top_word, bottom_word)
 }

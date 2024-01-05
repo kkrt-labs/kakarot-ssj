@@ -1,12 +1,13 @@
-use core::option::OptionTrait;
+use alexandria_math::blake2_compress::compress;
 use core::array::ArrayTrait;
+use core::option::OptionTrait;
+
 use evm::errors::{PrecompileError, EVMError};
 use evm::model::vm::{VM, VMTrait};
-use utils::helpers::{U32Trait, U64Trait};
 use starknet::EthAddress;
+use utils::helpers::{U32Trait, U64Trait};
 
-use alexandria_math::blake2_compress::compress;
-
+const GF_ROUND: u64 = 1;
 const INPUT_LENGTH: usize = 213;
 
 #[generate_trait]
@@ -29,7 +30,9 @@ impl Blake2PrecompileTraitImpl of Blake2PrecompileTrait {
             0 => false,
             1 => true,
             _ => {
-                return Result::Err(EVMError::PrecompileError(PrecompileError::Blake2WrongFinalIndicatorFlag));
+                return Result::Err(
+                    EVMError::PrecompileError(PrecompileError::Blake2WrongFinalIndicatorFlag)
+                );
             }
         };
 
@@ -40,10 +43,18 @@ impl Blake2PrecompileTraitImpl of Blake2PrecompileTrait {
             }
         };
 
+        let gas: u128 = (GF_ROUND * rounds.into()).into();
+
+        if (gas > vm.gas_left()) {
+            return Result::Err(EVMError::OutOfGas);
+        }
+
+        vm.charge_gas(gas)?;
+
         let mut h: Array<u64> = Default::default();
         let mut m: Array<u64> = Default::default();
 
-        let mut i =0;
+        let mut i = 0;
         let mut pos = 4;
         loop {
             if i == 8 {
@@ -51,11 +62,11 @@ impl Blake2PrecompileTraitImpl of Blake2PrecompileTrait {
             }
 
             h.append(U64Trait::from_le_bytes(input.slice(pos, 8)).unwrap());
-            i+=1;
-            pos+=8;
+            i += 1;
+            pos += 8;
         };
 
-        let mut i =0;
+        let mut i = 0;
         let mut pos = 68;
         loop {
             if i == 16 {
@@ -63,29 +74,28 @@ impl Blake2PrecompileTraitImpl of Blake2PrecompileTrait {
             }
 
             m.append(U64Trait::from_le_bytes(input.slice(pos, 8)).unwrap());
-            i+=1;
-            pos+=8;
+            i += 1;
+            pos += 8;
         };
 
         let mut t: Array<u64> = Default::default();
         t.append(U64Trait::from_le_bytes(input.slice(196, 8)).unwrap());
         t.append(U64Trait::from_le_bytes(input.slice(204, 8)).unwrap());
 
-
         let res = compress(rounds, h.span(), m.span(), t.span(), f);
 
-        let mut return_data: Array<u8> =  Default::default();
+        let mut return_data: Array<u8> = Default::default();
 
         let mut i = 0;
-        loop{
+        loop {
             if i == res.len() {
                 break;
             }
 
-            let bytes = (*res[i]).to_le_bytes().span();
+            let bytes = (*res[i]).to_le_bytes_padded().span();
             return_data.append_span(bytes);
 
-            i+=1;
+            i += 1;
         };
 
         vm.return_data = return_data.span();

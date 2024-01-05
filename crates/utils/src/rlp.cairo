@@ -213,7 +213,8 @@ impl RLPHelpersImpl of RLPHelpersTrait {
                 if bytes.len() == 0 {
                     return Result::Ok(0);
                 }
-                let value = U128Impl::from_be_bytes(bytes).ok_or(RLPHelpersError::FailedParsingU128)?;
+                let value = U128Impl::from_be_bytes(bytes)
+                    .ok_or(RLPHelpersError::FailedParsingU128)?;
                 Result::Ok(value)
             },
             RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
@@ -243,7 +244,8 @@ impl RLPHelpersImpl of RLPHelpersTrait {
                 if bytes.len() == 0 {
                     return Result::Ok(0);
                 }
-                let value = U256Impl::from_be_bytes(bytes).ok_or(RLPHelpersError::FailedParsingU256)?;
+                let value = U256Impl::from_be_bytes(bytes)
+                    .ok_or(RLPHelpersError::FailedParsingU256)?;
                 Result::Ok(value)
             },
             RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }

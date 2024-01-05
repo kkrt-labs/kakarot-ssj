@@ -4,6 +4,10 @@ version = 1
 [[package]]
 name = "alexandria_math"
 version = "0.1.0"
+dependencies = [
+ "alexandria_storage",
+ "utils",
+]
 
 [[package]]
 name = "alexandria_storage"
@@ -24,6 +28,7 @@ name = "evm"
 version = "0.1.0"
 dependencies = [
  "alexandria_math",
+ "alexandria_storage",
  "contracts",
  "openzeppelin",
  "utils",
