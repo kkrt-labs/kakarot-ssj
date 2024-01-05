@@ -9,7 +9,6 @@ starknet.workspace = true
 utils = { path = "../utils" }
 contracts = { path = "../contracts" }
 alexandria_math = { path = "../alexandria_math" }
-alexandria_storage = { path = "../alexandria_storage" }
 openzeppelin = { path = "../openzeppelin" }
 
 [tool]
