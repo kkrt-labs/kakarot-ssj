@@ -39,10 +39,6 @@ impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
 
         let gas: u128 = (GF_ROUND * rounds.into()).into();
 
-        if (gas > vm.gas_left()) {
-            return Result::Err(EVMError::OutOfGas);
-        }
-
         vm.charge_gas(gas)?;
 
         let mut h: Array<u64> = Default::default();

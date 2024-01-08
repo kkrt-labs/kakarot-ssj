@@ -22,10 +22,6 @@ impl EcRecoverPrecompileTraitImpl of EcRecoverPrecompileTrait {
     fn exec(ref vm: VM) -> Result<(), EVMError> {
         let gas: u128 = EC_RECOVER_PRECOMPILE_GAS_COST;
 
-        if (gas > vm.gas_left()) {
-            return Result::Err(EVMError::OutOfGas);
-        }
-
         vm.charge_gas(gas)?;
 
         let input = vm.message().data;
