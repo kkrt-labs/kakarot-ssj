@@ -51,6 +51,7 @@ impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
                 break;
             }
 
+            // safe unwrap, because we have made sure of the input length to be 213
             h.append(U64Trait::from_le_bytes(input.slice(pos, 8)).unwrap());
             i += 1;
             pos += 8;
@@ -63,13 +64,17 @@ impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
                 break;
             }
 
+            // safe unwrap, because we have made sure of the input length to be 213
             m.append(U64Trait::from_le_bytes(input.slice(pos, 8)).unwrap());
             i += 1;
             pos += 8;
         };
 
         let mut t: Array<u64> = Default::default();
+
+        // safe unwrap, because we have made sure of the input length to be 213
         t.append(U64Trait::from_le_bytes(input.slice(196, 8)).unwrap());
+        // safe unwrap, because we have made sure of the input length to be 213
         t.append(U64Trait::from_le_bytes(input.slice(204, 8)).unwrap());
 
         let res = compress(rounds, h.span(), m.span(), t.span(), f);
