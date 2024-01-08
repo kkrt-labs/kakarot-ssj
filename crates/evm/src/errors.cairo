@@ -41,13 +41,6 @@ const CALLING_FROM_UNDEPLOYED_ACCOUNT: felt252 = 'EOA: from is undeployed EOA';
 const CALLING_FROM_CA: felt252 = 'EOA: from is a contract account';
 
 #[derive(Drop, Copy, PartialEq)]
-enum PrecompileError {
-    Blake2WrongLength,
-    Blake2WrongFinalIndicatorFlag
-}
-
-
-#[derive(Drop, Copy, PartialEq)]
 enum EVMError {
     StackOverflow,
     StackUnderflow,
@@ -58,23 +51,13 @@ enum EVMError {
     InvalidJump,
     InvalidCode,
     NotImplemented,
+    InvalidParameter: felt252,
     InvalidOpcode: u8,
     WriteInStaticContext,
     DeployError: felt252,
     OutOfGas,
     Assertion,
     DepthLimit,
-    PrecompileError: PrecompileError
-}
-
-#[generate_trait]
-impl PrecompileErrorImpl of PrecompileErrorTrait {
-    fn to_string(self: PrecompileError) -> felt252 {
-        match self {
-            PrecompileError::Blake2WrongLength => 'blake2 wrong length',
-            PrecompileError::Blake2WrongFinalIndicatorFlag => 'blake2 wrong indicator flag'
-        }
-    }
 }
 
 #[generate_trait]
@@ -90,6 +73,7 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::InvalidJump => 'invalid jump destination',
             EVMError::InvalidCode => 'invalid code',
             EVMError::NotImplemented => 'not implemented',
+            EVMError::InvalidParameter(error_message) => error_message,
             // TODO: refactor with dynamic strings once supported
             EVMError::InvalidOpcode => 'invalid opcode'.into(),
             EVMError::WriteInStaticContext => 'write protection',
@@ -97,7 +81,6 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::OutOfGas => 'out of gas'.into(),
             EVMError::Assertion => 'assertion failed'.into(),
             EVMError::DepthLimit => 'max call depth exceeded'.into(),
-            EVMError::PrecompileError(err) => err.to_string()
         }
     }
 

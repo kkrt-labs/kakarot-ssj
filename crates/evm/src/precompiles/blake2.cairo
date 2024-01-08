@@ -1,7 +1,7 @@
 use core::array::ArrayTrait;
 use core::option::OptionTrait;
 
-use evm::errors::{PrecompileError, EVMError};
+use evm::errors::EVMError;
 use evm::model::vm::{VM, VMTrait};
 use starknet::EthAddress;
 use utils::crypto::blake2_compress::compress;
@@ -23,16 +23,14 @@ impl Blake2PrecompileTraitImpl of Blake2PrecompileTrait {
         let input = input.span();
 
         if input.len() != INPUT_LENGTH {
-            return Result::Err(EVMError::PrecompileError(PrecompileError::Blake2WrongLength));
+            return Result::Err(EVMError::InvalidParameter('Blake2: wrong input length'));
         };
 
         let f = match (*input[212]).into() {
             0 => false,
             1 => true,
             _ => {
-                return Result::Err(
-                    EVMError::PrecompileError(PrecompileError::Blake2WrongFinalIndicatorFlag)
-                );
+                return Result::Err(EVMError::InvalidParameter('Blake2: wrong final indicator'));
             }
         };
 

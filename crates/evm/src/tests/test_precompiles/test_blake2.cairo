@@ -1,6 +1,6 @@
 use contracts::tests::test_utils::{setup_contracts_for_testing};
 use core::array::SpanTrait;
-use evm::errors::{EVMError, PrecompileError};
+use evm::errors::EVMError;
 use evm::instructions::memory_operations::MemoryOperationTrait;
 use evm::instructions::system_operations::SystemOperationsTrait;
 use evm::interpreter::EVMTrait;
@@ -26,7 +26,7 @@ fn test_blake2_precompile_fail_empty_input() {
     vm.message.data = calldata;
 
     let res = Blake2PrecompileTrait::exec(ref vm);
-    assert_eq!(res, Result::Err(EVMError::PrecompileError(PrecompileError::Blake2WrongLength)));
+    assert_eq!(res, Result::Err(EVMError::InvalidParameter('Blake2: wrong input length')));
 }
 
 #[test]
@@ -37,7 +37,7 @@ fn test_blake2_precompile_fail_wrong_length_input_1() {
     vm.message.data = calldata;
 
     let res = Blake2PrecompileTrait::exec(ref vm);
-    assert_eq!(res, Result::Err(EVMError::PrecompileError(PrecompileError::Blake2WrongLength)));
+    assert_eq!(res, Result::Err(EVMError::InvalidParameter('Blake2: wrong input length')));
 }
 
 #[test]
@@ -48,7 +48,7 @@ fn test_blake2_precompile_fail_wrong_length_input_2() {
     vm.message.data = calldata;
 
     let res = Blake2PrecompileTrait::exec(ref vm);
-    assert_eq!(res, Result::Err(EVMError::PrecompileError(PrecompileError::Blake2WrongLength)));
+    assert_eq!(res, Result::Err(EVMError::InvalidParameter('Blake2: wrong input length')));
 }
 
 #[test]
@@ -59,9 +59,7 @@ fn test_blake2_precompile_fail_wrong_final_block_indicator_flag() {
     vm.message.data = calldata;
 
     let res = Blake2PrecompileTrait::exec(ref vm);
-    assert_eq!(
-        res, Result::Err(EVMError::PrecompileError(PrecompileError::Blake2WrongFinalIndicatorFlag))
-    );
+    assert_eq!(res, Result::Err(EVMError::InvalidParameter('Blake2: wrong final indicator')));
 }
 
 
