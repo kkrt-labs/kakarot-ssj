@@ -1,7 +1,7 @@
 use alexandria_data_structures::vec::{Felt252Vec, VecTrait};
 use core::num::traits::BitSize;
 use core::option::OptionTrait;
-use integer::{BoundedInt, u64_wrapping_add, U64BitNot};
+use integer::{BoundedInt, u64_wrapping_add};
 use utils::math::{Bitshift, WrappingBitshift};
 
 /// SIGMA from [spec](https://datatracker.ietf.org/doc/html/rfc7693#section-2.7)
@@ -87,7 +87,7 @@ fn compress(rounds: usize, h: Span<u64>, m: Span<u64>, t: Span<u64>, f: bool) ->
     v.set(13, v[13] ^ *t[1]);
 
     if f {
-        v.set(14, U64BitNot::bitnot((v[14])));
+        v.set(14, ~v[14]);
     }
 
     let mut i = 0;
