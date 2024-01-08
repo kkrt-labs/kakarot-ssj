@@ -34,12 +34,8 @@ impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
             }
         };
 
-        let rounds = match U32Trait::from_be_bytes(input.slice(0, 4)) {
-            Option::Some(rounds) => rounds,
-            Option::None => {
-                return Result::Err(EVMError::TypeConversionError('extraction of u32 failed'));
-            }
-        };
+        let rounds = U32Trait::from_be_bytes(input.slice(0, 4))
+            .ok_or(EVMError::TypeConversionError('extraction of u32 failed'))?;
 
         let gas: u128 = (GF_ROUND * rounds.into()).into();
 
