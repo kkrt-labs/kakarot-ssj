@@ -1,4 +1,5 @@
 use alexandria_data_structures::vec::{Felt252Vec, VecTrait};
+use core::num::traits::BitSize;
 use core::option::OptionTrait;
 use integer::{BoundedInt, u64_wrapping_add, U64BitNot};
 use utils::math::{Bitshift, WrappingBitshift};
@@ -39,7 +40,7 @@ fn rotate_right(value: u64, n: u32) -> u64 {
     if n == 0 {
         value // No rotation needed
     } else {
-        let bits = 64; // The number of bits in a u64
+        let bits = BitSize::<u64>::bits(); // The number of bits in a u64
         let n = n % bits; // Ensure n is less than 64
 
         let res = value.wrapping_shr(n.into()) | value.wrapping_shl((bits - n).into());
