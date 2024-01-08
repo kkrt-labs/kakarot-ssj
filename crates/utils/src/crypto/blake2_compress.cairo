@@ -1,6 +1,6 @@
+use alexandria_storage::vec::{Felt252Vec, VecTrait};
 use core::option::OptionTrait;
 use integer::{BoundedInt, u64_wrapping_add, U64BitNot};
-use alexandria_storage::vec::{Felt252Vec, VecTrait};
 use utils::math::{Bitshift, WrappingBitshift};
 
 /// SIGMA from [spec](https://datatracker.ietf.org/doc/html/rfc7693#section-2.7)

@@ -5,7 +5,6 @@ version = 1
 name = "alexandria_math"
 version = "0.1.0"
 dependencies = [
- "alexandria_storage",
  "utils",
 ]
 
