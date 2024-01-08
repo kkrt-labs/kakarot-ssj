@@ -6,7 +6,7 @@ use evm::instructions::system_operations::SystemOperationsTrait;
 use evm::interpreter::EVMTrait;
 use evm::memory::InternalMemoryTrait;
 use evm::memory::MemoryTrait;
-use evm::precompiles::blake2::Blake2PrecompileTrait;
+use evm::precompiles::blake2f::Blake2fPrecompileTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
 use starknet::testing::set_contract_address;
@@ -25,7 +25,7 @@ fn test_blake2_precompile_fail_empty_input() {
     let calldata = array![].span();
     vm.message.data = calldata;
 
-    let res = Blake2PrecompileTrait::exec(ref vm);
+    let res = Blake2fPrecompileTrait::exec(ref vm);
     assert_eq!(res, Result::Err(EVMError::InvalidParameter('Blake2: wrong input length')));
 }
 
@@ -36,7 +36,7 @@ fn test_blake2_precompile_fail_wrong_length_input_1() {
     let (calldata, _) = blake2_precompile_fail_wrong_length_input_1_test_case();
     vm.message.data = calldata;
 
-    let res = Blake2PrecompileTrait::exec(ref vm);
+    let res = Blake2fPrecompileTrait::exec(ref vm);
     assert_eq!(res, Result::Err(EVMError::InvalidParameter('Blake2: wrong input length')));
 }
 
@@ -47,7 +47,7 @@ fn test_blake2_precompile_fail_wrong_length_input_2() {
     let (calldata, _) = blake2_precompile_fail_wrong_length_input_2_test_case();
     vm.message.data = calldata;
 
-    let res = Blake2PrecompileTrait::exec(ref vm);
+    let res = Blake2fPrecompileTrait::exec(ref vm);
     assert_eq!(res, Result::Err(EVMError::InvalidParameter('Blake2: wrong input length')));
 }
 
@@ -58,7 +58,7 @@ fn test_blake2_precompile_fail_wrong_final_block_indicator_flag() {
     let (calldata, _) = blake2_precompile_fail_wrong_length_input_3_test_case();
     vm.message.data = calldata;
 
-    let res = Blake2PrecompileTrait::exec(ref vm);
+    let res = Blake2fPrecompileTrait::exec(ref vm);
     assert_eq!(res, Result::Err(EVMError::InvalidParameter('Blake2: wrong final indicator')));
 }
 
@@ -71,7 +71,7 @@ fn test_blake2_precompile_pass_1() {
     vm.message.data = calldata;
 
     let gas_before = vm.gas_left;
-    Blake2PrecompileTrait::exec(ref vm).unwrap();
+    Blake2fPrecompileTrait::exec(ref vm).unwrap();
     let gas_after = vm.gas_left;
 
     let result = vm.return_data;
@@ -89,7 +89,7 @@ fn test_blake2_precompile_pass_0() {
     vm.message.data = calldata;
 
     let gas_before = vm.gas_left;
-    Blake2PrecompileTrait::exec(ref vm).unwrap();
+    Blake2fPrecompileTrait::exec(ref vm).unwrap();
     let gas_after = vm.gas_left;
 
     let result = vm.return_data;
@@ -108,7 +108,7 @@ fn test_blake2_precompile_pass_2() {
     vm.message.data = calldata;
 
     let gas_before = vm.gas_left;
-    Blake2PrecompileTrait::exec(ref vm).unwrap();
+    Blake2fPrecompileTrait::exec(ref vm).unwrap();
     let gas_after = vm.gas_left;
 
     let result = vm.return_data;

@@ -1,4 +1,4 @@
-mod blake2;
+mod blake2f;
 mod ec_recover;
 mod identity;
 

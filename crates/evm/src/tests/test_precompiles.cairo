@@ -1,4 +1,4 @@
-mod test_blake2;
+mod test_blake2f;
 mod test_data;
 mod test_ec_recover;
 mod test_identity;

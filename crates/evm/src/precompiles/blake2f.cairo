@@ -11,7 +11,7 @@ const GF_ROUND: u64 = 1;
 const INPUT_LENGTH: usize = 213;
 
 #[generate_trait]
-impl Blake2PrecompileTraitImpl of Blake2PrecompileTrait {
+impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
     #[inline(always)]
     fn address() -> EthAddress {
         EthAddress { address: 0x9 }
