@@ -1,3 +1,4 @@
+use core::keccak::u128_split;
 use core::num::traits::{Zero, One};
 use integer::{
     u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt, u128_overflowing_mul,
@@ -353,17 +354,10 @@ fn u256_wide_add(a: u256, b: u256) -> u512 {
 
 fn u64_overflow_mul(lhs: u64, rhs: u64) -> (u64, bool) {
     let result = u64_wide_mul(lhs, rhs);
-    let (top_word, bottom_word) = split_u128_into_u64(result);
+    let (top_word, bottom_word) = u128_split(result);
 
     match u64_to_felt252(top_word) {
         0 => (bottom_word, false),
         _ => (bottom_word, true),
     }
-}
-
-fn split_u128_into_u64(v: u128) -> (u64, u64) {
-    let bottom_word: u64 = (v & 0xFFFFFFFFFFFFFFFF).try_into().unwrap();
-    let top_word = (v.shr(64) & 0xFFFFFFFFFFFFFFFF).try_into().unwrap();
-
-    (top_word, bottom_word)
 }
