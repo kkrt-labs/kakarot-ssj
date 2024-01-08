@@ -1,4 +1,4 @@
-use alexandria_storage::vec::{Felt252Vec, VecTrait};
+use alexandria_data_structures::vec::{Felt252Vec, VecTrait};
 use core::option::OptionTrait;
 use integer::{BoundedInt, u64_wrapping_add, U64BitNot};
 use utils::math::{Bitshift, WrappingBitshift};
