@@ -178,18 +178,18 @@ mod u32_test {
     use utils::helpers::U32Trait;
 
     #[test]
-    fn test_u32_from_bytes() {
+    fn test_u32_from_be_bytes() {
         let input: Array<u8> = array![0xf4, 0x32, 0x15, 0x62];
-        let res: Option<u32> = U32Trait::from_bytes(input.span());
+        let res: Option<u32> = U32Trait::from_be_bytes(input.span());
 
         assert(res.is_some(), 'should have a value');
         assert(res.unwrap() == 0xf4321562, 'wrong result value');
     }
 
     #[test]
-    fn test_u32_from_bytes_too_big() {
+    fn test_u32_from_be_bytes_too_big() {
         let input: Array<u8> = array![0xf4, 0x32, 0x15, 0x62, 0x01];
-        let res: Option<u32> = U32Trait::from_bytes(input.span());
+        let res: Option<u32> = U32Trait::from_be_bytes(input.span());
 
         assert(res.is_none(), 'should not have a value');
     }

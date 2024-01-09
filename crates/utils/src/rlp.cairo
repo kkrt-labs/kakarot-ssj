@@ -54,7 +54,7 @@ impl RLPImpl of RLPTrait {
                 return Result::Err(RLPError::InputTooShort);
             }
             let string_len_bytes = input.slice(1, len_bytes_count);
-            let string_len: u32 = U32Trait::from_bytes(string_len_bytes).unwrap();
+            let string_len: u32 = U32Trait::from_be_bytes(string_len_bytes).unwrap();
             if input_len <= len_bytes_count + string_len {
                 return Result::Err(RLPError::InputTooShort);
             }
@@ -72,7 +72,7 @@ impl RLPImpl of RLPTrait {
                 return Result::Err(RLPError::InputTooShort);
             }
             let list_len_bytes = input.slice(1, len_bytes_count);
-            let list_len: u32 = U32Trait::from_bytes(list_len_bytes).unwrap();
+            let list_len: u32 = U32Trait::from_be_bytes(list_len_bytes).unwrap();
             if input_len <= len_bytes_count + list_len {
                 return Result::Err(RLPError::InputTooShort);
             }
@@ -213,7 +213,8 @@ impl RLPHelpersImpl of RLPHelpersTrait {
                 if bytes.len() == 0 {
                     return Result::Ok(0);
                 }
-                let value = U128Impl::from_bytes(bytes).ok_or(RLPHelpersError::FailedParsingU128)?;
+                let value = U128Impl::from_be_bytes(bytes)
+                    .ok_or(RLPHelpersError::FailedParsingU128)?;
                 Result::Ok(value)
             },
             RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
@@ -243,7 +244,8 @@ impl RLPHelpersImpl of RLPHelpersTrait {
                 if bytes.len() == 0 {
                     return Result::Ok(0);
                 }
-                let value = U256Impl::from_bytes(bytes).ok_or(RLPHelpersError::FailedParsingU256)?;
+                let value = U256Impl::from_be_bytes(bytes)
+                    .ok_or(RLPHelpersError::FailedParsingU256)?;
                 Result::Ok(value)
             },
             RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }

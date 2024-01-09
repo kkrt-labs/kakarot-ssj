@@ -22,10 +22,6 @@ impl Sha256PrecompileTraitImpl of Sha256PrecompileTrait {
         let gas: u128 = SHA_256_PRECOMPILE_BASE_COST
             + data_word_size * SHA_256_PRECOMPILE_COST_PER_WORD;
 
-        if (gas > vm.gas_left()) {
-            return Result::Err(EVMError::OutOfGas);
-        }
-
         vm.charge_gas(gas)?;
 
         let result = sha256(input);

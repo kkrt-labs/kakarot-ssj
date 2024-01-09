@@ -40,7 +40,6 @@ const DEPLOYMENT_FAILED: felt252 = 'KKT: deployment failed';
 const CALLING_FROM_UNDEPLOYED_ACCOUNT: felt252 = 'EOA: from is undeployed EOA';
 const CALLING_FROM_CA: felt252 = 'EOA: from is a contract account';
 
-
 #[derive(Drop, Copy, PartialEq)]
 enum EVMError {
     StackOverflow,
@@ -52,12 +51,13 @@ enum EVMError {
     InvalidJump,
     InvalidCode,
     NotImplemented,
+    InvalidParameter: felt252,
     InvalidOpcode: u8,
     WriteInStaticContext,
     DeployError: felt252,
     OutOfGas,
     Assertion,
-    DepthLimit
+    DepthLimit,
 }
 
 #[generate_trait]
@@ -73,6 +73,7 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::InvalidJump => 'invalid jump destination',
             EVMError::InvalidCode => 'invalid code',
             EVMError::NotImplemented => 'not implemented',
+            EVMError::InvalidParameter(error_message) => error_message,
             // TODO: refactor with dynamic strings once supported
             EVMError::InvalidOpcode => 'invalid opcode'.into(),
             EVMError::WriteInStaticContext => 'write protection',

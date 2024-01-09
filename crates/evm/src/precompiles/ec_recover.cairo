@@ -22,22 +22,18 @@ impl EcRecoverPrecompileTraitImpl of EcRecoverPrecompileTrait {
     fn exec(ref vm: VM) -> Result<(), EVMError> {
         let gas: u128 = EC_RECOVER_PRECOMPILE_GAS_COST;
 
-        if (gas > vm.gas_left()) {
-            return Result::Err(EVMError::OutOfGas);
-        }
-
         vm.charge_gas(gas)?;
 
         let input = vm.message().data;
 
         let message_hash = input.slice(0, 32);
-        let message_hash = match U256Trait::from_bytes(message_hash) {
+        let message_hash = match U256Trait::from_be_bytes(message_hash) {
             Option::Some(message_hash) => message_hash,
             Option::None => { return Result::Ok(()); }
         };
 
         let v = input.slice(32, 32);
-        let y_parity = match U256Trait::from_bytes(v) {
+        let y_parity = match U256Trait::from_be_bytes(v) {
             Option::Some(v) => {
                 let y_parity = v - 27;
 
@@ -51,13 +47,13 @@ impl EcRecoverPrecompileTraitImpl of EcRecoverPrecompileTrait {
         };
 
         let r = input.slice(64, 32);
-        let r = match U256Trait::from_bytes(r) {
+        let r = match U256Trait::from_be_bytes(r) {
             Option::Some(r) => r,
             Option::None => { return Result::Ok(()); }
         };
 
         let s = input.slice(96, 32);
-        let s = match U256Trait::from_bytes(s) {
+        let s = match U256Trait::from_be_bytes(s) {
             Option::Some(s) => s,
             Option::None => { return Result::Ok(()); }
         };

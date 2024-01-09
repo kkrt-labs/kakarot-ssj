@@ -2,6 +2,7 @@ use core::traits::Into;
 use evm::errors::EVMError;
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
+use evm::precompiles::blake2f::Blake2fPrecompileTrait;
 use evm::precompiles::ec_recover::EcRecoverPrecompileTrait;
 
 use evm::precompiles::identity::IdentityPrecompileTrait;
@@ -51,12 +52,7 @@ impl PrecompileTraitImpl of PrecompileTrait {
                     "pre-compile at address {} isn't implemented yet", precompile_address.address
                 )
             },
-            9 => {
-                // we should never reach this branch!
-                panic!(
-                    "pre-compile at address {} isn't implemented yet", precompile_address.address
-                )
-            },
+            9 => { Blake2fPrecompileTrait::exec(ref vm) },
             _ => {
                 // we should never reach this branch!
                 panic!("address {} isn't a pre-compile", precompile_address.address)

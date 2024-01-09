@@ -3,6 +3,7 @@
 mod address;
 mod checked_math;
 mod constants;
+mod crypto;
 mod errors;
 mod eth_transaction;
 mod fmt;

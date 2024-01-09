@@ -21,13 +21,9 @@ impl IdentityPrecompileTraitImpl of IdentityPrecompileTrait {
         let gas: u128 = IDENTITY_PRECOMPILE_BASE_COST
             + (data_word_size * IDENTITY_PRECOMPILE_COST_PER_WORD);
 
-        if (gas > vm.gas_left()) {
-            Result::Err(EVMError::OutOfGas)
-        } else {
-            vm.charge_gas(gas)?;
-            vm.return_data = input;
+        vm.charge_gas(gas)?;
+        vm.return_data = input;
 
-            Result::Ok(())
-        }
+        Result::Ok(())
     }
 }

@@ -1,5 +1,6 @@
 use cmp::min;
 use core::array::ArrayTrait;
+use core::array::SpanTrait;
 use core::hash::{HashStateExTrait, HashStateTrait};
 use core::num::traits::{Zero, One};
 use core::pedersen::{HashState, PedersenTrait};
@@ -637,13 +638,13 @@ impl U8SpanExImpl of U8SpanExTrait {
 
 #[generate_trait]
 impl U32Impl of U32Trait {
-    /// Packs 4 bytes into a u32
+    /// Packs 4 bytes into a u32 big endian bytes
     /// # Arguments
     /// * `input` a Span<u8> of len <=4
     /// # Returns
     /// * Option::Some(u32) if the operation succeeds
     /// * Option::None otherwise
-    fn from_bytes(input: Span<u8>) -> Option<u32> {
+    fn from_be_bytes(input: Span<u8>) -> Option<u32> {
         let len = input.len();
         if len == 0 {
             return Option::None;
@@ -659,7 +660,36 @@ impl U32Impl of U32Trait {
             if i == len {
                 break ();
             }
-            let byte: u32 = (*input.at(i)).into();
+            let byte: u32 = (*input[i]).into();
+            result += byte * *shifts[offset - i];
+            i += 1;
+        };
+        Option::Some(result)
+    }
+
+    /// Packs 4 bytes into a u32 from little endian bytes
+    /// # Arguments
+    /// * `input` a Span<u8> of len <=4
+    /// # Returns
+    /// * Option::Some(u32) if the operation succeeds
+    /// * Option::None otherwise
+    fn from_le_bytes(input: Span<u8>) -> Option<u32> {
+        let len = input.len();
+        if len == 0 {
+            return Option::None;
+        }
+        if len > 4 {
+            return Option::None;
+        }
+        let mut result: u32 = 0;
+        let mut i: u32 = 0;
+        let mut offset = len - 1;
+        let mut shifts = array![0x1, 0x100, 0x10000, 0x1000000];
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: u32 = (*input[(len - 1) - i]).into();
             result += byte * *shifts[offset - i];
             i += 1;
         };
@@ -714,12 +744,71 @@ impl U32Impl of U32Trait {
 
 #[generate_trait]
 impl U64Impl of U64Trait {
-    /// Unpacks a u64 into an array of bytes
+    /// Packs 8 bytes into a u64 from big endian bytes
+    /// # Arguments
+    /// * `input` a Span<u8> of len <=8
+    /// # Returns
+    /// * Option::Some(u64) if the operation succeeds
+    /// * Option::None otherwise
+    fn from_be_bytes(input: Span<u8>) -> Option<u64> {
+        let len = input.len();
+        if len == 0 {
+            return Option::None;
+        }
+        if len > 8 {
+            return Option::None;
+        }
+
+        let offset: u32 = len - 1;
+        let mut result: u64 = 0;
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: u64 = (*input.at(i)).into();
+            result += byte.shl((8 * (offset - i)).into());
+
+            i += 1;
+        };
+        Option::Some(result)
+    }
+
+    /// Packs 8 bytes into a u64 from little endian bytes
+    /// # Arguments
+    /// * `input` a Span<u8> of len <=8
+    /// # Returns
+    /// * Option::Some(u64) if the operation succeeds
+    /// * Option::None otherwise
+    fn from_le_bytes(input: Span<u8>) -> Option<u64> {
+        let len = input.len();
+        if len == 0 {
+            return Option::None;
+        }
+        if len > 8 {
+            return Option::None;
+        }
+
+        let mut result: u64 = 0;
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: u64 = (*input.at(i)).into();
+            result += byte.shl((8 * i).into());
+
+            i += 1;
+        };
+        Option::Some(result)
+    }
+
+    /// Unpacks a u64 into an array of big endian bytes
     /// # Arguments
     /// * `self` a `u64` value.
     /// # Returns
     /// * The bytes array representation of the value.
-    fn to_bytes(mut self: u64) -> Array<u8> {
+    fn to_be_bytes(mut self: u64) -> Array<u8> {
         let bytes_used: u64 = self.bytes_used().into();
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
@@ -730,6 +819,72 @@ impl U64Impl of U64Trait {
             let val = self.shr(8 * (bytes_used.try_into().unwrap() - i - 1));
             bytes.append((val & 0xFF).try_into().unwrap());
             i += 1;
+        };
+
+        bytes
+    }
+
+    /// Unpacks a u64 into an array of little endian bytes
+    /// # Arguments
+    /// * `self` a `u64` value.
+    /// # Returns
+    /// * The bytes array representation of the value.
+    fn to_le_bytes(mut self: u64) -> Array<u8> {
+        let bytes_used: u64 = self.bytes_used().into();
+        let mut bytes: Array<u8> = Default::default();
+        let mut i = 0;
+        loop {
+            if i == bytes_used {
+                break ();
+            }
+            let val = self.shr(8 * i);
+            bytes.append((val & 0xFF).try_into().unwrap());
+            i += 1;
+        };
+
+        bytes
+    }
+
+    /// Unpacks a u64 into an array of big endian bytes, padded to 8 bytes
+    /// # Arguments
+    /// * `self` a `u64` value.
+    /// # Returns
+    /// * The bytes array representation of the value.
+    fn to_be_bytes_padded(mut self: u64) -> Array<u8> {
+        let mut bytes: Array<u8> = Default::default();
+        let res = self.to_be_bytes().span();
+
+        let i = 0;
+        loop {
+            if i == (8 - res.len()) {
+                break;
+            }
+
+            bytes.append(0);
+        };
+
+        bytes.append_span(res);
+        bytes
+    }
+
+    /// Unpacks a u64 into an array of little endian bytes, padded to 8 bytes
+    /// # Arguments
+    /// * `self` a `u64` value.
+    /// # Returns
+    /// * The bytes array representation of the value.
+    fn to_le_bytes_padded(mut self: u64) -> Array<u8> {
+        let mut bytes: Array<u8> = Default::default();
+        let res = self.to_le_bytes().span();
+
+        bytes.append_span(res);
+
+        let i = 0;
+        loop {
+            if i == (8 - res.len()) {
+                break;
+            }
+
+            bytes.append(0);
         };
 
         bytes
@@ -766,13 +921,13 @@ impl U64Impl of U64Trait {
 
 #[generate_trait]
 impl U128Impl of U128Trait {
-    /// Packs 16 bytes into a u128
+    /// Packs 16 bytes into a u128 from big endian bytes
     /// # Arguments
     /// * `input` a Span<u8> of len <=16
     /// # Returns
     /// * Option::Some(u128) if the operation succeeds
     /// * Option::None otherwise
-    fn from_bytes(input: Span<u8>) -> Option<u128> {
+    fn from_be_bytes(input: Span<u8>) -> Option<u128> {
         let len = input.len();
         if len == 0 {
             return Option::None;
@@ -789,6 +944,35 @@ impl U128Impl of U128Trait {
             }
             let byte: u128 = (*input.at(i)).into();
             result += byte.shl((8 * (offset - i)).into());
+
+            i += 1;
+        };
+        Option::Some(result)
+    }
+
+    /// Packs 16 bytes into a u128 from little endian bytes
+    /// # Arguments
+    /// * `input` a Span<u8> of len <=16
+    /// # Returns
+    /// * Option::Some(u128) if the operation succeeds
+    /// * Option::None otherwise
+    fn from_le_bytes(input: Span<u8>) -> Option<u128> {
+        let len = input.len();
+        if len == 0 {
+            return Option::None;
+        }
+        if len > 16 {
+            return Option::None;
+        }
+
+        let mut result: u128 = 0;
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: u128 = (*input.at(i)).into();
+            result += byte.shl((8 * i).into());
 
             i += 1;
         };
@@ -860,13 +1044,13 @@ impl U256Impl of U256Trait {
         bytes.span()
     }
 
-    /// Packs 32 bytes into a u128
+    /// Packs 32 bytes into a u256 from big endian bytes
     /// # Arguments
     /// * `input` a Span<u8> of len <=32
     /// # Returns
     /// * Option::Some(u128) if the operation succeeds
     /// * Option::None otherwise
-    fn from_bytes(input: Span<u8>) -> Option<u256> {
+    fn from_be_bytes(input: Span<u8>) -> Option<u256> {
         let len = input.len();
         if len == 0 {
             return Option::None;
@@ -883,6 +1067,34 @@ impl U256Impl of U256Trait {
             }
             let byte: u256 = (*input.at(i)).into();
             result += byte.shl((8 * (offset - i)).into());
+
+            i += 1;
+        };
+        Option::Some(result)
+    }
+
+    /// Packs 32 bytes into a u256 from little endian bytes
+    /// # Arguments
+    /// * `input` a Span<u8> of len <=32
+    /// # Returns
+    /// * Option::Some(u128) if the operation succeeds
+    /// * Option::None otherwise
+    fn from_le_bytes(input: Span<u8>) -> Option<u256> {
+        let len = input.len();
+        if len == 0 {
+            return Option::None;
+        }
+        if len > 32 {
+            return Option::None;
+        }
+        let mut result: u256 = 0;
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: u256 = (*input.at(i)).into();
+            result += byte.shl((8 * i).into());
 
             i += 1;
         };
