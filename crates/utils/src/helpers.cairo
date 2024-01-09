@@ -1,9 +1,13 @@
+use alexandria_data_structures::vec::VecTrait;
+use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
 use cmp::min;
 use core::array::ArrayTrait;
 use core::array::SpanTrait;
 use core::hash::{HashStateExTrait, HashStateTrait};
 use core::num::traits::{Zero, One};
+use core::option::OptionTrait;
 use core::pedersen::{HashState, PedersenTrait};
+use core::traits::IndexView;
 use core::traits::TryInto;
 use integer::{BoundedInt, u32_as_non_zero, U32TryIntoNonZero};
 use keccak::{cairo_keccak, u128_split};
@@ -1420,5 +1424,112 @@ impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
 
         res.append(value.into());
         Option::Some(res)
+    }
+}
+
+
+#[derive(Drop)]
+enum Felt252VecTraitErrors {
+    IndexOutOfBound,
+    Overflow,
+    SizeLessThanCurrentLength
+}
+
+#[generate_trait]
+impl Felt252VecU8TraitImpl of Felt252VecU8Trait {
+    fn to_bytes(ref self: Felt252Vec<u8>) -> Span<u8> {
+        let mut arr: Array<u8> = Default::default();
+
+        let mut i = 0;
+        loop {
+            if i == self.len() {
+                break;
+            }
+
+            arr.append(self[i]);
+            i += 1;
+        };
+
+        arr.span()
+    }
+}
+
+#[generate_trait]
+impl Felt252VecTraitImpl<
+    T, +Drop<T>, +Copy<T>, +Felt252DictValue<T>, +Into<u8, T>, +PartialEq<T>
+> of Felt252VecTrait<T> {
+    fn expand(ref self: Felt252Vec<T>, new_length: usize) -> Result<(), Felt252VecTraitErrors> {
+        if (new_length < self.len) {
+            return Result::Err(Felt252VecTraitErrors::SizeLessThanCurrentLength);
+        };
+
+        let mut i = self.len - new_length;
+        loop {
+            if i == 0 {
+                break;
+            }
+
+            self.push(0_u8.into());
+            i -= 1;
+        };
+
+        Result::Ok(())
+    }
+
+    fn copy_from_span(
+        ref self: Felt252Vec<T>, index: usize, mut slice: Span<u8>
+    ) -> Result<(), Felt252VecTraitErrors> {
+        if (index > self.len) {
+            return Result::Err(Felt252VecTraitErrors::IndexOutOfBound);
+        }
+
+        if ((self.len - index) < slice.len()) {
+            return Result::Err(Felt252VecTraitErrors::Overflow);
+        }
+
+        let mut i = index;
+        loop {
+            let val = slice.pop_front();
+            if val.is_none() {
+                break;
+            }
+
+            // safe unwrap, as in case of none, we will never reach this branch
+            self.set(i, (*(val.unwrap())).into());
+            i += 1;
+        };
+
+        Result::Ok(())
+    }
+
+    /// Removes trailing zeroes before the Most Significant Digit
+    /// # Arguments
+    /// * `input` a ref Felt252Vec<T>
+    /// Note: this is an expensive operation, as it will create a new Felt252Vec
+    fn remove_trailing_zeroes_le(ref self: Felt252Vec<T>) {
+        let mut vec: Felt252Vec<T> = Felt252VecImpl::new();
+
+        let mut i = self.len - 1;
+        let mut num_of_trailing_zeroes = 0;
+        loop {
+            if (i < 0) || (self[i] != 0_u8.into()) {
+                break;
+            }
+
+            i -= 1;
+            num_of_trailing_zeroes += 1;
+        };
+
+        let mut i = 0;
+        loop {
+            if i == (self.len - num_of_trailing_zeroes) {
+                break;
+            }
+
+            vec.push(self[i]);
+            i += 1;
+        };
+
+        self = vec;
     }
 }
