@@ -65,7 +65,7 @@ trait IKakarotCore<TContractState> {
     /// It cannot modify the state of the chain
     fn eth_call(
         self: @TContractState, origin: EthAddress, tx: EthereumTransaction
-    ) -> (bool, Span<u8>);
+    ) -> (bool, Span<u8>, u128);
 
     /// Transaction entrypoint into the EVM
     /// Executes an EVM transaction and possibly modifies the state
