@@ -361,3 +361,8 @@ fn u64_overflow_mul(lhs: u64, rhs: u64) -> (u64, bool) {
         _ => (bottom_word, true),
     }
 }
+
+fn u64_wrapping_mul(lhs: u64, rhs: u64) -> u64 {
+    let (res, _) = u64_overflow_mul(lhs, rhs);
+    res
+}

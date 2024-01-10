@@ -116,6 +116,33 @@ mod checked_sub {
     }
 }
 
+mod checked_mul {
+    use integer::{u32_wide_mul};
+    use utils::math::Bitshift;
+
+    trait CheckedMul<T> {
+        fn checked_mul(self: T, rhs: T) -> Option<T>;
+    }
+
+    impl U32CheckedMul of CheckedMul<u32> {
+        fn checked_mul(self: u32, rhs: u32) -> Option<u32> {
+            let res = u32_wide_mul(self, rhs);
+
+            let mask = 0xFFFFFFFF;
+
+            // safe unwrap, as the mask makes sure value is never above 32 bits
+            let top_word: u32 = (res.shr(32) & mask).try_into().unwrap();
+            // safe unwrap, as the mask makes sure value is never above 32 bits
+            let bottom_word: u32 = (res & mask).try_into().unwrap();
+
+            match top_word.into() {
+                0 => { Option::Some(bottom_word) },
+                _ => { Option::None }
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use integer::BoundedInt;

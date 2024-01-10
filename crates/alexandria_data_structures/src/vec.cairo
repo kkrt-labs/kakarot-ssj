@@ -1,3 +1,4 @@
+use core::dict::Felt252DictTrait;
 //! Vec implementation.
 //!
 //! # Example
@@ -73,7 +74,6 @@ impl DestructFeltVec<T, +Drop<T>, +Felt252DictValue<T>> of Destruct<Felt252Vec<T
         self.items.squash();
     }
 }
-
 
 impl Felt252VecImpl<T, +Drop<T>, +Copy<T>, +Felt252DictValue<T>> of VecTrait<Felt252Vec<T>, T> {
     fn new() -> Felt252Vec<T> {
