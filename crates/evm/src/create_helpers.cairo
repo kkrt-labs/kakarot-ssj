@@ -87,6 +87,7 @@ impl CreateHelpersImpl of CreateHelpers {
         self.accessed_addresses.add(create_args.to);
 
         let create_message_gas = gas::max_message_call_gas(self.gas_left);
+        // This doesn't underflow as create_message_gas is always smaller than self.gas_left.
         self.gas_left -= create_message_gas;
 
         ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
