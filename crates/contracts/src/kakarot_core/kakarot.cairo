@@ -252,17 +252,17 @@ mod KakarotCore {
 
         fn eth_call(
             self: @ContractState, origin: EthAddress, tx: EthereumTransaction
-        ) -> (bool, Span<u8>) {
+        ) -> (bool, Span<u8>, u128) {
             if !self.is_view() {
                 panic_with_felt252('fn must be called, not invoked');
             };
 
             let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
 
-            let TransactionResult{success, return_data, gas_used: _, state: _ } = self
+            let TransactionResult{success, return_data, gas_used, state: _ } = self
                 .process_transaction(origin, tx);
 
-            (success, return_data)
+            (success, return_data, gas_used)
         }
 
         fn eth_send_transaction(
