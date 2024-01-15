@@ -8,3 +8,5 @@ mod test_num;
 mod test_rlp;
 mod test_set;
 mod test_traits;
+mod test_modexp_arith;
+mod test_modexp_mpnat;

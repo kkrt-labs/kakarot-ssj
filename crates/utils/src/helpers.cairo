@@ -9,6 +9,9 @@ use core::option::OptionTrait;
 use core::pedersen::{HashState, PedersenTrait};
 use core::traits::IndexView;
 use core::traits::TryInto;
+
+//todo: remove
+use debug::{PrintTrait};
 use integer::{BoundedInt, u32_as_non_zero, U32TryIntoNonZero};
 use keccak::{cairo_keccak, u128_split};
 use starknet::{
@@ -25,7 +28,6 @@ use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 use utils::eth_transaction::{TransactionType};
 use utils::math::{Bitshift, WrappingBitshift, Exponentiation};
 use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, TryIntoResult, BoolIntoNumeric};
-
 
 /// Converts a value to the next closest multiple of 32
 ///
@@ -705,7 +707,7 @@ impl U32Impl of U32Trait {
     /// * `self` a `u32` value.
     /// # Returns
     /// * The bytes array representation of the value.
-    fn to_bytes(mut self: u32) -> Span<u8> {
+    fn to_be_bytes(mut self: u32) -> Span<u8> {
         let bytes_used: u32 = self.bytes_used().into();
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
@@ -719,6 +721,29 @@ impl U32Impl of U32Trait {
         };
 
         bytes.span()
+    }
+
+    /// Unpacks a u32 into an array of big endian bytes, padded to 4 bytes
+    /// # Arguments
+    /// * `self` a `u32` value.
+    /// # Returns
+    /// * The bytes array representation of the value.
+    fn to_be_bytes_padded(mut self: u32) -> Array<u8> {
+        let mut bytes: Array<u8> = Default::default();
+        let res = self.to_be_bytes();
+
+        let mut i = 0;
+        loop {
+            if i == (4 - res.len()) {
+                break;
+            }
+
+            bytes.append(0);
+            i += 1;
+        };
+
+        bytes.append_span(res);
+        bytes
     }
 
     /// Returns the number of bytes used to represent a `u32` value.
@@ -858,13 +883,14 @@ impl U64Impl of U64Trait {
         let mut bytes: Array<u8> = Default::default();
         let res = self.to_be_bytes().span();
 
-        let i = 0;
+        let mut i = 0;
         loop {
             if i == (8 - res.len()) {
                 break;
             }
 
             bytes.append(0);
+            i += 1;
         };
 
         bytes.append_span(res);
@@ -1020,6 +1046,50 @@ impl U128Impl of U128Trait {
     fn as_u64(self: u128) -> u64 {
         let (_, bottom_word) = u128_split(self);
         bottom_word
+    }
+
+    /// Unpacks a u128 into an array of big endian bytes
+    /// # Arguments
+    /// * `self` a `u128` value.
+    /// # Returns
+    /// * The bytes array representation of the value.
+    fn to_be_bytes(mut self: u128) -> Array<u8> {
+        let bytes_used: u128 = self.bytes_used().into();
+        let mut bytes: Array<u8> = Default::default();
+        let mut i = 0;
+        loop {
+            if i == bytes_used {
+                break ();
+            }
+            let val = self.shr(8 * (bytes_used.try_into().unwrap() - i - 1));
+            bytes.append((val & 0xFF).try_into().unwrap());
+            i += 1;
+        };
+
+        bytes
+    }
+
+    /// Unpacks a u128 into an array of big endian bytes, padded to 16 bytes
+    /// # Arguments
+    /// * `self` a `u128` value.
+    /// # Returns
+    /// * The bytes array representation of the value.
+    fn to_be_bytes_padded(mut self: u128) -> Array<u8> {
+        let mut bytes: Array<u8> = Default::default();
+        let res = self.to_be_bytes().span();
+
+        let mut i = 0;
+        loop {
+            if i == (16 - res.len()) {
+                break;
+            }
+
+            bytes.append(0);
+            i += 1;
+        };
+
+        bytes.append_span(res);
+        bytes
     }
 }
 
@@ -1486,8 +1556,47 @@ impl Felt252VecU8TraitImpl of Felt252VecU8Trait {
 }
 
 #[generate_trait]
+impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
+        fn to_be_bytes(
+        ref self: Felt252Vec<u64>
+    ) -> Span<u8> {
+
+        let mut res: Array<u8> =  array![];
+        let mut i = 0;
+
+        loop {
+            if i == self.len(){
+                break;
+            }
+
+            if self [i] == 0{
+            res.append(0);
+            }else {
+            res.append_span(self[i].to_be_bytes().span());
+            }
+
+            i += 1;
+        };
+
+       res.span()
+    }
+}
+
+#[generate_trait]
 impl Felt252VecTraitImpl<
-    T, +Drop<T>, +Copy<T>, +Felt252DictValue<T>, +Into<u8, T>, +PartialEq<T>
+    T,
+    +Drop<T>,
+    +Copy<T>,
+    +Felt252DictValue<T>,
+    +Zero<T>,
+    +Add<T>,
+    +Sub<T>,
+    +Div<T>,
+    +Mul<T>,
+    +Exponentiation<T>,
+    +PartialOrd<T>,
+    +Into<u8, T>,
+    +PartialEq<T>
 > of Felt252VecTrait<T> {
     fn expand(ref self: Felt252Vec<T>, new_length: usize) -> Result<(), Felt252VecTraitErrors> {
         if (new_length < self.len) {
@@ -1500,7 +1609,7 @@ impl Felt252VecTraitImpl<
                 break;
             }
 
-            self.push(0_u8.into());
+            self.push(Zero::zero());
             i -= 1;
         };
 
@@ -1516,10 +1625,23 @@ impl Felt252VecTraitImpl<
                 break;
             };
 
-            self.set(i, 0_u8.into());
+            self.set(i, Zero::zero());
 
             i += 1;
         };
+    }
+
+    fn count_trailining_zeroes_be(ref self: Felt252Vec<T>) -> usize {
+        let mut i = 0;
+        loop {
+            if i == self.len || self[i] != Zero::zero() {
+                break;
+            }
+
+            i += 1;
+        };
+
+        i
     }
 
     /// Resizes the Vec in-place so that len is equal to new_len.
@@ -1530,10 +1652,11 @@ impl Felt252VecTraitImpl<
             return;
         }
 
-        if self.len() < new_len {
+        let s = self.len();
+        if s < new_len {
             let mut i = 0;
             loop {
-                if i == new_len - self.len() {
+                if i == new_len - s {
                     break;
                 }
 
@@ -1560,9 +1683,14 @@ impl Felt252VecTraitImpl<
     }
 
 
-    fn copy_from_span(
+    fn copy_from_bytes(
         ref self: Felt252Vec<T>, index: usize, mut slice: Span<u8>
     ) -> Result<(), Felt252VecTraitErrors> {
+        //todo: remove
+        'index, self.len'.print();
+        index.print();
+        self.len.print();
+        slice.len().print();
         if (index > self.len) {
             return Result::Err(Felt252VecTraitErrors::IndexOutOfBound);
         }
@@ -1634,10 +1762,10 @@ impl Felt252VecTraitImpl<
     fn remove_trailing_zeroes_le(ref self: Felt252Vec<T>) {
         let mut vec: Felt252Vec<T> = Felt252VecImpl::new();
 
-        let mut i = self.len - 1;
+        let mut i = self.len;
         let mut num_of_trailing_zeroes = 0;
         loop {
-            if (i < 0) || (self[i] != 0_u8.into()) {
+            if (i == 0) || (self[i - 1] != Zero::zero()) {
                 break;
             }
 
@@ -1725,5 +1853,55 @@ impl Felt252VecTraitImpl<
         };
 
         Option::Some(new_vec)
+    }
+
+    fn equal(ref self: Felt252Vec<T>, ref rhs: Felt252Vec<T>) -> bool {
+        let mut lhs = self.duplicate();
+        lhs.remove_trailing_zeroes_le();
+
+        let mut rhs = rhs.duplicate();
+        rhs.remove_trailing_zeroes_le();
+
+        'lhs_len, rhs_len'.print();
+        lhs.len().print();
+        rhs.len().print();
+
+        if lhs.len() != rhs.len() {
+            return false;
+        };
+
+        let mut i = 0;
+        loop {
+            if i == lhs.len() {
+                break true;
+            }
+
+            if lhs[i] != rhs[i] {
+                break false;
+            }
+
+            i += 1;
+        }
+    }
+
+    fn fill(
+        ref self: Felt252Vec<T>, start_idx: usize, len: usize, value: T
+    ) -> Result<(), Felt252VecTraitErrors> {
+        if (start_idx + len >= self.len()) {
+            return Result::Err(Felt252VecTraitErrors::Overflow);
+        }
+
+        let mut i = start_idx;
+        loop {
+            if i == start_idx + len {
+                break;
+            }
+
+            self.set(i, value);
+
+            i += 1;
+        };
+
+        Result::Ok(())
     }
 }

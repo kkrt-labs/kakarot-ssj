@@ -42,7 +42,7 @@ fn test_decode_legacy_tx() {
     assert_eq!(tx.destination.unwrap().into(), 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984,);
     assert_eq!(tx.amount, 0x016345785d8a0000);
 
-    let expected_calldata = 0xabcdef_u32.to_bytes();
+    let expected_calldata = 0xabcdef_u32.to_be_bytes();
     assert(tx.calldata == expected_calldata, 'calldata is not 0xabcdef');
 }
 
@@ -107,7 +107,7 @@ fn test_decode_eip_2930_tx() {
         .span();
     assert!(tx.access_list == expected_access_list, "access lists are not equal");
 
-    let expected_calldata = 0xabcdef_u32.to_bytes();
+    let expected_calldata = 0xabcdef_u32.to_be_bytes();
     assert(tx.calldata == expected_calldata, 'calldata is not 0xabcdef');
 }
 
@@ -147,7 +147,7 @@ fn test_decode_eip_1559_tx() {
         .span();
     assert!(tx.access_list == expected_access_list, "access lists are not equal");
 
-    let expected_calldata = 0xabcdef_u32.to_bytes();
+    let expected_calldata = 0xabcdef_u32.to_be_bytes();
     assert(tx.calldata == expected_calldata, 'calldata is not 0xabcdef');
 }
 
