@@ -12,7 +12,7 @@ use core::traits::TryInto;
 
 //todo: remove
 use debug::{PrintTrait};
-use integer::{BoundedInt, u32_as_non_zero, U32TryIntoNonZero};
+use integer::{BoundedInt, u32_as_non_zero, U32TryIntoNonZero, u32_overflowing_add};
 use keccak::{cairo_keccak, u128_split};
 use starknet::{
     EthAddress, EthAddressIntoFelt252, ContractAddress, ClassHash,
@@ -639,6 +639,77 @@ impl U8SpanExImpl of U8SpanExTrait {
         };
 
         array
+    }
+
+    fn get_right_padded_span(self: Span<u8>, offset: usize, len: usize) -> Span<u8> {
+        let mut arr = array![];
+
+        let start = if offset <= self.len() {
+            offset
+        } else {
+            self.len()
+        };
+
+        let tmp = match u32_overflowing_add(start, len) {
+            Result::Ok(v) => v,
+            Result::Err(v) => v
+        };
+        let end = if tmp <= self.len() {
+            start + len
+        } else {
+            self.len()
+        };
+
+        let mut i = 0;
+        loop {
+            if i == (end - start) {
+                break;
+            };
+
+            arr.append((*self[start + i]));
+            i += 1;
+        };
+
+        if arr.len() == len {
+            return arr.span();
+        }
+
+        let diff = len - arr.len();
+        let mut i = 0;
+        loop {
+            if i == diff {
+                break;
+            };
+
+            arr.append(0);
+            i += 1;
+        };
+
+        arr.span()
+    }
+
+    fn left_padding(self: Span<u8>, len: usize) -> Span<u8> {
+        if self.len() >= len {
+            return self;
+        }
+
+        let mut arr = array![];
+        let mut i = 0;
+        loop {
+            if i == len {
+                break;
+            };
+
+            if i >= len - self.len() {
+                arr.append(*self[i]);
+            } else {
+                arr.append(0);
+            }
+
+            i += 1;
+        };
+
+        arr.span()
     }
 }
 
