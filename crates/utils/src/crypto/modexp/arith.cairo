@@ -24,8 +24,6 @@ use utils::traits::BoolIntoNumeric;
 // or we will have `x < r`, `y < n`).
 fn monpro(ref x: MPNat, ref y: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
     let s = out.len() - 2;
-    's'.print();
-    s.print();
     // Using a range loop as opposed to `out.iter_mut().enumerate().take(s)`
     // does make a meaningful performance difference in this case.
     let mut i = 0;
@@ -42,11 +40,6 @@ fn monpro(ref x: MPNat, ref y: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt
                 break;
             }
 
-            'input for prod_c'.print();
-            out[j].print();
-            x.digits.get(j).unwrap_or(0).print();
-            y.digits.get(i).unwrap_or(0).print();
-            c.print();
             let (prod, carry) = shifted_carrying_mul(
                 out[j], x.digits.get(j).unwrap_or(0), y.digits.get(i).unwrap_or(0), c,
             );
@@ -54,25 +47,15 @@ fn monpro(ref x: MPNat, ref y: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt
             c = carry;
 
             j += 1;
-
-            'prod, carry'.print();
-            prod.print();
-            carry.print();
         };
 
         let (sum, carry) = carrying_add(out[s], c, false);
         out.set(s, sum);
         out.set(s + 1, carry.into());
-        'sum+_carry'.print();
-        sum.print();
-        carry.print();
 
         let m = u64_wrapping_mul(out[0], n_prime);
         let (_, carry) = shifted_carrying_mul(out[0], m, n.digits.get(0).unwrap_or(0), 0);
         c = carry;
-
-        'mpro_0'.print();
-        out.print_dict();
 
         let mut j = 1;
         loop {
@@ -83,8 +66,6 @@ fn monpro(ref x: MPNat, ref y: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt
             let (prod, carry) = shifted_carrying_mul(out[j], m, n.digits.get(j).unwrap_or(0), c);
             out.set(j - 1, prod);
             c = carry;
-            'carry'.print();
-            c.print();
 
             j += 1;
         };
@@ -92,8 +73,6 @@ fn monpro(ref x: MPNat, ref y: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt
         let (sum, carry) = carrying_add(out[s], c, false);
         out.set(s - 1, sum);
         out.set(s, out[s + 1] + (carry.into())); // overflow impossible at this stage
-        'mp_1'.print();
-        out.print_dict();
 
         i += 1;
     };
@@ -101,7 +80,7 @@ fn monpro(ref x: MPNat, ref y: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt
     // Result is only in the first s + 1 words of the output.
     out.set(s + 1, 0);
 
-    let mut j = s;
+    let mut j = s + 1;
     let should_return = loop {
         if j == 0 {
             break false;
@@ -118,10 +97,6 @@ fn monpro(ref x: MPNat, ref y: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt
         j -= 1;
     };
 
-    //todo: remove
-    'final'.print();
-    out.print_dict();
-
     if should_return {
         return;
     }
@@ -135,22 +110,13 @@ fn monpro(ref x: MPNat, ref y: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt
 
         let out_digit = out[i];
 
-        'borrow_input'.print();
-        out_digit.print();
-        n.digits.get(i).unwrap_or(0).print();
-        b.print();
         let (diff, borrow) = borrowing_sub(out_digit, n.digits.get(i).unwrap_or(0), b);
-        'diff & borrow'.print();
-        diff.print();
-        borrow.print();
         out.set(i, diff);
         b = borrow;
 
         i += 1;
     };
 
-    //todo: remove
-    'after_final'.print();
     out.print_dict();
 
     let (diff, _) = borrowing_sub(out[s], 0, b);
@@ -162,9 +128,6 @@ fn monsq(ref x: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
     let s = n.digits.len();
 
     big_sq(ref x, ref out);
-    //todo: remove
-    '0_'.print();
-    out.print_dict();
     let mut i = 0;
 
     loop {
@@ -181,17 +144,11 @@ fn monsq(ref x: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
                 break;
             }
 
-            'c_here'.print();
-            c.print();
             let (prod, carry) = shifted_carrying_mul(
                 out[i + j], m, n.digits.get(j).unwrap_or(0), c
             );
-            //todo: remove
-            'prod'.print();
-            prod.print();
-            carry.print();
             out.set(i + j, prod);
-            '1_'.print();
+            // '1_'.print();
             out.print_dict();
             c = carry;
 
@@ -206,10 +163,6 @@ fn monsq(ref x: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
             let (sum, carry) = carrying_add(out[j], c, false);
             out.set(j, sum);
             c = carry.into();
-
-            //todo: remove
-            '2_'.print();
-            out.print_dict();
 
             j += 1;
         };
@@ -228,9 +181,6 @@ fn monsq(ref x: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
 
         i += 1;
     };
-    //todo: remove
-    '3_'.print();
-    out.print_dict();
 
     let mut i = s + 1;
     loop {
@@ -244,11 +194,10 @@ fn monsq(ref x: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
         i += 1;
     };
 
-    //todo: remove
-    '4_'.print();
+    println!("output here");
     out.print_dict();
 
-    let mut k = s;
+    let mut k = s + 1;
     let should_return = loop {
         if k == 0 {
             break false;
@@ -269,10 +218,6 @@ fn monsq(ref x: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
     if should_return {
         return;
     }
-
-    //todo: remove
-    '5_'.print();
-    out.print_dict();
 
     let mut b = false;
     let mut i = 0;
@@ -302,6 +247,7 @@ pub fn big_wrapping_pow(
     scratch_space.print_dict();
 
     let mut digits = Felt252VecImpl::new();
+    scratch_space.len().print();
     digits.resize(scratch_space.len(), 0);
     println!("I reach here as well");
     let mut result = MPNat { digits };
@@ -312,13 +258,12 @@ pub fn big_wrapping_pow(
     'exp'.print();
     let mut i = 0;
     loop {
-        if i == exp.len()
-        {
+        if i == exp.len() {
             break;
         }
 
         (*exp[i]).print();
-        i+=1;
+        i += 1;
     };
 
     let mut i = 0;
@@ -340,15 +285,15 @@ pub fn big_wrapping_pow(
             let digits = result.digits.duplicate();
             let mut tmp = MPNat { digits };
 
-        println!("or stuck here 1");
+            println!("or stuck here 1");
 
             big_wrapping_mul(ref result, ref tmp, ref scratch_space);
-                        'scratch_space >>'.print();
+            'scratch_space >>'.print();
             scratch_space.print_dict();
-        println!("or stuck here 2");
+            println!("or stuck here 2");
             result.digits.copy_from_vec(ref scratch_space).unwrap();
             scratch_space.reset(); // zero-out the scatch space
-        println!("or stuck here 3");
+            println!("or stuck here 3");
 
             ' b_mask'.print();
             b.print();
@@ -362,8 +307,8 @@ pub fn big_wrapping_pow(
                 scratch_space.print_dict();
                 '-----'.print();
                 big_wrapping_mul(ref result, ref base, ref scratch_space);
-                        'scratch_space --'.print();
-            scratch_space.print_dict();
+                'scratch_space --'.print();
+                scratch_space.print_dict();
                 result.digits.copy_from_vec(ref scratch_space).unwrap();
                 'result --'.print();
                 result.digits.print_dict();
@@ -371,7 +316,7 @@ pub fn big_wrapping_pow(
             }
 
             mask = mask.wrapping_shr(1);
-        println!("or stuck here 4");
+            println!("or stuck here 4");
 
             'stuck here?'.print();
         };
@@ -400,13 +345,13 @@ fn big_wrapping_mul(ref x: MPNat, ref y: MPNat, ref out: Felt252Vec<Word>) {
                 break;
             }
 
-            let (prod, carry) = shifted_carrying_mul(out[i + j], x.digits.get(j).unwrap_or(0),
-            y.digits.get(i).unwrap_or(0),
-            c);
+            let (prod, carry) = shifted_carrying_mul(
+                out[i + j], x.digits.get(j).unwrap_or(0), y.digits.get(i).unwrap_or(0), c
+            );
             c = carry;
             out.set(i + j, prod);
 
-            j+=1;
+            j += 1;
         };
 
         i += 1;
@@ -460,7 +405,7 @@ fn compute_r_mod_n(ref n: MPNat, ref out: Felt252Vec<Word>) {
         return;
     }
 
-        'c_1'.print();
+    'c_1'.print();
 
     'n_digits_approx_n'.print();
     n.digits[k - 1].print();
@@ -472,50 +417,29 @@ fn compute_r_mod_n(ref n: MPNat, ref out: Felt252Vec<Word>) {
     let approx_q = DOUBLE_WORD_MAX / approx_n;
     let mut approx_q: Word = approx_q.as_u64();
 
-
-
     loop {
         let mut c = 0;
         let mut b = false;
 
         let mut i: usize = 0;
         loop {
-            'n_len, out.len'.print();
-            n.digits.len().print();
-            out.len().print();
             if i == n.digits.len || i == out.len {
                 break;
             }
 
             let n_digit = n.digits[i];
 
-            'c_3'.print();
-            'prod_carry_inputs'.print();
-            approx_q.print();
-            n_digit.print();
-            c.print();
             let (prod, carry) = carrying_mul(approx_q, n_digit, c);
-            'prod_carry'.print();
-            prod.print();
-            carry.print();
-            c  = carry;
-
-                            'c_4'.print();
+            c = carry;
 
             let (diff, borrow) = borrowing_sub(0, prod, b);
             b = borrow;
             out.set(i, diff);
 
-                                        'c_5'.print();
             i += 1;
         };
 
-        'borrow_inputs'.print();
-        c.print();
-        b.print();
         let (_, borrow) = borrowing_sub(1, c, b);
-        'borrow_is'.print();
-        borrow.print();
         if borrow {
             // approx_q was too large so `R - approx_q*n` overflowed.
             // try again with approx_q -= 1
@@ -588,14 +512,9 @@ fn big_sq(ref x: MPNat, ref out: Felt252Vec<Word>) {
             break;
         }
 
-        'o_x_x_0'.print();
-        out[i + i].print(); x.digits[i].print(); x.digits[i].print();
         let (product, carry) = shifted_carrying_mul(out[i + i], x.digits[i], x.digits[i], 0);
         out.set(i + i, product);
         let mut c: DoubleWord = carry.into();
-
-        'bgs_out_0'.print();
-        out.print_dict();
 
         let mut j = i + 1;
 
@@ -638,9 +557,6 @@ fn big_sq(ref x: MPNat, ref out: Felt252Vec<Word>) {
         let (sum, carry) = carrying_add(out[i + s], c.as_u64(), false);
         out.set(i + s, sum);
         out.set(i + s + 1, (c.wrapping_shr(WORD_BITS.into()) + (carry.into())).as_u64());
-
-        'bgs_out_end'.print();
-        out.print_dict();
 
         i += 1;
     }

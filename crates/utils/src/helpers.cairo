@@ -947,28 +947,45 @@ impl U64Impl of U64Trait {
         }
     }
 
-    fn count_leading_zeroes(self: u64) -> u8 {
-        let mut leading_zeroes = 0;
 
-        let mut i = 32;
-        loop {
-            if i == 0 {
-                break;
-            }
+    fn count_trailing_zeroes(self: u64) -> u8 {
+        let mut count = 0;
 
-            let j = i - 1;
-            let res = self & (1_u64.shl(i));
-
-            if res == 0 {
-                leading_zeroes += 1;
-            } else {
-                break;
-            }
-
-            i -= 1;
+        if self == 0 {
+            return 64; // If n is 0, all 64 bits are zeros
         };
 
-        leading_zeroes
+        let mut n = self;
+
+        loop {
+            if (n & 1) != 0 {
+                break;
+            };
+            count += 1;
+            n = n.shr(1);
+        };
+
+        count
+    }
+
+    // todo: change zeroes to zeros
+    fn count_leading_zeroes(self: u64) -> u8 {
+        if self == 0 {
+            return 64;
+        }
+        let mut count = 0;
+
+        let mut n = self;
+        loop {
+            if n == 0 {
+                break;
+            };
+
+            count += 1;
+            n = n.shr(1);
+        };
+
+        64 - count
     }
 }
 
@@ -1557,28 +1574,47 @@ impl Felt252VecU8TraitImpl of Felt252VecU8Trait {
 
 #[generate_trait]
 impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
-        fn to_be_bytes(
-        ref self: Felt252Vec<u64>
-    ) -> Span<u8> {
-
-        let mut res: Array<u8> =  array![];
+    fn to_be_bytes(ref self: Felt252Vec<u64>) -> Span<u8> {
+        let mut res: Array<u8> = array![];
         let mut i = 0;
 
         loop {
-            if i == self.len(){
+            if i == self.len() {
                 break;
             }
 
-            if self [i] == 0{
-            res.append(0);
-            }else {
-            res.append_span(self[i].to_be_bytes().span());
+            if self[i] == 0 {
+                res.append(0);
+            } else {
+                res.append_span(self[i].to_be_bytes().span());
             }
 
             i += 1;
         };
 
-       res.span()
+        res.span()
+    }
+
+    // assuming the bytes are le
+    fn to_le_bytes(ref self: Felt252Vec<u64>) -> Span<u8> {
+        let mut res: Array<u8> = array![];
+        let mut i = 0;
+
+        loop {
+            if i == self.len() {
+                break;
+            }
+
+            if self[i] == 0 {
+                res.append(0);
+            } else {
+                res.append_span(self[i].to_le_bytes().span());
+            }
+
+            i += 1;
+        };
+
+        res.span()
     }
 }
 
@@ -1631,7 +1667,7 @@ impl Felt252VecTraitImpl<
         };
     }
 
-    fn count_trailining_zeroes_be(ref self: Felt252Vec<T>) -> usize {
+    fn count_leading_zeroes_le(ref self: Felt252Vec<T>) -> usize {
         let mut i = 0;
         loop {
             if i == self.len || self[i] != Zero::zero() {
@@ -1686,11 +1722,6 @@ impl Felt252VecTraitImpl<
     fn copy_from_bytes(
         ref self: Felt252Vec<T>, index: usize, mut slice: Span<u8>
     ) -> Result<(), Felt252VecTraitErrors> {
-        //todo: remove
-        'index, self.len'.print();
-        index.print();
-        self.len.print();
-        slice.len().print();
         if (index > self.len) {
             return Result::Err(Felt252VecTraitErrors::IndexOutOfBound);
         }
@@ -1743,7 +1774,7 @@ impl Felt252VecTraitImpl<
 
         let mut i = idx;
         loop {
-            if i == vec.len() {
+            if i == idx + vec.len() {
                 break;
             }
 
@@ -1800,10 +1831,11 @@ impl Felt252VecTraitImpl<
         }
 
         let mut new_vec = Felt252VecImpl::new();
+        let popped_ele = self[self.len() - 1];
 
         let mut i = 0;
         loop {
-            if i == self.len - i {
+            if i == self.len - 1 {
                 break;
             }
             new_vec.push(self[i]);
@@ -1812,7 +1844,7 @@ impl Felt252VecTraitImpl<
 
         self = new_vec;
 
-        Option::Some(self[self.len - 1])
+        Option::Some(popped_ele)
     }
 
     fn duplicate(ref self: Felt252Vec<T>) -> Felt252Vec<T> {
@@ -1861,10 +1893,6 @@ impl Felt252VecTraitImpl<
 
         let mut rhs = rhs.duplicate();
         rhs.remove_trailing_zeroes_le();
-
-        'lhs_len, rhs_len'.print();
-        lhs.len().print();
-        rhs.len().print();
 
         if lhs.len() != rhs.len() {
             return false;

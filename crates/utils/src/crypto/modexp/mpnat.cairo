@@ -17,7 +17,10 @@ use super::arith::{
 use utils::checked_math::checked_mul::CheckedMul;
 use utils::checked_math::checked_mul;
 use utils::helpers::{U64Trait, Felt252VecTrait, Felt252VecU8Trait, U128Trait};
-use utils::math::Bitshift;
+use utils::math::{Bitshift, WrappingBitshift};
+
+//todo: remove
+use utils::tests::test_modexp_mpnat::Felt252TestTrait;
 
 type Word = u64;
 type DoubleWord = u128;
@@ -43,9 +46,6 @@ impl MPNatTraitImpl of MPNatTrait {
             return MPNat { digits: Felt252VecImpl::new() };
         }
 
-        'bytes_len'.print();
-        bytes.len().print();
-
         // Remainder on division by WORD_BYTES
         let r = bytes.len() & (WORD_BYTES - 1);
         let n_digits: usize = if r == 0 {
@@ -54,10 +54,6 @@ impl MPNatTraitImpl of MPNatTrait {
             // Need an extra digit for the remainder
             (bytes.len() / WORD_BYTES) + 1
         };
-
-        'r'.print();
-        r.print();
-        n_digits.print();
 
         let mut digits: Felt252Vec<u64> = Felt252VecImpl::new();
         // safe unwrap, since n_digits >= 0;
@@ -85,23 +81,15 @@ impl MPNatTraitImpl of MPNatTrait {
             i -= 1;
         };
 
-        'be_1_1'.print();
         let mut j = r;
         loop {
             let next_j = j + WORD_BYTES;
             // safe unwrap, since we know index is in bound + no overflow
-            'buf.len(), j, next_j'.print();
-            buf.len().print();
-            j.print();
-            next_j.print();
             buf.copy_from_bytes(0, bytes.slice(j, next_j - j)).unwrap();
-            'be_2'.print();
 
             // safe unwrap, since we know that bytes won't overflow
             let word = U64Trait::from_be_bytes(buf.to_bytes()).unwrap();
             digits.set(i, word);
-
-            'be_2'.print();
 
             if i == 0 {
                 break;
@@ -130,16 +118,33 @@ impl MPNatTraitImpl of MPNatTrait {
             s - n
         };
 
+        // 'n, s, m'.print();
+        // n.print();
+        // s.print();
+        // m.print();
+        // println!("self input");
+        // self.digits.print_dict();
+        // println!("other input");
+        // other.digits.print_dict();
+
         let other_most_sig: DoubleWord = other.digits[other.digits.len - 1].into();
+        'other_most_sig_0'.print();
+        other_most_sig.print();
 
         if self.digits.len() == 2 { // This is the smallest case since `n >= 1` and `m > 0`
             // implies that `self.digits.len() >= 2`.
             // In this case we can use DoubleWord-sized arithmetic
             // to get the answer directly.
             let self_most_sig = self.digits.pop().unwrap();
+            // 'self_most_sig'.print();
+            // self_most_sig.print();
             let a = join_as_double(self_most_sig, self.digits[0]);
             let b = other_most_sig;
             self.digits.set(0, (a % b).as_u64());
+            // 's_size'.print();
+            // self.digits.print_dict();
+            // other.digits.print_dict();
+            // '-<><>'.print();
             return;
         };
 
@@ -163,6 +168,8 @@ impl MPNatTraitImpl of MPNatTrait {
 
             return;
         }
+
+        'reach_0'.print();
         // At this stage we know that `n >= 2` and `self.digits.len() >= 3`.
         // The smaller cases are covered in the if-statements above.
 
@@ -172,8 +179,13 @@ impl MPNatTraitImpl of MPNatTrait {
         // both numerator and denominator by a common factor
         // and run the algorithm on those numbers.
         // See Knuth The Art of Computer Programming vol. 2 section 4.3 for details.
+        // 'other_most_sig'.print();
+        // other_most_sig.print();
+        // 'other_most_sig 0s'.print();
+        other_most_sig.as_u64().count_leading_zeroes().print();
         let shift: u32 = other_most_sig.as_u64().count_leading_zeroes().into();
         if shift > 0 {
+            // println!("shift is {:?}", shift);
             // Normalize self
             let overflow = in_place_shl(ref self.digits, shift);
             self.digits.push(overflow);
@@ -192,10 +204,11 @@ impl MPNatTraitImpl of MPNatTrait {
             return;
         };
 
+        // 'reach_1'.print();
         let other_second_sig: DoubleWord = other.digits[n - 2].into();
         let mut self_most_sig: Word = 0;
 
-        let mut i = m;
+        let mut i = m + 1;
 
         loop {
             if i == 0 {
@@ -206,17 +219,36 @@ impl MPNatTraitImpl of MPNatTrait {
 
             let self_second_sig = self.digits[self.digits.len - 1];
             let self_third_sig = self.digits[self.digits.len - 2];
+            // println!("sss sts smg");
+            // self_second_sig.print();
+            // self_third_sig.print();
+            // self_most_sig.print();
 
             let a = join_as_double(self_most_sig, self_second_sig);
+            // 'a'.print();a.print();
             let mut q_hat = a / other_most_sig;
             let mut r_hat = a % other_most_sig;
 
+            //             'r_hat.....'.print();
+            // r_hat.print();
+            // q_hat.print();
+
             loop {
+                // 'r_q_other'.print();
+                // r_hat.print();
+                // q_hat.print();
+                // other_second_sig.print();
                 let a = q_hat * other_second_sig;
                 let b = join_as_double(r_hat.as_u64(), self_third_sig);
+                // 'a & b'.print();
+                // a.print();
+                // b.print();
                 if q_hat >= BASE || a > b {
                     q_hat -= 1;
                     r_hat += other_most_sig;
+                    // 'base condition q_hat & r_hat'.print();
+                    // q_hat.print();
+                    // r_hat.print();
                     if BASE <= r_hat {
                         break;
                     }
@@ -225,10 +257,31 @@ impl MPNatTraitImpl of MPNatTrait {
                 }
             };
 
+            // 'reach_2'.print();
+            // 'self<>other m'.print();
+            // self.digits.print_dict();
+            // 'other'.print();
+            // other.digits.print_dict();
+
             let mut a = self.digits.slice(j, self.digits.len - j).unwrap();
+            // 'in_place_mul_inputs'.print();
+            // 'a'.print();
+            // a.print_dict();
+            // 'other'.print();
+            // other.digits.print_dict();
+            // 'q'.print();
+            // q_hat.print();
+
             let mut borrow = in_place_mul_sub(ref a, ref other.digits, q_hat.as_u64());
+            // 'a_after'.print();
+            // a.print_dict();
             self.digits.insert_vec(ref a, j).unwrap();
+            // 'self<>other here?'.print();
+            // self.digits.print_dict();
+            // 'other?'.print();
+            // other.digits.print_dict();
             if borrow > self_most_sig {
+                'borrow_is_greatr'.print();
                 // q_hat was too large, add back one multiple of the modulus
                 let mut a = self.digits.slice(j, self.digits.len - j).unwrap();
                 let _ = in_place_add(ref a, ref other.digits);
@@ -237,9 +290,16 @@ impl MPNatTraitImpl of MPNatTrait {
             }
 
             self_most_sig = self.digits.pop().unwrap();
+            'reach_3'.print();
 
             i -= 1;
         };
+
+        println!("self & other is");
+        println!("self");
+        self.digits.print_dict();
+        println!("other");
+        other.digits.print_dict();
 
         self.digits.push(self_most_sig);
     }
@@ -257,7 +317,11 @@ impl MPNatTraitImpl of MPNatTrait {
             }
 
             let d = self.digits[i];
-            let is_p2 = (d % 2) == 0;
+            let is_p2 = if d != 0 {
+                (d & (d - 1)) == 0
+            } else {
+                false
+            };
 
             if ((!is_p2 && d != 0) || (is_p2 && found_power_of_two)) {
                 break false;
@@ -270,6 +334,11 @@ impl MPNatTraitImpl of MPNatTrait {
     }
 
     fn is_odd(ref self: MPNat) -> bool {
+        // when the value is 0
+        if self.digits.len == 0 {
+            return false;
+        };
+
         // A binary number is odd iff its lowest order bit is set.
         self.digits[0] & 1 == 1
     }
@@ -337,7 +406,27 @@ impl MPNatTraitImpl of MPNatTrait {
         // exp must be stripped because it is iterated over in
         // big_wrapping_pow and modpow_montgomery, and a large
         // zero-padded exp leads to performance issues.
+        'exp before'.print();
+        let mut i = 0;
+        loop {
+            if i == exp.len() {
+                break;
+            };
+
+            (*exp[i]).print();
+            i += 1;
+        };
         let (exp, exp_is_zero) = MPNatTrait::strip_leading_zeroes(exp);
+        'exp after'.print();
+        let mut i = 0;
+        loop {
+            if i == exp.len() {
+                break;
+            };
+
+            (*exp[i]).print();
+            i += 1;
+        };
 
         // base^0 is always 1, regardless of base.
         // Hence the result is 0 for (base^0) % 1, and 1
@@ -347,7 +436,7 @@ impl MPNatTraitImpl of MPNatTrait {
         // handled in modexp().
         assert!(!(modulus.digits.len() == 1 && modulus.digits[0] == 0));
         if exp_is_zero {
-            if modulus.digits.len == 1 && modulus.digits[0] == 0 {
+            if modulus.digits.len == 1 && modulus.digits[0] == 1 {
                 let mut digits = Felt252VecImpl::new();
                 digits.push(0);
 
@@ -378,6 +467,8 @@ impl MPNatTraitImpl of MPNatTrait {
                 tmp
             };
 
+            println!("exp as num {:?}", exp_as_number);
+
             match self.digits.len().checked_mul(exp_as_number) {
                 Option::Some(max_output_digits) => {
                     if (modulus.digits.len() > max_output_digits) {
@@ -395,7 +486,7 @@ impl MPNatTraitImpl of MPNatTrait {
         if modulus.is_power_of_two() { // return
             return self.modpow_with_power_of_two(exp, ref modulus);
         } else if modulus.is_odd() {
-            return self.modpow_montogery(exp, ref modulus);
+            return self.modpow_montgomery(exp, ref modulus);
         }
 
         // If the modulus is not a power of two and not an odd number then
@@ -403,20 +494,28 @@ impl MPNatTraitImpl of MPNatTrait {
         // case we will use the Chinese remainder theorem to get the result.
         // See http://www.people.vcu.edu/~jwang3/CMSC691/j34monex.pdf
 
-        let trailing_zeros = modulus.digits.count_trailining_zeroes_be();
+        let trailing_zeros = modulus.digits.count_leading_zeroes_le();
         let additional_zero_bits: usize = modulus
             .digits[trailing_zeros]
-            .count_leading_zeroes()
+            .count_trailing_zeroes()
             .into();
+        'trailing_zeroes'.print();
+        trailing_zeros.print();
+        'addition_zero'.print();
+        additional_zero_bits.print();
+
         let mut power_of_two = {
             let mut digits = Felt252VecImpl::new();
             digits.resize(trailing_zeros + 1, 0);
             let mut tmp = MPNat { digits };
-            tmp.digits.set(trailing_zeros, 1.shl(additional_zero_bits).into());
+            tmp.digits.set(trailing_zeros, 1_u64.shl(additional_zero_bits.into()));
             tmp
         };
 
+        'odd_inv before'.print();
+        power_of_two.digits.print_dict();
         let power_of_two_mask = power_of_two.digits[power_of_two.digits.len - 1] - 1;
+        'odd_inv here'.print();
         let mut odd = {
             let num_digits = modulus.digits.len() - trailing_zeros;
             let mut digits = Felt252VecImpl::new();
@@ -435,7 +534,10 @@ impl MPNatTraitImpl of MPNatTrait {
                         .digits
                         .set(
                             i - 1,
-                            (d & power_of_two_mask).shl((WORD_BITS - additional_zero_bits).into())
+                            tmp.digits[i
+                                - 1]
+                                + (d & power_of_two_mask)
+                                    .shl((WORD_BITS - additional_zero_bits).into())
                         );
                     tmp.digits.set(i, d.shr(additional_zero_bits.into()));
 
@@ -450,7 +552,7 @@ impl MPNatTraitImpl of MPNatTrait {
             }
             if tmp.digits.len > 0 {
                 loop {
-                    if tmp.digits[tmp.digits.len - 1] == 0 {
+                    if tmp.digits[tmp.digits.len - 1] != 0 {
                         break;
                     };
 
@@ -461,12 +563,15 @@ impl MPNatTraitImpl of MPNatTrait {
         };
 
         let mut base_copy = MPNat { digits: self.digits.duplicate(), };
-        let mut x1 = base_copy.modpow_montogery(exp, ref odd);
+        let mut x1 = base_copy.modpow_montgomery(exp, ref odd);
         let mut x2 = self.modpow_with_power_of_two(exp, ref power_of_two);
 
         let mut odd_inv = MPNatTrait::koc_2017_inverse(
             ref odd, trailing_zeros * WORD_BITS + additional_zero_bits
         );
+
+        'odd_inv'.print();
+        odd_inv.digits.print_dict();
 
         let s = power_of_two.digits.len();
         let mut scratch: Felt252Vec<Word> = Felt252VecImpl::new();
@@ -529,7 +634,7 @@ impl MPNatTraitImpl of MPNatTrait {
 
     // Computes `self ^ exp mod modulus` using Montgomery multiplication.
     // See https://www.microsoft.com/en-us/research/wp-content/uploads/1996/01/j37acmon.pdf
-    fn modpow_montogery(ref self: MPNat, exp: Span<u8>, ref modulus: MPNat) -> MPNat {
+    fn modpow_montgomery(ref self: MPNat, exp: Span<u8>, ref modulus: MPNat) -> MPNat {
         // n_prime satisfies `r * (r^(-1)) - modulus * n' = 1`, where
         // `r = 2^(WORD_BITS*modulus.digits.len())`.
         let n_prime = WORD_MAX - mod_inv(modulus.digits[0]) + 1;
@@ -542,6 +647,7 @@ impl MPNatTraitImpl of MPNatTrait {
         // Initialize result as `r mod modulus` (Montgomery form of 1)
         compute_r_mod_n(ref modulus, ref x_bar.digits);
 
+        'mp_0_reached'.print();
         // Reduce base mod modulus
         self.sub_to_same_size(ref modulus);
 
@@ -552,8 +658,28 @@ impl MPNatTraitImpl of MPNatTrait {
             let mut digits = Felt252VecImpl::new();
             digits.expand(2 * s).unwrap();
             let mut tmp = MPNat { digits };
+            println!("self before");
+            self.digits.print_dict();
+            println!("x_bar_before");
+            x_bar.digits.print_dict();
+            println!("tmp_digits before");
+            tmp.digits.print_dict();
             big_wrapping_mul(ref self, ref x_bar, ref tmp.digits);
+            println!("self after");
+            self.digits.print_dict();
+            println!("x_bar_after");
+            x_bar.digits.print_dict();
+            println!("tmp_digits after");
+            tmp.digits.print_dict();
+            println!("modulus");
+            modulus.digits.print_dict();
+            println!("tmp");
+            tmp.digits.print_dict();
             tmp.sub_to_same_size(ref modulus);
+            println!("modulus");
+            modulus.digits.print_dict();
+            println!("tmp");
+            tmp.digits.print_dict();
             tmp
         };
 
@@ -577,21 +703,52 @@ impl MPNatTraitImpl of MPNatTrait {
                     break;
                 };
 
+                'monsq_inputs'.print();
+                'x_bar_input'.print();
+                x_bar.digits.print_dict();
+                'modulus_input'.print();
+                modulus.digits.print_dict();
+                'n_prime'.print();
+                n_prime.print();
+                'scratch'.print();
+                scratch.print_dict();
+                '-----'.print();
+
                 monsq(ref x_bar, ref modulus, n_prime, ref scratch);
                 let mut slice = scratch.slice(0, s).unwrap();
+                'might be changes here?'.print();
+                slice.print_dict();
                 x_bar.digits.copy_from_vec(ref slice).unwrap();
                 scratch.reset();
 
-                let mut slice = scratch.slice(0, monpro_len).unwrap();
                 if b & mask != 0 {
+                    println!("I reach here");
+                    let mut slice = scratch.slice(0, monpro_len).unwrap();
+                    'x_bar_input'.print();
+                    x_bar.digits.print_dict();
+                    'a_bar_input'.print();
+                    a_bar.digits.print_dict();
+                    'modulus_input'.print();
+                    modulus.digits.print_dict();
+                    'n_prime'.print();
+                    n_prime.print();
+                    'slice'.print();
+                    slice.print_dict();
+                    '-----'.print();
                     monpro(ref x_bar, ref a_bar, ref modulus, n_prime, ref slice);
+                    'monpro_result'.print();
+                    slice.print_dict();
                     scratch.insert_vec(ref slice, 0).unwrap();
 
                     let mut slice = scratch.slice(0, s).unwrap();
                     x_bar.digits.copy_from_vec(ref slice).unwrap();
                     scratch.reset();
                 }
-                mask.shr(1);
+                mask = mask.shr(1);
+
+                'x_bar here'.print();
+                x_bar.digits.print_dict();
+                '-----'.print();
             };
 
             i += 1;
@@ -607,10 +764,26 @@ impl MPNatTraitImpl of MPNatTrait {
         };
 
         let mut slice = scratch.slice(0, monpro_len).unwrap();
+        //    'x_bar_input'.print();
+        //         x_bar.digits.print_dict();
+        //         'a_bar_input'.print();
+        //         one.digits.print_dict();
+        //         'modulus_input'.print();
+        //         modulus.digits.print_dict();
+        //         'n_prime'.print();
+        //         n_prime.print();
+        //         'slice'.print();
+        //         slice.print_dict();
+        //         '-----'.print();
         monpro(ref x_bar, ref one, ref modulus, n_prime, ref slice);
         scratch.insert_vec(ref slice, 0).unwrap();
 
+        'scratch_after_insert'.print();
+        scratch.print_dict();
+
         scratch.resize(s, 0);
+        'scratch_after_resize'.print();
+        scratch.print_dict();
         MPNat { digits: scratch }
     }
 
@@ -650,6 +823,9 @@ impl MPNatTraitImpl of MPNatTrait {
             .digits
             .set(result.digits.len - 1, result.digits[result.digits.len - 1] & modulus_mask);
 
+        'result here'.print();
+        result.digits.print_dict();
+
         result
     }
 
@@ -662,9 +838,9 @@ impl MPNatTraitImpl of MPNatTrait {
         self.digits.resize(other.digits.len, 0);
     }
 
-    /// stips leading zeroes from big endian bytes
+    /// stips leading zeroes from little endian bytes
     /// # Arguments
-    /// * `input` a Span<u8> in big endian
+    /// * `input` a Span<u8> in little endian
     /// # Returns
     /// * (Span<8>, bool), where span is the resulting Span after removing trailing zeroes, and the boolean indicates if all bytes were zero
     fn strip_leading_zeroes(v: Span<u8>) -> (Span<u8>, bool) {
@@ -689,7 +865,7 @@ impl MPNatTraitImpl of MPNatTrait {
             return (arr.span(), true);
         }
 
-        arr.append_span(v.slice(0, v.len() - num_of_trailing_zeroes));
+        arr.append_span(v.slice(num_of_trailing_zeroes, v.len() - num_of_trailing_zeroes));
         (arr.span(), false)
     }
 }
