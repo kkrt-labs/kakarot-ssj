@@ -14,6 +14,8 @@ use utils::helpers::{Felt252VecTrait, Felt252VecU64Trait};
 use utils::helpers::{U128Trait, U32Trait};
 use utils::math::{u64_wrapping_mul, Bitshift, WrappingBitshift};
 
+// the tests are taken from (aurora-engine)[https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/mpnat.rs#L825]
+
 #[cfg(test)]
 pub fn mp_nat_to_u128(ref x: MPNat) -> u128 {
     let result = x.digits.to_le_bytes();

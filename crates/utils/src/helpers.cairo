@@ -1042,7 +1042,6 @@ impl U64Impl of U64Trait {
         count
     }
 
-    // todo: change zeroes to zeros
     fn count_leading_zeroes(self: u64) -> u8 {
         if self == 0 {
             return 64;
@@ -1309,7 +1308,6 @@ impl U256Impl of U256Trait {
         }
     }
 
-    // todo: change zeroes to zeros
     fn count_leading_zeroes(self: u256) -> u32 {
         if self == 0 {
             return 256;

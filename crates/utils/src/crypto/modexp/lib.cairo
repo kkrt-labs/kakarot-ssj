@@ -1,3 +1,5 @@
+// CREDITS: The implementation has been take from (aurora-engine)[https://github.com/aurora-is-near/aurora-engine/tree/develop/engine-modexp]
+
 use utils::crypto::modexp::mpnat::MPNatTrait;
 use utils::helpers::Felt252VecTrait;
 use utils::helpers::Felt252VecU64Trait;

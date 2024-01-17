@@ -14,6 +14,8 @@ use utils::helpers::{Felt252VecTrait, Felt252VecU64Trait};
 use utils::helpers::{U128Trait, U32Trait};
 use utils::math::{u64_wrapping_mul};
 
+// the tests are taken from (aurora-engine)[https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/arith.rs#L401]
+
 fn check_monsq(x: u128, n: u128) {
     let mut a = MPNatTrait::from_big_endian(x.to_be_bytes_padded().span());
     let mut m = MPNatTrait::from_big_endian(n.to_be_bytes_padded().span());
@@ -1865,7 +1867,6 @@ fn test_big_sq_8() {
     check_big_sq(0xcf2025cee03025d247ad190e9366d926, ref expected);
 }
 
-//todo: add tests for overflow { see aurora tests }
 #[test]
 fn test_big_sq_9() {
     let mut expected_digits: Felt252Vec<u64> = Felt252VecImpl::new();
