@@ -11,6 +11,7 @@ use starknet::testing::set_contract_address;
 use utils::helpers::U256Trait;
 
 #[test]
+// name: "eth_tests_modexp_modsize0_returndatasizeFiller"
 fn test_mod_exp_precompile_0() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -369,12 +370,19 @@ fn test_mod_exp_precompile_0() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
 
+    let expected_gas = 44_954;
+
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 #[test]
+//  name: "eth_tests_create2callPrecompiles_test0_berlin",
 fn test_mod_exp_precompile_1() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -570,12 +578,18 @@ fn test_mod_exp_precompile_1() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let expected_gas = 1_360;
 
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 #[test]
+// name: "eip198_example_1",
 fn test_mod_exp_precompile_2() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -780,12 +794,18 @@ fn test_mod_exp_precompile_2() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let expected_gas = 1_360;
 
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 #[test]
+// name: "eip198_example_2"
 fn test_mod_exp_precompile_3() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -989,13 +1009,19 @@ fn test_mod_exp_precompile_3() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let expected_gas = 1_360;
 
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 
 #[test]
+// name: "nagydani_1_square",
 fn test_mod_exp_precompile_4() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -1296,12 +1322,18 @@ fn test_mod_exp_precompile_4() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let expected_gas = 200;
 
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 #[test]
+// name: "nagydani_1_qube"
 fn test_mod_exp_precompile_5() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -1602,12 +1634,18 @@ fn test_mod_exp_precompile_5() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let expected_gas = 200;
 
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 #[test]
+// name: "nagydani_1_pow0x10001"
 fn test_mod_exp_precompile_6() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -1910,12 +1948,18 @@ fn test_mod_exp_precompile_6() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let expected_gas = 341;
 
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 #[test]
+// name: "nagydani_2_square"
 fn test_mod_exp_precompile_7() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -2408,12 +2452,19 @@ fn test_mod_exp_precompile_7() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
 
+    let expected_gas = 200;
+
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 #[test]
+// name: "nagydani_2_qube"
 fn test_mod_exp_precompile_8() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -2906,13 +2957,19 @@ fn test_mod_exp_precompile_8() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let expected_gas = 200;
 
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 #[test]
 #[available_gas(10000000000000)]
+// name: "nagydani_1_pow0x10001"
 fn test_mod_exp_precompile_9() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -3407,13 +3464,19 @@ fn test_mod_exp_precompile_9() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let expected_gas = 1365;
 
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 #[test]
 #[available_gas(10000000000000)]
+// name: "nagydani_2_square"
 fn test_mod_exp_precompile_10() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -4290,13 +4353,19 @@ fn test_mod_exp_precompile_10() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let expected_gas = 341;
 
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 #[test]
 #[available_gas(10000000000000)]
+// name: "nagydani_2_qube"
 fn test_mod_exp_precompile_11() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -5173,13 +5242,19 @@ fn test_mod_exp_precompile_11() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let expected_gas = 341;
 
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 #[test]
 #[available_gas(10000000000000)]
+// name: "nagydani_2_pow0x10001"
 fn test_mod_exp_precompile_12() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -6058,13 +6133,19 @@ fn test_mod_exp_precompile_12() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let expected_gas = 5461;
 
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 #[test]
 #[available_gas(10000000000000)]
+// name: "nagydani_3_square"
 fn test_mod_exp_precompile_13() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -7709,13 +7790,19 @@ fn test_mod_exp_precompile_13() {
         .span();
 
     vm.message.data = calldata;
-    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let expected_gas = 1365;
 
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }
 
 #[test]
 #[available_gas(10000000000000)]
+// name: "nagydani_3_qube"
 fn test_mod_exp_precompile_14() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -9362,5 +9449,14 @@ fn test_mod_exp_precompile_14() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
+    assert_eq!(vm.return_data, expected);
+
+    let expected_gas = 1365;
+
+    let gas_before = vm.gas_left;
+    ModExpPrecompileTrait::exec(ref vm).unwrap();
+    let gas_after = vm.gas_left;
+
+    assert_eq!(gas_before - gas_after, expected_gas);
     assert_eq!(vm.return_data, expected);
 }

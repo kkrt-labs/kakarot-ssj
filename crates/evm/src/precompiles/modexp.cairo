@@ -5,10 +5,10 @@ use evm::errors::EVMError;
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 
-use integer::{u32_overflowing_add};
+use integer::{u32_overflowing_add, BoundedInt};
 use starknet::EthAddress;
 use utils::crypto::modexp::lib::modexp;
-use utils::helpers::{U256Trait, U8SpanExTrait};
+use utils::helpers::{U256Trait, U8SpanExTrait, U64Trait};
 
 const HEADER_LENGTH: usize = 96;
 const MIN_GAS: u128 = 200;
@@ -79,10 +79,19 @@ impl ModExpPrecompileTraitImpl of ModExpPrecompileTrait {
             let right_padded_highp = input.get_right_padded_span(base_len, 32);
             // If exp_len is less then 32 bytes get only exp_len bytes and do left padding.
             let out = right_padded_highp.slice(0, exp_highp_len).left_padding(32);
-            U256Trait::from_be_bytes(out)
+            match U256Trait::from_be_bytes(out) {
+                Option::Some(result) => result,
+                Option::None => {
+                    return Result::Err(EVMError::InvalidParameter('failed to extract exp_highp'));
+                }
+            }
         };
 
         // todo calc gas & gas
+        let gas = ModExpPrecompileHelperTraitImpl::calc_gas(
+            base_len.into(), exp_len.into(), mod_len.into(), exp_highp
+        );
+        vm.charge_gas(gas.into())?;
 
         // Padding is needed if the input does not contain all 3 values.
         let base = input.get_right_padded_span(0, base_len);
@@ -100,5 +109,66 @@ impl ModExpPrecompileTraitImpl of ModExpPrecompileTrait {
         vm.return_data = output.left_padding(mod_len);
 
         Result::Ok(())
+    }
+}
+
+#[generate_trait]
+impl ModExpPrecompileHelperTraitImpl of ModExpPrecompileHelperTrait {
+    // Calculate gas cost according to EIP 2565:
+    // https://eips.ethereum.org/EIPS/eip-2565
+    fn calc_gas(base_length: u64, exp_length: u64, mod_length: u64, exp_highp: u256) -> u64 {
+        let multiplication_complexity =
+            ModExpPrecompileHelperTrait::calculate_multiplication_complexity(
+            base_length, mod_length
+        );
+        let iteration_count = ModExpPrecompileHelperTrait::calculate_iteration_count(
+            exp_length, exp_highp
+        );
+        let gas = (multiplication_complexity * iteration_count.into()) / 3;
+        let gas: u64 = gas.try_into().unwrap_or(BoundedInt::<u64>::max());
+
+        if gas >= 200 {
+            gas
+        } else {
+            200
+        }
+    }
+
+    fn calculate_multiplication_complexity(base_length: u64, mod_length: u64) -> u256 {
+        let max_length = if base_length >= mod_length {
+            base_length
+        } else {
+            mod_length
+        };
+        let mut words = max_length / 8;
+        if max_length % 8 > 0 {
+            words += 1;
+        }
+        let words: u256 = words.into();
+        words * words
+    }
+
+    fn calculate_iteration_count(exp_length: u64, exp_highp: u256) -> u64 {
+        let mut iteration_count: u64 = 0;
+
+        if exp_length <= 32 && exp_highp == 0 {
+            iteration_count = 0;
+        } else if exp_length <= 32 {
+            iteration_count = (exp_highp.bit_len() - 1).into();
+        } else if exp_length > 32 {
+            let max: u64 = if exp_highp.bit_len() >= 1 {
+                exp_highp.bit_len().into()
+            } else {
+                1
+            };
+
+            iteration_count = (8 * (exp_length - 32)) + max - 1;
+        }
+
+        if iteration_count >= 1 {
+            iteration_count
+        } else {
+            1
+        }
     }
 }

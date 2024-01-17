@@ -1061,6 +1061,11 @@ impl U64Impl of U64Trait {
 
         64 - count
     }
+
+    fn bit_len(self: u64) -> u8 {
+        let count = self.count_leading_zeroes();
+        64 - count
+    }
 }
 
 
@@ -1302,6 +1307,31 @@ impl U256Impl of U256Trait {
         } else {
             return U128Trait::bytes_used(self.high.try_into().unwrap()) + 16;
         }
+    }
+
+    // todo: change zeroes to zeros
+    fn count_leading_zeroes(self: u256) -> u32 {
+        if self == 0 {
+            return 256;
+        }
+        let mut count = 0;
+
+        let mut n = self;
+        loop {
+            if n == 0 {
+                break;
+            };
+
+            count += 1;
+            n = n.shr(1);
+        };
+
+        256 - count
+    }
+
+    fn bit_len(self: u256) -> u32 {
+        let count = self.count_leading_zeroes();
+        256 - count
     }
 }
 
