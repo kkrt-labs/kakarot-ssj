@@ -115,9 +115,9 @@ fn calculate_message_call_gas(
 /// To optimize computations on u128 and avoid overflows, we compute size_in_words / 512
 ///  instead of size_in_words * size_in_words / 512. Then we recompute the
 ///  resulting quotient: x^2 = 512q + r becomes
-///  x = 512 q0 + r0 => x^2 = 512(512 q0^2 + q0 r0) + r0^2
+///  x = 512 q0 + r0 => x^2 = 512(512 q0^2 + 2 q0 r0) + r0^2
 ///  r0^2 = 512 q1 + r1
-///  x^2 = 512(512 q0^2 + q0 r0 + q1) + r1
+///  x^2 = 512(512 q0^2 + 2 q0 r0 + q1) + r1
 ///  q = 512 * q0 * q0 + 2 * q0 * r0 + q1
 /// # Parameters
 ///
@@ -128,7 +128,7 @@ fn calculate_message_call_gas(
 /// * `total_gas_cost` - The gas cost for storing data in memory.
 fn calculate_memory_gas_cost(size_in_bytes: usize) -> u128 {
     let _512: NonZero<u128> = 512_u128.try_into().unwrap();
-    let size_in_words = size_in_bytes / 32;
+    let size_in_words = (size_in_bytes + 31) / 32;
     let linear_cost = size_in_words.into() * MEMORY;
 
     let (q0, r0) = DivRem::div_rem(size_in_words.into(), _512);

@@ -1,6 +1,9 @@
 use core::option::OptionTrait;
 
-use evm::gas::{calculate_intrinsic_gas_cost, ACCESS_LIST_ADDRESS, ACCESS_LIST_STORAGE_KEY};
+use evm::gas::{
+    calculate_intrinsic_gas_cost, calculate_memory_gas_cost, ACCESS_LIST_ADDRESS,
+    ACCESS_LIST_STORAGE_KEY
+};
 use evm::tests::test_utils::evm_address;
 use starknet::EthAddress;
 use utils::eth_transaction::{
@@ -38,7 +41,7 @@ fn test_calculate_intrinsic_gas_cost() {
     let expected_cost: u128 = 21136;
     let out_cost: u128 = calculate_intrinsic_gas_cost(@tx);
 
-    assert(out_cost == expected_cost, 'wrong cost');
+    assert!(out_cost == expected_cost, "wrong cost");
 }
 
 #[test]
@@ -78,7 +81,7 @@ fn test_calculate_intrinsic_gas_cost_with_access_list() {
     let expected_cost: u128 = 21136 + ACCESS_LIST_ADDRESS + 5 * ACCESS_LIST_STORAGE_KEY;
     let out_cost: u128 = calculate_intrinsic_gas_cost(@tx);
 
-    assert(out_cost == expected_cost, 'wrong cost');
+    assert!(out_cost == expected_cost, "wrong cost");
 }
 
 
@@ -110,5 +113,13 @@ fn test_calculate_intrinsic_gas_cost_without_destination() {
     let expected_cost: u128 = 53138;
     let out_cost: u128 = calculate_intrinsic_gas_cost(@tx);
 
-    assert(out_cost == expected_cost, 'wrong cost');
+    assert!(out_cost == expected_cost, "wrong cost");
+}
+
+#[test]
+fn test_calculate_memory_allocation_cost() {
+    let size_in_bytes: usize = 10018613;
+    let expected_cost: u128 = 192385220;
+    let out_cost: u128 = calculate_memory_gas_cost(size_in_bytes);
+    assert!(out_cost == expected_cost, "wrong cost");
 }
