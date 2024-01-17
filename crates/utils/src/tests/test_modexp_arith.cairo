@@ -3,8 +3,6 @@ use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
 use core::result::ResultTrait;
 use core::traits::Into;
 
-//todo: remove
-use debug::PrintTrait;
 use utils::crypto::modexp::arith::{
     mod_inv, monsq, monpro, compute_r_mod_n, in_place_shl, in_place_shr, big_wrapping_pow,
     big_wrapping_mul, big_sq, borrowing_sub, shifted_carrying_mul
@@ -27,19 +25,12 @@ fn check_monsq(x: u128, n: u128) {
     monsq(ref a, ref m, n_prime, ref output);
     let mut result = MPNat { digits: output };
 
-    '2_output'.print();
-    result.digits.print_dict();
-
     let mut output = Felt252VecImpl::new();
     output.resize(m.digits.len() + 2, 0);
-    output.print_dict();
     let mut tmp = MPNat { digits: a.digits.duplicate() };
     monpro(ref a, ref tmp, ref m, n_prime, ref output);
 
-    '3'.print();
     let mut expected = MPNat { digits: output };
-    'expected'.print();
-    expected.digits.print_dict();
 
     assert!(result.digits.equal(ref expected.digits));
 }
@@ -47,16 +38,12 @@ fn check_monsq(x: u128, n: u128) {
 fn check_monpro(x: u128, y: u128, n: u128, ref expected: MPNat) {
     let mut a = MPNatTrait::from_big_endian(x.to_be_bytes_padded().span());
     let mut b = MPNatTrait::from_big_endian(y.to_be_bytes_padded().span());
-    println!("b: ");
-    b.digits.print_dict();
     let mut m = MPNatTrait::from_big_endian(n.to_be_bytes().span());
     let n_prime = WORD_MAX - mod_inv(m.digits[0]) + 1;
 
     let mut output = Felt252VecImpl::new();
     output.resize(m.digits.len() + 2, 0);
     monpro(ref a, ref b, ref m, n_prime, ref output);
-    'output_monpro'.print();
-    output.print_dict();
     let mut result = MPNat { digits: output };
 
     assert!(result.digits.equal(ref expected.digits));
@@ -101,8 +88,6 @@ fn check_big_wrapping_pow(a: u128, b: u32, expected_bytes: Span<u8>) {
     scratch.expand(1 + (expected_bytes.len() / WORD_BYTES)).unwrap();
 
     let mut result = big_wrapping_pow(ref x, y, ref scratch);
-    'yay!'.print();
-    result.digits.print_dict();
 
     let mut expected = MPNatTrait::from_big_endian(expected_bytes);
     assert!(result.digits.equal(ref expected.digits));
@@ -149,9 +134,6 @@ fn test_monsq_alpha() {
     scratch.expand(5).unwrap();
 
     monsq(ref x, ref y, n_prime, ref scratch);
-
-    'result is'.print();
-    scratch.print_dict();
 }
 
 
@@ -2017,21 +1999,4 @@ fn test_shifted_carrying_mul() {
         (0x0C_38_0C_94, WORD_MAX - 0xBE00)
     );
     assert_eq!(shifted_carrying_mul(WORD_MAX, WORD_MAX, WORD_MAX, WORD_MAX), (WORD_MAX, WORD_MAX));
-}
-
-#[generate_trait]
-impl Felt252TestTraitImpl of Felt252TestTrait {
-    fn print_dict(ref self: Felt252Vec<u64>) {
-        let mut i = 0;
-        loop {
-            if self.len == i {
-                break;
-            }
-
-            let b = self[i];
-            b.print();
-
-            i += 1;
-        }
-    }
 }

@@ -10,8 +10,6 @@ use core::pedersen::{HashState, PedersenTrait};
 use core::traits::IndexView;
 use core::traits::TryInto;
 
-//todo: remove
-use debug::{PrintTrait};
 use integer::{BoundedInt, u32_as_non_zero, U32TryIntoNonZero, u32_overflowing_add};
 use keccak::{cairo_keccak, u128_split};
 use starknet::{
@@ -689,24 +687,9 @@ impl U8SpanExImpl of U8SpanExTrait {
     }
 
     fn left_padding(self: Span<u8>, len: usize) -> Span<u8> {
-        'lp starts here'.print();
-        let mut i = 0;
-        loop {
-            if i == self.len() {
-                break;
-            };
-
-            (*self[i]).print();
-            i += 1;
-        };
-
         if self.len() >= len {
             return self;
         }
-        'self_len'.print();
-        self.len().print();
-        'len'.print();
-        len.print();
 
         let mut arr = array![];
         let mut i = 0;
@@ -729,7 +712,6 @@ impl U8SpanExImpl of U8SpanExTrait {
             i += 1;
         };
 
-        'ends here'.print();
         arr.span()
     }
 }
@@ -1673,11 +1655,6 @@ impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
 
         let mut i = self.len();
 
-        'I reach here'.print();
-        'left_padding'.print();
-        self.len().print();
-        'But not here?'.print();
-
         loop {
             if i == 0 {
                 break;
@@ -1686,14 +1663,8 @@ impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
             let j = i - 1;
 
             if self[j] == 0 {
-                'encountered 0 at'.print();
-                j.print();
-                (self[j]).print();
                 res.append(0);
             } else {
-                'self[j]'.print();
-                self[j].print();
-                self[j].to_be_bytes().len().print();
                 res.append_span(self[j].to_be_bytes_padded().span());
             }
 

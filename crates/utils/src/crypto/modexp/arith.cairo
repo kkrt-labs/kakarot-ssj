@@ -2,8 +2,6 @@ use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
 use core::option::OptionTrait;
 use core::traits::TryInto;
 
-//todo: remove
-use debug::PrintTrait;
 use integer::{u64_wide_mul, u64_overflowing_add, u64_overflowing_sub, u128_overflowing_add};
 use keccak::u128_split;
 use super::mpnat::{MPNat, Word, DoubleWord, WORD_BITS, BASE, DOUBLE_WORD_MAX, WORD_MAX};
@@ -11,8 +9,6 @@ use utils::helpers::{Felt252VecTrait, U128Trait};
 use utils::math::WrappingBitshift;
 use utils::math::{Bitshift, u64_wrapping_mul};
 
-//todo: remove
-use utils::tests::test_modexp_arith::Felt252TestTrait;
 use utils::traits::BoolIntoNumeric;
 
 // Computes the "Montgomery Product" of two numbers.
@@ -117,8 +113,6 @@ fn monpro(ref x: MPNat, ref y: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt
         i += 1;
     };
 
-    out.print_dict();
-
     let (diff, _) = borrowing_sub(out[s], 0, b);
     out.set(s, diff);
 }
@@ -148,8 +142,6 @@ fn monsq(ref x: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
                 out[i + j], m, n.digits.get(j).unwrap_or(0), c
             );
             out.set(i + j, prod);
-            // '1_'.print();
-            out.print_dict();
             c = carry;
 
             j += 1;
@@ -193,9 +185,6 @@ fn monsq(ref x: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
 
         i += 1;
     };
-
-    println!("output here");
-    out.print_dict();
 
     let mut k = s + 1;
     let should_return = loop {
@@ -243,26 +232,17 @@ fn monsq(ref x: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
 pub fn big_wrapping_pow(
     ref base: MPNat, exp: Span<u8>, ref scratch_space: Felt252Vec<Word>
 ) -> MPNat {
-    'scratch_space_init'.print();
-    scratch_space.print_dict();
-
     let mut digits = Felt252VecImpl::new();
-    scratch_space.len().print();
     digits.resize(scratch_space.len(), 0);
-    println!("I reach here as well");
     let mut result = MPNat { digits };
     result.digits.set(0, 1);
 
-    'base'.print();
-    base.digits.print_dict();
-    'exp'.print();
     let mut i = 0;
     loop {
         if i == exp.len() {
             break;
         }
 
-        (*exp[i]).print();
         i += 1;
     };
 
@@ -275,8 +255,6 @@ pub fn big_wrapping_pow(
         let b = *exp[i];
         let mut mask: u8 = 1_u8.wrapping_shl(7);
 
-        println!("or stuck here?");
-
         loop {
             if mask <= 0 {
                 break;
@@ -285,40 +263,17 @@ pub fn big_wrapping_pow(
             let digits = result.digits.duplicate();
             let mut tmp = MPNat { digits };
 
-            println!("or stuck here 1");
-
             big_wrapping_mul(ref result, ref tmp, ref scratch_space);
-            'scratch_space >>'.print();
-            scratch_space.print_dict();
-            println!("or stuck here 2");
             result.digits.copy_from_vec(ref scratch_space).unwrap();
             scratch_space.reset(); // zero-out the scatch space
-            println!("or stuck here 3");
 
-            ' b_mask'.print();
-            b.print();
-            mask.print();
             if (b & mask) != 0 {
-                'result_base_scartch_space'.print();
-                result.digits.print_dict();
-                '-----'.print();
-                base.digits.print_dict();
-                '-----'.print();
-                scratch_space.print_dict();
-                '-----'.print();
                 big_wrapping_mul(ref result, ref base, ref scratch_space);
-                'scratch_space --'.print();
-                scratch_space.print_dict();
                 result.digits.copy_from_vec(ref scratch_space).unwrap();
-                'result --'.print();
-                result.digits.print_dict();
                 scratch_space.reset(); // zero-out the scatch space
             }
 
             mask = mask.wrapping_shr(1);
-            println!("or stuck here 4");
-
-            'stuck here?'.print();
         };
 
         i += 1;
@@ -396,8 +351,6 @@ fn mod_inv(x: Word) -> Word {
 fn compute_r_mod_n(ref n: MPNat, ref out: Felt252Vec<Word>) {
     let k = n.digits.len();
 
-    'c_0'.print();
-
     if k == 1 {
         let r = BASE;
         let result = r % (n.digits[0].into());
@@ -405,15 +358,7 @@ fn compute_r_mod_n(ref n: MPNat, ref out: Felt252Vec<Word>) {
         return;
     }
 
-    'c_1'.print();
-
-    'n_digits_approx_n'.print();
-    n.digits[k - 1].print();
-    n.digits[k - 2].print();
     let approx_n = join_as_double(n.digits[k - 1], n.digits[k - 2]);
-    'c_2'.print();
-    'approx_n'.print();
-    approx_n.print();
     let approx_q = DOUBLE_WORD_MAX / approx_n;
     let mut approx_q: Word = approx_q.as_u64();
 

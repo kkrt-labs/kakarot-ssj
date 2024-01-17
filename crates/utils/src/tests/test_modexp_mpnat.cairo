@@ -3,8 +3,6 @@ use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
 use core::result::ResultTrait;
 use core::traits::Into;
 
-//todo: remove
-use debug::PrintTrait;
 use utils::crypto::modexp::arith::{
     mod_inv, monsq, monpro, compute_r_mod_n, in_place_shl, in_place_shr, big_wrapping_pow,
     big_wrapping_mul, big_sq, borrowing_sub, shifted_carrying_mul
@@ -19,14 +17,11 @@ use utils::math::{u64_wrapping_mul, Bitshift, WrappingBitshift};
 #[cfg(test)]
 pub fn mp_nat_to_u128(ref x: MPNat) -> u128 {
     let result = x.digits.to_le_bytes();
-    'mp_nat_bytes'.print();
     let mut i: usize = 0;
     loop {
         if i == result.len() {
             break;
         };
-
-        (*result[i]).print();
 
         i += 1;
     };
@@ -46,9 +41,6 @@ fn check_modpow_with_power_of_two(base: u128, exp: u128, modulus: u128, expected
     let mut m = MPNatTrait::from_big_endian(modulus.to_be_bytes().span());
     let mut result = x.modpow_with_power_of_two(exp.to_be_bytes().span(), ref m);
     let result = mp_nat_to_u128(ref result);
-    'result_expected'.print();
-    result.print();
-    expected.print();
     assert_eq!(result, expected);
 }
 
@@ -56,11 +48,7 @@ fn check_modpow_montgomery(base: u128, exp: u128, modulus: u128, expected: u128)
     let mut x = MPNatTrait::from_big_endian(base.to_be_bytes().span());
     let mut m = MPNatTrait::from_big_endian(modulus.to_be_bytes().span());
     let mut result = x.modpow_montgomery(exp.to_be_bytes().span(), ref m);
-    'result is'.print();
-    result.digits.print_dict();
     let result = mp_nat_to_u128(ref result);
-    'result in num'.print();
-    result.print();
     assert_eq!(result, expected, "({base} ^ {exp}) % {modulus} failed check_modpow_montgomery");
 }
 
@@ -368,21 +356,4 @@ fn test_mp_nat_is_power_of_two() {
     check_is_p2(1.shl(64), true);
     check_is_p2(1.shl(65), true);
     check_is_p2(1.shl(127), true);
-}
-
-#[generate_trait]
-impl Felt252TestTraitImpl of Felt252TestTrait {
-    fn print_dict(ref self: Felt252Vec<u64>) {
-        let mut i = 0;
-        loop {
-            if self.len == i {
-                break;
-            }
-
-            let b = self[i];
-            b.print();
-
-            i += 1;
-        }
-    }
 }

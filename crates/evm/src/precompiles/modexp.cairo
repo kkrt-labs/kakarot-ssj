@@ -5,10 +5,6 @@ use evm::errors::EVMError;
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 
-//todo: remove
-use evm::tests::test_precompiles::test_modexp::PrintTrait;
-use evm::tests::test_precompiles::test_modexp::PrivateTrait;
-
 use integer::{u32_overflowing_add};
 use starknet::EthAddress;
 use utils::crypto::modexp::lib::modexp;
@@ -92,36 +88,15 @@ impl ModExpPrecompileTraitImpl of ModExpPrecompileTrait {
         let base = input.get_right_padded_span(0, base_len);
         let exponent = input.get_right_padded_span(base_len, exp_len);
 
-        'base_len'.print();
-        base_len.print();
-        'exp_len'.print();
-        exp_len.print();
-        'modulus_len'.print();
-        mod_len.print();
         let tmp = match u32_overflowing_add(base_len, exp_len) {
             Result::Ok(v) => v,
             Result::Err(v) => v
         };
 
-        'tmp here'.print();
-        tmp.print();
-        'mod_len'.print();
-        mod_len.print();
         let modulus = input.get_right_padded_span(tmp, mod_len);
-
-        'base'.print();
-        base.print_span();
-        'exponent'.print();
-        exponent.print_span();
-        'modulus'.print();
-        modulus.print_span();
 
         let output = modexp(base, exponent, modulus);
 
-        'okay, so output'.print();
-        output.print_span();
-        'output_len'.print();
-        output.len().print();
         vm.return_data = output.left_padding(mod_len);
 
         Result::Ok(())

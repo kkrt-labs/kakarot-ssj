@@ -1,8 +1,6 @@
 use contracts::tests::test_utils::{setup_contracts_for_testing};
 use core::result::ResultTrait;
 
-//todo: remove
-use debug::PrintTrait;
 use evm::instructions::system_operations::SystemOperationsTrait;
 
 use evm::memory::MemoryTrait;
@@ -373,8 +371,6 @@ fn test_mod_exp_precompile_0() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -576,8 +572,6 @@ fn test_mod_exp_precompile_1() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -788,8 +782,6 @@ fn test_mod_exp_precompile_2() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -999,8 +991,6 @@ fn test_mod_exp_precompile_3() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -1308,8 +1298,6 @@ fn test_mod_exp_precompile_4() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -1616,8 +1604,6 @@ fn test_mod_exp_precompile_5() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -1926,8 +1912,6 @@ fn test_mod_exp_precompile_6() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -2426,8 +2410,6 @@ fn test_mod_exp_precompile_7() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -2926,8 +2908,6 @@ fn test_mod_exp_precompile_8() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -3429,8 +3409,6 @@ fn test_mod_exp_precompile_9() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -4314,8 +4292,6 @@ fn test_mod_exp_precompile_10() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -5199,8 +5175,6 @@ fn test_mod_exp_precompile_11() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -6086,8 +6060,6 @@ fn test_mod_exp_precompile_12() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -7739,8 +7711,6 @@ fn test_mod_exp_precompile_13() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
 }
 
@@ -9392,22 +9362,5 @@ fn test_mod_exp_precompile_14() {
     vm.message.data = calldata;
     ModExpPrecompileTrait::exec(ref vm).unwrap();
 
-    'finalllll'.print();
-    vm.return_data.print_span();
     assert_eq!(vm.return_data, expected);
-}
-
-
-#[generate_trait]
-impl Private of PrivateTrait {
-    fn print_span(self: Span<u8>) {
-        let mut i = 0;
-        loop {
-            if i == self.len() {
-                break;
-            };
-            (*self[i]).print();
-            i += 1;
-        };
-    }
 }
