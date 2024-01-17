@@ -118,7 +118,7 @@ fn calculate_message_call_gas(
 ///  x = 512 q0 + r0 => x^2 = 512(512 q0^2 + q0 r0) + r0^2
 ///  r0^2 = 512 q1 + r1
 ///  x^2 = 512(512 q0^2 + q0 r0 + q1) + r1
-///  q = 512 * q0 * q0 + q0 * r0 + q1
+///  q = 512 * q0 * q0 + 2 * q0 * r0 + q1
 /// # Parameters
 ///
 /// * `size_in_bytes` - The size of the data in bytes.
@@ -133,7 +133,7 @@ fn calculate_memory_gas_cost(size_in_bytes: usize) -> u128 {
 
     let (q0, r0) = DivRem::div_rem(size_in_words.into(), _512);
     let (q1, _) = DivRem::div_rem(r0 * r0, _512);
-    let quadratic_cost = 512 * q0 * q0 + q0 * r0 + q1;
+    let quadratic_cost = 512 * q0 * q0 + 2 * q0 * r0 + q1;
 
     linear_cost + quadratic_cost
 }
