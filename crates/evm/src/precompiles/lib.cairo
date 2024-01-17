@@ -6,6 +6,7 @@ use evm::precompiles::blake2f::Blake2fPrecompileTrait;
 use evm::precompiles::ec_recover::EcRecoverPrecompileTrait;
 
 use evm::precompiles::identity::IdentityPrecompileTrait;
+use evm::precompiles::modexp::ModExpPrecompileTrait;
 use evm::precompiles::sha256::Sha256PrecompileTrait;
 use starknet::EthAddress;
 
@@ -28,12 +29,7 @@ impl PrecompileTraitImpl of PrecompileTrait {
                 )
             },
             4 => { IdentityPrecompileTrait::exec(ref vm) },
-            5 => {
-                // we should never reach this branch!
-                panic!(
-                    "pre-compile at address {} isn't implemented yet", precompile_address.address
-                )
-            },
+            5 => { ModExpPrecompileTrait::exec(ref vm) },
             6 => {
                 // we should never reach this branch!
                 panic!(
