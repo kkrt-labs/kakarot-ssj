@@ -689,26 +689,47 @@ impl U8SpanExImpl of U8SpanExTrait {
     }
 
     fn left_padding(self: Span<u8>, len: usize) -> Span<u8> {
+        'lp starts here'.print();
+        let mut i = 0;
+        loop {
+            if i == self.len() {
+                break;
+            };
+
+            (*self[i]).print();
+            i += 1;
+        };
+
         if self.len() >= len {
             return self;
         }
+        'self_len'.print();
+        self.len().print();
+        'len'.print();
+        len.print();
 
         let mut arr = array![];
         let mut i = 0;
         loop {
-            if i == len {
+            if i == (len - self.len()) {
                 break;
             };
 
-            if i >= len - self.len() {
-                arr.append(*self[i]);
-            } else {
-                arr.append(0);
-            }
-
+            arr.append(0);
             i += 1;
         };
 
+        let mut i = 0;
+        loop {
+            if i == self.len() {
+                break;
+            };
+
+            arr.append(*self[i]);
+            i += 1;
+        };
+
+        'ends here'.print();
         arr.span()
     }
 }
@@ -1647,20 +1668,36 @@ impl Felt252VecU8TraitImpl of Felt252VecU8Trait {
 impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
     fn to_be_bytes(ref self: Felt252Vec<u64>) -> Span<u8> {
         let mut res: Array<u8> = array![];
-        let mut i = 0;
+
+        self.remove_trailing_zeroes_le();
+
+        let mut i = self.len();
+
+        'I reach here'.print();
+        'left_padding'.print();
+        self.len().print();
+        'But not here?'.print();
 
         loop {
-            if i == self.len() {
+            if i == 0 {
                 break;
             }
 
-            if self[i] == 0 {
+            let j = i - 1;
+
+            if self[j] == 0 {
+                'encountered 0 at'.print();
+                j.print();
+                (self[j]).print();
                 res.append(0);
             } else {
-                res.append_span(self[i].to_be_bytes().span());
+                'self[j]'.print();
+                self[j].print();
+                self[j].to_be_bytes().len().print();
+                res.append_span(self[j].to_be_bytes_padded().span());
             }
 
-            i += 1;
+            i -= 1;
         };
 
         res.span()
@@ -1887,6 +1924,10 @@ impl Felt252VecTraitImpl<
 
             vec.push(self[i]);
             i += 1;
+        };
+
+        if vec.len == 0 {
+            vec.push(Zero::zero());
         };
 
         self = vec;

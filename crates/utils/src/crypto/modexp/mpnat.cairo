@@ -449,8 +449,11 @@ impl MPNatTraitImpl of MPNatTrait {
             }
         }
 
+        'I do reach here .....'.print();
         if exp.len() <= (BitSize::<usize>::bits() / 8) {
+            'I enter in this loop as well?'.print();
             let exp_as_number: usize = {
+                println!("ff _1");
                 let mut tmp = 0;
                 let mut i = 0;
                 loop {
@@ -458,11 +461,15 @@ impl MPNatTraitImpl of MPNatTrait {
                         break;
                     }
 
+                    println!("ff _2");
+
                     tmp *= 256;
                     tmp += (*exp[i]).into();
 
                     i += 1;
                 };
+
+                println!("ff _3");
 
                 tmp
             };
@@ -594,6 +601,7 @@ impl MPNatTraitImpl of MPNatTrait {
 
                 i += 1;
             };
+
             MPNat { digits: scratch }
         };
 
@@ -605,6 +613,9 @@ impl MPNatTraitImpl of MPNatTrait {
             out.set(out.len - 1, out[out.len - 1] & power_of_two_mask);
             MPNat { digits: out }
         };
+
+        println!(" y here");
+        y.digits.print_dict();
 
         // Re-use allocation for efficiency
         let mut digits = diff.digits;
@@ -628,6 +639,9 @@ impl MPNatTraitImpl of MPNatTrait {
 
             i += 1;
         };
+
+        'digitgs here ....'.print();
+        digits.print_dict();
 
         MPNat { digits }
     }
@@ -658,28 +672,8 @@ impl MPNatTraitImpl of MPNatTrait {
             let mut digits = Felt252VecImpl::new();
             digits.expand(2 * s).unwrap();
             let mut tmp = MPNat { digits };
-            println!("self before");
-            self.digits.print_dict();
-            println!("x_bar_before");
-            x_bar.digits.print_dict();
-            println!("tmp_digits before");
-            tmp.digits.print_dict();
             big_wrapping_mul(ref self, ref x_bar, ref tmp.digits);
-            println!("self after");
-            self.digits.print_dict();
-            println!("x_bar_after");
-            x_bar.digits.print_dict();
-            println!("tmp_digits after");
-            tmp.digits.print_dict();
-            println!("modulus");
-            modulus.digits.print_dict();
-            println!("tmp");
-            tmp.digits.print_dict();
             tmp.sub_to_same_size(ref modulus);
-            println!("modulus");
-            modulus.digits.print_dict();
-            println!("tmp");
-            tmp.digits.print_dict();
             tmp
         };
 
@@ -703,41 +697,14 @@ impl MPNatTraitImpl of MPNatTrait {
                     break;
                 };
 
-                'monsq_inputs'.print();
-                'x_bar_input'.print();
-                x_bar.digits.print_dict();
-                'modulus_input'.print();
-                modulus.digits.print_dict();
-                'n_prime'.print();
-                n_prime.print();
-                'scratch'.print();
-                scratch.print_dict();
-                '-----'.print();
-
                 monsq(ref x_bar, ref modulus, n_prime, ref scratch);
                 let mut slice = scratch.slice(0, s).unwrap();
-                'might be changes here?'.print();
-                slice.print_dict();
                 x_bar.digits.copy_from_vec(ref slice).unwrap();
                 scratch.reset();
 
                 if b & mask != 0 {
-                    println!("I reach here");
                     let mut slice = scratch.slice(0, monpro_len).unwrap();
-                    'x_bar_input'.print();
-                    x_bar.digits.print_dict();
-                    'a_bar_input'.print();
-                    a_bar.digits.print_dict();
-                    'modulus_input'.print();
-                    modulus.digits.print_dict();
-                    'n_prime'.print();
-                    n_prime.print();
-                    'slice'.print();
-                    slice.print_dict();
-                    '-----'.print();
                     monpro(ref x_bar, ref a_bar, ref modulus, n_prime, ref slice);
-                    'monpro_result'.print();
-                    slice.print_dict();
                     scratch.insert_vec(ref slice, 0).unwrap();
 
                     let mut slice = scratch.slice(0, s).unwrap();
@@ -745,10 +712,6 @@ impl MPNatTraitImpl of MPNatTrait {
                     scratch.reset();
                 }
                 mask = mask.shr(1);
-
-                'x_bar here'.print();
-                x_bar.digits.print_dict();
-                '-----'.print();
             };
 
             i += 1;
