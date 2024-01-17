@@ -10,7 +10,7 @@ use evm::tests::test_utils::{VMBuilderTrait, native_token, other_starknet_addres
 use starknet::testing::set_contract_address;
 use utils::helpers::U256Trait;
 
-// the tests are taken from (revm)[https://github.com/bluealloy/revm/blob/0629883f5a40e913a5d9498fa37886348c858c70/crates/precompile/src/modexp.rs#L175]
+// the tests are taken from [revm](https://github.com/bluealloy/revm/blob/0629883f5a40e913a5d9498fa37886348c858c70/crates/precompile/src/modexp.rs#L175)
 
 #[test]
 // name: "eth_tests_modexp_modsize0_returndatasizeFiller"

@@ -14,7 +14,7 @@ use utils::helpers::{Felt252VecTrait, Felt252VecU64Trait};
 use utils::helpers::{U128Trait, U32Trait};
 use utils::math::{u64_wrapping_mul};
 
-// the tests are taken from (aurora-engine)[https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/arith.rs#L401]
+// the tests are taken from [aurora-engine](https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/arith.rs#L401)
 
 fn check_monsq(x: u128, n: u128) {
     let mut a = MPNatTrait::from_big_endian(x.to_be_bytes_padded().span());

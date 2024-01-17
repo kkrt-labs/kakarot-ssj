@@ -1,4 +1,4 @@
-// CREDITS: The implementation has take reference from (revm)[// CREDITS: The implementation has been take from (aurora-engine)[https://github.com/aurora-is-near/aurora-engine/tree/develop/engine-modexp]]
+// CREDITS: The implementation has take reference from [revm](https://github.com/bluealloy/revm/blob/main/crates/precompile/src/modexp.rs)
 
 use core::option::OptionTrait;
 use core::traits::TryInto;
