@@ -234,7 +234,7 @@ trait OverflowingMul<T> {
 impl u8OverflowingMul of OverflowingMul<u8> {
     fn overflowing_mul(self: u8, rhs: u8) -> (u8, bool) {
         let result = u8_wide_mul(self, rhs);
-        let mask = 0xFF;
+        let mask = BoundedInt::max();
         let top_word: u8 = (result.shr(8) & mask).try_into().unwrap();
         let bottom_word = (result & mask).try_into().unwrap();
 
@@ -249,7 +249,7 @@ impl u32OverflowingMul of OverflowingMul<u32> {
     fn overflowing_mul(self: u32, rhs: u32) -> (u32, bool) {
         let result = u32_wide_mul(self, rhs);
 
-        let mask = 0xFFFFFFFF;
+        let mask = BoundedInt::max();
         let top_word: u32 = (result.shr(32) & mask).try_into().unwrap();
         let bottom_word = (result & mask).try_into().unwrap();
 
