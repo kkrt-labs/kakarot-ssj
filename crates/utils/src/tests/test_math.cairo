@@ -45,6 +45,11 @@ fn test_wrapping_fast_pow() {
 }
 
 #[test]
+fn test_wrapping_fast_pow_0() {
+    assert(3_u256.wrapping_fpow(0) == 1, '3^(0) should be 1');
+}
+
+#[test]
 #[should_panic(expected: ('u256_mul Overflow',))]
 fn test_pow_should_overflow() {
     2_u256.pow(256);
