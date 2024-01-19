@@ -61,9 +61,67 @@ trait WrappingExponentiation<T> {
     /// from the core library, which wrap around when overflowing.
     /// * `T` - The result of base raised to the power of exp modulo MAX<T>.
     fn wrapping_pow(self: T, exponent: T) -> T;
-    /// this function performs exponentiation through a simple loop
+
+    /// Performs exponentiation by repeatedly multiplying the base number with itself.
+    ///
+    /// This function uses a simple loop to perform exponentiation. It continues to multiply
+    /// the base number (`self`) with itself, for the number of times specified by `exponent`.
+    /// The method uses a wrapping strategy to handle overflow, which means if the result
+    /// overflows the type `T`, it will wrap around according to the rules defined for
+    /// the `wrapping_mul` method in Rust's standard library.
+    ///
+    /// # Examples
+    /// ```
+    /// let result = 2.wrapping_spow(3);
+    /// assert_eq!(result, 8);
+    /// ```
+    ///
+    /// # Parameters
+    /// - `self`: The base number of type `T`.
+    /// - `exponent`: The exponent to which the base number is raised, also of type `T`.
+    ///
+    /// # Returns
+    /// - Returns the result of raising `self` to the power of `exponent`, of type `T`.
+    ///   The result is wrapped in case of overflow.
+    ///
+    /// # Panics
+    /// This function does not panic under normal circumstances, unless multiplication
+    /// of type `T` can panic.
+    ///
+    /// # Safety
+    /// This function is safe as long as the multiplication of type `T` is safe.
     fn wrapping_spow(self: T, exponent: T) -> T;
-    /// this function performs exponentiation using binary exponentiation
+
+    /// Performs exponentiation using the binary exponentiation method.
+    ///
+    /// This function calculates the power of a number using binary exponentiation, which is
+    /// an optimized method for exponentiation that reduces the number of multiplications.
+    /// It works by repeatedly squaring the base and reducing the exponent by half, using
+    /// a wrapping strategy to handle overflow. This means if intermediate or final results
+    /// overflow the type `T`, they will wrap around according to the rules defined for
+    /// the `wrapping_mul` method in Rust's standard library.
+    ///
+    /// # Examples
+    /// ```
+    /// let result = 2.wrapping_fpow(3);
+    /// assert_eq!(result, 8);
+    /// ```
+    ///
+    /// # Parameters
+    /// - `self`: The base number of type `T`.
+    /// - `exponent`: The exponent to which the base number is raised, also of type `T`.
+    ///
+    /// # Returns
+    /// - Returns the result of raising `self` to the power of `exponent`, of type `T`.
+    ///   The result is wrapped in case of overflow.
+    ///
+    /// # Panics
+    /// This function does not panic under normal circumstances, unless the multiplication
+    /// of type `T` can panic.
+    ///
+    /// # Safety
+    /// This function is safe as long as the operations (multiplication and division by 2)
+    /// on type `T` are safe.
     fn wrapping_fpow(self: T, exponent: T) -> T;
 }
 
@@ -98,7 +156,6 @@ impl WrappingExponentiationImpl<
         }
     }
 
-    /// this function performs exponentiation through a simple loop
     fn wrapping_spow(self: T, exponent: T) -> T {
         let mut exponent = exponent;
         let mut base = self;
@@ -114,7 +171,6 @@ impl WrappingExponentiationImpl<
         }
     }
 
-    /// this function performs exponentiation using binary exponentiation
     fn wrapping_fpow(self: T, exponent: T) -> T {
         let mut result = One::one();
         let mut base = self;
