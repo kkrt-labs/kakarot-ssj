@@ -67,8 +67,7 @@ trait WrappingExponentiation<T> {
     /// This function uses a simple loop to perform exponentiation. It continues to multiply
     /// the base number (`self`) with itself, for the number of times specified by `exponent`.
     /// The method uses a wrapping strategy to handle overflow, which means if the result
-    /// overflows the type `T`, it will wrap around according to the rules defined for
-    /// the `wrapping_mul` method in Rust's standard library.
+    /// overflows the type `T`, then higher bits are discarded and the result is wrapped.
     ///
     /// # Examples
     /// ```
@@ -91,8 +90,7 @@ trait WrappingExponentiation<T> {
     /// an optimized method for exponentiation that reduces the number of multiplications.
     /// It works by repeatedly squaring the base and reducing the exponent by half, using
     /// a wrapping strategy to handle overflow. This means if intermediate or final results
-    /// overflow the type `T`, they will wrap around according to the rules defined for
-    /// the `wrapping_mul` method in Rust's standard library.
+    /// overflow the type `T`, then the higher bits are discarded and the result is wrapped.
     ///
     /// # Examples
     /// ```
@@ -380,8 +378,7 @@ trait WrappingMul<T> {
     /// - `rhs`: The second operand of type `T` in the multiplication.
     ///
     /// # Returns
-    /// - Returns the result of multiplying `self` by `rhs`, of type `T`. If overflow occurs,
-    ///   the result is the wrapped value according to Rust's overflow behavior for type `T`.
+    /// - Returns the result of multiplying `self` by `rhs`, of type `T`. If overflow occurs, the higher bits are discarded.
     fn wrapping_mul(self: T, rhs: T) -> T;
 }
 
