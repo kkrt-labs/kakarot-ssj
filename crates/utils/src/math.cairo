@@ -275,7 +275,7 @@ trait OverflowingMul<T> {
     fn overflowing_mul(self: T, rhs: T) -> (T, bool);
 }
 
-impl u8OverflowingMul of OverflowingMul<u8> {
+impl U8OverflowingMul of OverflowingMul<u8> {
     fn overflowing_mul(self: u8, rhs: u8) -> (u8, bool) {
         let result = u8_wide_mul(self, rhs);
         let mask: u16 = BoundedInt::<u8>::max().into();
@@ -292,7 +292,7 @@ impl u8OverflowingMul of OverflowingMul<u8> {
     }
 }
 
-impl u32OverflowingMul of OverflowingMul<u32> {
+impl U32OverflowingMul of OverflowingMul<u32> {
     fn overflowing_mul(self: u32, rhs: u32) -> (u32, bool) {
         let result = u32_wide_mul(self, rhs);
 
@@ -307,7 +307,7 @@ impl u32OverflowingMul of OverflowingMul<u32> {
     }
 }
 
-impl u64OverflowingMul of OverflowingMul<u64> {
+impl U64OverflowingMul of OverflowingMul<u64> {
     fn overflowing_mul(self: u64, rhs: u64) -> (u64, bool) {
         let result = u64_wide_mul(self, rhs);
         let (top_word, bottom_word) = u128_split(result);
@@ -319,13 +319,13 @@ impl u64OverflowingMul of OverflowingMul<u64> {
     }
 }
 
-impl u128OverflowingMul of OverflowingMul<u128> {
+impl U128OverflowingMul of OverflowingMul<u128> {
     fn overflowing_mul(self: u128, rhs: u128) -> (u128, bool) {
         u128_overflowing_mul(self, rhs)
     }
 }
 
-impl u256OverflowingMul of OverflowingMul<u256> {
+impl U256OverflowingMul of OverflowingMul<u256> {
     fn overflowing_mul(self: u256, rhs: u256) -> (u256, bool) {
         u256_overflowing_mul(self, rhs)
     }
