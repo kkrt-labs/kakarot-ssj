@@ -1,7 +1,8 @@
 use integer::{u256_overflowing_add, BoundedInt, u512, u256_overflow_mul};
 use utils::math::{
     Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift,
-    internal_wrapping_pow_u256
+    internal_wrapping_pow_u256, u8_overflowing_mul, u8_wrapping_mul, u32_overflowing_mul,
+    u32_wrapping_mul, u64_overflowing_mul, u64_wrapping_mul, u128_overflowing_mul, u128_wrapping_mul
 };
 
 #[test]
@@ -133,7 +134,7 @@ fn test_shl_overflow() {
     // 1-byte shift is an 8-bit shift
     let shift = 4 * 8;
 
-    // When & Then a << 32 overflows u256 
+    // When & Then a << 32 overflows u256
     a.shl(shift);
 }
 
@@ -224,4 +225,102 @@ fn test_wrapping_shr_to_zero() {
     // Then
     let expected = 0_u256;
     assert(result == expected, 'wrong result');
+}
+
+#[test]
+fn test_u8_overflowing_mul_not_overflow_case() {
+    let result = u8_overflowing_mul(5, 10);
+    assert_eq!(result, (50, false));
+}
+
+#[test]
+fn test_u8_overflowing_mul_overflow_case() {
+    let result = u8_overflowing_mul(BoundedInt::max(), BoundedInt::max());
+    assert_eq!(result, (1, true));
+}
+
+#[test]
+fn test_u8_wrapping_mul_not_overflow_case() {
+    let result = u8_wrapping_mul(5, 10);
+    assert_eq!(result, 50);
+}
+
+#[test]
+fn test_u8_wrapping_mul_overflow_case() {
+    let result = u8_wrapping_mul(BoundedInt::max(), BoundedInt::max());
+    assert_eq!(result, 1);
+}
+
+#[test]
+fn test_u32_overflowing_mul_not_overflow_case() {
+    let result = u32_overflowing_mul(5, 10);
+    assert_eq!(result, (50, false));
+}
+
+#[test]
+fn test_u32_overflowing_mul_overflow_case() {
+    let result = u32_overflowing_mul(BoundedInt::max(), BoundedInt::max());
+    assert_eq!(result, (1, true));
+}
+
+#[test]
+fn test_u32_wrapping_mul_not_overflow_case() {
+    let result = u32_wrapping_mul(5, 10);
+    assert_eq!(result, 50);
+}
+
+#[test]
+fn test_u32_wrapping_mul_overflow_case() {
+    let result = u32_wrapping_mul(BoundedInt::max(), BoundedInt::max());
+    assert_eq!(result, 1);
+}
+
+
+#[test]
+fn test_u64_overflowing_mul_not_overflow_case() {
+    let result = u32_overflowing_mul(5, 10);
+    assert_eq!(result, (50, false));
+}
+
+#[test]
+fn test_u64_overflowing_mul_overflow_case() {
+    let result = u32_overflowing_mul(BoundedInt::max(), BoundedInt::max());
+    assert_eq!(result, (1, true));
+}
+
+#[test]
+fn test_u64_wrapping_mul_not_overflow_case() {
+    let result = u32_wrapping_mul(5, 10);
+    assert_eq!(result, 50);
+}
+
+#[test]
+fn test_u64_wrapping_mul_overflow_case() {
+    let result = u32_wrapping_mul(BoundedInt::max(), BoundedInt::max());
+    assert_eq!(result, 1);
+}
+
+
+#[test]
+fn test_u128_overflowing_mul_not_overflow_case() {
+    let result = u32_overflowing_mul(5, 10);
+    assert_eq!(result, (50, false));
+}
+
+#[test]
+fn test_u128_overflowing_mul_overflow_case() {
+    let result = u32_overflowing_mul(BoundedInt::max(), BoundedInt::max());
+    assert_eq!(result, (1, true));
+}
+
+#[test]
+fn test_u128_wrapping_mul_not_overflow_case() {
+    let result = u32_wrapping_mul(5, 10);
+    assert_eq!(result, 50);
+}
+
+#[test]
+fn test_u128_wrapping_mul_overflow_case() {
+    let result = u32_wrapping_mul(BoundedInt::max(), BoundedInt::max());
+    assert_eq!(result, 1);
 }

@@ -1,8 +1,9 @@
 use core::keccak::u128_split;
 use core::num::traits::{Zero, One};
 use integer::{
-    u256, u256_overflow_mul, u256_overflowing_add, u512, BoundedInt, u128_overflowing_mul,
-    u64_wide_mul, u64_to_felt252
+    u256, u256_overflow_mul as u256_overflowing_mul, u256_overflowing_add, u512, BoundedInt,
+    u128_overflowing_mul, u64_wide_mul, u64_to_felt252, u32_wide_mul, u32_to_felt252, u8_wide_mul,
+    u8_to_felt252
 };
 use utils::num::{SizeOf};
 
@@ -62,8 +63,113 @@ trait WrappingExponentiation<T> {
     fn wrapping_pow(self: T, exponent: T) -> T;
 }
 
+mod internal_wrapping_pow_u8 {
+    use super::u8_overflowing_mul;
+
+    fn wrapping_spow(base: u8, exponent: u8) -> u8 {
+        let mut exponent = exponent;
+        let mut base = base;
+        let mut result = 1;
+
+        loop {
+            if exponent == 0 {
+                break result;
+            }
+            let (new_result, _) = u8_overflowing_mul(result, base);
+            result = new_result;
+            exponent -= 1;
+        }
+    }
+    fn wrapping_fpow(base: u8, exponent: u8) -> u8 {
+        let mut result = 1;
+        let mut base = base;
+        let mut exponent = exponent;
+
+        loop {
+            if exponent % 2 != 0 {
+                let (new_result, _) = u8_overflowing_mul(result, base);
+                result = new_result;
+            }
+
+            exponent = exponent / 2;
+            if exponent == 0 {
+                break result;
+            }
+
+            let (new_base, _) = u8_overflowing_mul(base, base);
+            base = new_base;
+        }
+    }
+}
+
+mod internal_wrapping_pow_u32 {
+    use super::u32_overflowing_mul;
+
+    fn wrapping_spow(base: u32, exponent: u32) -> u32 {
+        let mut exponent = exponent;
+        let mut base = base;
+        let mut result = 1;
+
+        loop {
+            if exponent == 0 {
+                break result;
+            }
+            let (new_result, _) = u32_overflowing_mul(result, base);
+            result = new_result;
+            exponent -= 1;
+        }
+    }
+    fn wrapping_fpow(base: u32, exponent: u32) -> u32 {
+        let mut result = 1;
+        let mut base = base;
+        let mut exponent = exponent;
+
+        loop {
+            if exponent % 2 != 0 {
+                let (new_result, _) = u32_overflowing_mul(result, base);
+                result = new_result;
+            }
+
+            exponent = exponent / 2;
+            if exponent == 0 {
+                break result;
+            }
+
+            let (new_base, _) = u32_overflowing_mul(base, base);
+            base = new_base;
+        }
+    }
+}
+
+
+impl U8WrappingExponentiationImpl of WrappingExponentiation<u8> {
+    fn wrapping_pow(self: u8, mut exponent: u8) -> u8 {
+        if self == 0 {
+            return 1;
+        }
+        if exponent > 10 {
+            internal_wrapping_pow_u8::wrapping_fpow(self, exponent)
+        } else {
+            internal_wrapping_pow_u8::wrapping_spow(self, exponent)
+        }
+    }
+}
+
+impl U32WrappingExponentiationImpl of WrappingExponentiation<u32> {
+    fn wrapping_pow(self: u32, mut exponent: u32) -> u32 {
+        if self == 0 {
+            return 1;
+        };
+        if exponent > 10 {
+            internal_wrapping_pow_u32::wrapping_fpow(self, exponent)
+        } else {
+            internal_wrapping_pow_u32::wrapping_spow(self, exponent)
+        }
+    }
+}
+
 mod internal_wrapping_pow_u64 {
-    use super::u64_overflow_mul;
+    use super::u64_overflowing_mul;
 
     fn wrapping_spow(base: u64, exponent: u64) -> u64 {
         let mut exponent = exponent;
@@ -74,7 +180,7 @@ mod internal_wrapping_pow_u64 {
             if exponent == 0 {
                 break result;
             }
-            let (new_result, _) = u64_overflow_mul(result, base);
+            let (new_result, _) = u64_overflowing_mul(result, base);
             result = new_result;
             exponent -= 1;
         }
@@ -86,7 +192,7 @@ mod internal_wrapping_pow_u64 {
 
         loop {
             if exponent % 2 != 0 {
-                let (new_result, _) = u64_overflow_mul(result, base);
+                let (new_result, _) = u64_overflowing_mul(result, base);
                 result = new_result;
             }
 
@@ -95,7 +201,7 @@ mod internal_wrapping_pow_u64 {
                 break result;
             }
 
-            let (new_base, _) = u64_overflow_mul(base, base);
+            let (new_base, _) = u64_overflowing_mul(base, base);
             base = new_base;
         }
     }
@@ -181,7 +287,7 @@ impl U256WrappingExponentiationImpl of WrappingExponentiation<u256> {
 }
 
 mod internal_wrapping_pow_u256 {
-    use integer::{u256_overflow_mul, u256};
+    use integer::{u256_overflow_mul as u256_overflowing_mul, u256};
     fn wrapping_spow(base: u256, exponent: u256) -> u256 {
         let mut exponent = exponent;
         let mut base = base;
@@ -191,7 +297,7 @@ mod internal_wrapping_pow_u256 {
             if exponent == 0 {
                 break result;
             }
-            let (new_result, _) = u256_overflow_mul(result, base);
+            let (new_result, _) = u256_overflowing_mul(result, base);
             result = new_result;
             exponent -= 1;
         }
@@ -203,7 +309,7 @@ mod internal_wrapping_pow_u256 {
 
         loop {
             if exponent % 2 != 0 {
-                let (new_result, _) = u256_overflow_mul(result, base);
+                let (new_result, _) = u256_overflowing_mul(result, base);
                 result = new_result;
             }
 
@@ -212,7 +318,7 @@ mod internal_wrapping_pow_u256 {
                 break result;
             }
 
-            let (new_base, _) = u256_overflow_mul(base, base);
+            let (new_base, _) = u256_overflowing_mul(base, base);
             base = new_base;
         }
     }
@@ -278,14 +384,50 @@ trait WrappingBitshift<T> {
     fn wrapping_shr(self: T, shift: T) -> T;
 }
 
+impl u8WrappingBitshiftImpl of WrappingBitshift<u8> {
+    fn wrapping_shl(self: u8, shift: u8) -> u8 {
+        let (result, _) = u8_overflowing_mul(self, 2.wrapping_pow(shift));
+        result
+    }
+
+    fn wrapping_shr(self: u8, shift: u8) -> u8 {
+        // if we shift by more than 7 bits, the result is 0 (the type is 8 bits wide)
+        // we early return to save gas
+        // todo: update below comment
+        // and prevent unexpected behavior, e.g. 2.pow(128) == 0 mod 2^128, given we can't divide by zero
+        if shift > 7 {
+            return 0;
+        }
+        self / 2.pow(shift)
+    }
+}
+
+impl u32WrappingBitshiftImpl of WrappingBitshift<u32> {
+    fn wrapping_shl(self: u32, shift: u32) -> u32 {
+        let (result, _) = u32_overflowing_mul(self, 2.wrapping_pow(shift));
+        result
+    }
+
+    fn wrapping_shr(self: u32, shift: u32) -> u32 {
+        // if we shift by more than 31 bits, the result is 0 (the type is 32 bits wide)
+        // we early return to save gas
+        // todo: update below comment
+        // and prevent unexpected behavior, e.g. 2.pow(128) == 0 mod 2^128, given we can't divide by zero
+        if shift > 31 {
+            return 0;
+        }
+        self / 2.pow(shift)
+    }
+}
+
 impl u64WrappingBitshiftImpl of WrappingBitshift<u64> {
     fn wrapping_shl(self: u64, shift: u64) -> u64 {
-        let (result, _) = u64_overflow_mul(self, 2.wrapping_pow(shift));
+        let (result, _) = u64_overflowing_mul(self, 2.wrapping_pow(shift));
         result
     }
 
     fn wrapping_shr(self: u64, shift: u64) -> u64 {
-        // if we shift by more than 255 bits, the result is 0 (the type is 128 bits wide)
+        // if we shift by more than 63 bits, the result is 0 (the type is 64 bits wide)
         // we early return to save gas
         // and prevent unexpected behavior, e.g. 2.pow(128) == 0 mod 2^128, given we can't divide by zero
         if shift > 63 {
@@ -302,7 +444,7 @@ impl U128WrappingBitshiftImpl of WrappingBitshift<u128> {
     }
 
     fn wrapping_shr(self: u128, shift: u128) -> u128 {
-        // if we shift by more than 255 bits, the result is 0 (the type is 128 bits wide)
+        // if we shift by more than 127 bits, the result is 0 (the type is 128 bits wide)
         // we early return to save gas
         // and prevent unexpected behavior, e.g. 2.pow(128) == 0 mod 2^128, given we can't divide by zero
         if shift > 127 {
@@ -314,7 +456,7 @@ impl U128WrappingBitshiftImpl of WrappingBitshift<u128> {
 
 impl U256WrappingBitshiftImpl of WrappingBitshift<u256> {
     fn wrapping_shl(self: u256, shift: u256) -> u256 {
-        let (result, _) = u256_overflow_mul(self, 2.wrapping_pow(shift));
+        let (result, _) = u256_overflowing_mul(self, 2.wrapping_pow(shift));
         result
     }
 
@@ -352,7 +494,52 @@ fn u256_wide_add(a: u256, b: u256) -> u512 {
     u512 { limb0, limb1, limb2, limb3 }
 }
 
-fn u64_overflow_mul(lhs: u64, rhs: u64) -> (u64, bool) {
+
+/// Multiplies two 8-bit unsigned integers, returning a 8-bit unsigned integer result and boolean indicating overflow
+/// any overflow is discarded
+fn u8_overflowing_mul(lhs: u8, rhs: u8) -> (u8, bool) {
+    let result = u8_wide_mul(lhs, rhs);
+    let mask = 0xFF;
+    let top_word: u8 = (result.shr(8) & mask).try_into().unwrap();
+    let bottom_word = (result & mask).try_into().unwrap();
+
+    match u8_to_felt252(top_word) {
+        0 => (bottom_word, false),
+        _ => (bottom_word, true),
+    }
+}
+
+/// Multiplies two 8-bit unsigned integers, returning a 8-bit unsigned integer result and discarding any overflow
+fn u8_wrapping_mul(lhs: u8, rhs: u8) -> u8 {
+    let (res, _) = u8_overflowing_mul(lhs, rhs);
+    res
+}
+
+
+/// Multiplies two 32-bit unsigned integers, returning a 32-bit unsigned integer result and boolean indicating overflow
+/// any overflow is discarded
+fn u32_overflowing_mul(lhs: u32, rhs: u32) -> (u32, bool) {
+    let result = u32_wide_mul(lhs, rhs);
+
+    let mask = 0xFFFFFFFF;
+    let top_word: u32 = (result.shr(32) & mask).try_into().unwrap();
+    let bottom_word = (result & mask).try_into().unwrap();
+
+    match u32_to_felt252(top_word) {
+        0 => (bottom_word, false),
+        _ => (bottom_word, true),
+    }
+}
+
+/// Multiplies two 8-bit unsigned integers, returning a 8-bit unsigned integer result and discarding any overflow
+fn u32_wrapping_mul(lhs: u32, rhs: u32) -> u32 {
+    let (res, _) = u32_overflowing_mul(lhs, rhs);
+    res
+}
+
+/// Multiplies two 64-bit unsigned integers, returning a 64-bit unsigned integer result and boolean indicating overflow
+/// any overflow is discarded
+fn u64_overflowing_mul(lhs: u64, rhs: u64) -> (u64, bool) {
     let result = u64_wide_mul(lhs, rhs);
     let (top_word, bottom_word) = u128_split(result);
 
@@ -360,4 +547,16 @@ fn u64_overflow_mul(lhs: u64, rhs: u64) -> (u64, bool) {
         0 => (bottom_word, false),
         _ => (bottom_word, true),
     }
+}
+
+/// Multiplies two 64-bit unsigned integers, returning a 64-bit unsigned integer result and discarding any overflow
+fn u64_wrapping_mul(lhs: u64, rhs: u64) -> u64 {
+    let (res, _) = u64_overflowing_mul(lhs, rhs);
+    res
+}
+
+/// Multiplies two 128-bit unsigned integers, returning a 128-bit unsigned integer result and discarding any overflow
+fn u128_wrapping_mul(lhs: u128, rhs: u128) -> u128 {
+    let (res, _) = u128_overflowing_mul(lhs, rhs);
+    res
 }
