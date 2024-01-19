@@ -96,6 +96,7 @@ impl WrappingExponentiationImpl<
         }
     }
 
+    /// this function performs exponentiation through a simple loop
     fn wrapping_spow(self: T, exponent: T) -> T {
         let mut exponent = exponent;
         let mut base = self;
@@ -111,6 +112,7 @@ impl WrappingExponentiationImpl<
         }
     }
 
+    /// this function performs exponentiation using binary exponentiation
     fn wrapping_fpow(self: T, exponent: T) -> T {
         let mut result = One::one();
         let mut base = self;
