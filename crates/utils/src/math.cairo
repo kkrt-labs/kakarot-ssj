@@ -84,7 +84,7 @@ impl WrappingExponentiationImpl<
 > of WrappingExponentiation<T> {
     fn wrapping_pow(self: T, exponent: T) -> T {
         if self == Zero::zero() {
-            return One::one();
+            return Zero::zero();
         }
 
         let one = One::<T>::one();
@@ -195,90 +195,34 @@ trait WrappingBitshift<T> {
     fn wrapping_shr(self: T, shift: T) -> T;
 }
 
-impl u8WrappingBitshiftImpl of WrappingBitshift<u8> {
-    fn wrapping_shl(self: u8, shift: u8) -> u8 {
-        let (result, _) = self.overflowing_mul(2.wrapping_pow(shift));
+impl WrappingBitshiftImpl<
+    T,
+    +Zero<T>,
+    +One<T>,
+    +Add<T>,
+    +Sub<T>,
+    +Div<T>,
+    +Exponentiation<T>,
+    +PartialOrd<T>,
+    +Drop<T>,
+    +Copy<T>,
+    +OverflowingMul<T>,
+    +WrappingExponentiation<T>,
+    +SizeOf<T>
+> of WrappingBitshift<T> {
+    fn wrapping_shl(self: T, shift: T) -> T {
+        let two = One::<T>::one() + One::<T>::one();
+        let (result, _) = self.overflowing_mul(two.wrapping_pow(shift));
         result
     }
 
-    fn wrapping_shr(self: u8, shift: u8) -> u8 {
-        // if we shift by more than 7 bits, the result is 0 (the type is 8 bits wide)
-        // we early return to save gas
-        // todo: update below comment
-        // and prevent unexpected behavior, e.g. 2.pow(128) == 0 mod 2^128, given we can't divide by zero
-        if shift > 7 {
-            return 0;
+    fn wrapping_shr(self: T, shift: T) -> T {
+        let two = One::<T>::one() + One::<T>::one();
+
+        if shift > shift.size_of() - One::one() {
+            return Zero::zero();
         }
-        self / 2.pow(shift)
-    }
-}
-
-impl u32WrappingBitshiftImpl of WrappingBitshift<u32> {
-    fn wrapping_shl(self: u32, shift: u32) -> u32 {
-        let (result, _) = self.overflowing_mul(2.wrapping_pow(shift));
-        result
-    }
-
-    fn wrapping_shr(self: u32, shift: u32) -> u32 {
-        // if we shift by more than 31 bits, the result is 0 (the type is 32 bits wide)
-        // we early return to save gas
-        // todo: update below comment
-        // and prevent unexpected behavior, e.g. 2.pow(128) == 0 mod 2^128, given we can't divide by zero
-        if shift > 31 {
-            return 0;
-        }
-        self / 2.pow(shift)
-    }
-}
-
-impl u64WrappingBitshiftImpl of WrappingBitshift<u64> {
-    fn wrapping_shl(self: u64, shift: u64) -> u64 {
-        let (result, _) = self.overflowing_mul(2.wrapping_pow(shift));
-        result
-    }
-
-    fn wrapping_shr(self: u64, shift: u64) -> u64 {
-        // if we shift by more than 63 bits, the result is 0 (the type is 64 bits wide)
-        // we early return to save gas
-        // and prevent unexpected behavior, e.g. 2.pow(128) == 0 mod 2^128, given we can't divide by zero
-        if shift > 63 {
-            return 0;
-        }
-        self / 2.pow(shift)
-    }
-}
-
-impl U128WrappingBitshiftImpl of WrappingBitshift<u128> {
-    fn wrapping_shl(self: u128, shift: u128) -> u128 {
-        let (result, _) = u128_overflowing_mul(self, 2.wrapping_pow(shift));
-        result
-    }
-
-    fn wrapping_shr(self: u128, shift: u128) -> u128 {
-        // if we shift by more than 127 bits, the result is 0 (the type is 128 bits wide)
-        // we early return to save gas
-        // and prevent unexpected behavior, e.g. 2.pow(128) == 0 mod 2^128, given we can't divide by zero
-        if shift > 127 {
-            return 0;
-        }
-        self / 2.pow(shift)
-    }
-}
-
-impl U256WrappingBitshiftImpl of WrappingBitshift<u256> {
-    fn wrapping_shl(self: u256, shift: u256) -> u256 {
-        let (result, _) = u256_overflowing_mul(self, 2.wrapping_pow(shift));
-        result
-    }
-
-    fn wrapping_shr(self: u256, shift: u256) -> u256 {
-        // if we shift by more than 255 bits, the result is 0 (the type is 256 bits wide)
-        // we early return to save gas
-        // and prevent unexpected behavior, e.g. 2.pow(256) == 0 mod 2^256, given we can't divide by zero
-        if shift > 255 {
-            return 0;
-        }
-        self / 2.pow(shift)
+        self / two.pow(shift)
     }
 }
 
