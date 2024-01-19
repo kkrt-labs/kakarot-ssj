@@ -61,7 +61,9 @@ trait WrappingExponentiation<T> {
     /// from the core library, which wrap around when overflowing.
     /// * `T` - The result of base raised to the power of exp modulo MAX<T>.
     fn wrapping_pow(self: T, exponent: T) -> T;
+    /// this function performs exponentiation through a simple loop
     fn wrapping_spow(self: T, exponent: T) -> T;
+    /// this function performs exponentiation using binary exponentiation
     fn wrapping_fpow(self: T, exponent: T) -> T;
 }
 
