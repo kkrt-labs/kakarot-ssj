@@ -83,13 +83,6 @@ trait WrappingExponentiation<T> {
     /// # Returns
     /// - Returns the result of raising `self` to the power of `exponent`, of type `T`.
     ///   The result is wrapped in case of overflow.
-    ///
-    /// # Panics
-    /// This function does not panic under normal circumstances, unless multiplication
-    /// of type `T` can panic.
-    ///
-    /// # Safety
-    /// This function is safe as long as the multiplication of type `T` is safe.
     fn wrapping_spow(self: T, exponent: T) -> T;
 
     /// Performs exponentiation using the binary exponentiation method.
@@ -114,14 +107,6 @@ trait WrappingExponentiation<T> {
     /// # Returns
     /// - Returns the result of raising `self` to the power of `exponent`, of type `T`.
     ///   The result is wrapped in case of overflow.
-    ///
-    /// # Panics
-    /// This function does not panic under normal circumstances, unless the multiplication
-    /// of type `T` can panic.
-    ///
-    /// # Safety
-    /// This function is safe as long as the operations (multiplication and division by 2)
-    /// on type `T` are safe.
     fn wrapping_fpow(self: T, exponent: T) -> T;
 }
 
