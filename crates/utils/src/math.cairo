@@ -71,7 +71,7 @@ trait WrappingExponentiation<T> {
     ///
     /// # Examples
     /// ```
-    /// let result = 2.wrapping_spow(3);
+    /// let result = 2_u8.wrapping_spow(3);
     /// assert_eq!(result, 8);
     /// ```
     ///
@@ -94,7 +94,7 @@ trait WrappingExponentiation<T> {
     ///
     /// # Examples
     /// ```
-    /// let result = 2.wrapping_fpow(3);
+    /// let result = 2_u8.wrapping_fpow(3);
     /// assert_eq!(result, 8);
     /// ```
     ///
