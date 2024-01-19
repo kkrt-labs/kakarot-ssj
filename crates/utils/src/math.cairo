@@ -1,5 +1,6 @@
 use core::keccak::u128_split;
 use core::num::traits::{Zero, One, BitSize};
+use core::option::OptionTrait;
 use core::starknet::secp256_trait::Secp256PointTrait;
 use integer::{
     u256, u256_overflow_mul as u256_overflowing_mul, u256_overflowing_add, u512, BoundedInt,
@@ -303,11 +304,12 @@ trait OverflowingMul<T> {
 impl U8OverflowingMul of OverflowingMul<u8> {
     fn overflowing_mul(self: u8, rhs: u8) -> (u8, bool) {
         let result = u8_wide_mul(self, rhs);
-        let top_mask: u16 = 0xFF00;
-        let bottom_mask: u16 = BoundedInt::<u8>::max().into();
+        let mask: u16 = BoundedInt::<u8>::max().into();
 
-        let top_word = (result & top_mask).try_into().unwrap();
-        let bottom_word = (result & bottom_mask).try_into().unwrap();
+        let top_word: u8 = (result.shr(BitSize::<u8>::bits().try_into().unwrap()) & mask)
+            .try_into()
+            .unwrap();
+        let bottom_word = (result & mask).try_into().unwrap();
 
         match u8_to_felt252(top_word) {
             0 => (bottom_word, false),
@@ -320,11 +322,10 @@ impl U32OverflowingMul of OverflowingMul<u32> {
     fn overflowing_mul(self: u32, rhs: u32) -> (u32, bool) {
         let result = u32_wide_mul(self, rhs);
 
-        let top_mask: u64 = 0xFF_FF_FF_FF_00_00_00_00;
-        let bottom_mask: u64 = BoundedInt::<u32>::max().into();
+        let mask: u64 = BoundedInt::<u32>::max().into();
 
-        let top_word = (result & top_mask).try_into().unwrap();
-        let bottom_word = (result & bottom_mask).try_into().unwrap();
+        let top_word: u32 = (result.shr(BitSize::<u32>::bits().into()) & mask).try_into().unwrap();
+        let bottom_word = (result & mask).try_into().unwrap();
 
         match u32_to_felt252(top_word) {
             0 => (bottom_word, false),
