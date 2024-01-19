@@ -271,7 +271,34 @@ impl WrappingBitshiftImpl<
 }
 
 trait OverflowingMul<T> {
-    /// performs multiplication on a number, any overflow is discarded and boolean is returned indicating whether an overflow happened or not
+    /// Performs multiplication on two numbers of type `T`.
+    ///
+    /// This function multiplies two numbers and checks for overflow. If an overflow occurs,
+    /// the overflow is discarded, and a boolean value is returned to indicate that the
+    /// overflow happened. The function returns a tuple where the first element is the
+    /// result of the multiplication (with overflow being wrapped) and the second element
+    /// is a boolean flag that is `true` if an overflow occurred and `false` otherwise.
+    ///
+    /// # Examples
+    /// ```
+    /// let (result, overflowed) = 1_000_000_000_u256.overflowing_mul(2);
+    /// assert_eq!(result, 2_000_000_000);
+    /// assert!(!overflowed);
+    ///
+    /// let (result, overflowed) = BoundedInt::<u32>::max().overflowing_mul(BoundedInt::max());
+    /// assert_eq!(result, u32::MAX.wrapping_mul(1));
+    /// assert!(overflowed);
+    /// ```
+    ///
+    /// # Parameters
+    /// - `self`: The first operand of type `T` in the multiplication.
+    /// - `rhs`: The second operand of type `T` in the multiplication.
+    ///
+    /// # Returns
+    /// - A tuple `(T, bool)`. The first element of the tuple is the result of the
+    ///   multiplication, and the second element is a boolean flag that is `true` if
+    ///   an overflow occurred during the multiplication.
+    ///
     fn overflowing_mul(self: T, rhs: T) -> (T, bool);
 }
 
@@ -333,7 +360,28 @@ impl U256OverflowingMul of OverflowingMul<u256> {
 
 
 trait WrappingMul<T> {
-    /// performs multiplication on a number, any overflow is discarded
+    /// Performs multiplication on two numbers of type `T`, discarding any overflow.
+    ///
+    /// This function multiplies two numbers and applies a wrapping strategy for handling
+    /// overflow. If the result of the multiplication overflows the type `T`, it wraps
+    /// around by discarding the higer bits.
+    ///
+    /// # Examples
+    /// ```
+    /// let result = 1_000_000_000_u256.overflowing_mul(2);
+    /// assert_eq!(result, 2_000_000_000);
+    ///
+    /// let result = BoundedInt::<u32>::max().overflowing_mul(BoundedInt::max());
+    /// assert_eq!(result, u32::MAX.wrapping_mul(1));
+    /// ```
+    ///
+    /// # Parameters
+    /// - `self`: The first operand of type `T` in the multiplication.
+    /// - `rhs`: The second operand of type `T` in the multiplication.
+    ///
+    /// # Returns
+    /// - Returns the result of multiplying `self` by `rhs`, of type `T`. If overflow occurs,
+    ///   the result is the wrapped value according to Rust's overflow behavior for type `T`.
     fn wrapping_mul(self: T, rhs: T) -> T;
 }
 
