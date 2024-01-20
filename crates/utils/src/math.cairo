@@ -113,6 +113,10 @@ impl WrappingExponentiationImpl<
     +SubEq<T>
 > of WrappingExponentiation<T> {
     fn wrapping_pow(self: T, exponent: T) -> T {
+        if exponent == Zero::zero() {
+            return One::one();
+        }
+
         if self == Zero::zero() {
             return Zero::zero();
         }
