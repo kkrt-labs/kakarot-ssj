@@ -50,6 +50,11 @@ fn test_wrapping_fast_pow_0() {
 }
 
 #[test]
+fn test_wrapping_fast_base_0() {
+    assert(0_u256.wrapping_fpow(42) == 0, '0^(42) should be 0');
+}
+
+#[test]
 #[should_panic(expected: ('u256_mul Overflow',))]
 fn test_pow_should_overflow() {
     2_u256.pow(256);

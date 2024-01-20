@@ -69,12 +69,6 @@ trait WrappingExponentiation<T> {
     /// The method uses a wrapping strategy to handle overflow, which means if the result
     /// overflows the type `T`, then higher bits are discarded and the result is wrapped.
     ///
-    /// # Examples
-    /// ```
-    /// let result = 2_u8.wrapping_spow(3);
-    /// assert_eq!(result, 8);
-    /// ```
-    ///
     /// # Parameters
     /// - `self`: The base number of type `T`.
     /// - `exponent`: The exponent to which the base number is raised, also of type `T`.
@@ -91,12 +85,6 @@ trait WrappingExponentiation<T> {
     /// It works by repeatedly squaring the base and reducing the exponent by half, using
     /// a wrapping strategy to handle overflow. This means if intermediate or final results
     /// overflow the type `T`, then the higher bits are discarded and the result is wrapped.
-    ///
-    /// # Examples
-    /// ```
-    /// let result = 2_u8.wrapping_fpow(3);
-    /// assert_eq!(result, 8);
-    /// ```
     ///
     /// # Parameters
     /// - `self`: The base number of type `T`.
@@ -277,12 +265,6 @@ trait OverflowingMul<T> {
     /// result of the multiplication (with overflow being wrapped) and the second element
     /// is a boolean flag that is `true` if an overflow occurred and `false` otherwise.
     ///
-    /// # Examples
-    /// ```
-    /// let (result, overflowed) = 1_000_000_000_u256.overflowing_mul(2);
-    /// assert_eq!(result, 2_000_000_000);
-    /// assert!(!overflowed);
-    ///
     /// let (result, overflowed) = BoundedInt::<u32>::max().overflowing_mul(BoundedInt::max());
     /// assert_eq!(result, u32::MAX.wrapping_mul(1));
     /// assert!(overflowed);
@@ -303,15 +285,14 @@ trait OverflowingMul<T> {
 impl U8OverflowingMul of OverflowingMul<u8> {
     fn overflowing_mul(self: u8, rhs: u8) -> (u8, bool) {
         let result = u8_wide_mul(self, rhs);
-        let top_mask: u16 = 0xFF00;
-        let bottom_mask: u16 = BoundedInt::<u8>::max().into();
+        let mask: u16 = BoundedInt::<u8>::max().into();
 
-        let top_word: u16 = result & top_mask;
-        let bottom_word = (result & bottom_mask).try_into().unwrap();
+        let bottom_word = (result & mask).try_into().unwrap();
 
-        match u16_to_felt252(top_word) {
-            0 => (bottom_word, false),
-            _ => (bottom_word, true),
+        if result > mask {
+            (bottom_word, true)
+        } else {
+            (bottom_word, false)
         }
     }
 }
@@ -320,15 +301,13 @@ impl U32OverflowingMul of OverflowingMul<u32> {
     fn overflowing_mul(self: u32, rhs: u32) -> (u32, bool) {
         let result = u32_wide_mul(self, rhs);
 
-        let top_mask: u64 = 0xFF_FF_FF_FF_00_00_00_00;
-        let bottom_mask: u64 = BoundedInt::<u32>::max().into();
+        let mask: u64 = BoundedInt::<u32>::max().into();
+        let bottom_word = (result & mask).try_into().unwrap();
 
-        let top_word: u64 = result & top_mask;
-        let bottom_word = (result & bottom_mask).try_into().unwrap();
-
-        match u64_to_felt252(top_word) {
-            0 => (bottom_word, false),
-            _ => (bottom_word, true),
+        if result > mask {
+            (bottom_word, true)
+        } else {
+            (bottom_word, false)
         }
     }
 }
@@ -364,15 +343,6 @@ trait WrappingMul<T> {
     /// This function multiplies two numbers and applies a wrapping strategy for handling
     /// overflow. If the result of the multiplication overflows the type `T`, it wraps
     /// around by discarding the higer bits.
-    ///
-    /// # Examples
-    /// ```
-    /// let result = 1_000_000_000_u256.overflowing_mul(2);
-    /// assert_eq!(result, 2_000_000_000);
-    ///
-    /// let result = BoundedInt::<u32>::max().overflowing_mul(BoundedInt::max());
-    /// assert_eq!(result, u32::MAX.wrapping_mul(1));
-    /// ```
     ///
     /// # Parameters
     /// - `self`: The first operand of type `T` in the multiplication.
