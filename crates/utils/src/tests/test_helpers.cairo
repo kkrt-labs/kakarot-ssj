@@ -197,7 +197,7 @@ mod u32_test {
     #[test]
     fn test_u32_to_bytes_full() {
         let input: u32 = 0xf4321562;
-        let res: Span<u8> = input.to_bytes();
+        let res: Span<u8> = input.to_be_bytes();
 
         assert(res.len() == 4, 'wrong result length');
         assert(*res[0] == 0xf4, 'wrong result value');
@@ -209,7 +209,7 @@ mod u32_test {
     #[test]
     fn test_u32_to_bytes_partial() {
         let input: u32 = 0xf43215;
-        let res: Span<u8> = input.to_bytes();
+        let res: Span<u8> = input.to_be_bytes();
 
         assert(res.len() == 3, 'wrong result length');
         assert(*res[0] == 0xf4, 'wrong result value');
@@ -221,11 +221,20 @@ mod u32_test {
     #[test]
     fn test_u32_to_bytes_leading_zeros() {
         let input: u32 = 0x00f432;
-        let res: Span<u8> = input.to_bytes();
+        let res: Span<u8> = input.to_be_bytes();
 
         assert(res.len() == 2, 'wrong result length');
         assert(*res[0] == 0xf4, 'wrong result value');
         assert(*res[1] == 0x32, 'wrong result value');
+    }
+
+    #[test]
+    fn test_u32_to_be_bytes_padded () {
+        let input: u32 = 0x7;
+        let result = input.to_be_bytes_padded().span();
+        let expected = array![0x0, 0x0, 0x0, 0x7].span();
+
+        assert_eq!(result, expected);
     }
 
 
@@ -270,6 +279,15 @@ mod u64_test {
             i += 1;
             value = value.shl(8);
         };
+    }
+
+    #[test]
+    fn test_u64_to_be_bytes_padded () {
+        let input: u64 = 0x7;
+        let result = input.to_be_bytes_padded().span();
+        let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x7].span();
+
+        assert_eq!(result, expected);
     }
 }
 
@@ -514,7 +532,7 @@ mod span_u8_test {
 
     #[test]
     fn test_compute_msg_hash() {
-        let msg = 0xabcdef_u32.to_bytes();
+        let msg = 0xabcdef_u32.to_be_bytes();
         let expected_hash = 0x800d501693feda2226878e1ec7869eef8919dbc5bd10c2bcd031b94d73492860;
         let hash = msg.compute_keccak256_hash();
 
