@@ -1237,4 +1237,26 @@ mod felt252_vec_test {
         vec2.pop().unwrap();
         assert!(!vec.equal(ref vec2));
     }
+
+    #[test]
+    fn test_fill() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        vec.fill(1, 3, 1).unwrap();
+
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_fill_overflow() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        assert_eq!(vec.fill(4, 0, 1), Result::Err(Felt252VecTraitErrors::IndexOutOfBound));
+        assert_eq!(vec.fill(2, 4, 1), Result::Err(Felt252VecTraitErrors::Overflow));
+    }
 }
