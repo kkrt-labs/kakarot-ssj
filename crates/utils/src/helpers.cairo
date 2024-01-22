@@ -2005,7 +2005,13 @@ impl Felt252VecTraitImpl<
     /// In case of overflow return Option::None
     /// Note: this is an expensive operation, as it will create a new Felt252Vec
     fn slice(ref self: Felt252Vec<T>, idx: usize, len: usize) -> Option<Felt252Vec<T>> {
-        if (idx + len) >= self.len {
+        // Index out of bounds
+        if idx >= self.len {
+            return Option::None;
+        };
+
+        // Overflow
+        if (idx + len) > self.len {
             return Option::None;
         };
 
@@ -2026,6 +2032,7 @@ impl Felt252VecTraitImpl<
         Option::Some(new_vec)
     }
 
+    /// Returns whether two Felt252Vec<T> are equal
     fn equal(ref self: Felt252Vec<T>, ref rhs: Felt252Vec<T>) -> bool {
         let mut lhs = self.duplicate();
         lhs.remove_trailing_zeroes_le();

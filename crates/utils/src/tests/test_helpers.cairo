@@ -1222,4 +1222,19 @@ mod felt252_vec_test {
         assert_eq!(vec.slice(2, 1).is_none(), true);
         assert_eq!(vec.slice(4, 2).is_none(), true)
     }
+
+    #[test]
+    fn test_equal() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(1);
+        vec.push(2);
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+        vec2.push(2);
+
+        assert!(vec.equal(ref vec2));
+        vec2.pop().unwrap();
+        assert!(!vec.equal(ref vec2));
+    }
 }
