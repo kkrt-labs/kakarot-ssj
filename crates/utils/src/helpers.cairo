@@ -1024,6 +1024,53 @@ impl U64Impl of U64Trait {
             }
         }
     }
+
+    /// Returns the number of trailing zeroes in the bit representation of `self`.
+    fn count_trailing_zeroes(self: u64) -> u8 {
+        let mut count = 0;
+
+        if self == 0 {
+            return 64; // If n is 0, all 64 bits are zeros
+        };
+
+        let mut n = self;
+
+        loop {
+            if (n & 1) != 0 {
+                break;
+            };
+            count += 1;
+            n = n.shr(1);
+        };
+
+        count
+    }
+
+    /// Returns the number of leading zeroes in the bit representation of `self`.
+    fn count_leading_zeroes(self: u64) -> u8 {
+        if self == 0 {
+            return 64;
+        }
+        let mut count = 0;
+
+        let mut n = self;
+        loop {
+            if n == 0 {
+                break;
+            };
+
+            count += 1;
+            n = n.shr(1);
+        };
+
+        64 - count
+    }
+
+    /// Returns the number of bits required to represent `self`, ignoring leading zeros.
+    fn bit_len(self: u64) -> u8 {
+        let count = self.count_leading_zeroes();
+        64 - count
+    }
 }
 
 
@@ -1094,6 +1141,57 @@ impl U128Impl of U128Trait {
         } else {
             return U64Trait::bytes_used(u64high.try_into().unwrap()) + 8;
         }
+    }
+
+
+    /// Returns the Least signficant 64 bits of a u128
+    fn as_u64(self: u128) -> u64 {
+        let (_, bottom_word) = u128_split(self);
+        bottom_word
+    }
+
+    /// Unpacks a u128 into an array of big endian bytes
+    /// # Arguments
+    /// * `self` a `u128` value.
+    /// # Returns
+    /// * The bytes array representation of the value.
+    fn to_be_bytes(mut self: u128) -> Array<u8> {
+        let bytes_used: u128 = self.bytes_used().into();
+        let mut bytes: Array<u8> = Default::default();
+        let mut i = 0;
+        loop {
+            if i == bytes_used {
+                break ();
+            }
+            let val = self.shr(8 * (bytes_used.try_into().unwrap() - i - 1));
+            bytes.append((val & 0xFF).try_into().unwrap());
+            i += 1;
+        };
+
+        bytes
+    }
+
+    /// Unpacks a u128 into an array of big endian bytes, padded to 16 bytes
+    /// # Arguments
+    /// * `self` a `u128` value.
+    /// # Returns
+    /// * The bytes array representation of the value.
+    fn to_be_bytes_padded(mut self: u128) -> Array<u8> {
+        let mut bytes: Array<u8> = Default::default();
+        let res = self.to_be_bytes().span();
+
+        let mut i = 0;
+        loop {
+            if i == (16 - res.len()) {
+                break;
+            }
+
+            bytes.append(0);
+            i += 1;
+        };
+
+        bytes.append_span(res);
+        bytes
     }
 }
 
@@ -1215,6 +1313,32 @@ impl U256Impl of U256Trait {
         } else {
             return U128Trait::bytes_used(self.high.try_into().unwrap()) + 16;
         }
+    }
+
+    /// Returns the number of leading zeroes in the bit representation of `self`.
+    fn count_leading_zeroes(self: u256) -> u32 {
+        if self == 0 {
+            return 256;
+        }
+        let mut count = 0;
+
+        let mut n = self;
+        loop {
+            if n == 0 {
+                break;
+            };
+
+            count += 1;
+            n = n.shr(1);
+        };
+
+        256 - count
+    }
+
+    /// Returns the number of bits required to represent `self`, ignoring leading zeros.
+    fn bit_len(self: u256) -> u32 {
+        let count = self.count_leading_zeroes();
+        256 - count
     }
 }
 
