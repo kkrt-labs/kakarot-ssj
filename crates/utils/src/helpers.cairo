@@ -1955,7 +1955,7 @@ impl Felt252VecTraitImpl<
         self = vec;
     }
 
-    /// Pops an element out of the vector
+    /// Pops an element out of the vector, returns Option::None if the vector is empty
     /// # Arguments
     /// * `input` a ref Felt252Vec<T>
     /// Note: this is an expensive operation, as it will create a new Felt252Vec

@@ -1182,4 +1182,15 @@ mod felt252_vec_test {
         assert_eq!(vec.pop().unwrap(), 2);
         assert_eq!(vec.pop().unwrap(), 1);
     }
+
+    #[test]
+    fn test_pop() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(1);
+        vec.push(2);
+
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop(), Option::<u64>::None);
+    }
 }
