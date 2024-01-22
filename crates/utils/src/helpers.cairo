@@ -1981,6 +1981,8 @@ impl Felt252VecTraitImpl<
         Option::Some(popped_ele)
     }
 
+    /// takes a Felt252Vec<T> and returns a new Felt252Vec<T> with the same elements
+    /// Note: this is an expensive operation, as it will create a new Felt252Vec
     fn duplicate(ref self: Felt252Vec<T>) -> Felt252Vec<T> {
         let mut new_vec = Felt252VecImpl::new();
 
@@ -1999,8 +2001,11 @@ impl Felt252VecTraitImpl<
         new_vec
     }
 
+    /// Returns a new Felt252Vec<T> with elements starting from `idx` to `idx + len`
+    /// In case of overflow return Option::None
+    /// Note: this is an expensive operation, as it will create a new Felt252Vec
     fn slice(ref self: Felt252Vec<T>, idx: usize, len: usize) -> Option<Felt252Vec<T>> {
-        if (idx + len) > self.len {
+        if (idx + len) >= self.len {
             return Option::None;
         };
 
