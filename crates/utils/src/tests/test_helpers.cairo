@@ -229,10 +229,10 @@ mod u32_test {
     }
 
     #[test]
-    fn test_u32_to_be_bytes_padded () {
-        let input: u32 = 0x7;
+    fn test_u32_to_be_bytes_padded() {
+        let input: u32 = 7;
         let result = input.to_be_bytes_padded().span();
-        let expected = array![0x0, 0x0, 0x0, 0x7].span();
+        let expected = array![0x0, 0x0, 0x0, 7].span();
 
         assert_eq!(result, expected);
     }
@@ -282,16 +282,47 @@ mod u64_test {
     }
 
     #[test]
-    fn test_u64_to_be_bytes_padded () {
-        let input: u64 = 0x7;
+    fn test_u64_to_be_bytes_padded() {
+        let input: u64 = 7;
         let result = input.to_be_bytes_padded().span();
-        let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x7].span();
+        let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 7].span();
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_u64_trailing_zeroes() {
+        /// bit len is 3, and trailing zeroes are 2
+        let input: u64 = 4;
+        let result = input.count_trailing_zeroes();
+        let expected = 2;
+
+        assert_eq!(result, expected);
+    }
+
+
+    #[test]
+    fn test_u64_leading_zeroes() {
+        /// bit len is 3, and leading zeroes are 64 - 3 = 61
+        let input: u64 = 7;
+        let result = input.count_leading_zeroes();
+        let expected = 61;
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_u64_bit_len() {
+        let input: u64 = 7;
+        let result = input.bit_len();
+        let expected = 3;
 
         assert_eq!(result, expected);
     }
 }
 
 mod u128_test {
+    use integer::BoundedInt;
     use utils::helpers::Bitshift;
     use utils::helpers::U128Trait;
 
@@ -308,6 +339,39 @@ mod u128_test {
             i += 1;
             value = value.shl(8);
         };
+    }
+
+    #[test]
+    fn test_u128_to_bytes_full() {
+        let input: u128 = BoundedInt::max();
+        let result: Span<u8> = input.to_be_bytes().span();
+        let expected = array![
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
+        ]
+            .span();
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_u128_to_bytes_partial() {
+        let input: u128 = 0xf43215;
+        let result: Span<u8> = input.to_be_bytes().span();
+        let expected = array![0xf4, 0x32, 0x15].span();
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_u128_to_bytes_padded() {
+        let input: u128 = 0xf43215;
+        let result: Span<u8> = input.to_be_bytes_padded().span();
+        let expected = array![
+            0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x32, 0x15
+        ]
+            .span();
+
+        assert_eq!(result, expected);
     }
 }
 
@@ -347,6 +411,25 @@ mod u256_test {
             i += 1;
             value = value.shl(8);
         };
+    }
+
+    #[test]
+    fn test_u256_leading_zeroes() {
+        /// bit len is 3, and leading zeroes are 256 - 3 = 253
+        let input: u256 = 7;
+        let result = input.count_leading_zeroes();
+        let expected = 253;
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_u64_bit_len() {
+        let input: u256 = 7;
+        let result = input.bit_len();
+        let expected = 3;
+
+        assert_eq!(result, expected);
     }
 }
 
