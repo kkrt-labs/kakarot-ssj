@@ -1838,7 +1838,7 @@ impl Felt252VecTraitImpl<
     }
 
 
-    /// Copies the elements from a Span<u8> into the Felt252Vec<T> in little endian format
+    /// Copies the elements from a Span<u8> into the Felt252Vec<T> in little endian format, in case of overflow or index being out of bounds, an error is returned
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
     /// * `index` the index at `self` to start copying from
@@ -1850,7 +1850,7 @@ impl Felt252VecTraitImpl<
             return Result::Err(Felt252VecTraitErrors::IndexOutOfBound);
         }
 
-        if ((self.len - index) < slice.len()) {
+        if ((slice.len() + index) > self.len()) {
             return Result::Err(Felt252VecTraitErrors::Overflow);
         }
 
@@ -1890,9 +1890,15 @@ impl Felt252VecTraitImpl<
         Result::Ok(())
     }
 
+    /// Insert elements of Felt252Vec into another Felt252Vec at a given index, in case of overflow or index being out of bounds, an error is returned
+    /// In case of overflow, an error is returned
     fn insert_vec(
-        ref self: Felt252Vec<T>, ref vec: Felt252Vec<T>, idx: usize
+        ref self: Felt252Vec<T>, idx: usize, ref vec: Felt252Vec<T>
     ) -> Result<(), Felt252VecTraitErrors> {
+        if idx >= self.len() {
+            return Result::Err(Felt252VecTraitErrors::IndexOutOfBound);
+        }
+
         if (idx + vec.len > self.len) {
             return Result::Err(Felt252VecTraitErrors::Overflow);
         }

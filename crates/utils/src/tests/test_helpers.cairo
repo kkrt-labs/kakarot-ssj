@@ -1104,4 +1104,67 @@ mod felt252_vec_test {
 
         assert_eq!(result, Result::Err(Felt252VecTraitErrors::LengthIsNotSame));
     }
+
+
+    #[test]
+    fn test_insert_vec_size_equal_to_vec_size() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(2).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+        vec2.push(2);
+
+        vec.insert_vec(0, ref vec2).unwrap();
+
+        assert_eq!(vec.len(), 2);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_insert_vec_size_less_than_vec_size() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+        vec2.push(2);
+
+        vec.insert_vec(2, ref vec2).unwrap();
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_insert_vec_size_greater_than_vec_size() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(2).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+        vec2.push(2);
+        vec2.push(3);
+        vec2.push(4);
+
+        let result = vec.insert_vec(1, ref vec2);
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::Overflow));
+    }
+
+    #[test]
+    fn test_insert_vec_index_out_of_bound() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+        vec2.push(2);
+
+        let result = vec.insert_vec(4, ref vec2);
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::IndexOutOfBound));
+    }
 }
