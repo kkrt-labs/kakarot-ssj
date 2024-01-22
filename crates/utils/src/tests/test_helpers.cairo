@@ -1167,4 +1167,19 @@ mod felt252_vec_test {
         let result = vec.insert_vec(4, ref vec2);
         assert_eq!(result, Result::Err(Felt252VecTraitErrors::IndexOutOfBound));
     }
+
+    #[test]
+    fn test_remove_trailing_zeroes_le() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(1);
+        vec.push(2);
+        vec.push(0);
+        vec.push(0);
+
+        vec.remove_trailing_zeroes_le();
+
+        assert_eq!(vec.len(), 2);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+    }
 }
