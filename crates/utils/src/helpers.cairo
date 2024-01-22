@@ -780,12 +780,12 @@ impl U32Impl of U32Trait {
         Option::Some(result)
     }
 
-    /// Unpacks a u32 into an array of bytes
+    /// Unpacks a u32 into an array of big endian bytes
     /// # Arguments
     /// * `self` a `u32` value.
     /// # Returns
     /// * The bytes array representation of the value.
-    fn to_bytes(mut self: u32) -> Span<u8> {
+    fn to_be_bytes(mut self: u32) -> Span<u8> {
         let bytes_used: u32 = self.bytes_used().into();
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
@@ -799,6 +799,29 @@ impl U32Impl of U32Trait {
         };
 
         bytes.span()
+    }
+
+    /// Unpacks a u32 into an array of big endian bytes, padded to 4 bytes
+    /// # Arguments
+    /// * `self` a `u32` value.
+    /// # Returns
+    /// * The bytes array representation of the value.
+    fn to_be_bytes_padded(mut self: u32) -> Array<u8> {
+        let mut bytes: Array<u8> = Default::default();
+        let res = self.to_be_bytes();
+
+        let mut i = 0;
+        loop {
+            if i == (4 - res.len()) {
+                break;
+            }
+
+            bytes.append(0);
+            i += 1;
+        };
+
+        bytes.append_span(res);
+        bytes
     }
 
     /// Returns the number of bytes used to represent a `u32` value.
@@ -938,13 +961,14 @@ impl U64Impl of U64Trait {
         let mut bytes: Array<u8> = Default::default();
         let res = self.to_be_bytes().span();
 
-        let i = 0;
+        let mut i = 0;
         loop {
             if i == (8 - res.len()) {
                 break;
             }
 
             bytes.append(0);
+            i += 1;
         };
 
         bytes.append_span(res);
@@ -1090,10 +1114,10 @@ impl U256Impl of U256Trait {
         u256 { low: new_low, high: new_high }
     }
 
-    // Returns a u256 representation as bytes: `Span<u8>`
+    // Returns a u256 representation as bytes: `Span<u8>` big endian
     // If the u256 representation does not take up to 32 bytes,
     // the size of the returned slice is equal to the number of bytes used
-    fn to_bytes(self: u256) -> Span<u8> {
+    fn to_be_bytes(self: u256) -> Span<u8> {
         let bytes_used: u256 = self.bytes_used().into();
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;

@@ -87,7 +87,7 @@ impl EVMErrorImpl of EVMErrorTrait {
     fn to_bytes(self: EVMError) -> Span<u8> {
         let error_message: felt252 = self.to_string();
         let error_message: u256 = error_message.into();
-        error_message.to_bytes()
+        error_message.to_be_bytes()
     }
 }
 
