@@ -1075,4 +1075,33 @@ mod felt252_vec_test {
 
         assert_eq!(result, Result::Err(Felt252VecTraitErrors::IndexOutOfBound));
     }
+
+    #[test]
+    fn test_copy_from_vec_le() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(2).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+        vec2.push(2);
+
+        vec.copy_from_vec_le(ref vec2).unwrap();
+
+        assert_eq!(vec.len, 2);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_copy_from_vec_le_not_equal_lengths() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(2).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+
+        let result = vec.copy_from_vec_le(ref vec2);
+
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::LengthIsNotSame));
+    }
 }
