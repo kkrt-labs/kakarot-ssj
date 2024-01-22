@@ -520,6 +520,60 @@ mod span_u8_test {
 
         assert_eq!(hash, expected_hash);
     }
+
+    #[test]
+    fn test_right_padded_span_offset_0() {
+        let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+        let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x0, 0x0, 0x0, 0x0].span();
+        let result = span.get_right_padded_span(0, 10);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_right_padded_span_offset_4() {
+        let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+        let expected = array![0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
+        let result = span.get_right_padded_span(4, 10);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_right_padded_span_offset_greater_than_span_len() {
+        let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+        let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
+        let result = span.get_right_padded_span(6, 10);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_left_padding_len_10() {
+        let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+        let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+        let result = span.left_padding(10);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_left_padding_len_equal_than_data_len() {
+        let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+        let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+        let result = span.left_padding(10);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_left_padding_len_equal_than_smaller_len() {
+        let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+        let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
+        let result = span.left_padding(9);
+
+        assert_eq!(result, expected);
+    }
 }
 
 mod eth_signature_test {
