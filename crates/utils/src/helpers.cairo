@@ -1846,7 +1846,7 @@ impl Felt252VecTraitImpl<
     fn copy_from_bytes_le(
         ref self: Felt252Vec<T>, index: usize, mut slice: Span<u8>
     ) -> Result<(), Felt252VecTraitErrors> {
-        if (index > self.len) {
+        if (index >= self.len) {
             return Result::Err(Felt252VecTraitErrors::IndexOutOfBound);
         }
 
@@ -1869,6 +1869,7 @@ impl Felt252VecTraitImpl<
         Result::Ok(())
     }
 
+    /// Copies the elements from a Felt252Vec<T> into the Felt252Vec<T> in little endian format, If length of both Felt252Vecs are not same, it will return an error
     fn copy_from_vec_le(
         ref self: Felt252Vec<T>, ref vec: Felt252Vec<T>
     ) -> Result<(), Felt252VecTraitErrors> {
