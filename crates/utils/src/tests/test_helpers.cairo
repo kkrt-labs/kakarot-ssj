@@ -929,5 +929,98 @@ mod felt252_vec_u64_test {
 
 mod felt252_vec_test {
     use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
-    use utils::helpers::{Felt252VecTrait};
+    use utils::helpers::{Felt252VecTrait, Felt252VecTraitErrors};
+
+    #[test]
+    fn test_felt252_vec_expand() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+
+        vec.expand(4).unwrap();
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_felt252_vec_expand_fail() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+
+        let result = vec.expand(1);
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::SizeLessThanCurrentLength));
+    }
+
+    #[test]
+    fn test_felt252_vec_reset() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+
+        vec.reset();
+
+        assert_eq!(vec.len(), 2);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_felt252_vec_count_leading_zeroes() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(0);
+        vec.push(0);
+        vec.push(1);
+
+        let result = vec.count_leading_zeroes_le();
+
+        assert_eq!(result, 3);
+    }
+
+
+    #[test]
+    fn test_felt252_vec_resize_len_greater_than_current_len() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+
+        vec.resize(4, 0);
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_felt252_vec_resize_len_less_than_current_len() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+        vec.push(0);
+        vec.push(0);
+
+        vec.resize(2, 0);
+
+        assert_eq!(vec.len(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_felt252_vec_len_0() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+
+        vec.resize(0, 0);
+
+        assert_eq!(vec.len(), 0);
+    }
 }
