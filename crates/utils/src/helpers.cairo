@@ -1891,7 +1891,6 @@ impl Felt252VecTraitImpl<
     }
 
     /// Insert elements of Felt252Vec into another Felt252Vec at a given index, in case of overflow or index being out of bounds, an error is returned
-    /// In case of overflow, an error is returned
     fn insert_vec(
         ref self: Felt252Vec<T>, idx: usize, ref vec: Felt252Vec<T>
     ) -> Result<(), Felt252VecTraitErrors> {
