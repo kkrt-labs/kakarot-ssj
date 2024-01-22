@@ -2058,10 +2058,18 @@ impl Felt252VecTraitImpl<
         }
     }
 
+    /// Fills a Felt252Vec<T> with a given `value` starting from `start_idx` to `start_idx + len`
+    /// In case of overflow, error is returned
     fn fill(
         ref self: Felt252Vec<T>, start_idx: usize, len: usize, value: T
     ) -> Result<(), Felt252VecTraitErrors> {
-        if (start_idx + len >= self.len()) {
+        // Index out of bounds
+        if (start_idx >= self.len()) {
+            return Result::Err(Felt252VecTraitErrors::IndexOutOfBound);
+        }
+
+        // Overflow
+        if (start_idx + len > self.len()) {
             return Result::Err(Felt252VecTraitErrors::Overflow);
         }
 
