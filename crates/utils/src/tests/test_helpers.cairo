@@ -840,3 +840,22 @@ mod eth_signature_test {
         assert_eq!(result, signature_2);
     }
 }
+
+mod felt252_vec_u8_test {
+    use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+    use utils::helpers::{Felt252VecU8Trait};
+
+    #[test]
+    fn test_felt252_vec_u8_to_bytes() {
+        let mut vec: Felt252Vec<u8> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+        vec.push(2);
+        vec.push(3);
+
+        let result = vec.to_bytes();
+        let expected = array![0, 1, 2, 3].span();
+
+        assert_eq!(result, expected);
+    }
+}

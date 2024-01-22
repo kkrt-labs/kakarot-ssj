@@ -1,3 +1,5 @@
+use alexandria_data_structures::vec::VecTrait;
+use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
 use cmp::min;
 use core::array::ArrayTrait;
 use core::array::SpanTrait;
@@ -1652,5 +1654,35 @@ impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
 
         res.append(value.into());
         Option::Some(res)
+    }
+}
+
+
+#[derive(Drop)]
+enum Felt252VecTraitErrors {
+    IndexOutOfBound,
+    Overflow,
+    LengthIsNotSame,
+    SizeLessThanCurrentLength
+}
+
+#[generate_trait]
+impl Felt252VecU8TraitImpl of Felt252VecU8Trait {
+    /// Returns Felt252Vec<u8> as a Span<8>
+    /// The endianess of the bytes will be same as the endianess of the `self`
+    fn to_bytes(ref self: Felt252Vec<u8>) -> Span<u8> {
+        let mut arr: Array<u8> = Default::default();
+
+        let mut i = 0;
+        loop {
+            if i == self.len() {
+                break;
+            }
+
+            arr.append(self[i]);
+            i += 1;
+        };
+
+        arr.span()
     }
 }
