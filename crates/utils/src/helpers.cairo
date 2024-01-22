@@ -1686,3 +1686,107 @@ impl Felt252VecU8TraitImpl of Felt252VecU8Trait {
         arr.span()
     }
 }
+
+#[generate_trait]
+impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
+    /// Returns Felt252Vec<u64> as a Span<8>, Where self is in little endian format, and the returned Span is in big endian format
+    fn from_le_to_be_bytes(ref self: Felt252Vec<u64>) -> Span<u8> {
+        let mut res: Array<u8> = array![];
+
+        self.remove_trailing_zeroes_le();
+
+        let mut i = self.len();
+
+        loop {
+            if i == 0 {
+                break;
+            }
+
+            let j = i - 1;
+
+            res.append_span(self[j].to_be_bytes_padded().span());
+
+            i -= 1;
+        };
+
+        res.span()
+    }
+
+    /// Returns Felt252Vec<u64> as a Span<8>, Where self is in little endian format, and the returned Span is in little endian format
+    fn from_le_to_le_bytes(ref self: Felt252Vec<u64>) -> Span<u8> {
+        let mut res: Array<u8> = array![];
+        let mut i = 0;
+
+        loop {
+            if i == self.len() {
+                break;
+            }
+
+            if self[i] == 0 {
+                res.append(0);
+            } else {
+                res.append_span(self[i].to_le_bytes().span());
+            }
+
+            i += 1;
+        };
+
+        res.span()
+    }
+}
+
+#[generate_trait]
+impl Felt252VecTraitImpl<
+    T,
+    +Drop<T>,
+    +Copy<T>,
+    +Felt252DictValue<T>,
+    +Zero<T>,
+    +Add<T>,
+    +Sub<T>,
+    +Div<T>,
+    +Mul<T>,
+    +Exponentiation<T>,
+    +PartialOrd<T>,
+    +Into<u8, T>,
+    +PartialEq<T>
+> of Felt252VecTrait<T> {
+    /// Removes trailing zeroes before the Most Significant Digit, self is in little endian representation
+    /// # Arguments
+    /// * `input` a ref Felt252Vec<T>
+    /// Note: this is an expensive operation, as it will create a new Felt252Vec
+    fn remove_trailing_zeroes_le(ref self: Felt252Vec<T>) {
+        let mut vec: Felt252Vec<T> = Felt252VecImpl::new();
+
+        let mut i = self.len;
+        let mut num_of_trailing_zeroes = 0;
+        loop {
+            if (i == 0) || (self[i - 1] != Zero::zero()) {
+                break;
+            }
+
+            i -= 1;
+            num_of_trailing_zeroes += 1;
+        };
+
+        if num_of_trailing_zeroes == 0 {
+            return;
+        }
+
+        let mut i = 0;
+        loop {
+            if i == (self.len - num_of_trailing_zeroes) {
+                break;
+            }
+
+            vec.push(self[i]);
+            i += 1;
+        };
+
+        if vec.len == 0 {
+            vec.push(Zero::zero());
+        };
+
+        self = vec;
+    }
+}

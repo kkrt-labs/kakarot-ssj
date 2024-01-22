@@ -859,3 +859,75 @@ mod felt252_vec_u8_test {
         assert_eq!(result, expected);
     }
 }
+
+mod felt252_vec_u64_test {
+    use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+    use utils::helpers::{Felt252VecU64Trait};
+
+    #[test]
+    fn test_felt252_vec_u64_from_le_to_le_bytes() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+        vec.push(2);
+        vec.push(3);
+
+        let result = vec.from_le_to_le_bytes();
+        let expected = array![0, 1, 2, 3].span();
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_felt252_vec_u64_from_le_to_be_bytes() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+        vec.push(2);
+        vec.push(3);
+
+        let result = vec.from_le_to_be_bytes();
+        let expected = array![
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ]
+            .span();
+
+        assert_eq!(result, expected);
+    }
+}
+
+mod felt252_vec_test {
+    use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+    use utils::helpers::{Felt252VecTrait};
+}
