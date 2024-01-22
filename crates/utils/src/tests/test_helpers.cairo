@@ -1193,4 +1193,33 @@ mod felt252_vec_test {
         assert_eq!(vec.pop().unwrap(), 1);
         assert_eq!(vec.pop(), Option::<u64>::None);
     }
+
+    #[test]
+    fn test_duplicate() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(1);
+        vec.push(2);
+
+        let mut vec2 = vec.duplicate();
+
+        assert_eq!(vec.len(), vec2.len());
+        assert_eq!(vec.pop(), vec2.pop());
+        assert_eq!(vec.pop(), vec2.pop());
+        assert_eq!(vec.pop().is_none(), true);
+        assert_eq!(vec2.pop().is_none(), true);
+    }
+
+    #[test]
+    fn test_slice() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(1);
+        vec.push(2);
+
+        let mut vec2 = vec.slice(1, 1).unwrap();
+
+        assert_eq!(vec2.len(), 1);
+        assert_eq!(vec2.pop().unwrap(), 2);
+        assert_eq!(vec.slice(2, 1).is_none(), true);
+        assert_eq!(vec.slice(4, 2).is_none(), true)
+    }
 }
