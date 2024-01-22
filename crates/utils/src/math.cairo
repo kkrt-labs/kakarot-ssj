@@ -293,11 +293,8 @@ impl U8OverflowingMul of OverflowingMul<u8> {
 
         let bottom_word = (result & mask).try_into().unwrap();
 
-        if result > mask {
-            (bottom_word, true)
-        } else {
-            (bottom_word, false)
-        }
+        let is_overflown = result > mask;
+        (bottom_word, is_overflown)
     }
 }
 
@@ -308,11 +305,8 @@ impl U32OverflowingMul of OverflowingMul<u32> {
         let mask: u64 = BoundedInt::<u32>::max().into();
         let bottom_word = (result & mask).try_into().unwrap();
 
-        if result > mask {
-            (bottom_word, true)
-        } else {
-            (bottom_word, false)
-        }
+        let is_overflown = result > mask;
+        (bottom_word, is_overflown)
     }
 }
 
