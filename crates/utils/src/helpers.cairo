@@ -1838,7 +1838,12 @@ impl Felt252VecTraitImpl<
     }
 
 
-    fn copy_from_bytes(
+    /// Copies the elements from a Span<u8> into the Felt252Vec<T> in little endian format
+    /// # Arguments
+    /// * `self` a ref Felt252Vec<T>
+    /// * `index` the index at `self` to start copying from
+    /// * `slice` a Span<u8>
+    fn copy_from_bytes_le(
         ref self: Felt252Vec<T>, index: usize, mut slice: Span<u8>
     ) -> Result<(), Felt252VecTraitErrors> {
         if (index > self.len) {
@@ -1864,7 +1869,7 @@ impl Felt252VecTraitImpl<
         Result::Ok(())
     }
 
-    fn copy_from_vec(
+    fn copy_from_vec_le(
         ref self: Felt252Vec<T>, ref vec: Felt252Vec<T>
     ) -> Result<(), Felt252VecTraitErrors> {
         if (vec.len() != self.len) {

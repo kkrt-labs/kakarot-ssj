@@ -1023,4 +1023,56 @@ mod felt252_vec_test {
 
         assert_eq!(vec.len(), 0);
     }
+
+    #[test]
+    fn test_copy_from_bytes_le_size_equal_to_vec_size() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        let bytes = array![1, 2, 3, 4].span();
+        vec.copy_from_bytes_le(0, bytes).unwrap();
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 4);
+        assert_eq!(vec.pop().unwrap(), 3);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_copy_from_bytes_le_size_less_than_vec_size() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        let bytes = array![1, 2].span();
+        vec.copy_from_bytes_le(2, bytes).unwrap();
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_copy_from_bytes_le_size_greater_than_vec_size() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        let bytes = array![1, 2, 3, 4].span();
+        let result = vec.copy_from_bytes_le(2, bytes);
+
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::Overflow));
+    }
+
+    #[test]
+    fn test_copy_from_bytes_index_out_of_bound() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        let bytes = array![1, 2].span();
+        let result = vec.copy_from_bytes_le(4, bytes);
+
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::IndexOutOfBound));
+    }
 }
