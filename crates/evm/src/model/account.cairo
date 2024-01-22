@@ -60,10 +60,7 @@ impl AccountBuilderImpl of AccountBuilderTrait {
             self.account.account_type == AccountType::ContractAccount,
             "Cannot fetch nonce of an EOA"
         );
-        let contract_account = IContractAccountDispatcher {
-            contract_address: self.account.address.starknet
-        };
-        self.account.nonce = contract_account.nonce();
+        self.account.nonce = self.account.fetch_nonce();
         self
     }
 
