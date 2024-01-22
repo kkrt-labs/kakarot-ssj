@@ -60,10 +60,8 @@ impl AccountBuilderImpl of AccountBuilderTrait {
             self.account.account_type == AccountType::ContractAccount,
             "Cannot fetch nonce of an EOA"
         );
-        let contract_account = IContractAccountDispatcher {
-            contract_address: self.account.address.starknet
-        };
-        self.account.nonce = contract_account.nonce();
+
+        self.account.nonce = self.account.fetch_nonce();
         self
     }
 
@@ -204,7 +202,7 @@ impl AccountImpl of AccountTrait {
         // If a Starknet account is already deployed for this evm address, we
         // should "EVM-Deploy" only if the nonce is different.
         let should_deploy = if is_deployed && is_ca {
-            let deployed_nonce = ContractAccountTrait::fetch_nonce(self);
+            let deployed_nonce = self.fetch_nonce();
             if (deployed_nonce == 0 && deployed_nonce != *self.nonce) {
                 true
             } else {
