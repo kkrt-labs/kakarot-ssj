@@ -235,7 +235,7 @@ impl AccountImpl of AccountTrait {
         // Only CAs have components committed on starknet.
         if is_deployed && is_ca {
             if *self.selfdestruct {
-                return ContractAccountTrait::selfdestruct(self);
+                return self.selfdestruct();
             }
             self.store_nonce(*self.nonce);
         };
@@ -313,7 +313,7 @@ impl AccountImpl of AccountTrait {
     fn read_storage(self: @Account, key: u256) -> u256 {
         let is_deployed = self.address().evm.is_deployed();
         if *self.account_type == AccountType::ContractAccount && is_deployed {
-            return ContractAccountTrait::fetch_storage(self, key);
+            return self.fetch_storage(key);
         }
         0
     }
