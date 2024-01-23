@@ -1,3 +1,4 @@
+use utils::helpers::{BitLengthTrait, BytesUsedTrait};
 use utils::helpers;
 
 #[test]
@@ -176,6 +177,7 @@ mod test_array_ext {
 mod u32_test {
     use utils::helpers::Bitshift;
     use utils::helpers::U32Trait;
+    use utils::helpers::{BitLengthTrait, BytesUsedTrait};
 
     #[test]
     fn test_u32_from_be_bytes() {
@@ -241,7 +243,7 @@ mod u32_test {
     #[test]
     fn test_u32_bytes_used() {
         assert_eq!(0x00_u32.bytes_used(), 0);
-        let mut value = 0xff;
+        let mut value: u32 = 0xff;
         let mut i = 1;
         loop {
             assert_eq!(value.bytes_used(), i);
@@ -255,7 +257,7 @@ mod u32_test {
 
     #[test]
     fn test_u32_bytes_used_leading_zeroes() {
-        let len = 0x001234;
+        let len: u32 = 0x001234;
         let bytes_count = len.bytes_used();
 
         assert(bytes_count == 2, 'wrong bytes count');
@@ -265,11 +267,13 @@ mod u32_test {
 mod u64_test {
     use utils::helpers::Bitshift;
     use utils::helpers::U64Trait;
+    use utils::helpers::{BitLengthTrait, BytesUsedTrait};
+
 
     #[test]
     fn test_u64_bytes_used() {
         assert_eq!(0x00_u64.bytes_used(), 0);
-        let mut value = 0xff;
+        let mut value: u64 = 0xff;
         let mut i = 1;
         loop {
             assert_eq!(value.bytes_used(), i);
@@ -325,11 +329,12 @@ mod u128_test {
     use integer::BoundedInt;
     use utils::helpers::Bitshift;
     use utils::helpers::U128Trait;
+    use utils::helpers::{BitLengthTrait, BytesUsedTrait};
 
     #[test]
     fn test_u128_bytes_used() {
         assert_eq!(0x00_u128.bytes_used(), 0);
-        let mut value = 0xff;
+        let mut value: u128 = 0xff;
         let mut i = 1;
         loop {
             assert_eq!(value.bytes_used(), i);
@@ -378,6 +383,8 @@ mod u128_test {
 mod u256_test {
     use utils::helpers::Bitshift;
     use utils::helpers::U256Trait;
+    use utils::helpers::{BitLengthTrait, BytesUsedTrait};
+
     #[test]
     fn test_reverse_bytes_u256() {
         let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
@@ -401,7 +408,7 @@ mod u256_test {
     #[test]
     fn test_u256_bytes_used() {
         assert_eq!(0x00_u256.bytes_used(), 0);
-        let mut value = 0xff;
+        let mut value: u256 = 0xff;
         let mut i = 1;
         loop {
             assert_eq!(value.bytes_used(), i);
