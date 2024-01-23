@@ -717,14 +717,12 @@ impl U8SpanExImpl of U8SpanExTrait {
 
         // left pad with 0
         let mut arr = array![];
-        let mut i = 0;
         loop {
-            if i == (len - self.len()) {
+            if arr.len() == (len - self.len()) {
                 break;
             };
 
             arr.append(0);
-            i += 1;
         };
 
         // append the data
