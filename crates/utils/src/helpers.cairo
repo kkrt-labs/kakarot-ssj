@@ -697,7 +697,7 @@ impl U8SpanExImpl of U8SpanExTrait {
     ///  // Truncates the data if it is more than the given length
     ///  let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
     ///  let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
-    ///  let result = span.left_padding(9);
+    ///  let result = span.pad_left_with_zeroes(9);
     ///
     ///  assert_eq!(result, expected);
     /// ```
