@@ -821,27 +821,13 @@ impl U32Impl of U32Trait {
         bytes.span()
     }
 
-    /// Unpacks a u32 into an array of big endian bytes, padded to 4 bytes
+    /// Unpacks a u32 into an span of big endian bytes, padded to 4 bytes
     /// # Arguments
     /// * `self` a `u32` value.
     /// # Returns
-    /// * The bytes array representation of the value.
-    fn to_be_bytes_padded(mut self: u32) -> Array<u8> {
-        let mut bytes: Array<u8> = Default::default();
-        let res = self.to_be_bytes();
-
-        let mut i = 0;
-        loop {
-            if i == (4 - res.len()) {
-                break;
-            }
-
-            bytes.append(0);
-            i += 1;
-        };
-
-        bytes.append_span(res);
-        bytes
+    /// * The bytes representation of the value.
+    fn to_be_bytes_padded(mut self: u32) -> Span<u8> {
+        self.to_be_bytes().pad_left_with_zeroes(4)
     }
 
     /// Returns the number of bytes used to represent a `u32` value.
@@ -930,12 +916,12 @@ impl U64Impl of U64Trait {
         Option::Some(result)
     }
 
-    /// Unpacks a u64 into an array of big endian bytes
+    /// Unpacks a u64 into an Span of big endian bytes
     /// # Arguments
     /// * `self` a `u64` value.
     /// # Returns
-    /// * The bytes array representation of the value.
-    fn to_be_bytes(mut self: u64) -> Array<u8> {
+    /// * The bytes representation of the value.
+    fn to_be_bytes(mut self: u64) -> Span<u8> {
         let bytes_used: u64 = self.bytes_used().into();
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
@@ -948,15 +934,15 @@ impl U64Impl of U64Trait {
             i += 1;
         };
 
-        bytes
+        bytes.span()
     }
 
-    /// Unpacks a u64 into an array of little endian bytes
+    /// Unpacks a u64 into an Span of little endian bytes
     /// # Arguments
     /// * `self` a `u64` value.
     /// # Returns
-    /// * The bytes array representation of the value.
-    fn to_le_bytes(mut self: u64) -> Array<u8> {
+    /// * The bytes representation of the value.
+    fn to_le_bytes(mut self: u64) -> Span<u8> {
         let bytes_used: u64 = self.bytes_used().into();
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
@@ -969,30 +955,16 @@ impl U64Impl of U64Trait {
             i += 1;
         };
 
-        bytes
+        bytes.span()
     }
 
-    /// Unpacks a u64 into an array of big endian bytes, padded to 8 bytes
+    /// Unpacks a u64 into an Span of big endian bytes, padded to 8 bytes
     /// # Arguments
     /// * `self` a `u64` value.
     /// # Returns
-    /// * The bytes array representation of the value.
-    fn to_be_bytes_padded(mut self: u64) -> Array<u8> {
-        let mut bytes: Array<u8> = Default::default();
-        let res = self.to_be_bytes().span();
-
-        let mut i = 0;
-        loop {
-            if i == (8 - res.len()) {
-                break;
-            }
-
-            bytes.append(0);
-            i += 1;
-        };
-
-        bytes.append_span(res);
-        bytes
+    /// * The bytes representation of the value padded to 8 bytes.
+    fn to_be_bytes_padded(mut self: u64) -> Span<u8> {
+        self.to_be_bytes().pad_left_with_zeroes(8)
     }
 
     /// Unpacks a u64 into an array of little endian bytes, padded to 8 bytes
@@ -1002,7 +974,7 @@ impl U64Impl of U64Trait {
     /// * The bytes array representation of the value.
     fn to_le_bytes_padded(mut self: u64) -> Array<u8> {
         let mut bytes: Array<u8> = Default::default();
-        let res = self.to_le_bytes().span();
+        let res = self.to_le_bytes();
 
         bytes.append_span(res);
 
@@ -1170,12 +1142,12 @@ impl U128Impl of U128Trait {
         bottom_word
     }
 
-    /// Unpacks a u128 into an array of big endian bytes
+    /// Unpacks a u128 into an Span of big endian bytes
     /// # Arguments
     /// * `self` a `u128` value.
     /// # Returns
-    /// * The bytes array representation of the value.
-    fn to_be_bytes(mut self: u128) -> Array<u8> {
+    /// * The bytes representation of the value.
+    fn to_be_bytes(mut self: u128) -> Span<u8> {
         let bytes_used: u128 = self.bytes_used().into();
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
@@ -1188,30 +1160,16 @@ impl U128Impl of U128Trait {
             i += 1;
         };
 
-        bytes
+        bytes.span()
     }
 
-    /// Unpacks a u128 into an array of big endian bytes, padded to 16 bytes
+    /// Unpacks a u128 into an Span of big endian bytes, padded to 16 bytes
     /// # Arguments
     /// * `self` a `u128` value.
     /// # Returns
-    /// * The bytes array representation of the value.
-    fn to_be_bytes_padded(mut self: u128) -> Array<u8> {
-        let mut bytes: Array<u8> = Default::default();
-        let res = self.to_be_bytes().span();
-
-        let mut i = 0;
-        loop {
-            if i == (16 - res.len()) {
-                break;
-            }
-
-            bytes.append(0);
-            i += 1;
-        };
-
-        bytes.append_span(res);
-        bytes
+    /// * The bytes representation of the value.
+    fn to_be_bytes_padded(mut self: u128) -> Span<u8> {
+        self.to_be_bytes().pad_left_with_zeroes(16)
     }
 }
 
@@ -1722,7 +1680,7 @@ impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
 
             let j = i - 1;
 
-            res.append_span(self[j].to_be_bytes_padded().span());
+            res.append_span(self[j].to_be_bytes_padded());
 
             i -= 1;
         };
