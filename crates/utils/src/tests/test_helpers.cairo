@@ -626,7 +626,7 @@ mod span_u8_test {
     fn test_right_padded_span_offset_0() {
         let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
         let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x0, 0x0, 0x0, 0x0].span();
-        let result = span.get_right_padded_span(0, 10);
+        let result = span.slice_right_padded(0, 10);
 
         assert_eq!(result, expected);
     }
@@ -635,7 +635,7 @@ mod span_u8_test {
     fn test_right_padded_span_offset_4() {
         let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
         let expected = array![0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
-        let result = span.get_right_padded_span(4, 10);
+        let result = span.slice_right_padded(4, 10);
 
         assert_eq!(result, expected);
     }
@@ -644,7 +644,7 @@ mod span_u8_test {
     fn test_right_padded_span_offset_greater_than_span_len() {
         let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
         let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
-        let result = span.get_right_padded_span(6, 10);
+        let result = span.slice_right_padded(6, 10);
 
         assert_eq!(result, expected);
     }
