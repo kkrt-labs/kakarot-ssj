@@ -663,11 +663,7 @@ impl U8SpanExImpl of U8SpanExTrait {
             self.len()
         };
 
-        let end = if start.saturating_add(len) <= self.len() {
-            start + len
-        } else {
-            self.len()
-        };
+        let end = min(start.saturating_add(len), self.len());
 
         let slice = self.slice(start, end - start);
         // Save appending to span for this case as it is more efficient to just return the slice
