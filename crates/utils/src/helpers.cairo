@@ -4,7 +4,7 @@ use cmp::min;
 use core::array::ArrayTrait;
 use core::array::SpanTrait;
 use core::hash::{HashStateExTrait, HashStateTrait};
-use core::num::traits::{Zero, One};
+use core::num::traits::{Zero, One, BitSize};
 use core::pedersen::{HashState, PedersenTrait};
 use core::traits::TryInto;
 use integer::{BoundedInt, u32_as_non_zero, U32TryIntoNonZero};
@@ -829,29 +829,6 @@ impl U32Impl of U32Trait {
     fn to_be_bytes_padded(mut self: u32) -> Span<u8> {
         self.to_be_bytes().pad_left_with_zeroes(4)
     }
-
-    /// Returns the number of bytes used to represent a `u32` value.
-    /// # Arguments
-    /// * `self` - The value to check.
-    /// # Returns
-    /// The number of bytes used to represent the value.
-    fn bytes_used(self: usize) -> u8 {
-        if self < 0x10000 { // 256^2
-            if self < 0x100 { // 256^1
-                if self == 0 {
-                    return 0;
-                } else {
-                    return 1;
-                };
-            }
-            return 2;
-        } else {
-            if self < 0x1000000 { // 256^3
-                return 3;
-            }
-            return 4;
-        }
-    }
 }
 
 
@@ -990,33 +967,6 @@ impl U64Impl of U64Trait {
         bytes
     }
 
-    /// Returns the number of bytes used to represent a `u64` value.
-    /// # Arguments
-    /// * `self` - The value to check.
-    /// # Returns
-    /// The number of bytes used to represent the value.
-    fn bytes_used(self: u64) -> u8 {
-        if self <= BoundedInt::<u32>::max().into() { // 256^4
-            return U32Trait::bytes_used(self.try_into().unwrap());
-        } else {
-            if self < 0x1000000000000 { // 256^6
-                if self < 0x10000000000 {
-                    if self < 0x100000000 {
-                        return 4;
-                    }
-                    return 5;
-                }
-                return 6;
-            } else {
-                if self < 0x100000000000000 { // 256^7
-                    return 7;
-                } else {
-                    return 8;
-                }
-            }
-        }
-    }
-
     /// Returns the number of trailing zeroes in the bit representation of `self`.
     fn count_trailing_zeroes(self: u64) -> u8 {
         let mut count = 0;
@@ -1036,32 +986,6 @@ impl U64Impl of U64Trait {
         };
 
         count
-    }
-
-    /// Returns the number of leading zeroes in the bit representation of `self`.
-    fn count_leading_zeroes(self: u64) -> u8 {
-        64 - self.bit_len()
-    }
-
-    /// Returns the number of bits required to represent `self`, ignoring leading zeros.
-    fn bit_len(self: u64) -> u8 {
-        let bytes_used = self.bytes_used();
-        let last_byte = self.shr(8 * (bytes_used - 1).into());
-
-        let mut count = 0;
-
-        /// Count the number of bits in the last byte
-        let mut n = last_byte;
-        loop {
-            if n == 0 {
-                break;
-            };
-
-            count += 1;
-            n = n.shr(1);
-        };
-
-        count + 8 * (bytes_used - 1)
     }
 }
 
@@ -1125,16 +1049,6 @@ impl U128Impl of U128Trait {
         };
         Option::Some(result)
     }
-
-    fn bytes_used(self: u128) -> u8 {
-        let (u64high, u64low) = u128_split(self);
-        if u64high == 0 {
-            return U64Trait::bytes_used(u64low.try_into().unwrap());
-        } else {
-            return U64Trait::bytes_used(u64high.try_into().unwrap()) + 8;
-        }
-    }
-
 
     /// Returns the Least signficant 64 bits of a u128
     fn as_u64(self: u128) -> u64 {
@@ -1283,40 +1197,6 @@ impl U256Impl of U256Trait {
             i += 1;
         };
         Option::Some(result)
-    }
-
-    fn bytes_used(self: u256) -> u8 {
-        if self.high == 0 {
-            return U128Trait::bytes_used(self.low.try_into().unwrap());
-        } else {
-            return U128Trait::bytes_used(self.high.try_into().unwrap()) + 16;
-        }
-    }
-
-    /// Returns the number of leading zeroes in the bit representation of `self`.
-    fn count_leading_zeroes(self: u256) -> u32 {
-        256 - self.bit_len()
-    }
-
-    /// Returns the number of bits required to represent `self`, ignoring leading zeros.
-    fn bit_len(self: u256) -> u32 {
-        let bytes_used = self.bytes_used();
-        let last_byte = self.shr(8 * (bytes_used - 1).into());
-
-        let mut count = 0;
-
-        /// Count the number of bits in the last byte
-        let mut n = last_byte;
-        loop {
-            if n == 0 {
-                break;
-            };
-
-            count += 1;
-            n = n.shr(1);
-        };
-
-        (count + 8 * (bytes_used - 1)).into()
     }
 }
 
@@ -1630,6 +1510,139 @@ impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
 
         res.append(value.into());
         Option::Some(res)
+    }
+}
+
+trait BytesUsedTrait<T> {
+    /// Returns the number of bytes used to represent a `T` value.
+    /// # Arguments
+    /// * `self` - The value to check.
+    /// # Returns
+    /// The number of bytes used to represent the value.
+    fn bytes_used(self: T) -> u8;
+}
+
+impl USizeBytesUsedTraitImpl of BytesUsedTrait<usize> {
+    fn bytes_used(self: usize) -> u8 {
+        if self < 0x10000 { // 256^2
+            if self < 0x100 { // 256^1
+                if self == 0 {
+                    return 0;
+                } else {
+                    return 1;
+                };
+            }
+            return 2;
+        } else {
+            if self < 0x1000000 { // 256^3
+                return 3;
+            }
+            return 4;
+        }
+    }
+}
+
+impl U64BytesUsedTraitImpl of BytesUsedTrait<u64> {
+    fn bytes_used(self: u64) -> u8 {
+        if self <= BoundedInt::<u32>::max().into() { // 256^4
+            return BytesUsedTrait::<u32>::bytes_used(self.try_into().unwrap());
+        } else {
+            if self < 0x1000000000000 { // 256^6
+                if self < 0x10000000000 {
+                    if self < 0x100000000 {
+                        return 4;
+                    }
+                    return 5;
+                }
+                return 6;
+            } else {
+                if self < 0x100000000000000 { // 256^7
+                    return 7;
+                } else {
+                    return 8;
+                }
+            }
+        }
+    }
+}
+
+impl U128BytesTraitUsedImpl of BytesUsedTrait<u128> {
+    fn bytes_used(self: u128) -> u8 {
+        let (u64high, u64low) = u128_split(self);
+        if u64high == 0 {
+            return BytesUsedTrait::<u64>::bytes_used(u64low.try_into().unwrap());
+        } else {
+            return BytesUsedTrait::<u64>::bytes_used(u64high.try_into().unwrap()) + 8;
+        }
+    }
+}
+
+impl U256BytesUsedTraitImpl of BytesUsedTrait<u256> {
+    fn bytes_used(self: u256) -> u8 {
+        if self.high == 0 {
+            return BytesUsedTrait::<u128>::bytes_used(self.low.try_into().unwrap());
+        } else {
+            return BytesUsedTrait::<u128>::bytes_used(self.high.try_into().unwrap()) + 16;
+        }
+    }
+}
+
+trait BitLengthTrait<T> {
+    /// Returns the number of bits required to represent `self`, ignoring leading zeros.
+    /// # Arguments
+    /// `self` - The value to check.
+    /// # Returns
+    /// The number of bits used to represent the value, ignoring leading zeros.
+    fn bit_len(self: T) -> u32;
+
+    /// Returns the number of leading zeroes in the bit representation of `self`.
+    /// # Arguments
+    /// `self` - The value to check.
+    /// # Returns
+    /// The number of leading zeroes in the bit representation of `self`.
+    fn count_leading_zeroes(self: T) -> u32;
+}
+
+impl BitLengthTraitImpl<
+    T,
+    +Zero<T>,
+    +One<T>,
+    +Add<T>,
+    +Sub<T>,
+    +Mul<T>,
+    +Bitshift<T>,
+    +BitSize<T>,
+    +BytesUsedTrait<T>,
+    +Into<u8, T>,
+    +Copy<T>,
+    +Drop<T>,
+    +PartialEq<T>
+> of BitLengthTrait<T> {
+    fn bit_len(self: T) -> u32 {
+        let two: T = One::one() + One::one();
+        let eight: T = two * two * two;
+
+        let bytes_used = self.bytes_used();
+        let last_byte = self.shr(eight * (bytes_used.into() - One::one()));
+
+        let mut count = 0;
+
+        /// Count the number of bits in the last byte
+        let mut n = last_byte;
+        loop {
+            if n == Zero::zero() {
+                break;
+            };
+
+            count += 1;
+            n = n.shr(One::one());
+        };
+
+        (count + 8 * (bytes_used - 1)).into()
+    }
+
+    fn count_leading_zeroes(self: T) -> u32 {
+        BitSize::<T>::bits() - self.bit_len()
     }
 }
 
