@@ -650,28 +650,28 @@ mod span_u8_test {
     }
 
     #[test]
-    fn test_left_padding_len_10() {
+    fn test_pad_left_with_zeroes_len_10() {
         let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
         let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-        let result = span.left_padding(10);
+        let result = span.pad_left_with_zeroes(10);
 
         assert_eq!(result, expected);
     }
 
     #[test]
-    fn test_left_padding_len_equal_than_data_len() {
+    fn test_pad_left_with_zeroes_len_equal_than_data_len() {
         let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
         let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
-        let result = span.left_padding(10);
+        let result = span.pad_left_with_zeroes(10);
 
         assert_eq!(result, expected);
     }
 
     #[test]
-    fn test_left_padding_len_equal_than_smaller_len() {
+    fn test_pad_left_with_zeroes_len_equal_than_smaller_len() {
         let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
         let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
-        let result = span.left_padding(9);
+        let result = span.pad_left_with_zeroes(9);
 
         assert_eq!(result, expected);
     }
@@ -861,8 +861,9 @@ mod felt252_vec_u8_test {
 }
 
 mod felt252_vec_u64_test {
-    use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+    #[available_gas(1000000000000)]
     use utils::helpers::{Felt252VecU64Trait};
+    use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
 
     #[test]
     fn test_felt252_vec_u64_from_le_to_le_bytes() {

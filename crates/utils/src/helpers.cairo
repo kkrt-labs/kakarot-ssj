@@ -689,8 +689,28 @@ impl U8SpanExImpl of U8SpanExTrait {
         arr.span()
     }
 
-    /// Left padding until `len`. If data is more than len, truncate the right most bytes.
-    fn left_padding(self: Span<u8>, len: usize) -> Span<u8> {
+    /// Clones and pads the given span with 0s to the given length, if data is more than the given length, it is truncated from the right side
+    /// # Examples
+    /// ```
+    ///  let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+    ///  let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+    ///  let result = span.left_padding(10);
+    ///
+    ///  assert_eq!(result, expected);
+    ///
+    ///  // Truncates the data if it is more than the given length
+    ///  let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+    ///  let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
+    ///  let result = span.left_padding(9);
+    ///
+    ///  assert_eq!(result, expected);
+    /// ```
+    /// # Arguments
+    /// * `len` - The length of the padded span
+    ///
+    /// # Returns
+    /// * A span of length `len` left padded with 0s if the span length is less than `len`, returns a span of length `len` if the span length is greater than `len` then the data is truncated from the right side
+    fn pad_left_with_zeroes(self: Span<u8>, len: usize) -> Span<u8> {
         if self.len() >= len {
             return self.slice(0, len);
         }
