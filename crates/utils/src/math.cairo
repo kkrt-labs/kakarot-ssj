@@ -169,6 +169,36 @@ impl WrappingExponentiationImpl<
     }
 }
 
+trait SaturatingAdd<T> {
+    /// Adds two numbers, saturating at the numeric bounds instead of overflowing.
+    /// # Examples
+    /// ```
+    /// let max = BoundedInt::<u8>::max();
+    /// assert_eq!(max.saturating_add(max), max);
+    // ```
+    /// #Arguments
+    /// * `self` - The first operand of type `T` in the addition.
+    /// * `rhs` - The second operand of type `T` in the addition.
+    ///
+    /// # Returns
+    /// - The result of the addition, of type `T`, saturating at the numeric bounds instead of overflowing.
+    fn saturating_add(self: T, rhs: T) -> T;
+}
+
+impl SaturatingAddImpl<
+    T, +Add<T>, +Sub<T>, +BoundedInt<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>
+> of SaturatingAdd<T> {
+    fn saturating_add(self: T, rhs: T) -> T {
+        let max = BoundedInt::<T>::max();
+
+        if self > max - rhs {
+            max
+        } else {
+            self + rhs
+        }
+    }
+}
+
 // === BitShift ===
 
 trait Bitshift<T> {

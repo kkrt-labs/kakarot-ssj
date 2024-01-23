@@ -22,7 +22,7 @@ use utils::constants::{
 };
 use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 use utils::eth_transaction::{TransactionType};
-use utils::math::{Bitshift, WrappingBitshift, Exponentiation};
+use utils::math::{Bitshift, WrappingBitshift, Exponentiation, SaturatingAdd};
 use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, TryIntoResult, BoolIntoNumeric};
 
 
@@ -663,11 +663,7 @@ impl U8SpanExImpl of U8SpanExTrait {
             self.len()
         };
 
-        let tmp = match u32_overflowing_add(start, len) {
-            Result::Ok(v) => v,
-            Result::Err(v) => v
-        };
-        let end = if tmp <= self.len() {
+        let end = if start.saturating_add(len) <= self.len() {
             start + len
         } else {
             self.len()
