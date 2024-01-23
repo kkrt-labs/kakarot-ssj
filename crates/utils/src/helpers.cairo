@@ -1040,12 +1040,18 @@ impl U64Impl of U64Trait {
 
     /// Returns the number of leading zeroes in the bit representation of `self`.
     fn count_leading_zeroes(self: u64) -> u8 {
-        if self == 0 {
-            return 64;
-        }
+        64 - self.bit_len()
+    }
+
+    /// Returns the number of bits required to represent `self`, ignoring leading zeros.
+    fn bit_len(self: u64) -> u8 {
+        let bytes_used = self.bytes_used();
+        let last_byte = self.shr(8 * (bytes_used - 1).into());
+
         let mut count = 0;
 
-        let mut n = self;
+        /// Count the number of bits in the last byte
+        let mut n = last_byte;
         loop {
             if n == 0 {
                 break;
@@ -1055,13 +1061,7 @@ impl U64Impl of U64Trait {
             n = n.shr(1);
         };
 
-        64 - count
-    }
-
-    /// Returns the number of bits required to represent `self`, ignoring leading zeros.
-    fn bit_len(self: u64) -> u8 {
-        let count = self.count_leading_zeroes();
-        64 - count
+        count + 8 * (bytes_used - 1)
     }
 }
 
@@ -1295,12 +1295,18 @@ impl U256Impl of U256Trait {
 
     /// Returns the number of leading zeroes in the bit representation of `self`.
     fn count_leading_zeroes(self: u256) -> u32 {
-        if self == 0 {
-            return 256;
-        }
+        256 - self.bit_len()
+    }
+
+    /// Returns the number of bits required to represent `self`, ignoring leading zeros.
+    fn bit_len(self: u256) -> u32 {
+        let bytes_used = self.bytes_used();
+        let last_byte = self.shr(8 * (bytes_used - 1).into());
+
         let mut count = 0;
 
-        let mut n = self;
+        /// Count the number of bits in the last byte
+        let mut n = last_byte;
         loop {
             if n == 0 {
                 break;
@@ -1310,13 +1316,7 @@ impl U256Impl of U256Trait {
             n = n.shr(1);
         };
 
-        256 - count
-    }
-
-    /// Returns the number of bits required to represent `self`, ignoring leading zeros.
-    fn bit_len(self: u256) -> u32 {
-        let count = self.count_leading_zeroes();
-        256 - count
+        (count + 8 * (bytes_used - 1)).into()
     }
 }
 
