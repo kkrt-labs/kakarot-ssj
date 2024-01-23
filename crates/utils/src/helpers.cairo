@@ -669,20 +669,14 @@ impl U8SpanExImpl of U8SpanExTrait {
             self.len()
         };
 
-        // Copy the span
-        let mut i = 0;
-        loop {
-            if i == (end - start) {
-                break;
-            };
-
-            arr.append((*self[start + i]));
-            i += 1;
-        };
-
-        if arr.len() == len {
-            return arr.span();
+        let slice = self.slice(start, end - start);
+        // Save appending to span for this case as it is more efficient to just return the slice
+        if slice.len() == len {
+            return slice;
         }
+
+        // Copy the span
+        arr.append_span(slice);
 
         // Pad the span
         let diff = len - arr.len();
