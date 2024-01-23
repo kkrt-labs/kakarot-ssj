@@ -678,16 +678,12 @@ impl U8SpanExImpl of U8SpanExTrait {
         // Copy the span
         arr.append_span(slice);
 
-        // Pad the span
-        let diff = len - arr.len();
-        let mut i = 0;
         loop {
-            if i == diff {
+            if arr.len() == len {
                 break;
             };
 
             arr.append(0);
-            i += 1;
         };
 
         arr.span()
