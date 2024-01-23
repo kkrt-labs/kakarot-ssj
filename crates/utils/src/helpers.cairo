@@ -944,27 +944,13 @@ impl U64Impl of U64Trait {
         self.to_be_bytes().pad_left_with_zeroes(8)
     }
 
-    /// Unpacks a u64 into an array of little endian bytes, padded to 8 bytes
+    /// Unpacks a u64 into an span of little endian bytes, padded to 8 bytes
     /// # Arguments
     /// * `self` a `u64` value.
     /// # Returns
-    /// * The bytes array representation of the value.
-    fn to_le_bytes_padded(mut self: u64) -> Array<u8> {
-        let mut bytes: Array<u8> = Default::default();
-        let res = self.to_le_bytes();
-
-        bytes.append_span(res);
-
-        let i = 0;
-        loop {
-            if i == (8 - res.len()) {
-                break;
-            }
-
-            bytes.append(0);
-        };
-
-        bytes
+    /// * The bytes representation of the value.
+    fn to_le_bytes_padded(mut self: u64) -> Span<u8> {
+        self.to_le_bytes().slice_right_padded(0, 8)
     }
 
     /// Returns the number of trailing zeroes in the bit representation of `self`.
@@ -1714,7 +1700,7 @@ impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
             if self[i] == 0 {
                 res.append(0);
             } else {
-                res.append_span(self[i].to_le_bytes_padded().span());
+                res.append_span(self[i].to_le_bytes());
             }
 
             i += 1;
