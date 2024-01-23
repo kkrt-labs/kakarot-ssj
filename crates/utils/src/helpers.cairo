@@ -640,7 +640,21 @@ impl U8SpanExImpl of U8SpanExTrait {
 
     /// Returns right padded slice of the span, starting from index offset
     /// If offset is greater than the span length, returns an empty span
-    fn get_right_padded_span(self: Span<u8>, offset: usize, len: usize) -> Span<u8> {
+    /// # Examples
+    ///
+    /// ```
+    ///   let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+    ///   let expected = array![0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
+    ///   let result = span.slice_right_padded(4, 10);
+    ///   assert_eq!(result, expected);
+    /// ```
+    /// # Arguments
+    /// * `offset` - The offset to start the slice from
+    /// * `len` - The length of the slice
+    ///
+    /// # Returns
+    /// * A span of length `len` starting from `offset` right padded with 0s if `offset` is greater than the span length, returns an empty span of length `len` if offset is grearter than the span length
+    fn slice_right_padded(self: Span<u8>, offset: usize, len: usize) -> Span<u8> {
         let mut arr = array![];
 
         let start = if offset <= self.len() {
