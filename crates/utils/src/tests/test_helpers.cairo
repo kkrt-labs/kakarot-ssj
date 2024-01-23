@@ -231,7 +231,7 @@ mod u32_test {
     #[test]
     fn test_u32_to_be_bytes_padded() {
         let input: u32 = 7;
-        let result = input.to_be_bytes_padded().span();
+        let result = input.to_be_bytes_padded();
         let expected = array![0x0, 0x0, 0x0, 7].span();
 
         assert_eq!(result, expected);
@@ -284,7 +284,7 @@ mod u64_test {
     #[test]
     fn test_u64_to_be_bytes_padded() {
         let input: u64 = 7;
-        let result = input.to_be_bytes_padded().span();
+        let result = input.to_be_bytes_padded();
         let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 7].span();
 
         assert_eq!(result, expected);
@@ -344,7 +344,7 @@ mod u128_test {
     #[test]
     fn test_u128_to_bytes_full() {
         let input: u128 = BoundedInt::max();
-        let result: Span<u8> = input.to_be_bytes().span();
+        let result: Span<u8> = input.to_be_bytes();
         let expected = array![
             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
         ]
@@ -356,7 +356,7 @@ mod u128_test {
     #[test]
     fn test_u128_to_bytes_partial() {
         let input: u128 = 0xf43215;
-        let result: Span<u8> = input.to_be_bytes().span();
+        let result: Span<u8> = input.to_be_bytes();
         let expected = array![0xf4, 0x32, 0x15].span();
 
         assert_eq!(result, expected);
@@ -365,7 +365,7 @@ mod u128_test {
     #[test]
     fn test_u128_to_bytes_padded() {
         let input: u128 = 0xf43215;
-        let result: Span<u8> = input.to_be_bytes_padded().span();
+        let result: Span<u8> = input.to_be_bytes_padded();
         let expected = array![
             0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x32, 0x15
         ]
