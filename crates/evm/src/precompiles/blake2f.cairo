@@ -87,7 +87,7 @@ impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
                 break;
             }
 
-            let bytes = (*res[i]).to_le_bytes_padded().span();
+            let bytes = (*res[i]).to_le_bytes_padded();
             return_data.append_span(bytes);
 
             i += 1;
