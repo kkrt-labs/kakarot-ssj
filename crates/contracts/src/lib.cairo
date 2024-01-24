@@ -12,3 +12,5 @@ mod tests;
 
 // Account transparent proxy
 mod uninitialized_account;
+
+mod precompiles;
