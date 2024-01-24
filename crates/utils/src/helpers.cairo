@@ -950,6 +950,10 @@ impl U64Impl of U64Trait {
     }
 
     /// Returns the number of trailing zeroes in the bit representation of `self`.
+    /// # Arguments
+    /// * `self` a `u64` value.
+    /// # Returns
+    /// * The number of trailing zeroes in the bit representation of `self`.
     fn count_trailing_zeroes(self: u64) -> u8 {
         let mut count = 0;
 
@@ -957,14 +961,15 @@ impl U64Impl of U64Trait {
             return 64; // If n is 0, all 64 bits are zeros
         };
 
-        let mut n = self;
+        let mut mask = 1;
 
         loop {
-            if (n & 1) != 0 {
+            if (self & mask) != 0 {
                 break;
-            };
+            }
+
             count += 1;
-            n = n.shr(1);
+            mask *= 2;
         };
 
         count
