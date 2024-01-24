@@ -1,7 +1,7 @@
 use integer::{u256_overflowing_add, BoundedInt, u512, u256_overflow_mul};
 use utils::math::{
     Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift,
-    OverflowingMul, WrappingMul
+    OverflowingMul, WrappingMul, SaturatingAdd
 };
 
 #[test]
@@ -362,4 +362,12 @@ fn test_u256_wrapping_mul_not_overflow_case() {
 fn test_u256_wrapping_mul_overflow_case() {
     let result = BoundedInt::<u256>::max().wrapping_mul(BoundedInt::max());
     assert_eq!(result, 1);
+}
+
+#[test]
+fn test_saturating_add() {
+    let max = BoundedInt::<u8>::max();
+
+    assert_eq!(max.saturating_add(1), BoundedInt::<u8>::max());
+    assert_eq!((max - 2).saturating_add(1), max - 1);
 }

@@ -145,7 +145,7 @@ impl RLPImpl of RLPTrait {
             return encoding.span();
         } else {
             let mut encoding: Array<u8> = Default::default();
-            let len_as_bytes = len.to_bytes();
+            let len_as_bytes = len.to_be_bytes();
             let len_bytes_count = len_as_bytes.len();
             let prefix = 0xb7 + len_bytes_count.try_into().unwrap();
             encoding.append(prefix);

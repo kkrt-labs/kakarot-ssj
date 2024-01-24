@@ -1,11 +1,14 @@
+use alexandria_data_structures::vec::VecTrait;
+use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
 use cmp::min;
 use core::array::ArrayTrait;
 use core::array::SpanTrait;
 use core::hash::{HashStateExTrait, HashStateTrait};
-use core::num::traits::{Zero, One};
+use core::num::traits::{Zero, One, BitSize};
 use core::pedersen::{HashState, PedersenTrait};
 use core::traits::TryInto;
 use integer::{BoundedInt, u32_as_non_zero, U32TryIntoNonZero};
+use integer::{u32_overflowing_add};
 use keccak::{cairo_keccak, u128_split};
 use starknet::{
     EthAddress, EthAddressIntoFelt252, ContractAddress, ClassHash,
@@ -19,7 +22,7 @@ use utils::constants::{
 };
 use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 use utils::eth_transaction::{TransactionType};
-use utils::math::{Bitshift, WrappingBitshift, Exponentiation};
+use utils::math::{Bitshift, WrappingBitshift, Exponentiation, SaturatingAdd};
 use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, TryIntoResult, BoolIntoNumeric};
 
 
@@ -634,6 +637,144 @@ impl U8SpanExImpl of U8SpanExTrait {
 
         array
     }
+
+    /// Returns right padded slice of the span, starting from index offset
+    /// If offset is greater than the span length, returns an empty span
+    /// # Examples
+    ///
+    /// ```
+    ///   let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+    ///   let expected = array![0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
+    ///   let result = span.slice_right_padded(4, 10);
+    ///   assert_eq!(result, expected);
+    /// ```
+    /// # Arguments
+    /// * `offset` - The offset to start the slice from
+    /// * `len` - The length of the slice
+    ///
+    /// # Returns
+    /// * A span of length `len` starting from `offset` right padded with 0s if `offset` is greater than the span length, returns an empty span of length `len` if offset is grearter than the span length
+    fn slice_right_padded(self: Span<u8>, offset: usize, len: usize) -> Span<u8> {
+        let mut arr = array![];
+
+        let start = if offset <= self.len() {
+            offset
+        } else {
+            self.len()
+        };
+
+        let end = min(start.saturating_add(len), self.len());
+
+        let slice = self.slice(start, end - start);
+        // Save appending to span for this case as it is more efficient to just return the slice
+        if slice.len() == len {
+            return slice;
+        }
+
+        // Copy the span
+        arr.append_span(slice);
+
+        loop {
+            if arr.len() == len {
+                break;
+            };
+
+            arr.append(0);
+        };
+
+        arr.span()
+    }
+
+    /// Clones and pads the given span with 0s to the given length, if data is more than the given length, it is truncated from the right side
+    /// # Examples
+    /// ```
+    ///  let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+    ///  let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+    ///  let result = span.left_padding(10);
+    ///
+    ///  assert_eq!(result, expected);
+    ///
+    ///  // Truncates the data if it is more than the given length
+    ///  let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+    ///  let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
+    ///  let result = span.pad_left_with_zeroes(9);
+    ///
+    ///  assert_eq!(result, expected);
+    /// ```
+    /// # Arguments
+    /// * `len` - The length of the padded span
+    ///
+    /// # Returns
+    /// * A span of length `len` left padded with 0s if the span length is less than `len`, returns a span of length `len` if the span length is greater than `len` then the data is truncated from the right side
+    fn pad_left_with_zeroes(self: Span<u8>, len: usize) -> Span<u8> {
+        if self.len() >= len {
+            return self.slice(0, len);
+        }
+
+        // left pad with 0
+        let mut arr = array![];
+        loop {
+            if arr.len() == (len - self.len()) {
+                break;
+            };
+
+            arr.append(0);
+        };
+
+        // append the data
+        let mut i = 0;
+        loop {
+            if i == self.len() {
+                break;
+            };
+
+            arr.append(*self[i]);
+            i += 1;
+        };
+
+        arr.span()
+    }
+}
+
+#[generate_trait]
+impl U8Impl of U8Trait {
+    /// Returns the number of bits used to represent the value in binary representation
+    /// # Arguments
+    /// * `self` - The value to compute the number of bits used
+    /// # Returns
+    /// * The number of bits used to represent the value in binary representation
+    fn bits_used(self: u8) -> u8 {
+        if self < 0b100000 {
+            if self < 0b1000 {
+                if self < 0b100 {
+                    if self < 0b10 {
+                        if self == 0 {
+                            return 0;
+                        } else {
+                            return 1;
+                        };
+                    }
+                    return 2;
+                }
+
+                return 3;
+            }
+
+            if self < 0b10000 {
+                return 4;
+            }
+
+            return 5;
+        } else {
+            if self < 0b10000000 {
+                if self < 0b1000000 {
+                    return 6;
+                }
+                return 7;
+            }
+            return 8;
+        }
+    }
 }
 
 #[generate_trait]
@@ -696,12 +837,12 @@ impl U32Impl of U32Trait {
         Option::Some(result)
     }
 
-    /// Unpacks a u32 into an array of bytes
+    /// Unpacks a u32 into an array of big endian bytes
     /// # Arguments
     /// * `self` a `u32` value.
     /// # Returns
     /// * The bytes array representation of the value.
-    fn to_bytes(mut self: u32) -> Span<u8> {
+    fn to_be_bytes(mut self: u32) -> Span<u8> {
         let bytes_used: u32 = self.bytes_used().into();
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
@@ -717,27 +858,13 @@ impl U32Impl of U32Trait {
         bytes.span()
     }
 
-    /// Returns the number of bytes used to represent a `u32` value.
+    /// Unpacks a u32 into an span of big endian bytes, padded to 4 bytes
     /// # Arguments
-    /// * `self` - The value to check.
+    /// * `self` a `u32` value.
     /// # Returns
-    /// The number of bytes used to represent the value.
-    fn bytes_used(self: usize) -> u8 {
-        if self < 0x10000 { // 256^2
-            if self < 0x100 { // 256^1
-                if self == 0 {
-                    return 0;
-                } else {
-                    return 1;
-                };
-            }
-            return 2;
-        } else {
-            if self < 0x1000000 { // 256^3
-                return 3;
-            }
-            return 4;
-        }
+    /// * The bytes representation of the value.
+    fn to_be_bytes_padded(mut self: u32) -> Span<u8> {
+        self.to_be_bytes().pad_left_with_zeroes(4)
     }
 }
 
@@ -803,12 +930,12 @@ impl U64Impl of U64Trait {
         Option::Some(result)
     }
 
-    /// Unpacks a u64 into an array of big endian bytes
+    /// Unpacks a u64 into an Span of big endian bytes
     /// # Arguments
     /// * `self` a `u64` value.
     /// # Returns
-    /// * The bytes array representation of the value.
-    fn to_be_bytes(mut self: u64) -> Array<u8> {
+    /// * The bytes representation of the value.
+    fn to_be_bytes(mut self: u64) -> Span<u8> {
         let bytes_used: u64 = self.bytes_used().into();
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
@@ -821,15 +948,15 @@ impl U64Impl of U64Trait {
             i += 1;
         };
 
-        bytes
+        bytes.span()
     }
 
-    /// Unpacks a u64 into an array of little endian bytes
+    /// Unpacks a u64 into an Span of little endian bytes
     /// # Arguments
     /// * `self` a `u64` value.
     /// # Returns
-    /// * The bytes array representation of the value.
-    fn to_le_bytes(mut self: u64) -> Array<u8> {
+    /// * The bytes representation of the value.
+    fn to_le_bytes(mut self: u64) -> Span<u8> {
         let bytes_used: u64 = self.bytes_used().into();
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
@@ -842,79 +969,51 @@ impl U64Impl of U64Trait {
             i += 1;
         };
 
-        bytes
+        bytes.span()
     }
 
-    /// Unpacks a u64 into an array of big endian bytes, padded to 8 bytes
+    /// Unpacks a u64 into an Span of big endian bytes, padded to 8 bytes
     /// # Arguments
     /// * `self` a `u64` value.
     /// # Returns
-    /// * The bytes array representation of the value.
-    fn to_be_bytes_padded(mut self: u64) -> Array<u8> {
-        let mut bytes: Array<u8> = Default::default();
-        let res = self.to_be_bytes().span();
-
-        let i = 0;
-        loop {
-            if i == (8 - res.len()) {
-                break;
-            }
-
-            bytes.append(0);
-        };
-
-        bytes.append_span(res);
-        bytes
+    /// * The bytes representation of the value padded to 8 bytes.
+    fn to_be_bytes_padded(mut self: u64) -> Span<u8> {
+        self.to_be_bytes().pad_left_with_zeroes(8)
     }
 
-    /// Unpacks a u64 into an array of little endian bytes, padded to 8 bytes
+    /// Unpacks a u64 into an span of little endian bytes, padded to 8 bytes
     /// # Arguments
     /// * `self` a `u64` value.
     /// # Returns
-    /// * The bytes array representation of the value.
-    fn to_le_bytes_padded(mut self: u64) -> Array<u8> {
-        let mut bytes: Array<u8> = Default::default();
-        let res = self.to_le_bytes().span();
+    /// * The bytes representation of the value.
+    fn to_le_bytes_padded(mut self: u64) -> Span<u8> {
+        self.to_le_bytes().slice_right_padded(0, 8)
+    }
 
-        bytes.append_span(res);
+    /// Returns the number of trailing zeroes in the bit representation of `self`.
+    /// # Arguments
+    /// * `self` a `u64` value.
+    /// # Returns
+    /// * The number of trailing zeroes in the bit representation of `self`.
+    fn count_trailing_zeroes(self: u64) -> u8 {
+        let mut count = 0;
 
-        let i = 0;
+        if self == 0 {
+            return 64; // If n is 0, all 64 bits are zeros
+        };
+
+        let mut mask = 1;
+
         loop {
-            if i == (8 - res.len()) {
+            if (self & mask) != 0 {
                 break;
             }
 
-            bytes.append(0);
+            count += 1;
+            mask *= 2;
         };
 
-        bytes
-    }
-
-    /// Returns the number of bytes used to represent a `u64` value.
-    /// # Arguments
-    /// * `self` - The value to check.
-    /// # Returns
-    /// The number of bytes used to represent the value.
-    fn bytes_used(self: u64) -> u8 {
-        if self <= BoundedInt::<u32>::max().into() { // 256^4
-            return U32Trait::bytes_used(self.try_into().unwrap());
-        } else {
-            if self < 0x1000000000000 { // 256^6
-                if self < 0x10000000000 {
-                    if self < 0x100000000 {
-                        return 4;
-                    }
-                    return 5;
-                }
-                return 6;
-            } else {
-                if self < 0x100000000000000 { // 256^7
-                    return 7;
-                } else {
-                    return 8;
-                }
-            }
-        }
+        count
     }
 }
 
@@ -979,13 +1078,40 @@ impl U128Impl of U128Trait {
         Option::Some(result)
     }
 
-    fn bytes_used(self: u128) -> u8 {
-        let (u64high, u64low) = u128_split(self);
-        if u64high == 0 {
-            return U64Trait::bytes_used(u64low.try_into().unwrap());
-        } else {
-            return U64Trait::bytes_used(u64high.try_into().unwrap()) + 8;
-        }
+    /// Returns the Least signficant 64 bits of a u128
+    fn as_u64(self: u128) -> u64 {
+        let (_, bottom_word) = u128_split(self);
+        bottom_word
+    }
+
+    /// Unpacks a u128 into an Span of big endian bytes
+    /// # Arguments
+    /// * `self` a `u128` value.
+    /// # Returns
+    /// * The bytes representation of the value.
+    fn to_be_bytes(mut self: u128) -> Span<u8> {
+        let bytes_used: u128 = self.bytes_used().into();
+        let mut bytes: Array<u8> = Default::default();
+        let mut i = 0;
+        loop {
+            if i == bytes_used {
+                break ();
+            }
+            let val = self.shr(8 * (bytes_used.try_into().unwrap() - i - 1));
+            bytes.append((val & 0xFF).try_into().unwrap());
+            i += 1;
+        };
+
+        bytes.span()
+    }
+
+    /// Unpacks a u128 into an Span of big endian bytes, padded to 16 bytes
+    /// # Arguments
+    /// * `self` a `u128` value.
+    /// # Returns
+    /// * The bytes representation of the value.
+    fn to_be_bytes_padded(mut self: u128) -> Span<u8> {
+        self.to_be_bytes().pad_left_with_zeroes(16)
     }
 }
 
@@ -1006,10 +1132,10 @@ impl U256Impl of U256Trait {
         u256 { low: new_low, high: new_high }
     }
 
-    // Returns a u256 representation as bytes: `Span<u8>`
+    // Returns a u256 representation as bytes: `Span<u8>` big endian
     // If the u256 representation does not take up to 32 bytes,
     // the size of the returned slice is equal to the number of bytes used
-    fn to_bytes(self: u256) -> Span<u8> {
+    fn to_be_bytes(self: u256) -> Span<u8> {
         let bytes_used: u256 = self.bytes_used().into();
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
@@ -1099,14 +1225,6 @@ impl U256Impl of U256Trait {
             i += 1;
         };
         Option::Some(result)
-    }
-
-    fn bytes_used(self: u256) -> u8 {
-        if self.high == 0 {
-            return U128Trait::bytes_used(self.low.try_into().unwrap());
-        } else {
-            return U128Trait::bytes_used(self.high.try_into().unwrap()) + 16;
-        }
     }
 }
 
@@ -1420,5 +1538,129 @@ impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
 
         res.append(value.into());
         Option::Some(res)
+    }
+}
+
+trait BytesUsedTrait<T> {
+    /// Returns the number of bytes used to represent a `T` value.
+    /// # Arguments
+    /// * `self` - The value to check.
+    /// # Returns
+    /// The number of bytes used to represent the value.
+    fn bytes_used(self: T) -> u8;
+}
+
+impl USizeBytesUsedTraitImpl of BytesUsedTrait<usize> {
+    fn bytes_used(self: usize) -> u8 {
+        if self < 0x10000 { // 256^2
+            if self < 0x100 { // 256^1
+                if self == 0 {
+                    return 0;
+                } else {
+                    return 1;
+                };
+            }
+            return 2;
+        } else {
+            if self < 0x1000000 { // 256^3
+                return 3;
+            }
+            return 4;
+        }
+    }
+}
+
+impl U64BytesUsedTraitImpl of BytesUsedTrait<u64> {
+    fn bytes_used(self: u64) -> u8 {
+        if self <= BoundedInt::<u32>::max().into() { // 256^4
+            return BytesUsedTrait::<u32>::bytes_used(self.try_into().unwrap());
+        } else {
+            if self < 0x1000000000000 { // 256^6
+                if self < 0x10000000000 {
+                    if self < 0x100000000 {
+                        return 4;
+                    }
+                    return 5;
+                }
+                return 6;
+            } else {
+                if self < 0x100000000000000 { // 256^7
+                    return 7;
+                } else {
+                    return 8;
+                }
+            }
+        }
+    }
+}
+
+impl U128BytesTraitUsedImpl of BytesUsedTrait<u128> {
+    fn bytes_used(self: u128) -> u8 {
+        let (u64high, u64low) = u128_split(self);
+        if u64high == 0 {
+            return BytesUsedTrait::<u64>::bytes_used(u64low.try_into().unwrap());
+        } else {
+            return BytesUsedTrait::<u64>::bytes_used(u64high.try_into().unwrap()) + 8;
+        }
+    }
+}
+
+impl U256BytesUsedTraitImpl of BytesUsedTrait<u256> {
+    fn bytes_used(self: u256) -> u8 {
+        if self.high == 0 {
+            return BytesUsedTrait::<u128>::bytes_used(self.low.try_into().unwrap());
+        } else {
+            return BytesUsedTrait::<u128>::bytes_used(self.high.try_into().unwrap()) + 16;
+        }
+    }
+}
+
+trait BitLengthTrait<T> {
+    /// Returns the number of bits required to represent `self`, ignoring leading zeros.
+    /// # Arguments
+    /// `self` - The value to check.
+    /// # Returns
+    /// The number of bits used to represent the value, ignoring leading zeros.
+    fn bit_len(self: T) -> u32;
+
+    /// Returns the number of leading zeroes in the bit representation of `self`.
+    /// # Arguments
+    /// `self` - The value to check.
+    /// # Returns
+    /// The number of leading zeroes in the bit representation of `self`.
+    fn count_leading_zeroes(self: T) -> u32;
+}
+
+impl BitLengthTraitImpl<
+    T,
+    +Zero<T>,
+    +One<T>,
+    +Add<T>,
+    +Sub<T>,
+    +Mul<T>,
+    +Bitshift<T>,
+    +BitSize<T>,
+    +BytesUsedTrait<T>,
+    +Into<u8, T>,
+    +TryInto<T, u8>,
+    +Copy<T>,
+    +Drop<T>,
+    +PartialEq<T>
+> of BitLengthTrait<T> {
+    fn bit_len(self: T) -> u32 {
+        let two: T = One::one() + One::one();
+        let eight: T = two * two * two;
+
+        let bytes_used = self.bytes_used();
+        let last_byte = self.shr(eight * (bytes_used.into() - One::one()));
+
+        // safe unwrap since we know atmost 8 bits are used
+        let mut n: u8 = last_byte.try_into().unwrap();
+
+        (n.bits_used() + 8 * (bytes_used - 1)).into()
+    }
+
+    fn count_leading_zeroes(self: T) -> u32 {
+        BitSize::<T>::bits() - self.bit_len()
     }
 }
