@@ -737,6 +737,47 @@ impl U8SpanExImpl of U8SpanExTrait {
 }
 
 #[generate_trait]
+impl U8Impl of U8Trait {
+    /// Returns the number of bits used to represent the value in binary representation
+    /// # Arguments
+    /// * `self` - The value to compute the number of bits used
+    /// # Returns
+    /// * The number of bits used to represent the value in binary representation
+    fn bits_used(self: u8) -> u8 {
+        if self < 0b100000 {
+            if self < 0b1000 {
+                if self < 0b100 {
+                    if self < 0b10 {
+                        if self == 0 {
+                            return 0;
+                        } else {
+                            return 1;
+                        };
+                    }
+                    return 2;
+                }
+
+                return 3;
+            }
+
+            if self < 0b10000 {
+                return 4;
+            }
+
+            return 5;
+        } else {
+            if self < 0b10000000 {
+                if self < 0b1000000 {
+                    return 6;
+                }
+                return 7;
+            }
+            return 8;
+        }
+    }
+}
+
+#[generate_trait]
 impl U32Impl of U32Trait {
     /// Packs 4 bytes into a u32 big endian bytes
     /// # Arguments
@@ -1601,6 +1642,7 @@ impl BitLengthTraitImpl<
     +BitSize<T>,
     +BytesUsedTrait<T>,
     +Into<u8, T>,
+    +TryInto<T, u8>,
     +Copy<T>,
     +Drop<T>,
     +PartialEq<T>
@@ -1612,20 +1654,10 @@ impl BitLengthTraitImpl<
         let bytes_used = self.bytes_used();
         let last_byte = self.shr(eight * (bytes_used.into() - One::one()));
 
-        let mut count = 0;
+        // safe unwrap since we know atmost 8 bits are used
+        let mut n: u8 = last_byte.try_into().unwrap();
 
-        /// Count the number of bits in the last byte
-        let mut n = last_byte;
-        loop {
-            if n == Zero::zero() {
-                break;
-            };
-
-            count += 1;
-            n = n.shr(One::one());
-        };
-
-        (count + 8 * (bytes_used - 1)).into()
+        (n.bits_used() + 8 * (bytes_used - 1)).into()
     }
 
     fn count_leading_zeroes(self: T) -> u32 {

@@ -174,6 +174,27 @@ mod test_array_ext {
     }
 }
 
+mod u8_test {
+    use utils::helpers::U8Trait;
+    use utils::math::Bitshift;
+
+    #[test]
+    fn test_bits_used() {
+        assert_eq!(0x00_u8.bits_used(), 0);
+        let mut value: u8 = 0xff;
+        let mut i = 8;
+        loop {
+            assert_eq!(value.bits_used(), i);
+            if i == 0 {
+                break;
+            };
+            value = value.shr(1);
+
+            i -= 1;
+        };
+    }
+}
+
 mod u32_test {
     use utils::helpers::Bitshift;
     use utils::helpers::U32Trait;
