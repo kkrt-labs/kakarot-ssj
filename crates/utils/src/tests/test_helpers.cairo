@@ -868,3 +868,424 @@ mod eth_signature_test {
         assert_eq!(result, signature_2);
     }
 }
+
+mod felt252_vec_u8_test {
+    use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+    use utils::helpers::{Felt252VecU8Trait};
+
+    #[test]
+    fn test_felt252_vec_u8_to_bytes() {
+        let mut vec: Felt252Vec<u8> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+        vec.push(2);
+        vec.push(3);
+
+        let result = vec.to_bytes();
+        let expected = array![0, 1, 2, 3].span();
+
+        assert_eq!(result, expected);
+    }
+}
+
+mod felt252_vec_u64_test {
+    #[available_gas(1000000000000)]
+    use utils::helpers::{Felt252VecU64Trait};
+    use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+
+    #[test]
+    fn test_felt252_vec_u64_from_le_to_le_bytes() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+        vec.push(2);
+        vec.push(3);
+
+        let result = vec.from_le_to_le_bytes();
+        let expected = array![0, 1, 2, 3].span();
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_felt252_vec_u64_from_le_to_be_bytes() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+        vec.push(2);
+        vec.push(3);
+
+        let result = vec.from_le_to_be_bytes();
+        let expected = array![
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ]
+            .span();
+
+        assert_eq!(result, expected);
+    }
+}
+
+mod felt252_vec_test {
+    use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+    use utils::helpers::{Felt252VecTrait, Felt252VecTraitErrors};
+
+    #[test]
+    fn test_felt252_vec_expand() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+
+        vec.expand(4).unwrap();
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_felt252_vec_expand_fail() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+
+        let result = vec.expand(1);
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::SizeLessThanCurrentLength));
+    }
+
+    #[test]
+    fn test_felt252_vec_reset() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+
+        vec.reset();
+
+        assert_eq!(vec.len(), 2);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_felt252_vec_count_leading_zeroes() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(0);
+        vec.push(0);
+        vec.push(1);
+
+        let result = vec.count_leading_zeroes();
+
+        assert_eq!(result, 3);
+    }
+
+
+    #[test]
+    fn test_felt252_vec_resize_len_greater_than_current_len() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+
+        vec.resize(4, 0);
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_felt252_vec_resize_len_less_than_current_len() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+        vec.push(0);
+        vec.push(0);
+
+        vec.resize(2, 0);
+
+        assert_eq!(vec.len(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_felt252_vec_len_0() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(0);
+        vec.push(1);
+
+        vec.resize(0, 0);
+
+        assert_eq!(vec.len(), 0);
+    }
+
+    #[test]
+    fn test_copy_from_bytes_le_size_equal_to_vec_size() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        let bytes = array![1, 2, 3, 4].span();
+        vec.copy_from_bytes_le(0, bytes).unwrap();
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 4);
+        assert_eq!(vec.pop().unwrap(), 3);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_copy_from_bytes_le_size_less_than_vec_size() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        let bytes = array![1, 2].span();
+        vec.copy_from_bytes_le(2, bytes).unwrap();
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_copy_from_bytes_le_size_greater_than_vec_size() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        let bytes = array![1, 2, 3, 4].span();
+        let result = vec.copy_from_bytes_le(2, bytes);
+
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::Overflow));
+    }
+
+    #[test]
+    fn test_copy_from_bytes_index_out_of_bound() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        let bytes = array![1, 2].span();
+        let result = vec.copy_from_bytes_le(4, bytes);
+
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::IndexOutOfBound));
+    }
+
+    #[test]
+    fn test_copy_from_vec_le() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(2).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+        vec2.push(2);
+
+        vec.copy_from_vec_le(ref vec2).unwrap();
+
+        assert_eq!(vec.len, 2);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_copy_from_vec_le_not_equal_lengths() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(2).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+
+        let result = vec.copy_from_vec_le(ref vec2);
+
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::LengthIsNotSame));
+    }
+
+
+    #[test]
+    fn test_insert_vec_size_equal_to_vec_size() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(2).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+        vec2.push(2);
+
+        vec.insert_vec(0, ref vec2).unwrap();
+
+        assert_eq!(vec.len(), 2);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_insert_vec_size_less_than_vec_size() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+        vec2.push(2);
+
+        vec.insert_vec(2, ref vec2).unwrap();
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_insert_vec_size_greater_than_vec_size() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(2).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+        vec2.push(2);
+        vec2.push(3);
+        vec2.push(4);
+
+        let result = vec.insert_vec(1, ref vec2);
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::Overflow));
+    }
+
+    #[test]
+    fn test_insert_vec_index_out_of_bound() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+        vec2.push(2);
+
+        let result = vec.insert_vec(4, ref vec2);
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::IndexOutOfBound));
+    }
+
+    #[test]
+    fn test_remove_trailing_zeroes_le() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(1);
+        vec.push(2);
+        vec.push(0);
+        vec.push(0);
+
+        vec.remove_trailing_zeroes();
+
+        assert_eq!(vec.len(), 2);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_pop() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(1);
+        vec.push(2);
+
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop(), Option::<u64>::None);
+    }
+
+    #[test]
+    fn test_duplicate() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(1);
+        vec.push(2);
+
+        let mut vec2 = vec.duplicate();
+
+        assert_eq!(vec.len(), vec2.len());
+        assert_eq!(vec.pop(), vec2.pop());
+        assert_eq!(vec.pop(), vec2.pop());
+        assert_eq!(vec.pop().is_none(), true);
+        assert_eq!(vec2.pop().is_none(), true);
+    }
+
+    #[test]
+    fn test_slice() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(1);
+        vec.push(2);
+
+        let mut vec2 = vec.slice(1, 1).unwrap();
+
+        assert_eq!(vec2.len(), 1);
+        assert_eq!(vec2.pop().unwrap(), 2);
+        assert_eq!(vec.slice(2, 1).is_none(), true);
+        assert_eq!(vec.slice(4, 2).is_none(), true)
+    }
+
+    #[test]
+    fn test_equal() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.push(1);
+        vec.push(2);
+
+        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec2.push(1);
+        vec2.push(2);
+
+        assert!(vec.equal(ref vec2));
+        vec2.pop().unwrap();
+        assert!(!vec.equal(ref vec2));
+    }
+
+    #[test]
+    fn test_fill() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        vec.fill(1, 3, 1).unwrap();
+
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_fill_overflow() {
+        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.expand(4).unwrap();
+
+        assert_eq!(vec.fill(4, 0, 1), Result::Err(Felt252VecTraitErrors::IndexOutOfBound));
+        assert_eq!(vec.fill(2, 4, 1), Result::Err(Felt252VecTraitErrors::Overflow));
+    }
+}
