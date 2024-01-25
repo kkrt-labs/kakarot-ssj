@@ -1823,15 +1823,7 @@ impl Felt252VecTraitImpl<
             return Result::Err(Felt252VecTraitErrors::LengthIsNotSame);
         }
 
-        let mut i = 0;
-        loop {
-            if i == self.len() {
-                break;
-            }
-
-            self.set(i, vec[i]);
-            i += 1;
-        };
+        self = vec.duplicate();
 
         Result::Ok(())
     }
