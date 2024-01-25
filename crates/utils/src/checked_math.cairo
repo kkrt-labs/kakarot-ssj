@@ -121,6 +121,12 @@ mod checked_mul {
     use utils::math::{Bitshift, OverflowingMul};
 
     trait CheckedMul<T> {
+        /// performs a checked multiplication, returning `None` if the multiplication overflows.
+        /// # Arguments
+        /// * `self` - The left hand side of the multiplication.
+        /// * `rhs` - The right hand side of the multiplication.
+        /// # Returns
+        /// `Some(self * rhs)` if the multiplication doesn't overflow, and `None` otherwise.
         fn checked_mul(self: T, rhs: T) -> Option<T>;
     }
 
