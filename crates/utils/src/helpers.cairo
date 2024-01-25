@@ -1664,3 +1664,434 @@ impl BitLengthTraitImpl<
         BitSize::<T>::bits() - self.bit_len()
     }
 }
+
+
+#[derive(Drop, Debug, PartialEq)]
+enum Felt252VecTraitErrors {
+    IndexOutOfBound,
+    Overflow,
+    LengthIsNotSame,
+    SizeLessThanCurrentLength
+}
+
+#[generate_trait]
+impl Felt252VecU8TraitImpl of Felt252VecU8Trait {
+    /// Returns Felt252Vec<u8> as a Span<8>
+    /// The endianess of the bytes will be same as the endianess of the `self`
+    fn to_bytes(ref self: Felt252Vec<u8>) -> Span<u8> {
+        let mut arr: Array<u8> = Default::default();
+
+        let mut i = 0;
+        loop {
+            if i == self.len() {
+                break;
+            }
+
+            arr.append(self[i]);
+            i += 1;
+        };
+
+        arr.span()
+    }
+}
+
+#[generate_trait]
+impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
+    /// Returns Felt252Vec<u64> as a Span<8>, Where self is in little endian format, and the returned Span is in big endian format
+    fn from_le_to_be_bytes(ref self: Felt252Vec<u64>) -> Span<u8> {
+        let mut res: Array<u8> = array![];
+
+        self.remove_trailing_zeroes_le();
+
+        let mut i = self.len();
+
+        loop {
+            if i == 0 {
+                break;
+            }
+
+            let j = i - 1;
+
+            res.append_span(self[j].to_be_bytes_padded());
+
+            i -= 1;
+        };
+
+        res.span()
+    }
+
+    /// Returns Felt252Vec<u64> as a Span<8>, Where self is in little endian format, and the returned Span is in little endian format
+    fn from_le_to_le_bytes(ref self: Felt252Vec<u64>) -> Span<u8> {
+        let mut res: Array<u8> = array![];
+        let mut i = 0;
+
+        loop {
+            if i == self.len() {
+                break;
+            }
+
+            if self[i] == 0 {
+                res.append(0);
+            } else {
+                res.append_span(self[i].to_le_bytes());
+            }
+
+            i += 1;
+        };
+
+        res.span()
+    }
+}
+
+#[generate_trait]
+impl Felt252VecTraitImpl<
+    T,
+    +Drop<T>,
+    +Copy<T>,
+    +Felt252DictValue<T>,
+    +Zero<T>,
+    +Add<T>,
+    +Sub<T>,
+    +Div<T>,
+    +Mul<T>,
+    +Exponentiation<T>,
+    +PartialOrd<T>,
+    +Into<u8, T>,
+    +PartialEq<T>
+> of Felt252VecTrait<T> {
+    /// Expands a Felt252Vec to a new length by appending zeroes, if the new length is less than the current length, it will return an error
+    fn expand(ref self: Felt252Vec<T>, new_length: usize) -> Result<(), Felt252VecTraitErrors> {
+        if (new_length < self.len) {
+            return Result::Err(Felt252VecTraitErrors::SizeLessThanCurrentLength);
+        };
+
+        let mut i = new_length - self.len();
+        loop {
+            if i == 0 {
+                break;
+            }
+
+            self.push(Zero::zero());
+            i -= 1;
+        };
+
+        Result::Ok(())
+    }
+
+    /// Sets all elements of the Felt252Vec to zero
+    fn reset(ref self: Felt252Vec<T>) {
+        let mut i = 0;
+
+        loop {
+            if i == self.len() {
+                break;
+            };
+
+            self.set(i, Zero::zero());
+
+            i += 1;
+        };
+    }
+
+    /// Returns the leading zeroes of a Felt252Vec<T> which is in little endian format
+    fn count_leading_zeroes_le(ref self: Felt252Vec<T>) -> usize {
+        let mut i = 0;
+        loop {
+            if i == self.len || self[i] != Zero::zero() {
+                break;
+            }
+
+            i += 1;
+        };
+
+        i
+    }
+
+    /// Resizes the Felt252Vec<T> in-place so that len is equal to new_len.
+    ///
+    /// If new_len is greater than len, the Vec is extended by the difference, with each additional slot filled with `value`. If new_len is less than len, the Vec is simply truncated from the right.
+    fn resize(ref self: Felt252Vec<T>, new_len: usize, value: T) {
+        if self.len() == new_len {
+            return;
+        }
+
+        let s = self.len();
+        if s < new_len {
+            let mut i = 0;
+            loop {
+                if i == new_len - s {
+                    break;
+                }
+
+                self.push(value);
+                i += 1;
+            };
+
+            return;
+        };
+
+        let mut new_vec = Felt252VecImpl::new();
+        let mut i = 0;
+        loop {
+            if i == new_len {
+                break;
+            }
+
+            new_vec.push(self[i]);
+
+            i += 1;
+        };
+
+        self = new_vec;
+    }
+
+
+    /// Copies the elements from a Span<u8> into the Felt252Vec<T> in little endian format, in case of overflow or index being out of bounds, an error is returned
+    /// # Arguments
+    /// * `self` a ref Felt252Vec<T>
+    /// * `index` the index at `self` to start copying from
+    /// * `slice` a Span<u8>
+    fn copy_from_bytes_le(
+        ref self: Felt252Vec<T>, index: usize, mut slice: Span<u8>
+    ) -> Result<(), Felt252VecTraitErrors> {
+        if (index >= self.len) {
+            return Result::Err(Felt252VecTraitErrors::IndexOutOfBound);
+        }
+
+        if ((slice.len() + index) > self.len()) {
+            return Result::Err(Felt252VecTraitErrors::Overflow);
+        }
+
+        let mut i = index;
+        loop {
+            let val = slice.pop_front();
+            if val.is_none() {
+                break;
+            }
+
+            // safe unwrap, as in case of none, we will never reach this branch
+            self.set(i, (*(val.unwrap())).into());
+            i += 1;
+        };
+
+        Result::Ok(())
+    }
+
+    /// Copies the elements from a Felt252Vec<T> into the Felt252Vec<T> in little endian format, If length of both Felt252Vecs are not same, it will return an error
+    fn copy_from_vec_le(
+        ref self: Felt252Vec<T>, ref vec: Felt252Vec<T>
+    ) -> Result<(), Felt252VecTraitErrors> {
+        if (vec.len() != self.len) {
+            return Result::Err(Felt252VecTraitErrors::LengthIsNotSame);
+        }
+
+        let mut i = 0;
+        loop {
+            if i == self.len() {
+                break;
+            }
+
+            self.set(i, vec[i]);
+            i += 1;
+        };
+
+        Result::Ok(())
+    }
+
+    /// Insert elements of Felt252Vec into another Felt252Vec at a given index, in case of overflow or index being out of bounds, an error is returned
+    fn insert_vec(
+        ref self: Felt252Vec<T>, idx: usize, ref vec: Felt252Vec<T>
+    ) -> Result<(), Felt252VecTraitErrors> {
+        if idx >= self.len() {
+            return Result::Err(Felt252VecTraitErrors::IndexOutOfBound);
+        }
+
+        if (idx + vec.len > self.len) {
+            return Result::Err(Felt252VecTraitErrors::Overflow);
+        }
+
+        let mut i = idx;
+        loop {
+            if i == idx + vec.len() {
+                break;
+            }
+
+            self.set(i, vec[i - idx]);
+            i += 1;
+        };
+
+        Result::Ok(())
+    }
+
+
+    /// Removes trailing zeroes before the Most Significant Digit
+    /// # Arguments
+    /// * `input` a ref Felt252Vec<T>
+    /// Note: this is an expensive operation, as it will create a new Felt252Vec
+    fn remove_trailing_zeroes_le(ref self: Felt252Vec<T>) {
+        let mut vec: Felt252Vec<T> = Felt252VecImpl::new();
+
+        let mut i = self.len;
+        let mut num_of_trailing_zeroes = 0;
+        loop {
+            if (i == 0) || (self[i - 1] != Zero::zero()) {
+                break;
+            }
+
+            i -= 1;
+            num_of_trailing_zeroes += 1;
+        };
+
+        if num_of_trailing_zeroes == 0 {
+            return;
+        }
+
+        let mut i = 0;
+        loop {
+            if i == (self.len - num_of_trailing_zeroes) {
+                break;
+            }
+
+            vec.push(self[i]);
+            i += 1;
+        };
+
+        if vec.len == 0 {
+            vec.push(Zero::zero());
+        };
+
+        self = vec;
+    }
+
+    /// Pops an element out of the vector, returns Option::None if the vector is empty
+    /// # Arguments
+    /// * `input` a ref Felt252Vec<T>
+    /// Note: this is an expensive operation, as it will create a new Felt252Vec
+    fn pop(ref self: Felt252Vec<T>) -> Option<T> {
+        if (self.len) == 0 {
+            return Option::None;
+        }
+
+        let mut new_vec = Felt252VecImpl::new();
+        let popped_ele = self[self.len() - 1];
+
+        let mut i = 0;
+        loop {
+            if i == self.len - 1 {
+                break;
+            }
+            new_vec.push(self[i]);
+            i += 1;
+        };
+
+        self = new_vec;
+
+        Option::Some(popped_ele)
+    }
+
+    /// takes a Felt252Vec<T> and returns a new Felt252Vec<T> with the same elements
+    /// Note: this is an expensive operation, as it will create a new Felt252Vec
+    fn duplicate(ref self: Felt252Vec<T>) -> Felt252Vec<T> {
+        let mut new_vec = Felt252VecImpl::new();
+
+        let mut i: u32 = 0;
+
+        loop {
+            if i == self.len {
+                break;
+            }
+
+            new_vec.push(self[i]);
+
+            i += 1;
+        };
+
+        new_vec
+    }
+
+    /// Returns a new Felt252Vec<T> with elements starting from `idx` to `idx + len`
+    /// In case of overflow return Option::None
+    /// Note: this is an expensive operation, as it will create a new Felt252Vec
+    fn slice(ref self: Felt252Vec<T>, idx: usize, len: usize) -> Option<Felt252Vec<T>> {
+        // Index out of bounds
+        if idx >= self.len {
+            return Option::None;
+        };
+
+        // Overflow
+        if (idx + len) > self.len {
+            return Option::None;
+        };
+
+        let mut new_vec = Felt252VecImpl::new();
+
+        let mut i: u32 = 0;
+
+        loop {
+            if i == len {
+                break;
+            }
+
+            new_vec.push(self[idx + i]);
+
+            i += 1;
+        };
+
+        Option::Some(new_vec)
+    }
+
+    /// Returns whether two Felt252Vec<T> are equal
+    fn equal(ref self: Felt252Vec<T>, ref rhs: Felt252Vec<T>) -> bool {
+        let mut lhs = self.duplicate();
+        lhs.remove_trailing_zeroes_le();
+
+        let mut rhs = rhs.duplicate();
+        rhs.remove_trailing_zeroes_le();
+
+        if lhs.len() != rhs.len() {
+            return false;
+        };
+
+        let mut i = 0;
+        loop {
+            if i == lhs.len() {
+                break true;
+            }
+
+            if lhs[i] != rhs[i] {
+                break false;
+            }
+
+            i += 1;
+        }
+    }
+
+    /// Fills a Felt252Vec<T> with a given `value` starting from `start_idx` to `start_idx + len`
+    /// In case of overflow, error is returned
+    fn fill(
+        ref self: Felt252Vec<T>, start_idx: usize, len: usize, value: T
+    ) -> Result<(), Felt252VecTraitErrors> {
+        // Index out of bounds
+        if (start_idx >= self.len()) {
+            return Result::Err(Felt252VecTraitErrors::IndexOutOfBound);
+        }
+
+        // Overflow
+        if (start_idx + len > self.len()) {
+            return Result::Err(Felt252VecTraitErrors::Overflow);
+        }
+
+        let mut i = start_idx;
+        loop {
+            if i == start_idx + len {
+                break;
+            }
+
+            self.set(i, value);
+
+            i += 1;
+        };
+
+        Result::Ok(())
+    }
+}

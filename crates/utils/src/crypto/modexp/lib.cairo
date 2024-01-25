@@ -1,0 +1,19 @@
+// CREDITS: The implementation has been take from [aurora-engine](https://github.com/aurora-is-near/aurora-engine/tree/develop/engine-modexp)
+
+use utils::crypto::modexp::mpnat::MPNatTrait;
+use utils::helpers::Felt252VecTrait;
+use utils::helpers::Felt252VecU64Trait;
+
+/// Computes `(base ^ exp) % modulus`, where all values are given as big-endian
+/// encoded bytes.
+pub fn modexp(base: Span<u8>, exp: Span<u8>, modulus: Span<u8>) -> Span<u8> {
+    let mut x = MPNatTrait::from_big_endian(base);
+    let mut m = MPNatTrait::from_big_endian(modulus);
+
+    if m.digits.len == 1 && m.digits[0] == 0 {
+        return array![].span();
+    }
+
+    let mut result = x.modpow(exp, ref m);
+    result.digits.from_le_to_be_bytes()
+}
