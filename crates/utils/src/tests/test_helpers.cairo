@@ -875,7 +875,7 @@ mod felt252_vec_u8_test {
 
     #[test]
     fn test_felt252_vec_u8_to_bytes() {
-        let mut vec: Felt252Vec<u8> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u8> = Default::default();
         vec.push(0);
         vec.push(1);
         vec.push(2);
@@ -908,7 +908,7 @@ mod felt252_vec_u64_test {
 
     #[test]
     fn test_felt252_vec_u64_from_le_to_be_bytes() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(0);
         vec.push(1);
         vec.push(2);
@@ -961,7 +961,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_felt252_vec_expand() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(0);
         vec.push(1);
 
@@ -976,7 +976,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_felt252_vec_expand_fail() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(0);
         vec.push(1);
 
@@ -986,7 +986,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_felt252_vec_reset() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(0);
         vec.push(1);
 
@@ -999,7 +999,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_felt252_vec_count_leading_zeroes() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(0);
         vec.push(0);
         vec.push(0);
@@ -1013,7 +1013,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_felt252_vec_resize_len_greater_than_current_len() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(0);
         vec.push(1);
 
@@ -1028,7 +1028,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_felt252_vec_resize_len_less_than_current_len() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(0);
         vec.push(1);
         vec.push(0);
@@ -1043,7 +1043,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_felt252_vec_len_0() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(0);
         vec.push(1);
 
@@ -1054,7 +1054,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_copy_from_bytes_le_size_equal_to_vec_size() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.expand(4).unwrap();
 
         let bytes = array![1, 2, 3, 4].span();
@@ -1069,7 +1069,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_copy_from_bytes_le_size_less_than_vec_size() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.expand(4).unwrap();
 
         let bytes = array![1, 2].span();
@@ -1084,7 +1084,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_copy_from_bytes_le_size_greater_than_vec_size() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.expand(4).unwrap();
 
         let bytes = array![1, 2, 3, 4].span();
@@ -1095,7 +1095,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_copy_from_bytes_index_out_of_bound() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.expand(4).unwrap();
 
         let bytes = array![1, 2].span();
@@ -1106,10 +1106,10 @@ mod felt252_vec_test {
 
     #[test]
     fn test_copy_from_vec_le() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.expand(2).unwrap();
 
-        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec2: Felt252Vec<u64> = Default::default();
         vec2.push(1);
         vec2.push(2);
 
@@ -1122,10 +1122,10 @@ mod felt252_vec_test {
 
     #[test]
     fn test_copy_from_vec_le_not_equal_lengths() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.expand(2).unwrap();
 
-        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec2: Felt252Vec<u64> = Default::default();
         vec2.push(1);
 
         let result = vec.copy_from_vec_le(ref vec2);
@@ -1136,10 +1136,10 @@ mod felt252_vec_test {
 
     #[test]
     fn test_insert_vec_size_equal_to_vec_size() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.expand(2).unwrap();
 
-        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec2: Felt252Vec<u64> = Default::default();
         vec2.push(1);
         vec2.push(2);
 
@@ -1152,10 +1152,10 @@ mod felt252_vec_test {
 
     #[test]
     fn test_insert_vec_size_less_than_vec_size() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.expand(4).unwrap();
 
-        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec2: Felt252Vec<u64> = Default::default();
         vec2.push(1);
         vec2.push(2);
 
@@ -1170,10 +1170,10 @@ mod felt252_vec_test {
 
     #[test]
     fn test_insert_vec_size_greater_than_vec_size() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.expand(2).unwrap();
 
-        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec2: Felt252Vec<u64> = Default::default();
         vec2.push(1);
         vec2.push(2);
         vec2.push(3);
@@ -1185,10 +1185,10 @@ mod felt252_vec_test {
 
     #[test]
     fn test_insert_vec_index_out_of_bound() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.expand(4).unwrap();
 
-        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec2: Felt252Vec<u64> = Default::default();
         vec2.push(1);
         vec2.push(2);
 
@@ -1198,7 +1198,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_remove_trailing_zeroes_le() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(1);
         vec.push(2);
         vec.push(0);
@@ -1213,7 +1213,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_pop() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(1);
         vec.push(2);
 
@@ -1224,7 +1224,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_duplicate() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(1);
         vec.push(2);
 
@@ -1238,37 +1238,56 @@ mod felt252_vec_test {
     }
 
     #[test]
-    fn test_slice() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+    fn test_clone_slice() {
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(1);
         vec.push(2);
 
-        let mut vec2 = vec.slice(1, 1).unwrap();
+        let mut vec2 = vec.clone_slice(1, 1);
 
         assert_eq!(vec2.len(), 1);
         assert_eq!(vec2.pop().unwrap(), 2);
-        assert_eq!(vec.slice(2, 1).is_none(), true);
-        assert_eq!(vec.slice(4, 2).is_none(), true)
     }
 
     #[test]
-    fn test_equal() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+    #[should_panic(expected: ('Index out of bounds',))]
+    fn test_clone_slice_should_pani_index_out_of_bounds() {
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(1);
         vec.push(2);
 
-        let mut vec2: Felt252Vec<u64> = Felt252VecImpl::new();
+        vec.clone_slice(2, 1);
+    }
+
+    #[test]
+    #[should_panic(expected: ('Overflow',))]
+    fn test_clone_slice_should_panic_overflow() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(1);
+        vec.push(2);
+
+        vec.clone_slice(1, 2);
+    }
+
+
+    #[test]
+    fn test_equal() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(1);
+        vec.push(2);
+
+        let mut vec2: Felt252Vec<u64> = Default::default();
         vec2.push(1);
         vec2.push(2);
 
-        assert!(vec.equal(ref vec2));
+        assert!(vec.equal_remove_trailing_zeroes(ref vec2));
         vec2.pop().unwrap();
-        assert!(!vec.equal(ref vec2));
+        assert!(!vec.equal_remove_trailing_zeroes(ref vec2));
     }
 
     #[test]
     fn test_fill() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.expand(4).unwrap();
 
         vec.fill(1, 3, 1).unwrap();
@@ -1281,7 +1300,7 @@ mod felt252_vec_test {
 
     #[test]
     fn test_fill_overflow() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.expand(4).unwrap();
 
         assert_eq!(vec.fill(4, 0, 1), Result::Err(Felt252VecTraitErrors::IndexOutOfBound));

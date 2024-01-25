@@ -2064,17 +2064,20 @@ impl Felt252VecTraitImpl<
     /// * `idx` the index to start slicing from
     /// * `len` the length of the slice
     /// # Returns
-    /// * Option::Some(Felt252Vec<T>), returns Option::None if the index is out of bounds or if the slice overflows
+    /// * Felt252Vec<T>
+    /// # Panics
+    /// * If the index is out of bounds
+    /// * If index + len overflows the length of `self`
     /// Note: this is an expensive operation, as it will create a new Felt252Vec
-    fn slice(ref self: Felt252Vec<T>, idx: usize, len: usize) -> Option<Felt252Vec<T>> {
+    fn clone_slice(ref self: Felt252Vec<T>, idx: usize, len: usize) -> Felt252Vec<T> {
         // Index out of bounds
         if idx >= self.len {
-            return Option::None;
+            panic(array!['Index out of bounds']);
         };
 
         // Overflow
         if (idx + len) > self.len {
-            return Option::None;
+            panic(array!['Overflow']);
         };
 
         let mut new_vec = Default::default();
@@ -2091,16 +2094,16 @@ impl Felt252VecTraitImpl<
             i += 1;
         };
 
-        Option::Some(new_vec)
+        new_vec
     }
 
-    /// Returns whether two Felt252Vec<T> are equal
+    /// Returns whether two Felt252Vec<T> are equal after removing trailing_zeroes
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
     /// * `rhs` a ref Felt252Vec<T>
     /// # Returns
     /// * bool, returns true if both Felt252Vecs are equal, false otherwise
-    fn equal(ref self: Felt252Vec<T>, ref rhs: Felt252Vec<T>) -> bool {
+    fn equal_remove_trailing_zeroes(ref self: Felt252Vec<T>, ref rhs: Felt252Vec<T>) -> bool {
         let mut lhs = self.duplicate();
         lhs.remove_trailing_zeroes();
 
