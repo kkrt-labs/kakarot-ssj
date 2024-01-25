@@ -1505,6 +1505,16 @@ trait BytesUsedTrait<T> {
     fn bytes_used(self: T) -> u8;
 }
 
+impl U8BytesUsedTraitImpl of BytesUsedTrait<u8> {
+    fn bytes_used(self: u8) -> u8 {
+        if self == 0 {
+            return 0;
+        }
+
+        return 1;
+    }
+}
+
 impl USizeBytesUsedTraitImpl of BytesUsedTrait<usize> {
     fn bytes_used(self: usize) -> u8 {
         if self < 0x10000 { // 256^2
@@ -1626,31 +1636,6 @@ enum Felt252VecTraitErrors {
     Overflow,
     LengthIsNotSame,
     SizeLessThanCurrentLength
-}
-
-#[generate_trait]
-impl Felt252VecU8TraitImpl of Felt252VecU8Trait {
-    /// Returns Felt252Vec<u8> as a Span<8>
-    /// The endianess of the bytes will be same as the endianess of the `self`
-    /// # Arguments
-    /// * `self` a ref Felt252Vec<u8>
-    /// # Returns
-    /// * A Span<u8> of len == self.len() with same endianess as `self`
-    fn to_bytes(ref self: Felt252Vec<u8>) -> Span<u8> {
-        let mut arr: Array<u8> = Default::default();
-
-        let mut i = 0;
-        loop {
-            if i == self.len() {
-                break;
-            }
-
-            arr.append(self[i]);
-            i += 1;
-        };
-
-        arr.span()
-    }
 }
 
 #[generate_trait]
