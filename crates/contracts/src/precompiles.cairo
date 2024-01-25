@@ -22,7 +22,7 @@ mod Precompiles {
                     let mut input = array![];
                     input.append_span(data);
                     sha256(input).span()
-                    },
+                },
                 _ => panic!("Precompile {} not available", address)
             };
             return result;
