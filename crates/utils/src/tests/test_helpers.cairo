@@ -889,13 +889,12 @@ mod felt252_vec_u8_test {
 }
 
 mod felt252_vec_u64_test {
-    #[available_gas(1000000000000)]
-    use utils::helpers::{Felt252VecU64Trait};
     use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+    use utils::helpers::{Felt252VecU64Trait};
 
     #[test]
     fn test_felt252_vec_u64_from_le_to_le_bytes() {
-        let mut vec: Felt252Vec<u64> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(0);
         vec.push(1);
         vec.push(2);

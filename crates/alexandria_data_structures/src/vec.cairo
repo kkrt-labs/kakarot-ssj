@@ -63,9 +63,16 @@ impl VecIndex<V, T, impl VecTraitImpl: VecTrait<V, T>> of Index<V, usize, T> {
     }
 }
 
+
 struct Felt252Vec<T> {
     items: Felt252Dict<T>,
     len: usize,
+}
+
+impl DefaultFeltVec<T, +Drop<T>, +Copy<T>, +Felt252DictValue<T>> of Default<Felt252Vec<T>> {
+    fn default() -> Felt252Vec<T> {
+        Felt252VecImpl::<T>::new()
+    }
 }
 
 impl DestructFeltVec<T, +Drop<T>, +Felt252DictValue<T>> of Destruct<Felt252Vec<T>> {
