@@ -1789,17 +1789,9 @@ impl Felt252VecTraitImpl<
     /// # Arguments
     /// self a ref Felt252Vec<T>
     fn reset(ref self: Felt252Vec<T>) {
-        let mut i = 0;
-
-        loop {
-            if i == self.len() {
-                break;
-            };
-
-            self.set(i, Zero::zero());
-
-            i += 1;
-        };
+        let mut new_vec: Felt252Vec<T> = Default::default();
+        new_vec.len = self.len;
+        self = new_vec;
     }
 
     /// Returns the leading zeroes of a Felt252Vec<T>
