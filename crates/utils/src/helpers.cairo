@@ -1871,18 +1871,16 @@ impl Felt252VecTraitImpl<
     /// # Arguments
     /// * `input` a ref Felt252Vec<T>
     fn remove_trailing_zeroes(ref self: Felt252Vec<T>) {
-        let mut i = self.len;
-        let mut num_of_trailing_zeroes = 0;
+        let mut new_len = self.len;
         loop {
-            if (i == 0) || (self[i - 1] != Zero::zero()) {
+            if (new_len == 0) || (self[new_len - 1] != Zero::zero()) {
                 break;
             }
 
-            i -= 1;
-            num_of_trailing_zeroes += 1;
+            new_len -= 1;
         };
 
-        self.len = self.len - num_of_trailing_zeroes;
+        self.len = new_len;
     }
 
     /// Pops an element out of the vector, returns Option::None if the vector is empty
@@ -1938,23 +1936,15 @@ impl Felt252VecTraitImpl<
     /// * `self` a ref Felt252Vec<T>
     /// * `idx` the index to start slicing from
     /// * `len` the length of the slice
+    ///
     /// # Returns
     /// * Felt252Vec<T>
+    ///
     /// # Panics
     /// * If the index is out of bounds
-    /// * If index + len overflows the length of `self`
+    ///
     /// Note: this is an expensive operation, as it will create a new Felt252Vec
     fn clone_slice(ref self: Felt252Vec<T>, idx: usize, len: usize) -> Felt252Vec<T> {
-        // Index out of bounds
-        if idx >= self.len {
-            panic(array!['Index out of bounds']);
-        };
-
-        // Overflow
-        if (idx + len) > self.len {
-            panic(array!['Overflow']);
-        };
-
         let mut new_vec = Default::default();
 
         let mut i: u32 = 0;
