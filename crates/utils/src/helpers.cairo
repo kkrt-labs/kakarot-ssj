@@ -1700,12 +1700,12 @@ impl Felt252VecU8TraitImpl of Felt252VecU8Trait {
 
 #[generate_trait]
 impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
-    /// Returns Felt252Vec<u64> as a Span<8>, Where self is in little endian format, and the returned Span is in big endian format
+    /// Returns Felt252Vec<u64> as a Span<8>, the returned Span is in big endian format
     /// # Arguments
     /// * `self` a ref Felt252Vec<u64>
     /// # Returns
     /// * A Span<u8> representing bytes conversion of `self` in big endian format
-    fn from_le_to_be_bytes(ref self: Felt252Vec<u64>) -> Span<u8> {
+    fn words64_to_be_bytes(ref self: Felt252Vec<u64>) -> Span<u8> {
         let mut res: Array<u8> = array![];
 
         self.remove_trailing_zeroes();
@@ -1716,23 +1716,20 @@ impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
             if i == 0 {
                 break;
             }
-
-            let j = i - 1;
-
-            res.append_span(self[j].to_be_bytes_padded());
-
             i -= 1;
+
+            res.append_span(self[i].to_be_bytes_padded());
         };
 
         res.span()
     }
 
-    /// Returns Felt252Vec<u64> as a Span<8>, Where self is in little endian format, and the returned Span is in little endian format
+    /// Returns Felt252Vec<u64> as a Span<8>, the returned Span is in little endian format
     /// # Arguments
     /// * `self` a ref Felt252Vec<u64>
     /// # Returns
     /// * A Span<u8> representing bytes conversion of `self` in little endian format
-    fn from_le_to_le_bytes(ref self: Felt252Vec<u64>) -> Span<u8> {
+    fn words64_to_le_bytes(ref self: Felt252Vec<u64>) -> Span<u8> {
         let mut res: Array<u8> = array![];
         let mut i = 0;
 
