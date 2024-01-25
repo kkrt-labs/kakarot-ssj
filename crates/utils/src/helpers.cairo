@@ -1902,9 +1902,10 @@ impl Felt252VecTraitImpl<
             return Result::Err(Felt252VecTraitErrors::Overflow);
         }
 
+        let stop = idx + vec.len();
         let mut i = idx;
         loop {
-            if i == idx + vec.len() {
+            if i == stop {
                 break;
             }
 
@@ -1919,10 +1920,7 @@ impl Felt252VecTraitImpl<
     /// Removes trailing zeroes from a Felt252Vec<T>
     /// # Arguments
     /// * `input` a ref Felt252Vec<T>
-    /// Note: this is an expensive operation, as it will create a new Felt252Vec
     fn remove_trailing_zeroes(ref self: Felt252Vec<T>) {
-        let mut vec: Felt252Vec<T> = Default::default();
-
         let mut i = self.len;
         let mut num_of_trailing_zeroes = 0;
         loop {
@@ -1934,25 +1932,7 @@ impl Felt252VecTraitImpl<
             num_of_trailing_zeroes += 1;
         };
 
-        if num_of_trailing_zeroes == 0 {
-            return;
-        }
-
-        let mut i = 0;
-        loop {
-            if i == (self.len - num_of_trailing_zeroes) {
-                break;
-            }
-
-            vec.push(self[i]);
-            i += 1;
-        };
-
-        if vec.len == 0 {
-            vec.push(Zero::zero());
-        };
-
-        self = vec;
+        self.len = self.len - num_of_trailing_zeroes;
     }
 
     /// Pops an element out of the vector, returns Option::None if the vector is empty
@@ -1960,26 +1940,13 @@ impl Felt252VecTraitImpl<
     /// * `self` a ref Felt252Vec<T>
     /// # Returns
     /// * Option::Some(T), returns the last element or Option::None if the vector is empty
-    /// Note: this is an expensive operation, as it will create a new Felt252Vec
     fn pop(ref self: Felt252Vec<T>) -> Option<T> {
         if (self.len) == 0 {
             return Option::None;
         }
 
-        let mut new_vec = Default::default();
         let popped_ele = self[self.len() - 1];
-
-        let mut i = 0;
-        loop {
-            if i == self.len - 1 {
-                break;
-            }
-            new_vec.push(self[i]);
-            i += 1;
-        };
-
-        self = new_vec;
-
+        self.len = self.len - 1;
         Option::Some(popped_ele)
     }
 
