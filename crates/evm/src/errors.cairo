@@ -1,5 +1,5 @@
 use core::fmt::{Debug, Formatter, Error, Display};
-use utils::helpers::U256Trait;
+use utils::helpers::{U256Trait, ToBytes};
 
 // STACK
 
