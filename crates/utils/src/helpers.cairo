@@ -1927,13 +1927,13 @@ impl Felt252VecTraitImpl<
 
     /// Returns a new Felt252Vec<T> with elements starting from `idx` to `idx + len`
     ///
-    /// This function will start slicing from `idx` and will slice `len` elements, it will firstly clone the elements and then return a new Felt252Vec<T>
+    /// This function will start cloning from `idx` and will clone `len` elements, it will firstly clone the elements and then return a new Felt252Vec<T>
     /// In case of overflow return Option::None
     ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
-    /// * `idx` the index to start slicing from
-    /// * `len` the length of the slice
+    /// * `idx` the index to start cloning from
+    /// * `len` the length of the clone
     ///
     /// # Returns
     /// * Felt252Vec<T>
