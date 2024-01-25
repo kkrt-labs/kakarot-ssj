@@ -1698,12 +1698,18 @@ impl Felt252VecTraitImpl<
     +Into<u8, T>,
     +PartialEq<T>
 > of Felt252VecTrait<T> {
-    /// Expands a Felt252Vec to a new length by appending zeroes, if the new length is less than the current length, it will return an error
+    /// Expands a Felt252Vec to a new length by appending zeroes
+    ///
+    /// This function will mutate the Felt252Vec in-place and will expand its length to the new length by appending zeroes.
+    /// If the new length is less than the current length, it will return an error.
+    ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
     /// * `new_length` the new length of the Felt252Vec
+    ///
     /// # Returns
     /// * Result::<(), Felt252VecTraitErrors>
+    ///
     /// # Errors
     /// * Felt252VecTraitErrors::SizeLessThanCurrentLength if the new length is less than the current length
     fn expand(ref self: Felt252Vec<T>, new_length: usize) -> Result<(), Felt252VecTraitErrors> {
@@ -1717,6 +1723,7 @@ impl Felt252VecTraitImpl<
     }
 
     /// Sets all elements of the Felt252Vec to zero, mutates the Felt252Vec in-place
+    ///
     /// # Arguments
     /// self a ref Felt252Vec<T>
     fn reset(ref self: Felt252Vec<T>) {
@@ -1726,8 +1733,10 @@ impl Felt252VecTraitImpl<
     }
 
     /// Returns the leading zeroes of a Felt252Vec<T>
+    ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
+    ///
     /// # Returns
     /// * The number of leading zeroes in `self`.
     fn count_leading_zeroes(ref self: Felt252Vec<T>) -> usize {
@@ -1744,7 +1753,10 @@ impl Felt252VecTraitImpl<
     }
 
     /// Resizes the Felt252Vec<T> in-place so that len is equal to new_len.
+    ///
+    /// This function will mutate the Felt252Vec in-place and will resize its length to the new length.
     /// If new_len is greater than len, the Vec is extended by the difference, with each additional slot filled with `value`. If new_len is less than len, the Vec is simply truncated from the right.
+    ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
     /// * `new_len` the new length of the Felt252Vec
@@ -1755,10 +1767,12 @@ impl Felt252VecTraitImpl<
 
 
     /// Copies the elements from a Span<u8> into the Felt252Vec<T> in little endian format, in case of overflow or index being out of bounds, an error is returned
+    ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
     /// * `index` the index at `self` to start copying from
     /// * `slice` a Span<u8>
+    ///
     /// # Errors
     /// * Felt252VecTraitErrors::IndexOutOfBound if the index is out of bounds
     /// * Felt252VecTraitErrors::Overflow if the Span is too big to fit in the Felt252Vec
@@ -1789,9 +1803,11 @@ impl Felt252VecTraitImpl<
     }
 
     /// Copies the elements from a Felt252Vec<T> into the Felt252Vec<T> in little endian format, If length of both Felt252Vecs are not same, it will return an error
+    ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
     /// * `vec` a ref Felt252Vec<T>
+    ///
     /// # Errors
     /// * Felt252VecTraitErrors::LengthIsNotSame if the length of both Felt252Vecs are not same
     fn copy_from_vec_le(
@@ -1815,10 +1831,12 @@ impl Felt252VecTraitImpl<
     }
 
     /// Insert elements of Felt252Vec into another Felt252Vec at a given index, in case of overflow or index being out of bounds, an error is returned
+    ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
     /// * `idx` the index at `self` to start inserting from
     /// * `vec` a ref Felt252Vec<T>
+    ///
     /// # Errors
     /// * Felt252VecTraitErrors::IndexOutOfBound if the index is out of bounds
     /// * Felt252VecTraitErrors::Overflow if the Felt252Vec is too big to fit in the Felt252Vec
@@ -1849,6 +1867,7 @@ impl Felt252VecTraitImpl<
 
 
     /// Removes trailing zeroes from a Felt252Vec<T>
+    ///
     /// # Arguments
     /// * `input` a ref Felt252Vec<T>
     fn remove_trailing_zeroes(ref self: Felt252Vec<T>) {
@@ -1867,9 +1886,11 @@ impl Felt252VecTraitImpl<
     }
 
     /// Pops an element out of the vector, returns Option::None if the vector is empty
+    ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
     /// # Returns
+    ///
     /// * Option::Some(T), returns the last element or Option::None if the vector is empty
     fn pop(ref self: Felt252Vec<T>) -> Option<T> {
         if (self.len) == 0 {
@@ -1882,9 +1903,12 @@ impl Felt252VecTraitImpl<
     }
 
     /// takes a Felt252Vec<T> and returns a new Felt252Vec<T> with the same elements
+    ///
     /// Note: this is an expensive operation, as it will create a new Felt252Vec
+    ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
+    ///
     /// # Returns
     /// * A new Felt252Vec<T> with the same elements
     fn duplicate(ref self: Felt252Vec<T>) -> Felt252Vec<T> {
@@ -1906,7 +1930,10 @@ impl Felt252VecTraitImpl<
     }
 
     /// Returns a new Felt252Vec<T> with elements starting from `idx` to `idx + len`
+    ///
+    /// This function will start slicing from `idx` and will slice `len` elements, it will firstly clone the elements and then return a new Felt252Vec<T>
     /// In case of overflow return Option::None
+    ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
     /// * `idx` the index to start slicing from
@@ -1946,9 +1973,11 @@ impl Felt252VecTraitImpl<
     }
 
     /// Returns whether two Felt252Vec<T> are equal after removing trailing_zeroes
+    ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
     /// * `rhs` a ref Felt252Vec<T>
+    ///
     /// # Returns
     /// * bool, returns true if both Felt252Vecs are equal, false otherwise
     fn equal_remove_trailing_zeroes(ref self: Felt252Vec<T>, ref rhs: Felt252Vec<T>) -> bool {
@@ -1978,13 +2007,16 @@ impl Felt252VecTraitImpl<
 
     /// Fills a Felt252Vec<T> with a given `value` starting from `start_idx` to `start_idx + len`
     /// In case of index out of bounds or overflow, error is returned
+    ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
     /// * `start_idx` the index to start filling from
     /// * `len` the length of the fill
     /// * `value` the value to fill the Felt252Vec with
+    ///
     /// # Returns
     /// * Result::<(), Felt252VecTraitErrors>
+    ///
     /// # Errors
     /// * Felt252VecTraitErrors::IndexOutOfBound if the index is out of bounds
     /// * Felt252VecTraitErrors::Overflow if the Felt252Vec is too big to fit in the Felt252Vec
