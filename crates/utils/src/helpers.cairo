@@ -900,36 +900,6 @@ impl U64Impl of U64Trait {
         Option::Some(result)
     }
 
-    /// Unpacks a u64 into an array of little endian bytes
-    /// # Arguments
-    /// * `self` a `u64` value.
-    /// # Returns
-    /// * The bytes array representation of the value in little endian format.
-    fn to_le_bytes(mut self: u64) -> Span<u8> {
-        let bytes_used: u64 = self.bytes_used().into();
-        let mut bytes: Array<u8> = Default::default();
-        let mut i = 0;
-        loop {
-            if i == bytes_used {
-                break ();
-            }
-            let val = self.shr(8 * i);
-            bytes.append((val & 0xFF).try_into().unwrap());
-            i += 1;
-        };
-
-        bytes.span()
-    }
-
-    /// Unpacks a u64 into an span of little endian bytes, padded to 8 bytes
-    /// # Arguments
-    /// * `self` a `u64` value.
-    /// # Returns
-    /// * The bytes representation of the value in little endian format padded to 8 bytes.
-    fn to_le_bytes_padded(mut self: u64) -> Span<u8> {
-        self.to_le_bytes().slice_right_padded(0, 8)
-    }
-
     /// Returns the number of trailing zeroes in the bit representation of `self`.
     /// # Arguments
     /// * `self` a `u64` value.
@@ -1101,13 +1071,38 @@ impl U256Impl of U256Trait {
 }
 
 trait ToBytes<T> {
-    /// Unpacks a type T into an array of big endian bytes
+    /// Unpacks a type T into a span of big endian bytes
+    ///
     /// # Arguments
     /// * `self` a value of type T.
+    ///
     /// # Returns
-    /// * The bytes array representation of the value in big endian.
+    /// * The bytes representation of the value in big endian.
     fn to_be_bytes(self: T) -> Span<u8>;
+    /// Unpacks a type T into a span of big endian bytes, padded to the byte size of T
+    ///
+    /// # Arguments
+    /// * `self` a value of type T.
+    ///
+    /// # Returns
+    /// * The bytesrepresentation of the value in big endian padded to the byte size of T.
     fn to_be_bytes_padded(self: T) -> Span<u8>;
+    /// Unpacks a type T into a span of little endian bytes
+    ///
+    /// # Arguments
+    /// * `self` a value of type T.
+    ///
+    /// # Returns
+    /// * The bytes representation of the value in little endian.
+    fn to_le_bytes(self: T) -> Span<u8>;
+    /// Unpacks a type T into a span of little endian bytes, padded to the byte size of T
+    ///
+    /// # Arguments
+    /// * `self` a value of type T.
+    ///
+    /// # Returns
+    /// * The bytesrepresentation of the value in little endian padded to the byte size of T.
+    fn to_le_bytes_padded(self: T) -> Span<u8>;
 }
 
 impl ToBytesImp<
@@ -1156,6 +1151,35 @@ impl ToBytesImp<
     fn to_be_bytes_padded(mut self: T) -> Span<u8> {
         let padding = (BitSize::<T>::bits() / 8);
         self.to_be_bytes().pad_left_with_zeroes(padding)
+    }
+
+    fn to_le_bytes(mut self: T) -> Span<u8> {
+        let bytes_used: T = self.bytes_used().into();
+        let one = One::<T>::one();
+        let two = one + one;
+        let eight = one + one + one + one + one + one + one + one;
+
+        // 0xFF
+        let mask = (eight * eight * two * two) - one;
+
+        let mut bytes: Array<u8> = Default::default();
+
+        let mut i: T = Zero::zero();
+        loop {
+            if i == bytes_used {
+                break ();
+            }
+            let val = self.shr(eight * i);
+            bytes.append((val & mask).try_into().unwrap());
+            i += one;
+        };
+
+        bytes.span()
+    }
+
+    fn to_le_bytes_padded(mut self: T) -> Span<u8> {
+        let padding = (BitSize::<T>::bits() / 8);
+        self.to_le_bytes().slice_right_padded(0, padding)
     }
 }
 
@@ -1630,15 +1654,29 @@ impl Felt252VecU8TraitImpl of Felt252VecU8Trait {
 }
 
 #[generate_trait]
-impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
-    /// Returns Felt252Vec<u64> as a Span<8>, the returned Span is in big endian format
+impl Felt252VecTraitImpl<
+    T,
+    +Drop<T>,
+    +Copy<T>,
+    +Felt252DictValue<T>,
+    +Zero<T>,
+    +Add<T>,
+    +Sub<T>,
+    +Div<T>,
+    +Mul<T>,
+    +Exponentiation<T>,
+    +ToBytes<T>,
+    +PartialOrd<T>,
+    +Into<u8, T>,
+    +PartialEq<T>
+> of Felt252VecTrait<T> {
+    /// Returns Felt252Vec<T> as a Span<8>, the returned Span is in big endian format
     /// # Arguments
-    /// * `self` a ref Felt252Vec<u64>
+    /// * `self` a ref Felt252Vec<T>
     /// # Returns
     /// * A Span<u8> representing bytes conversion of `self` in big endian format
-    fn words64_to_be_bytes(ref self: Felt252Vec<u64>) -> Span<u8> {
+    fn to_be_bytes(ref self: Felt252Vec<T>) -> Span<u8> {
         let mut res: Array<u8> = array![];
-
         self.remove_trailing_zeroes();
 
         let mut i = self.len();
@@ -1655,12 +1693,12 @@ impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
         res.span()
     }
 
-    /// Returns Felt252Vec<u64> as a Span<8>, the returned Span is in little endian format
+    /// Returns Felt252Vec<T> as a Span<8>, the returned Span is in little endian format
     /// # Arguments
-    /// * `self` a ref Felt252Vec<u64>
+    /// * `self` a ref Felt252Vec<T>
     /// # Returns
     /// * A Span<u8> representing bytes conversion of `self` in little endian format
-    fn words64_to_le_bytes(ref self: Felt252Vec<u64>) -> Span<u8> {
+    fn to_le_bytes(ref self: Felt252Vec<T>) -> Span<u8> {
         let mut res: Array<u8> = array![];
         let mut i = 0;
 
@@ -1669,8 +1707,8 @@ impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
                 break;
             }
 
-            if self[i] == 0 {
-                res.append(0);
+            if self[i] == Zero::zero() {
+                res.append(Zero::zero());
             } else {
                 res.append_span(self[i].to_le_bytes());
             }
@@ -1680,24 +1718,7 @@ impl Felt252VecU64TraitImpl of Felt252VecU64Trait {
 
         res.span()
     }
-}
 
-#[generate_trait]
-impl Felt252VecTraitImpl<
-    T,
-    +Drop<T>,
-    +Copy<T>,
-    +Felt252DictValue<T>,
-    +Zero<T>,
-    +Add<T>,
-    +Sub<T>,
-    +Div<T>,
-    +Mul<T>,
-    +Exponentiation<T>,
-    +PartialOrd<T>,
-    +Into<u8, T>,
-    +PartialEq<T>
-> of Felt252VecTrait<T> {
     /// Expands a Felt252Vec to a new length by appending zeroes
     ///
     /// This function will mutate the Felt252Vec in-place and will expand its length to the new length by appending zeroes.

@@ -890,7 +890,7 @@ mod felt252_vec_u8_test {
 
 mod felt252_vec_u64_test {
     use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
-    use utils::helpers::{Felt252VecU64Trait};
+    use utils::helpers::{Felt252VecTrait};
 
     #[test]
     fn test_felt252_vec_u64_words64_to_le_bytes() {
@@ -900,7 +900,7 @@ mod felt252_vec_u64_test {
         vec.push(2);
         vec.push(3);
 
-        let result = vec.words64_to_le_bytes();
+        let result = vec.to_le_bytes();
         let expected = array![0, 1, 2, 3].span();
 
         assert_eq!(result, expected);
@@ -914,7 +914,7 @@ mod felt252_vec_u64_test {
         vec.push(2);
         vec.push(3);
 
-        let result = vec.words64_to_be_bytes();
+        let result = vec.to_be_bytes();
         let expected = array![
             0,
             0,
