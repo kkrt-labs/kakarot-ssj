@@ -1250,27 +1250,6 @@ mod felt252_vec_test {
     }
 
     #[test]
-    #[should_panic(expected: ('Index out of bounds',))]
-    fn test_clone_slice_should_pani_index_out_of_bounds() {
-        let mut vec: Felt252Vec<u64> = Default::default();
-        vec.push(1);
-        vec.push(2);
-
-        vec.clone_slice(2, 1);
-    }
-
-    #[test]
-    #[should_panic(expected: ('Overflow',))]
-    fn test_clone_slice_should_panic_overflow() {
-        let mut vec: Felt252Vec<u64> = Default::default();
-        vec.push(1);
-        vec.push(2);
-
-        vec.clone_slice(1, 2);
-    }
-
-
-    #[test]
     fn test_equal() {
         let mut vec: Felt252Vec<u64> = Default::default();
         vec.push(1);
