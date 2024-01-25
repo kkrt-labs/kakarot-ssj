@@ -2,17 +2,19 @@ use alexandria_data_structures::vec::VecTrait;
 use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
 use core::result::ResultTrait;
 use core::traits::Into;
+use integer::u128_wrapping_sub;
 
 use utils::crypto::modexp::arith::{
     mod_inv, monsq, monpro, compute_r_mod_n, in_place_shl, in_place_shr, big_wrapping_pow,
     big_wrapping_mul, big_sq, borrowing_sub, shifted_carrying_mul
 };
 use utils::crypto::modexp::mpnat::{
-    MPNat, MPNatTrait, WORD_MAX, DOUBLE_WORD_MAX, Word, DoubleWord, WORD_BYTES
+    MPNat, MPNatTrait, WORD_MAX, DOUBLE_WORD_MAX, BASE, Word, DoubleWord, WORD_BYTES
 };
 use utils::helpers::{Felt252VecTrait, Felt252VecU64Trait};
 use utils::helpers::{U128Trait, U32Trait};
-use utils::math::{WrappingMul};
+use utils::math::{WrappingMul, WrappingBitshift, WrappingExponentiation};
+use utils::tests::test_modexp::test_mpnat::{mp_nat_to_u128};
 
 // the tests are taken from [aurora-engine](https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/arith.rs#L401)
 
@@ -61,20 +63,21 @@ fn check_r_mod_n(n: u128, ref expected: MPNat) {
     assert!(result.digits.equal(ref expected.digits));
 }
 
-fn check_in_place_shl(n: u128, shift: u32, ref expected: MPNat) {
+fn check_in_place_shl(n: u128, shift: u32) {
     let mut x = MPNatTrait::from_big_endian(n.to_be_bytes_padded());
     in_place_shl(ref x.digits, shift);
-    let mut result = x;
+    let mut result = mp_nat_to_u128(ref x);
 
-    assert!(result.digits.equal(ref expected.digits));
+    let mask = u128_wrapping_sub(BASE.wrapping_pow(x.digits.len().into()), 1);
+    assert_eq!(result, n.wrapping_shl(shift.into()) & mask);
 }
 
-fn check_in_place_shr(n: u128, shift: u32, ref expected: MPNat) {
+fn check_in_place_shr(n: u128, shift: u32) {
     let mut x = MPNatTrait::from_big_endian(n.to_be_bytes_padded());
     in_place_shr(ref x.digits, shift);
-    let mut result = x;
+    let mut result = mp_nat_to_u128(ref x);
 
-    assert!(result.digits.equal(ref expected.digits));
+    assert_eq!(result, n.wrapping_shr(shift.into()));
 }
 
 fn check_mod_inv(n: Word) {
@@ -308,96 +311,20 @@ fn test_r_mod_n_6() {
 }
 
 #[test]
-fn test_in_place_shl_0() {
-    let mut expected_digits: Felt252Vec<u64> = Felt252VecImpl::new();
-    expected_digits.push(0);
-
-    let mut expected = MPNat { digits: expected_digits };
-
-    check_in_place_shl(0, 0, ref expected);
+fn test_in_place_shl() {
+    check_in_place_shl(0, 0);
+    check_in_place_shl(1, 10);
+    check_in_place_shl(WORD_MAX.into(), 5);
+    check_in_place_shl(DOUBLE_WORD_MAX.into(), 16);
 }
 
 #[test]
-fn test_in_place_shl_1() {
-    let mut expected_digits: Felt252Vec<u64> = Felt252VecImpl::new();
-    expected_digits.push(1024);
-
-    let mut expected = MPNat { digits: expected_digits };
-
-    check_in_place_shl(1, 10, ref expected);
-}
-
-#[test]
-fn test_in_place_shl_2() {
-    let mut expected_digits: Felt252Vec<u64> = Felt252VecImpl::new();
-    expected_digits.push(18446744073709551584);
-
-    let mut expected = MPNat { digits: expected_digits };
-
-    check_in_place_shl(WORD_MAX.into(), 5, ref expected);
-}
-
-
-#[test]
-fn test_in_place_shl_3() {
-    let mut expected_digits: Felt252Vec<u64> = Felt252VecImpl::new();
-    expected_digits.push(18446744073709486080);
-    expected_digits.push(18446744073709551615);
-
-    let mut expected = MPNat { digits: expected_digits };
-
-    check_in_place_shl(DOUBLE_WORD_MAX, 16, ref expected);
-}
-
-#[test]
-fn test_in_place_shr_0() {
-    let mut expected_digits: Felt252Vec<u64> = Felt252VecImpl::new();
-    expected_digits.push(0);
-
-    let mut expected = MPNat { digits: expected_digits };
-
-    check_in_place_shr(0, 0, ref expected);
-}
-
-#[test]
-fn test_in_place_shr_1() {
-    let mut expected_digits: Felt252Vec<u64> = Felt252VecImpl::new();
-    expected_digits.push(0);
-
-    let mut expected = MPNat { digits: expected_digits };
-
-    check_in_place_shr(1, 10, ref expected);
-}
-
-#[test]
-fn test_in_place_shr_2() {
-    let mut expected_digits: Felt252Vec<u64> = Felt252VecImpl::new();
-    expected_digits.push(298261);
-
-    let mut expected = MPNat { digits: expected_digits };
-
-    check_in_place_shr(0x1234_5678, 10, ref expected);
-}
-
-#[test]
-fn test_in_place_shr_3() {
-    let mut expected_digits: Felt252Vec<u64> = Felt252VecImpl::new();
-    expected_digits.push(576460752303423487);
-
-    let mut expected = MPNat { digits: expected_digits };
-
-    check_in_place_shr(WORD_MAX.into(), 5, ref expected);
-}
-
-#[test]
-fn test_in_place_shr_4() {
-    let mut expected_digits: Felt252Vec<u64> = Felt252VecImpl::new();
-    expected_digits.push(18446744073709551615);
-    expected_digits.push(281474976710655);
-
-    let mut expected = MPNat { digits: expected_digits };
-
-    check_in_place_shr(DOUBLE_WORD_MAX.into(), 16, ref expected);
+fn test_in_place_shr() {
+    check_in_place_shr(0, 0);
+    check_in_place_shr(1, 10);
+    check_in_place_shr(0x1234_5678, 10);
+    check_in_place_shr(WORD_MAX.into(), 5);
+    check_in_place_shr(DOUBLE_WORD_MAX, 16);
 }
 
 #[test]

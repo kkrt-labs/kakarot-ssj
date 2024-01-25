@@ -1006,7 +1006,7 @@ mod felt252_vec_test {
         vec.push(0);
         vec.push(1);
 
-        let result = vec.count_leading_zeroes_le();
+        let result = vec.count_leading_zeroes();
 
         assert_eq!(result, 3);
     }
@@ -1205,7 +1205,7 @@ mod felt252_vec_test {
         vec.push(0);
         vec.push(0);
 
-        vec.remove_trailing_zeroes_le();
+        vec.remove_trailing_zeroes();
 
         assert_eq!(vec.len(), 2);
         assert_eq!(vec.pop().unwrap(), 2);

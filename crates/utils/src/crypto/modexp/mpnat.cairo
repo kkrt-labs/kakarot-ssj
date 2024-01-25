@@ -96,7 +96,7 @@ impl MPNatTraitImpl of MPNatTrait {
             j = next_j;
         };
 
-        digits.remove_trailing_zeroes_le();
+        digits.remove_trailing_zeroes();
         MPNat { digits }
     }
 
@@ -105,7 +105,7 @@ impl MPNatTraitImpl of MPNatTrait {
     /// This is equivalent to reducing `self` modulo `2^(WORD_BITS*k)` where
     /// `k` is the number of digits in `other`.
     fn sub_to_same_size(ref self: MPNat, ref other: MPNat) {
-        self.digits.remove_trailing_zeroes_le();
+        self.digits.remove_trailing_zeroes();
 
         let n = other.digits.len();
         let s = self.digits.len();
@@ -407,7 +407,7 @@ impl MPNatTraitImpl of MPNatTrait {
         // case we will use the Chinese remainder theorem to get the result.
         // See http://www.people.vcu.edu/~jwang3/CMSC691/j34monex.pdf
 
-        let trailing_zeros = modulus.digits.count_leading_zeroes_le();
+        let trailing_zeros = modulus.digits.count_leading_zeroes();
         let additional_zero_bits: usize = modulus
             .digits[trailing_zeros]
             .count_trailing_zeroes()
