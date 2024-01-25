@@ -1,4 +1,4 @@
-use utils::helpers::{BitLengthTrait, BytesUsedTrait};
+use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes};
 use utils::helpers;
 
 #[test]
@@ -198,7 +198,7 @@ mod u8_test {
 mod u32_test {
     use utils::helpers::Bitshift;
     use utils::helpers::U32Trait;
-    use utils::helpers::{BitLengthTrait, BytesUsedTrait};
+    use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes};
 
     #[test]
     fn test_u32_from_be_bytes() {
@@ -288,7 +288,7 @@ mod u32_test {
 mod u64_test {
     use utils::helpers::Bitshift;
     use utils::helpers::U64Trait;
-    use utils::helpers::{BitLengthTrait, BytesUsedTrait};
+    use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes};
 
 
     #[test]
@@ -350,7 +350,7 @@ mod u128_test {
     use integer::BoundedInt;
     use utils::helpers::Bitshift;
     use utils::helpers::U128Trait;
-    use utils::helpers::{BitLengthTrait, BytesUsedTrait};
+    use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes};
 
     #[test]
     fn test_u128_bytes_used() {
@@ -618,7 +618,7 @@ mod bytearray_test {
 }
 
 mod span_u8_test {
-    use utils::helpers::{U32Trait, U8SpanExTrait};
+    use utils::helpers::{U32Trait, U8SpanExTrait, ToBytes};
 
     #[test]
     fn test_span_u8_to_64_words_partial() {

@@ -10,7 +10,7 @@ use utils::eth_transaction::{
     EthereumTransaction, LegacyTransaction, AccessListTransaction, EthereumTransactionTrait,
     AccessListItem
 };
-use utils::helpers::U256Trait;
+use utils::helpers::{U256Trait, ToBytes};
 
 #[test]
 fn test_calculate_intrinsic_gas_cost() {

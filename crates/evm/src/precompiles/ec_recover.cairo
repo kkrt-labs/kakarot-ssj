@@ -7,7 +7,7 @@ use starknet::{
     secp256k1::{Secp256k1Point}
 };
 
-use utils::helpers::{U256Trait, BoolIntoNumeric};
+use utils::helpers::{U256Trait, BoolIntoNumeric, ToBytes};
 use utils::traits::EthAddressIntoU256;
 
 const EC_RECOVER_PRECOMPILE_GAS_COST: u128 = 3000;
@@ -67,7 +67,7 @@ impl EcRecoverPrecompileTraitImpl of EcRecoverPrecompileTrait {
         };
 
         let eth_address: u256 = public_key_point_to_eth_address(recovered_public_key).into();
-        let eth_address = eth_address.to_padded_bytes();
+        let eth_address = eth_address.to_be_bytes_padded();
 
         vm.return_data = eth_address;
 

@@ -836,36 +836,6 @@ impl U32Impl of U32Trait {
         };
         Option::Some(result)
     }
-
-    /// Unpacks a u32 into an array of big endian bytes
-    /// # Arguments
-    /// * `self` a `u32` value.
-    /// # Returns
-    /// * The bytes array representation of the value.
-    fn to_be_bytes(mut self: u32) -> Span<u8> {
-        let bytes_used: u32 = self.bytes_used().into();
-        let mut bytes: Array<u8> = Default::default();
-        let mut i = 0;
-        loop {
-            if i == bytes_used {
-                break ();
-            }
-            let val = self.shr(8 * (bytes_used.try_into().unwrap() - i - 1));
-            bytes.append((val & 0xFF).try_into().unwrap());
-            i += 1;
-        };
-
-        bytes.span()
-    }
-
-    /// Unpacks a u32 into an span of big endian bytes, padded to 4 bytes
-    /// # Arguments
-    /// * `self` a `u32` value.
-    /// # Returns
-    /// * The bytes representation of the value.
-    fn to_be_bytes_padded(mut self: u32) -> Span<u8> {
-        self.to_be_bytes().pad_left_with_zeroes(4)
-    }
 }
 
 
@@ -930,32 +900,11 @@ impl U64Impl of U64Trait {
         Option::Some(result)
     }
 
-    /// Unpacks a u64 into an Span of big endian bytes
+    /// Unpacks a u64 into an array of little endian bytes
     /// # Arguments
     /// * `self` a `u64` value.
     /// # Returns
-    /// * The bytes representation of the value.
-    fn to_be_bytes(mut self: u64) -> Span<u8> {
-        let bytes_used: u64 = self.bytes_used().into();
-        let mut bytes: Array<u8> = Default::default();
-        let mut i = 0;
-        loop {
-            if i == bytes_used {
-                break ();
-            }
-            let val = self.shr(8 * (bytes_used.try_into().unwrap() - i - 1));
-            bytes.append((val & 0xFF).try_into().unwrap());
-            i += 1;
-        };
-
-        bytes.span()
-    }
-
-    /// Unpacks a u64 into an Span of little endian bytes
-    /// # Arguments
-    /// * `self` a `u64` value.
-    /// # Returns
-    /// * The bytes representation of the value.
+    /// * The bytes array representation of the value in little endian format.
     fn to_le_bytes(mut self: u64) -> Span<u8> {
         let bytes_used: u64 = self.bytes_used().into();
         let mut bytes: Array<u8> = Default::default();
@@ -972,20 +921,11 @@ impl U64Impl of U64Trait {
         bytes.span()
     }
 
-    /// Unpacks a u64 into an Span of big endian bytes, padded to 8 bytes
-    /// # Arguments
-    /// * `self` a `u64` value.
-    /// # Returns
-    /// * The bytes representation of the value padded to 8 bytes.
-    fn to_be_bytes_padded(mut self: u64) -> Span<u8> {
-        self.to_be_bytes().pad_left_with_zeroes(8)
-    }
-
     /// Unpacks a u64 into an span of little endian bytes, padded to 8 bytes
     /// # Arguments
     /// * `self` a `u64` value.
     /// # Returns
-    /// * The bytes representation of the value.
+    /// * The bytes representation of the value in little endian format padded to 8 bytes.
     fn to_le_bytes_padded(mut self: u64) -> Span<u8> {
         self.to_le_bytes().slice_right_padded(0, 8)
     }
@@ -1083,36 +1023,6 @@ impl U128Impl of U128Trait {
         let (_, bottom_word) = u128_split(self);
         bottom_word
     }
-
-    /// Unpacks a u128 into an Span of big endian bytes
-    /// # Arguments
-    /// * `self` a `u128` value.
-    /// # Returns
-    /// * The bytes representation of the value.
-    fn to_be_bytes(mut self: u128) -> Span<u8> {
-        let bytes_used: u128 = self.bytes_used().into();
-        let mut bytes: Array<u8> = Default::default();
-        let mut i = 0;
-        loop {
-            if i == bytes_used {
-                break ();
-            }
-            let val = self.shr(8 * (bytes_used.try_into().unwrap() - i - 1));
-            bytes.append((val & 0xFF).try_into().unwrap());
-            i += 1;
-        };
-
-        bytes.span()
-    }
-
-    /// Unpacks a u128 into an Span of big endian bytes, padded to 16 bytes
-    /// # Arguments
-    /// * `self` a `u128` value.
-    /// # Returns
-    /// * The bytes representation of the value.
-    fn to_be_bytes_padded(mut self: u128) -> Span<u8> {
-        self.to_be_bytes().pad_left_with_zeroes(16)
-    }
 }
 
 #[generate_trait]
@@ -1132,45 +1042,7 @@ impl U256Impl of U256Trait {
         u256 { low: new_low, high: new_high }
     }
 
-    // Returns a u256 representation as bytes: `Span<u8>` big endian
-    // If the u256 representation does not take up to 32 bytes,
-    // the size of the returned slice is equal to the number of bytes used
-    fn to_be_bytes(self: u256) -> Span<u8> {
-        let bytes_used: u256 = self.bytes_used().into();
-        let mut bytes: Array<u8> = Default::default();
-        let mut i = 0;
-        loop {
-            if i == bytes_used {
-                break ();
-            }
-            let val = self.shr(8 * (bytes_used - i - 1));
-            bytes.append((val & 0xFF).try_into().unwrap());
-            i += 1;
-        };
-
-        bytes.span()
-    }
-
-    // Returns a u256 representation as bytes: `Span<u8>`
-    // This slice is padded of zeros if the u256 representation does not take up to 32 bytes
-    // The size of the returned slice is always 32
-    fn to_padded_bytes(self: u256) -> Span<u8> {
-        let bytes_used: u256 = 32;
-        let mut bytes: Array<u8> = Default::default();
-        let mut i = 0;
-        loop {
-            if i == bytes_used {
-                break ();
-            }
-            let val = self.shr(8 * (bytes_used - i - 1));
-            bytes.append((val & 0xFF).try_into().unwrap());
-            i += 1;
-        };
-
-        bytes.span()
-    }
-
-    /// Packs 32 bytes into a u256 from big endian bytes
+    // Packs 32 bytes into a u256 from big endian bytes
     /// # Arguments
     /// * `input` a Span<u8> of len <=32
     /// # Returns
@@ -1225,6 +1097,65 @@ impl U256Impl of U256Trait {
             i += 1;
         };
         Option::Some(result)
+    }
+}
+
+trait ToBytes<T> {
+    /// Unpacks a type T into an array of big endian bytes
+    /// # Arguments
+    /// * `self` a value of type T.
+    /// # Returns
+    /// * The bytes array representation of the value in big endian.
+    fn to_be_bytes(self: T) -> Span<u8>;
+    fn to_be_bytes_padded(self: T) -> Span<u8>;
+}
+
+impl ToBytesImp<
+    T,
+    +Zero<T>,
+    +One<T>,
+    +Add<T>,
+    +Sub<T>,
+    +Mul<T>,
+    +BitAnd<T>,
+    +Bitshift<T>,
+    +BitSize<T>,
+    +BytesUsedTrait<T>,
+    +Into<u8, T>,
+    +TryInto<T, u8>,
+    +Copy<T>,
+    +Drop<T>,
+    +AddEq<T>,
+    +PartialEq<T>
+> of ToBytes<T> {
+    fn to_be_bytes(self: T) -> Span<u8> {
+        let bytes_used: T = self.bytes_used().into();
+
+        let one = One::<T>::one();
+        let two = one + one;
+        let eight = one + one + one + one + one + one + one + one;
+
+        // 0xFF
+        let mask = (eight * eight * two * two) - one;
+
+        let mut bytes: Array<u8> = Default::default();
+        let mut i: T = Zero::zero();
+        loop {
+            if i == bytes_used {
+                break ();
+            }
+
+            let val = Bitshift::<T>::shr(self, eight * (bytes_used.try_into().unwrap() - i - one));
+            bytes.append((val & mask).try_into().unwrap());
+            i += one;
+        };
+
+        bytes.span()
+    }
+
+    fn to_be_bytes_padded(mut self: T) -> Span<u8> {
+        let padding = (BitSize::<T>::bits() / 8);
+        self.to_be_bytes().pad_left_with_zeroes(padding)
     }
 }
 

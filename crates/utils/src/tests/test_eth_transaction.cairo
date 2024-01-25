@@ -6,8 +6,7 @@ use utils::eth_transaction::{
     EthTransactionTrait, EncodedTransactionTrait, EncodedTransaction, TransactionMetadata,
     EthTransactionError, EthereumTransaction, EthereumTransactionTrait, AccessListItem
 };
-use utils::helpers::U256Trait;
-use utils::helpers::{U32Trait};
+use utils::helpers::{U256Trait, U32Trait, ToBytes};
 use utils::rlp::{RLPTrait, RLPItem, RLPHelpersTrait};
 use utils::tests::test_data::{
     legacy_rlp_encoded_tx, legacy_rlp_encoded_deploy_tx, eip_2930_encoded_tx, eip_1559_encoded_tx
