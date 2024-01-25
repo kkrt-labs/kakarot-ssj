@@ -1857,7 +1857,7 @@ impl Felt252VecTraitImpl<
             return;
         };
 
-        let mut new_vec = Felt252VecImpl::new();
+        let mut new_vec = Default::default();
         let mut i = 0;
         loop {
             if i == new_len {
@@ -1971,7 +1971,7 @@ impl Felt252VecTraitImpl<
     /// * `input` a ref Felt252Vec<T>
     /// Note: this is an expensive operation, as it will create a new Felt252Vec
     fn remove_trailing_zeroes(ref self: Felt252Vec<T>) {
-        let mut vec: Felt252Vec<T> = Felt252VecImpl::new();
+        let mut vec: Felt252Vec<T> = Default::default();
 
         let mut i = self.len;
         let mut num_of_trailing_zeroes = 0;
@@ -2016,7 +2016,7 @@ impl Felt252VecTraitImpl<
             return Option::None;
         }
 
-        let mut new_vec = Felt252VecImpl::new();
+        let mut new_vec = Default::default();
         let popped_ele = self[self.len() - 1];
 
         let mut i = 0;
@@ -2040,7 +2040,7 @@ impl Felt252VecTraitImpl<
     /// # Returns
     /// * A new Felt252Vec<T> with the same elements
     fn duplicate(ref self: Felt252Vec<T>) -> Felt252Vec<T> {
-        let mut new_vec = Felt252VecImpl::new();
+        let mut new_vec = Default::default();
 
         let mut i: u32 = 0;
 
@@ -2077,7 +2077,7 @@ impl Felt252VecTraitImpl<
             return Option::None;
         };
 
-        let mut new_vec = Felt252VecImpl::new();
+        let mut new_vec = Default::default();
 
         let mut i: u32 = 0;
 
