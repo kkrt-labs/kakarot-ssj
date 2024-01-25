@@ -1124,25 +1124,25 @@ impl ToBytesImp<
     +PartialEq<T>
 > of ToBytes<T> {
     fn to_be_bytes(self: T) -> Span<u8> {
-        let bytes_used: T = self.bytes_used().into();
+        let bytes_used = self.bytes_used();
 
         let one = One::<T>::one();
         let two = one + one;
-        let eight = one + one + one + one + one + one + one + one;
+        let eight = two * two * two;
 
         // 0xFF
-        let mask = (eight * eight * two * two) - one;
+        let mask = BoundedInt::<u8>::max().into();
 
         let mut bytes: Array<u8> = Default::default();
-        let mut i: T = Zero::zero();
+        let mut i: u8 = 0;
         loop {
             if i == bytes_used {
                 break ();
             }
 
-            let val = Bitshift::<T>::shr(self, eight * (bytes_used.try_into().unwrap() - i - one));
+            let val = Bitshift::<T>::shr(self, eight * (bytes_used - i - 1).into());
             bytes.append((val & mask).try_into().unwrap());
-            i += one;
+            i += 1;
         };
 
         bytes.span()
@@ -1154,24 +1154,24 @@ impl ToBytesImp<
     }
 
     fn to_le_bytes(mut self: T) -> Span<u8> {
-        let bytes_used: T = self.bytes_used().into();
+        let bytes_used = self.bytes_used();
         let one = One::<T>::one();
         let two = one + one;
-        let eight = one + one + one + one + one + one + one + one;
+        let eight = two * two * two;
 
         // 0xFF
-        let mask = (eight * eight * two * two) - one;
+        let mask = BoundedInt::<u8>::max().into();
 
         let mut bytes: Array<u8> = Default::default();
 
-        let mut i: T = Zero::zero();
+        let mut i: u8 = 0;
         loop {
             if i == bytes_used {
                 break ();
             }
-            let val = self.shr(eight * i);
+            let val = self.shr(eight * i.into());
             bytes.append((val & mask).try_into().unwrap());
-            i += one;
+            i += 1;
         };
 
         bytes.span()
