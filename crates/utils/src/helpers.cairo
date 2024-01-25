@@ -1823,11 +1823,12 @@ impl Felt252VecTraitImpl<
             return;
         }
 
-        let s = self.len();
-        if s < new_len {
+        let current_len = self.len();
+        let diff = current_len - new_len;
+        if current_len < new_len {
             let mut i = 0;
             loop {
-                if i == new_len - s {
+                if i == diff {
                     break;
                 }
 
