@@ -16,6 +16,7 @@ fmt.workspace = true
 
 [[target.starknet-contract]]
 casm = true
+casm-add-pythonic-hints = true
 
 [lib]
 name = "contracts"
