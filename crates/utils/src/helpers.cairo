@@ -1819,39 +1819,7 @@ impl Felt252VecTraitImpl<
     /// * `new_len` the new length of the Felt252Vec
     /// * `value` the value to fill the new elements with
     fn resize(ref self: Felt252Vec<T>, new_len: usize, value: T) {
-        if self.len() == new_len {
-            return;
-        }
-
-        let current_len = self.len();
-        let diff = current_len - new_len;
-        if current_len < new_len {
-            let mut i = 0;
-            loop {
-                if i == diff {
-                    break;
-                }
-
-                self.push(value);
-                i += 1;
-            };
-
-            return;
-        };
-
-        let mut new_vec = Default::default();
-        let mut i = 0;
-        loop {
-            if i == new_len {
-                break;
-            }
-
-            new_vec.push(self[i]);
-
-            i += 1;
-        };
-
-        self = new_vec;
+        self.len = new_len;
     }
 
 
