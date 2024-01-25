@@ -1780,15 +1780,7 @@ impl Felt252VecTraitImpl<
             return Result::Err(Felt252VecTraitErrors::SizeLessThanCurrentLength);
         };
 
-        let mut i = new_length - self.len();
-        loop {
-            if i == 0 {
-                break;
-            }
-
-            self.push(Zero::zero());
-            i -= 1;
-        };
+        self.len = new_length;
 
         Result::Ok(())
     }
