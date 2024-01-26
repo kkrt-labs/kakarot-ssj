@@ -1706,7 +1706,8 @@ impl Felt252VecTraitImpl<
 
     /// Expands a Felt252Vec to a new length by appending zeroes
     ///
-    /// This function will mutate the Felt252Vec in-place and will expand its length to the new length by appending zeroes.
+    /// This function will mutate the Felt252Vec in-place and will expand its length,
+    /// since the default value for Felt252Dict item is 0, all new elements will be set to 0.
     /// If the new length is less than the current length, it will return an error.
     ///
     /// # Arguments
