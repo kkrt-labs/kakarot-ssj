@@ -10,7 +10,7 @@ use utils::eth_transaction::{
     EthereumTransaction, LegacyTransaction, AccessListTransaction, EthereumTransactionTrait,
     AccessListItem
 };
-use utils::helpers::U256Trait;
+use utils::helpers::{U256Trait, ToBytes};
 
 #[test]
 fn test_calculate_intrinsic_gas_cost() {
@@ -23,7 +23,7 @@ fn test_calculate_intrinsic_gas_cost() {
     //   = 21136
     let rlp_encoded: u256 = 0xc981f781808184000012;
 
-    let calldata = rlp_encoded.to_bytes();
+    let calldata = rlp_encoded.to_be_bytes();
     let destination: Option<EthAddress> = 'vitalik.eth'.try_into();
 
     let tx: EthereumTransaction = EthereumTransaction::LegacyTransaction(
@@ -55,7 +55,7 @@ fn test_calculate_intrinsic_gas_cost_with_access_list() {
     //   = 21136
     let rlp_encoded: u256 = 0xc981f781808184000012;
 
-    let calldata = rlp_encoded.to_bytes();
+    let calldata = rlp_encoded.to_be_bytes();
     let destination: Option<EthAddress> = 'vitalik.eth'.try_into();
 
     let access_list = array![
@@ -96,7 +96,7 @@ fn test_calculate_intrinsic_gas_cost_without_destination() {
     //   = 53138
     let rlp_encoded: u256 = 0xc981f781808184000012;
 
-    let calldata = rlp_encoded.to_bytes();
+    let calldata = rlp_encoded.to_be_bytes();
 
     let tx: EthereumTransaction = EthereumTransaction::LegacyTransaction(
         LegacyTransaction {

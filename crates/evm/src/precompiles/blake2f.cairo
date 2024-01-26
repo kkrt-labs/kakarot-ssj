@@ -5,7 +5,7 @@ use evm::errors::{EVMError, ensure};
 use evm::model::vm::{VM, VMTrait};
 use starknet::EthAddress;
 use utils::crypto::blake2_compress::compress;
-use utils::helpers::{U32Trait, U64Trait};
+use utils::helpers::{U32Trait, U64Trait, ToBytes};
 
 const GF_ROUND: u64 = 1;
 const INPUT_LENGTH: usize = 213;
@@ -87,7 +87,7 @@ impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
                 break;
             }
 
-            let bytes = (*res[i]).to_le_bytes_padded().span();
+            let bytes = (*res[i]).to_le_bytes_padded();
             return_data.append_span(bytes);
 
             i += 1;

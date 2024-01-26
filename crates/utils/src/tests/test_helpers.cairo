@@ -1,3 +1,4 @@
+use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes};
 use utils::helpers;
 
 #[test]
@@ -173,9 +174,31 @@ mod test_array_ext {
     }
 }
 
+mod u8_test {
+    use utils::helpers::U8Trait;
+    use utils::math::Bitshift;
+
+    #[test]
+    fn test_bits_used() {
+        assert_eq!(0x00_u8.bits_used(), 0);
+        let mut value: u8 = 0xff;
+        let mut i = 8;
+        loop {
+            assert_eq!(value.bits_used(), i);
+            if i == 0 {
+                break;
+            };
+            value = value.shr(1);
+
+            i -= 1;
+        };
+    }
+}
+
 mod u32_test {
     use utils::helpers::Bitshift;
     use utils::helpers::U32Trait;
+    use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes};
 
     #[test]
     fn test_u32_from_be_bytes() {
@@ -197,7 +220,7 @@ mod u32_test {
     #[test]
     fn test_u32_to_bytes_full() {
         let input: u32 = 0xf4321562;
-        let res: Span<u8> = input.to_bytes();
+        let res: Span<u8> = input.to_be_bytes();
 
         assert(res.len() == 4, 'wrong result length');
         assert(*res[0] == 0xf4, 'wrong result value');
@@ -209,7 +232,7 @@ mod u32_test {
     #[test]
     fn test_u32_to_bytes_partial() {
         let input: u32 = 0xf43215;
-        let res: Span<u8> = input.to_bytes();
+        let res: Span<u8> = input.to_be_bytes();
 
         assert(res.len() == 3, 'wrong result length');
         assert(*res[0] == 0xf4, 'wrong result value');
@@ -221,18 +244,27 @@ mod u32_test {
     #[test]
     fn test_u32_to_bytes_leading_zeros() {
         let input: u32 = 0x00f432;
-        let res: Span<u8> = input.to_bytes();
+        let res: Span<u8> = input.to_be_bytes();
 
         assert(res.len() == 2, 'wrong result length');
         assert(*res[0] == 0xf4, 'wrong result value');
         assert(*res[1] == 0x32, 'wrong result value');
     }
 
+    #[test]
+    fn test_u32_to_be_bytes_padded() {
+        let input: u32 = 7;
+        let result = input.to_be_bytes_padded();
+        let expected = array![0x0, 0x0, 0x0, 7].span();
+
+        assert_eq!(result, expected);
+    }
+
 
     #[test]
     fn test_u32_bytes_used() {
         assert_eq!(0x00_u32.bytes_used(), 0);
-        let mut value = 0xff;
+        let mut value: u32 = 0xff;
         let mut i = 1;
         loop {
             assert_eq!(value.bytes_used(), i);
@@ -246,7 +278,7 @@ mod u32_test {
 
     #[test]
     fn test_u32_bytes_used_leading_zeroes() {
-        let len = 0x001234;
+        let len: u32 = 0x001234;
         let bytes_count = len.bytes_used();
 
         assert(bytes_count == 2, 'wrong bytes count');
@@ -256,11 +288,13 @@ mod u32_test {
 mod u64_test {
     use utils::helpers::Bitshift;
     use utils::helpers::U64Trait;
+    use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes};
+
 
     #[test]
     fn test_u64_bytes_used() {
         assert_eq!(0x00_u64.bytes_used(), 0);
-        let mut value = 0xff;
+        let mut value: u64 = 0xff;
         let mut i = 1;
         loop {
             assert_eq!(value.bytes_used(), i);
@@ -271,16 +305,57 @@ mod u64_test {
             value = value.shl(8);
         };
     }
+
+    #[test]
+    fn test_u64_to_be_bytes_padded() {
+        let input: u64 = 7;
+        let result = input.to_be_bytes_padded();
+        let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 7].span();
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_u64_trailing_zeroes() {
+        /// bit len is 3, and trailing zeroes are 2
+        let input: u64 = 4;
+        let result = input.count_trailing_zeroes();
+        let expected = 2;
+
+        assert_eq!(result, expected);
+    }
+
+
+    #[test]
+    fn test_u64_leading_zeroes() {
+        /// bit len is 3, and leading zeroes are 64 - 3 = 61
+        let input: u64 = 7;
+        let result = input.count_leading_zeroes();
+        let expected = 61;
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_u64_bit_len() {
+        let input: u64 = 7;
+        let result = input.bit_len();
+        let expected = 3;
+
+        assert_eq!(result, expected);
+    }
 }
 
 mod u128_test {
+    use integer::BoundedInt;
     use utils::helpers::Bitshift;
     use utils::helpers::U128Trait;
+    use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes};
 
     #[test]
     fn test_u128_bytes_used() {
         assert_eq!(0x00_u128.bytes_used(), 0);
-        let mut value = 0xff;
+        let mut value: u128 = 0xff;
         let mut i = 1;
         loop {
             assert_eq!(value.bytes_used(), i);
@@ -291,11 +366,46 @@ mod u128_test {
             value = value.shl(8);
         };
     }
+
+    #[test]
+    fn test_u128_to_bytes_full() {
+        let input: u128 = BoundedInt::max();
+        let result: Span<u8> = input.to_be_bytes();
+        let expected = array![
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
+        ]
+            .span();
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_u128_to_bytes_partial() {
+        let input: u128 = 0xf43215;
+        let result: Span<u8> = input.to_be_bytes();
+        let expected = array![0xf4, 0x32, 0x15].span();
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_u128_to_bytes_padded() {
+        let input: u128 = 0xf43215;
+        let result: Span<u8> = input.to_be_bytes_padded();
+        let expected = array![
+            0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x32, 0x15
+        ]
+            .span();
+
+        assert_eq!(result, expected);
+    }
 }
 
 mod u256_test {
     use utils::helpers::Bitshift;
     use utils::helpers::U256Trait;
+    use utils::helpers::{BitLengthTrait, BytesUsedTrait};
+
     #[test]
     fn test_reverse_bytes_u256() {
         let value: u256 = 0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000;
@@ -319,7 +429,7 @@ mod u256_test {
     #[test]
     fn test_u256_bytes_used() {
         assert_eq!(0x00_u256.bytes_used(), 0);
-        let mut value = 0xff;
+        let mut value: u256 = 0xff;
         let mut i = 1;
         loop {
             assert_eq!(value.bytes_used(), i);
@@ -329,6 +439,25 @@ mod u256_test {
             i += 1;
             value = value.shl(8);
         };
+    }
+
+    #[test]
+    fn test_u256_leading_zeroes() {
+        /// bit len is 3, and leading zeroes are 256 - 3 = 253
+        let input: u256 = 7;
+        let result = input.count_leading_zeroes();
+        let expected = 253;
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_u64_bit_len() {
+        let input: u256 = 7;
+        let result = input.bit_len();
+        let expected = 3;
+
+        assert_eq!(result, expected);
     }
 }
 
@@ -489,7 +618,7 @@ mod bytearray_test {
 }
 
 mod span_u8_test {
-    use utils::helpers::{U32Trait, U8SpanExTrait};
+    use utils::helpers::{U32Trait, U8SpanExTrait, ToBytes};
 
     #[test]
     fn test_span_u8_to_64_words_partial() {
@@ -514,11 +643,65 @@ mod span_u8_test {
 
     #[test]
     fn test_compute_msg_hash() {
-        let msg = 0xabcdef_u32.to_bytes();
+        let msg = 0xabcdef_u32.to_be_bytes();
         let expected_hash = 0x800d501693feda2226878e1ec7869eef8919dbc5bd10c2bcd031b94d73492860;
         let hash = msg.compute_keccak256_hash();
 
         assert_eq!(hash, expected_hash);
+    }
+
+    #[test]
+    fn test_right_padded_span_offset_0() {
+        let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+        let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x0, 0x0, 0x0, 0x0].span();
+        let result = span.slice_right_padded(0, 10);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_right_padded_span_offset_4() {
+        let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+        let expected = array![0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
+        let result = span.slice_right_padded(4, 10);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_right_padded_span_offset_greater_than_span_len() {
+        let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+        let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
+        let result = span.slice_right_padded(6, 10);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_pad_left_with_zeroes_len_10() {
+        let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+        let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+        let result = span.pad_left_with_zeroes(10);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_pad_left_with_zeroes_len_equal_than_data_len() {
+        let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+        let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+        let result = span.pad_left_with_zeroes(10);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_pad_left_with_zeroes_len_equal_than_smaller_len() {
+        let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+        let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
+        let result = span.pad_left_with_zeroes(9);
+
+        assert_eq!(result, expected);
     }
 }
 
@@ -683,5 +866,423 @@ mod eth_signature_test {
             .try_into_eth_signature(CHAIN_ID)
             .unwrap();
         assert_eq!(result, signature_2);
+    }
+}
+
+mod felt252_vec_u8_test {
+    use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+    use utils::helpers::{Felt252VecTrait};
+
+    #[test]
+    fn test_felt252_vec_u8_to_bytes() {
+        let mut vec: Felt252Vec<u8> = Default::default();
+        vec.push(0);
+        vec.push(1);
+        vec.push(2);
+        vec.push(3);
+
+        let result = vec.to_le_bytes();
+        let expected = array![0, 1, 2, 3].span();
+
+        assert_eq!(result, expected);
+    }
+}
+
+mod felt252_vec_u64_test {
+    use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+    use utils::helpers::{Felt252VecTrait};
+
+    #[test]
+    fn test_felt252_vec_u64_words64_to_le_bytes() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(0);
+        vec.push(1);
+        vec.push(2);
+        vec.push(3);
+
+        let result = vec.to_le_bytes();
+        let expected = array![0, 1, 2, 3].span();
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_felt252_vec_u64_words64_to_be_bytes() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(0);
+        vec.push(1);
+        vec.push(2);
+        vec.push(3);
+
+        let result = vec.to_be_bytes();
+        let expected = array![
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ]
+            .span();
+
+        assert_eq!(result, expected);
+    }
+}
+
+mod felt252_vec_test {
+    use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+    use utils::helpers::{Felt252VecTrait, Felt252VecTraitErrors};
+
+    #[test]
+    fn test_felt252_vec_expand() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(0);
+        vec.push(1);
+
+        vec.expand(4).unwrap();
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_felt252_vec_expand_fail() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(0);
+        vec.push(1);
+
+        let result = vec.expand(1);
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::SizeLessThanCurrentLength));
+    }
+
+    #[test]
+    fn test_felt252_vec_reset() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(0);
+        vec.push(1);
+
+        vec.reset();
+
+        assert_eq!(vec.len(), 2);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_felt252_vec_count_leading_zeroes() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(0);
+        vec.push(0);
+        vec.push(0);
+        vec.push(1);
+
+        let result = vec.count_leading_zeroes();
+
+        assert_eq!(result, 3);
+    }
+
+
+    #[test]
+    fn test_felt252_vec_resize_len_greater_than_current_len() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(0);
+        vec.push(1);
+
+        vec.resize(4, 0);
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_felt252_vec_resize_len_less_than_current_len() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(0);
+        vec.push(1);
+        vec.push(0);
+        vec.push(0);
+
+        vec.resize(2, 0);
+
+        assert_eq!(vec.len(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_felt252_vec_len_0() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(0);
+        vec.push(1);
+
+        vec.resize(0, 0);
+
+        assert_eq!(vec.len(), 0);
+    }
+
+    #[test]
+    fn test_copy_from_bytes_le_size_equal_to_vec_size() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.expand(4).unwrap();
+
+        let bytes = array![1, 2, 3, 4].span();
+        vec.copy_from_bytes_le(0, bytes).unwrap();
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 4);
+        assert_eq!(vec.pop().unwrap(), 3);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_copy_from_bytes_le_size_less_than_vec_size() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.expand(4).unwrap();
+
+        let bytes = array![1, 2].span();
+        vec.copy_from_bytes_le(2, bytes).unwrap();
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_copy_from_bytes_le_size_greater_than_vec_size() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.expand(4).unwrap();
+
+        let bytes = array![1, 2, 3, 4].span();
+        let result = vec.copy_from_bytes_le(2, bytes);
+
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::Overflow));
+    }
+
+    #[test]
+    fn test_copy_from_bytes_index_out_of_bound() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.expand(4).unwrap();
+
+        let bytes = array![1, 2].span();
+        let result = vec.copy_from_bytes_le(4, bytes);
+
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::IndexOutOfBound));
+    }
+
+    #[test]
+    fn test_copy_from_vec_le() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.expand(2).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Default::default();
+        vec2.push(1);
+        vec2.push(2);
+
+        vec.copy_from_vec_le(ref vec2).unwrap();
+
+        assert_eq!(vec.len, 2);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_copy_from_vec_le_not_equal_lengths() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.expand(2).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Default::default();
+        vec2.push(1);
+
+        let result = vec.copy_from_vec_le(ref vec2);
+
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::LengthIsNotSame));
+    }
+
+
+    #[test]
+    fn test_insert_vec_size_equal_to_vec_size() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.expand(2).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Default::default();
+        vec2.push(1);
+        vec2.push(2);
+
+        vec.insert_vec(0, ref vec2).unwrap();
+
+        assert_eq!(vec.len(), 2);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_insert_vec_size_less_than_vec_size() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.expand(4).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Default::default();
+        vec2.push(1);
+        vec2.push(2);
+
+        vec.insert_vec(2, ref vec2).unwrap();
+
+        assert_eq!(vec.len(), 4);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_insert_vec_size_greater_than_vec_size() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.expand(2).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Default::default();
+        vec2.push(1);
+        vec2.push(2);
+        vec2.push(3);
+        vec2.push(4);
+
+        let result = vec.insert_vec(1, ref vec2);
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::Overflow));
+    }
+
+    #[test]
+    fn test_insert_vec_index_out_of_bound() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.expand(4).unwrap();
+
+        let mut vec2: Felt252Vec<u64> = Default::default();
+        vec2.push(1);
+        vec2.push(2);
+
+        let result = vec.insert_vec(4, ref vec2);
+        assert_eq!(result, Result::Err(Felt252VecTraitErrors::IndexOutOfBound));
+    }
+
+    #[test]
+    fn test_remove_trailing_zeroes_le() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(1);
+        vec.push(2);
+        vec.push(0);
+        vec.push(0);
+
+        vec.remove_trailing_zeroes();
+
+        assert_eq!(vec.len(), 2);
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_pop() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(1);
+        vec.push(2);
+
+        assert_eq!(vec.pop().unwrap(), 2);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop(), Option::<u64>::None);
+    }
+
+    #[test]
+    fn test_duplicate() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(1);
+        vec.push(2);
+
+        let mut vec2 = vec.duplicate();
+
+        assert_eq!(vec.len(), vec2.len());
+        assert_eq!(vec.pop(), vec2.pop());
+        assert_eq!(vec.pop(), vec2.pop());
+        assert_eq!(vec.pop().is_none(), true);
+        assert_eq!(vec2.pop().is_none(), true);
+    }
+
+    #[test]
+    fn test_clone_slice() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(1);
+        vec.push(2);
+
+        let mut vec2 = vec.clone_slice(1, 1);
+
+        assert_eq!(vec2.len(), 1);
+        assert_eq!(vec2.pop().unwrap(), 2);
+    }
+
+    #[test]
+    fn test_equal() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.push(1);
+        vec.push(2);
+
+        let mut vec2: Felt252Vec<u64> = Default::default();
+        vec2.push(1);
+        vec2.push(2);
+
+        assert!(vec.equal_remove_trailing_zeroes(ref vec2));
+        vec2.pop().unwrap();
+        assert!(!vec.equal_remove_trailing_zeroes(ref vec2));
+    }
+
+    #[test]
+    fn test_fill() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.expand(4).unwrap();
+
+        vec.fill(1, 3, 1).unwrap();
+
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 1);
+        assert_eq!(vec.pop().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_fill_overflow() {
+        let mut vec: Felt252Vec<u64> = Default::default();
+        vec.expand(4).unwrap();
+
+        assert_eq!(vec.fill(4, 0, 1), Result::Err(Felt252VecTraitErrors::IndexOutOfBound));
+        assert_eq!(vec.fill(2, 4, 1), Result::Err(Felt252VecTraitErrors::Overflow));
     }
 }

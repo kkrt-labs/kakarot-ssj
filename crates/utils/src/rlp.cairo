@@ -8,7 +8,7 @@ use starknet::EthAddress;
 use utils::errors::RLPHelpersErrorTrait;
 use utils::errors::{RLPError, RLPHelpersError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use utils::eth_transaction::AccessListItem;
-use utils::helpers::{U32Trait, EthAddressExTrait, U256Impl, U128Impl, ArrayExtension};
+use utils::helpers::{U32Trait, EthAddressExTrait, U256Impl, U128Impl, ArrayExtension, ToBytes};
 
 // Possible RLP types
 #[derive(Drop, PartialEq)]
@@ -145,7 +145,7 @@ impl RLPImpl of RLPTrait {
             return encoding.span();
         } else {
             let mut encoding: Array<u8> = Default::default();
-            let len_as_bytes = len.to_bytes();
+            let len_as_bytes = len.to_be_bytes();
             let len_bytes_count = len_as_bytes.len();
             let prefix = 0xb7 + len_bytes_count.try_into().unwrap();
             encoding.append(prefix);
