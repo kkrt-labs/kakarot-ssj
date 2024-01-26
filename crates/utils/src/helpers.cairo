@@ -1968,6 +1968,7 @@ impl Felt252VecTraitImpl<
     ///
     /// # Returns
     /// * bool, returns true if both Felt252Vecs are equal, false otherwise
+    /// TODO: if this utils is only used for testing, then refactor as a test util
     fn equal_remove_trailing_zeroes(ref self: Felt252Vec<T>, ref rhs: Felt252Vec<T>) -> bool {
         let mut lhs = self.duplicate();
         lhs.remove_trailing_zeroes();
