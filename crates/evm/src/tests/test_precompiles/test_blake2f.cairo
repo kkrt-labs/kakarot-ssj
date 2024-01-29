@@ -16,7 +16,7 @@ use super::test_data::{
     blake2_precompile_fail_wrong_length_input_3_test_case, blake2_precompile_pass_1_test_case,
     blake2_precompile_pass_0_test_case, blake2_precompile_pass_2_test_case
 };
-use utils::helpers::U32Trait;
+use utils::helpers::FromBytes;
 
 #[test]
 fn test_blake2_precompile_fail_empty_input() {

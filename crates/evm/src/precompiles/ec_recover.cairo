@@ -25,13 +25,13 @@ impl EcRecover of Precompile {
         let gas: u128 = EC_RECOVER_PRECOMPILE_GAS_COST;
 
         let message_hash = input.slice(0, 32);
-        let message_hash = match U256Trait::from_be_bytes(message_hash) {
+        let message_hash = match message_hash.from_be_bytes() {
             Option::Some(message_hash) => message_hash,
             Option::None => { return Result::Ok((gas, array![].span())); }
         };
 
-        let v = input.slice(32, 32);
-        let y_parity = match U256Trait::from_be_bytes(v) {
+        let v: Option<u256> = input.slice(32, 32).from_be_bytes();
+        let y_parity = match v {
             Option::Some(v) => {
                 let y_parity = v - 27;
                 if (y_parity == 0 || y_parity == 1) {
@@ -43,14 +43,14 @@ impl EcRecover of Precompile {
             Option::None => { return Result::Ok((gas, array![].span())); }
         };
 
-        let r = input.slice(64, 32);
-        let r = match U256Trait::from_be_bytes(r) {
+        let r: Option<u256> = input.slice(64, 32).from_be_bytes();
+        let r = match r {
             Option::Some(r) => r,
             Option::None => { return Result::Ok((gas, array![].span())); }
         };
 
-        let s = input.slice(96, 32);
-        let s = match U256Trait::from_be_bytes(s) {
+        let s: Option<u256> = input.slice(96, 32).from_be_bytes();
+        let s = match s {
             Option::Some(s) => s,
             Option::None => { return Result::Ok((gas, array![].span())); }
         };
