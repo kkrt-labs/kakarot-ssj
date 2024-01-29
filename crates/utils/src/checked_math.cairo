@@ -116,10 +116,37 @@ mod checked_sub {
     }
 }
 
+mod checked_mul {
+    use integer::{u32_wide_mul};
+    use utils::math::{Bitshift, OverflowingMul};
+
+    trait CheckedMul<T> {
+        /// performs a checked multiplication, returning `None` if the multiplication overflows.
+        /// # Arguments
+        /// * `self` - The left hand side of the multiplication.
+        /// * `rhs` - The right hand side of the multiplication.
+        /// # Returns
+        /// `Some(self * rhs)` if the multiplication doesn't overflow, and `None` otherwise.
+        fn checked_mul(self: T, rhs: T) -> Option<T>;
+    }
+
+    impl CheckedMulImpl<T, +OverflowingMul<T>, +Drop<T>> of CheckedMul<T> {
+        fn checked_mul(self: T, rhs: T) -> Option<T> {
+            let (result, is_overflow) = self.overflowing_mul(rhs);
+
+            match is_overflow {
+                true => { Option::None },
+                false => { Option::Some(result) }
+            }
+        }
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use integer::BoundedInt;
-    use super::{checked_math::CheckedMath};
+    use super::{checked_math::CheckedMath, checked_mul::CheckedMul};
 
     #[test]
     fn test_u8_checked_add() {
@@ -191,5 +218,11 @@ mod tests {
     fn test_u256_checked_sub() {
         assert_eq!(3_u256.checked_sub(2), Option::Some(1));
         assert_eq!(0_u256.checked_sub(1), Option::<u256>::None);
+    }
+
+    #[test]
+    fn test_checked_mul() {
+        assert_eq!(1_u8.checked_mul(2), Option::Some(2));
+        assert_eq!(BoundedInt::<u8>::max().checked_mul(2), Option::<u8>::None);
     }
 }

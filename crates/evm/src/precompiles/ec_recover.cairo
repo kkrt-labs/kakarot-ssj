@@ -6,6 +6,7 @@ use starknet::{
     EthAddress, eth_signature::{recover_public_key, public_key_point_to_eth_address, Signature},
     secp256k1::{Secp256k1Point}
 };
+use utils::helpers::FromBytes;
 
 use utils::helpers::{U256Trait, BoolIntoNumeric, ToBytes};
 use utils::traits::EthAddressIntoU256;
@@ -27,13 +28,13 @@ impl EcRecoverPrecompileTraitImpl of EcRecoverPrecompileTrait {
         let input = vm.message().data;
 
         let message_hash = input.slice(0, 32);
-        let message_hash = match U256Trait::from_be_bytes(message_hash) {
+        let message_hash = match message_hash.from_be_bytes() {
             Option::Some(message_hash) => message_hash,
             Option::None => { return Result::Ok(()); }
         };
 
-        let v = input.slice(32, 32);
-        let y_parity = match U256Trait::from_be_bytes(v) {
+        let v: Option<u256> = input.slice(32, 32).from_be_bytes();
+        let y_parity = match v {
             Option::Some(v) => {
                 let y_parity = v - 27;
 
@@ -46,14 +47,14 @@ impl EcRecoverPrecompileTraitImpl of EcRecoverPrecompileTrait {
             Option::None => { return Result::Ok(()); }
         };
 
-        let r = input.slice(64, 32);
-        let r = match U256Trait::from_be_bytes(r) {
+        let r: Option<u256> = input.slice(64, 32).from_be_bytes();
+        let r = match r {
             Option::Some(r) => r,
             Option::None => { return Result::Ok(()); }
         };
 
-        let s = input.slice(96, 32);
-        let s = match U256Trait::from_be_bytes(s) {
+        let s: Option<u256> = input.slice(96, 32).from_be_bytes();
+        let s = match s {
             Option::Some(s) => s,
             Option::None => { return Result::Ok(()); }
         };

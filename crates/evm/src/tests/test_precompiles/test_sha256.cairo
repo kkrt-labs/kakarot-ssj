@@ -7,7 +7,7 @@ use evm::precompiles::sha256::Sha256PrecompileTrait;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
 use starknet::testing::set_contract_address;
-use utils::helpers::U256Trait;
+use utils::helpers::{FromBytes};
 
 //source: <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='wFirsWplaceqparameters%20in%20memorybFFjdata~0vMSTOREvvwDoqcallZSizeZ_1XSizeb1FX_2jaddressY4%200xFFFFFFFFjgasvSTATICCALLvvwPutqresulWalonVonqstackvPOPb20vMLOAD'~Y1j//%20v%5Cnq%20thVj%20wb~0x_Offset~Zb20jretYvPUSHXjargsWt%20Ve%20%01VWXYZ_bjqvw~_>
 #[test]
@@ -21,7 +21,7 @@ fn test_sha_256_precompile() {
     Sha256PrecompileTrait::exec(ref vm).unwrap();
     let gas_after = vm.gas_left;
 
-    let result = U256Trait::from_be_bytes(vm.return_data).unwrap();
+    let result: u256 = vm.return_data.from_be_bytes().unwrap();
     let expected_result = 0xa8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89;
 
     assert_eq!(result, expected_result);

@@ -778,128 +778,7 @@ impl U8Impl of U8Trait {
 }
 
 #[generate_trait]
-impl U32Impl of U32Trait {
-    /// Packs 4 bytes into a u32 big endian bytes
-    /// # Arguments
-    /// * `input` a Span<u8> of len <=4
-    /// # Returns
-    /// * Option::Some(u32) if the operation succeeds
-    /// * Option::None otherwise
-    fn from_be_bytes(input: Span<u8>) -> Option<u32> {
-        let len = input.len();
-        if len == 0 {
-            return Option::None;
-        }
-        if len > 4 {
-            return Option::None;
-        }
-        let mut result: u32 = 0;
-        let mut i: u32 = 0;
-        let mut offset = len - 1;
-        let mut shifts = array![0x1, 0x100, 0x10000, 0x1000000];
-        loop {
-            if i == len {
-                break ();
-            }
-            let byte: u32 = (*input[i]).into();
-            result += byte * *shifts[offset - i];
-            i += 1;
-        };
-        Option::Some(result)
-    }
-
-    /// Packs 4 bytes into a u32 from little endian bytes
-    /// # Arguments
-    /// * `input` a Span<u8> of len <=4
-    /// # Returns
-    /// * Option::Some(u32) if the operation succeeds
-    /// * Option::None otherwise
-    fn from_le_bytes(input: Span<u8>) -> Option<u32> {
-        let len = input.len();
-        if len == 0 {
-            return Option::None;
-        }
-        if len > 4 {
-            return Option::None;
-        }
-        let mut result: u32 = 0;
-        let mut i: u32 = 0;
-        let mut offset = len - 1;
-        let mut shifts = array![0x1, 0x100, 0x10000, 0x1000000];
-        loop {
-            if i == len {
-                break ();
-            }
-            let byte: u32 = (*input[(len - 1) - i]).into();
-            result += byte * *shifts[offset - i];
-            i += 1;
-        };
-        Option::Some(result)
-    }
-}
-
-
-#[generate_trait]
 impl U64Impl of U64Trait {
-    /// Packs 8 bytes into a u64 from big endian bytes
-    /// # Arguments
-    /// * `input` a Span<u8> of len <=8
-    /// # Returns
-    /// * Option::Some(u64) if the operation succeeds
-    /// * Option::None otherwise
-    fn from_be_bytes(input: Span<u8>) -> Option<u64> {
-        let len = input.len();
-        if len == 0 {
-            return Option::None;
-        }
-        if len > 8 {
-            return Option::None;
-        }
-
-        let offset: u32 = len - 1;
-        let mut result: u64 = 0;
-        let mut i: u32 = 0;
-        loop {
-            if i == len {
-                break ();
-            }
-            let byte: u64 = (*input.at(i)).into();
-            result += byte.shl((8 * (offset - i)).into());
-
-            i += 1;
-        };
-        Option::Some(result)
-    }
-
-    /// Packs 8 bytes into a u64 from little endian bytes
-    /// # Arguments
-    /// * `input` a Span<u8> of len <=8
-    /// # Returns
-    /// * Option::Some(u64) if the operation succeeds
-    /// * Option::None otherwise
-    fn from_le_bytes(input: Span<u8>) -> Option<u64> {
-        let len = input.len();
-        if len == 0 {
-            return Option::None;
-        }
-        if len > 8 {
-            return Option::None;
-        }
-
-        let mut result: u64 = 0;
-        let mut i: u32 = 0;
-        loop {
-            if i == len {
-                break ();
-            }
-            let byte: u64 = (*input.at(i)).into();
-            result += byte.shl((8 * i).into());
-
-            i += 1;
-        };
-        Option::Some(result)
-    }
-
     /// Returns the number of trailing zeroes in the bit representation of `self`.
     /// # Arguments
     /// * `self` a `u64` value.
@@ -930,64 +809,6 @@ impl U64Impl of U64Trait {
 
 #[generate_trait]
 impl U128Impl of U128Trait {
-    /// Packs 16 bytes into a u128 from big endian bytes
-    /// # Arguments
-    /// * `input` a Span<u8> of len <=16
-    /// # Returns
-    /// * Option::Some(u128) if the operation succeeds
-    /// * Option::None otherwise
-    fn from_be_bytes(input: Span<u8>) -> Option<u128> {
-        let len = input.len();
-        if len == 0 {
-            return Option::None;
-        }
-        if len > 16 {
-            return Option::None;
-        }
-        let offset: u32 = len - 1;
-        let mut result: u128 = 0;
-        let mut i: u32 = 0;
-        loop {
-            if i == len {
-                break ();
-            }
-            let byte: u128 = (*input.at(i)).into();
-            result += byte.shl((8 * (offset - i)).into());
-
-            i += 1;
-        };
-        Option::Some(result)
-    }
-
-    /// Packs 16 bytes into a u128 from little endian bytes
-    /// # Arguments
-    /// * `input` a Span<u8> of len <=16
-    /// # Returns
-    /// * Option::Some(u128) if the operation succeeds
-    /// * Option::None otherwise
-    fn from_le_bytes(input: Span<u8>) -> Option<u128> {
-        let len = input.len();
-        if len == 0 {
-            return Option::None;
-        }
-        if len > 16 {
-            return Option::None;
-        }
-
-        let mut result: u128 = 0;
-        let mut i: u32 = 0;
-        loop {
-            if i == len {
-                break ();
-            }
-            let byte: u128 = (*input.at(i)).into();
-            result += byte.shl((8 * i).into());
-
-            i += 1;
-        };
-        Option::Some(result)
-    }
-
     /// Returns the Least signficant 64 bits of a u128
     fn as_u64(self: u128) -> u64 {
         let (_, bottom_word) = u128_split(self);
@@ -1010,63 +831,6 @@ impl U256Impl of U256Trait {
         let new_low = integer::u128_byte_reverse(self.high);
         let new_high = integer::u128_byte_reverse(self.low);
         u256 { low: new_low, high: new_high }
-    }
-
-    // Packs 32 bytes into a u256 from big endian bytes
-    /// # Arguments
-    /// * `input` a Span<u8> of len <=32
-    /// # Returns
-    /// * Option::Some(u128) if the operation succeeds
-    /// * Option::None otherwise
-    fn from_be_bytes(input: Span<u8>) -> Option<u256> {
-        let len = input.len();
-        if len == 0 {
-            return Option::None;
-        }
-        if len > 32 {
-            return Option::None;
-        }
-        let offset: u32 = len - 1;
-        let mut result: u256 = 0;
-        let mut i: u32 = 0;
-        loop {
-            if i == len {
-                break ();
-            }
-            let byte: u256 = (*input.at(i)).into();
-            result += byte.shl((8 * (offset - i)).into());
-
-            i += 1;
-        };
-        Option::Some(result)
-    }
-
-    /// Packs 32 bytes into a u256 from little endian bytes
-    /// # Arguments
-    /// * `input` a Span<u8> of len <=32
-    /// # Returns
-    /// * Option::Some(u128) if the operation succeeds
-    /// * Option::None otherwise
-    fn from_le_bytes(input: Span<u8>) -> Option<u256> {
-        let len = input.len();
-        if len == 0 {
-            return Option::None;
-        }
-        if len > 32 {
-            return Option::None;
-        }
-        let mut result: u256 = 0;
-        let mut i: u32 = 0;
-        loop {
-            if i == len {
-                break ();
-            }
-            let byte: u256 = (*input.at(i)).into();
-            result += byte.shl((8 * i).into());
-
-            i += 1;
-        };
-        Option::Some(result)
     }
 }
 
@@ -1105,7 +869,7 @@ trait ToBytes<T> {
     fn to_le_bytes_padded(self: T) -> Span<u8>;
 }
 
-impl ToBytesImp<
+impl ToBytesImpl<
     T,
     +Zero<T>,
     +One<T>,
@@ -1182,6 +946,98 @@ impl ToBytesImp<
         self.to_le_bytes().slice_right_padded(0, padding)
     }
 }
+
+trait FromBytes<T> {
+    /// Parses a span of big endian bytes into a type T
+    ///
+    /// # Arguments
+    /// * `self` a span of big endian bytes.
+    ///
+    /// # Returns
+    /// * The Option::(value) represented by the bytes in big endian, Option::None if the span is longer than the byte size of T.
+    fn from_be_bytes(self: Span<u8>) -> Option<T>;
+    /// Parses a span of little endian bytes into a type T
+    ///
+    /// # Arguments
+    /// * `self` a span of little endian bytes.
+    ///
+    /// # Returns
+    /// * The Option::(value) represented by the bytes in little endian, Option::None if the span is longer than the byte size of T.
+    fn from_le_bytes(self: Span<u8>) -> Option<T>;
+}
+
+impl FromBytesImpl<
+    T,
+    +Zero<T>,
+    +One<T>,
+    +Add<T>,
+    +Sub<T>,
+    +Mul<T>,
+    +BitAnd<T>,
+    +Bitshift<T>,
+    +BitSize<T>,
+    +BytesUsedTrait<T>,
+    +Into<u8, T>,
+    +Into<u32, T>,
+    +TryInto<T, u8>,
+    +Copy<T>,
+    +Drop<T>,
+    +AddEq<T>,
+    +PartialEq<T>
+> of FromBytes<T> {
+    fn from_be_bytes(self: Span<u8>) -> Option<T> {
+        let byte_size = BitSize::<T>::bits() / 8;
+
+        let len = self.len();
+        if len == 0 {
+            return Option::Some(Zero::zero());
+        }
+        if len > byte_size {
+            return Option::None;
+        }
+        let offset: u32 = len - 1;
+        let mut result: T = Zero::zero();
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: T = (*self.at(i)).into();
+            // Safe unwrap, since offset - i is inbound in case of u8 { offset - i = 0 }, and TryInto<u32, u32>, TryInto<u32, u64>, TryInto<u32, u128>, TryInto<u32, 256> are safe
+            result += byte.shl((8 * (offset - i)).into());
+
+            i += 1;
+        };
+        Option::Some(result)
+    }
+
+    fn from_le_bytes(self: Span<u8>) -> Option<T> {
+        let byte_size = BitSize::<T>::bits() / 8;
+        let len = self.len();
+
+        if len == 0 {
+            return Option::Some(Zero::zero());
+        }
+        if len > byte_size {
+            return Option::None;
+        }
+
+        let mut result: T = Zero::zero();
+        let mut i: u32 = 0;
+        loop {
+            if i == len {
+                break ();
+            }
+            let byte: T = (*self.at(i)).into();
+            // safe unwrap, as i is inbound in case of u8 { max value can be 8 * 1 = 8 }, and TryInto<u32, u32>, TryInto<u32, u64>, TryInto<u32, u128>, TryInto<u32, 256> are safe
+            result += byte.shl((8 * i).into());
+
+            i += 1;
+        };
+        Option::Some(result)
+    }
+}
+
 
 #[generate_trait]
 impl ByteArrayExt of ByteArrayExTrait {

@@ -5,7 +5,7 @@ use evm::errors::{EVMError, ensure};
 use evm::model::vm::{VM, VMTrait};
 use starknet::EthAddress;
 use utils::crypto::blake2_compress::compress;
-use utils::helpers::{U32Trait, U64Trait, ToBytes};
+use utils::helpers::{FromBytes, ToBytes};
 
 const GF_ROUND: u64 = 1;
 const INPUT_LENGTH: usize = 213;
@@ -34,7 +34,9 @@ impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
             }
         };
 
-        let rounds = U32Trait::from_be_bytes(input.slice(0, 4))
+        let rounds: u32 = input
+            .slice(0, 4)
+            .from_be_bytes()
             .ok_or(EVMError::TypeConversionError('extraction of u32 failed'))?;
 
         let gas: u128 = (GF_ROUND * rounds.into()).into();
@@ -52,7 +54,7 @@ impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
             }
 
             // safe unwrap, because we have made sure of the input length to be 213
-            h.append(U64Trait::from_le_bytes(input.slice(pos, 8)).unwrap());
+            h.append(input.slice(pos, 8).from_le_bytes().unwrap());
             i += 1;
             pos += 8;
         };
@@ -65,7 +67,7 @@ impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
             }
 
             // safe unwrap, because we have made sure of the input length to be 213
-            m.append(U64Trait::from_le_bytes(input.slice(pos, 8)).unwrap());
+            m.append(input.slice(pos, 8).from_le_bytes().unwrap());
             i += 1;
             pos += 8;
         };
@@ -73,9 +75,9 @@ impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
         let mut t: Array<u64> = Default::default();
 
         // safe unwrap, because we have made sure of the input length to be 213
-        t.append(U64Trait::from_le_bytes(input.slice(196, 8)).unwrap());
+        t.append(input.slice(196, 8).from_le_bytes().unwrap());
         // safe unwrap, because we have made sure of the input length to be 213
-        t.append(U64Trait::from_le_bytes(input.slice(204, 8)).unwrap());
+        t.append(input.slice(204, 8).from_le_bytes().unwrap());
 
         let res = compress(rounds, h.span(), m.span(), t.span(), f);
 

@@ -16,7 +16,7 @@ use super::test_data::{
     blake2_precompile_fail_wrong_length_input_3_test_case, blake2_precompile_pass_1_test_case,
     blake2_precompile_pass_0_test_case, blake2_precompile_pass_2_test_case
 };
-use utils::helpers::U32Trait;
+use utils::helpers::FromBytes;
 
 #[test]
 fn test_blake2_precompile_fail_empty_input() {
@@ -75,7 +75,7 @@ fn test_blake2_precompile_pass_1() {
     let gas_after = vm.gas_left;
 
     let result = vm.return_data;
-    let rounds = U32Trait::from_be_bytes(calldata.slice(0, 4)).unwrap();
+    let rounds: u32 = calldata.slice(0, 4).from_be_bytes().unwrap();
 
     assert_eq!(result, expected_result);
     assert_eq!(gas_before - gas_after, rounds.into());
@@ -93,7 +93,7 @@ fn test_blake2_precompile_pass_0() {
     let gas_after = vm.gas_left;
 
     let result = vm.return_data;
-    let rounds = U32Trait::from_be_bytes(calldata.slice(0, 4)).unwrap();
+    let rounds: u32 = calldata.slice(0, 4).from_be_bytes().unwrap();
 
     assert_eq!(result, expected_result);
     assert_eq!(gas_before - gas_after, rounds.into());
@@ -112,7 +112,7 @@ fn test_blake2_precompile_pass_2() {
     let gas_after = vm.gas_left;
 
     let result = vm.return_data;
-    let rounds = U32Trait::from_be_bytes(calldata.slice(0, 4)).unwrap();
+    let rounds: u32 = calldata.slice(0, 4).from_be_bytes().unwrap();
 
     assert_eq!(result, expected_result);
     assert_eq!(gas_before - gas_after, rounds.into());
