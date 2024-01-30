@@ -234,6 +234,7 @@ pub fn big_wrapping_pow(
                 break;
             }
 
+            // TODO: investigae if deep clone can be avoided
             let digits = result.digits.duplicate();
             let mut tmp = MPNat { digits };
 
@@ -269,8 +270,9 @@ fn big_wrapping_mul(ref x: MPNat, ref y: MPNat, ref out: Felt252Vec<Word>) {
         let mut c: Word = 0;
 
         let mut j = 0;
+        let stop_condition = s - i;
         loop {
-            if j == (s - i) {
+            if j == stop_condition {
                 break;
             }
 
@@ -372,7 +374,7 @@ fn compute_r_mod_n(ref n: MPNat, ref out: Felt252Vec<Word>) {
 /// Computes `a + xy + c` where any overflow is captured as the "carry",
 /// the second part of the output. The arithmetic in this function is
 /// guaranteed to never overflow because even when all 4 variables are
-/// equal to `Word::MAX` the output is smaller than `DoubleWord::MAX`.
+/// equal to `WORD_MAX` the output is smaller than `DOUBLEWORD_MAX`.
 fn shifted_carrying_mul(a: Word, x: Word, y: Word, c: Word) -> (Word, Word) {
     let res: DoubleWord = a.into() + u64_wide_mul(x, y) + c.into();
     let (top_word, bottom_word) = u128_split(res);
@@ -416,9 +418,17 @@ pub fn borrowing_sub(x: Word, y: Word, borrow: bool) -> (Word, bool) {
     (c, b | d)
 }
 
+/// Takes 2 words and joins them into a double word
+///
+/// # Arguments
+/// `hi` is the most significant word
+/// `lo` is the least significant word
+///
+/// # Returns
+/// The double word obtained by joining `hi` and `lo`
 fn join_as_double(hi: Word, lo: Word) -> DoubleWord {
     let hi: DoubleWord = hi.into();
-    lo.into() | (hi.wrapping_shl(WORD_BITS.into())).into()
+    (hi.wrapping_shl(WORD_BITS.into())).into() + lo.into()
 }
 
 /// Computes `x^2`, storing the result in `out`.
@@ -438,35 +448,36 @@ fn big_sq(ref x: MPNat, ref out: Felt252Vec<Word>) {
         let mut j = i + 1;
 
         loop {
-            if j >= s {
+            if j == s {
                 break;
             }
 
             let mut new_c: DoubleWord = 0;
             let res: DoubleWord = (x.digits[i].into()) * (x.digits[j].into());
-            let (res, overflow) = match u128_overflowing_add(res, res) {
-                Result::Ok(res) => { (res, false) },
-                Result::Err(res) => { (res, true) }
-            };
-            if overflow {
-                new_c += BASE;
-            }
-
-            let (res, overflow) = match u128_overflowing_add(out[i + j].into(), res) {
-                Result::Ok(res) => { (res, false) },
-                Result::Err(res) => { (res, true) }
+            let res = match u128_overflowing_add(res, res) {
+                Result::Ok(res) => { res },
+                Result::Err(res) => {
+                    new_c += BASE;
+                    res
+                }
             };
 
-            if overflow {
-                new_c += BASE;
-            }
-            let (res, overflow) = match u128_overflowing_add(res, c) {
-                Result::Ok(res) => { (res, false) },
-                Result::Err(res) => { (res, true) }
+            let res = match u128_overflowing_add(out[i + j].into(), res) {
+                Result::Ok(res) => { res },
+                Result::Err(res) => {
+                    new_c += BASE;
+                    res
+                }
             };
-            if overflow {
-                new_c += BASE;
-            }
+
+            let res = match u128_overflowing_add(res, c) {
+                Result::Ok(res) => { res },
+                Result::Err(res) => {
+                    new_c += BASE;
+                    res
+                }
+            };
+
             out.set(i + j, res.as_u64());
             c = new_c + ((res.wrapping_shr(WORD_BITS.into())));
 
@@ -492,9 +503,9 @@ fn in_place_shl(ref a: Felt252Vec<Word>, shift: u32) -> Word {
             break;
         }
 
-        let a_digit = a[i];
+        let mut a_digit = a[i];
         let carry = a_digit.wrapping_shr(carry_shift.into());
-        let a_digit = a_digit.wrapping_shl(shift.into()) | c;
+        a_digit = a_digit.wrapping_shl(shift.into()) | c;
         a.set(i, a_digit);
 
         c = carry;
@@ -518,9 +529,9 @@ fn in_place_shr(ref a: Felt252Vec<Word>, shift: u32) -> Word {
 
         let j = i - 1;
 
-        let a_digit = a[j];
+        let mut a_digit = a[j];
         let borrow = a_digit.wrapping_shl(borrow_shift.into());
-        let a_digit = a_digit.wrapping_shr(shift.into()) | b;
+        a_digit = a_digit.wrapping_shr(shift.into()) | b;
         a.set(j, a_digit);
 
         b = borrow;
