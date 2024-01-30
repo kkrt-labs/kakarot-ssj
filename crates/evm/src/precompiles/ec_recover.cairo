@@ -1,3 +1,4 @@
+use utils::helpers::EthAddressExTrait;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
@@ -18,43 +19,39 @@ impl EcRecover of Precompile {
         EthAddress { address: 0x1 }
     }
 
-    fn exec(ref vm: VM) -> Result<(), EVMError> {
+    fn exec(input: Array<u8>) -> Result<(u128, Array<u8>), EVMError> {
         let gas: u128 = EC_RECOVER_PRECOMPILE_GAS_COST;
 
-        vm.charge_gas(gas)?;
-
-        let input = vm.message().data;
-
+        let input = input.span();
         let message_hash = input.slice(0, 32);
         let message_hash = match U256Trait::from_be_bytes(message_hash) {
             Option::Some(message_hash) => message_hash,
-            Option::None => { return Result::Ok(()); }
+            Option::None => { return Result::Ok((gas, ArrayTrait::<u8>::new())); }
         };
 
         let v = input.slice(32, 32);
         let y_parity = match U256Trait::from_be_bytes(v) {
             Option::Some(v) => {
                 let y_parity = v - 27;
-
                 if (y_parity == 0 || y_parity == 1) {
                     y_parity == 1
                 } else {
-                    return Result::Ok(());
+                    return Result::Ok((gas, ArrayTrait::<u8>::new()));
                 }
             },
-            Option::None => { return Result::Ok(()); }
+            Option::None => { return Result::Ok((gas, ArrayTrait::<u8>::new())); }
         };
 
         let r = input.slice(64, 32);
         let r = match U256Trait::from_be_bytes(r) {
             Option::Some(r) => r,
-            Option::None => { return Result::Ok(()); }
+            Option::None => { return Result::Ok((gas, ArrayTrait::<u8>::new())); }
         };
 
         let s = input.slice(96, 32);
         let s = match U256Trait::from_be_bytes(s) {
             Option::Some(s) => s,
-            Option::None => { return Result::Ok(()); }
+            Option::None => { return Result::Ok((gas, ArrayTrait::<u8>::new())); }
         };
 
         let signature = Signature { r, s, y_parity };
@@ -62,14 +59,11 @@ impl EcRecover of Precompile {
         let recovered_public_key =
             match recover_public_key::<Secp256k1Point>(message_hash, signature) {
             Option::Some(public_key_point) => public_key_point,
-            Option::None => { return Result::Ok(()); }
+            Option::None => { return Result::Ok((gas, ArrayTrait::<u8>::new())); }
         };
 
-        let eth_address: u256 = public_key_point_to_eth_address(recovered_public_key).into();
-        let eth_address = eth_address.to_be_bytes_padded();
+        let eth_address = public_key_point_to_eth_address(recovered_public_key);
 
-        vm.return_data = eth_address;
-
-        Result::Ok(())
+        return Result::Ok((gas, eth_address.to_bytes()));
     }
 }

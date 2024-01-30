@@ -4,8 +4,8 @@ use evm::model::vm::VMTrait;
 use starknet::EthAddress;
 use evm::precompiles::Precompile;
 
-const IDENTITY_PRECOMPILE_BASE_COST: u128 = 15;
-const IDENTITY_PRECOMPILE_COST_PER_WORD: u128 = 3;
+const BASE_COST: u128 = 15;
+const COST_PER_WORD: u128 = 3;
 
 impl Identity of Precompile {
     #[inline(always)]
@@ -13,17 +13,10 @@ impl Identity of Precompile {
         EthAddress { address: 0x4 }
     }
 
-    fn exec(ref vm: VM) -> Result<(), EVMError> {
-        let input = vm.message().data;
+    fn exec(input: Array<u8>) -> Result<(u128, Array<u8>), EVMError> {
+        let data_word_size = ((input.len() + 31) / 32).into();
+        let gas = BASE_COST + data_word_size * COST_PER_WORD;
 
-        let data_word_size: u128 = ((input.len() + 31) / 32).into();
-
-        let gas: u128 = IDENTITY_PRECOMPILE_BASE_COST
-            + (data_word_size * IDENTITY_PRECOMPILE_COST_PER_WORD);
-
-        vm.charge_gas(gas)?;
-        vm.return_data = input;
-
-        Result::Ok(())
+        return Result::Ok((gas, input));
     }
 }

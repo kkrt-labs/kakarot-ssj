@@ -15,30 +15,31 @@ use starknet::EthAddress;
 
 
 trait Precompile {
-    #[inline(always)]
     fn address() -> EthAddress;
-    fn exec(ref vm: VM) -> Result<(), EVMError>;
+    fn exec(input: Array<u8>) -> Result<(u128, Array<u8>), EVMError>;
 }
 
 #[generate_trait]
 impl PrecompilesImpl of Precompiles {
     fn exec_precompile(ref vm: VM) -> Result<(), EVMError> {
         let precompile_address = vm.message.target.evm;
+        let mut input = array![];
+        input.append_span(vm.message().data);
 
-        let result = match precompile_address.address {
+        let (gas, result) = match precompile_address.address {
             0 => {
                 // we should never reach this branch!
                 panic!("pre-compile address can't be 0")
             },
-            1 => { EcRecover::exec(ref vm) },
-            2 => { Sha256::exec(ref vm) },
+            1 => { EcRecover::exec(input)? },
+            2 => { Sha256::exec(input)? },
             3 => {
                 // we should never reach this branch!
                 panic!(
                     "pre-compile at address {} isn't implemented yet", precompile_address.address
                 )
             },
-            4 => { Identity::exec(ref vm) },
+            4 => { Identity::exec(input)? },
             5 => {
                 // we should never reach this branch!
                 panic!(
@@ -63,14 +64,16 @@ impl PrecompilesImpl of Precompiles {
                     "pre-compile at address {} isn't implemented yet", precompile_address.address
                 )
             },
-            9 => { Blake2f::exec(ref vm) },
+            9 => { Blake2f::exec(input)? },
             _ => {
                 // we should never reach this branch!
                 panic!("address {} isn't a pre-compile", precompile_address.address)
             }
         };
 
+        vm.charge_gas(gas)?;
+        vm.return_data = result.span();
         vm.stop();
-        result
+        return Result::Ok(());
     }
 }

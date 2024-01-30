@@ -17,9 +17,7 @@ impl Blake2f of Precompile {
         EthAddress { address: 0x9 }
     }
 
-    fn exec(ref vm: VM) -> Result<(), EVMError> {
-        let mut input = array![];
-        input.append_span(vm.message().data);
+    fn exec(input: Array<u8>) -> Result<(u128, Array<u8>), EVMError> {
         let input = input.span();
 
         ensure(
@@ -38,8 +36,6 @@ impl Blake2f of Precompile {
             .ok_or(EVMError::TypeConversionError('extraction of u32 failed'))?;
 
         let gas: u128 = (GF_ROUND * rounds.into()).into();
-
-        vm.charge_gas(gas)?;
 
         let mut h: Array<u64> = Default::default();
         let mut m: Array<u64> = Default::default();
@@ -93,7 +89,6 @@ impl Blake2f of Precompile {
             i += 1;
         };
 
-        vm.return_data = return_data.span();
-        Result::Ok(())
+        Result::Ok((gas, return_data))
     }
 }
