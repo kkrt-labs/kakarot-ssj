@@ -2,11 +2,11 @@
 # To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
 version: 0.1
 cli:
-  version: 1.17.2
+  version: 1.19.0
 plugins:
   sources:
     - id: trunk
-      ref: v1.3.0
+      ref: v1.4.2
       uri: https://github.com/trunk-io/plugins
 runtimes:
   enabled:
@@ -30,19 +30,19 @@ lint:
     # https://github.com/software-mansion/scarb/issues/700
     # - cairo@SYSTEM
     - actionlint@1.6.26
-    - bandit@1.7.5
-    - black@23.9.1
-    - checkov@3.1.9
+    - bandit@1.7.7
+    - black@24.1.1
+    - checkov@3.2.1
     - git-diff-check
-    - isort@5.12.0
-    - markdownlint@0.37.0
+    - isort@5.13.2
+    - markdownlint@0.39.0
     - oxipng@9.0.0
-    - prettier@3.1.0
-    - ruff@0.1.7
+    - prettier@3.2.4
+    - ruff@0.1.15
     - shellcheck@0.9.0
     - shfmt@3.6.0
     - taplo@0.8.1
-    - trivy@0.47.0
+    - trivy@0.48.3
     - yamllint@1.33.0
 actions:
   disabled:
