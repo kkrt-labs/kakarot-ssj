@@ -975,7 +975,7 @@ impl FromBytesImpl<
     +Mul<T>,
     +BitAnd<T>,
     +Bitshift<T>,
-    +BitSize<T>,
+    +ByteSize<T>,
     +BytesUsedTrait<T>,
     +Into<u8, T>,
     +Into<u32, T>,
@@ -986,7 +986,7 @@ impl FromBytesImpl<
     +PartialEq<T>
 > of FromBytes<T> {
     fn from_be_bytes(self: Span<u8>) -> Option<T> {
-        let byte_size = BitSize::<T>::bits() / 8;
+        let byte_size = ByteSize::<T>::byte_size();
 
         let len = self.len();
         if len == 0 {
@@ -1012,7 +1012,7 @@ impl FromBytesImpl<
     }
 
     fn from_le_bytes(self: Span<u8>) -> Option<T> {
-        let byte_size = BitSize::<T>::bits() / 8;
+        let byte_size = ByteSize::<T>::byte_size();
         let len = self.len();
 
         if len == 0 {
@@ -1433,6 +1433,16 @@ impl U256BytesUsedTraitImpl of BytesUsedTrait<u256> {
         } else {
             return BytesUsedTrait::<u128>::bytes_used(self.high.try_into().unwrap()) + 16;
         }
+    }
+}
+
+trait ByteSize<T> {
+    fn byte_size() -> usize;
+}
+
+impl ByteSizeImpl<T, +BitSize<T>> of ByteSize<T> {
+    fn byte_size() -> usize {
+        BitSize::<T>::bits() / 8
     }
 }
 
