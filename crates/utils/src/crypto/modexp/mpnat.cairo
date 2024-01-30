@@ -303,6 +303,7 @@ impl MPNatTraitImpl of MPNatTrait {
             if x != 0 {
                 if !neg {
                     // b = a - b
+                    //TODO: optimize with [#720](https://github.com/kkrt-labs/kakarot-ssj/issues/720)
                     let mut tmp = MPNat { digits: a.digits.duplicate(), };
                     in_place_mul_sub(ref tmp.digits, ref b.digits, 1);
                     b = tmp;
@@ -336,14 +337,6 @@ impl MPNatTraitImpl of MPNatTrait {
         // big_wrapping_pow and modpow_montgomery, and a large
         // zero-padded exp leads to performance issues.
         let (exp, exp_is_zero) = MPNatTrait::strip_leading_zeroes(exp);
-        let mut i = 0;
-        loop {
-            if i == exp.len() {
-                break;
-            };
-
-            i += 1;
-        };
 
         // base^0 is always 1, regardless of base.
         // Hence the result is 0 for (base^0) % 1, and 1
