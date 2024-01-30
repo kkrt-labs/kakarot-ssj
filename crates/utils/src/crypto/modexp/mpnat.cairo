@@ -144,7 +144,6 @@ impl MPNatTraitImpl of MPNatTrait {
                 let self_second_sig = self.digits[i];
                 let r = join_as_double(self_most_sig, self_second_sig) % other_most_sig;
                 self.digits.set(i, r.as_u64());
-
             };
 
             return;
@@ -167,7 +166,7 @@ impl MPNatTraitImpl of MPNatTrait {
 
             // Normalize other
             let mut normalized = other.digits.duplicate();
-            let _ = in_place_shl(ref normalized, shift);
+            in_place_shl(ref normalized, shift);
 
             let mut v = MPNat { digits: normalized };
             // Run algorithm on normalized values
@@ -219,7 +218,7 @@ impl MPNatTraitImpl of MPNatTrait {
             if borrow > self_most_sig {
                 // q_hat was too large, add back one multiple of the modulus
                 let mut a = self.digits.clone_slice(j, self.digits.len - j);
-                let _ = in_place_add(ref a, ref other.digits);
+                in_place_add(ref a, ref other.digits);
                 self.digits.insert_vec(j, ref a).unwrap();
                 borrow -= 1;
             }
