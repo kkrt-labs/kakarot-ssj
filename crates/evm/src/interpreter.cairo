@@ -16,8 +16,7 @@ use evm::model::{
     Message, Environment, Address, Transfer, ExecutionSummary, ExecutionSummaryTrait,
     ExecutionResult, ExecutionResultTrait, AccountType
 };
-use evm::precompiles::lib::PrecompileTrait;
-use evm::precompiles;
+use evm::precompiles::Precompiles;
 use evm::stack::{Stack, StackTrait};
 use evm::state::{State, StateTrait};
 use starknet::{EthAddress, ContractAddress};
@@ -143,7 +142,7 @@ impl EVMImpl of EVMTrait {
     fn execute_code(ref vm: VM) -> ExecutionResult {
         // Handle precompile logic
         if is_precompile(vm.message.target.evm) {
-            let result = PrecompileTrait::exec_precompile(ref vm);
+            let result = Precompiles::exec_precompile(ref vm);
 
             match result {
                 Result::Ok(_) => {

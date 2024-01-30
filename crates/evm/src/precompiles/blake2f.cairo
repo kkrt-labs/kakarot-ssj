@@ -3,6 +3,7 @@ use core::option::OptionTrait;
 
 use evm::errors::{EVMError, ensure};
 use evm::model::vm::{VM, VMTrait};
+use evm::precompiles::Precompile;
 use starknet::EthAddress;
 use utils::crypto::blake2_compress::compress;
 use utils::helpers::{U32Trait, U64Trait, ToBytes};
@@ -10,18 +11,13 @@ use utils::helpers::{U32Trait, U64Trait, ToBytes};
 const GF_ROUND: u64 = 1;
 const INPUT_LENGTH: usize = 213;
 
-#[generate_trait]
-impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
+impl Blake2f of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
         EthAddress { address: 0x9 }
     }
 
-    fn exec(ref vm: VM) -> Result<(), EVMError> {
-        let mut input = array![];
-        input.append_span(vm.message().data);
-        let input = input.span();
-
+    fn exec(input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
         ensure(
             input.len() == INPUT_LENGTH, EVMError::InvalidParameter('Blake2: wrong input length')
         )?;
@@ -38,8 +34,6 @@ impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
             .ok_or(EVMError::TypeConversionError('extraction of u32 failed'))?;
 
         let gas: u128 = (GF_ROUND * rounds.into()).into();
-
-        vm.charge_gas(gas)?;
 
         let mut h: Array<u64> = Default::default();
         let mut m: Array<u64> = Default::default();
@@ -93,7 +87,6 @@ impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
             i += 1;
         };
 
-        vm.return_data = return_data.span();
-        Result::Ok(())
+        Result::Ok((gas, return_data.span()))
     }
 }
