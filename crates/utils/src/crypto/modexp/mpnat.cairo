@@ -138,7 +138,7 @@ impl MPNatTraitImpl of MPNatTrait {
                     break;
                 };
 
-                i -=1;
+                i -= 1;
 
                 let self_most_sig = self.digits.pop().unwrap();
                 let self_second_sig = self.digits[i];
@@ -211,12 +211,14 @@ impl MPNatTraitImpl of MPNatTrait {
                 }
             };
 
+            //TODO: optimize with [#720](https://github.com/kkrt-labs/kakarot-ssj/issues/720)
             let mut a = self.digits.clone_slice(j, self.digits.len() - j);
 
             let mut borrow = in_place_mul_sub(ref a, ref other.digits, q_hat.as_u64());
             self.digits.insert_vec(j, ref a).unwrap();
             if borrow > self_most_sig {
                 // q_hat was too large, add back one multiple of the modulus
+                //TODO: optimize with [#720](https://github.com/kkrt-labs/kakarot-ssj/issues/720)
                 let mut a = self.digits.clone_slice(j, self.digits.len() - j);
                 in_place_add(ref a, ref other.digits);
                 self.digits.insert_vec(j, ref a).unwrap();
