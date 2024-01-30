@@ -339,7 +339,7 @@ impl MPNatTraitImpl of MPNatTrait {
         let (exp, exp_is_zero) = MPNatTrait::strip_leading_zeroes(exp);
 
         if exp_is_zero {
-            if modulus.digits.len == 1 && modulus.digits[0] == 1 {
+            if modulus.digits.len() == 1 && modulus.digits[0] == 1 {
                 let mut digits = Felt252VecImpl::new();
                 digits.push(0);
 
@@ -394,7 +394,7 @@ impl MPNatTraitImpl of MPNatTrait {
             tmp
         };
 
-        let power_of_two_mask = power_of_two.digits[power_of_two.digits.len - 1] - 1;
+        let power_of_two_mask = power_of_two.digits[power_of_two.digits.len() - 1] - 1;
         let mut odd = {
             let num_digits = modulus.digits.len() - trailing_zeros;
             let mut digits = Felt252VecImpl::new();
@@ -425,12 +425,12 @@ impl MPNatTraitImpl of MPNatTrait {
             } else {
                 let mut slice = modulus
                     .digits
-                    .clone_slice(trailing_zeros, modulus.digits.len - trailing_zeros);
+                    .clone_slice(trailing_zeros, modulus.digits.len() - trailing_zeros);
                 tmp.digits.insert_vec(0, ref slice).unwrap();
             }
-            if tmp.digits.len > 0 {
+            if tmp.digits.len() > 0 {
                 loop {
-                    if tmp.digits[tmp.digits.len - 1] != 0 {
+                    if tmp.digits[tmp.digits.len() - 1] != 0 {
                         break;
                     };
 
@@ -456,7 +456,7 @@ impl MPNatTraitImpl of MPNatTrait {
             let mut b = false;
             let mut i = 0;
             loop {
-                if i == scratch.len || i == s {
+                if i == scratch.len() || i == s {
                     break;
                 }
 
@@ -478,7 +478,7 @@ impl MPNatTraitImpl of MPNatTrait {
             out.resize(s, 0);
             big_wrapping_mul(ref diff, ref odd_inv, ref out);
 
-            out.set(out.len - 1, out[out.len - 1] & power_of_two_mask);
+            out.set(out.len() - 1, out[out.len() - 1] & power_of_two_mask);
             MPNat { digits: out }
         };
 
@@ -492,7 +492,7 @@ impl MPNatTraitImpl of MPNatTrait {
 
         let mut i = 0;
         loop {
-            if i == digits.len {
+            if i == digits.len() {
                 break;
             };
 
@@ -629,7 +629,7 @@ impl MPNatTraitImpl of MPNatTrait {
 
         result
             .digits
-            .set(result.digits.len - 1, result.digits[result.digits.len - 1] & modulus_mask);
+            .set(result.digits.len() - 1, result.digits[result.digits.len() - 1] & modulus_mask);
 
         result
     }
