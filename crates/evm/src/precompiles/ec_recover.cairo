@@ -6,14 +6,13 @@ use starknet::{
     EthAddress, eth_signature::{recover_public_key, public_key_point_to_eth_address, Signature},
     secp256k1::{Secp256k1Point}
 };
-
 use utils::helpers::{U256Trait, BoolIntoNumeric, ToBytes};
 use utils::traits::EthAddressIntoU256;
+use evm::precompiles::Precompile;
 
 const EC_RECOVER_PRECOMPILE_GAS_COST: u128 = 3000;
 
-#[generate_trait]
-impl EcRecoverPrecompileTraitImpl of EcRecoverPrecompileTrait {
+impl EcRecover of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
         EthAddress { address: 0x1 }

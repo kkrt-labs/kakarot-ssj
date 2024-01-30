@@ -3,12 +3,12 @@ use evm::errors::EVMError;
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 use starknet::EthAddress;
+use evm::precompiles::Precompile;
 
 const SHA_256_PRECOMPILE_BASE_COST: u128 = 60;
 const SHA_256_PRECOMPILE_COST_PER_WORD: u128 = 12;
 
-#[generate_trait]
-impl Sha256PrecompileTraitImpl of Sha256PrecompileTrait {
+impl Sha256 of Precompile {
     fn address() -> EthAddress {
         EthAddress { address: 0x2 }
     }

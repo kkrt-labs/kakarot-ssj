@@ -6,12 +6,12 @@ use evm::model::vm::{VM, VMTrait};
 use starknet::EthAddress;
 use utils::crypto::blake2_compress::compress;
 use utils::helpers::{U32Trait, U64Trait, ToBytes};
+use evm::precompiles::Precompile;
 
 const GF_ROUND: u64 = 1;
 const INPUT_LENGTH: usize = 213;
 
-#[generate_trait]
-impl Blake2fPrecompileTraitImpl of Blake2fPrecompileTrait {
+impl Blake2f of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
         EthAddress { address: 0x9 }

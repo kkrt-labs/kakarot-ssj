@@ -2,12 +2,12 @@ use evm::errors::EVMError;
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 use starknet::EthAddress;
+use evm::precompiles::Precompile;
 
 const IDENTITY_PRECOMPILE_BASE_COST: u128 = 15;
 const IDENTITY_PRECOMPILE_COST_PER_WORD: u128 = 3;
 
-#[generate_trait]
-impl IdentityPrecompileTraitImpl of IdentityPrecompileTrait {
+impl Identity of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
         EthAddress { address: 0x4 }
