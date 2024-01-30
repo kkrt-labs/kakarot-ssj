@@ -277,18 +277,18 @@ impl MPNatTraitImpl of MPNatTrait {
     fn koc_2017_inverse(ref aa: MPNat, k: usize) -> MPNat {
         let length = k / WORD_BITS;
         let mut digits = Felt252VecImpl::new();
-        digits.resize(length + 1, 0);
+        digits.expand(length + 1).unwrap();
         let mut b = MPNat { digits };
 
         b.digits.set(0, 1);
 
         let mut a = MPNat { digits: aa.digits.duplicate(), };
-        a.digits.resize(length + 1, 0);
+        a.digits.resize(length + 1);
 
         let mut neg: bool = false;
 
         let mut digits = Felt252VecImpl::new();
-        digits.resize(length + 1, 0);
+        digits.expand(length + 1).unwrap();
         let mut res = MPNat { digits };
 
         let (mut wordpos, mut bitpos) = (0, 0);
@@ -388,7 +388,7 @@ impl MPNatTraitImpl of MPNatTrait {
 
         let mut power_of_two = {
             let mut digits = Felt252VecImpl::new();
-            digits.resize(trailing_zeros + 1, 0);
+            digits.expand(trailing_zeros + 1).unwrap();
             let mut tmp = MPNat { digits };
             tmp.digits.set(trailing_zeros, 1_u64.shl(additional_zero_bits.into()));
             tmp
@@ -398,7 +398,7 @@ impl MPNatTraitImpl of MPNatTrait {
         let mut odd = {
             let num_digits = modulus.digits.len() - trailing_zeros;
             let mut digits = Felt252VecImpl::new();
-            digits.resize(num_digits, 0);
+            digits.expand(num_digits).unwrap();
             let mut tmp = MPNat { digits };
             if additional_zero_bits > 0 {
                 tmp.digits.set(0, modulus.digits[trailing_zeros].shr(additional_zero_bits.into()));
@@ -451,7 +451,7 @@ impl MPNatTraitImpl of MPNatTrait {
 
         let s = power_of_two.digits.len();
         let mut scratch: Felt252Vec<Word> = Felt252VecImpl::new();
-        scratch.resize(s, 0);
+        scratch.expand(s).unwrap();
 
         let mut diff = {
             let mut b = false;
@@ -476,7 +476,7 @@ impl MPNatTraitImpl of MPNatTrait {
 
         let mut y = {
             let mut out: Felt252Vec<Word> = Felt252VecImpl::new();
-            out.resize(s, 0);
+            out.expand(s).unwrap();
             big_wrapping_mul(ref diff, ref odd_inv, ref out);
 
             out.set(out.len() - 1, out[out.len() - 1] & power_of_two_mask);
@@ -487,7 +487,7 @@ impl MPNatTraitImpl of MPNatTrait {
         let mut digits = diff.digits;
         let s = modulus.digits.len();
         digits.reset();
-        digits.resize(s, 0);
+        digits.resize(s);
         big_wrapping_mul(ref odd, ref y, ref digits);
         let mut c = false;
 
@@ -592,7 +592,7 @@ impl MPNatTraitImpl of MPNatTrait {
         monpro(ref x_bar, ref one, ref modulus, n_prime, ref slice);
         scratch.insert_vec(0, ref slice).unwrap();
 
-        scratch.resize(s, 0);
+        scratch.resize(s);
         MPNat { digits: scratch }
     }
 
@@ -641,7 +641,7 @@ impl MPNatTraitImpl of MPNatTrait {
     /// This is equivalent to reducing `self` modulo `2^(WORD_BITS*k)` where
     /// `k` is the number of digits in `other`.
     fn force_same_size(ref self: MPNat, ref other: MPNat) {
-        self.digits.resize(other.digits.len, 0);
+        self.digits.resize(other.digits.len);
     }
 
     /// stips leading zeroes from little endian bytes

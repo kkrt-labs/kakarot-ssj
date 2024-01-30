@@ -216,7 +216,7 @@ pub fn big_wrapping_pow(
     ref base: MPNat, exp: Span<u8>, ref scratch_space: Felt252Vec<Word>
 ) -> MPNat {
     let mut digits = Felt252VecImpl::new();
-    digits.resize(scratch_space.len(), 0);
+    digits.expand(scratch_space.len()).unwrap();
     let mut result = MPNat { digits };
     result.digits.set(0, 1);
 

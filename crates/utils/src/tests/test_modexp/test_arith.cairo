@@ -24,13 +24,13 @@ fn check_monsq(x: u128, n: u128) {
     let n_prime = WORD_MAX - mod_inv(m.digits[0]) + 1;
 
     let mut output = Felt252VecImpl::new();
-    output.resize(2 * m.digits.len() + 1, 0);
+    output.expand(2 * m.digits.len() + 1).unwrap();
 
     monsq(ref a, ref m, n_prime, ref output);
     let mut result = MPNat { digits: output };
 
     let mut output = Felt252VecImpl::new();
-    output.resize(m.digits.len() + 2, 0);
+    output.expand(m.digits.len() + 2).unwrap();
     let mut tmp = MPNat { digits: a.digits.duplicate() };
     monpro(ref a, ref tmp, ref m, n_prime, ref output);
 
@@ -46,7 +46,7 @@ fn check_monpro(x: u128, y: u128, n: u128, ref expected: MPNat) {
     let n_prime = WORD_MAX - mod_inv(m.digits[0]) + 1;
 
     let mut output = Felt252VecImpl::new();
-    output.resize(m.digits.len() + 2, 0);
+    output.expand(m.digits.len() + 2).unwrap();
     monpro(ref a, ref b, ref m, n_prime, ref output);
     let mut result = MPNat { digits: output };
 
