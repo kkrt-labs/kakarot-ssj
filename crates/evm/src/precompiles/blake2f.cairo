@@ -3,10 +3,10 @@ use core::option::OptionTrait;
 
 use evm::errors::{EVMError, ensure};
 use evm::model::vm::{VM, VMTrait};
+use evm::precompiles::Precompile;
 use starknet::EthAddress;
 use utils::crypto::blake2_compress::compress;
 use utils::helpers::{U32Trait, U64Trait, ToBytes};
-use evm::precompiles::Precompile;
 
 const GF_ROUND: u64 = 1;
 const INPUT_LENGTH: usize = 213;
@@ -17,9 +17,7 @@ impl Blake2f of Precompile {
         EthAddress { address: 0x9 }
     }
 
-    fn exec(input: Array<u8>) -> Result<(u128, Array<u8>), EVMError> {
-        let input = input.span();
-
+    fn exec(input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
         ensure(
             input.len() == INPUT_LENGTH, EVMError::InvalidParameter('Blake2: wrong input length')
         )?;
@@ -89,6 +87,6 @@ impl Blake2f of Precompile {
             i += 1;
         };
 
-        Result::Ok((gas, return_data))
+        Result::Ok((gas, return_data.span()))
     }
 }

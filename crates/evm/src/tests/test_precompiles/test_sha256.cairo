@@ -14,9 +14,9 @@ use utils::helpers::U256Trait;
 fn test_sha_256_precompile() {
     let calldata = array![0xFF];
 
-    let (gas, result) = Sha256::exec(calldata.clone()).unwrap();
+    let (gas, result) = Sha256::exec(calldata.span()).unwrap();
 
-    let result = U256Trait::from_be_bytes(result.span()).unwrap();
+    let result = U256Trait::from_be_bytes(result).unwrap();
     let expected_result = 0xa8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89;
 
     assert_eq!(result, expected_result);

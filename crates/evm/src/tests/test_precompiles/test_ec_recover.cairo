@@ -29,9 +29,9 @@ fn test_ec_recover_precompile() {
     calldata.append_span(r);
     calldata.append_span(s);
 
-    let (gas, result) = EcRecover::exec(calldata).unwrap();
+    let (gas, result) = EcRecover::exec(calldata.span()).unwrap();
 
-    let result = U256Trait::from_be_bytes(result.span()).unwrap();
+    let result = U256Trait::from_be_bytes(result).unwrap();
     assert_eq!(result, 0x7156526fbd7a3c72969b54f64e42c10fbb768c8a);
     assert_eq!(gas, 3000);
 }

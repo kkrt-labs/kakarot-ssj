@@ -16,15 +16,14 @@ use starknet::EthAddress;
 
 trait Precompile {
     fn address() -> EthAddress;
-    fn exec(input: Array<u8>) -> Result<(u128, Array<u8>), EVMError>;
+    fn exec(input: Span<u8>) -> Result<(u128, Span<u8>), EVMError>;
 }
 
 #[generate_trait]
 impl PrecompilesImpl of Precompiles {
     fn exec_precompile(ref vm: VM) -> Result<(), EVMError> {
         let precompile_address = vm.message.target.evm;
-        let mut input = array![];
-        input.append_span(vm.message().data);
+        let input = vm.message().data;
 
         let (gas, result) = match precompile_address.address {
             0 => {
@@ -72,7 +71,7 @@ impl PrecompilesImpl of Precompiles {
         };
 
         vm.charge_gas(gas)?;
-        vm.return_data = result.span();
+        vm.return_data = result;
         vm.stop();
         return Result::Ok(());
     }

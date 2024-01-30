@@ -22,7 +22,7 @@ use utils::helpers::U32Trait;
 fn test_blake2_precompile_fail_empty_input() {
     let calldata = array![];
 
-    let res = Blake2f::exec(calldata);
+    let res = Blake2f::exec(calldata.span());
     assert_eq!(res, Result::Err(EVMError::InvalidParameter('Blake2: wrong input length')));
 }
 
@@ -52,7 +52,7 @@ fn test_blake2_precompile_fail_wrong_final_block_indicator_flag() {
 #[test]
 fn test_blake2_precompile_pass_1() {
     let (calldata, expected_result) = blake2_precompile_pass_1_test_case();
-    let rounds = U32Trait::from_be_bytes(calldata.span().slice(0, 4)).unwrap();
+    let rounds = U32Trait::from_be_bytes(calldata.slice(0, 4)).unwrap();
 
     let (gas, result) = Blake2f::exec(calldata).unwrap();
 
@@ -63,7 +63,7 @@ fn test_blake2_precompile_pass_1() {
 #[test]
 fn test_blake2_precompile_pass_0() {
     let (calldata, expected_result) = blake2_precompile_pass_0_test_case();
-    let rounds = U32Trait::from_be_bytes(calldata.span().slice(0, 4)).unwrap();
+    let rounds = U32Trait::from_be_bytes(calldata.slice(0, 4)).unwrap();
 
     let (gas, result) = Blake2f::exec(calldata).unwrap();
 
@@ -74,7 +74,7 @@ fn test_blake2_precompile_pass_0() {
 #[test]
 fn test_blake2_precompile_pass_2() {
     let (calldata, expected_result) = blake2_precompile_pass_2_test_case();
-    let rounds = U32Trait::from_be_bytes(calldata.span().slice(0, 4)).unwrap();
+    let rounds = U32Trait::from_be_bytes(calldata.slice(0, 4)).unwrap();
 
     let (gas, result) = Blake2f::exec(calldata).unwrap();
 
@@ -131,5 +131,5 @@ fn test_blake2_precompile_static_call() {
 
     let (_, expected_result) = blake2_precompile_pass_1_test_case();
 
-    assert_eq!(result, expected_result);
+    assert_eq!(result.span(), expected_result);
 }
