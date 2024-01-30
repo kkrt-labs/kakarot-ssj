@@ -649,29 +649,15 @@ impl MPNatTraitImpl of MPNatTrait {
     /// * `input` a Span<u8> in little endian
     /// # Returns
     /// * (Span<8>, bool), where span is the resulting Span after removing trailing zeroes, and the boolean indicates if all bytes were zero
-    fn strip_leading_zeroes(v: Span<u8>) -> (Span<u8>, bool) {
-        let mut arr: Array<u8> = Default::default();
-
-        let mut i = 0;
-        let mut num_of_trailing_zeroes = 0;
+    fn strip_leading_zeroes(mut v: Span<u8>) -> (Span<u8>, bool) {
         loop {
-            if (i == v.len()) || (*v[i] != 0) {
-                break;
+            let stripped_span = v;
+            match v.pop_front() {
+                Option::Some(v) => { if (*v != 0) {
+                    break (stripped_span, false);
+                } },
+                Option::None => { break (v, true); }
             }
-
-            i += 1;
-            num_of_trailing_zeroes += 1;
-        };
-
-        if num_of_trailing_zeroes == 0 {
-            return (v, false);
         }
-
-        if num_of_trailing_zeroes == v.len() {
-            return (arr.span(), true);
-        }
-
-        arr.append_span(v.slice(num_of_trailing_zeroes, v.len() - num_of_trailing_zeroes));
-        (arr.span(), false)
     }
 }
