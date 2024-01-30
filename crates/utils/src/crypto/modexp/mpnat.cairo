@@ -190,8 +190,8 @@ impl MPNatTraitImpl of MPNatTrait {
 
             let j = i - 1;
 
-            let self_second_sig = self.digits[self.digits.len - 1];
-            let self_third_sig = self.digits[self.digits.len - 2];
+            let self_second_sig = self.digits[self.digits.len() - 1];
+            let self_third_sig = self.digits[self.digits.len() - 2];
 
             let a = join_as_double(self_most_sig, self_second_sig);
             let mut q_hat = a / other_most_sig;
@@ -211,13 +211,13 @@ impl MPNatTraitImpl of MPNatTrait {
                 }
             };
 
-            let mut a = self.digits.clone_slice(j, self.digits.len - j);
+            let mut a = self.digits.clone_slice(j, self.digits.len() - j);
 
             let mut borrow = in_place_mul_sub(ref a, ref other.digits, q_hat.as_u64());
             self.digits.insert_vec(j, ref a).unwrap();
             if borrow > self_most_sig {
                 // q_hat was too large, add back one multiple of the modulus
-                let mut a = self.digits.clone_slice(j, self.digits.len - j);
+                let mut a = self.digits.clone_slice(j, self.digits.len() - j);
                 in_place_add(ref a, ref other.digits);
                 self.digits.insert_vec(j, ref a).unwrap();
                 borrow -= 1;
@@ -239,7 +239,7 @@ impl MPNatTraitImpl of MPNatTrait {
 
         let mut i = 0;
         loop {
-            if i == self.digits.len {
+            if i == self.digits.len() {
                 break found_power_of_two;
             }
 
@@ -262,7 +262,7 @@ impl MPNatTraitImpl of MPNatTrait {
 
     fn is_odd(ref self: MPNat) -> bool {
         // when the value is 0
-        if self.digits.len == 0 {
+        if self.digits.len() == 0 {
             return false;
         };
 
@@ -632,7 +632,7 @@ impl MPNatTraitImpl of MPNatTrait {
         // The modulus is a power of 2 but that power may not be a multiple of a whole word.
         // We can clear out any higher order bits to fix this.
         let modulus_mask = modulus.digits[modulus.digits.len() - 1] - 1;
-        self.digits.set(self.digits.len - 1, self.digits[self.digits.len - 1] & modulus_mask);
+        self.digits.set(self.digits.len() - 1, self.digits[self.digits.len() - 1] & modulus_mask);
 
         // We know that `totient(2^k) = 2^(k-1)`, therefore by Euler's theorem
         // we can also reduce the exponent mod `2^(k-1)`. Effectively this means
