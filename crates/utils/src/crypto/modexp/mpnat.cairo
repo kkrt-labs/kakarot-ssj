@@ -341,7 +341,7 @@ impl MPNatTraitImpl of MPNatTrait {
         if exp_is_zero {
             if modulus.digits.len() == 1 && modulus.digits[0] == 1 {
                 let mut digits = Felt252VecImpl::new();
-                digits.push(0);
+                digits.expand(1).unwrap();
 
                 return MPNat { digits };
             } else {
