@@ -391,7 +391,7 @@ fn carrying_mul(x: Word, y: Word, c: Word) -> (Word, Word) {
     (bottom_word, top_word)
 }
 
-// Computes `x + y` with "carry the 1" semantics
+/// computes x + y accounting for any carry from a previous addition
 fn carrying_add(x: Word, y: Word, carry: bool) -> (Word, bool) {
     let (a, b) = match u64_overflowing_add(x, y) {
         Result::Ok(x) => (x, false),
@@ -404,7 +404,7 @@ fn carrying_add(x: Word, y: Word, carry: bool) -> (Word, bool) {
     (c, b | d)
 }
 
-// Computes `x - y` with "borrow from your neighbour" semantics
+// Computes `x - y` accounting for any borrow from a previous subtraction
 pub fn borrowing_sub(x: Word, y: Word, borrow: bool) -> (Word, bool) {
     let (a, b) = match u64_overflowing_sub(x, y) {
         Result::Ok(x) => (x, false),
@@ -504,7 +504,7 @@ fn in_place_shl(ref a: Felt252Vec<Word>, shift: u32) -> Word {
         }
 
         let mut a_digit = a[i];
-        let carry = a_digit.shr(carry_shift.into());
+        let carry = a_digit.wrapping_shr(carry_shift.into());
         a_digit = a_digit.wrapping_shl(shift.into()) | c;
         a.set(i, a_digit);
 
