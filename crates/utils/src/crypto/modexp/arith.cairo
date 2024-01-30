@@ -21,8 +21,7 @@ use utils::traits::BoolIntoNumeric;
 // or we will have `x < r`, `y < n`).
 fn monpro(ref x: MPNat, ref y: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
     let s = out.len() - 2;
-    // Using a range loop as opposed to `out.iter_mut().enumerate().take(s)`
-    // does make a meaningful performance difference in this case.
+
     let mut i = 0;
     loop {
         if i == s {
@@ -150,7 +149,7 @@ fn monsq(ref x: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
 
         let mut j = i + s;
         loop {
-            if c <= 0 {
+            if c == 0 {
                 break;
             }
             let (sum, carry) = carrying_add(out[j], c, false);
@@ -164,28 +163,11 @@ fn monsq(ref x: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
     };
 
     // Only keep the last `s + 1` digits in `out`.
-    let mut i = 0;
-    loop {
-        if i == s + 1 {
-            break;
-        };
+    let mut new_vec: Felt252Vec<u64> = out.clone_slice(s, s + 1);
 
-        out.set(i, out[i + s]);
-
-        i += 1;
-    };
-
-    let mut i = s + 1;
-    loop {
-        if i == out.len {
-            break;
-        };
-
-        // todo(harsh): can this set an index which doesn't exist?
-        out.set(i, 0);
-
-        i += 1;
-    };
+    // safe unwrap, since new_vec.len <= out.len
+    new_vec.expand(out.len).unwrap();
+    out = new_vec;
 
     let mut k = s + 1;
     let should_return = loop {
