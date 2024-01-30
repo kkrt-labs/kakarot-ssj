@@ -227,7 +227,7 @@ pub fn big_wrapping_pow(
         }
 
         let b = *exp[i];
-        let mut mask: u8 = 1_u8.wrapping_shl(7);
+        let mut mask: u8 = 128;
 
         loop {
             if mask <= 0 {
