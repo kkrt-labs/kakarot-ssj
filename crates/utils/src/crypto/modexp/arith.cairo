@@ -248,7 +248,7 @@ pub fn big_wrapping_pow(
                 scratch_space.reset(); // zero-out the scatch space
             }
 
-            mask = mask.wrapping_shr(1);
+            mask = mask.shr(1);
         };
 
         i += 1;
@@ -300,9 +300,9 @@ fn mod_inv(x: Word) -> Word {
             break;
         }
 
-        let mask: u64 = 1_u64.wrapping_shl(i.into()) - 1;
+        let mask: u64 = 1_u64.shl(i.into()) - 1;
         let xy = x.wrapping_mul(y) & mask;
-        let q = 1_u64.wrapping_shl((i - 1).into());
+        let q = 1_u64.shl((i - 1).into());
         if xy >= q {
             y += q;
         }
@@ -428,7 +428,7 @@ pub fn borrowing_sub(x: Word, y: Word, borrow: bool) -> (Word, bool) {
 /// The double word obtained by joining `hi` and `lo`
 fn join_as_double(hi: Word, lo: Word) -> DoubleWord {
     let hi: DoubleWord = hi.into();
-    (hi.wrapping_shl(WORD_BITS.into())).into() + lo.into()
+    (hi.shl(WORD_BITS.into())).into() + lo.into()
 }
 
 /// Computes `x^2`, storing the result in `out`.
@@ -479,14 +479,14 @@ fn big_sq(ref x: MPNat, ref out: Felt252Vec<Word>) {
             };
 
             out.set(i + j, res.as_u64());
-            c = new_c + ((res.wrapping_shr(WORD_BITS.into())));
+            c = new_c + ((res.shr(WORD_BITS.into())));
 
             j += 1;
         };
 
         let (sum, carry) = carrying_add(out[i + s], c.as_u64(), false);
         out.set(i + s, sum);
-        out.set(i + s + 1, (c.wrapping_shr(WORD_BITS.into()) + (carry.into())).as_u64());
+        out.set(i + s + 1, (c.shr(WORD_BITS.into()) + (carry.into())).as_u64());
 
         i += 1;
     }
@@ -504,7 +504,7 @@ fn in_place_shl(ref a: Felt252Vec<Word>, shift: u32) -> Word {
         }
 
         let mut a_digit = a[i];
-        let carry = a_digit.wrapping_shr(carry_shift.into());
+        let carry = a_digit.shr(carry_shift.into());
         a_digit = a_digit.wrapping_shl(shift.into()) | c;
         a.set(i, a_digit);
 
@@ -596,7 +596,7 @@ fn in_place_mul_sub(ref a: Felt252Vec<Word>, ref x: Felt252Vec<Word>, y: Word) -
             + offset_carry.into()
             - ((x_digit.into()) * (y.into()));
 
-        let new_offset_carry = (offset_sum.wrapping_shr(WORD_BITS.into())).as_u64();
+        let new_offset_carry = (offset_sum.shr(WORD_BITS.into())).as_u64();
         let new_x = offset_sum.as_u64();
         offset_carry = new_offset_carry;
         a.set(i, new_x);
