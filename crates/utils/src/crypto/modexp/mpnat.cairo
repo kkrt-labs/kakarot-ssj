@@ -423,6 +423,7 @@ impl MPNatTraitImpl of MPNatTrait {
                     i += 1;
                 };
             } else {
+                // TODO: explore if we can avoid this clone and just use a copy to avoid deep cloning
                 let mut slice = modulus
                     .digits
                     .clone_slice(trailing_zeros, modulus.digits.len() - trailing_zeros);
