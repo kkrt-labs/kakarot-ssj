@@ -115,7 +115,7 @@ impl MPNatTraitImpl of MPNatTrait {
             s - n
         };
 
-        let other_most_sig: DoubleWord = other.digits[other.digits.len - 1].into();
+        let other_most_sig: DoubleWord = other.digits[other.digits.len() - 1].into();
 
         if self.digits.len() == 2 { // This is the smallest case since `n >= 1` and `m > 0`
             // implies that `self.digits.len() >= 2`.
@@ -131,19 +131,20 @@ impl MPNatTraitImpl of MPNatTrait {
         if n == 1 {
             // The divisor is only 1 digit, so the long-division
             // algorithm is easy.
-            let k = self.digits.len - 1;
+            let k = self.digits.len() - 1;
             let mut i = k;
             loop {
                 if i == 0 {
                     break;
                 };
 
-                let j = i - 1;
+                i -=1;
 
                 let self_most_sig = self.digits.pop().unwrap();
-                let self_second_sig = self.digits[j];
+                let self_second_sig = self.digits[i];
                 let r = join_as_double(self_most_sig, self_second_sig) % other_most_sig;
-                self.digits.set(j, r.as_u64());
+                self.digits.set(i, r.as_u64());
+
             };
 
             return;
