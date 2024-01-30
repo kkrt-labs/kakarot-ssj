@@ -230,7 +230,7 @@ pub fn big_wrapping_pow(
         let mut mask: u8 = 128;
 
         loop {
-            if mask <= 0 {
+            if mask == 0 {
                 break;
             }
 
