@@ -1,9 +1,10 @@
+use core::clone::Clone;
 use contracts::tests::test_utils::{setup_contracts_for_testing};
 use core::result::ResultTrait;
 use evm::instructions::system_operations::SystemOperationsTrait;
 
 use evm::memory::MemoryTrait;
-use evm::precompiles::identity::IdentityPrecompileTrait;
+use evm::precompiles::identity::Identity;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
 use starknet::testing::set_contract_address;
@@ -11,17 +12,12 @@ use starknet::testing::set_contract_address;
 // source: <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='wFirsWplaceqparameters%20in%20memorybFFjdata~0vMSTOREvvwDoqcall~1QX3FQ_1YX1FY_4jaddressZ4%200xFFFFFFFFjgasvSTATICCALLvvwPutqresulWalonVonqstackvPOPb20vMLOAD'~Z1j//%20v%5Cnq%20thVj%20wb~0x_Offset~ZvPUSHYjargsXSizebWt%20Ve%20Qjret%01QVWXYZ_bjqvw~_>
 #[test]
 fn test_identity_precompile() {
-    let mut vm = VMBuilderTrait::new_with_presets().build();
+    let calldata = array![0x2A];
 
-    let calldata = array![0x2A].span();
-    vm.message.data = calldata;
+    let (gas, result) = Identity::exec(calldata.clone()).unwrap();
 
-    let gas_before = vm.gas_left;
-    IdentityPrecompileTrait::exec(ref vm).unwrap();
-    let gas_after = vm.gas_left;
-
-    assert_eq!(calldata, vm.return_data);
-    assert_eq!(gas_before - gas_after, 18);
+    assert_eq!(calldata, result);
+    assert_eq!(gas, 18);
 }
 
 

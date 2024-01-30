@@ -1,3 +1,5 @@
+use utils::helpers::U8SpanExTrait;
+use core::traits::Into;
 use utils::helpers::EthAddressExTrait;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use evm::model::vm::VM;
@@ -62,8 +64,11 @@ impl EcRecover of Precompile {
             Option::None => { return Result::Ok((gas, ArrayTrait::<u8>::new())); }
         };
 
-        let eth_address = public_key_point_to_eth_address(recovered_public_key);
+        let eth_address: u256 = public_key_point_to_eth_address(recovered_public_key).into();
+        let eth_address = eth_address.to_be_bytes_padded();
+        let mut output = array![];
+        output.append_span(eth_address);
 
-        return Result::Ok((gas, eth_address.to_bytes()));
+        return Result::Ok((gas, output));
     }
 }
