@@ -16,7 +16,7 @@ use super::arith::{
 };
 use utils::checked_math::checked_mul::CheckedMul;
 use utils::checked_math::checked_mul;
-use utils::helpers::{FromBytes, U64Trait, Felt252VecTrait, U128Trait, BitLengthTrait};
+use utils::helpers::{FromBytes, U64Trait, Felt252VecTrait, U128Trait, BitLengthTrait, ByteSize};
 use utils::math::{Bitshift, WrappingBitshift};
 
 type Word = u64;
@@ -338,13 +338,6 @@ impl MPNatTraitImpl of MPNatTrait {
         // zero-padded exp leads to performance issues.
         let (exp, exp_is_zero) = MPNatTrait::strip_leading_zeroes(exp);
 
-        // base^0 is always 1, regardless of base.
-        // Hence the result is 0 for (base^0) % 1, and 1
-        // for every modulus larger than 1.
-        //
-        // The case of modulus being 0 should have already been
-        // handled in modexp().
-        assert!(!(modulus.digits.len() == 1 && modulus.digits[0] == 0));
         if exp_is_zero {
             if modulus.digits.len == 1 && modulus.digits[0] == 1 {
                 let mut digits = Felt252VecImpl::new();
@@ -359,23 +352,8 @@ impl MPNatTraitImpl of MPNatTrait {
             }
         }
 
-        if exp.len() <= (BitSize::<usize>::bits() / 8) {
-            let exp_as_number: usize = {
-                let mut tmp = 0;
-                let mut i = 0;
-                loop {
-                    if i == exp.len() {
-                        break;
-                    }
-
-                    tmp *= 256;
-                    tmp += (*exp[i]).into();
-
-                    i += 1;
-                };
-
-                tmp
-            };
+        if exp.len() <= (ByteSize::<usize>::byte_size()) {
+            let exp_as_number: usize = exp.from_le_bytes().unwrap();
 
             match self.digits.len().checked_mul(exp_as_number) {
                 Option::Some(max_output_digits) => {
