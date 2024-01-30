@@ -226,15 +226,6 @@ pub fn big_wrapping_pow(
             break;
         }
 
-        i += 1;
-    };
-
-    let mut i = 0;
-    loop {
-        if i == exp.len() {
-            break;
-        }
-
         let b = *exp[i];
         let mut mask: u8 = 1_u8.wrapping_shl(7);
 
