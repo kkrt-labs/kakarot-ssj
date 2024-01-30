@@ -1016,7 +1016,7 @@ mod felt252_vec_test {
         vec.push(0);
         vec.push(1);
 
-        vec.resize(4, 0);
+        vec.expand(4).unwrap();
 
         assert_eq!(vec.len(), 4);
         assert_eq!(vec.pop().unwrap(), 0);
@@ -1033,7 +1033,7 @@ mod felt252_vec_test {
         vec.push(0);
         vec.push(0);
 
-        vec.resize(2, 0);
+        vec.resize(2);
 
         assert_eq!(vec.len(), 2);
         assert_eq!(vec.pop().unwrap(), 1);
@@ -1046,7 +1046,7 @@ mod felt252_vec_test {
         vec.push(0);
         vec.push(1);
 
-        vec.resize(0, 0);
+        vec.resize(0);
 
         assert_eq!(vec.len(), 0);
     }

@@ -1628,13 +1628,12 @@ impl Felt252VecTraitImpl<
     /// Resizes the Felt252Vec<T> in-place so that len is equal to new_len.
     ///
     /// This function will mutate the Felt252Vec in-place and will resize its length to the new length.
-    /// If new_len is greater than len, the Vec is extended by the difference, with each additional slot filled with `value`. If new_len is less than len, the Vec is simply truncated from the right.
+    /// If new_len is greater than len, the Vec is extended by the difference, with each additional slot filled with 0. If new_len is less than len, the Vec is simply truncated from the right.
     ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
     /// * `new_len` the new length of the Felt252Vec
-    /// * `value` the value to fill the new elements with
-    fn resize(ref self: Felt252Vec<T>, new_len: usize, value: T) {
+    fn resize(ref self: Felt252Vec<T>, new_len: usize) {
         self.len = new_len;
     }
 
