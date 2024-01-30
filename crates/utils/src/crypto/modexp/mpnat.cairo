@@ -552,7 +552,7 @@ impl MPNatTraitImpl of MPNatTrait {
 
             let b = *exp[i];
 
-            let mut mask: u8 = 1.shl(7);
+            let mut mask: u8 = 128;
 
             loop {
                 if mask == 0 {
