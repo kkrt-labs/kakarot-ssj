@@ -181,14 +181,14 @@ impl MPNatTraitImpl of MPNatTrait {
         let other_second_sig: DoubleWord = other.digits[n - 2].into();
         let mut self_most_sig: Word = 0;
 
-        let mut i = m + 1;
+        let mut j = m + 1;
 
         loop {
-            if i == 0 {
+            if j == 0 {
                 break;
             }
 
-            let j = i - 1;
+            j -= 1;
 
             let self_second_sig = self.digits[self.digits.len() - 1];
             let self_third_sig = self.digits[self.digits.len() - 2];
@@ -226,8 +226,6 @@ impl MPNatTraitImpl of MPNatTrait {
             }
 
             self_most_sig = self.digits.pop().unwrap();
-
-            i -= 1;
         };
 
         self.digits.push(self_most_sig);
