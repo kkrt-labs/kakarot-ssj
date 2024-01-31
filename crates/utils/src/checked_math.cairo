@@ -5,8 +5,8 @@ use checked_math::CheckedMath;
 // and make CheckedAdd and CheckedSub so that they are not exported.
 mod checked_math {
     use super::checked_add::CheckedAdd;
-    use super::checked_sub::CheckedSub;
     use super::checked_mul::CheckedMul;
+    use super::checked_sub::CheckedSub;
 
     trait CheckedMath<T> {
         fn checked_add(self: T, rhs: T) -> Option<T>;

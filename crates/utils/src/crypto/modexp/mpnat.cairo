@@ -56,6 +56,7 @@ impl MPNatTraitImpl of MPNatTrait {
         digits.expand(n_digits).unwrap();
 
         // buffer to hold Word-sized slices of the input bytes
+        // TODO: optimize, see if we can avoid using this Felt252Vec
         let mut buf: Felt252Vec<u8> = Felt252VecImpl::new();
         // safe unwrap, since WORD_BYTES > 0
         buf.expand(WORD_BYTES).unwrap();
@@ -335,6 +336,12 @@ impl MPNatTraitImpl of MPNatTrait {
         // zero-padded exp leads to performance issues.
         let (exp, exp_is_zero) = MPNatTrait::strip_leading_zeroes(exp);
 
+        // base^0 is always 1, regardless of base.
+        // Hence the result is 0 for (base^0) % 1, and 1
+        // for every modulus larger than 1.
+        //
+        // The case of modulus being 0 should have already been
+        // handled in modexp().
         if exp_is_zero {
             if modulus.digits.len() == 1 && modulus.digits[0] == 1 {
                 let mut digits = Felt252VecImpl::new();
@@ -557,6 +564,7 @@ impl MPNatTraitImpl of MPNatTrait {
                 };
 
                 monsq(ref x_bar, ref modulus, n_prime, ref scratch);
+                //TODO: optimize
                 let mut slice = scratch.clone_slice(0, s);
                 x_bar.digits.copy_from_vec_le(ref slice).unwrap();
                 scratch.reset();
@@ -566,6 +574,7 @@ impl MPNatTraitImpl of MPNatTrait {
                     monpro(ref x_bar, ref a_bar, ref modulus, n_prime, ref slice);
                     scratch.insert_vec(0, ref slice).unwrap();
 
+                    //TODO: optimize
                     let mut slice = scratch.clone_slice(0, s);
                     x_bar.digits.copy_from_vec_le(ref slice).unwrap();
                     scratch.reset();
@@ -645,7 +654,7 @@ impl MPNatTraitImpl of MPNatTrait {
     /// # Arguments
     /// * `input` a Span<u8> in little endian
     /// # Returns
-    /// * (Span<8>, bool), where span is the resulting Span after removing trailing zeroes, and the boolean indicates if all bytes were zero
+    /// * (Span<8>, bool), where span is the resulting Span after removing leading zeroes, and the boolean indicates if all bytes were zero
     fn strip_leading_zeroes(mut v: Span<u8>) -> (Span<u8>, bool) {
         loop {
             let stripped_span = v;
