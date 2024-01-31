@@ -302,7 +302,7 @@ fn mod_inv(x: Word) -> Word {
 
         let mask: u64 = 1_u64.shl(i.into()) - 1;
         let xy = x.wrapping_mul(y) & mask;
-        let q = 1_u64.shl((i - 1).into());
+        let q = (mask + 1) / 2;
         if xy >= q {
             y += q;
         }
