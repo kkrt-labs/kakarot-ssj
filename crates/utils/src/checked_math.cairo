@@ -6,19 +6,25 @@ use checked_math::CheckedMath;
 mod checked_math {
     use super::checked_add::CheckedAdd;
     use super::checked_sub::CheckedSub;
+    use super::checked_mul::CheckedMul;
 
     trait CheckedMath<T> {
         fn checked_add(self: T, rhs: T) -> Option<T>;
         fn checked_sub(self: T, rhs: T) -> Option<T>;
+        fn checked_mul(self: T, rhs: T) -> Option<T>;
     }
 
-    impl CheckedMathImpl<T, +CheckedAdd<T>, +CheckedSub<T>> of CheckedMath<T> {
+    impl CheckedMathImpl<T, +CheckedAdd<T>, +CheckedSub<T>, +CheckedMul<T>> of CheckedMath<T> {
         fn checked_add(self: T, rhs: T) -> Option<T> {
             CheckedAdd::<T>::checked_add(self, rhs)
         }
 
         fn checked_sub(self: T, rhs: T) -> Option<T> {
             CheckedSub::<T>::checked_sub(self, rhs)
+        }
+
+        fn checked_mul(self: T, rhs: T) -> Option<T> {
+            CheckedMul::<T>::checked_mul(self, rhs)
         }
     }
 }
@@ -146,7 +152,7 @@ mod checked_mul {
 #[cfg(test)]
 mod tests {
     use integer::BoundedInt;
-    use super::{checked_math::CheckedMath, checked_mul::CheckedMul};
+    use super::{checked_math::CheckedMath};
 
     #[test]
     fn test_u8_checked_add() {
