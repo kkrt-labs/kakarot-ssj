@@ -10,7 +10,7 @@ use starknet::{
 };
 use utils::helpers::EthAddressExTrait;
 use utils::helpers::U8SpanExTrait;
-use utils::helpers::{U256Trait, BoolIntoNumeric, ToBytes};
+use utils::helpers::{U256Trait, BoolIntoNumeric, ToBytes, FromBytes};
 use utils::traits::EthAddressIntoU256;
 
 const EC_RECOVER_PRECOMPILE_GAS_COST: u128 = 3000;
