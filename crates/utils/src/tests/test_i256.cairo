@@ -364,7 +364,7 @@ fn test_signed_div_rem() {
 }
 
 #[test]
-#[should_panic(expected: ('u256 is 0',))]
+#[should_panic(expected: ('Option::unwrap failed.',))]
 fn test_signed_div_rem_by_zero() {
     //     Zero Division
     assert(
