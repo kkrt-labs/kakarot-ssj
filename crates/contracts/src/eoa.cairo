@@ -113,8 +113,7 @@ mod ExternallyOwnedAccount {
                     .expect('signature extraction failed')
             };
 
-            let encoded_tx = (call.calldata)
-                .span()
+            let encoded_tx = (*call.calldata)
                 .try_into_bytes()
                 .expect('conversion to Span<u8> failed');
             let validation_result = EthTransactionTrait::validate_eth_tx(
@@ -137,7 +136,7 @@ mod ExternallyOwnedAccount {
             assert(calls.len() == 1, 'calls length is not 1');
 
             let call = calls.at(0);
-            let calldata = call.calldata.span().try_into_bytes().expect('conversion failed').span();
+            let calldata = (*call.calldata).try_into_bytes().expect('conversion failed').span();
 
             let tx = EthTransactionTrait::decode(calldata).expect('rlp decoding of tx failed');
 

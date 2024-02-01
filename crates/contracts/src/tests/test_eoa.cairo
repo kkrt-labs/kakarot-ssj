@@ -138,7 +138,7 @@ mod test_external_owned_account {
         let call = Call {
             to: kakarot_address,
             selector: selector!("eth_send_transaction"),
-            calldata: encoded_tx.to_felt252_array()
+            calldata: encoded_tx.to_felt252_array().span()
         };
 
         starknet::testing::set_transaction_hash(selector!("transaction_hash"));
@@ -218,7 +218,7 @@ mod test_external_owned_account {
         let call = Call {
             to: other_starknet_address(),
             selector: selector!("eth_send_transaction"),
-            calldata: array![]
+            calldata: array![].span()
         };
 
         eoa_contract.__validate__(array![call]);
@@ -237,7 +237,9 @@ mod test_external_owned_account {
         set_contract_address(contract_address_const::<0>());
 
         let call = Call {
-            to: kakarot_core.contract_address, selector: selector!("eth_call"), calldata: array![]
+            to: kakarot_core.contract_address,
+            selector: selector!("eth_call"),
+            calldata: array![].span()
         };
 
         eoa_contract.__validate__(array![call]);
@@ -271,7 +273,7 @@ mod test_external_owned_account {
         let call = Call {
             to: kakarot_core.contract_address,
             selector: selector!("eth_send_transaction"),
-            calldata: legacy_rlp_encoded_tx().to_felt252_array()
+            calldata: legacy_rlp_encoded_tx().to_felt252_array().span()
         };
 
         let result = eoa_contract.__validate__(array![call]);
@@ -307,7 +309,7 @@ mod test_external_owned_account {
         let call = Call {
             to: kakarot_core.contract_address,
             selector: selector!("eth_send_transaction"),
-            calldata: eip_2930_encoded_tx().to_felt252_array()
+            calldata: eip_2930_encoded_tx().to_felt252_array().span()
         };
 
         let result = eoa_contract.__validate__(array![call]);
@@ -343,7 +345,7 @@ mod test_external_owned_account {
         let call = Call {
             to: kakarot_core.contract_address,
             selector: selector!("eth_send_transaction"),
-            calldata: eip_1559_encoded_tx().to_felt252_array()
+            calldata: eip_1559_encoded_tx().to_felt252_array().span()
         };
 
         let result = eoa_contract.__validate__(array![call]);
