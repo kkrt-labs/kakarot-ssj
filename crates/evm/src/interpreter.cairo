@@ -238,579 +238,164 @@ impl EVMImpl of EVMTrait {
 
     fn execute_opcode(ref self: VM, opcode: u8) -> Result<(), EVMError> {
         // Call the appropriate function based on the opcode.
-        if opcode == 0 {
-            // STOP
-            return self.exec_stop();
-        }
-        if opcode == 1 {
-            // ADD
-            return self.exec_add();
-        }
-        if opcode == 2 {
-            // MUL
-            return self.exec_mul();
-        }
-        if opcode == 3 {
-            // SUB
-            return self.exec_sub();
-        }
-        if opcode == 4 {
-            // DIV
-            return self.exec_div();
-        }
-        if opcode == 5 {
-            // SDIV
-            return self.exec_sdiv();
-        }
-        if opcode == 6 {
-            // MOD
-            return self.exec_mod();
-        }
-        if opcode == 7 {
-            // SMOD
-            return self.exec_smod();
-        }
-        if opcode == 8 {
-            // ADDMOD
-            return self.exec_addmod();
-        }
-        if opcode == 9 {
-            // MULMOD
-            return self.exec_mulmod();
-        }
-        if opcode == 10 {
-            // EXP
-            return self.exec_exp();
-        }
-        if opcode == 11 {
-            // SIGNEXTEND
-            return self.exec_signextend();
-        }
-        if opcode == 16 {
-            // LT
-            return self.exec_lt();
-        }
-        if opcode == 17 {
-            // GT
-            return self.exec_gt();
-        }
-        if opcode == 18 {
-            // SLT
-            return self.exec_slt();
-        }
-        if opcode == 19 {
-            // SGT
-            return self.exec_sgt();
-        }
-        if opcode == 20 {
-            // EQ
-            return self.exec_eq();
-        }
-        if opcode == 21 {
-            // ISZERO
-            return self.exec_iszero();
-        }
-        if opcode == 22 {
-            // AND
-            return self.exec_and();
-        }
-        if opcode == 23 {
-            // OR
-            return self.exec_or();
-        }
-        if opcode == 24 {
-            // XOR
-            return self.exec_xor();
-        }
-        if opcode == 25 {
-            // NOT
-            return self.exec_not();
-        }
-        if opcode == 26 {
-            // BYTE
-            return self.exec_byte();
-        }
-        if opcode == 27 {
-            // SHL
-            return self.exec_shl();
-        }
-        if opcode == 28 {
-            // SHR
-            return self.exec_shr();
-        }
-        if opcode == 29 {
-            // SAR
-            return self.exec_sar();
-        }
-        if opcode == 48 {
-            // ADDRESS
-            return self.exec_address();
-        }
-        if opcode == 49 {
-            // BALANCE
-            return self.exec_balance();
-        }
-        if opcode == 50 {
-            // ORIGIN
-            return self.exec_origin();
-        }
-        if opcode == 51 {
-            // CALLER
-            return self.exec_caller();
-        }
-        if opcode == 52 {
-            // CALLVALUE
-            return self.exec_callvalue();
-        }
-        if opcode == 53 {
-            // CALLDATALOAD
-            return self.exec_calldataload();
-        }
-        if opcode == 54 {
-            // CALLDATASIZE
-            return self.exec_calldatasize();
-        }
-        if opcode == 55 {
-            // CALLDATACOPY
-            return self.exec_calldatacopy();
-        }
-        if opcode == 56 {
-            // CODESIZE
-            return self.exec_codesize();
-        }
-        if opcode == 57 {
-            // CODECOPY
-            return self.exec_codecopy();
-        }
-        if opcode == 58 {
-            // GASPRICE
-            return self.exec_gasprice();
-        }
-        if opcode == 59 {
-            // EXTCODESIZE
-            return self.exec_extcodesize();
-        }
-        if opcode == 60 {
-            // EXTCODECOPY
-            return self.exec_extcodecopy();
-        }
-        if opcode == 61 {
-            // RETURNDATASIZE
-            return self.exec_returndatasize();
-        }
-        if opcode == 62 {
-            // RETURNDATACOPY
-            return self.exec_returndatacopy();
-        }
-        if opcode == 63 {
-            // EXTCODEHASH
-            return self.exec_extcodehash();
-        }
-        if opcode == 64 {
-            // BLOCKHASH
-            return self.exec_blockhash();
-        }
-        if opcode == 65 {
-            // COINBASE
-            return self.exec_coinbase();
-        }
-        if opcode == 66 {
-            // TIMESTAMP
-            return self.exec_timestamp();
-        }
-        if opcode == 67 {
-            // NUMBER
-            return self.exec_number();
-        }
-        if opcode == 68 {
-            // PREVRANDAO
-            return self.exec_prevrandao();
-        }
-        if opcode == 69 {
-            // GASLIMIT
-            return self.exec_gaslimit();
-        }
-        if opcode == 70 {
-            // CHAINID
-            return self.exec_chainid();
-        }
-        if opcode == 71 {
-            // SELFBALANCE
-            return self.exec_selfbalance();
-        }
-        if opcode == 72 {
-            // BASEFEE
-            return self.exec_basefee();
-        }
-        if opcode == 80 {
-            // POP
-            return self.exec_pop();
-        }
-        if opcode == 81 {
-            // MLOAD
-            return self.exec_mload();
-        }
-        if opcode == 82 {
-            // MSTORE
-            return self.exec_mstore();
-        }
-        if opcode == 83 {
-            // MSTORE8
-            return self.exec_mstore8();
-        }
-        if opcode == 84 {
-            // SLOAD
-            return self.exec_sload();
-        }
-        if opcode == 85 {
-            // SSTORE
-            return self.exec_sstore();
-        }
-        if opcode == 86 {
-            // JUMP
-            return self.exec_jump();
-        }
-        if opcode == 87 {
-            // JUMPI
-            return self.exec_jumpi();
-        }
-        if opcode == 88 {
-            // PC
-            return self.exec_pc();
-        }
-        if opcode == 89 {
-            // MSIZE
-            return self.exec_msize();
-        }
-        if opcode == 90 {
-            // GAS
-            return self.exec_gas();
-        }
-        if opcode == 91 {
-            // JUMPDEST
-            return self.exec_jumpdest();
-        }
-        if opcode == 95 {
-            // PUSH0
-            return self.exec_push0();
-        }
-        if opcode == 96 {
-            // PUSH1
-            return self.exec_push1();
-        }
-        if opcode == 97 {
-            // PUSH2
-            return self.exec_push2();
-        }
-        if opcode == 98 {
-            // PUSH3
-            return self.exec_push3();
-        }
-        if opcode == 99 {
-            // PUSH4
-            return self.exec_push4();
-        }
-        if opcode == 100 {
-            // PUSH5
-            return self.exec_push5();
-        }
-        if opcode == 101 {
-            // PUSH6
-            return self.exec_push6();
-        }
-        if opcode == 102 {
-            // PUSH7
-            return self.exec_push7();
-        }
-        if opcode == 103 {
-            // PUSH8
-            return self.exec_push8();
-        }
-        if opcode == 104 {
-            // PUSH9
-            return self.exec_push9();
-        }
-        if opcode == 105 {
-            // PUSH10
-            return self.exec_push10();
-        }
-        if opcode == 106 {
-            // PUSH11
-            return self.exec_push11();
-        }
-        if opcode == 107 {
-            // PUSH12
-            return self.exec_push12();
-        }
-        if opcode == 108 {
-            // PUSH13
-            return self.exec_push13();
-        }
-        if opcode == 109 {
-            // PUSH14
-            return self.exec_push14();
-        }
-        if opcode == 110 {
-            // PUSH15
-            return self.exec_push15();
-        }
-        if opcode == 111 {
-            // PUSH16
-            return self.exec_push16();
-        }
-        if opcode == 112 {
-            // PUSH17
-            return self.exec_push17();
-        }
-        if opcode == 113 {
-            // PUSH18
-            return self.exec_push18();
-        }
-        if opcode == 114 {
-            // PUSH19
-            return self.exec_push19();
-        }
-        if opcode == 115 {
-            // PUSH20
-            return self.exec_push20();
-        }
-        if opcode == 116 {
-            // PUSH21
-            return self.exec_push21();
-        }
-        if opcode == 117 {
-            // PUSH22
-            return self.exec_push22();
-        }
-        if opcode == 118 {
-            // PUSH23
-            return self.exec_push23();
-        }
-        if opcode == 119 {
-            // PUSH24
-            return self.exec_push24();
-        }
-        if opcode == 120 {
-            // PUSH25
-            return self.exec_push25();
-        }
-        if opcode == 121 {
-            // PUSH26
-            return self.exec_push26();
-        }
-        if opcode == 122 {
-            // PUSH27
-            return self.exec_push27();
-        }
-        if opcode == 123 {
-            // PUSH28
-            return self.exec_push28();
-        }
-        if opcode == 124 {
-            // PUSH29
-            return self.exec_push29();
-        }
-        if opcode == 125 {
-            // PUSH30
-            return self.exec_push30();
-        }
-        if opcode == 126 {
-            // PUSH31
-            return self.exec_push31();
-        }
-        if opcode == 127 {
-            // PUSH32
-            return self.exec_push32();
-        }
-        if opcode == 128 {
-            // DUP1
-            return self.exec_dup1();
-        }
-        if opcode == 129 {
-            // DUP2
-            return self.exec_dup2();
-        }
-        if opcode == 130 {
-            // DUP3
-            return self.exec_dup3();
-        }
-        if opcode == 131 {
-            // DUP4
-            return self.exec_dup4();
-        }
-        if opcode == 132 {
-            // DUP5
-            return self.exec_dup5();
-        }
-        if opcode == 133 {
-            // DUP6
-            return self.exec_dup6();
-        }
-        if opcode == 134 {
-            // DUP7
-            return self.exec_dup7();
-        }
-        if opcode == 135 {
-            // DUP8
-            return self.exec_dup8();
-        }
-        if opcode == 136 {
-            // DUP9
-            return self.exec_dup9();
-        }
-        if opcode == 137 {
-            // DUP10
-            return self.exec_dup10();
-        }
-        if opcode == 138 {
-            // DUP11
-            return self.exec_dup11();
-        }
-        if opcode == 139 {
-            // DUP12
-            return self.exec_dup12();
-        }
-        if opcode == 140 {
-            // DUP13
-            return self.exec_dup13();
-        }
-        if opcode == 141 {
-            // DUP14
-            return self.exec_dup14();
-        }
-        if opcode == 142 {
-            // DUP15
-            return self.exec_dup15();
-        }
-        if opcode == 143 {
-            // DUP16
-            return self.exec_dup16();
-        }
-        if opcode == 144 {
-            // SWAP1
-            return self.exec_swap1();
-        }
-        if opcode == 145 {
-            // SWAP2
-            return self.exec_swap2();
-        }
-        if opcode == 146 {
-            // SWAP3
-            return self.exec_swap3();
-        }
-        if opcode == 147 {
-            // SWAP4
-            return self.exec_swap4();
-        }
-        if opcode == 148 {
-            // SWAP5
-            return self.exec_swap5();
-        }
-        if opcode == 149 {
-            // SWAP6
-            return self.exec_swap6();
-        }
-        if opcode == 150 {
-            // SWAP7
-            return self.exec_swap7();
-        }
-        if opcode == 151 {
-            // SWAP8
-            return self.exec_swap8();
-        }
-        if opcode == 152 {
-            // SWAP9
-            return self.exec_swap9();
-        }
-        if opcode == 153 {
-            // SWAP10
-            return self.exec_swap10();
-        }
-        if opcode == 154 {
-            // SWAP11
-            return self.exec_swap11();
-        }
-        if opcode == 155 {
-            // SWAP12
-            return self.exec_swap12();
-        }
-        if opcode == 156 {
-            // SWAP13
-            return self.exec_swap13();
-        }
-        if opcode == 157 {
-            // SWAP14
-            return self.exec_swap14();
-        }
-        if opcode == 158 {
-            // SWAP15
-            return self.exec_swap15();
-        }
-        if opcode == 159 {
-            // SWAP16
-            return self.exec_swap16();
-        }
-        if opcode == 160 {
-            // LOG0
-            return self.exec_log0();
-        }
-        if opcode == 161 {
-            // LOG1
-            return self.exec_log1();
-        }
-        if opcode == 162 {
-            // LOG2
-            return self.exec_log2();
-        }
-        if opcode == 163 {
-            // LOG3
-            return self.exec_log3();
-        }
-        if opcode == 164 {
-            // LOG4
-            return self.exec_log4();
-        }
-        if opcode == 240 {
-            // CREATE
-            return self.exec_create();
-        }
-        if opcode == 241 {
-            // CALL
-            return self.exec_call();
-        }
-        if opcode == 242 {
-            // CALLCODE
-            return self.exec_callcode();
-        }
-        if opcode == 243 {
-            // RETURN
-            return self.exec_return();
-        }
-        if opcode == 244 {
-            // DELEGATECALL
-            return self.exec_delegatecall();
-        }
-        if opcode == 245 {
-            // CREATE2
-            return self.exec_create2();
-        }
-        if opcode == 250 {
-            // STATICCALL
-            return self.exec_staticcall();
-        }
-        if opcode == 253 {
-            // REVERT
-            return self.exec_revert();
-        }
-        if opcode == 254 {
-            // INVALID
-            return self.exec_invalid();
-        }
-        if opcode == 255 {
-            // SELFDESTRUCT
-            return self.exec_selfdestruct();
-        }
-        // Unknown opcode
-        return Result::Err(EVMError::InvalidOpcode(opcode));
+        return match opcode {
+            0 => self.exec_stop(),
+            1 => self.exec_add(),
+            2 => self.exec_mul(),
+            3 => self.exec_sub(),
+            4 => self.exec_div(),
+            5 => self.exec_sdiv(),
+            6 => self.exec_mod(),
+            7 => self.exec_smod(),
+            8 => self.exec_addmod(),
+            9 => self.exec_mulmod(),
+            10 => self.exec_exp(),
+            11 => self.exec_signextend(),
+            12 | 13 | 14 | 15 => Result::Err(EVMError::InvalidOpcode(opcode)),
+            16 => self.exec_lt(),
+            17 => self.exec_gt(),
+            18 => self.exec_slt(),
+            19 => self.exec_sgt(),
+            20 => self.exec_eq(),
+            21 => self.exec_iszero(),
+            22 => self.exec_and(),
+            23 => self.exec_or(),
+            24 => self.exec_xor(),
+            25 => self.exec_not(),
+            26 => self.exec_byte(),
+            27 => self.exec_shl(),
+            28 => self.exec_shr(),
+            29 => self.exec_sar(),
+            30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 |
+            47 => Result::Err(EVMError::InvalidOpcode(opcode)),
+            48 => self.exec_address(),
+            49 => self.exec_balance(),
+            50 => self.exec_origin(),
+            51 => self.exec_caller(),
+            52 => self.exec_callvalue(),
+            53 => self.exec_calldataload(),
+            54 => self.exec_calldatasize(),
+            55 => self.exec_calldatacopy(),
+            56 => self.exec_codesize(),
+            57 => self.exec_codecopy(),
+            58 => self.exec_gasprice(),
+            59 => self.exec_extcodesize(),
+            60 => self.exec_extcodecopy(),
+            61 => self.exec_returndatasize(),
+            62 => self.exec_returndatacopy(),
+            63 => self.exec_extcodehash(),
+            64 => self.exec_blockhash(),
+            65 => self.exec_coinbase(),
+            66 => self.exec_timestamp(),
+            67 => self.exec_number(),
+            68 => self.exec_prevrandao(),
+            69 => self.exec_gaslimit(),
+            70 => self.exec_chainid(),
+            71 => self.exec_selfbalance(),
+            72 => self.exec_basefee(),
+            73 | 74 | 75 | 76 | 77 | 78 | 79 => Result::Err(EVMError::InvalidOpcode(opcode)),
+            80 => self.exec_pop(),
+            81 => self.exec_mload(),
+            82 => self.exec_mstore(),
+            83 => self.exec_mstore8(),
+            84 => self.exec_sload(),
+            85 => self.exec_sstore(),
+            86 => self.exec_jump(),
+            87 => self.exec_jumpi(),
+            88 => self.exec_pc(),
+            89 => self.exec_msize(),
+            90 => self.exec_gas(),
+            91 => self.exec_jumpdest(),
+            92 | 93 | 94 => Result::Err(EVMError::InvalidOpcode(opcode)),
+            95 => self.exec_push0(),
+            96 => self.exec_push1(),
+            97 => self.exec_push2(),
+            98 => self.exec_push3(),
+            99 => self.exec_push4(),
+            100 => self.exec_push5(),
+            101 => self.exec_push6(),
+            102 => self.exec_push7(),
+            103 => self.exec_push8(),
+            104 => self.exec_push9(),
+            105 => self.exec_push10(),
+            106 => self.exec_push11(),
+            107 => self.exec_push12(),
+            108 => self.exec_push13(),
+            109 => self.exec_push14(),
+            110 => self.exec_push15(),
+            111 => self.exec_push16(),
+            112 => self.exec_push17(),
+            113 => self.exec_push18(),
+            114 => self.exec_push19(),
+            115 => self.exec_push20(),
+            116 => self.exec_push21(),
+            117 => self.exec_push22(),
+            118 => self.exec_push23(),
+            119 => self.exec_push24(),
+            120 => self.exec_push25(),
+            121 => self.exec_push26(),
+            122 => self.exec_push27(),
+            123 => self.exec_push28(),
+            124 => self.exec_push29(),
+            125 => self.exec_push30(),
+            126 => self.exec_push31(),
+            127 => self.exec_push32(),
+            128 => self.exec_dup1(),
+            129 => self.exec_dup2(),
+            130 => self.exec_dup3(),
+            131 => self.exec_dup4(),
+            132 => self.exec_dup5(),
+            133 => self.exec_dup6(),
+            134 => self.exec_dup7(),
+            135 => self.exec_dup8(),
+            136 => self.exec_dup9(),
+            137 => self.exec_dup10(),
+            138 => self.exec_dup11(),
+            139 => self.exec_dup12(),
+            140 => self.exec_dup13(),
+            141 => self.exec_dup14(),
+            142 => self.exec_dup15(),
+            143 => self.exec_dup16(),
+            144 => self.exec_swap1(),
+            145 => self.exec_swap2(),
+            146 => self.exec_swap3(),
+            147 => self.exec_swap4(),
+            148 => self.exec_swap5(),
+            149 => self.exec_swap6(),
+            150 => self.exec_swap7(),
+            151 => self.exec_swap8(),
+            152 => self.exec_swap9(),
+            153 => self.exec_swap10(),
+            154 => self.exec_swap11(),
+            155 => self.exec_swap12(),
+            156 => self.exec_swap13(),
+            157 => self.exec_swap14(),
+            158 => self.exec_swap15(),
+            159 => self.exec_swap16(),
+            160 => self.exec_log0(),
+            161 => self.exec_log1(),
+            162 => self.exec_log2(),
+            163 => self.exec_log3(),
+            164 => self.exec_log4(),
+            165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 |
+            179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 |
+            193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 |
+            207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 |
+            221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 |
+            235 | 236 | 237 | 238 | 239 => Result::Err(EVMError::InvalidOpcode(opcode)),
+            240 => self.exec_create(),
+            241 => self.exec_call(),
+            242 => self.exec_callcode(),
+            243 => self.exec_return(),
+            244 => self.exec_delegatecall(),
+            245 => self.exec_create2(),
+            246 | 247 | 248 | 249 => Result::Err(EVMError::InvalidOpcode(opcode)),
+            250 => self.exec_staticcall(),
+            251 | 252 => Result::Err(EVMError::InvalidOpcode(opcode)),
+            253 => self.exec_revert(),
+            254 => self.exec_invalid(),
+            255 => self.exec_selfdestruct(),
+            _ => Result::Err(EVMError::InvalidOpcode(opcode))
+        };
     }
 }
