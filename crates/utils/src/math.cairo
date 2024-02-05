@@ -328,6 +328,19 @@ impl U8OverflowingMul of OverflowingMul<u8> {
     }
 }
 
+impl U16OverflowingMul of OverflowingMul<u16> {
+    fn overflowing_mul(self: u16, rhs: u16) -> (u16, bool) {
+        let result: u32 = self.into() * rhs.into();
+        let mask: u32 = BoundedInt::<u8>::max().into();
+
+        let bottom_word = (result & mask).try_into().unwrap();
+
+        let is_overflown = result > mask;
+        (bottom_word, is_overflown)
+    }
+}
+
+
 impl U32OverflowingMul of OverflowingMul<u32> {
     fn overflowing_mul(self: u32, rhs: u32) -> (u32, bool) {
         let result = u32_wide_mul(self, rhs);

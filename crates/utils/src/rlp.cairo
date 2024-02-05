@@ -8,7 +8,7 @@ use starknet::EthAddress;
 use utils::errors::RLPHelpersErrorTrait;
 use utils::errors::{RLPError, RLPHelpersError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use utils::eth_transaction::AccessListItem;
-use utils::helpers::{U32Trait, EthAddressExTrait, U256Impl, U128Impl, ArrayExtension, ToBytes};
+use utils::helpers::{EthAddressExTrait, ArrayExtension, ToBytes, FromBytes};
 
 // Possible RLP types
 #[derive(Drop, PartialEq)]
@@ -54,7 +54,7 @@ impl RLPImpl of RLPTrait {
                 return Result::Err(RLPError::InputTooShort);
             }
             let string_len_bytes = input.slice(1, len_bytes_count);
-            let string_len: u32 = U32Trait::from_be_bytes(string_len_bytes).unwrap();
+            let string_len: u32 = string_len_bytes.from_be_bytes().unwrap();
             if input_len <= len_bytes_count + string_len {
                 return Result::Err(RLPError::InputTooShort);
             }
@@ -72,7 +72,7 @@ impl RLPImpl of RLPTrait {
                 return Result::Err(RLPError::InputTooShort);
             }
             let list_len_bytes = input.slice(1, len_bytes_count);
-            let list_len: u32 = U32Trait::from_be_bytes(list_len_bytes).unwrap();
+            let list_len: u32 = list_len_bytes.from_be_bytes().unwrap();
             if input_len <= len_bytes_count + list_len {
                 return Result::Err(RLPError::InputTooShort);
             }
@@ -213,8 +213,7 @@ impl RLPHelpersImpl of RLPHelpersTrait {
                 if bytes.len() == 0 {
                     return Result::Ok(0);
                 }
-                let value = U128Impl::from_be_bytes(bytes)
-                    .ok_or(RLPHelpersError::FailedParsingU128)?;
+                let value = bytes.from_be_bytes().ok_or(RLPHelpersError::FailedParsingU128)?;
                 Result::Ok(value)
             },
             RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
@@ -244,8 +243,7 @@ impl RLPHelpersImpl of RLPHelpersTrait {
                 if bytes.len() == 0 {
                     return Result::Ok(0);
                 }
-                let value = U256Impl::from_be_bytes(bytes)
-                    .ok_or(RLPHelpersError::FailedParsingU256)?;
+                let value = bytes.from_be_bytes().ok_or(RLPHelpersError::FailedParsingU256)?;
                 Result::Ok(value)
             },
             RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }

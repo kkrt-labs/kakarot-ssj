@@ -197,13 +197,12 @@ mod u8_test {
 
 mod u32_test {
     use utils::helpers::Bitshift;
-    use utils::helpers::U32Trait;
-    use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes};
+    use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes, FromBytes};
 
     #[test]
     fn test_u32_from_be_bytes() {
         let input: Array<u8> = array![0xf4, 0x32, 0x15, 0x62];
-        let res: Option<u32> = U32Trait::from_be_bytes(input.span());
+        let res: Option<u32> = input.span().from_be_bytes();
 
         assert(res.is_some(), 'should have a value');
         assert(res.unwrap() == 0xf4321562, 'wrong result value');
@@ -212,7 +211,7 @@ mod u32_test {
     #[test]
     fn test_u32_from_be_bytes_too_big() {
         let input: Array<u8> = array![0xf4, 0x32, 0x15, 0x62, 0x01];
-        let res: Option<u32> = U32Trait::from_be_bytes(input.span());
+        let res: Option<u32> = input.span().from_be_bytes();
 
         assert(res.is_none(), 'should not have a value');
     }
@@ -618,7 +617,7 @@ mod bytearray_test {
 }
 
 mod span_u8_test {
-    use utils::helpers::{U32Trait, U8SpanExTrait, ToBytes};
+    use utils::helpers::{U8SpanExTrait, ToBytes};
 
     #[test]
     fn test_span_u8_to_64_words_partial() {
@@ -1017,7 +1016,7 @@ mod felt252_vec_test {
         vec.push(0);
         vec.push(1);
 
-        vec.resize(4, 0);
+        vec.expand(4).unwrap();
 
         assert_eq!(vec.len(), 4);
         assert_eq!(vec.pop().unwrap(), 0);
@@ -1034,7 +1033,7 @@ mod felt252_vec_test {
         vec.push(0);
         vec.push(0);
 
-        vec.resize(2, 0);
+        vec.resize(2);
 
         assert_eq!(vec.len(), 2);
         assert_eq!(vec.pop().unwrap(), 1);
@@ -1047,7 +1046,7 @@ mod felt252_vec_test {
         vec.push(0);
         vec.push(1);
 
-        vec.resize(0, 0);
+        vec.resize(0);
 
         assert_eq!(vec.len(), 0);
     }
