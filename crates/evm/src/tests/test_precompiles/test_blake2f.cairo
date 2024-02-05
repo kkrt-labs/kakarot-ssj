@@ -74,7 +74,7 @@ fn test_blake2_precompile_pass_0() {
 #[test]
 fn test_blake2_precompile_pass_2() {
     let (calldata, expected_result) = blake2_precompile_pass_2_test_case();
-        let rounds: u32 = calldata.slice(0, 4).from_be_bytes().unwrap();
+    let rounds: u32 = calldata.slice(0, 4).from_be_bytes().unwrap();
 
     let (gas, result) = Blake2f::exec(calldata).unwrap();
 
