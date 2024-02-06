@@ -145,20 +145,12 @@ impl ModExpPrecompileHelperTraitImpl of ModExpPrecompileHelperTrait {
             if exp_length <= 32 {
                 (exp_highp.bit_len() - 1).into()
             } else {
-                let max: u64 = if exp_highp.bit_len() >= 1 {
-                    exp_highp.bit_len().into()
-                } else {
-                    1
-                };
+                let max: u64 = cmp::max(exp_highp.bit_len().into(), 1);
 
                 (8 * (exp_length - 32)) + max - 1
             }
         };
 
-        if iteration_count >= 1 {
-            iteration_count
-        } else {
-            1
-        }
+        cmp::max(iteration_count, 1)
     }
 }
