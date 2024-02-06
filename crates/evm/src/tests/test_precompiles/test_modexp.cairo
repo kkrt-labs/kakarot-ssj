@@ -5,7 +5,6 @@ use evm::instructions::system_operations::SystemOperationsTrait;
 
 use evm::memory::MemoryTrait;
 use evm::precompiles::Precompiles;
-use evm::precompiles::modexp::ModExpPrecompileTrait;
 use evm::stack::StackTrait;
 
 use evm::tests::test_precompiles::test_data::test_data_modexp::{

@@ -81,9 +81,7 @@ impl ModExp of Precompile {
             }
         };
 
-        let gas = ModExpPrecompileHelperTraitImpl::calc_gas(
-            base_len.into(), exp_len.into(), mod_len.into(), exp_highp
-        );
+        let gas = calc_gas(base_len.into(), exp_len.into(), mod_len.into(), exp_highp);
 
         // Padding is needed if the input does not contain all 3 values.
         let base = input.slice_right_padded(0, base_len);
@@ -103,54 +101,46 @@ impl ModExp of Precompile {
     }
 }
 
-#[generate_trait]
-impl ModExpPrecompileHelperTraitImpl of ModExpPrecompileHelperTrait {
-    // Calculate gas cost according to EIP 2565:
-    // https://eips.ethereum.org/EIPS/eip-2565
-    fn calc_gas(base_length: u64, exp_length: u64, mod_length: u64, exp_highp: u256) -> u64 {
-        let multiplication_complexity =
-            ModExpPrecompileHelperTrait::calculate_multiplication_complexity(
-            base_length, mod_length
-        );
+// Calculate gas cost according to EIP 2565:
+// https://eips.ethereum.org/EIPS/eip-2565
+fn calc_gas(base_length: u64, exp_length: u64, mod_length: u64, exp_highp: u256) -> u64 {
+    let multiplication_complexity = calculate_multiplication_complexity(base_length, mod_length);
 
-        let iteration_count = ModExpPrecompileHelperTrait::calculate_iteration_count(
-            exp_length, exp_highp
-        );
+    let iteration_count = calculate_iteration_count(exp_length, exp_highp);
 
-        let gas = (multiplication_complexity * iteration_count.into()) / 3;
-        let gas: u64 = gas.try_into().unwrap_or(BoundedInt::<u64>::max());
+    let gas = (multiplication_complexity * iteration_count.into()) / 3;
+    let gas: u64 = gas.try_into().unwrap_or(BoundedInt::<u64>::max());
 
-        cmp::max(gas, 200)
-    }
+    cmp::max(gas, 200)
+}
 
-    fn calculate_multiplication_complexity(base_length: u64, mod_length: u64) -> u256 {
-        let max_length = cmp::max(base_length, mod_length);
+fn calculate_multiplication_complexity(base_length: u64, mod_length: u64) -> u256 {
+    let max_length = cmp::max(base_length, mod_length);
 
-        let _8: NonZero<u64> = 8_u64.try_into().unwrap();
-        let (words, rem) = DivRem::div_rem(max_length, _8);
+    let _8: NonZero<u64> = 8_u64.try_into().unwrap();
+    let (words, rem) = DivRem::div_rem(max_length, _8);
 
-        let words: u256 = if rem != 0 {
-            (words + 1).into()
+    let words: u256 = if rem != 0 {
+        (words + 1).into()
+    } else {
+        words.into()
+    };
+
+    words * words
+}
+
+fn calculate_iteration_count(exp_length: u64, exp_highp: u256) -> u64 {
+    let mut iteration_count: u64 = if exp_length <= 32 && exp_highp == 0 {
+        0
+    } else {
+        if exp_length <= 32 {
+            (exp_highp.bit_len() - 1).into()
         } else {
-            words.into()
-        };
+            let max: u64 = cmp::max(exp_highp.bit_len().into(), 1);
 
-        words * words
-    }
+            (8 * (exp_length - 32)) + max - 1
+        }
+    };
 
-    fn calculate_iteration_count(exp_length: u64, exp_highp: u256) -> u64 {
-        let mut iteration_count: u64 = if exp_length <= 32 && exp_highp == 0 {
-            0
-        } else {
-            if exp_length <= 32 {
-                (exp_highp.bit_len() - 1).into()
-            } else {
-                let max: u64 = cmp::max(exp_highp.bit_len().into(), 1);
-
-                (8 * (exp_length - 32)) + max - 1
-            }
-        };
-
-        cmp::max(iteration_count, 1)
-    }
+    cmp::max(iteration_count, 1)
 }
