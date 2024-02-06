@@ -139,21 +139,21 @@ impl ModExpPrecompileHelperTraitImpl of ModExpPrecompileHelperTrait {
     }
 
     fn calculate_iteration_count(exp_length: u64, exp_highp: u256) -> u64 {
-        let mut iteration_count: u64 = 0;
-
-        if exp_length <= 32 && exp_highp == 0 {
-            iteration_count = 0;
-        } else if exp_length <= 32 {
-            iteration_count = (exp_highp.bit_len() - 1).into();
-        } else if exp_length > 32 {
-            let max: u64 = if exp_highp.bit_len() >= 1 {
-                exp_highp.bit_len().into()
+        let mut iteration_count: u64 = if exp_length <= 32 && exp_highp == 0 {
+            0
+        } else {
+            if exp_length <= 32 {
+                (exp_highp.bit_len() - 1).into()
             } else {
-                1
-            };
+                let max: u64 = if exp_highp.bit_len() >= 1 {
+                    exp_highp.bit_len().into()
+                } else {
+                    1
+                };
 
-            iteration_count = (8 * (exp_length - 32)) + max - 1;
-        }
+                (8 * (exp_length - 32)) + max - 1
+            }
+        };
 
         if iteration_count >= 1 {
             iteration_count
