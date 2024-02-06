@@ -60,11 +60,7 @@ impl ModExp of Precompile {
         }
 
         // Used to extract ADJUSTED_EXPONENT_LENGTH.
-        let exp_highp_len = if exp_len <= 32 {
-            exp_len
-        } else {
-            32
-        };
+        let exp_highp_len = cmp::min(exp_len, 32);
 
         let input = if input.len() >= 96 {
             input.slice(HEADER_LENGTH, input.len() - HEADER_LENGTH)
@@ -124,24 +120,21 @@ impl ModExpPrecompileHelperTraitImpl of ModExpPrecompileHelperTrait {
         let gas = (multiplication_complexity * iteration_count.into()) / 3;
         let gas: u64 = gas.try_into().unwrap_or(BoundedInt::<u64>::max());
 
-        if gas >= 200 {
-            gas
-        } else {
-            200
-        }
+        cmp::max(gas, 200)
     }
 
     fn calculate_multiplication_complexity(base_length: u64, mod_length: u64) -> u256 {
-        let max_length = if base_length >= mod_length {
-            base_length
+        let max_length = cmp::max(base_length, mod_length);
+
+        let _8: NonZero<u64> = 8_u64.try_into().unwrap();
+        let (words, rem) = DivRem::div_rem(max_length, _8);
+
+        let words: u256 = if rem != 0 {
+            (words + 1).into()
         } else {
-            mod_length
+            words.into()
         };
-        let mut words = max_length / 8;
-        if max_length % 8 > 0 {
-            words += 1;
-        }
-        let words: u256 = words.into();
+
         words * words
     }
 
