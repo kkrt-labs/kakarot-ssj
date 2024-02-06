@@ -366,9 +366,6 @@ impl MPNatTraitImpl of MPNatTrait {
             }
         }
 
-        //todo: remvoe
-        println!("r1");
-
         if exp.len() <= (ByteSize::<usize>::byte_size()) {
             let exp_as_number: usize = exp.from_le_bytes().unwrap();
 
@@ -385,9 +382,6 @@ impl MPNatTraitImpl of MPNatTrait {
                 Option::None => {}
             };
         }
-
-        //todo: remvoe
-        println!("r2");
 
         if modulus.is_power_of_two() { // return
             return self.modpow_with_power_of_two(exp, ref modulus);
@@ -606,12 +600,8 @@ impl MPNatTraitImpl of MPNatTrait {
         let mut one = {
             // We'll reuse the memory space from a_bar for efficiency.
             let mut digits = a_bar.digits;
-            println!("digits len {:?}", digits.len());
             digits.reset();
-            println!("digits len {:?}", digits.len());
             digits.set(0, 1);
-            //todo: remvoe
-            println!("r3");
             MPNat { digits }
         };
 
