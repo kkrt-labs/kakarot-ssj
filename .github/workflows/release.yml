@@ -1,0 +1,27 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Scarb
+        uses: software-mansion/setup-scarb@v1
+      - name: Build contracts
+        run: |
+          scarb build -p contracts
+      - name: Zip dev artifacts
+        run: zip -r dev-artifacts.zip target/dev
+      - name: Upload artifacts to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dev-artifacts.zip
+          asset_name: dev-artifacts.zip
+          tag: ${{ github.ref_name }}
+          overwrite: true
