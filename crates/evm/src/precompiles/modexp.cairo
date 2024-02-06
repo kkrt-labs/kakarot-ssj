@@ -42,15 +42,15 @@ impl ModExp of Precompile {
             }
         };
         let exp_len: usize = match exp_len.try_into() {
-            Option::Some(base_len) => { base_len },
+            Option::Some(exp_len) => { exp_len },
             Option::None => {
-                return Result::Err(EVMError::InvalidParameter('base_len casting to u32 failed'));
+                return Result::Err(EVMError::InvalidParameter('exp_len casting to u32 failed'));
             }
         };
         let mod_len: usize = match mod_len.try_into() {
-            Option::Some(base_len) => { base_len },
+            Option::Some(mod_len) => { mod_len },
             Option::None => {
-                return Result::Err(EVMError::InvalidParameter('base_len casting to u32 failed'));
+                return Result::Err(EVMError::InvalidParameter('mod_len casting to u32 failed'));
             }
         };
 
