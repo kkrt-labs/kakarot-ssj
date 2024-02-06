@@ -39,7 +39,9 @@ struct MPNat {
 impl MPNatTraitImpl of MPNatTrait {
     fn from_big_endian(bytes: Span<u8>) -> MPNat {
         if bytes.is_empty() {
-            return MPNat { digits: Felt252VecImpl::new() };
+            let mut digits = Default::default();
+            digits.expand(1).unwrap();
+            return MPNat { digits };
         }
 
         // Remainder on division by WORD_BYTES
@@ -97,6 +99,11 @@ impl MPNatTraitImpl of MPNatTrait {
         };
 
         digits.remove_trailing_zeroes();
+
+        if digits.len() == 0 {
+            digits.expand(1).unwrap();
+        }
+
         MPNat { digits }
     }
 
@@ -106,6 +113,9 @@ impl MPNatTraitImpl of MPNatTrait {
     /// `k` is the number of digits in `other`.
     fn sub_to_same_size(ref self: MPNat, ref other: MPNat) {
         self.digits.remove_trailing_zeroes();
+        if (self.digits.len() == 0) {
+            self.digits.expand(1).unwrap();
+        }
 
         let n = other.digits.len();
         let s = self.digits.len();
@@ -356,6 +366,9 @@ impl MPNatTraitImpl of MPNatTrait {
             }
         }
 
+        //todo: remvoe
+        println!("r1");
+
         if exp.len() <= (ByteSize::<usize>::byte_size()) {
             let exp_as_number: usize = exp.from_le_bytes().unwrap();
 
@@ -372,6 +385,9 @@ impl MPNatTraitImpl of MPNatTrait {
                 Option::None => {}
             };
         }
+
+        //todo: remvoe
+        println!("r2");
 
         if modulus.is_power_of_two() { // return
             return self.modpow_with_power_of_two(exp, ref modulus);
@@ -539,6 +555,7 @@ impl MPNatTraitImpl of MPNatTrait {
             digits.expand(2 * s).unwrap();
             let mut tmp = MPNat { digits };
             big_wrapping_mul(ref self, ref x_bar, ref tmp.digits);
+
             tmp.sub_to_same_size(ref modulus);
             tmp
         };
@@ -589,8 +606,12 @@ impl MPNatTraitImpl of MPNatTrait {
         let mut one = {
             // We'll reuse the memory space from a_bar for efficiency.
             let mut digits = a_bar.digits;
+            println!("digits len {:?}", digits.len());
             digits.reset();
+            println!("digits len {:?}", digits.len());
             digits.set(0, 1);
+            //todo: remvoe
+            println!("r3");
             MPNat { digits }
         };
 
