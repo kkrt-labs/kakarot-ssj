@@ -87,12 +87,12 @@ impl ModExp of Precompile {
         let base = input.slice_right_padded(0, base_len);
         let exponent = input.slice_right_padded(base_len, exp_len);
 
-        let tmp = match u32_overflowing_add(base_len, exp_len) {
+        let mod_start_idx = match u32_overflowing_add(base_len, exp_len) {
             Result::Ok(v) => v,
             Result::Err(v) => v
         };
 
-        let modulus = input.slice_right_padded(tmp, mod_len);
+        let modulus = input.slice_right_padded(mod_start_idx, mod_len);
 
         let output = modexp(base, exponent, modulus);
 
