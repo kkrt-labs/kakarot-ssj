@@ -10,7 +10,7 @@ use evm::precompiles::blake2f::Blake2f;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
 use starknet::testing::set_contract_address;
-use super::test_data::{
+use super::test_data::test_data_blake2f::{
     blake2_precompile_fail_wrong_length_input_1_test_case,
     blake2_precompile_fail_wrong_length_input_2_test_case,
     blake2_precompile_fail_wrong_length_input_3_test_case, blake2_precompile_pass_1_test_case,

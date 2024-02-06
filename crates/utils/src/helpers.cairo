@@ -7,6 +7,7 @@ use core::hash::{HashStateExTrait, HashStateTrait};
 use core::num::traits::{Zero, One, BitSize};
 use core::pedersen::{HashState, PedersenTrait};
 use core::traits::TryInto;
+
 use integer::{BoundedInt, u32_as_non_zero, U32TryIntoNonZero};
 use integer::{u32_overflowing_add};
 use keccak::{cairo_keccak, u128_split};
@@ -24,7 +25,6 @@ use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 use utils::eth_transaction::{TransactionType};
 use utils::math::{Bitshift, WrappingBitshift, Exponentiation, SaturatingAdd};
 use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, TryIntoResult, BoolIntoNumeric};
-
 
 /// Converts a value to the next closest multiple of 32
 ///
@@ -690,7 +690,7 @@ impl U8SpanExImpl of U8SpanExTrait {
     /// ```
     ///  let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
     ///  let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-    ///  let result = span.left_padding(10);
+    ///  let result = span.pad_left_with_zeroes(10);
     ///
     ///  assert_eq!(result, expected);
     ///
@@ -1488,7 +1488,7 @@ impl BitLengthTraitImpl<
         // safe unwrap since we know atmost 8 bits are used
         let mut n: u8 = last_byte.try_into().unwrap();
 
-        (n.bits_used() + 8 * (bytes_used - 1)).into()
+        n.bits_used().into() + 8 * (bytes_used - 1).into()
     }
 
     fn count_leading_zeroes(self: T) -> u32 {
@@ -1519,7 +1519,7 @@ impl Felt252VecTraitImpl<
     +ToBytes<T>,
     +PartialOrd<T>,
     +Into<u8, T>,
-    +PartialEq<T>
+    +PartialEq<T>,
 > of Felt252VecTrait<T> {
     /// Returns Felt252Vec<T> as a Span<8>, the returned Span is in big endian format
     /// # Arguments
