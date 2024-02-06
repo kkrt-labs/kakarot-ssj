@@ -1,5 +1,7 @@
 name: Release
 
+permissions: read-all
+
 on:
   release:
     types: [published]
