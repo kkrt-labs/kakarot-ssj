@@ -11,7 +11,7 @@ use evm::model::vm::VMTrait;
 use evm::precompiles::blake2f::Blake2f;
 use evm::precompiles::ec_recover::EcRecover;
 use evm::precompiles::identity::Identity;
-use evm::precompiles::modexp::ModExpPrecompileTrait;
+use evm::precompiles::modexp::ModExp;
 use evm::precompiles::sha256::Sha256;
 use starknet::EthAddress;
 
@@ -41,7 +41,7 @@ impl PrecompilesImpl of Precompiles {
                 )
             },
             4 => { Identity::exec(input)? },
-            5 => { ModExpPrecompileTrait::exec(input)? },
+            5 => { ModExp::exec(input)? },
             6 => {
                 // we should never reach this branch!
                 panic!(

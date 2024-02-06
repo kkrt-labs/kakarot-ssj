@@ -7,6 +7,8 @@ use evm::errors::EVMError;
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 
+use evm::precompiles::Precompile;
+
 use integer::{u32_overflowing_add, BoundedInt};
 use starknet::EthAddress;
 use utils::crypto::modexp::lib::modexp;
@@ -15,8 +17,7 @@ use utils::helpers::{U256Trait, U8SpanExTrait, U64Trait, FromBytes, BitLengthTra
 const HEADER_LENGTH: usize = 96;
 const MIN_GAS: u128 = 200;
 
-#[generate_trait]
-impl ModExpPrecompileTraitImpl of ModExpPrecompileTrait {
+impl ModExp of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
         EthAddress { address: 0x5 }
