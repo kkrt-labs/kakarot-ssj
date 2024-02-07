@@ -132,14 +132,12 @@ fn calculate_multiplication_complexity(base_length: u64, mod_length: u64) -> u25
 fn calculate_iteration_count(exp_length: u64, exp_highp: u256) -> u64 {
     let mut iteration_count: u64 = if exp_length <= 32 && exp_highp == 0 {
         0
+    } else if exp_length < 33 {
+        (exp_highp.bit_len() - 1).into()
     } else {
-        if exp_length <= 32 {
-            (exp_highp.bit_len() - 1).into()
-        } else {
-            let max: u64 = cmp::max(exp_highp.bit_len().into(), 1);
+        let max: u64 = cmp::max(exp_highp.bit_len().into(), 1);
 
-            (8 * (exp_length - 32)) + max - 1
-        }
+        (8 * (exp_length - 32)) + max - 1
     };
 
     cmp::max(iteration_count, 1)
