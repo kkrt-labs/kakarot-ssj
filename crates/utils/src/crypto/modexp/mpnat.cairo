@@ -39,7 +39,9 @@ struct MPNat {
 impl MPNatTraitImpl of MPNatTrait {
     fn from_big_endian(bytes: Span<u8>) -> MPNat {
         if bytes.is_empty() {
-            return MPNat { digits: Felt252VecImpl::new() };
+            let mut digits = Default::default();
+            digits.expand(1).unwrap();
+            return MPNat { digits };
         }
 
         // Remainder on division by WORD_BYTES
@@ -97,6 +99,11 @@ impl MPNatTraitImpl of MPNatTrait {
         };
 
         digits.remove_trailing_zeroes();
+
+        if digits.len() == 0 {
+            digits.expand(1).unwrap();
+        }
+
         MPNat { digits }
     }
 
@@ -106,6 +113,9 @@ impl MPNatTraitImpl of MPNatTrait {
     /// `k` is the number of digits in `other`.
     fn sub_to_same_size(ref self: MPNat, ref other: MPNat) {
         self.digits.remove_trailing_zeroes();
+        if (self.digits.len() == 0) {
+            self.digits.expand(1).unwrap();
+        }
 
         let n = other.digits.len();
         let s = self.digits.len();
@@ -539,6 +549,7 @@ impl MPNatTraitImpl of MPNatTrait {
             digits.expand(2 * s).unwrap();
             let mut tmp = MPNat { digits };
             big_wrapping_mul(ref self, ref x_bar, ref tmp.digits);
+
             tmp.sub_to_same_size(ref modulus);
             tmp
         };
