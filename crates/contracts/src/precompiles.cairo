@@ -25,6 +25,7 @@ mod Precompiles {
     use evm::precompiles::ec_recover::EcRecover;
     use evm::precompiles::identity::Identity;
     use evm::precompiles::sha256::Sha256;
+    use evm::precompiles::modexp::ModExp;
 
     use super::IPrecompiles;
 
@@ -40,6 +41,8 @@ mod Precompiles {
                 0 => Result::Err(EVMError::NotImplemented),
                 1 => Result::Err(EVMError::NotImplemented),
                 2 => Sha256::exec(data),
+                3 | 4 => Result::Err(EVMError::NotImplemented),
+                5 => ModExp::exec(data),
                 _ => Result::Err(EVMError::NotImplemented),
             };
             match result {
