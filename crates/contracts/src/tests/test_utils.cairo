@@ -15,9 +15,7 @@ use core::fmt::Debug;
 use evm::model::contract_account::ContractAccountTrait;
 use evm::model::{Address};
 
-use evm::tests::test_utils::{
-    deploy_fee, ca_address, other_starknet_address, chain_id, sequencer_evm_address
-};
+use evm::tests::test_utils::{ca_address, other_starknet_address, chain_id, sequencer_evm_address};
 use openzeppelin::token::erc20::ERC20;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{
@@ -105,7 +103,6 @@ fn deploy_kakarot_core(
 ) -> IExtendedKakarotCoreDispatcher {
     let mut calldata: Array<felt252> = array![
         native_token.into(),
-        deploy_fee().into(),
         UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(),
         ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(),
         ContractAccount::TEST_CLASS_HASH.try_into().unwrap(),

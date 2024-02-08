@@ -59,27 +59,10 @@ fn test_kakarot_core_renounce_ownership() {
 }
 
 #[test]
-fn test_kakarot_core_deploy_fee() {
-    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
-
-    assert(kakarot_core.deploy_fee() == contract_utils::deploy_fee(), 'wrong deploy_fee');
-}
-
-#[test]
 fn test_kakarot_core_chain_id() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     assert(kakarot_core.chain_id() == contract_utils::chain_id(), 'wrong chain id');
-}
-
-#[test]
-fn test_kakarot_core_set_deploy_fee() {
-    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
-
-    assert(kakarot_core.deploy_fee() == contract_utils::deploy_fee(), 'wrong deploy_fee');
-    testing::set_contract_address(test_utils::other_starknet_address());
-    kakarot_core.set_deploy_fee(0x100);
-    assert(kakarot_core.deploy_fee() == 0x100, 'wrong new deploy_fee');
 }
 
 #[test]
