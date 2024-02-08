@@ -175,9 +175,15 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/7962849?v=4",
       "profile": "https://github.com/glihm",
       "contributions": ["code"]
+    },
+    {
+      "login": "bajpai244",
+      "name": "Harsh Bajpai",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41180869?v=4",
+      "profile": "https://github.com/bajpai244",
+      "contributions": ["code"]
     }
   ],
   "contributorsPerLine": 7,
   "linkToUsage": true
 }
-
