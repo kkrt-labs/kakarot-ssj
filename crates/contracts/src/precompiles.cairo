@@ -24,8 +24,8 @@ mod Precompiles {
     use evm::precompiles::blake2f::Blake2f;
     use evm::precompiles::ec_recover::EcRecover;
     use evm::precompiles::identity::Identity;
-    use evm::precompiles::sha256::Sha256;
     use evm::precompiles::modexp::ModExp;
+    use evm::precompiles::sha256::Sha256;
 
     use super::IPrecompiles;
 
