@@ -5,20 +5,26 @@ use checked_math::CheckedMath;
 // and make CheckedAdd and CheckedSub so that they are not exported.
 mod checked_math {
     use super::checked_add::CheckedAdd;
+    use super::checked_mul::CheckedMul;
     use super::checked_sub::CheckedSub;
 
     trait CheckedMath<T> {
         fn checked_add(self: T, rhs: T) -> Option<T>;
         fn checked_sub(self: T, rhs: T) -> Option<T>;
+        fn checked_mul(self: T, rhs: T) -> Option<T>;
     }
 
-    impl CheckedMathImpl<T, +CheckedAdd<T>, +CheckedSub<T>> of CheckedMath<T> {
+    impl CheckedMathImpl<T, +CheckedAdd<T>, +CheckedSub<T>, +CheckedMul<T>> of CheckedMath<T> {
         fn checked_add(self: T, rhs: T) -> Option<T> {
             CheckedAdd::<T>::checked_add(self, rhs)
         }
 
         fn checked_sub(self: T, rhs: T) -> Option<T> {
             CheckedSub::<T>::checked_sub(self, rhs)
+        }
+
+        fn checked_mul(self: T, rhs: T) -> Option<T> {
+            CheckedMul::<T>::checked_mul(self, rhs)
         }
     }
 }
@@ -116,6 +122,33 @@ mod checked_sub {
     }
 }
 
+mod checked_mul {
+    use integer::{u32_wide_mul};
+    use utils::math::{Bitshift, OverflowingMul};
+
+    trait CheckedMul<T> {
+        /// performs a checked multiplication, returning `None` if the multiplication overflows.
+        /// # Arguments
+        /// * `self` - The left hand side of the multiplication.
+        /// * `rhs` - The right hand side of the multiplication.
+        /// # Returns
+        /// `Some(self * rhs)` if the multiplication doesn't overflow, and `None` otherwise.
+        fn checked_mul(self: T, rhs: T) -> Option<T>;
+    }
+
+    impl CheckedMulImpl<T, +OverflowingMul<T>, +Drop<T>> of CheckedMul<T> {
+        fn checked_mul(self: T, rhs: T) -> Option<T> {
+            let (result, is_overflow) = self.overflowing_mul(rhs);
+
+            match is_overflow {
+                true => { Option::None },
+                false => { Option::Some(result) }
+            }
+        }
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use integer::BoundedInt;
@@ -191,5 +224,11 @@ mod tests {
     fn test_u256_checked_sub() {
         assert_eq!(3_u256.checked_sub(2), Option::Some(1));
         assert_eq!(0_u256.checked_sub(1), Option::<u256>::None);
+    }
+
+    #[test]
+    fn test_checked_mul() {
+        assert_eq!(1_u8.checked_mul(2), Option::Some(2));
+        assert_eq!(BoundedInt::<u8>::max().checked_mul(2), Option::<u8>::None);
     }
 }
