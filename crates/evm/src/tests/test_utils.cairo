@@ -132,11 +132,6 @@ fn callvalue() -> u256 {
     123456789
 }
 
-
-fn deploy_fee() -> u128 {
-    0x10
-}
-
 fn native_token() -> ContractAddress {
     contract_address_const::<'native_token'>()
 }

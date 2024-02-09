@@ -11,16 +11,6 @@ trait IKakarotCore<TContractState> {
     /// Gets the native token used by the Kakarot smart contract
     fn native_token(self: @TContractState) -> ContractAddress;
 
-    /// Sets the deploy fee for an EOA
-    /// Currently, the Kakarot RPC can trigger an EOA deployment,
-    /// and optimistically fund it.
-    /// Then, the KakarotCore smart contract is able to levy this fee retroactively from the EOA
-    /// And reimburse the RPC's smart wallet.
-    fn set_deploy_fee(ref self: TContractState, deploy_fee: u128);
-
-    /// Get the deploy fee
-    fn deploy_fee(self: @TContractState) -> u128;
-
     /// Get the chain id
     fn chain_id(self: @TContractState) -> u128;
 
@@ -98,16 +88,6 @@ trait IExtendedKakarotCore<TContractState> {
 
     /// Gets the native token used by the Kakarot smart contract
     fn native_token(self: @TContractState) -> ContractAddress;
-
-    /// Sets the deploy fee for an EOA
-    /// Currently, the Kakarot RPC can trigger an EOA deployment,
-    /// and optimistically fund it.
-    /// Then, the KakarotCore smart contract is able to levy this fee retroactively from the EOA
-    /// And reimburse the RPC's smart wallet.
-    fn set_deploy_fee(ref self: TContractState, deploy_fee: u128);
-
-    /// Get the deploy fee
-    fn deploy_fee(self: @TContractState) -> u128;
 
     /// Get the chain id
     fn chain_id(self: @TContractState) -> u128;

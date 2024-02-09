@@ -71,7 +71,6 @@ mod KakarotCore {
         ca_class_hash: ClassHash,
         // Utility storage
         native_token: ContractAddress,
-        deploy_fee: u128,
         chain_id: u128,
         // Components
         #[substorage(v0)]
@@ -133,7 +132,6 @@ mod KakarotCore {
     fn constructor(
         ref self: ContractState,
         native_token: ContractAddress,
-        deploy_fee: u128,
         account_class_hash: ClassHash,
         eoa_class_hash: ClassHash,
         ca_class_hash: ClassHash,
@@ -142,7 +140,6 @@ mod KakarotCore {
         mut eoas_to_deploy: Span<EthAddress>,
     ) {
         self.native_token.write(native_token);
-        self.deploy_fee.write(deploy_fee);
         self.account_class_hash.write(account_class_hash);
         self.eoa_class_hash.write(eoa_class_hash);
         self.ca_class_hash.write(ca_class_hash);
@@ -166,15 +163,6 @@ mod KakarotCore {
 
         fn native_token(self: @ContractState) -> ContractAddress {
             self.native_token.read()
-        }
-
-        fn set_deploy_fee(ref self: ContractState, deploy_fee: u128) {
-            self.ownable.assert_only_owner();
-            self.deploy_fee.write(deploy_fee);
-        }
-
-        fn deploy_fee(self: @ContractState) -> u128 {
-            self.deploy_fee.read()
         }
 
         fn chain_id(self: @ContractState) -> u128 {
