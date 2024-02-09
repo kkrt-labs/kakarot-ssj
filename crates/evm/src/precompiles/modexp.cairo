@@ -12,7 +12,7 @@ use evm::precompiles::Precompile;
 use integer::{u32_overflowing_add, BoundedInt};
 use starknet::EthAddress;
 use utils::crypto::modexp::lib::modexp;
-use utils::helpers::{U256Trait, U8SpanExTrait, U64Trait, FromBytes, BitLengthTrait};
+use utils::helpers::{U256Trait, U8SpanExTrait, U64Trait, FromBytes, BitsUsed};
 
 const HEADER_LENGTH: usize = 96;
 const MIN_GAS: u128 = 200;
@@ -62,7 +62,7 @@ impl ModExp of Precompile {
         // Used to extract ADJUSTED_EXPONENT_LENGTH.
         let exp_highp_len = cmp::min(exp_len, 32);
 
-        let input = if input.len() >= 96 {
+        let input = if input.len() >= HEADER_LENGTH {
             input.slice(HEADER_LENGTH, input.len() - HEADER_LENGTH)
         } else {
             array![].span()
@@ -130,14 +130,21 @@ fn calculate_multiplication_complexity(base_length: u64, mod_length: u64) -> u25
 }
 
 fn calculate_iteration_count(exp_length: u64, exp_highp: u256) -> u64 {
-    let mut iteration_count: u64 = if exp_length < 33 && exp_highp == 0 {
-        0
-    } else if exp_length < 33 {
-        (exp_highp.bit_len() - 1).into()
+    let mut iteration_count: u64 = if exp_length < 33 {
+        if exp_highp == 0 {
+            0
+        } else {
+            (exp_highp.bits_used() - 1).into()
+        }
     } else {
-        let max: u64 = cmp::max(exp_highp.bit_len().into(), 1);
+        let length_part = 8 * (exp_length - 32);
+        let bits_part = if exp_highp != 0 {
+            exp_highp.bits_used() - 1
+        } else {
+            0
+        };
 
-        (8 * (exp_length - 32)) + max - 1
+        length_part + bits_part.into()
     };
 
     cmp::max(iteration_count, 1)
