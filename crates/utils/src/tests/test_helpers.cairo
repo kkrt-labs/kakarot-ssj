@@ -1,4 +1,4 @@
-use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes};
+use utils::helpers::{BitsUsed, BytesUsedTrait, ToBytes};
 use utils::helpers;
 
 #[test]
@@ -175,7 +175,7 @@ mod test_array_ext {
 }
 
 mod u8_test {
-    use utils::helpers::U8Trait;
+    use utils::helpers::BitsUsed;
     use utils::math::Bitshift;
 
     #[test]
@@ -197,7 +197,7 @@ mod u8_test {
 
 mod u32_test {
     use utils::helpers::Bitshift;
-    use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes, FromBytes};
+    use utils::helpers::{BitsUsed, BytesUsedTrait, ToBytes, FromBytes};
 
     #[test]
     fn test_u32_from_be_bytes() {
@@ -287,7 +287,7 @@ mod u32_test {
 mod u64_test {
     use utils::helpers::Bitshift;
     use utils::helpers::U64Trait;
-    use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes};
+    use utils::helpers::{BitsUsed, BytesUsedTrait, ToBytes};
 
 
     #[test]
@@ -336,9 +336,9 @@ mod u64_test {
     }
 
     #[test]
-    fn test_u64_bit_len() {
+    fn test_u64_bits_used() {
         let input: u64 = 7;
-        let result = input.bit_len();
+        let result = input.bits_used();
         let expected = 3;
 
         assert_eq!(result, expected);
@@ -349,7 +349,7 @@ mod u128_test {
     use integer::BoundedInt;
     use utils::helpers::Bitshift;
     use utils::helpers::U128Trait;
-    use utils::helpers::{BitLengthTrait, BytesUsedTrait, ToBytes};
+    use utils::helpers::{BitsUsed, BytesUsedTrait, ToBytes};
 
     #[test]
     fn test_u128_bytes_used() {
@@ -403,7 +403,7 @@ mod u128_test {
 mod u256_test {
     use utils::helpers::Bitshift;
     use utils::helpers::U256Trait;
-    use utils::helpers::{BitLengthTrait, BytesUsedTrait};
+    use utils::helpers::{BitsUsed, BytesUsedTrait};
 
     #[test]
     fn test_reverse_bytes_u256() {
@@ -451,9 +451,9 @@ mod u256_test {
     }
 
     #[test]
-    fn test_u64_bit_len() {
+    fn test_u64_bits_used() {
         let input: u256 = 7;
-        let result = input.bit_len();
+        let result = input.bits_used();
         let expected = 3;
 
         assert_eq!(result, expected);

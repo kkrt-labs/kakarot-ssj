@@ -737,47 +737,6 @@ impl U8SpanExImpl of U8SpanExTrait {
 }
 
 #[generate_trait]
-impl U8Impl of U8Trait {
-    /// Returns the number of bits used to represent the value in binary representation
-    /// # Arguments
-    /// * `self` - The value to compute the number of bits used
-    /// # Returns
-    /// * The number of bits used to represent the value in binary representation
-    fn bits_used(self: u8) -> u8 {
-        if self < 0b100000 {
-            if self < 0b1000 {
-                if self < 0b100 {
-                    if self < 0b10 {
-                        if self == 0 {
-                            return 0;
-                        } else {
-                            return 1;
-                        };
-                    }
-                    return 2;
-                }
-
-                return 3;
-            }
-
-            if self < 0b10000 {
-                return 4;
-            }
-
-            return 5;
-        } else {
-            if self < 0b10000000 {
-                if self < 0b1000000 {
-                    return 6;
-                }
-                return 7;
-            }
-            return 8;
-        }
-    }
-}
-
-#[generate_trait]
 impl U64Impl of U64Trait {
     /// Returns the number of trailing zeroes in the bit representation of `self`.
     /// # Arguments
@@ -1446,13 +1405,13 @@ impl ByteSizeImpl<T, +BitSize<T>> of ByteSize<T> {
     }
 }
 
-trait BitLengthTrait<T> {
+trait BitsUsed<T> {
     /// Returns the number of bits required to represent `self`, ignoring leading zeros.
     /// # Arguments
     /// `self` - The value to check.
     /// # Returns
     /// The number of bits used to represent the value, ignoring leading zeros.
-    fn bit_len(self: T) -> u32;
+    fn bits_used(self: T) -> u32;
 
     /// Returns the number of leading zeroes in the bit representation of `self`.
     /// # Arguments
@@ -1462,7 +1421,7 @@ trait BitLengthTrait<T> {
     fn count_leading_zeroes(self: T) -> u32;
 }
 
-impl BitLengthTraitImpl<
+impl BitsUsedImpl<
     T,
     +Zero<T>,
     +One<T>,
@@ -1477,8 +1436,11 @@ impl BitLengthTraitImpl<
     +Copy<T>,
     +Drop<T>,
     +PartialEq<T>
-> of BitLengthTrait<T> {
-    fn bit_len(self: T) -> u32 {
+> of BitsUsed<T> {
+    fn bits_used(self: T) -> u32 {
+        if self == Zero::zero() {
+            return 0;
+        }
         let two: T = One::one() + One::one();
         let eight: T = two * two * two;
 
@@ -1486,13 +1448,53 @@ impl BitLengthTraitImpl<
         let last_byte = self.shr(eight * (bytes_used.into() - One::one()));
 
         // safe unwrap since we know atmost 8 bits are used
-        let mut n: u8 = last_byte.try_into().unwrap();
+        let bits_used: u8 = bits_used_internal::bits_used_in_byte(last_byte.try_into().unwrap());
 
-        n.bits_used().into() + 8 * (bytes_used - 1).into()
+        bits_used.into() + 8 * (bytes_used - 1).into()
     }
 
     fn count_leading_zeroes(self: T) -> u32 {
-        BitSize::<T>::bits() - self.bit_len()
+        BitSize::<T>::bits() - self.bits_used()
+    }
+}
+
+mod bits_used_internal {
+    /// Returns the number of bits used to represent the value in binary representation
+    /// # Arguments
+    /// * `self` - The value to compute the number of bits used
+    /// # Returns
+    /// * The number of bits used to represent the value in binary representation
+    fn bits_used_in_byte(self: u8) -> u8 {
+        if self < 0b100000 {
+            if self < 0b1000 {
+                if self < 0b100 {
+                    if self < 0b10 {
+                        if self == 0 {
+                            return 0;
+                        } else {
+                            return 1;
+                        };
+                    }
+                    return 2;
+                }
+
+                return 3;
+            }
+
+            if self < 0b10000 {
+                return 4;
+            }
+
+            return 5;
+        } else {
+            if self < 0b10000000 {
+                if self < 0b1000000 {
+                    return 6;
+                }
+                return 7;
+            }
+            return 8;
+        }
     }
 }
 
