@@ -15,7 +15,7 @@ use super::arith::{
     in_place_add, in_place_mul_sub, big_wrapping_mul, monsq, monpro, borrowing_sub, carrying_add
 };
 use utils::checked_math::CheckedMath;
-use utils::helpers::{FromBytes, U64Trait, Felt252VecTrait, U128Trait, BitLengthTrait, ByteSize};
+use utils::helpers::{FromBytes, U64Trait, Felt252VecTrait, U128Trait, BitsUsed, ByteSize};
 use utils::math::{Bitshift, WrappingBitshift};
 
 type Word = u64;
