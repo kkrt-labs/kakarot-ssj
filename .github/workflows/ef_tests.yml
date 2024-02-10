@@ -21,7 +21,7 @@ jobs:
       - name: Checkout ef-tests
         uses: actions/checkout@v3
         with:
-          repository: kkrt-labs/ef-tests
+          repository: enitrat/ef-tests
       - name: Checkout local skip file
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/checkout@v3
