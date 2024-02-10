@@ -55,11 +55,11 @@ trait IKakarotCore<TContractState> {
     /// It cannot modify the state of the chain
     fn eth_call(
         self: @TContractState, origin: EthAddress, tx: EthereumTransaction
-    ) -> (bool, Span<u8>, u128);
+    ) -> (Span<u8>, bool, u128);
 
     /// Transaction entrypoint into the EVM
     /// Executes an EVM transaction and possibly modifies the state
-    fn eth_send_transaction(ref self: TContractState, tx: EthereumTransaction) -> (bool, Span<u8>);
+    fn eth_send_transaction(ref self: TContractState, tx: EthereumTransaction) -> (Span<u8>, bool);
 
     /// Upgrade the KakarotCore smart contract
     /// Using replace_class_syscall
@@ -133,11 +133,11 @@ trait IExtendedKakarotCore<TContractState> {
     /// It cannot modify the state of the chain
     fn eth_call(
         self: @TContractState, origin: EthAddress, tx: EthereumTransaction
-    ) -> (bool, Span<u8>);
+    ) -> (Span<u8>, bool);
 
     /// Transaction entrypoint into the EVM
     /// Executes an EVM transaction and possibly modifies the state
-    fn eth_send_transaction(ref self: TContractState, tx: EthereumTransaction) -> (bool, Span<u8>);
+    fn eth_send_transaction(ref self: TContractState, tx: EthereumTransaction) -> (Span<u8>, bool);
 
     /// Upgrade the KakarotCore smart contract
     /// Using replace_class_syscall

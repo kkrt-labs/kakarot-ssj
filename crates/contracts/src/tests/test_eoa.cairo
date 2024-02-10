@@ -127,7 +127,7 @@ mod test_external_owned_account {
             kakarot_core.chain_id(), Option::Some(other_evm_address()), data_get_tx
         );
 
-        let (_, return_data) = kakarot_core
+        let (return_data, _) = kakarot_core
             .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx),);
 
         assert_eq!(return_data, u256_to_bytes_array(0).span());
@@ -159,7 +159,7 @@ mod test_external_owned_account {
         let tx = call_transaction(
             kakarot_core.chain_id(), Option::Some(other_evm_address()), data_get_tx
         );
-        let (_, return_data) = kakarot_core
+        let (return_data, _) = kakarot_core
             .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx),);
         assert_eq!(return_data, u256_to_bytes_array(1).span());
     }

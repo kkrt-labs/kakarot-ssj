@@ -58,6 +58,7 @@ enum EVMError {
     OutOfGas,
     Assertion,
     DepthLimit,
+    ValidateError,
 }
 
 #[generate_trait]
@@ -81,6 +82,7 @@ impl EVMErrorImpl of EVMErrorTrait {
             EVMError::OutOfGas => 'out of gas'.into(),
             EVMError::Assertion => 'assertion failed'.into(),
             EVMError::DepthLimit => 'max call depth exceeded'.into(),
+            EVMError::ValidateError => 'Kakarot: eth validation failed',
         }
     }
 
