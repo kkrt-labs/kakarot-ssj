@@ -17,9 +17,28 @@ trait IPrecompiles<T> {
     fn exec_precompile(self: @T, address: felt252, data: Span<u8>) -> (bool, u128, Span<u8>);
 }
 
+#[starknet::interface]
+trait IHelpers<T> {
+    /// Gets the hash of a specific StarkNet block within the range of
+    /// [first_v0_12_0_block, current_block - 10].
+    ///
+    /// # Arguments
+    ///
+    /// * `block_number` - The block number for which to get the hash.
+    ///
+    /// # Returns
+    /// The hash of the specified block.
+    /// 
+    /// # Errors
+    /// `Block number out of range` - If the block number is greater than `current_block - 10`.
+    /// `0`: The block number is inferior to `first_v0_12_0_block`.
+    fn get_block_hash(self: @T, block_number: u64) -> felt252;
+}
+
 #[starknet::contract]
 mod Precompiles {
     use core::traits::Into;
+    use core::{starknet, starknet::SyscallResultTrait};
     use evm::errors::EVMError;
     use evm::precompiles::blake2f::Blake2f;
     use evm::precompiles::ec_recover::EcRecover;
@@ -27,7 +46,7 @@ mod Precompiles {
     use evm::precompiles::modexp::ModExp;
     use evm::precompiles::sha256::Sha256;
 
-    use super::IPrecompiles;
+    use super::{IPrecompiles, IHelpers};
 
     #[storage]
     struct Storage {}
@@ -49,6 +68,13 @@ mod Precompiles {
                 Result::Ok((gas, output)) => (true, gas, output),
                 Result::Err(_) => (false, 0, array![].span())
             }
+        }
+    }
+
+    #[abi(embed_v0)]
+    impl Helpers of IHelpers<ContractState> {
+        fn get_block_hash(self: @ContractState, block_number: u64) -> felt252 {
+            starknet::get_block_hash_syscall(block_number).unwrap_syscall()
         }
     }
 }
