@@ -17,7 +17,7 @@ jobs:
         run: |
           scarb build -p contracts
       - name: Zip dev artifacts
-        run: zip -r dev-artifacts.zip target/dev
+        run: zip -rj dev-artifacts.zip target/dev
       - name: Upload artifacts to release
         uses: svenstaro/upload-release-action@v2
         with:
