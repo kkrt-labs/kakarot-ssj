@@ -240,7 +240,7 @@ mod KakarotCore {
 
         fn eth_call(
             self: @ContractState, origin: EthAddress, tx: EthereumTransaction
-        ) -> (bool, Span<u8>, u128) {
+        ) -> (Span<u8>, bool, u128) {
             if !self.is_view() {
                 panic_with_felt252('fn must be called, not invoked');
             };
@@ -250,12 +250,12 @@ mod KakarotCore {
             let TransactionResult{success, return_data, gas_used, state: _ } = self
                 .process_transaction(origin, tx);
 
-            (success, return_data, gas_used)
+            (return_data, success, gas_used)
         }
 
         fn eth_send_transaction(
             ref self: ContractState, tx: EthereumTransaction
-        ) -> (bool, Span<u8>) {
+        ) -> (Span<u8>, bool) {
             let starknet_caller_address = get_caller_address();
             let account = IExternallyOwnedAccountDispatcher {
                 contract_address: starknet_caller_address
@@ -276,7 +276,7 @@ mod KakarotCore {
             let TransactionResult{success, return_data, gas_used: _, mut state } = self
                 .process_transaction(origin, tx);
             state.commit_state().expect('Committing state failed');
-            (success, return_data)
+            (return_data, success)
         }
 
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
@@ -375,9 +375,7 @@ mod KakarotCore {
             let gas_fee = gas_limit * gas_price;
             let mut sender_account = env.state.get_account(origin.evm);
             let sender_balance = sender_account.balance();
-            match ensure(
-                sender_balance >= gas_fee.into() + tx.value(), EVMError::InsufficientBalance
-            ) {
+            match ensure(sender_balance >= gas_fee.into() + tx.value(), EVMError::ValidateError) {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
                     return TransactionResultTrait::exceptional_failure(
@@ -390,7 +388,7 @@ mod KakarotCore {
                 Option::Some(gas_left) => gas_left,
                 Option::None => {
                     return TransactionResultTrait::exceptional_failure(
-                        EVMError::OutOfGas.to_bytes(), tx.gas_limit()
+                        EVMError::ValidateError.to_bytes(), tx.gas_limit()
                     );
                 }
             };
