@@ -36,7 +36,7 @@ trait IHelpers<T> {
 }
 
 #[starknet::contract]
-mod Precompiles {
+mod Cairo1Helpers {
     use core::traits::Into;
     use core::{starknet, starknet::SyscallResultTrait};
     use evm::errors::EVMError;
