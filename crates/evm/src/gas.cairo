@@ -1,12 +1,10 @@
-use core::array::SpanTrait;
-use core::traits::TryInto;
-
 use starknet::EthAddress;
 use utils::eth_transaction::{AccessListItem, EthereumTransaction, EthereumTransactionTrait};
+use utils::helpers;
+
 //! Gas costs for EVM operations
 //! Code is based on alloy project
 //! Source: <https://github.com/bluealloy/revm/blob/main/crates/interpreter/src/gas/constants.rs>
-use utils::helpers;
 
 const ZERO: u128 = 0;
 const BASE: u128 = 2;
@@ -63,6 +61,18 @@ const CALL_STIPEND: u128 = 2300;
 struct MessageCallGas {
     cost: u128,
     stipend: u128,
+}
+
+/// Defines the new size and the expansion cost after memory expansion.
+///
+/// # Struct fields
+///
+/// * `new_size`: The new size of the memory after extension.
+/// * `expansion_cost`: The cost of the memory extension.
+#[derive(Drop)]
+struct MemoryExpansion {
+    new_size: u32,
+    expansion_cost: u128,
 }
 
 /// Calculates the maximum gas that is allowed for making a message call.
@@ -139,14 +149,19 @@ fn calculate_memory_gas_cost(size_in_bytes: usize) -> u128 {
 }
 
 
-fn memory_expansion_cost(memory_size: usize, max_offset: usize) -> u128 {
+fn memory_expansion(memory_size: usize, max_offset: usize) -> MemoryExpansion {
     let new_size = helpers::ceil32(memory_size + max_offset);
-    if new_size <= memory_size {
-        return 0;
-    }
+
     let prev_cost = calculate_memory_gas_cost(memory_size);
     let new_cost = calculate_memory_gas_cost(new_size);
-    new_cost - prev_cost
+
+    if new_size <= memory_size {
+        return MemoryExpansion { new_size: memory_size, expansion_cost: 0 };
+    }
+
+    let expansion_cost = new_cost - prev_cost;
+
+    MemoryExpansion { new_size, expansion_cost }
 }
 
 

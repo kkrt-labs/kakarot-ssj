@@ -31,8 +31,8 @@ impl MemoryOperation of MemoryOperationTrait {
     fn exec_mload(ref self: VM) -> Result<(), EVMError> {
         let offset: usize = self.stack.pop_usize()?;
 
-        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + 32);
-        self.charge_gas(gas::VERYLOW + expand_memory_cost)?;
+        let memory_expansion = gas::memory_expansion(self.memory.size(), offset + 32);
+        self.charge_gas(gas::VERYLOW + memory_expansion.expansion_cost)?;
 
         let result = self.memory.load(offset);
         self.stack.push(result)
@@ -44,8 +44,8 @@ impl MemoryOperation of MemoryOperationTrait {
     fn exec_mstore(ref self: VM) -> Result<(), EVMError> {
         let offset: usize = self.stack.pop_usize()?;
         let value: u256 = self.stack.pop()?;
-        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + 32);
-        self.charge_gas(gas::VERYLOW + expand_memory_cost)?;
+        let memory_expansion = gas::memory_expansion(self.memory.size(), offset + 32);
+        self.charge_gas(gas::VERYLOW + memory_expansion.expansion_cost)?;
 
         self.memory.store(value, offset);
         Result::Ok(())
@@ -59,8 +59,8 @@ impl MemoryOperation of MemoryOperationTrait {
         let value = self.stack.pop()?;
         let value: u8 = (value.low & 0xFF).try_into().unwrap();
 
-        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + 1);
-        self.charge_gas(gas::VERYLOW + expand_memory_cost)?;
+        let memory_expansion = gas::memory_expansion(self.memory.size(), offset + 1);
+        self.charge_gas(gas::VERYLOW + memory_expansion.expansion_cost)?;
 
         self.memory.store_byte(value, offset);
 
