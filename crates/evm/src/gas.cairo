@@ -150,7 +150,9 @@ fn calculate_memory_gas_cost(size_in_bytes: usize) -> u128 {
 
 
 fn memory_expansion(memory_size: usize, max_offset: usize) -> MemoryExpansion {
-    let new_size = helpers::ceil32(memory_size + max_offset);
+    let new_size = helpers::ceil32(
+        max_offset
+    );
 
     let prev_cost = calculate_memory_gas_cost(memory_size);
     let new_cost = calculate_memory_gas_cost(new_size);
