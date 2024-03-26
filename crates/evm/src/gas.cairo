@@ -154,13 +154,12 @@ fn memory_expansion(memory_size: usize, max_offset: usize) -> MemoryExpansion {
         max_offset
     );
 
-    let prev_cost = calculate_memory_gas_cost(memory_size);
-    let new_cost = calculate_memory_gas_cost(new_size);
-
     if new_size <= memory_size {
         return MemoryExpansion { new_size: memory_size, expansion_cost: 0 };
     }
 
+    let prev_cost = calculate_memory_gas_cost(memory_size);
+    let new_cost = calculate_memory_gas_cost(new_size);
     let expansion_cost = new_cost - prev_cost;
 
     MemoryExpansion { new_size, expansion_cost }
