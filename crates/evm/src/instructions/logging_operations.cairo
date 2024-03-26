@@ -69,13 +69,13 @@ mod internal {
         let size = self.stack.pop_usize()?;
         let topics: Array<u256> = self.stack.pop_n(topics_len.into())?;
 
-        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + size);
+        let memory_expansion = gas::memory_expansion(self.memory.size(), offset + size);
         self
             .charge_gas(
                 gas::LOG
                     + topics_len.into() * gas::LOGTOPIC
                     + size.into() * gas::LOGDATA
-                    + expand_memory_cost
+                    + memory_expansion.expansion_cost
             )?;
 
         let mut data: Array<u8> = Default::default();

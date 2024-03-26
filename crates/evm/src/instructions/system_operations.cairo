@@ -50,7 +50,7 @@ impl SystemOperations of SystemOperationsTrait {
         // GAS
         //TODO(optimization): if we know how much the memory is going to be expanded,
         // we can return the new size and save a computation later.
-        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), max_memory_size);
+        let memory_expansion = gas::memory_expansion(self.memory.size(), max_memory_size);
 
         let access_gas_cost = if self.accessed_addresses.contains(to) {
             gas::WARM_ACCESS_COST
@@ -75,10 +75,10 @@ impl SystemOperations of SystemOperationsTrait {
             value,
             gas,
             self.gas_left(),
-            expand_memory_cost,
+            memory_expansion.expansion_cost,
             access_gas_cost + transfer_gas_cost + create_gas_cost
         );
-        self.charge_gas(message_call_gas.cost + expand_memory_cost)?;
+        self.charge_gas(message_call_gas.cost + memory_expansion.expansion_cost)?;
         // Only the transfer gas is left to charge.
 
         let read_only = self.message().read_only;
@@ -139,7 +139,7 @@ impl SystemOperations of SystemOperationsTrait {
         // GAS
         //TODO(optimization): if we know how much the memory is going to be expanded,
         // we can return the new size and save a computation later.
-        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), max_memory_size);
+        let memory_expansion = gas::memory_expansion(self.memory.size(), max_memory_size);
 
         let access_gas_cost = if self.accessed_addresses.contains(code_address) {
             gas::WARM_ACCESS_COST
@@ -155,9 +155,13 @@ impl SystemOperations of SystemOperationsTrait {
         };
 
         let message_call_gas = gas::calculate_message_call_gas(
-            value, gas, self.gas_left(), expand_memory_cost, access_gas_cost + transfer_gas_cost
+            value,
+            gas,
+            self.gas_left(),
+            memory_expansion.expansion_cost,
+            access_gas_cost + transfer_gas_cost
         );
-        self.charge_gas(message_call_gas.cost + expand_memory_cost)?;
+        self.charge_gas(message_call_gas.cost + memory_expansion.expansion_cost)?;
 
         // If sender_balance < value, return early, pushing
         // 0 on the stack to indicate call failure.
@@ -189,8 +193,8 @@ impl SystemOperations of SystemOperationsTrait {
     fn exec_return(ref self: VM) -> Result<(), EVMError> {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
-        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + size);
-        self.charge_gas(gas::ZERO + expand_memory_cost)?;
+        let memory_expansion = gas::memory_expansion(self.memory.size(), offset + size);
+        self.charge_gas(gas::ZERO + memory_expansion.expansion_cost)?;
 
         let mut return_data = Default::default();
         self.memory.load_n(size, ref return_data, offset);
@@ -224,7 +228,7 @@ impl SystemOperations of SystemOperationsTrait {
         // GAS
         //TODO(optimization): if we know how much the memory is going to be expanded,
         // we can return the new size and save a computation later.
-        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), max_memory_size);
+        let memory_expansion = gas::memory_expansion(self.memory.size(), max_memory_size);
 
         let access_gas_cost = if self.accessed_addresses.contains(code_address) {
             gas::WARM_ACCESS_COST
@@ -234,9 +238,9 @@ impl SystemOperations of SystemOperationsTrait {
         };
 
         let message_call_gas = gas::calculate_message_call_gas(
-            0, gas, self.gas_left(), expand_memory_cost, access_gas_cost
+            0, gas, self.gas_left(), memory_expansion.expansion_cost, access_gas_cost
         );
-        self.charge_gas(message_call_gas.cost + expand_memory_cost)?;
+        self.charge_gas(message_call_gas.cost + memory_expansion.expansion_cost)?;
 
         self
             .generic_call(
@@ -288,7 +292,7 @@ impl SystemOperations of SystemOperationsTrait {
         // GAS
         //TODO(optimization): if we know how much the memory is going to be expanded,
         // we can return the new size and save a computation later.
-        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), max_memory_size);
+        let memory_expansion = gas::memory_expansion(self.memory.size(), max_memory_size);
 
         let access_gas_cost = if self.accessed_addresses.contains(to) {
             gas::WARM_ACCESS_COST
@@ -298,9 +302,9 @@ impl SystemOperations of SystemOperationsTrait {
         };
 
         let message_call_gas = gas::calculate_message_call_gas(
-            0, gas, self.gas_left(), expand_memory_cost, access_gas_cost
+            0, gas, self.gas_left(), memory_expansion.expansion_cost, access_gas_cost
         );
-        self.charge_gas(message_call_gas.cost + expand_memory_cost)?;
+        self.charge_gas(message_call_gas.cost + memory_expansion.expansion_cost)?;
 
         self
             .generic_call(
@@ -325,8 +329,8 @@ impl SystemOperations of SystemOperationsTrait {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
-        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + size);
-        self.charge_gas(expand_memory_cost)?;
+        let memory_expansion = gas::memory_expansion(self.memory.size(), offset + size);
+        self.charge_gas(memory_expansion.expansion_cost)?;
 
         let mut return_data = Default::default();
         self.memory.load_n(size, ref return_data, offset);
