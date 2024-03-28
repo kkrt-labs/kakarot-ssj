@@ -1,3 +1,4 @@
+mod test_cairo1_helpers;
 mod test_contract_account;
 
 mod test_data;
