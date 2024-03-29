@@ -33,10 +33,27 @@ trait IHelpers<T> {
     /// `Block number out of range` - If the block number is greater than `current_block - 10`.
     /// `0`: The block number is inferior to `first_v0_12_0_block`.
     fn get_block_hash(self: @T, block_number: u64) -> felt252;
+
+    /// Computes the keccak hash of the provided data.
+    ///
+    /// The data is expected to be an array of full 64-bit words.
+    /// The last u64-word to hash may be incomplete and is provided separately.
+    /// # Arguments
+    ///
+    /// * `words` - The full 64-bit words to hash.
+    /// * `last_input_word` - The last word to hash.
+    /// * `last_input_num_bytes` - The number of bytes in the last word.
+    ///
+    /// # Returns
+    /// The EVM-compatible keccak hash of the provided data.
+    fn keccak(
+        self: @T, words: Array<u64>, last_input_word: u64, last_input_num_bytes: usize
+    ) -> u256;
 }
 
 #[starknet::contract]
 mod Cairo1Helpers {
+    use core::keccak::cairo_keccak;
     use core::traits::Into;
     use core::{starknet, starknet::SyscallResultTrait};
     use evm::errors::EVMError;
@@ -47,6 +64,7 @@ mod Cairo1Helpers {
     use evm::precompiles::sha256::Sha256;
 
     use super::{IPrecompiles, IHelpers};
+    use utils::helpers::U256Trait;
 
     #[storage]
     struct Storage {}
@@ -75,6 +93,15 @@ mod Cairo1Helpers {
     impl Helpers of IHelpers<ContractState> {
         fn get_block_hash(self: @ContractState, block_number: u64) -> felt252 {
             starknet::get_block_hash_syscall(block_number).unwrap_syscall()
+        }
+
+        fn keccak(
+            self: @ContractState,
+            mut words: Array<u64>,
+            last_input_word: u64,
+            last_input_num_bytes: usize
+        ) -> u256 {
+            cairo_keccak(ref words, last_input_word, last_input_num_bytes).reverse_endianness()
         }
     }
 }
