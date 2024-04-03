@@ -17,6 +17,16 @@ name = "alexandria_storage"
 version = "0.1.0"
 
 [[package]]
+name = "cairo_zero_contracts"
+version = "0.1.0"
+dependencies = [
+ "alexandria_storage",
+ "evm",
+ "openzeppelin",
+ "utils",
+]
+
+[[package]]
 name = "contracts"
 version = "0.1.0"
 dependencies = [

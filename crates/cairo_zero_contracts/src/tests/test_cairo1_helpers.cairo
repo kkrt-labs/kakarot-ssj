@@ -1,4 +1,4 @@
-use contracts::cairo1_helpers::Cairo1Helpers;
+use cairo_zero_contracts::cairo1_helpers::Cairo1Helpers;
 use utils::helpers::BytesUsedTrait;
 
 #[test]
