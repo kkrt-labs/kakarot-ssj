@@ -52,10 +52,11 @@ trait IHelpers<T> {
 }
 
 #[starknet::contract]
-mod Cairo1Helpers {
+pub mod Cairo1Helpers {
     use core::keccak::cairo_keccak;
     use core::traits::Into;
     use core::{starknet, starknet::SyscallResultTrait};
+    use core::starknet::syscalls::{get_block_hash_syscall};
     use evm::errors::EVMError;
     use evm::precompiles::blake2f::Blake2f;
     use evm::precompiles::ec_recover::EcRecover;
@@ -90,9 +91,9 @@ mod Cairo1Helpers {
     }
 
     #[abi(embed_v0)]
-    impl Helpers of IHelpers<ContractState> {
+    pub impl Helpers of IHelpers<ContractState> {
         fn get_block_hash(self: @ContractState, block_number: u64) -> felt252 {
-            starknet::get_block_hash_syscall(block_number).unwrap_syscall()
+            get_block_hash_syscall(block_number).unwrap_syscall()
         }
 
         fn keccak(

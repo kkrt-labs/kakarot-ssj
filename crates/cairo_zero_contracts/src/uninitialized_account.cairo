@@ -1,21 +1,30 @@
 //! The generic account that is deployed by Kakarot Core before being "specialized" into a Contract Account.
 //! This aims at having only one class hash for all the contracts deployed by Kakarot, thus enforcing a unique and consistent address mapping Eth Address <=> Starknet Address
+use starknet::{ContractAddress, EthAddress, ClassHash};
 
 #[starknet::interface]
 trait IKakarotCore<TContractState> {
-    fn get_account_contract_class_hash(self: @TContractState) -> starknet::ClassHash;
+    fn get_account_contract_class_hash(self: @TContractState) -> ClassHash;
 }
 
-const INITIALIZE_SELECTOR: felt252 =
-    0x79dc0da7c54b95f10aa182ad0a46400db63156920adb65eca2654c0945a463; // sn_keccak('initialize')
+#[starknet::interface]
+pub trait IAccount<TContractState> {
+    fn initialize(
+        self: @TContractState,
+        kakarot_address: ContractAddress,
+        evm_address: EthAddress,
+        implementation_class: ClassHash
+    );
+}
 
 #[starknet::contract]
 mod UninitializedAccount {
-    use core::starknet::SyscallResultTrait;
-    use starknet::{
-        ContractAddress, EthAddress, replace_class_syscall, library_call_syscall
+    use starknet::{ContractAddress, EthAddress, SyscallResultTrait};
+    use starknet::syscalls::{replace_class_syscall, library_call_syscall};
+    use super::{
+        IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait, IAccountDispatcher,
+        IAccountDispatcherTrait, IAccountLibraryDispatcher, IAccountLibraryDispatcherImpl
     };
-    use super::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait, INITIALIZE_SELECTOR};
 
     #[storage]
     struct Storage {}
@@ -27,12 +36,8 @@ mod UninitializedAccount {
         let implementation_class = IKakarotCoreDispatcher { contract_address: kakarot_address }
             .get_account_contract_class_hash();
 
-        let calldata = array![
-            kakarot_address.into(), evm_address.into(), implementation_class.into()
-        ];
-        library_call_syscall(implementation_class, INITIALIZE_SELECTOR, calldata.span())
-            .unwrap_syscall();
-
+        IAccountLibraryDispatcher { class_hash: implementation_class }
+            .initialize(kakarot_address, evm_address, implementation_class);
         replace_class_syscall(implementation_class).unwrap_syscall();
     }
 }
