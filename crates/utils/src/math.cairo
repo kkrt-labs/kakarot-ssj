@@ -6,7 +6,6 @@ use integer::{
     u128_overflowing_mul, u64_wide_mul, u64_to_felt252, u32_wide_mul, u32_to_felt252, u8_wide_mul,
     u16_to_felt252
 };
-use utils::num::{SizeOf};
 
 // === Exponentiation ===
 
@@ -226,12 +225,13 @@ impl BitshiftImpl<
     +Copy<T>,
     +Drop<T>,
     +PartialOrd<T>,
-    +SizeOf<T>
+    +BitSize<T>,
+    +TryInto<usize, T>,
 > of Bitshift<T> {
     fn shl(self: T, shift: T) -> T {
         // if we shift by more than nb_bits of T, the result is 0
         // we early return to save gas and prevent unexpected behavior
-        if shift > shift.size_of() - One::one() {
+        if shift > BitSize::<T>::bits().try_into().unwrap() - One::one() {
             panic_with_felt252('mul Overflow');
         }
         let two = One::one() + One::one();
@@ -240,7 +240,7 @@ impl BitshiftImpl<
 
     fn shr(self: T, shift: T) -> T {
         // early return to save gas if shift > nb_bits of T
-        if shift > shift.size_of() - One::one() {
+        if shift > BitSize::<T>::bits().try_into().unwrap() - One::one() {
             panic_with_felt252('mul Overflow');
         }
         let two = One::one() + One::one();
@@ -272,7 +272,8 @@ impl WrappingBitshiftImpl<
     +Copy<T>,
     +OverflowingMul<T>,
     +WrappingExponentiation<T>,
-    +SizeOf<T>
+    +BitSize<T>,
+    +TryInto<usize, T>,
 > of WrappingBitshift<T> {
     fn wrapping_shl(self: T, shift: T) -> T {
         let two = One::<T>::one() + One::<T>::one();
@@ -283,7 +284,7 @@ impl WrappingBitshiftImpl<
     fn wrapping_shr(self: T, shift: T) -> T {
         let two = One::<T>::one() + One::<T>::one();
 
-        if shift > shift.size_of() - One::one() {
+        if shift > BitSize::<T>::bits().try_into().unwrap() - One::one() {
             return Zero::zero();
         }
         self / two.pow(shift)
