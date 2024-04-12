@@ -1,6 +1,4 @@
-use contracts::contract_account::{
-    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount,
-};
+use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait, IAccount};
 use contracts::kakarot_core::kakarot::KakarotCore::KakarotCoreInternal;
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
@@ -60,10 +58,10 @@ impl AccountBuilderImpl of AccountBuilderTrait {
             self.account.account_type == AccountType::ContractAccount,
             "Cannot fetch nonce of an EOA"
         );
-        let contract_account = IContractAccountDispatcher {
+        let contract_account = IAccountDispatcher {
             contract_address: self.account.address.starknet
         };
-        self.account.nonce = contract_account.nonce();
+        self.account.nonce = contract_account.get_nonce();
         self
     }
 
@@ -79,7 +77,7 @@ impl AccountBuilderImpl of AccountBuilderTrait {
     /// # Returns
     /// * The bytecode of the Contract Account as a ByteArray
     fn fetch_bytecode(mut self: AccountBuilder) -> AccountBuilder {
-        let contract_account = IContractAccountDispatcher {
+        let contract_account = IAccountDispatcher {
             contract_address: self.account.address.starknet
         };
         let bytecode = contract_account.bytecode();

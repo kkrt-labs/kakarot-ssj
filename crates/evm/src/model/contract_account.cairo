@@ -3,16 +3,11 @@
 //! KakarotCore's storage.
 
 use alexandria_storage::list::{List, ListTrait};
-use contracts::contract_account::{
-    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount,
-};
+use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait,};
 use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     KakarotCore, IKakarotCore, KakarotCore::ContractStateEventEmitter,
     KakarotCore::ContractAccountDeployed, KakarotCore::KakarotCoreInternal
-};
-use contracts::uninitialized_account::{
-    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
 };
 use core::starknet::SyscallResultTrait;
 use evm::errors::{
@@ -64,21 +59,19 @@ impl ContractAccountImpl of ContractAccountTrait {
             let kakarot_address = get_contract_address();
             let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
             let (starknet_address, _) = deploy_syscall(
-                account_class_hash, evm_address.into(), calldata, false
+                account_class_hash, evm_address.into(), calldata, true
             )
                 .unwrap_syscall();
             // Initialize the account
-            IUninitializedAccountDispatcher { contract_address: starknet_address }
-                .initialize(kakarot_state.ca_class_hash());
             starknet_address
         } else {
             kakarot_state.compute_starknet_address(evm_address)
         };
 
         // Set code and nonce of the CA - no matter if we deployed a starknet contract or not.
-        let account = IContractAccountDispatcher { contract_address: starknet_address };
+        let account = IAccountDispatcher { contract_address: starknet_address };
         account.set_nonce(nonce);
-        account.set_bytecode(bytecode);
+        account.write_bytecode(bytecode);
 
         // Kakarot Core logic
         kakarot_state
@@ -91,10 +84,8 @@ impl ContractAccountImpl of ContractAccountTrait {
 
     #[inline(always)]
     fn selfdestruct(self: @Account) {
-        let contract_account = IContractAccountDispatcher {
-            contract_address: self.starknet_address()
-        };
-        contract_account.selfdestruct();
+        //TODO: remove selfdestruct to conform with Cancun
+        panic!("unimplemented")
     }
 
     /// Returns the addresses of a CA at the given `evm_address`.
@@ -120,10 +111,8 @@ impl ContractAccountImpl of ContractAccountTrait {
 
     /// Fetches the nonce of a contract account.
     fn fetch_nonce(self: @Account) -> u64 {
-        let contract_account = IContractAccountDispatcher {
-            contract_address: self.starknet_address()
-        };
-        contract_account.nonce()
+        let contract_account = IAccountDispatcher { contract_address: self.starknet_address() };
+        contract_account.get_nonce()
     }
 
 
@@ -134,9 +123,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `self` - The address of the Contract Account
     #[inline(always)]
     fn store_nonce(self: @Account, nonce: u64) {
-        let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.starknet_address()
-        };
+        let mut contract_account = IAccountDispatcher { contract_address: self.starknet_address() };
         contract_account.set_nonce(nonce);
     }
 
@@ -145,10 +132,8 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// The storage address used is h(sn_keccak("contract_account_storage_keys"), evm_address, key), where `h` is the poseidon hash function.
     #[inline(always)]
     fn fetch_storage(self: @Account, key: u256) -> u256 {
-        let contract_account = IContractAccountDispatcher {
-            contract_address: self.starknet_address()
-        };
-        contract_account.storage_at(key)
+        let contract_account = IAccountDispatcher { contract_address: self.starknet_address() };
+        contract_account.storage(key)
     }
 
     /// Sets the value stored at a `u256` key inside the Contract Account storage.
@@ -160,10 +145,8 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `value` - The value to set
     #[inline(always)]
     fn store_storage(self: @Account, key: u256, value: u256) {
-        let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.starknet_address()
-        };
-        contract_account.set_storage_at(key, value);
+        let mut contract_account = IAccountDispatcher { contract_address: self.starknet_address() };
+        contract_account.write_storage(key, value);
     }
 
     /// Stores the EVM bytecode of a contract account in Kakarot Core's contract storage.  The bytecode is first packed
@@ -172,38 +155,7 @@ impl ContractAccountImpl of ContractAccountTrait {
     /// * `evm_address` - The EVM address of the contract account
     /// * `bytecode` - The bytecode to store
     fn store_bytecode(self: @Account, bytecode: Span<u8>) {
-        let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.starknet_address()
-        };
-        contract_account.set_bytecode(bytecode);
-    }
-
-
-    /// Returns true if the given `offset` is a valid jump destination in the bytecode.
-    /// The valid jump destinations are stored in Kakarot Core's contract storage first.
-    /// # Arguments
-    /// * `offset` - The offset to check
-    /// # Returns
-    /// * `true` - If the offset is a valid jump destination
-    /// * `false` - Otherwise
-    #[inline(always)]
-    fn is_false_positive_jumpdest(self: @Account, offset: usize) -> bool {
-        let contract_account = IContractAccountDispatcher {
-            contract_address: self.starknet_address()
-        };
-        contract_account.is_false_positive_jumpdest(offset)
-    }
-
-    /// Sets the given `offset` as a valid jump destination in the bytecode.
-    /// The valid jump destinations are stored in Kakarot Core's contract storage.
-    /// # Arguments
-    /// * `self` - The address of the ContractAccount
-    /// * `offset` - The offset to set as a valid jump destination
-    #[inline(always)]
-    fn set_false_positive_jumpdest(self: @Account, offset: usize) {
-        let mut contract_account = IContractAccountDispatcher {
-            contract_address: self.starknet_address()
-        };
-        contract_account.set_false_positive_jumpdest(offset)
+        let mut contract_account = IAccountDispatcher { contract_address: self.starknet_address() };
+        contract_account.write_bytecode(bytecode);
     }
 }

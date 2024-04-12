@@ -1,22 +1,23 @@
-use starknet::{replace_class_syscall, ClassHash};
+use starknet::ClassHash;
 
 #[starknet::interface]
-trait IUpgradeable<TContractState> {
+pub trait IUpgradeable<TContractState> {
     fn upgrade_contract(ref self: TContractState, new_class_hash: ClassHash);
 }
 
 
 #[starknet::component]
-mod upgradeable_component {
-    use starknet::ClassHash;
-    use starknet::info::get_caller_address;
+pub mod upgradeable_component {
+    use starknet::syscalls::{replace_class_syscall};
+    use starknet::{get_caller_address, ClassHash};
+
 
     #[storage]
     struct Storage {}
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         ContractUpgraded: ContractUpgraded
     }
 
@@ -32,7 +33,7 @@ mod upgradeable_component {
         fn upgrade_contract(
             ref self: ComponentState<TContractState>, new_class_hash: starknet::ClassHash
         ) {
-            starknet::replace_class_syscall(new_class_hash).expect('replace class failed');
+            replace_class_syscall(new_class_hash).expect('replace class failed');
             self.emit(ContractUpgraded { new_class_hash: new_class_hash });
         }
     }

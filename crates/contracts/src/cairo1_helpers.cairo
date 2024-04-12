@@ -1,5 +1,7 @@
+use core::starknet::{EthAddress, secp256_trait::Signature};
+
 #[starknet::interface]
-trait IPrecompiles<T> {
+pub trait IPrecompiles<T> {
     /// Executes a precompiled contract at a given address with provided data.
     ///
     /// # Arguments
@@ -18,7 +20,7 @@ trait IPrecompiles<T> {
 }
 
 #[starknet::interface]
-trait IHelpers<T> {
+pub trait IHelpers<T> {
     /// Gets the hash of a specific StarkNet block within the range of
     /// [first_v0_12_0_block, current_block - 10].
     ///
@@ -49,10 +51,14 @@ trait IHelpers<T> {
     fn keccak(
         self: @T, words: Array<u64>, last_input_word: u64, last_input_num_bytes: usize
     ) -> u256;
+
+    fn verify_eth_signature(
+        self: @T, msg_hash: u256, signature: Signature, eth_address: EthAddress
+    );
 }
 
 #[starknet::contract]
-mod Cairo1Helpers {
+pub mod Cairo1Helpers {
     use core::keccak::cairo_keccak;
     use core::traits::Into;
     use core::{starknet, starknet::SyscallResultTrait};
@@ -62,6 +68,9 @@ mod Cairo1Helpers {
     use evm::precompiles::identity::Identity;
     use evm::precompiles::modexp::ModExp;
     use evm::precompiles::sha256::Sha256;
+    use starknet::EthAddress;
+    use starknet::eth_signature::{verify_eth_signature};
+    use starknet::secp256_trait::{Signature};
 
     use super::{IPrecompiles, IHelpers};
     use utils::helpers::U256Trait;
@@ -90,9 +99,9 @@ mod Cairo1Helpers {
     }
 
     #[abi(embed_v0)]
-    impl Helpers of IHelpers<ContractState> {
+    pub impl Helpers of IHelpers<ContractState> {
         fn get_block_hash(self: @ContractState, block_number: u64) -> felt252 {
-            starknet::get_block_hash_syscall(block_number).unwrap_syscall()
+            starknet::syscalls::get_block_hash_syscall(block_number).unwrap_syscall()
         }
 
         fn keccak(
@@ -102,6 +111,12 @@ mod Cairo1Helpers {
             last_input_num_bytes: usize
         ) -> u256 {
             cairo_keccak(ref words, last_input_word, last_input_num_bytes).reverse_endianness()
+        }
+
+        fn verify_eth_signature(
+            self: @ContractState, msg_hash: u256, signature: Signature, eth_address: EthAddress
+        ) {
+            verify_eth_signature(msg_hash, signature, eth_address);
         }
     }
 }

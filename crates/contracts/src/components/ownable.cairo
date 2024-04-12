@@ -2,33 +2,34 @@
 // OpenZeppelin Contracts for Cairo available here: https://github.com/OpenZeppelin/cairo-contracts
 
 use starknet::ContractAddress;
-mod Errors {
-    const NOT_OWNER: felt252 = 'Caller is not the owner';
-    const ZERO_ADDRESS_CALLER: felt252 = 'Caller is the zero address';
-    const ZERO_ADDRESS_OWNER: felt252 = 'New owner is the zero address';
+pub mod Errors {
+    pub const NOT_OWNER: felt252 = 'Caller is not the owner';
+    pub const ZERO_ADDRESS_CALLER: felt252 = 'Caller is the zero address';
+    pub const ZERO_ADDRESS_OWNER: felt252 = 'New owner is the zero address';
 }
 
 #[starknet::interface]
-trait IOwnable<TContractState> {
+pub trait IOwnable<TContractState> {
     fn owner(self: @TContractState) -> ContractAddress;
     fn transfer_ownership(ref self: TContractState, new_owner: ContractAddress);
     fn renounce_ownership(ref self: TContractState);
 }
 
 #[starknet::component]
-mod ownable_component {
+pub mod ownable_component {
+    use core::num::traits::Zero;
     use starknet::ContractAddress;
     use starknet::get_caller_address;
     use super::Errors;
 
     #[storage]
     struct Storage {
-        owner: ContractAddress
+        Ownable_owner: ContractAddress
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         OwnershipTransferred: OwnershipTransferred
     }
 
@@ -44,7 +45,7 @@ mod ownable_component {
         TContractState, +HasComponent<TContractState>
     > of super::IOwnable<ComponentState<TContractState>> {
         fn owner(self: @ComponentState<TContractState>) -> ContractAddress {
-            self.owner.read()
+            self.Ownable_owner.read()
         }
 
         fn transfer_ownership(
@@ -57,12 +58,12 @@ mod ownable_component {
 
         fn renounce_ownership(ref self: ComponentState<TContractState>) {
             self.assert_only_owner();
-            self._transfer_ownership(Zeroable::zero());
+            self._transfer_ownership(Zero::zero());
         }
     }
 
     #[generate_trait]
-    impl InternalImpl<
+    pub impl InternalImpl<
         TContractState, +HasComponent<TContractState>
     > of InternalTrait<TContractState> {
         fn initializer(ref self: ComponentState<TContractState>, owner: ContractAddress) {
@@ -70,7 +71,7 @@ mod ownable_component {
         }
 
         fn assert_only_owner(self: @ComponentState<TContractState>) {
-            let owner: ContractAddress = self.owner.read();
+            let owner: ContractAddress = self.Ownable_owner.read();
             let caller: ContractAddress = get_caller_address();
             assert(!caller.is_zero(), Errors::ZERO_ADDRESS_CALLER);
             assert(caller == owner, Errors::NOT_OWNER);
@@ -79,8 +80,8 @@ mod ownable_component {
         fn _transfer_ownership(
             ref self: ComponentState<TContractState>, new_owner: ContractAddress
         ) {
-            let previous_owner: ContractAddress = self.owner.read();
-            self.owner.write(new_owner);
+            let previous_owner: ContractAddress = self.Ownable_owner.read();
+            self.Ownable_owner.write(new_owner);
             self
                 .emit(
                     OwnershipTransferred { previous_owner: previous_owner, new_owner: new_owner }

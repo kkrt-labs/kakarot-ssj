@@ -137,7 +137,7 @@ fn native_token() -> ContractAddress {
 }
 
 fn chain_id() -> u128 {
-    'CHAIN_ID'.try_into().unwrap()
+    'KKRT'.try_into().unwrap()
 }
 
 fn kakarot_address() -> ContractAddress {

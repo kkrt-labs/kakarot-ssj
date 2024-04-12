@@ -1,10 +1,5 @@
-use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
 use contracts::kakarot_core::kakarot::KakarotCore::{ContractStateEventEmitter, EOADeployed};
-use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{IKakarotCore, KakarotCore, KakarotCore::KakarotCoreInternal};
-use contracts::uninitialized_account::{
-    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait
-};
 use core::starknet::SyscallResultTrait;
 
 use evm::errors::{EVMError, ensure, CONTRACT_SYSCALL_FAILED, EOA_EXISTS};
@@ -29,14 +24,10 @@ impl EOAImpl of EOATrait {
         let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
 
         let (starknet_address, _) = deploy_syscall(
-            account_class_hash, evm_address.into(), calldata, false
+            account_class_hash, evm_address.into(), calldata, true
         )
             .unwrap_syscall();
 
-        let account = IUninitializedAccountDispatcher { contract_address: starknet_address };
-        account.initialize(kakarot_state.eoa_class_hash());
-        kakarot_state.set_address_registry(evm_address, StoredAccountType::EOA(starknet_address));
-        kakarot_state.emit(EOADeployed { evm_address, starknet_address });
         Result::Ok(Address { evm: evm_address, starknet: starknet_address })
     }
 }

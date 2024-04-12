@@ -1,4 +1,4 @@
-mod interface;
+pub mod interface;
 mod kakarot;
 use interface::IKakarotCore;
 

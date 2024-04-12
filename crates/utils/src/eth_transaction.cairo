@@ -47,7 +47,7 @@ struct TransactionMetadata {
     signature: Signature,
 }
 
-#[derive(Drop, Copy, Clone, Serde)]
+#[derive(Drop, Copy, Clone, Serde, Debug)]
 struct LegacyTransaction {
     chain_id: u128,
     nonce: u128,
@@ -58,7 +58,7 @@ struct LegacyTransaction {
     calldata: Span<u8>
 }
 
-#[derive(Drop, Copy, Clone, Serde)]
+#[derive(Drop, Copy, Clone, Serde, Debug)]
 struct AccessListTransaction {
     chain_id: u128,
     nonce: u128,
@@ -70,7 +70,7 @@ struct AccessListTransaction {
     access_list: Span<AccessListItem>
 }
 
-#[derive(Drop, Copy, Clone, Serde)]
+#[derive(Drop, Copy, Clone, Serde, Debug)]
 struct FeeMarketTransaction {
     chain_id: u128,
     nonce: u128,
@@ -83,7 +83,7 @@ struct FeeMarketTransaction {
     access_list: Span<AccessListItem>
 }
 
-#[derive(Drop, Serde)]
+#[derive(Drop, Serde, Debug)]
 enum EthereumTransaction {
     LegacyTransaction: LegacyTransaction,
     AccessListTransaction: AccessListTransaction,
@@ -91,7 +91,7 @@ enum EthereumTransaction {
 }
 
 #[generate_trait]
-impl EthereumTransactionImpl of EthereumTransactionTrait {
+pub impl EthereumTransactionImpl of EthereumTransactionTrait {
     fn chain_id(self: @EthereumTransaction) -> u128 {
         match self {
             EthereumTransaction::LegacyTransaction(v) => { *v.chain_id },
@@ -190,22 +190,20 @@ enum EncodedTransaction {
     EIP2930: Span<u8>,
 }
 
-impl IntoEncodedTransaction of TryInto<Span<u8>, EncodedTransaction> {
-    fn try_into(self: Span<u8>) -> Option<EncodedTransaction> {
-        if self.is_empty() {
-            return Option::None;
-        }
-        if (EncodedTransactionTrait::is_legacy_tx(self)) {
-            Option::Some(EncodedTransaction::Legacy(self))
+fn deserialize_encoded_transaction(self: Span<u8>) -> Option<EncodedTransaction> {
+    if self.is_empty() {
+        return Option::None;
+    }
+    if (EncodedTransactionTrait::is_legacy_tx(self)) {
+        Option::Some(EncodedTransaction::Legacy(self))
+    } else {
+        let tx_type: u32 = (*self.at(0)).into();
+        if (tx_type == 1) {
+            Option::Some(EncodedTransaction::EIP2930(self))
+        } else if (tx_type == 2) {
+            Option::Some(EncodedTransaction::EIP1559(self))
         } else {
-            let tx_type: u32 = (*self.at(0)).into();
-            if (tx_type == 1) {
-                Option::Some(EncodedTransaction::EIP2930(self))
-            } else if (tx_type == 2) {
-                Option::Some(EncodedTransaction::EIP1559(self))
-            } else {
-                Option::None
-            }
+            Option::None
         }
     }
 }
@@ -443,8 +441,7 @@ impl EthTransactionImpl of EthTransactionTrait {
     /// * `encoded_tx_data` - The raw transaction rlp encoded data
     #[inline(always)]
     fn decode(encoded_tx_data: Span<u8>) -> Result<EthereumTransaction, EthTransactionError> {
-        let encoded_tx: EncodedTransaction = encoded_tx_data
-            .try_into()
+        let encoded_tx: EncodedTransaction = deserialize_encoded_transaction(encoded_tx_data)
             .ok_or(EthTransactionError::TransactionTypeError)?;
 
         encoded_tx.decode()

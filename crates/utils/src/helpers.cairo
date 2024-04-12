@@ -619,25 +619,6 @@ impl U8SpanExImpl of U8SpanExTrait {
         (u64_words, last_input_word, last_input_num_bytes)
     }
 
-    fn to_felt252_array(self: Span<u8>) -> Array<felt252> {
-        let mut array: Array<felt252> = Default::default();
-
-        let mut i = 0;
-
-        loop {
-            if (i == self.len()) {
-                break ();
-            }
-
-            let value: felt252 = (*self[i]).into();
-            array.append(value);
-
-            i += 1;
-        };
-
-        array
-    }
-
     /// Returns right padded slice of the span, starting from index offset
     /// If offset is greater than the span length, returns an empty span
     /// # Examples
@@ -1143,40 +1124,11 @@ impl ResultExImpl<T, E, +Drop<T>, +Drop<E>> of ResultExTrait<T, E> {
     }
 }
 
-#[generate_trait]
-impl Felt252SpanExImpl of Felt252SpanExTrait {
-    fn try_into_bytes(self: Span<felt252>) -> Option<Array<u8>> {
-        let mut i = 0;
-        let mut bytes: Array<u8> = Default::default();
-
-        loop {
-            if (i == self.len()) {
-                break ();
-            };
-
-            let v: Option<u8> = (*self[i]).try_into();
-
-            match v {
-                Option::Some(v) => { bytes.append(v); },
-                Option::None => { break (); }
-            }
-
-            i += 1;
-        };
-
-        // it means there was an error in the above loop
-        if (i != self.len()) {
-            Option::None
-        } else {
-            Option::Some(bytes)
-        }
-    }
-}
 
 fn compute_starknet_address(
-    deployer: ContractAddress, evm_address: EthAddress, class_hash: ClassHash
+    kakarot_address: ContractAddress, evm_address: EthAddress, class_hash: ClassHash
 ) -> ContractAddress {
-    // Deployer is always Kakarot Core
+    // Deployer is always 0
     // pedersen(a1, a2, a3) is defined as:
     // pedersen(pedersen(pedersen(a1, a2), a3), len([a1, a2, a3]))
     // https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/hash_state.py#L6
@@ -1185,14 +1137,14 @@ fn compute_starknet_address(
     // For an Account, the constructor calldata is:
     // [kakarot_address, evm_address]
     let constructor_calldata_hash = PedersenTrait::new(0)
-        .update_with(deployer)
+        .update_with(kakarot_address)
         .update_with(evm_address)
         .update(2)
         .finalize();
 
     let hash = PedersenTrait::new(0)
         .update_with(CONTRACT_ADDRESS_PREFIX)
-        .update_with(deployer)
+        .update_with(0)
         .update_with(evm_address)
         .update_with(class_hash)
         .update_with(constructor_calldata_hash)
@@ -1251,65 +1203,6 @@ impl EthAddressExImpl of EthAddressExTrait {
     }
 }
 
-fn compute_y_parity(v: u128, chain_id: u128) -> Option<bool> {
-    let y_parity = v - (chain_id * 2 + 35);
-    if (y_parity == 0 || y_parity == 1) {
-        return Option::Some(y_parity == 1);
-    }
-
-    return Option::None;
-}
-
-
-#[generate_trait]
-impl TryIntoEthSignatureImpl of TryIntoEthSignatureTrait {
-    // format: [r_low, r_high, s_low, s_high, v || yParity]
-    fn try_into_eth_signature(self: Span<felt252>, chain_id: u128) -> Option<EthSignature> {
-        if (self.len() != 5) {
-            return Option::None;
-        }
-
-        let r_low: u128 = (*self.at(0)).try_into()?;
-        let r_high: u128 = (*self.at(1)).try_into()?;
-
-        let s_low: u128 = (*self.at(2)).try_into()?;
-        let s_high: u128 = (*self.at(3)).try_into()?;
-
-        let y_parity = {
-            let value: u128 = (*self.at(4)).try_into()?;
-            if (value == 0 || value == 1) {
-                value == 1
-            } else {
-                compute_y_parity(value, chain_id)?
-            }
-        };
-
-        let r = u256 { low: r_low, high: r_high };
-        let s = u256 { low: s_low, high: s_high };
-
-        Option::Some(EthSignature { r, s, y_parity })
-    }
-}
-
-#[generate_trait]
-impl EthAddressSignatureTraitImpl of EthAddressSignatureTrait {
-    fn try_into_felt252_array(
-        self: EthSignature, tx_type: TransactionType, chain_id: u128
-    ) -> Option<Array<felt252>> {
-        let mut res: Array<felt252> = array![
-            self.r.low.into(), self.r.high.into(), self.s.low.into(), self.s.high.into()
-        ];
-
-        let value = match tx_type {
-            TransactionType::Legacy => { self.y_parity.into() + 2 * chain_id + 35 },
-            TransactionType::EIP2930 => { self.y_parity.into() },
-            TransactionType::EIP1559 => { self.y_parity.into() }
-        };
-
-        res.append(value.into());
-        Option::Some(res)
-    }
-}
 
 trait BytesUsedTrait<T> {
     /// Returns the number of bytes used to represent a `T` value.

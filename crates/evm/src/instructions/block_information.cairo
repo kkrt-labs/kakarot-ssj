@@ -1,4 +1,3 @@
-use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
 //! Block Information.
 
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
