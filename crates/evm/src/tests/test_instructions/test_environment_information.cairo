@@ -917,7 +917,7 @@ fn test_exec_extcodehash_precompile() {
 //     // The bytecode remains empty, and we expect the empty hash in return
 //     let mut ca_address = deploy_contract_account(evm_address, array![].span());
 //     let account = Account {
-//         account_type: AccountType::ContractAccount,
+//         
 //         address: ca_address,
 //         code: array![].span(),
 //         nonce: 1,
@@ -942,26 +942,21 @@ fn test_exec_extcodehash_precompile() {
 // }
 
 #[test]
-fn test_exec_extcodehash_eoa() {
+fn test_exec_extcodehash_eoa_empty_eoa() {
     // Given
     let evm_address = evm_address();
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let (_, kakarot_core) = setup_contracts_for_testing();
     kakarot_core.deploy_eoa(evm_address);
+
     vm.stack.push(evm_address.into()).expect('push failed');
 
     // When
     vm.exec_extcodehash().unwrap();
 
     // Then
-    assert(
-        vm
-            .stack
-            .peek()
-            .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
-        'expected empty hash'
-    );
+    assert_eq!(vm.stack.peek().unwrap(), 0);
 }
 
 

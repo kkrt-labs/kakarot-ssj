@@ -274,7 +274,7 @@ impl StateInternalImpl of StateInternalTrait {
             match account_keys.pop_front() {
                 Option::Some(evm_address) => {
                     let account = self.accounts.changes.get(*evm_address).deref();
-                    account.commit();
+                    account.commit(ref self);
                 },
                 Option::None => { break Result::Ok(()); }
             };

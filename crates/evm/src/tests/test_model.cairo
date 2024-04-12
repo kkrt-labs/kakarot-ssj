@@ -1,3 +1,4 @@
+use evm::model::contract_account::ContractAccountTrait;
 mod test_contract_account;
 mod test_eoa;
 mod test_vm;
@@ -7,10 +8,12 @@ use contracts::tests::test_utils::{
     setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
 };
 use evm::model::account::AccountTrait;
+use evm::state::{State, StateChangeLog, StateChangeLogTrait};
 use evm::model::{Address, Account, AccountType, eoa::{EOATrait}, AddressTrait};
 use evm::tests::test_utils::{evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::set_contract_address;
+use core::starknet::EthAddress;
 
 #[test]
 fn test_is_deployed_eoa_exists() {
@@ -90,7 +93,7 @@ fn test_address_balance_eoa() {
 
 
 #[test]
-fn test_account_has_code_or_nonce_eoa() {
+fn test_account_has_code_or_nonce_empty() {
     // Given
     setup_contracts_for_testing();
     let mut _eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy eoa',);
@@ -99,7 +102,7 @@ fn test_account_has_code_or_nonce_eoa() {
     let account = AccountTrait::fetch(evm_address()).unwrap();
 
     // Then
-    assert(account.has_code_or_nonce() == true, 'account shouldhave codeornonce');
+    assert_eq!(account.has_code_or_nonce(), false);
 }
 
 
@@ -137,7 +140,6 @@ fn test_account_has_code_or_nonce_account_to_deploy() {
     // When
     let mut account = AccountTrait::fetch_or_create(evm_address());
     // Mock account as an existing contract account in the cached state.
-    account.account_type = AccountType::ContractAccount;
     account.nonce = 1;
     account.code = array![0x1].span();
 
@@ -167,18 +169,20 @@ fn test_account_commit_already_deployed() {
     setup_contracts_for_testing();
     let mut ca_address = deploy_contract_account(evm_address(), array![].span());
 
+    let mut state: State = Default::default();
+
     // When
     let mut account = AccountTrait::fetch(evm_address()).unwrap();
     account.nonce = 420;
     account.code = array![0x1].span();
-    account.commit();
+    account.commit(ref state);
 
     // Then
     let account_dispatcher = IAccountDispatcher { contract_address: ca_address.starknet };
     let nonce = account_dispatcher.get_nonce();
     let code = account_dispatcher.bytecode();
     assert(nonce == 420, 'wrong nonce');
-    assert(code == array![].span(), 'notdeploying =  unmodified code');
+    assert(code == array![0x1].span(), 'notdeploying =  unmodified code');
 }
 
 //TODO unskip after selfdestruct rework
@@ -210,9 +214,9 @@ fn test_account_commit_undeployed() {
 
     let evm = evm_address();
     let starknet = kakarot_core.compute_starknet_address(evm);
+    let mut state: State = Default::default();
     // When
     let mut account = Account {
-        account_type: AccountType::ContractAccount,
         address: Address { evm, starknet },
         nonce: 420,
         code: array![0x69].span(),
@@ -221,7 +225,7 @@ fn test_account_commit_undeployed() {
     };
     account.nonce = 420;
     account.code = array![0x1].span();
-    account.commit();
+    account.commit(ref state);
 
     // Then
     let account_dispatcher = IAccountDispatcher { contract_address: starknet };

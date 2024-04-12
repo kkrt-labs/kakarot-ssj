@@ -615,7 +615,6 @@ fn test_selfdestruct_undeployed_ca() {
     // to mock a cached CA that has not been committed yet.
     let mut ca_account = vm.env.state.get_account(ca_address.evm);
     ca_account.set_code(array![0x1, 0x2, 0x3].span());
-    ca_account.set_type(AccountType::ContractAccount);
     ca_account.set_nonce(1);
     vm.env.state.set_account(ca_account);
     // - call selfdestruct and commit the state

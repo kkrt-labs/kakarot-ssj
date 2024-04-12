@@ -246,7 +246,6 @@ fn initialize_contract_account(
     let mut ca_address = deploy_contract_account(eth_address, bytecode);
     // Set the storage of the contract account
     let account = Account {
-        account_type: AccountType::ContractAccount,
         address: ca_address,
         code: array![0xab, 0xcd, 0xef].span(),
         nonce: 1,

@@ -131,7 +131,7 @@ fn deploy_eoa(eoa_address: EthAddress) -> IAccountDispatcher {
         UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(),
         eoa_address.into(),
         calldata,
-        false
+        true
     )
         .expect('failed to deploy EOA');
 
