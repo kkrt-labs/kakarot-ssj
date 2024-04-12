@@ -25,8 +25,8 @@ impl Sha3Impl of Sha3Trait {
 
         let words_size: u128 = (ceil32(size) / 32).into();
         let word_gas_cost = gas::KECCAK256WORD * words_size;
-        let expand_memory_cost = gas::memory_expansion_cost(self.memory.size(), offset + size);
-        self.charge_gas(gas::KECCAK256 + word_gas_cost + expand_memory_cost)?;
+        let memory_expansion = gas::memory_expansion(self.memory.size(), offset + size);
+        self.charge_gas(gas::KECCAK256 + word_gas_cost + memory_expansion.expansion_cost)?;
 
         let mut to_hash: Array<u64> = Default::default();
 
