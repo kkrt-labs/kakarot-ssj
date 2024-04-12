@@ -12,6 +12,7 @@ mod i256;
 mod math;
 mod num;
 mod rlp;
+mod serialization;
 mod set;
 mod storage;
 

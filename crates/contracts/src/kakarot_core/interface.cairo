@@ -4,7 +4,7 @@ use starknet::{ContractAddress, EthAddress, ClassHash};
 use utils::eth_transaction::EthereumTransaction;
 
 #[starknet::interface]
-trait IKakarotCore<TContractState> {
+pub trait IKakarotCore<TContractState> {
     /// Sets the native token, this token will be considered the native coin in the Ethereum sense
     fn set_native_token(ref self: TContractState, native_token: ContractAddress);
 
@@ -34,18 +34,10 @@ trait IKakarotCore<TContractState> {
     fn account_balance(self: @TContractState, evm_address: EthAddress) -> u256;
 
     /// Gets the value associated to a key in the contract account storage
-    fn contract_account_storage_at(
-        self: @TContractState, evm_address: EthAddress, key: u256
-    ) -> u256;
+    fn contract_account_storage(self: @TContractState, evm_address: EthAddress, key: u256) -> u256;
 
     /// Gets the bytecode associated to a contract account
     fn contract_account_bytecode(self: @TContractState, evm_address: EthAddress) -> Span<u8>;
-
-    /// Checks if for a specific offset, i.e. if  bytecode at index `offset`, bytecode[offset] == 0x5B && is part of a PUSH opcode input.
-    /// Prevents false positive checks in JUMP opcode of the type: jump destination opcode == JUMPDEST in appearance, but is a PUSH opcode bytecode slice.
-    fn contract_account_false_positive_jumpdest(
-        self: @TContractState, evm_address: EthAddress, offset: usize
-    ) -> bool;
 
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
@@ -59,30 +51,28 @@ trait IKakarotCore<TContractState> {
 
     /// Transaction entrypoint into the EVM
     /// Executes an EVM transaction and possibly modifies the state
-    fn eth_send_transaction(ref self: TContractState, tx: EthereumTransaction) -> (bool, Span<u8>);
+    fn eth_send_transaction(
+        ref self: TContractState, tx: EthereumTransaction
+    ) -> (bool, Span<u8>, u128);
 
     /// Upgrade the KakarotCore smart contract
     /// Using replace_class_syscall
     fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
 
-    // Getter for the EOA Class Hash
-    fn eoa_class_hash(self: @TContractState) -> ClassHash;
-    // Setter for the EOA Class Hash
-    fn set_eoa_class_hash(ref self: TContractState, new_class_hash: ClassHash);
-
-    // Getter for the Contract Account Class
-    fn ca_class_hash(self: @TContractState) -> ClassHash;
-    // Setter for the Contract Account Class
-    fn set_ca_class_hash(ref self: TContractState, new_class_hash: ClassHash);
+    // Setter for the Account Class Hash
+    fn set_account_contract_class_hash(ref self: TContractState, new_class_hash: ClassHash);
+    fn get_account_contract_class_hash(self: @TContractState) -> ClassHash;
 
     // Getter for the Generic Account Class
     fn account_class_hash(self: @TContractState) -> ClassHash;
     // Setter for the Generic Account Class
     fn set_account_class_hash(ref self: TContractState, new_class_hash: ClassHash);
+
+    fn register_account(ref self: TContractState, evm_address: EthAddress);
 }
 
 #[starknet::interface]
-trait IExtendedKakarotCore<TContractState> {
+pub trait IExtendedKakarotCore<TContractState> {
     /// Sets the native token, this token will be considered the native coin in the Ethereum sense
     fn set_native_token(ref self: TContractState, native_token: ContractAddress);
 
@@ -111,19 +101,10 @@ trait IExtendedKakarotCore<TContractState> {
     fn account_balance(self: @TContractState, evm_address: EthAddress) -> u256;
 
     /// Gets the value associated to a key in the contract account storage
-    fn contract_account_storage_at(
-        self: @TContractState, evm_address: EthAddress, key: u256
-    ) -> u256;
+    fn contract_account_storage(self: @TContractState, evm_address: EthAddress, key: u256) -> u256;
 
     /// Gets the bytecode associated to a contract account
     fn contract_account_bytecode(self: @TContractState, evm_address: EthAddress) -> Span<u8>;
-
-    /// Checks if for a specific offset, i.e. if  bytecode at index `offset`, bytecode[offset] == 0x5B && is part of a PUSH opcode input.
-    /// Prevents false positive checks in JUMP opcode of the type: jump destination opcode == JUMPDEST in appearance, but is a PUSH opcode bytecode slice.
-    fn contract_account_false_positive_jumpdest(
-        self: @TContractState, evm_address: EthAddress, offset: usize
-    ) -> bool;
-
 
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
@@ -143,15 +124,9 @@ trait IExtendedKakarotCore<TContractState> {
     /// Using replace_class_syscall
     fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
 
-    // Getter for the EOA Class Hash
-    fn eoa_class_hash(self: @TContractState) -> ClassHash;
-    // Setter for the EOA Class Hash
-    fn set_eoa_class_hash(ref self: TContractState, new_class_hash: ClassHash);
-
-    // Getter for the Contract Account Class
-    fn ca_class_hash(self: @TContractState) -> ClassHash;
-    // Setter for the Contract Account Class
-    fn set_ca_class_hash(ref self: TContractState, new_class_hash: ClassHash);
+    // Setter for the Account Class Hash
+    fn set_account_contract_class_hash(ref self: TContractState, new_class_hash: ClassHash);
+    fn get_account_contract_class_hash(self: @TContractState) -> ClassHash;
 
     // Getter for the Generic Account Class
     fn account_class_hash(self: @TContractState) -> ClassHash;

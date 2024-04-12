@@ -1,9 +1,5 @@
-use contracts::contract_account::ContractAccount::TEST_CLASS_HASH as ContractAccountTestClassHash;
-use contracts::contract_account::ContractAccount;
-use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
-use contracts::eoa::{
-    ExternallyOwnedAccount, IExternallyOwnedAccountDispatcher,
-    IExternallyOwnedAccountDispatcherTrait
+use contracts::account_contract::{
+    IAccountDispatcher, IAccountDispatcherTrait, AccountContract::TEST_CLASS_HASH
 };
 use contracts::kakarot_core::interface::IKakarotCore;
 use contracts::kakarot_core::interface::{
@@ -165,19 +161,19 @@ fn test_kakarot_contract_account_nonce() {
 }
 
 #[test]
-fn test_kakarot_contract_account_storage_at() {
+fn test_kakarot_contract_account_storage() {
     // Given
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let address = contract_utils::deploy_contract_account(
         test_utils::other_evm_address(), Default::default().span()
     );
-    let ca = IContractAccountDispatcher { contract_address: address.starknet };
+    let ca = IAccountDispatcher { contract_address: address.starknet };
     let expected_value = 420;
     let key = 69;
-    ca.set_storage_at(69, expected_value);
+    ca.write_storage(69, expected_value);
 
     // When
-    let value = kakarot_core.contract_account_storage_at(address.evm, key);
+    let value = kakarot_core.contract_account_storage(address.evm, key);
 
     // Then
     assert(value == expected_value, 'wrong storage value');
@@ -198,25 +194,6 @@ fn test_kakarot_contract_account_bytecode() {
     assert(bytecode == counter_evm_bytecode(), 'wrong bytecode');
 }
 
-#[test]
-#[should_panic(expected: ('unimplemented', 'ENTRYPOINT_FAILED'))]
-fn test_kakarot_contract_account_false_positive_jumpdest() {
-    // Given
-    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    let address = contract_utils::deploy_contract_account(
-        test_utils::other_evm_address(), Default::default().span()
-    );
-    let ca = IContractAccountDispatcher { contract_address: address.starknet };
-    let offset = 1337;
-    ca.set_false_positive_jumpdest(offset);
-
-    // When
-    let is_false_jumpdest = kakarot_core
-        .contract_account_false_positive_jumpdest(address.evm, offset);
-
-    // Then
-    assert(is_false_jumpdest, 'should be false jumpdest');
-}
 
 #[test]
 #[available_gas(2000000000000000000)]
@@ -298,8 +275,8 @@ fn test_eth_call() {
     let account = contract_utils::deploy_contract_account(
         test_utils::other_evm_address(), counter_evm_bytecode()
     );
-    let counter = IContractAccountDispatcher { contract_address: account.starknet };
-    counter.set_storage_at(0, 1);
+    let counter = IAccountDispatcher { contract_address: account.starknet };
+    counter.write_storage(0, 1);
 
     let to = Option::Some(test_utils::other_evm_address());
     // selector: function get()
@@ -394,10 +371,8 @@ fn test_eth_send_transaction_deploy_tx() {
 
     // Set back the contract address to Kakarot for the calculation of the deployed SN contract address, where we use a kakarot
     // internal functions and thus must "mock" its address.
-    testing::set_contract_address(kakarot_core.contract_address);
-    let kakarot_state = KakarotCore::unsafe_new_contract_state();
-    let computed_sn_addr = kakarot_state.compute_starknet_address(expected_address);
-    let CA = IContractAccountDispatcher { contract_address: computed_sn_addr };
+    let computed_sn_addr = kakarot_core.compute_starknet_address(expected_address);
+    let CA = IAccountDispatcher { contract_address: computed_sn_addr };
     let bytecode = CA.bytecode();
     assert(bytecode == counter_evm_bytecode(), 'wrong bytecode');
 
@@ -421,26 +396,6 @@ fn test_eth_send_transaction_deploy_tx() {
     assert(result == u256_to_bytes_array(0).span(), 'wrong result');
 }
 
-#[test]
-fn test_contract_account_class_hash() {
-    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
-
-    let class_hash = kakarot_core.ca_class_hash();
-
-    assert(class_hash == ContractAccountTestClassHash.try_into().unwrap(), 'wrong class hash');
-
-    let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
-    testing::set_contract_address(test_utils::other_starknet_address());
-    kakarot_core.set_ca_class_hash(new_class_hash);
-
-    assert(kakarot_core.ca_class_hash() == new_class_hash, 'wrong class hash');
-    let event = contract_utils::pop_log::<
-        KakarotCore::CAClassHashChange
-    >(kakarot_core.contract_address)
-        .unwrap();
-    assert(event.old_class_hash == class_hash, 'wrong old hash');
-    assert(event.new_class_hash == kakarot_core.ca_class_hash(), 'wrong new hash');
-}
 
 #[test]
 fn test_account_class_hash() {
@@ -466,25 +421,24 @@ fn test_account_class_hash() {
 }
 
 #[test]
-fn test_eoa_class_hash() {
+fn test_account_contract_class_hash() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
-    let class_hash = kakarot_core.eoa_class_hash();
+    let class_hash = kakarot_core.get_account_contract_class_hash();
 
-    assert(
-        class_hash == ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(),
-        'wrong class hash'
-    );
+    assert(class_hash == TEST_CLASS_HASH.try_into().unwrap(), 'wrong class hash');
 
     let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
     testing::set_contract_address(test_utils::other_starknet_address());
-    kakarot_core.set_eoa_class_hash(new_class_hash);
+    kakarot_core.set_account_contract_class_hash(new_class_hash);
 
-    assert(kakarot_core.eoa_class_hash() == new_class_hash, 'wrong class hash');
+    assert(kakarot_core.get_account_contract_class_hash() == new_class_hash, 'wrong class hash');
     let event = contract_utils::pop_log::<
         KakarotCore::EOAClassHashChange
     >(kakarot_core.contract_address)
         .unwrap();
     assert(event.old_class_hash == class_hash, 'wrong old hash');
-    assert(event.new_class_hash == kakarot_core.eoa_class_hash(), 'wrong new hash');
+    assert(
+        event.new_class_hash == kakarot_core.get_account_contract_class_hash(), 'wrong new hash'
+    );
 }

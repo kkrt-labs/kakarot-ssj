@@ -6,7 +6,7 @@ const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 // TODO: remove distinction between EOA and CA as EVM accounts
 // As soon as EOA::nonce can be handled at the application level
 #[derive(Drop, starknet::Store, Serde, PartialEq, Default)]
-enum StoredAccountType {
+pub enum StoredAccountType {
     #[default]
     UnexistingAccount,
     EOA: ContractAddress,
@@ -14,14 +14,15 @@ enum StoredAccountType {
 }
 
 #[starknet::contract]
-mod KakarotCore {
+pub mod KakarotCore {
+    use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
-    use contracts::contract_account::{IContractAccountDispatcher, IContractAccountDispatcherTrait};
-    use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
     use contracts::kakarot_core::interface::IKakarotCore;
     use core::array::SpanTrait;
+    use core::num::traits::zero::Zero;
     use core::starknet::SyscallResultTrait;
+    use core::starknet::event::EventEmitter;
 
     use evm::errors::{EVMError, ensure, EVMErrorTrait,};
     use evm::gas;
@@ -34,8 +35,9 @@ mod KakarotCore {
         ExecutionSummaryTrait, Address, AddressTrait
     };
     use evm::state::{State, StateTrait};
+    use starknet::syscalls::deploy_syscall;
     use starknet::{
-        EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address, deploy_syscall,
+        EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address,
         get_caller_address
     };
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
@@ -67,7 +69,7 @@ mod KakarotCore {
         /// - starknet_address: the deterministic starknet address (31 bytes) computed given an EVM address (20 bytes)
         address_registry: LegacyMap::<EthAddress, StoredAccountType>,
         account_class_hash: ClassHash,
-        eoa_class_hash: ClassHash,
+        account_contract_class_hash: ClassHash,
         ca_class_hash: ClassHash,
         // Utility storage
         native_token: ContractAddress,
@@ -133,16 +135,14 @@ mod KakarotCore {
         ref self: ContractState,
         native_token: ContractAddress,
         account_class_hash: ClassHash,
-        eoa_class_hash: ClassHash,
-        ca_class_hash: ClassHash,
+        account_contract_class_hash: ClassHash,
         owner: ContractAddress,
         chain_id: u128,
         mut eoas_to_deploy: Span<EthAddress>,
     ) {
         self.native_token.write(native_token);
         self.account_class_hash.write(account_class_hash);
-        self.eoa_class_hash.write(eoa_class_hash);
-        self.ca_class_hash.write(ca_class_hash);
+        self.account_contract_class_hash.write(account_contract_class_hash);
         self.ownable.initializer(owner);
         self.chain_id.write(chain_id);
 
@@ -172,9 +172,8 @@ mod KakarotCore {
         fn compute_starknet_address(
             self: @ContractState, evm_address: EthAddress
         ) -> ContractAddress {
-            // Deployer is always Kakarot Core
-            let deployer = get_contract_address();
-            compute_starknet_address(deployer, evm_address, self.account_class_hash.read())
+            let kakarot_address = get_contract_address();
+            compute_starknet_address(kakarot_address, evm_address, self.account_class_hash.read())
         }
 
         fn address_registry(
@@ -193,10 +192,8 @@ mod KakarotCore {
 
         fn contract_account_nonce(self: @ContractState, evm_address: EthAddress) -> u64 {
             let ca_address = ContractAccountTrait::at(evm_address).expect('Fetching CA failed');
-            let contract_account = IContractAccountDispatcher {
-                contract_address: ca_address.starknet
-            };
-            contract_account.nonce()
+            let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
+            contract_account.get_nonce()
         }
 
         fn account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
@@ -206,32 +203,18 @@ mod KakarotCore {
             address.fetch_balance()
         }
 
-        fn contract_account_storage_at(
+        fn contract_account_storage(
             self: @ContractState, evm_address: EthAddress, key: u256
         ) -> u256 {
             let ca_address = ContractAccountTrait::at(evm_address).expect('No CA found');
-            let contract_account = IContractAccountDispatcher {
-                contract_address: ca_address.starknet
-            };
-            contract_account.storage_at(key)
+            let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
+            contract_account.storage(key)
         }
 
         fn contract_account_bytecode(self: @ContractState, evm_address: EthAddress) -> Span<u8> {
             let ca_address = ContractAccountTrait::at(evm_address).expect('No CA found');
-            let contract_account = IContractAccountDispatcher {
-                contract_address: ca_address.starknet
-            };
+            let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
             contract_account.bytecode()
-        }
-
-        fn contract_account_false_positive_jumpdest(
-            self: @ContractState, evm_address: EthAddress, offset: usize
-        ) -> bool {
-            let ca_address = ContractAccountTrait::at(evm_address).expect('No CA found');
-            let contract_account = IContractAccountDispatcher {
-                contract_address: ca_address.starknet
-            };
-            contract_account.is_false_positive_jumpdest(offset)
         }
 
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
@@ -242,7 +225,7 @@ mod KakarotCore {
             self: @ContractState, origin: EthAddress, tx: EthereumTransaction
         ) -> (bool, Span<u8>, u128) {
             if !self.is_view() {
-                panic_with_felt252('fn must be called, not invoked');
+                core::panic_with_felt252('fn must be called, not invoked');
             };
 
             let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
@@ -255,12 +238,12 @@ mod KakarotCore {
 
         fn eth_send_transaction(
             ref self: ContractState, tx: EthereumTransaction
-        ) -> (bool, Span<u8>) {
+        ) -> (bool, Span<u8>, u128) {
             let starknet_caller_address = get_caller_address();
-            let account = IExternallyOwnedAccountDispatcher {
-                contract_address: starknet_caller_address
+            let account = IAccountDispatcher { contract_address: starknet_caller_address };
+            let origin = Address {
+                evm: account.get_evm_address(), starknet: starknet_caller_address
             };
-            let origin = Address { evm: account.evm_address(), starknet: starknet_caller_address };
 
             // Invariant:
             // We want to make sure the caller is part of the Kakarot address_registry
@@ -273,10 +256,10 @@ mod KakarotCore {
                 .expect('Fetching EOA failed');
             assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
 
-            let TransactionResult{success, return_data, gas_used: _, mut state } = self
+            let TransactionResult{success, return_data, gas_used, mut state } = self
                 .process_transaction(origin, tx);
             state.commit_state().expect('Committing state failed');
-            (success, return_data)
+            (success, return_data, gas_used)
         }
 
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
@@ -284,26 +267,15 @@ mod KakarotCore {
             self.upgradeable.upgrade_contract(new_class_hash);
         }
 
-        fn eoa_class_hash(self: @ContractState) -> ClassHash {
-            self.eoa_class_hash.read()
+        fn get_account_contract_class_hash(self: @ContractState) -> ClassHash {
+            self.account_contract_class_hash.read()
         }
 
-        fn set_eoa_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
+        fn set_account_contract_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
             self.ownable.assert_only_owner();
-            let old_class_hash = self.eoa_class_hash.read();
-            self.eoa_class_hash.write(new_class_hash);
+            let old_class_hash = self.account_contract_class_hash.read();
+            self.account_contract_class_hash.write(new_class_hash);
             self.emit(EOAClassHashChange { old_class_hash, new_class_hash });
-        }
-
-        fn ca_class_hash(self: @ContractState) -> ClassHash {
-            self.ca_class_hash.read()
-        }
-
-        fn set_ca_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
-            self.ownable.assert_only_owner();
-            let old_class_hash = self.ca_class_hash.read();
-            self.ca_class_hash.write(new_class_hash);
-            self.emit(CAClassHashChange { old_class_hash, new_class_hash });
         }
 
         fn account_class_hash(self: @ContractState) -> ClassHash {
@@ -315,6 +287,21 @@ mod KakarotCore {
             let old_class_hash = self.account_class_hash.read();
             self.account_class_hash.write(new_class_hash);
             self.emit(AccountClassHashChange { old_class_hash, new_class_hash });
+        }
+
+        fn register_account(ref self: ContractState, evm_address: EthAddress) {
+            let existing_address = self.address_registry.read(evm_address);
+            assert(
+                existing_address == StoredAccountType::UnexistingAccount, 'Account already exists'
+            );
+
+            let caller = get_caller_address();
+            let starknet_address = self.compute_starknet_address(evm_address);
+            //TODO: enable this assertion. Will require changing test runner to snfoundry
+            // assert!(starknet_address == caller, "Account must be registered by the caller");
+
+            self.address_registry.write(evm_address, StoredAccountType::EOA(starknet_address));
+            self.emit(EOADeployed { evm_address, starknet_address });
         }
     }
 
@@ -347,10 +334,8 @@ mod KakarotCore {
             let block_info = starknet::get_block_info().unbox();
             //TODO(optimization): the coinbase account is deployed from a specific `evm_address` which is specified upon deployment
             // and specific to the chain. Rather than reading from a contract, we could directly use this constant.
-            let coinbase = IExternallyOwnedAccountDispatcher {
-                contract_address: block_info.sequencer_address
-            }
-                .evm_address();
+            let coinbase = IAccountDispatcher { contract_address: block_info.sequencer_address }
+                .get_evm_address();
 
             let gas_price = tx.gas_price();
             let gas_limit = tx.gas_limit();
@@ -460,7 +445,7 @@ mod KakarotCore {
 
             // Gas refunds
             let gas_used = tx.gas_limit() - summary.gas_left;
-            let gas_refund = cmp::min(gas_used / 5, summary.gas_refund);
+            let gas_refund = core::cmp::min(gas_used / 5, summary.gas_refund);
 
             // Charging gas fees to the sender
             // At the end of the tx, the sender must have paid 

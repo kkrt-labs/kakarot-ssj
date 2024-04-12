@@ -2,7 +2,7 @@ use core::array::SpanTrait;
 use evm::errors::{EVMError, ensure, TYPE_CONVERSION_ERROR};
 use starknet::{
     StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
-    ContractAddress, Store, SyscallResult, eth_signature::Signature as EthSignature
+    ContractAddress, Store, SyscallResult, eth_signature::Signature
 };
 use utils::math::{Zero, One, Bitshift};
 

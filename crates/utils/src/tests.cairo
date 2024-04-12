@@ -7,5 +7,6 @@ mod test_math;
 mod test_modexp;
 mod test_num;
 mod test_rlp;
+mod test_serialization;
 mod test_set;
 mod test_traits;

@@ -3,8 +3,9 @@ use core::option::OptionTrait;
 use core::starknet::eth_signature::{EthAddress, Signature};
 
 use utils::eth_transaction::{
-    EthTransactionTrait, EncodedTransactionTrait, EncodedTransaction, TransactionMetadata,
-    EthTransactionError, EthereumTransaction, EthereumTransactionTrait, AccessListItem
+    deserialize_encoded_transaction, EthTransactionTrait, EncodedTransactionTrait,
+    EncodedTransaction, TransactionMetadata, EthTransactionError, EthereumTransaction,
+    EthereumTransactionTrait, AccessListItem
 };
 use utils::helpers::{U256Trait, ToBytes};
 use utils::rlp::{RLPTrait, RLPItem, RLPHelpersTrait};
@@ -21,7 +22,7 @@ fn test_decode_legacy_tx() {
     // chain id used: 0x434841494e5f4944
     let data = legacy_rlp_encoded_tx();
 
-    let encoded_tx: Option<EncodedTransaction> = data.try_into();
+    let encoded_tx: Option<EncodedTransaction> = deserialize_encoded_transaction(data);
     let encoded_tx = encoded_tx.unwrap();
     assert(encoded_tx == EncodedTransaction::Legacy(data), 'encoded_tx is not Legacy');
 
@@ -51,7 +52,7 @@ fn test_decode_legacy_deploy_tx() {
     // expected rlp decoding:  ["0x","0x0a","0x061a80","0x","0x0186a0","0x600160010a5060006000f3","0x4b4b5254","0x","0x"]
     let data = legacy_rlp_encoded_deploy_tx();
 
-    let encoded_tx: Option<EncodedTransaction> = data.try_into();
+    let encoded_tx: Option<EncodedTransaction> = deserialize_encoded_transaction(data);
     let encoded_tx = encoded_tx.unwrap();
     assert(encoded_tx == EncodedTransaction::Legacy(data), 'encoded_tx is not Legacy');
 
@@ -76,7 +77,7 @@ fn test_decode_eip_2930_tx() {
     // chain id used: 0x434841494e5f4944
     let data = eip_2930_encoded_tx();
 
-    let encoded_tx: Option<EncodedTransaction> = data.try_into();
+    let encoded_tx: Option<EncodedTransaction> = deserialize_encoded_transaction(data);
     let encoded_tx = encoded_tx.unwrap();
     assert(encoded_tx == EncodedTransaction::EIP2930(data), 'encoded_tx is not Eip2930');
 
@@ -119,7 +120,7 @@ fn test_decode_eip_1559_tx() {
     // chain id used: 0x434841494e5f4944
     let data = eip_1559_encoded_tx();
 
-    let encoded_tx: Option<EncodedTransaction> = data.try_into();
+    let encoded_tx: Option<EncodedTransaction> = deserialize_encoded_transaction(data);
     let encoded_tx = encoded_tx.unwrap();
     assert(encoded_tx == EncodedTransaction::EIP1559(data), 'encoded_tx is not EIP1559');
 

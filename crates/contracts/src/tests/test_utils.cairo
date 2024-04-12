@@ -1,16 +1,10 @@
-use contracts::contract_account::{
-    ContractAccount, IContractAccountDispatcher, IContractAccountDispatcherTrait
-};
-
-use contracts::eoa::{ExternallyOwnedAccount};
-use contracts::eoa::{IExternallyOwnedAccountDispatcher, IExternallyOwnedAccountDispatcherTrait};
+use contracts::account_contract::{AccountContract};
+use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcher, interface::IExtendedKakarotCoreDispatcherTrait,
     KakarotCore
 };
-use contracts::uninitialized_account::{
-    IUninitializedAccountDispatcher, IUninitializedAccountDispatcherTrait, UninitializedAccount
-};
+use contracts::uninitialized_account::{UninitializedAccount};
 use core::fmt::Debug;
 use evm::model::contract_account::ContractAccountTrait;
 use evm::model::{Address};
@@ -77,11 +71,11 @@ mod constants {
         contract_address_const::<0xe1145>()
     }
 
-    fn EVM_ADDRESS() -> EthAddress {
+    pub(crate) fn EVM_ADDRESS() -> EthAddress {
         0xc0ffee.try_into().unwrap()
     }
 
-    fn ETH_BANK() -> ContractAddress {
+    pub(crate) fn ETH_BANK() -> ContractAddress {
         contract_address_const::<0x777>()
     }
 }
@@ -104,8 +98,7 @@ fn deploy_kakarot_core(
     let mut calldata: Array<felt252> = array![
         native_token.into(),
         UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(),
-        ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap(),
-        ContractAccount::TEST_CLASS_HASH.try_into().unwrap(),
+        AccountContract::TEST_CLASS_HASH.try_into().unwrap(),
         other_starknet_address().into(),
         chain_id().into(),
     ];
@@ -124,13 +117,13 @@ fn deploy_kakarot_core(
     }
 }
 
-fn deploy_contract_account(evm_address: EthAddress, bytecode: Span<u8>) -> Address {
+pub(crate) fn deploy_contract_account(evm_address: EthAddress, bytecode: Span<u8>) -> Address {
     let ca_address = ContractAccountTrait::deploy(evm_address, 1, bytecode, true);
     ca_address
 }
 
 
-fn deploy_eoa(eoa_address: EthAddress) -> IExternallyOwnedAccountDispatcher {
+fn deploy_eoa(eoa_address: EthAddress) -> IAccountDispatcher {
     let kakarot_address = get_contract_address();
     let calldata: Span<felt252> = array![kakarot_address.into(), eoa_address.into()].span();
 
@@ -142,10 +135,7 @@ fn deploy_eoa(eoa_address: EthAddress) -> IExternallyOwnedAccountDispatcher {
     )
         .expect('failed to deploy EOA');
 
-    let account = IUninitializedAccountDispatcher { contract_address: starknet_address };
-
-    account.initialize(ExternallyOwnedAccount::TEST_CLASS_HASH.try_into().unwrap());
-    let eoa = IExternallyOwnedAccountDispatcher { contract_address: starknet_address };
+    let eoa = IAccountDispatcher { contract_address: starknet_address };
     eoa
 }
 
@@ -167,7 +157,9 @@ fn fund_account_with_native_token(
     testing::set_contract_address(current_contract);
 }
 
-fn setup_contracts_for_testing() -> (IERC20CamelDispatcher, IExtendedKakarotCoreDispatcher) {
+pub(crate) fn setup_contracts_for_testing() -> (
+    IERC20CamelDispatcher, IExtendedKakarotCoreDispatcher
+) {
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(
         native_token.contract_address, array![sequencer_evm_address()].span()
