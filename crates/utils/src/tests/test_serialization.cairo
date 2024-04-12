@@ -85,7 +85,7 @@ mod eth_signature_test {
     #[test]
     fn test_deserialize_transaction_signature() {
         // generated via ./scripts/compute_rlp_encoding.ts
-        // inputs:
+        // using json inputs
         //          to: 0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984
         //          value: 1
         //          gasLimit: 1
@@ -97,23 +97,23 @@ mod eth_signature_test {
 
         // tx_type = 0, v: 0x9696a4cb
         let signature_0 = Signature {
-            r: 0x306c3f638450a95f1f669481bf8ede9b056ef8d94259a3104f3a28673e02823d,
-            s: 0x41ea07e6d3d02773e380e752e5b3f9d28aca3882ee165e56b402cca0189967c9,
+            r: 0x5e5202c7e9d6d0964a1f48eaecf12eef1c3cafb2379dfeca7cbd413cedd4f2c7,
+            s: 0x66da52d0b666fc2a35895e0c91bc47385fe3aa347c7c2a129ae2b7b06cb5498b,
             y_parity: false
         };
 
         // tx_type = 1
         let signature_1 = Signature {
-            r: 0x615c33039b7b09e3d5aa3cf1851c35abe7032f92111cc95ef45f83d032ccff5d,
-            s: 0x30b5f1a58abce1c7d45309b7a3b0befeddd1aee203021172779dd693a1e59505,
-            y_parity: false
+            r: 0xbced8d81c36fe13c95b883b67898b47b4b70cae79e89fa27856ddf8c533886d1,
+            s: 0x3de0109f00bc3ed95ffec98edd55b6f750cb77be8e755935dbd6cfec59da7ad0,
+            y_parity: true
         };
 
         // tx_type = 2
         let signature_2 = Signature {
-            r: 0xbc485ed0b43483ebe5fbff90962791c015755cc03060a33360b1b3e823bb71a4,
-            s: 0x4c47017509e1609db6c2e8e2b02327caeb709c986d8b63099695105432afa533,
-            y_parity: false
+            r: 0x0f9a716653c19fefc240d1da2c5759c50f844fc8835c82834ea3ab7755f789a0,
+            s: 0x71506d904c05c6e5ce729b5dd88bcf29db9461c8d72413b864923e8d8f6650c0,
+            y_parity: true
         };
 
         let signature_0_felt252_arr: Array<felt252> = array![
