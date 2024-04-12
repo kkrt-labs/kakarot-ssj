@@ -144,7 +144,7 @@ mod ExternallyOwnedAccount {
                 contract_address: self.kakarot_core_address()
             };
 
-            let (success, return_data) = kakarot_core_dispatcher.eth_send_transaction(tx);
+            let (return_data, success) = kakarot_core_dispatcher.eth_send_transaction(tx);
             let return_data = return_data.to_felt252_array().span();
 
             let tx_info = get_tx_info().unbox();

@@ -245,7 +245,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
     let tx = contract_utils::call_transaction(
         kakarot_core.chain_id(), Option::Some(counter_address), data_get_tx
     );
-    let (_, return_data) = kakarot_core
+    let (return_data, _) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
 
     assert_eq!(return_data, u256_to_bytes_array(0).span());
@@ -266,7 +266,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
         calldata: data_increment_counter
     };
 
-    let (success, _) = kakarot_core
+    let (_, success) = kakarot_core
         .eth_send_transaction(EthereumTransaction::LegacyTransaction(tx));
     assert!(success);
 
@@ -280,7 +280,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
     );
     let (_, _) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
-    let (_, return_data) = kakarot_core
+    let (return_data, _) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
 
     // Then
@@ -307,7 +307,7 @@ fn test_eth_call() {
 
     // When
     let tx = contract_utils::call_transaction(kakarot_core.chain_id(), to, calldata);
-    let (success, return_data) = kakarot_core
+    let (return_data, success) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
 
     // Then
@@ -383,14 +383,14 @@ fn test_eth_send_transaction_deploy_tx() {
         calldata: deploy_counter_calldata()
     };
     testing::set_contract_address(eoa);
-    let (_, deploy_result) = kakarot_core
+    let (return_data, _success) = kakarot_core
         .eth_send_transaction(EthereumTransaction::LegacyTransaction(tx));
 
     // Then
     let expected_address: EthAddress = 0x19587b345dcadfe3120272bd0dbec24741891759
         .try_into()
         .unwrap();
-    assert(deploy_result == expected_address.to_bytes().span(), 'returndata not counter bytecode');
+    assert(return_data == expected_address.to_bytes().span(), 'returndata not counter bytecode');
 
     // Set back the contract address to Kakarot for the calculation of the deployed SN contract address, where we use a kakarot
     // internal functions and thus must "mock" its address.
@@ -415,10 +415,10 @@ fn test_eth_send_transaction_deploy_tx() {
         gas_limit,
         calldata
     };
-    let (_, result) = kakarot_core
+    let (return_data, _success) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
     // Then
-    assert(result == u256_to_bytes_array(0).span(), 'wrong result');
+    assert(return_data == u256_to_bytes_array(0).span(), 'wrong result');
 }
 
 #[test]
