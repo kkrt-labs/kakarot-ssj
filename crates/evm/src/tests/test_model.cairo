@@ -1,4 +1,3 @@
-use evm::model::contract_account::ContractAccountTrait;
 mod test_contract_account;
 mod test_eoa;
 mod test_vm;
@@ -7,13 +6,14 @@ use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::tests::test_utils::{
     setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
 };
+use core::starknet::EthAddress;
 use evm::model::account::AccountTrait;
-use evm::state::{State, StateChangeLog, StateChangeLogTrait};
+use evm::model::contract_account::ContractAccountTrait;
 use evm::model::{Address, Account, AccountType, eoa::{EOATrait}, AddressTrait};
+use evm::state::{State, StateChangeLog, StateChangeLogTrait};
 use evm::tests::test_utils::{evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::set_contract_address;
-use core::starknet::EthAddress;
 
 #[test]
 fn test_is_deployed_eoa_exists() {
