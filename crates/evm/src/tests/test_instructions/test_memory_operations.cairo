@@ -1,5 +1,6 @@
 use contracts::tests::test_utils::{setup_contracts_for_testing, deploy_contract_account};
 use core::result::ResultTrait;
+use evm::backend::starknet_backend;
 use evm::errors::{EVMError, INVALID_DESTINATION};
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
@@ -7,7 +8,7 @@ use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{Account, AccountType};
 use evm::stack::StackTrait;
-use evm::state::{StateTrait, StateInternalTrait, compute_storage_address};
+use evm::state::{StateTrait, compute_storage_address};
 use evm::tests::test_utils::{evm_address, VMBuilderTrait};
 use integer::BoundedInt;
 use starknet::get_contract_address;
@@ -636,7 +637,7 @@ fn test_exec_sstore_finalized() {
 
     // When
     vm.exec_sstore().expect('exec_sstore failed');
-    vm.env.state.commit_storage().expect('commit storage failed');
+    starknet_backend::commit(ref vm.env.state).expect('commit storage failed');
 
     // Then
     assert(account.fetch_storage(key) == value, 'wrong committed value')

@@ -187,14 +187,6 @@ impl StateImpl of StateTrait {
         Result::Ok(())
     }
 
-    #[inline(always)]
-    fn commit_state(ref self: State) -> Result<(), EVMError> {
-        self.commit_accounts()?;
-        self.transfer_native_token()?;
-        self.commit_storage()?;
-        self.emit_events()
-    }
-
     fn clone(ref self: State) -> State {
         State {
             accounts: self.accounts.clone(),
@@ -208,77 +200,6 @@ impl StateImpl of StateTrait {
     fn is_account_alive(ref self: State, evm_address: EthAddress) -> bool {
         let account = self.get_account(evm_address);
         return !(account.nonce == 0 && account.code.len() == 0 && account.balance == 0);
-    }
-}
-#[generate_trait]
-impl StateInternalImpl of StateInternalTrait {
-    /// Commits storage changes to the KakarotCore contract by writing pending
-    /// state changes to Starknet Storage.
-    /// commit_storage MUST be called after commit_accounts.
-    fn commit_storage(ref self: State) -> Result<(), EVMError> {
-        let mut storage_keys = self.accounts_storage.keyset.to_span();
-        let result = loop {
-            match storage_keys.pop_front() {
-                Option::Some(state_key) => {
-                    let (evm_address, key, value) = self
-                        .accounts_storage
-                        .changes
-                        .get(*state_key)
-                        .deref();
-                    let mut account = self.get_account(evm_address);
-                    account.commit_storage(key, value);
-                },
-                Option::None => { break Result::Ok(()); }
-            }
-        };
-        result
-    }
-
-
-    /// Iterates through the list of events and emits them.
-    fn emit_events(ref self: State) -> Result<(), EVMError> {
-        loop {
-            match self.events.pop_front() {
-                Option::Some(event) => {
-                    let mut keys = Default::default();
-                    let mut data = Default::default();
-                    Serde::<Array<u256>>::serialize(@event.keys, ref keys);
-                    Serde::<Array<u8>>::serialize(@event.data, ref data);
-                    emit_event_syscall(keys.span(), data.span()).unwrap_syscall();
-                },
-                Option::None => { break Result::Ok(()); }
-            }
-        }
-    }
-    /// Iterates through the list of pending transfer and triggers them
-    fn transfer_native_token(ref self: State) -> Result<(), EVMError> {
-        let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let native_token = kakarot_state.native_token();
-        loop {
-            match self.transfers.pop_front() {
-                Option::Some(transfer) => {
-                    IERC20CamelDispatcher { contract_address: native_token }
-                        .transferFrom(
-                            transfer.sender.starknet, transfer.recipient.starknet, transfer.amount
-                        );
-                },
-                Option::None => { break; }
-            }
-        };
-        Result::Ok(())
-    }
-
-    fn commit_accounts(ref self: State) -> Result<(), EVMError> {
-        let mut account_keys = self.accounts.keyset.to_span();
-        loop {
-            match account_keys.pop_front() {
-                Option::Some(evm_address) => {
-                    let account = self.accounts.changes.get(*evm_address).deref();
-                    account.commit(ref self);
-                },
-                Option::None => { break Result::Ok(()); }
-            };
-        }
     }
 }
 

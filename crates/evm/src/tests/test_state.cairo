@@ -70,11 +70,11 @@ mod test_state {
     use contracts::kakarot_core::interface::{IExtendedKakarotCoreDispatcherTrait};
     use contracts::tests::test_utils as contract_utils;
     use contracts::uninitialized_account::UninitializedAccount;
+    use evm::backend::starknet_backend;
     use evm::model::account::{Account, AccountType, AccountTrait, AccountInternalTrait};
     use evm::model::contract_account::{ContractAccountTrait};
-    use evm::model::eoa::EOATrait;
     use evm::model::{Event, Transfer, Address};
-    use evm::state::{State, StateTrait, StateInternalTrait};
+    use evm::state::{State, StateTrait};
     use evm::tests::test_utils;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use starknet::EthAddress;
@@ -337,7 +337,7 @@ mod test_state {
         // Transfer native tokens to sender
         let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
         let evm_address: EthAddress = test_utils::evm_address();
-        let eoa_account = EOATrait::deploy(evm_address).expect('sender deploy failed');
+        let eoa_account = starknet_backend::deploy(evm_address).expect('sender deploy failed');
         // Transfer native tokens to sender - we need to set the contract address for this
         set_contract_address(contract_utils::constants::ETH_BANK());
         IERC20CamelDispatcher { contract_address: native_token.contract_address }

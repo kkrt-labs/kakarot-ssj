@@ -12,7 +12,6 @@ use starknet::{
     ContractAddress, EthAddress, get_contract_address, deploy_syscall, get_tx_info,
     SyscallResultTrait
 };
-use utils::constants::BURN_ADDRESS;
 use utils::helpers::{ResultExTrait, ByteArrayExTrait, compute_starknet_address};
 
 #[derive(Copy, Drop, PartialEq)]
@@ -172,84 +171,6 @@ impl AccountImpl of AccountTrait {
         false
     }
 
-    /// Commits the account to Starknet by updating the account state if it
-    /// exists, or deploying a new account if it doesn't.
-    ///
-    /// Only Contract Accounts can be modified.
-    ///
-    /// # Arguments
-    /// * `self` - The account to commit
-    ///
-    /// # Returns
-    ///
-    /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
-    //TODO: move state out in starknet backend
-    fn commit(self: @Account, ref state: State) {
-        let is_deployed = self.evm_address().is_deployed();
-
-        if self.is_precompile() {
-            return;
-        }
-
-        // Case new account
-        if !is_deployed {
-            // If SELFDESTRUCT, deploy empty SN account
-            self.deploy();
-
-            let has_code_or_nonce = self.has_code_or_nonce();
-            if !has_code_or_nonce {
-                // Nothing to commit
-                return;
-            }
-
-            // If SELFDESTRUCT, leave the account empty after deploying it - including
-            // burning any leftover balance.
-            if (self.is_selfdestruct()) {
-                let kakarot_state = KakarotCore::unsafe_new_contract_state();
-                let starknet_address = kakarot_state
-                    .compute_starknet_address(BURN_ADDRESS.try_into().unwrap());
-                let burn_address = Address {
-                    starknet: starknet_address, evm: BURN_ADDRESS.try_into().unwrap()
-                };
-                state
-                    .add_transfer(
-                        Transfer {
-                            sender: self.address(), recipient: burn_address, amount: self.balance()
-                        }
-                    )
-                    .expect('Failed to burn on selfdestruct');
-                return;
-            }
-
-            let account = IAccountDispatcher { contract_address: self.starknet_address() };
-            account.write_bytecode(self.bytecode());
-            account.set_nonce(*self.nonce);
-
-            //TODO: storage commits are done in the State commitment
-            //Storage is handled outside of the account and must be committed after all accounts are committed.
-            return;
-        };
-
-        // If the account was not scheduled for deployment - then update it if it's deployed.
-
-        let is_created_selfdestructed = self.is_selfdestruct() && self.is_created();
-        if is_created_selfdestructed {
-            // If the account was created and selfdestructed in the same transaction, we don't need to commit it.
-            return;
-        }
-
-        let account = IAccountDispatcher { contract_address: self.starknet_address() };
-
-        account.set_nonce(*self.nonce);
-        //TODO: handle storage commitment
-
-        // Update bytecode if required (SELFDESTRUCTed contract committed and redeployed)
-        //TODO: add bytecode_len entrypoint for optimization
-        let bytecode_len = account.bytecode().len();
-        if bytecode_len != self.bytecode().len() {
-            account.write_bytecode(self.bytecode());
-        }
-    }
 
     fn is_created(self: @Account) -> bool {
         panic!("unimplemented is created")
