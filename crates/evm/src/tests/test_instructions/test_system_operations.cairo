@@ -6,6 +6,7 @@ use contracts::tests::test_utils::{
 };
 use core::result::ResultTrait;
 use core::traits::TryInto;
+use evm::backend::starknet_backend;
 use evm::call_helpers::{CallHelpers, CallHelpersImpl};
 use evm::errors::EVMErrorTrait;
 use evm::instructions::MemoryOperationTrait;
@@ -13,7 +14,6 @@ use evm::instructions::SystemOperationsTrait;
 use evm::interpreter::{EVMTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{Account};
-use evm::model::eoa::EOATrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{AccountTrait, Address, AccountType, Transfer};
 use evm::stack::StackTrait;
@@ -580,12 +580,12 @@ fn test_exec_selfdestruct_existing_ca() {
     let destroyed_address = test_address().evm; // address in vm call context
     let ca_address = deploy_contract_account(destroyed_address, array![0x1, 0x2, 0x3].span());
     fund_account_with_native_token(ca_address.starknet, native_token, 1000);
-    let recipient = EOATrait::deploy(other_evm_address()).expect('failed deploying eoa');
+    let recipient = starknet_backend::deploy(other_evm_address()).expect('failed deploying eoa');
     let mut vm = VMBuilderTrait::new_with_presets().with_target(ca_address).build();
     // When
     vm.stack.push(recipient.evm.into()).unwrap();
     vm.exec_selfdestruct().expect('selfdestruct failed');
-    vm.env.state.commit_state().expect('commit state failed');
+    starknet_backend::commit(ref vm.env.state).expect('commit state failed');
     vm.env.state = Default::default(); //empty state to force re-fetch from SN
     // Then
     let destructed = vm.env.state.get_account(ca_address.evm);
@@ -620,7 +620,7 @@ fn test_selfdestruct_undeployed_ca() {
     // - call selfdestruct and commit the state
     vm.stack.push(recipient_address.into()).expect('push failed');
     vm.exec_selfdestruct().expect('selfdestruct failed');
-    vm.env.state.commit_state().expect('commit state failed');
+    starknet_backend::commit(ref vm.env.state).expect('commit state failed');
     vm.env.state = Default::default(); //empty state to force re-fetch from SN
 
     // Then
@@ -639,8 +639,10 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     let (native_token, _) = setup_contracts_for_testing();
 
     // Deploy sender and recipiens EOAs, and CA that will be selfdestructed and funded with 100 tokens
-    let sender = EOATrait::deploy('sender'.try_into().unwrap()).expect('failed deploy EOA',);
-    let recipient = EOATrait::deploy('recipient'.try_into().unwrap()).expect('failed deploy EOA',);
+    let sender = starknet_backend::deploy('sender'.try_into().unwrap())
+        .expect('failed deploy EOA',);
+    let recipient = starknet_backend::deploy('recipient'.try_into().unwrap())
+        .expect('failed deploy EOA',);
     let ca_address = deploy_contract_account('contract'.try_into().unwrap(), array![].span());
     fund_account_with_native_token(sender.starknet, native_token, 150);
     fund_account_with_native_token(ca_address.starknet, native_token, 100);
@@ -655,7 +657,7 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     // Add a transfer from sender to CA - after it was selfdestructed in local state. This transfer should go through.
     let transfer = Transfer { sender, recipient: ca_address, amount: 150 };
     vm.env.state.add_transfer(transfer).unwrap();
-    vm.env.state.commit_state().expect('commit state failed');
+    starknet_backend::commit(ref vm.env.state).expect('commit state failed');
     vm.env.state = Default::default(); //empty state to force re-fetch from SN
 
     // Then

@@ -23,13 +23,13 @@ pub mod KakarotCore {
     use core::num::traits::zero::Zero;
     use core::starknet::SyscallResultTrait;
     use core::starknet::event::EventEmitter;
+    use evm::backend::starknet_backend;
 
     use evm::errors::{EVMError, ensure, EVMErrorTrait,};
     use evm::gas;
     use evm::interpreter::{EVMTrait};
     use evm::model::account::{Account, AccountType, AccountTrait};
     use evm::model::contract_account::{ContractAccountTrait};
-    use evm::model::eoa::{EOATrait};
     use evm::model::{
         Transfer, Message, Environment, TransactionResult, TransactionResultTrait, ExecutionSummary,
         ExecutionSummaryTrait, Address, AddressTrait
@@ -218,7 +218,7 @@ pub mod KakarotCore {
         }
 
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
-            EOATrait::deploy(evm_address).expect('EOA Deployment failed').starknet
+            starknet_backend::deploy(evm_address).expect('EOA Deployment failed').starknet
         }
 
         fn eth_call(
@@ -258,7 +258,7 @@ pub mod KakarotCore {
 
             let TransactionResult{success, return_data, gas_used, mut state } = self
                 .process_transaction(origin, tx);
-            state.commit_state().expect('Committing state failed');
+            starknet_backend::commit(ref state).expect('Committing state failed');
             (success, return_data, gas_used)
         }
 
@@ -331,30 +331,10 @@ pub mod KakarotCore {
         fn process_transaction(
             self: @ContractState, origin: Address, tx: EthereumTransaction
         ) -> TransactionResult {
-            let block_info = starknet::get_block_info().unbox();
-            //TODO(optimization): the coinbase account is deployed from a specific `evm_address` which is specified upon deployment
-            // and specific to the chain. Rather than reading from a contract, we could directly use this constant.
-            let coinbase = IAccountDispatcher { contract_address: block_info.sequencer_address }
-                .get_evm_address();
-
+            //TODO(gas) handle FeeMarketTransaction
             let gas_price = tx.gas_price();
             let gas_limit = tx.gas_limit();
-
-            // tx.gas_price and env.gas_price have the same values here
-            // - this is not always true in EVM transactions
-            let mut env = Environment {
-                origin: origin.evm,
-                gas_price,
-                chain_id: get_tx_info().unbox().chain_id.try_into().unwrap(),
-                prevrandao: 0,
-                block_number: block_info.block_number,
-                block_timestamp: block_info.block_timestamp,
-                block_gas_limit: constants::BLOCK_GAS_LIMIT,
-                coinbase,
-                state: Default::default(),
-            };
-
-            //TODO(gas) handle FeeMarketTransaction
+            let mut env = starknet_backend::get_env(origin.evm, gas_price);
 
             // TX Gas
             let gas_fee = gas_limit * gas_price;

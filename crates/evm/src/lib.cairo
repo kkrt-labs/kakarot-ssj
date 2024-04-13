@@ -1,3 +1,4 @@
+mod backend;
 // Call opcodes helpers
 mod call_helpers;
 

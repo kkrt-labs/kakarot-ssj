@@ -1,5 +1,4 @@
 mod test_contract_account;
-mod test_eoa;
 mod test_vm;
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
@@ -7,9 +6,11 @@ use contracts::tests::test_utils::{
     setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
 };
 use core::starknet::EthAddress;
+use evm::backend::starknet_backend;
 use evm::model::account::AccountTrait;
 use evm::model::contract_account::ContractAccountTrait;
-use evm::model::{Address, Account, AccountType, eoa::{EOATrait}, AddressTrait};
+use evm::model::{Address, Account, AccountType, AddressTrait};
+use evm::state::StateTrait;
 use evm::state::{State, StateChangeLog, StateChangeLogTrait};
 use evm::tests::test_utils::{evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
@@ -19,7 +20,7 @@ use starknet::testing::set_contract_address;
 fn test_is_deployed_eoa_exists() {
     // Given
     let (_, kakarot_core) = setup_contracts_for_testing();
-    EOATrait::deploy(evm_address()).expect('failed deploy eoa account',);
+    starknet_backend::deploy(evm_address()).expect('failed deploy eoa account',);
 
     // When
 
@@ -61,7 +62,7 @@ fn test_is_deployed_undeployed() {
 fn test_account_balance_eoa() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy eoa account',);
+    let eoa_address = starknet_backend::deploy(evm_address()).expect('failed deploy eoa account',);
 
     fund_account_with_native_token(eoa_address.starknet, native_token, 0x1);
 
@@ -78,7 +79,7 @@ fn test_account_balance_eoa() {
 fn test_address_balance_eoa() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy eoa account',);
+    let eoa_address = starknet_backend::deploy(evm_address()).expect('failed deploy eoa account',);
 
     fund_account_with_native_token(eoa_address.starknet, native_token, 0x1);
 
@@ -96,7 +97,7 @@ fn test_address_balance_eoa() {
 fn test_account_has_code_or_nonce_empty() {
     // Given
     setup_contracts_for_testing();
-    let mut _eoa_address = EOATrait::deploy(evm_address()).expect('failed deploy eoa',);
+    let mut _eoa_address = starknet_backend::deploy(evm_address()).expect('failed deploy eoa',);
 
     // When
     let account = AccountTrait::fetch(evm_address()).unwrap();
@@ -175,7 +176,8 @@ fn test_account_commit_already_deployed() {
     let mut account = AccountTrait::fetch(evm_address()).unwrap();
     account.nonce = 420;
     account.code = array![0x1].span();
-    account.commit(ref state);
+    state.set_account(account);
+    starknet_backend::commit(ref state).expect('commitment failed');
 
     // Then
     let account_dispatcher = IAccountDispatcher { contract_address: ca_address.starknet };
@@ -225,7 +227,8 @@ fn test_account_commit_undeployed() {
     };
     account.nonce = 420;
     account.code = array![0x1].span();
-    account.commit(ref state);
+    state.set_account(account);
+    starknet_backend::commit(ref state).expect('commitment failed');
 
     // Then
     let account_dispatcher = IAccountDispatcher { contract_address: starknet };
