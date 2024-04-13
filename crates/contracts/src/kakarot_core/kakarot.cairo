@@ -52,15 +52,14 @@ pub mod KakarotCore {
 
     #[storage]
     struct Storage {
-        /// Kakarot storage for accounts: Externally Owned Accounts (EOA) and Contract Accounts (CA)
-        /// Map their EVM address and their Starknet address
-        /// - starknet_address: the deterministic starknet address (31 bytes) computed given an EVM address (20 bytes)
         Kakarot_evm_to_starknet_address: LegacyMap::<EthAddress, ContractAddress>,
-        uninitialized_account_class_hash: ClassHash,
-        account_contract_class_hash: ClassHash,
-        ca_class_hash: ClassHash,
-        // Utility storage
-        native_token: ContractAddress,
+        Kakarot_uninitialized_account_class_hash: ClassHash,
+        Kakarot_account_contract_class_hash: ClassHash,
+        Kakarot_native_token_address: ContractAddress,
+        Kakarot_coinbase: EthAddress,
+        Kakarot_base_fee: u128,
+        Kakarot_prev_randao: u256,
+        Kakarot_block_gas_limit: u128,
         chain_id: u128,
         // Components
         #[substorage(v0)]
@@ -113,9 +112,9 @@ pub mod KakarotCore {
         chain_id: u128,
         mut eoas_to_deploy: Span<EthAddress>,
     ) {
-        self.native_token.write(native_token);
-        self.uninitialized_account_class_hash.write(uninitialized_account_class_hash);
-        self.account_contract_class_hash.write(account_contract_class_hash);
+        self.Kakarot_native_token_address.write(native_token);
+        self.Kakarot_uninitialized_account_class_hash.write(uninitialized_account_class_hash);
+        self.Kakarot_account_contract_class_hash.write(account_contract_class_hash);
         self.ownable.initializer(owner);
         self.chain_id.write(chain_id);
 
@@ -131,11 +130,11 @@ pub mod KakarotCore {
     impl KakarotCoreImpl of IKakarotCore<ContractState> {
         fn set_native_token(ref self: ContractState, native_token: ContractAddress) {
             self.ownable.assert_only_owner();
-            self.native_token.write(native_token);
+            self.Kakarot_native_token_address.write(native_token);
         }
 
         fn native_token(self: @ContractState) -> ContractAddress {
-            self.native_token.read()
+            self.Kakarot_native_token_address.read()
         }
 
         fn chain_id(self: @ContractState) -> u128 {
@@ -147,7 +146,7 @@ pub mod KakarotCore {
         ) -> ContractAddress {
             let kakarot_address = get_contract_address();
             compute_starknet_address(
-                kakarot_address, evm_address, self.uninitialized_account_class_hash.read()
+                kakarot_address, evm_address, self.Kakarot_uninitialized_account_class_hash.read()
             )
         }
 
@@ -195,24 +194,24 @@ pub mod KakarotCore {
         }
 
         fn get_account_contract_class_hash(self: @ContractState) -> ClassHash {
-            self.account_contract_class_hash.read()
+            self.Kakarot_account_contract_class_hash.read()
         }
 
         fn set_account_contract_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
             self.ownable.assert_only_owner();
-            let old_class_hash = self.account_contract_class_hash.read();
-            self.account_contract_class_hash.write(new_class_hash);
+            let old_class_hash = self.Kakarot_account_contract_class_hash.read();
+            self.Kakarot_account_contract_class_hash.write(new_class_hash);
             self.emit(EOAClassHashChange { old_class_hash, new_class_hash });
         }
 
         fn uninitialized_account_class_hash(self: @ContractState) -> ClassHash {
-            self.uninitialized_account_class_hash.read()
+            self.Kakarot_uninitialized_account_class_hash.read()
         }
 
         fn set_account_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
             self.ownable.assert_only_owner();
-            let old_class_hash = self.uninitialized_account_class_hash.read();
-            self.uninitialized_account_class_hash.write(new_class_hash);
+            let old_class_hash = self.Kakarot_uninitialized_account_class_hash.read();
+            self.Kakarot_uninitialized_account_class_hash.write(new_class_hash);
             self.emit(AccountClassHashChange { old_class_hash, new_class_hash });
         }
 
