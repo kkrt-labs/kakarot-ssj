@@ -60,7 +60,6 @@ pub mod KakarotCore {
         Kakarot_base_fee: u128,
         Kakarot_prev_randao: u256,
         Kakarot_block_gas_limit: u128,
-        chain_id: u128,
         // Components
         #[substorage(v0)]
         ownable: ownable_component::Storage,
@@ -105,19 +104,20 @@ pub mod KakarotCore {
     #[constructor]
     fn constructor(
         ref self: ContractState,
-        native_token: ContractAddress,
-        uninitialized_account_class_hash: ClassHash,
-        account_contract_class_hash: ClassHash,
         owner: ContractAddress,
-        chain_id: u128,
+        native_token: ContractAddress,
+        account_contract_class_hash: ClassHash,
+        uninitialized_account_class_hash: ClassHash,
+        coinbase: EthAddress,
+        block_gas_limit: u128,
         mut eoas_to_deploy: Span<EthAddress>,
     ) {
-        self.Kakarot_native_token_address.write(native_token);
-        self.Kakarot_uninitialized_account_class_hash.write(uninitialized_account_class_hash);
-        self.Kakarot_account_contract_class_hash.write(account_contract_class_hash);
         self.ownable.initializer(owner);
-        self.chain_id.write(chain_id);
-
+        self.Kakarot_native_token_address.write(native_token);
+        self.Kakarot_account_contract_class_hash.write(account_contract_class_hash);
+        self.Kakarot_uninitialized_account_class_hash.write(uninitialized_account_class_hash);
+        self.Kakarot_coinbase.write(coinbase);
+        self.Kakarot_block_gas_limit.write(block_gas_limit);
         loop {
             match eoas_to_deploy.pop_front() {
                 Option::Some(eoa_address) => self.deploy_eoa(*eoa_address),
@@ -135,10 +135,6 @@ pub mod KakarotCore {
 
         fn native_token(self: @ContractState) -> ContractAddress {
             self.Kakarot_native_token_address.read()
-        }
-
-        fn chain_id(self: @ContractState) -> u128 {
-            self.chain_id.read()
         }
 
         fn compute_starknet_address(

@@ -1,5 +1,11 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-use contracts::kakarot_core::{KakarotCore, KakarotCore::KakarotCoreImpl};
+use contracts::kakarot_core::{
+    KakarotCore, KakarotCore::KakarotCoreImpl,
+    KakarotCore::{
+        Kakarot_prev_randaoContractMemberStateTrait, Kakarot_coinbaseContractMemberStateTrait,
+        Kakarot_block_gas_limitContractMemberStateTrait, Kakarot_base_feeContractMemberStateTrait
+    }
+};
 use core::num::traits::zero::Zero;
 use evm::errors::{ensure, EVMError, EOA_EXISTS};
 use evm::model::{Address, AddressTrait, Environment};
@@ -54,11 +60,8 @@ fn get_bytecode(evm_address: EthAddress) -> Span<u8> {
 }
 
 fn get_env(origin: EthAddress, gas_price: u128) -> Environment {
+    let kakarot_state = KakarotCore::unsafe_new_contract_state();
     let block_info = get_block_info().unbox();
-    //TODO(optimization): the coinbase account is deployed from a specific `evm_address` which is specified upon deployment
-    // and specific to the chain. Rather than reading from a contract, we could directly use this constant.
-    let coinbase = IAccountDispatcher { contract_address: block_info.sequencer_address }
-        .get_evm_address();
 
     // tx.gas_price and env.gas_price have the same values here
     // - this is not always true in EVM transactions
@@ -66,11 +69,12 @@ fn get_env(origin: EthAddress, gas_price: u128) -> Environment {
         origin: origin,
         gas_price,
         chain_id: get_tx_info().unbox().chain_id.try_into().unwrap(),
-        prevrandao: 0,
+        prevrandao: kakarot_state.Kakarot_prev_randao.read(),
         block_number: block_info.block_number,
-        block_timestamp: block_info.block_timestamp,
         block_gas_limit: constants::BLOCK_GAS_LIMIT,
-        coinbase,
+        block_timestamp: block_info.block_timestamp,
+        coinbase: kakarot_state.Kakarot_coinbase.read(),
+        base_fee: kakarot_state.Kakarot_base_fee.read(),
         state: Default::default(),
     }
 }

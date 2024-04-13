@@ -21,7 +21,7 @@ use core::option::OptionTrait;
 
 use core::traits::TryInto;
 use evm::model::{Address};
-use evm::tests::test_utils::sequencer_evm_address;
+use evm::tests::test_utils::{sequencer_evm_address, chain_id};
 use evm::tests::test_utils;
 use starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};
 use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, LegacyTransaction};
@@ -58,7 +58,7 @@ fn test_kakarot_core_renounce_ownership() {
 fn test_kakarot_core_chain_id() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
-    assert(kakarot_core.chain_id() == contract_utils::chain_id(), 'wrong chain id');
+    assert(chain_id() == contract_utils::chain_id(), 'wrong chain id');
 }
 
 #[test]
@@ -163,7 +163,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
 
     // check counter value is 0 before doing inc
     let tx = contract_utils::call_transaction(
-        kakarot_core.chain_id(), Option::Some(counter_address), data_get_tx
+        chain_id(), Option::Some(counter_address), data_get_tx
     );
     let (_, return_data) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
@@ -177,7 +177,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
     testing::set_contract_address(eoa);
 
     let tx = LegacyTransaction {
-        chain_id: kakarot_core.chain_id(),
+        chain_id: chain_id(),
         nonce: 0,
         destination: Option::Some(counter_address),
         amount: value,
@@ -196,7 +196,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
 
     // check counter value is 1
     let tx = contract_utils::call_transaction(
-        kakarot_core.chain_id(), Option::Some(counter_address), data_get_tx
+        chain_id(), Option::Some(counter_address), data_get_tx
     );
     let (_, _) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
@@ -226,7 +226,7 @@ fn test_eth_call() {
     let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // When
-    let tx = contract_utils::call_transaction(kakarot_core.chain_id(), to, calldata);
+    let tx = contract_utils::call_transaction(chain_id(), to, calldata);
     let (success, return_data) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
 
@@ -245,7 +245,7 @@ fn test_process_transaction() {
     contract_utils::fund_account_with_native_token(
         eoa, native_token, 0xfffffffffffffffffffffffffff
     );
-    let chain_id = kakarot_core.chain_id();
+    let chain_id = chain_id();
 
     let _account = contract_utils::deploy_contract_account(
         test_utils::other_evm_address(), counter_evm_bytecode()
@@ -294,7 +294,7 @@ fn test_eth_send_transaction_deploy_tx() {
     // When
     // Set the contract address to the EOA address, so that the caller of the `eth_send_transaction` is an eoa
     let tx = LegacyTransaction {
-        chain_id: kakarot_core.chain_id(),
+        chain_id: chain_id(),
         nonce: 0,
         destination: Option::None,
         amount: value,
@@ -325,7 +325,7 @@ fn test_eth_send_transaction_deploy_tx() {
 
     // No need to set address back to eoa, as eth_call doesn't use the caller address.
     let tx = LegacyTransaction {
-        chain_id: kakarot_core.chain_id(),
+        chain_id: chain_id(),
         nonce: 0,
         destination: to,
         amount: value,

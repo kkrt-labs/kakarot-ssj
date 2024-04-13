@@ -24,6 +24,7 @@ struct Environment {
     block_gas_limit: u128,
     block_timestamp: u64,
     coinbase: EthAddress,
+    base_fee: u128,
     state: State
 }
 #[derive(Copy, Drop, Default, PartialEq, Debug)]

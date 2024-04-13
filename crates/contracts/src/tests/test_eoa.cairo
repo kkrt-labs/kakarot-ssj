@@ -72,9 +72,7 @@ mod test_external_owned_account {
         let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
 
         // check counter value is 0 before doing inc
-        let tx = call_transaction(
-            kakarot_core.chain_id(), Option::Some(other_evm_address()), data_get_tx
-        );
+        let tx = call_transaction(chain_id(), Option::Some(other_evm_address()), data_get_tx);
 
         let (_, return_data) = kakarot_core
             .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx),);
@@ -104,9 +102,7 @@ mod test_external_owned_account {
         assert_ne!(event.gas_used, 0);
 
         // check counter value has increased
-        let tx = call_transaction(
-            kakarot_core.chain_id(), Option::Some(other_evm_address()), data_get_tx
-        );
+        let tx = call_transaction(chain_id(), Option::Some(other_evm_address()), data_get_tx);
         let (_, return_data) = kakarot_core
             .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx),);
         assert_eq!(return_data, u256_to_bytes_array(1).span());
