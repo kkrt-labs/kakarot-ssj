@@ -146,56 +146,6 @@ fn test_kakarot_core_upgrade_contract() {
 }
 
 #[test]
-fn test_kakarot_contract_account_nonce() {
-    // Given
-    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    let address = contract_utils::deploy_contract_account(
-        test_utils::other_evm_address(), Default::default().span()
-    );
-
-    // When
-    let nonce = kakarot_core.contract_account_nonce(address.evm);
-
-    // Then
-    assert(nonce == 1, 'wrong nonce');
-}
-
-#[test]
-fn test_kakarot_contract_account_storage() {
-    // Given
-    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    let address = contract_utils::deploy_contract_account(
-        test_utils::other_evm_address(), Default::default().span()
-    );
-    let ca = IAccountDispatcher { contract_address: address.starknet };
-    let expected_value = 420;
-    let key = 69;
-    ca.write_storage(69, expected_value);
-
-    // When
-    let value = kakarot_core.contract_account_storage(address.evm, key);
-
-    // Then
-    assert(value == expected_value, 'wrong storage value');
-}
-
-#[test]
-fn test_kakarot_contract_account_bytecode() {
-    // Given
-    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    let address = contract_utils::deploy_contract_account(
-        test_utils::other_evm_address(), counter_evm_bytecode()
-    );
-
-    // When
-    let bytecode = kakarot_core.contract_account_bytecode(address.evm);
-
-    // Then
-    assert(bytecode == counter_evm_bytecode(), 'wrong bytecode');
-}
-
-
-#[test]
 #[available_gas(2000000000000000000)]
 fn test_eth_send_transaction_non_deploy_tx() {
     // Given

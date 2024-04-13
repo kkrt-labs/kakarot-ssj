@@ -6,7 +6,8 @@ use contracts::kakarot_core::{
 };
 use contracts::uninitialized_account::{UninitializedAccount};
 use core::fmt::Debug;
-use evm::model::contract_account::ContractAccountTrait;
+use core::result::ResultTrait;
+use evm::backend::starknet_backend;
 use evm::model::{Address};
 
 use evm::tests::test_utils::{ca_address, other_starknet_address, chain_id, sequencer_evm_address};
@@ -118,7 +119,9 @@ fn deploy_kakarot_core(
 }
 
 pub(crate) fn deploy_contract_account(evm_address: EthAddress, bytecode: Span<u8>) -> Address {
-    let ca_address = ContractAccountTrait::deploy(evm_address, 1, bytecode, true);
+    let ca_address = starknet_backend::deploy(evm_address).expect('failed to deploy CA');
+    IAccountDispatcher { contract_address: ca_address.starknet }.set_nonce(1);
+    IAccountDispatcher { contract_address: ca_address.starknet }.write_bytecode(bytecode);
     ca_address
 }
 

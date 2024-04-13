@@ -72,7 +72,6 @@ mod test_state {
     use contracts::uninitialized_account::UninitializedAccount;
     use evm::backend::starknet_backend;
     use evm::model::account::{Account, AccountType, AccountTrait, AccountInternalTrait};
-    use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::{Event, Transfer, Address};
     use evm::state::{State, StateTrait};
     use evm::tests::test_utils;

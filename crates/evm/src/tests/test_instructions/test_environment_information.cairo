@@ -6,7 +6,7 @@ use contracts::tests::test_utils::{
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
-use evm::model::contract_account::ContractAccountTrait;
+
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{Account, AccountType};
 use evm::stack::StackTrait;

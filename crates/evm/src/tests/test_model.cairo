@@ -1,4 +1,3 @@
-mod test_contract_account;
 mod test_vm;
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
@@ -8,7 +7,7 @@ use contracts::tests::test_utils::{
 use core::starknet::EthAddress;
 use evm::backend::starknet_backend;
 use evm::model::account::AccountTrait;
-use evm::model::contract_account::ContractAccountTrait;
+
 use evm::model::{Address, Account, AccountType, AddressTrait};
 use evm::state::StateTrait;
 use evm::state::{State, StateChangeLog, StateChangeLogTrait};

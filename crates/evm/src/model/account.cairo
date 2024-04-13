@@ -248,6 +248,20 @@ impl AccountImpl of AccountTrait {
         0
     }
 
+    /// Sets the value stored at a `u256` key inside the Contract Account storage.
+    /// The new value is written in Kakarot Core's contract storage.
+    /// The storage address used is h(sn_keccak("contract_account_storage_keys"), evm_address, key), where `h` is the poseidon hash function.
+    /// # Arguments
+    /// * `self` - The address of the Contract Account
+    /// * `key` - The key to set
+    /// * `value` - The value to set
+    #[inline(always)]
+    fn store_storage(self: @Account, key: u256, value: u256) {
+        let mut contract_account = IAccountDispatcher { contract_address: self.starknet_address() };
+        contract_account.write_storage(key, value);
+    }
+
+
     /// Sets the nonce of the Account
     /// # Arguments
     /// * `self` The Account to set the nonce on

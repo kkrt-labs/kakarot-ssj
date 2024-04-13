@@ -29,7 +29,6 @@ pub mod KakarotCore {
     use evm::gas;
     use evm::interpreter::{EVMTrait};
     use evm::model::account::{Account, AccountType, AccountTrait};
-    use evm::model::contract_account::{ContractAccountTrait};
     use evm::model::{
         Transfer, Message, Environment, TransactionResult, TransactionResultTrait, ExecutionSummary,
         ExecutionSummaryTrait, Address, AddressTrait
@@ -188,33 +187,6 @@ pub mod KakarotCore {
                     (AccountType::ContractAccount, starknet_address)
                 ),
             }
-        }
-
-        fn contract_account_nonce(self: @ContractState, evm_address: EthAddress) -> u64 {
-            let ca_address = ContractAccountTrait::at(evm_address).expect('Fetching CA failed');
-            let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
-            contract_account.get_nonce()
-        }
-
-        fn account_balance(self: @ContractState, evm_address: EthAddress) -> u256 {
-            let address = Address {
-                evm: evm_address, starknet: self.compute_starknet_address(evm_address)
-            };
-            address.fetch_balance()
-        }
-
-        fn contract_account_storage(
-            self: @ContractState, evm_address: EthAddress, key: u256
-        ) -> u256 {
-            let ca_address = ContractAccountTrait::at(evm_address).expect('No CA found');
-            let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
-            contract_account.storage(key)
-        }
-
-        fn contract_account_bytecode(self: @ContractState, evm_address: EthAddress) -> Span<u8> {
-            let ca_address = ContractAccountTrait::at(evm_address).expect('No CA found');
-            let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
-            contract_account.bytecode()
         }
 
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {

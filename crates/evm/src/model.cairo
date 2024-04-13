@@ -1,5 +1,4 @@
 mod account;
-mod contract_account;
 mod vm;
 
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};

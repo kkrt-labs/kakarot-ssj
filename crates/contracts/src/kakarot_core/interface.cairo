@@ -27,18 +27,6 @@ pub trait IKakarotCore<TContractState> {
     ) -> Option<(AccountType, ContractAddress)>;
 
 
-    /// Gets the nonce associated to a contract account
-    fn contract_account_nonce(self: @TContractState, evm_address: EthAddress) -> u64;
-
-    /// Gets the balance associated to an account.
-    fn account_balance(self: @TContractState, evm_address: EthAddress) -> u256;
-
-    /// Gets the value associated to a key in the contract account storage
-    fn contract_account_storage(self: @TContractState, evm_address: EthAddress, key: u256) -> u256;
-
-    /// Gets the bytecode associated to a contract account
-    fn contract_account_bytecode(self: @TContractState, evm_address: EthAddress) -> Span<u8>;
-
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
 
@@ -93,18 +81,6 @@ pub trait IExtendedKakarotCore<TContractState> {
     fn address_registry(
         self: @TContractState, evm_address: EthAddress
     ) -> Option<(AccountType, ContractAddress)>;
-
-    /// Gets the nonce associated to a contract account
-    fn contract_account_nonce(self: @TContractState, evm_address: EthAddress) -> u64;
-
-    /// Gets the balance associated to an account.
-    fn account_balance(self: @TContractState, evm_address: EthAddress) -> u256;
-
-    /// Gets the value associated to a key in the contract account storage
-    fn contract_account_storage(self: @TContractState, evm_address: EthAddress, key: u256) -> u256;
-
-    /// Gets the bytecode associated to a contract account
-    fn contract_account_bytecode(self: @TContractState, evm_address: EthAddress) -> Span<u8>;
 
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
