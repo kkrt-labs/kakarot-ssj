@@ -1,4 +1,5 @@
 use core::fmt::{Debug, Formatter, Error, Display};
+use core::nullable::{NullableTrait};
 //! Stack implementation.
 //! # Example
 //! ```
@@ -15,7 +16,6 @@ use core::fmt::{Debug, Formatter, Error, Display};
 //! let value = stack.pop()?;
 //! ```
 use evm::errors::{ensure, EVMError, TYPE_CONVERSION_ERROR};
-use nullable::{nullable_from_box, NullableTrait};
 use starknet::{StorageBaseAddress, EthAddress};
 
 use utils::constants;

@@ -1,3 +1,5 @@
+use core::hash::{HashStateTrait, HashStateExTrait};
+use core::poseidon::PoseidonTrait;
 //! Stack Memory Storage and Flow Operations.
 use evm::errors::{EVMError, ensure, INVALID_DESTINATION, READ_SYSCALL_FAILED};
 use evm::gas;
@@ -7,8 +9,6 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{AddressTrait};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, compute_state_key};
-use hash::{HashStateTrait, HashStateExTrait};
-use poseidon::PoseidonTrait;
 use starknet::{storage_base_address_from_felt252, Store};
 use utils::helpers::U256Trait;
 use utils::set::SetTrait;

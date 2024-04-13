@@ -1,7 +1,8 @@
 mod account;
 mod vm;
-
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
+
+use core::num::traits::Zero;
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
 use evm::model::account::{Account, AccountTrait};
 use evm::state::State;
@@ -131,11 +132,8 @@ struct Address {
 impl AddressImpl of AddressTrait {
     fn is_deployed(self: @EthAddress) -> bool {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let maybe_account = kakarot_state.address_registry(*self);
-        match maybe_account {
-            Option::Some(_) => true,
-            Option::None => false
-        }
+        let address = kakarot_state.address_registry(*self);
+        return address.is_non_zero();
     }
 
     fn fetch_balance(self: @Address) -> u256 {
@@ -153,15 +151,4 @@ struct Transfer {
     sender: Address,
     recipient: Address,
     amount: u256
-}
-
-/// An EVM Account is either an EOA or a Contract Account.  In both cases, the
-/// account is identified by an Ethereum address.  It has a corresponding
-/// Starknet Address - The corresponding Starknet Contract for EOAs, and the
-/// KakarotCore address for ContractAccounts.
-#[derive(Copy, Drop, PartialEq, Serde)]
-enum AccountType {
-    EOA,
-    ContractAccount,
-    Unknown
 }

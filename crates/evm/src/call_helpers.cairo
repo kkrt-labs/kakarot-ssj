@@ -1,7 +1,7 @@
-//! CALL, CALLCODE, DELEGATECALL, STATICCALL opcode helpers
-use cmp::min;
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
+//! CALL, CALLCODE, DELEGATECALL, STATICCALL opcode helpers
+use core::cmp::min;
 
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
 use evm::gas;

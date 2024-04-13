@@ -1,10 +1,10 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait, IAccount};
 use contracts::kakarot_core::kakarot::KakarotCore::KakarotCoreInternal;
-use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
+use core::num::traits::Zero;
 use core::traits::TryInto;
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
-use evm::model::{Address, AddressTrait, AccountType, Transfer};
+use evm::model::{Address, AddressTrait, Transfer};
 use evm::state::State;
 use evm::state::StateTrait;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
@@ -118,34 +118,14 @@ impl AccountImpl of AccountTrait {
     /// The fetched account if it existed, otherwise `None`.
     fn fetch(evm_address: EthAddress) -> Option<Account> {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let maybe_stored_account = kakarot_state.address_registry(evm_address);
-        let mut account = match maybe_stored_account {
-            Option::Some((
-                account_type, starknet_address
-            )) => {
-                let address = Address { evm: evm_address, starknet: starknet_address };
-                match account_type {
-                    AccountType::EOA => Option::Some(
-                        AccountBuilderTrait::new(address)
-                            .fetch_nonce()
-                            .fetch_bytecode()
-                            .fetch_balance()
-                            .build()
-                    ),
-                    AccountType::ContractAccount => {
-                        let account = AccountBuilderTrait::new(address)
-                            .fetch_nonce()
-                            .fetch_bytecode()
-                            .fetch_balance()
-                            .build();
-                        Option::Some(account)
-                    },
-                    AccountType::Unknown => Option::None,
-                }
-            },
-            Option::None => Option::None,
-        };
-        account
+        let starknet_address = kakarot_state.address_registry(evm_address);
+        if starknet_address.is_zero() {
+            return Option::None;
+        }
+        let address = Address { starknet: starknet_address, evm: evm_address };
+        Option::Some(
+            AccountBuilderTrait::new(address).fetch_nonce().fetch_bytecode().fetch_balance().build()
+        )
     }
 
 
@@ -178,13 +158,13 @@ impl AccountImpl of AccountTrait {
 
     fn deploy(self: @Account) {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let account_class_hash = kakarot_state.account_class_hash();
+        let uninitialized_account_class_hash = kakarot_state.uninitialized_account_class_hash();
         let kakarot_address = get_contract_address();
         let calldata: Span<felt252> = array![kakarot_address.into(), self.address().evm.into()]
             .span();
 
         let (starknet_address, _) = deploy_syscall(
-            account_class_hash, self.address().evm.into(), calldata, true
+            uninitialized_account_class_hash, self.address().evm.into(), calldata, true
         )
             .unwrap_syscall();
     }

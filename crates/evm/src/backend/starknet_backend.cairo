@@ -1,5 +1,6 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::{KakarotCore, KakarotCore::KakarotCoreImpl};
+use core::num::traits::zero::Zero;
 use evm::errors::{ensure, EVMError, EOA_EXISTS};
 use evm::model::{Address, AddressTrait, Environment};
 use evm::state::{State, StateTrait};
@@ -29,12 +30,12 @@ fn deploy(evm_address: EthAddress) -> Result<Address, EVMError> {
     ensure(!is_deployed, EVMError::DeployError(EOA_EXISTS))?;
 
     let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-    let account_class_hash = kakarot_state.account_class_hash();
+    let uninitialized_account_class_hash = kakarot_state.uninitialized_account_class_hash();
     let kakarot_address = get_contract_address();
     let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
 
     let (starknet_address, _) = deploy_syscall(
-        account_class_hash, evm_address.into(), calldata, true
+        uninitialized_account_class_hash, evm_address.into(), calldata, true
     )
         .unwrap_syscall();
 
@@ -43,14 +44,12 @@ fn deploy(evm_address: EthAddress) -> Result<Address, EVMError> {
 
 fn get_bytecode(evm_address: EthAddress) -> Span<u8> {
     let kakarot_state = KakarotCore::unsafe_new_contract_state();
-    match kakarot_state.address_registry(evm_address) {
-        Option::Some((
-            acc_type, starknet_address
-        )) => {
-            let account = IAccountDispatcher { contract_address: starknet_address };
-            account.bytecode()
-        },
-        Option::None => { array![].span() }
+    let starknet_address = kakarot_state.address_registry(evm_address);
+    if starknet_address.is_non_zero() {
+        let account = IAccountDispatcher { contract_address: starknet_address };
+        account.bytecode()
+    } else {
+        array![].span()
     }
 }
 

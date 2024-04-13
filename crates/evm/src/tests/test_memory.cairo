@@ -1,5 +1,5 @@
+use core::integer::BoundedInt;
 use evm::memory::{MemoryTrait, InternalMemoryTrait};
-use integer::BoundedInt;
 use utils::constants::{POW_2_8, POW_2_56, POW_2_64, POW_2_120};
 use utils::{math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtTrait};
 
