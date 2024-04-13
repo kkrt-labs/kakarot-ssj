@@ -298,12 +298,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         }
 
         let account = self.env.state.get_account(evm_address);
-        // UnknownAccount can either be
-        // -> Undeployed CAs that might be deployed later, but currently don't
-        // exist and have only been touched for value transfers
-        // -> Undeployed EOAs
-        // Selfdestructed CAs still exist until the end of the TX.
-        if account.is_precompile() || (account.account_type == AccountType::Unknown) {
+        // Relevant cases:
+        // https://github.com/ethereum/go-ethereum/blob/master/core/vm/instructions.go#L392
+        if account.is_precompile() || (!account.has_code_or_nonce() && account.balance.is_zero()) {
             return self.stack.push(0);
         }
         let bytecode = account.code;

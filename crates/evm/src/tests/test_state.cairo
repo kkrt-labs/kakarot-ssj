@@ -94,9 +94,7 @@ mod test_state {
             evm_address,
             UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
         );
-        let expected_type = AccountType::Unknown;
         let expected_account = Account {
-            account_type: expected_type,
             address: Address { evm: evm_address, starknet: starknet_address },
             code: Default::default().span(),
             nonce: 0,
@@ -121,9 +119,7 @@ mod test_state {
         let starknet_address = compute_starknet_address(
             deployer.into(), evm_address, UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
         );
-        let expected_type = AccountType::ContractAccount;
         let expected_account = Account {
-            account_type: expected_type,
             address: Address { evm: evm_address, starknet: starknet_address },
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,
@@ -151,9 +147,7 @@ mod test_state {
         contract_utils::fund_account_with_native_token(ca.starknet, native_token, 420);
 
         let starknet_address = kakarot_core.compute_starknet_address(evm_address);
-        let expected_type = AccountType::ContractAccount;
         let expected_account = Account {
-            account_type: expected_type,
             address: Address { evm: evm_address, starknet: starknet_address },
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,
@@ -191,7 +185,6 @@ mod test_state {
         let key = 10;
         let value = 100;
         let account = Account {
-            account_type: AccountType::ContractAccount,
             address: ca_address,
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,

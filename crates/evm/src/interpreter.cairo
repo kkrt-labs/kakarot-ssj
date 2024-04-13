@@ -66,7 +66,6 @@ impl EVMImpl of EVMTrait {
 
         // Increment nonce of target
         target_account.set_nonce(1);
-        target_account.set_type(AccountType::ContractAccount);
         target_account.address = message.target;
         env.state.set_account(target_account);
 

@@ -514,7 +514,6 @@ fn test_exec_sload_from_storage() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
     let mut ca_address = deploy_contract_account(vm.message().target.evm, array![].span());
     let account = Account {
-        account_type: AccountType::ContractAccount,
         address: ca_address,
         code: array![0xab, 0xcd, 0xef].span(),
         nonce: 1,
@@ -584,7 +583,6 @@ fn test_exec_sstore_on_contract_account_alive() {
 
     // When
     let account = Account {
-        account_type: AccountType::ContractAccount,
         address: vm.message().target,
         code: array![].span(),
         nonce: 1,
@@ -629,12 +627,7 @@ fn test_exec_sstore_finalized() {
     // Deploys the contract account to be able to commit storage changes.
     let ca_address = deploy_contract_account(vm.message().target.evm, array![].span());
     let account = Account {
-        account_type: AccountType::ContractAccount,
-        address: ca_address,
-        code: array![].span(),
-        nonce: 1,
-        balance: 0,
-        selfdestruct: false
+        address: ca_address, code: array![].span(), nonce: 1, balance: 0, selfdestruct: false
     };
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
