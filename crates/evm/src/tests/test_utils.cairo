@@ -212,6 +212,7 @@ fn preset_environment() -> Environment {
         block_timestamp: block_info.block_timestamp,
         block_gas_limit: constants::BLOCK_GAS_LIMIT,
         coinbase: coinbase(),
+        base_fee: 0,
         state: Default::default(),
     }
 }

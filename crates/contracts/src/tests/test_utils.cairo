@@ -17,6 +17,7 @@ use starknet::{
     testing, contract_address_const, EthAddress, ContractAddress, deploy_syscall,
     get_contract_address
 };
+use utils::constants::BLOCK_GAS_LIMIT;
 use utils::eth_transaction::LegacyTransaction;
 
 /// Pop the earliest unpopped logged event for the contract as the requested type
@@ -97,11 +98,12 @@ fn deploy_kakarot_core(
     native_token: ContractAddress, mut eoas: Span<EthAddress>
 ) -> IExtendedKakarotCoreDispatcher {
     let mut calldata: Array<felt252> = array![
-        native_token.into(),
-        UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(),
-        AccountContract::TEST_CLASS_HASH.try_into().unwrap(),
         other_starknet_address().into(),
-        chain_id().into(),
+        native_token.into(),
+        AccountContract::TEST_CLASS_HASH.try_into().unwrap(),
+        UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(),
+        'coinbase',
+        BLOCK_GAS_LIMIT.into(),
     ];
 
     Serde::serialize(@eoas, ref calldata);
@@ -167,6 +169,7 @@ pub(crate) fn setup_contracts_for_testing() -> (
     let kakarot_core = deploy_kakarot_core(
         native_token.contract_address, array![sequencer_evm_address()].span()
     );
+
     // We drop the first event of Kakarot Core, as it is the initializer from Ownable,
     // triggered in the constructor.
     drop_event(kakarot_core.contract_address);
