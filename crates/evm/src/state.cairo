@@ -1,14 +1,14 @@
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
+use core::hash::{HashStateTrait, HashStateExTrait};
+use core::integer::{u256_overflow_sub, u256_overflowing_add};
+use core::nullable::{match_nullable, FromNullableResult};
+use core::poseidon::PoseidonTrait;
 use core::starknet::SyscallResultTrait;
 
 use evm::errors::{ensure, EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, BALANCE_OVERFLOW};
 use evm::model::account::{AccountTrait, AccountInternalTrait};
-use evm::model::{Event, Transfer, Account, AccountType, Address, AddressTrait};
-use hash::{HashStateTrait, HashStateExTrait};
-use integer::{u256_overflow_sub, u256_overflowing_add};
-use nullable::{match_nullable, FromNullableResult};
+use evm::model::{Event, Transfer, Account, Address, AddressTrait};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use poseidon::PoseidonTrait;
 use starknet::{
     Store, StorageBaseAddress, storage_base_address_from_felt252, ContractAddress, EthAddress,
     emit_event_syscall

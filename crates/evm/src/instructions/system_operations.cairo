@@ -1,7 +1,7 @@
+use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 //! System operations.
 
-use box::BoxTrait;
-use contracts::kakarot_core::{KakarotCore, IKakarotCore};
+use core::box::BoxTrait;
 use evm::call_helpers::{CallHelpers, CallType};
 use evm::create_helpers::{CreateHelpers, CreateType};
 use evm::errors::{ensure, EVMError, VALUE_TRANSFER_IN_STATIC_CALL};

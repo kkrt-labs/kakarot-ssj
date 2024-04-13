@@ -1,3 +1,4 @@
+use core::integer::BoundedInt;
 use core::result::ResultTrait;
 use evm::errors::{EVMError, EVMErrorTrait, TYPE_CONVERSION_ERROR};
 use evm::instructions::LoggingOperationsTrait;
@@ -5,7 +6,6 @@ use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{VMBuilderTrait};
-use integer::BoundedInt;
 use utils::helpers::u256_to_bytes_array;
 
 #[test]

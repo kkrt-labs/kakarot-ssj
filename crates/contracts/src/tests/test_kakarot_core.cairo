@@ -5,7 +5,6 @@ use contracts::kakarot_core::interface::IKakarotCore;
 use contracts::kakarot_core::interface::{
     IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
-use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
 };
@@ -16,11 +15,12 @@ use contracts::tests::test_upgradeable::{
 };
 use contracts::tests::test_utils as contract_utils;
 use contracts::uninitialized_account::UninitializedAccount;
+use core::num::traits::Zero;
 use core::option::OptionTrait;
 
 
 use core::traits::TryInto;
-use evm::model::{AccountType, Address};
+use evm::model::{Address};
 use evm::tests::test_utils::sequencer_evm_address;
 use evm::tests::test_utils;
 use starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};
@@ -79,7 +79,9 @@ fn test_kakarot_core_deploy_eoa() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
 
-    let event = contract_utils::pop_log::<KakarotCore::EOADeployed>(kakarot_core.contract_address)
+    let event = contract_utils::pop_log::<
+        KakarotCore::AccountDeployed
+    >(kakarot_core.contract_address)
         .unwrap();
     assert_eq!(event.starknet_address, eoa_starknet_address);
 }
@@ -89,34 +91,25 @@ fn test_kakarot_core_eoa_mapping() {
     // Given
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
     assert(
-        kakarot_core.address_registry(test_utils::evm_address()).is_none(),
+        kakarot_core.address_registry(test_utils::evm_address()).is_zero(),
         'should be uninitialized'
     );
 
     let expected_eoa_starknet_address = kakarot_core.deploy_eoa(test_utils::evm_address());
 
     // When
-    let (account_type, address) = kakarot_core
-        .address_registry(test_utils::evm_address())
-        .expect('should be in registry');
+    let address = kakarot_core.address_registry(test_utils::evm_address());
 
     // Then
-    assert(account_type == AccountType::EOA, 'wrong account_type address');
-    assert(address == expected_eoa_starknet_address, 'wrong address');
+    assert_eq!(address, expected_eoa_starknet_address);
 
     let another_sn_address: ContractAddress = 0xbeef.try_into().unwrap();
 
     let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-    kakarot_state
-        .set_address_registry(
-            test_utils::evm_address(), StoredAccountType::EOA(another_sn_address)
-        );
+    kakarot_state.set_address_registry(test_utils::evm_address(), another_sn_address);
 
-    let (account_type, address) = kakarot_core
-        .address_registry(test_utils::evm_address())
-        .expect('should be in registry');
-    assert(account_type == AccountType::EOA, 'wrong registry address2');
-    assert(address == another_sn_address, 'wrong address2');
+    let address = kakarot_core.address_registry(test_utils::evm_address());
+    assert_eq!(address, another_sn_address)
 }
 
 #[test]
@@ -351,7 +344,7 @@ fn test_eth_send_transaction_deploy_tx() {
 fn test_account_class_hash() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
-    let class_hash = kakarot_core.account_class_hash();
+    let class_hash = kakarot_core.uninitialized_account_class_hash();
 
     assert(
         class_hash == UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(), 'wrong class hash'
@@ -361,13 +354,15 @@ fn test_account_class_hash() {
     testing::set_contract_address(test_utils::other_starknet_address());
     kakarot_core.set_account_class_hash(new_class_hash);
 
-    assert(kakarot_core.account_class_hash() == new_class_hash, 'wrong class hash');
+    assert(kakarot_core.uninitialized_account_class_hash() == new_class_hash, 'wrong class hash');
     let event = contract_utils::pop_log::<
         KakarotCore::AccountClassHashChange
     >(kakarot_core.contract_address)
         .unwrap();
     assert(event.old_class_hash == class_hash, 'wrong old hash');
-    assert(event.new_class_hash == kakarot_core.account_class_hash(), 'wrong new hash');
+    assert(
+        event.new_class_hash == kakarot_core.uninitialized_account_class_hash(), 'wrong new hash'
+    );
 }
 
 #[test]

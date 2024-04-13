@@ -151,7 +151,7 @@ mod checked_mul {
 
 #[cfg(test)]
 mod tests {
-    use integer::BoundedInt;
+    use core::integer::BoundedInt;
     use super::{checked_math::CheckedMath};
 
     #[test]

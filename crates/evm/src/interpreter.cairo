@@ -14,7 +14,7 @@ use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{
     Message, Environment, Address, Transfer, ExecutionSummary, ExecutionSummaryTrait,
-    ExecutionResult, ExecutionResultTrait, AccountType
+    ExecutionResult, ExecutionResultTrait
 };
 use evm::precompiles::Precompiles;
 use evm::stack::{Stack, StackTrait};

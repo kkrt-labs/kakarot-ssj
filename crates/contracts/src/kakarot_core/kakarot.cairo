@@ -2,16 +2,6 @@ use starknet::{ContractAddress, EthAddress, ClassHash};
 
 const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
-// Local enum to differentiate EOA and CA in storage
-// TODO: remove distinction between EOA and CA as EVM accounts
-// As soon as EOA::nonce can be handled at the application level
-#[derive(Drop, starknet::Store, Serde, PartialEq, Default)]
-pub enum StoredAccountType {
-    #[default]
-    UnexistingAccount,
-    EOA: ContractAddress,
-    ContractAccount: ContractAddress,
-}
 
 #[starknet::contract]
 pub mod KakarotCore {
@@ -28,7 +18,7 @@ pub mod KakarotCore {
     use evm::errors::{EVMError, ensure, EVMErrorTrait,};
     use evm::gas;
     use evm::interpreter::{EVMTrait};
-    use evm::model::account::{Account, AccountType, AccountTrait};
+    use evm::model::account::{Account, AccountTrait};
     use evm::model::{
         Transfer, Message, Environment, TransactionResult, TransactionResultTrait, ExecutionSummary,
         ExecutionSummaryTrait, Address, AddressTrait
@@ -40,7 +30,6 @@ pub mod KakarotCore {
         get_caller_address
     };
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
-    use super::{StoredAccountType};
     use utils::address::compute_contract_address;
     use utils::checked_math::CheckedMath;
     use utils::constants;
@@ -66,8 +55,8 @@ pub mod KakarotCore {
         /// Kakarot storage for accounts: Externally Owned Accounts (EOA) and Contract Accounts (CA)
         /// Map their EVM address and their Starknet address
         /// - starknet_address: the deterministic starknet address (31 bytes) computed given an EVM address (20 bytes)
-        address_registry: LegacyMap::<EthAddress, StoredAccountType>,
-        account_class_hash: ClassHash,
+        Kakarot_evm_to_starknet_address: LegacyMap::<EthAddress, ContractAddress>,
+        uninitialized_account_class_hash: ClassHash,
         account_contract_class_hash: ClassHash,
         ca_class_hash: ClassHash,
         // Utility storage
@@ -85,23 +74,13 @@ pub mod KakarotCore {
     enum Event {
         OwnableEvent: ownable_component::Event,
         UpgradeableEvent: upgradeable_component::Event,
-        EOADeployed: EOADeployed,
-        ContractAccountDeployed: ContractAccountDeployed,
+        AccountDeployed: AccountDeployed,
         AccountClassHashChange: AccountClassHashChange,
         EOAClassHashChange: EOAClassHashChange,
-        CAClassHashChange: CAClassHashChange,
     }
 
     #[derive(Drop, starknet::Event)]
-    struct EOADeployed {
-        #[key]
-        evm_address: EthAddress,
-        #[key]
-        starknet_address: ContractAddress,
-    }
-
-    #[derive(Drop, starknet::Event)]
-    struct ContractAccountDeployed {
+    struct AccountDeployed {
         #[key]
         evm_address: EthAddress,
         #[key]
@@ -121,11 +100,6 @@ pub mod KakarotCore {
         new_class_hash: ClassHash,
     }
 
-    #[derive(Drop, starknet::Event)]
-    struct CAClassHashChange {
-        old_class_hash: ClassHash,
-        new_class_hash: ClassHash,
-    }
 
     // TODO: add ability to pass Span<EthAddress>, which should be deployed along with Kakarot
     // this can be done once https://github.com/starkware-libs/cairo/issues/4488 is resolved
@@ -133,14 +107,14 @@ pub mod KakarotCore {
     fn constructor(
         ref self: ContractState,
         native_token: ContractAddress,
-        account_class_hash: ClassHash,
+        uninitialized_account_class_hash: ClassHash,
         account_contract_class_hash: ClassHash,
         owner: ContractAddress,
         chain_id: u128,
         mut eoas_to_deploy: Span<EthAddress>,
     ) {
         self.native_token.write(native_token);
-        self.account_class_hash.write(account_class_hash);
+        self.uninitialized_account_class_hash.write(uninitialized_account_class_hash);
         self.account_contract_class_hash.write(account_contract_class_hash);
         self.ownable.initializer(owner);
         self.chain_id.write(chain_id);
@@ -172,21 +146,13 @@ pub mod KakarotCore {
             self: @ContractState, evm_address: EthAddress
         ) -> ContractAddress {
             let kakarot_address = get_contract_address();
-            compute_starknet_address(kakarot_address, evm_address, self.account_class_hash.read())
+            compute_starknet_address(
+                kakarot_address, evm_address, self.uninitialized_account_class_hash.read()
+            )
         }
 
-        fn address_registry(
-            self: @ContractState, evm_address: EthAddress
-        ) -> Option<(AccountType, ContractAddress)> {
-            match self.address_registry.read(evm_address) {
-                StoredAccountType::UnexistingAccount => Option::None,
-                StoredAccountType::EOA(starknet_address) => Option::Some(
-                    (AccountType::EOA, starknet_address)
-                ),
-                StoredAccountType::ContractAccount(starknet_address) => Option::Some(
-                    (AccountType::ContractAccount, starknet_address)
-                ),
-            }
+        fn address_registry(self: @ContractState, evm_address: EthAddress) -> ContractAddress {
+            self.Kakarot_evm_to_starknet_address.read(evm_address)
         }
 
         fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
@@ -217,17 +183,6 @@ pub mod KakarotCore {
                 evm: account.get_evm_address(), starknet: starknet_caller_address
             };
 
-            // Invariant:
-            // We want to make sure the caller is part of the Kakarot address_registry
-            // and is an EOA. Contracts are added to the registry ONLY if there are
-            // part of the Kakarot system and thus deployed by the main Kakarot contract
-            // itself.
-
-            let (caller_account_type, _) = self
-                .address_registry(origin.evm)
-                .expect('Fetching EOA failed');
-            assert(caller_account_type == AccountType::EOA, 'Caller is not an EOA');
-
             let TransactionResult{success, return_data, gas_used, mut state } = self
                 .process_transaction(origin, tx);
             starknet_backend::commit(ref state).expect('Committing state failed');
@@ -250,30 +205,28 @@ pub mod KakarotCore {
             self.emit(EOAClassHashChange { old_class_hash, new_class_hash });
         }
 
-        fn account_class_hash(self: @ContractState) -> ClassHash {
-            self.account_class_hash.read()
+        fn uninitialized_account_class_hash(self: @ContractState) -> ClassHash {
+            self.uninitialized_account_class_hash.read()
         }
 
         fn set_account_class_hash(ref self: ContractState, new_class_hash: ClassHash) {
             self.ownable.assert_only_owner();
-            let old_class_hash = self.account_class_hash.read();
-            self.account_class_hash.write(new_class_hash);
+            let old_class_hash = self.uninitialized_account_class_hash.read();
+            self.uninitialized_account_class_hash.write(new_class_hash);
             self.emit(AccountClassHashChange { old_class_hash, new_class_hash });
         }
 
         fn register_account(ref self: ContractState, evm_address: EthAddress) {
-            let existing_address = self.address_registry.read(evm_address);
-            assert(
-                existing_address == StoredAccountType::UnexistingAccount, 'Account already exists'
-            );
+            let existing_address = self.Kakarot_evm_to_starknet_address.read(evm_address);
+            assert(existing_address.is_zero(), 'Account already exists');
 
             let caller = get_caller_address();
             let starknet_address = self.compute_starknet_address(evm_address);
             //TODO: enable this assertion. Will require changing test runner to snfoundry
             // assert!(starknet_address == caller, "Account must be registered by the caller");
 
-            self.address_registry.write(evm_address, StoredAccountType::EOA(starknet_address));
-            self.emit(EOADeployed { evm_address, starknet_address });
+            self.Kakarot_evm_to_starknet_address.write(evm_address, starknet_address);
+            self.emit(AccountDeployed { evm_address, starknet_address });
         }
     }
 
@@ -294,9 +247,9 @@ pub mod KakarotCore {
         /// Maps an EVM address to a Starknet address
         /// Triggered when deployment of an EOA or CA is successful
         fn set_address_registry(
-            ref self: ContractState, evm_address: EthAddress, account: StoredAccountType
+            ref self: ContractState, evm_address: EthAddress, starknet_address: ContractAddress
         ) {
-            self.address_registry.write(evm_address, account);
+            self.Kakarot_evm_to_starknet_address.write(evm_address, starknet_address);
         }
 
 

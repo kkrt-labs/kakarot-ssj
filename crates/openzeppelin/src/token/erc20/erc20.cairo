@@ -14,7 +14,7 @@
 
 #[starknet::contract]
 mod ERC20 {
-    use integer::BoundedInt;
+    use core::integer::BoundedInt;
     use openzeppelin::token::erc20::interface::{IERC20, IERC20CamelOnly};
     use starknet::ContractAddress;
     use starknet::get_caller_address;

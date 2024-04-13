@@ -15,7 +15,9 @@ fn test_account_deploy() {
 
     let eoa_address = starknet_backend::deploy(evm_address()).expect('deployment of EOA failed');
 
-    let event = contract_utils::pop_log::<KakarotCore::EOADeployed>(kakarot_core.contract_address)
+    let event = contract_utils::pop_log::<
+        KakarotCore::AccountDeployed
+    >(kakarot_core.contract_address)
         .unwrap();
 
     assert(event.evm_address == evm_address(), 'wrong evm address');

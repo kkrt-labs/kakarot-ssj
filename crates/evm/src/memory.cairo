@@ -1,5 +1,5 @@
-use cmp::{max};
-use integer::{
+use core::cmp::{max, min};
+use core::integer::{
     u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_as_non_zero
 };
 use utils::constants::{
@@ -57,7 +57,7 @@ impl MemoryImpl of MemoryTrait {
     fn store(ref self: Memory, element: u256, offset: usize) {
         //TODO(optimization): new bytes len was already compute when charging the gas
         let new_min_bytes_len = helpers::ceil32(offset + 32);
-        self.bytes_len = cmp::max(new_min_bytes_len, self.size());
+        self.bytes_len = max(new_min_bytes_len, self.size());
 
         // Check alignment of offset to bytes16 chunks
         let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
@@ -92,7 +92,7 @@ impl MemoryImpl of MemoryTrait {
     #[inline(always)]
     fn store_byte(ref self: Memory, value: u8, offset: usize) {
         let new_min_bytes_len = helpers::ceil32(offset + 1);
-        self.bytes_len = cmp::max(new_min_bytes_len, self.size());
+        self.bytes_len = max(new_min_bytes_len, self.size());
 
         // Compute actual offset in Memory, given active_segment of Memory (current Execution Context id)
         // And Memory Segment Size
@@ -136,7 +136,7 @@ impl MemoryImpl of MemoryTrait {
 
         // Compute new bytes_len.
         let new_min_bytes_len = helpers::ceil32(offset + elements.len());
-        self.bytes_len = cmp::max(new_min_bytes_len, self.size());
+        self.bytes_len = max(new_min_bytes_len, self.size());
 
         // Compute the offset inside the Memory, given its active segment, following the formula:
         // index = offset + self.active_segment * 125000
@@ -191,7 +191,7 @@ impl MemoryImpl of MemoryTrait {
         // For performance reasons, we don't add the zeros directly to the source, which would generate an implicit copy, which might be expensive if the source is big.
         // Instead, we'll copy the source into memory, then create a new span containing the zeros.
         // TODO: optimize this with a specific function
-        let mut slice_size = cmp::min(source.len(), length);
+        let mut slice_size = min(source.len(), length);
 
         let data_to_copy: Span<u8> = source.slice(0, slice_size);
         self.store_n(data_to_copy, offset);

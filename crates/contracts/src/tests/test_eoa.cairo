@@ -2,7 +2,6 @@
 mod test_external_owned_account {
     use contracts::account_contract::AccountContract::TransactionExecuted;
     use contracts::account_contract::{AccountContract, IAccountDispatcher, IAccountDispatcherTrait};
-    use contracts::kakarot_core::kakarot::StoredAccountType;
     use contracts::kakarot_core::{
         IKakarotCore, KakarotCore, KakarotCore::KakarotCoreInternal,
         interface::IExtendedKakarotCoreDispatcherTrait

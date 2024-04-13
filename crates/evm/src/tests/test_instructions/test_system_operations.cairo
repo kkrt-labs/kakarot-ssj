@@ -15,7 +15,7 @@ use evm::interpreter::{EVMTrait};
 use evm::memory::MemoryTrait;
 use evm::model::account::{Account};
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{AccountTrait, Address, AccountType, Transfer};
+use evm::model::{AccountTrait, Address, Transfer};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, State};
 use evm::tests::test_utils::{

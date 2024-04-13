@@ -173,7 +173,7 @@ pub(crate) fn setup_contracts_for_testing() -> (
 
     let sequencer: EthAddress = sequencer_evm_address();
 
-    let (_, sequencer_sn_address) = kakarot_core.address_registry(sequencer).unwrap();
+    let sequencer_sn_address = kakarot_core.address_registry(sequencer);
     // We drop the event of the EOA deployment
     drop_event(kakarot_core.contract_address);
     testing::set_sequencer_address(sequencer_sn_address);

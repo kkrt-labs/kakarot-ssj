@@ -3,19 +3,19 @@ use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_utils::{
     setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
 };
+use core::integer::u32_overflowing_add;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{Account, AccountType};
+use evm::model::{Account};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
     VMBuilderTrait, evm_address, origin, callvalue, native_token, other_address, gas_price,
     tx_gas_limit
 };
-use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 
 use starknet::testing::set_contract_address;

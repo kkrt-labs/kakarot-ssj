@@ -1,8 +1,8 @@
+use core::integer::u128_overflowing_sub;
 use evm::errors::{EVMError, ensure};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Message, Environment, ExecutionResult};
 use evm::stack::{Stack, StackTrait};
-use integer::u128_overflowing_sub;
 use starknet::EthAddress;
 use utils::helpers::{SpanExtTrait, ArrayExtTrait};
 use utils::set::{Set, SetTrait, SpanSet};

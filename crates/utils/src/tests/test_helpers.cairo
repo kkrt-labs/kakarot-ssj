@@ -346,7 +346,7 @@ mod u64_test {
 }
 
 mod u128_test {
-    use integer::BoundedInt;
+    use core::integer::BoundedInt;
     use utils::helpers::Bitshift;
     use utils::helpers::U128Trait;
     use utils::helpers::{BitsUsed, BytesUsedTrait, ToBytes};

@@ -8,7 +8,7 @@ use core::starknet::EthAddress;
 use evm::backend::starknet_backend;
 use evm::model::account::AccountTrait;
 
-use evm::model::{Address, Account, AccountType, AddressTrait};
+use evm::model::{Address, Account, AddressTrait};
 use evm::state::StateTrait;
 use evm::state::{State, StateChangeLog, StateChangeLogTrait};
 use evm::tests::test_utils::{evm_address};

@@ -1,5 +1,3 @@
-use contracts::kakarot_core::kakarot::StoredAccountType;
-use evm::model::AccountType;
 use starknet::{ContractAddress, EthAddress, ClassHash};
 use utils::eth_transaction::EthereumTransaction;
 
@@ -20,11 +18,9 @@ pub trait IKakarotCore<TContractState> {
     fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// Checks into KakarotCore storage if an EOA or a CA has been deployed for
-    /// a particular EVM address and if so, returns its corresponding type with
-    /// its starknet address.  Otherwise, returns Option::None.
-    fn address_registry(
-        self: @TContractState, evm_address: EthAddress
-    ) -> Option<(AccountType, ContractAddress)>;
+    /// a particular EVM address and. If so returns its corresponding address,
+    /// otherwise returns 0
+    fn address_registry(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
 
     /// Deploys an EOA for a particular EVM address
@@ -52,7 +48,7 @@ pub trait IKakarotCore<TContractState> {
     fn get_account_contract_class_hash(self: @TContractState) -> ClassHash;
 
     // Getter for the Generic Account Class
-    fn account_class_hash(self: @TContractState) -> ClassHash;
+    fn uninitialized_account_class_hash(self: @TContractState) -> ClassHash;
     // Setter for the Generic Account Class
     fn set_account_class_hash(ref self: TContractState, new_class_hash: ClassHash);
 
@@ -76,11 +72,9 @@ pub trait IExtendedKakarotCore<TContractState> {
     fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// Checks into KakarotCore storage if an EOA or a CA has been deployed for
-    /// a particular EVM address and if so, returns its corresponding type with
-    /// its starknet address.  Otherwise, returns Option::None.
-    fn address_registry(
-        self: @TContractState, evm_address: EthAddress
-    ) -> Option<(AccountType, ContractAddress)>;
+    /// a particular EVM address and. If so returns its corresponding address,
+    /// otherwise returns 0
+    fn address_registry(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// Deploys an EOA for a particular EVM address
     fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
@@ -105,7 +99,7 @@ pub trait IExtendedKakarotCore<TContractState> {
     fn get_account_contract_class_hash(self: @TContractState) -> ClassHash;
 
     // Getter for the Generic Account Class
-    fn account_class_hash(self: @TContractState) -> ClassHash;
+    fn uninitialized_account_class_hash(self: @TContractState) -> ClassHash;
     // Setter for the Generic Account Class
     fn set_account_class_hash(ref self: TContractState, new_class_hash: ClassHash);
 
