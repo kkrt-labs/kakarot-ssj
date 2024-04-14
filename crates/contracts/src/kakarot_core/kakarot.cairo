@@ -120,7 +120,7 @@ pub mod KakarotCore {
         self.Kakarot_block_gas_limit.write(block_gas_limit);
         loop {
             match eoas_to_deploy.pop_front() {
-                Option::Some(eoa_address) => self.deploy_eoa(*eoa_address),
+                Option::Some(eoa_address) => self.deploy_externally_owned_account(*eoa_address),
                 Option::None => { break; },
             };
         }
@@ -133,7 +133,7 @@ pub mod KakarotCore {
             self.Kakarot_native_token_address.write(native_token);
         }
 
-        fn native_token(self: @ContractState) -> ContractAddress {
+        fn get_native_token(self: @ContractState) -> ContractAddress {
             self.Kakarot_native_token_address.read()
         }
 
@@ -150,7 +150,9 @@ pub mod KakarotCore {
             self.Kakarot_evm_to_starknet_address.read(evm_address)
         }
 
-        fn deploy_eoa(ref self: ContractState, evm_address: EthAddress) -> ContractAddress {
+        fn deploy_externally_owned_account(
+            ref self: ContractState, evm_address: EthAddress
+        ) -> ContractAddress {
             starknet_backend::deploy(evm_address).expect('EOA Deployment failed').starknet
         }
 
@@ -215,7 +217,6 @@ pub mod KakarotCore {
             let existing_address = self.Kakarot_evm_to_starknet_address.read(evm_address);
             assert(existing_address.is_zero(), 'Account already exists');
 
-            let caller = get_caller_address();
             let starknet_address = self.compute_starknet_address(evm_address);
             //TODO: enable this assertion. Will require changing test runner to snfoundry
             // assert!(starknet_address == caller, "Account must be registered by the caller");

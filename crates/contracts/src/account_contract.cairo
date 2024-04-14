@@ -120,7 +120,7 @@ pub mod AccountContract {
 
             let kakarot = IKakarotCoreDispatcher { contract_address: kakarot_address };
 
-            let native_token = kakarot.native_token();
+            let native_token = kakarot.get_native_token();
             // To internally perform value transfer of the network's native
             // token (which conforms to the ERC20 standard), we need to give the
             // KakarotCore contract infinite allowance

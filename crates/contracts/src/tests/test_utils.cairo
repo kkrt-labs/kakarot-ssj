@@ -94,6 +94,7 @@ fn deploy_native_token() -> IERC20CamelDispatcher {
         Result::Err(err) => panic(err)
     }
 }
+
 fn deploy_kakarot_core(
     native_token: ContractAddress, mut eoas: Span<EthAddress>
 ) -> IExtendedKakarotCoreDispatcher {
@@ -127,7 +128,6 @@ pub(crate) fn deploy_contract_account(evm_address: EthAddress, bytecode: Span<u8
     ca_address
 }
 
-
 fn deploy_eoa(eoa_address: EthAddress) -> IAccountDispatcher {
     let kakarot_address = get_contract_address();
     let calldata: Span<felt252> = array![kakarot_address.into(), eoa_address.into()].span();
@@ -151,7 +151,6 @@ fn call_transaction(
         chain_id, nonce: 0, gas_price: 0, gas_limit: 500000000, destination, amount: 0, calldata
     }
 }
-
 
 fn fund_account_with_native_token(
     contract_address: ContractAddress, native_token: IERC20CamelDispatcher, amount: u256,

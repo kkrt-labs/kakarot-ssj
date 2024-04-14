@@ -92,7 +92,7 @@ fn test_exec_call() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
-    kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_externally_owned_account(evm_address);
 
     // Set vm bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -147,7 +147,7 @@ fn test_exec_call_no_return() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
-    kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_externally_owned_account(evm_address);
 
     // Set vm bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -199,7 +199,7 @@ fn test_exec_staticcall() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
-    kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_externally_owned_account(evm_address);
 
     // Set vm bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)
@@ -251,7 +251,7 @@ fn test_exec_staticcall_no_return() {
     let (_, kakarot_core) = setup_contracts_for_testing();
 
     let evm_address = evm_address();
-    kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_externally_owned_account(evm_address);
 
     // Set vm bytecode
     // (call 0xffffff 0x100 0 0 0 0 1)

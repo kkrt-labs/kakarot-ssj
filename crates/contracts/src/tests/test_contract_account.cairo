@@ -5,7 +5,7 @@ use evm::tests::test_utils::{ca_address, native_token};
 
 #[test]
 fn test_ca_deploy() {
-    let (_, kakarot_core) = setup_contracts_for_testing();
+    setup_contracts_for_testing();
     let ca_address = deploy_contract_account(ca_address(), Default::default().span());
     let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
 
