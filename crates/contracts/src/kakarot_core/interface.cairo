@@ -19,7 +19,6 @@ pub trait IKakarotCore<TContractState> {
     /// otherwise returns 0
     fn address_registry(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
-
     /// Deploys an EOA for a particular EVM address
     fn deploy_externally_owned_account(
         ref self: TContractState, evm_address: EthAddress
@@ -73,7 +72,9 @@ pub trait IExtendedKakarotCore<TContractState> {
     fn address_registry(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
     /// Deploys an EOA for a particular EVM address
-    fn deploy_eoa(ref self: TContractState, evm_address: EthAddress) -> ContractAddress;
+    fn deploy_externally_owned_account(
+        ref self: TContractState, evm_address: EthAddress
+    ) -> ContractAddress;
 
     /// View entrypoint into the EVM
     /// Performs view calls into the blockchain

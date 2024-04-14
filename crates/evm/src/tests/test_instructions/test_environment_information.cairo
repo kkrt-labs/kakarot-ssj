@@ -53,7 +53,7 @@ fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls
 fn test_exec_balance_eoa() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let eoa = kakarot_core.deploy_eoa(evm_address());
+    let eoa = kakarot_core.deploy_externally_owned_account(evm_address());
 
     fund_account_with_native_token(eoa, native_token, 0x1);
 
@@ -548,7 +548,7 @@ fn test_exec_extcodesize_eoa() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let (_, kakarot_core) = setup_contracts_for_testing();
-    let _expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
+    let _expected_eoa_starknet_address = kakarot_core.deploy_externally_owned_account(evm_address);
     vm.stack.push(evm_address.into()).expect('push failed');
 
     // When
@@ -668,7 +668,7 @@ fn test_exec_extcodecopy_eoa() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let (_, kakarot_core) = setup_contracts_for_testing();
-    kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_externally_owned_account(evm_address);
 
     // size
     vm.stack.push(5).expect('push failed');
@@ -894,7 +894,7 @@ fn test_exec_extcodehash_precompile() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let (_, kakarot_core) = setup_contracts_for_testing();
-    kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_externally_owned_account(evm_address);
     vm.stack.push(evm_address.into()).expect('push failed');
     set_contract_address(kakarot_core.contract_address);
 
@@ -948,7 +948,7 @@ fn test_exec_extcodehash_eoa_empty_eoa() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let (_, kakarot_core) = setup_contracts_for_testing();
-    kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_externally_owned_account(evm_address);
 
     vm.stack.push(evm_address.into()).expect('push failed');
 
