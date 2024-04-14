@@ -56,7 +56,7 @@ fn test_kakarot_core_renounce_ownership() {
 
 #[test]
 fn test_kakarot_core_chain_id() {
-    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    contract_utils::setup_contracts_for_testing();
 
     assert(chain_id() == contract_utils::chain_id(), 'wrong chain id');
 }
@@ -65,12 +65,13 @@ fn test_kakarot_core_chain_id() {
 fn test_kakarot_core_set_native_token() {
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
-    assert(kakarot_core.native_token() == native_token.contract_address, 'wrong native_token');
+    assert(kakarot_core.get_native_token() == native_token.contract_address, 'wrong native_token');
 
     testing::set_contract_address(test_utils::other_starknet_address());
     kakarot_core.set_native_token(contract_address_const::<0xdead>());
     assert(
-        kakarot_core.native_token() == contract_address_const::<0xdead>(), 'wrong new native_token'
+        kakarot_core.get_native_token() == contract_address_const::<0xdead>(),
+        'wrong new native_token'
     );
 }
 

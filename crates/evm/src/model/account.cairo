@@ -170,7 +170,8 @@ impl AccountImpl of AccountTrait {
     }
 
     fn commit_storage(self: @Account, key: u256, value: u256) {
-        IAccountDispatcher { contract_address: self.starknet_address() }.write_storage(key, value);
+        IAccountDispatcher { contract_address: self.get_registered_starknet_address() }
+            .write_storage(key, value);
     }
 
 
@@ -199,7 +200,7 @@ impl AccountImpl of AccountTrait {
     }
 
     #[inline(always)]
-    fn starknet_address(self: @Account) -> ContractAddress {
+    fn get_registered_starknet_address(self: @Account) -> ContractAddress {
         *self.address.starknet
     }
 
@@ -237,7 +238,9 @@ impl AccountImpl of AccountTrait {
     /// * `value` - The value to set
     #[inline(always)]
     fn store_storage(self: @Account, key: u256, value: u256) {
-        let mut contract_account = IAccountDispatcher { contract_address: self.starknet_address() };
+        let mut contract_account = IAccountDispatcher {
+            contract_address: self.get_registered_starknet_address()
+        };
         contract_account.write_storage(key, value);
     }
 
