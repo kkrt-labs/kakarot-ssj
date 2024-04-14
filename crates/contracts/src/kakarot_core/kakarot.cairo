@@ -217,7 +217,6 @@ pub mod KakarotCore {
             let existing_address = self.Kakarot_evm_to_starknet_address.read(evm_address);
             assert(existing_address.is_zero(), 'Account already exists');
 
-            let caller = get_caller_address();
             let starknet_address = self.compute_starknet_address(evm_address);
             //TODO: enable this assertion. Will require changing test runner to snfoundry
             // assert!(starknet_address == caller, "Account must be registered by the caller");

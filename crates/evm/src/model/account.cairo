@@ -163,9 +163,7 @@ impl AccountImpl of AccountTrait {
         let calldata: Span<felt252> = array![kakarot_address.into(), self.address().evm.into()]
             .span();
 
-        let (starknet_address, _) = deploy_syscall(
-            uninitialized_account_class_hash, self.address().evm.into(), calldata, true
-        )
+        deploy_syscall(uninitialized_account_class_hash, self.address().evm.into(), calldata, true)
             .unwrap_syscall();
     }
 
