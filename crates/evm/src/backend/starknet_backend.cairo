@@ -155,7 +155,9 @@ mod internals {
                 return;
             }
 
-            let account = IAccountDispatcher { contract_address: self.starknet_address() };
+            let account = IAccountDispatcher {
+                contract_address: self.get_registered_starknet_address()
+            };
             account.write_bytecode(self.bytecode());
             account.set_nonce(*self.nonce);
 
@@ -172,7 +174,9 @@ mod internals {
             return;
         }
 
-        let account = IAccountDispatcher { contract_address: self.starknet_address() };
+        let account = IAccountDispatcher {
+            contract_address: self.get_registered_starknet_address()
+        };
 
         account.set_nonce(*self.nonce);
         //TODO: handle storage commitment
@@ -188,7 +192,7 @@ mod internals {
     /// Iterates through the list of pending transfer and triggers them
     fn transfer_native_token(ref self: State) -> Result<(), EVMError> {
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let native_token = kakarot_state.native_token();
+        let native_token = kakarot_state.get_native_token();
         loop {
             match self.transfers.pop_front() {
                 Option::Some(transfer) => {
