@@ -1,3 +1,6 @@
+use core::cmp::{min, max};
+
+use core::integer::{u32_overflowing_add, BoundedInt};
 // CREDITS: The implementation has take reference from [revm](https://github.com/bluealloy/revm/blob/main/crates/precompile/src/modexp.rs)
 
 use core::option::OptionTrait;
@@ -8,8 +11,6 @@ use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 
 use evm::precompiles::Precompile;
-
-use integer::{u32_overflowing_add, BoundedInt};
 use starknet::EthAddress;
 use utils::crypto::modexp::lib::modexp;
 use utils::helpers::{U256Trait, U8SpanExTrait, U64Trait, FromBytes, BitsUsed};
@@ -60,7 +61,7 @@ impl ModExp of Precompile {
         }
 
         // Used to extract ADJUSTED_EXPONENT_LENGTH.
-        let exp_highp_len = cmp::min(exp_len, 32);
+        let exp_highp_len = min(exp_len, 32);
 
         let input = if input.len() >= HEADER_LENGTH {
             input.slice(HEADER_LENGTH, input.len() - HEADER_LENGTH)
@@ -111,11 +112,11 @@ fn calc_gas(base_length: u64, exp_length: u64, mod_length: u64, exp_highp: u256)
     let gas = (multiplication_complexity * iteration_count.into()) / 3;
     let gas: u64 = gas.try_into().unwrap_or(BoundedInt::<u64>::max());
 
-    cmp::max(gas, 200)
+    max(gas, 200)
 }
 
 fn calculate_multiplication_complexity(base_length: u64, mod_length: u64) -> u256 {
-    let max_length = cmp::max(base_length, mod_length);
+    let max_length = max(base_length, mod_length);
 
     let _8: NonZero<u64> = 8_u64.try_into().unwrap();
     let (words, rem) = DivRem::div_rem(max_length, _8);
@@ -147,5 +148,5 @@ fn calculate_iteration_count(exp_length: u64, exp_highp: u256) -> u64 {
         length_part + bits_part.into()
     };
 
-    cmp::max(iteration_count, 1)
+    max(iteration_count, 1)
 }

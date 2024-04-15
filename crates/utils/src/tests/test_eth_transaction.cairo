@@ -3,8 +3,9 @@ use core::option::OptionTrait;
 use core::starknet::eth_signature::{EthAddress, Signature};
 
 use utils::eth_transaction::{
-    EthTransactionTrait, EncodedTransactionTrait, EncodedTransaction, TransactionMetadata,
-    EthTransactionError, EthereumTransaction, EthereumTransactionTrait, AccessListItem
+    deserialize_encoded_transaction, EthTransactionTrait, EncodedTransactionTrait,
+    EncodedTransaction, TransactionMetadata, EthTransactionError, EthereumTransaction,
+    EthereumTransactionTrait, AccessListItem
 };
 use utils::helpers::{U256Trait, ToBytes};
 use utils::rlp::{RLPTrait, RLPItem, RLPHelpersTrait};
@@ -21,7 +22,7 @@ fn test_decode_legacy_tx() {
     // chain id used: 0x434841494e5f4944
     let data = legacy_rlp_encoded_tx();
 
-    let encoded_tx: Option<EncodedTransaction> = data.try_into();
+    let encoded_tx: Option<EncodedTransaction> = deserialize_encoded_transaction(data);
     let encoded_tx = encoded_tx.unwrap();
     assert(encoded_tx == EncodedTransaction::Legacy(data), 'encoded_tx is not Legacy');
 
@@ -51,7 +52,7 @@ fn test_decode_legacy_deploy_tx() {
     // expected rlp decoding:  ["0x","0x0a","0x061a80","0x","0x0186a0","0x600160010a5060006000f3","0x4b4b5254","0x","0x"]
     let data = legacy_rlp_encoded_deploy_tx();
 
-    let encoded_tx: Option<EncodedTransaction> = data.try_into();
+    let encoded_tx: Option<EncodedTransaction> = deserialize_encoded_transaction(data);
     let encoded_tx = encoded_tx.unwrap();
     assert(encoded_tx == EncodedTransaction::Legacy(data), 'encoded_tx is not Legacy');
 
@@ -76,7 +77,7 @@ fn test_decode_eip_2930_tx() {
     // chain id used: 0x434841494e5f4944
     let data = eip_2930_encoded_tx();
 
-    let encoded_tx: Option<EncodedTransaction> = data.try_into();
+    let encoded_tx: Option<EncodedTransaction> = deserialize_encoded_transaction(data);
     let encoded_tx = encoded_tx.unwrap();
     assert(encoded_tx == EncodedTransaction::EIP2930(data), 'encoded_tx is not Eip2930');
 
@@ -119,7 +120,7 @@ fn test_decode_eip_1559_tx() {
     // chain id used: 0x434841494e5f4944
     let data = eip_1559_encoded_tx();
 
-    let encoded_tx: Option<EncodedTransaction> = data.try_into();
+    let encoded_tx: Option<EncodedTransaction> = deserialize_encoded_transaction(data);
     let encoded_tx = encoded_tx.unwrap();
     assert(encoded_tx == EncodedTransaction::EIP1559(data), 'encoded_tx is not EIP1559');
 
@@ -179,7 +180,7 @@ fn test_is_legacy_tx_eip_2930_tx() {
 #[test]
 fn test_validate_legacy_tx() {
     let encoded_tx_data = legacy_rlp_encoded_tx();
-    let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
+    let address: EthAddress = 0xaA36F24f65b5F0f2c642323f3d089A3F0f2845Bf_u256.into();
     let account_nonce = 0x0;
     let chain_id = chain_id();
 
@@ -187,9 +188,9 @@ fn test_validate_legacy_tx() {
     // run: cp .env.example .env
     // bun install & bun run scripts/compute_rlp_encoding.ts
     let signature = Signature {
-        r: 0xaae7c4f6e4caa03257e37a6879ed5b51a6f7db491d559d10a0594f804aa8d797,
-        s: 0x2f3d9634f8cb9b9a43b048ee3310be91c2d3dc3b51a3313b473ef2260bbf6bc7,
-        y_parity: true
+        r: 0x5e5202c7e9d6d0964a1f48eaecf12eef1c3cafb2379dfeca7cbd413cedd4f2c7,
+        s: 0x66da52d0b666fc2a35895e0c91bc47385fe3aa347c7c2a129ae2b7b06cb5498b,
+        y_parity: false
     };
 
     let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
@@ -203,7 +204,7 @@ fn test_validate_legacy_tx() {
 #[test]
 fn test_validate_eip_2930_tx() {
     let encoded_tx_data = eip_2930_encoded_tx();
-    let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
+    let address: EthAddress = 0xaA36F24f65b5F0f2c642323f3d089A3F0f2845Bf_u256.into();
     let account_nonce = 0x0;
     let chain_id = chain_id();
 
@@ -211,9 +212,9 @@ fn test_validate_eip_2930_tx() {
     // run: cp .env.example .env
     // bun install & bun run scripts/compute_rlp_encoding.ts
     let signature = Signature {
-        r: 0xae2dbf7b1e1bdee326066be5afcfb673fe3d1287ef5d5973d4a83025b72bad1e,
-        s: 0x48ecf8bc7153513fce782a1f369a8cd3ee9132fc062eb0558cf7102973624774,
-        y_parity: false
+        r: 0xbced8d81c36fe13c95b883b67898b47b4b70cae79e89fa27856ddf8c533886d1,
+        s: 0x3de0109f00bc3ed95ffec98edd55b6f750cb77be8e755935dbd6cfec59da7ad0,
+        y_parity: true
     };
 
     let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
@@ -227,7 +228,7 @@ fn test_validate_eip_2930_tx() {
 #[test]
 fn test_validate_eip_1559_tx() {
     let encoded_tx_data = eip_1559_encoded_tx();
-    let address: EthAddress = 0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466_u256.into();
+    let address: EthAddress = 0xaA36F24f65b5F0f2c642323f3d089A3F0f2845Bf_u256.into();
     let account_nonce = 0x0;
     let chain_id = chain_id();
 
@@ -235,9 +236,9 @@ fn test_validate_eip_1559_tx() {
     // run: cp .env.example .env
     // bun install & bun run scripts/compute_rlp_encoding.ts
     let signature = Signature {
-        r: 0x141615694556f9078d9da3249e8aa1987524f57153121599cf36d7681b809858,
-        s: 0x052052478f912dbe80339e3f198be8c9e1cd44eaabb295d912087d975ef38192,
-        y_parity: false
+        r: 0x0f9a716653c19fefc240d1da2c5759c50f844fc8835c82834ea3ab7755f789a0,
+        s: 0x71506d904c05c6e5ce729b5dd88bcf29db9461c8d72413b864923e8d8f6650c0,
+        y_parity: true
     };
 
     let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };

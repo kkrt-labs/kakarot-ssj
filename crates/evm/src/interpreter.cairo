@@ -14,7 +14,7 @@ use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{
     Message, Environment, Address, Transfer, ExecutionSummary, ExecutionSummaryTrait,
-    ExecutionResult, ExecutionResultTrait, AccountType
+    ExecutionResult, ExecutionResultTrait
 };
 use evm::precompiles::Precompiles;
 use evm::stack::{Stack, StackTrait};
@@ -66,7 +66,6 @@ impl EVMImpl of EVMTrait {
 
         // Increment nonce of target
         target_account.set_nonce(1);
-        target_account.set_type(AccountType::ContractAccount);
         target_account.address = message.target;
         env.state.set_account(target_account);
 

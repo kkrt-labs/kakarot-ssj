@@ -1,7 +1,6 @@
+mod account_contract;
 mod cairo1_helpers;
 mod components;
-mod contract_account;
-mod eoa;
 
 mod errors;
 

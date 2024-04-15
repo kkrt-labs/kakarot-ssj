@@ -1,13 +1,13 @@
 use contracts::tests::test_utils::{deploy_contract_account};
 use contracts::uninitialized_account::UninitializedAccount;
+use core::nullable::{match_nullable, FromNullableResult};
 use core::traits::TryInto;
 use evm::errors::{EVMError};
-use evm::model::contract_account::ContractAccountTrait;
+
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{Message, Environment, Address, Account, AccountType};
+use evm::model::{Message, Environment, Address, Account, AccountTrait};
 use evm::state::State;
 use evm::{stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}};
-use nullable::{match_nullable, FromNullableResult};
 use starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
@@ -137,7 +137,7 @@ fn native_token() -> ContractAddress {
 }
 
 fn chain_id() -> u128 {
-    'CHAIN_ID'.try_into().unwrap()
+    'KKRT'.try_into().unwrap()
 }
 
 fn kakarot_address() -> ContractAddress {
@@ -212,6 +212,7 @@ fn preset_environment() -> Environment {
         block_timestamp: block_info.block_timestamp,
         block_gas_limit: constants::BLOCK_GAS_LIMIT,
         coinbase: coinbase(),
+        base_fee: 0,
         state: Default::default(),
     }
 }
@@ -246,7 +247,6 @@ fn initialize_contract_account(
     let mut ca_address = deploy_contract_account(eth_address, bytecode);
     // Set the storage of the contract account
     let account = Account {
-        account_type: AccountType::ContractAccount,
         address: ca_address,
         code: array![0xab, 0xcd, 0xef].span(),
         nonce: 1,

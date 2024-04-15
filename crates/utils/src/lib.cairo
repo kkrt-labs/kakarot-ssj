@@ -11,6 +11,7 @@ mod helpers;
 mod i256;
 mod math;
 mod rlp;
+mod serialization;
 mod set;
 mod storage;
 

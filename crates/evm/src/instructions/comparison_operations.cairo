@@ -1,9 +1,9 @@
+use core::integer::BoundedInt;
 use evm::errors::EVMError;
 use evm::gas;
 use evm::model::vm::{VM, VMTrait};
 // Internal imports
 use evm::stack::StackTrait;
-use integer::BoundedInt;
 use utils::constants::{POW_2_127};
 use utils::i256::i256;
 use utils::math::{Exponentiation, Bitshift, WrappingBitshift};

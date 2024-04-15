@@ -1,10 +1,9 @@
+use core::integer::BoundedInt;
 use core::result::ResultTrait;
 use evm::instructions::StopAndArithmeticOperationsTrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
 use evm::tests::test_utils::VMBuilderTrait;
-
-use integer::BoundedInt;
 
 
 #[test]

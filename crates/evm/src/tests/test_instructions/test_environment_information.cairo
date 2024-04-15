@@ -3,19 +3,19 @@ use contracts::tests::test_data::counter_evm_bytecode;
 use contracts::tests::test_utils::{
     setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
 };
+use core::integer::u32_overflowing_add;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use evm::instructions::EnvironmentInformationTrait;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
-use evm::model::contract_account::ContractAccountTrait;
+
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{Account, AccountType};
+use evm::model::{Account};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use evm::tests::test_utils::{
     VMBuilderTrait, evm_address, origin, callvalue, native_token, other_address, gas_price,
     tx_gas_limit
 };
-use integer::u32_overflowing_add;
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 
 use starknet::testing::set_contract_address;
@@ -53,7 +53,7 @@ fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls
 fn test_exec_balance_eoa() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let eoa = kakarot_core.deploy_eoa(evm_address());
+    let eoa = kakarot_core.deploy_externally_owned_account(evm_address());
 
     fund_account_with_native_token(eoa, native_token, 0x1);
 
@@ -548,7 +548,7 @@ fn test_exec_extcodesize_eoa() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let (_, kakarot_core) = setup_contracts_for_testing();
-    let _expected_eoa_starknet_address = kakarot_core.deploy_eoa(evm_address);
+    let _expected_eoa_starknet_address = kakarot_core.deploy_externally_owned_account(evm_address);
     vm.stack.push(evm_address.into()).expect('push failed');
 
     // When
@@ -668,7 +668,7 @@ fn test_exec_extcodecopy_eoa() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let (_, kakarot_core) = setup_contracts_for_testing();
-    kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_externally_owned_account(evm_address);
 
     // size
     vm.stack.push(5).expect('push failed');
@@ -894,7 +894,7 @@ fn test_exec_extcodehash_precompile() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let (_, kakarot_core) = setup_contracts_for_testing();
-    kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_externally_owned_account(evm_address);
     vm.stack.push(evm_address.into()).expect('push failed');
     set_contract_address(kakarot_core.contract_address);
 
@@ -905,62 +905,58 @@ fn test_exec_extcodehash_precompile() {
     assert(vm.stack.peek().unwrap() == 0, 'expected 0');
 }
 
+//TODO: restore after selfdestruct
+// #[test]
+// fn test_exec_extcodehash_selfdestructed() {
+//     // Given
+//     let evm_address = evm_address();
+//     let mut vm = VMBuilderTrait::new_with_presets().build();
+
+//     setup_contracts_for_testing();
+
+//     // The bytecode remains empty, and we expect the empty hash in return
+//     let mut ca_address = deploy_contract_account(evm_address, array![].span());
+//     let account = Account {
+//         
+//         address: ca_address,
+//         code: array![].span(),
+//         nonce: 1,
+//         balance: 1,
+//         selfdestruct: false
+//     };
+//     account.selfdestruct();
+
+//     vm.stack.push(evm_address.into()).expect('push failed');
+
+//     // When
+//     vm.exec_extcodehash().unwrap();
+
+//     // Then
+//     assert(
+//         vm
+//             .stack
+//             .peek()
+//             .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
+//         'expected empty hash'
+//     );
+// }
+
 #[test]
-fn test_exec_extcodehash_selfdestructed() {
-    // Given
-    let evm_address = evm_address();
-    let mut vm = VMBuilderTrait::new_with_presets().build();
-
-    setup_contracts_for_testing();
-
-    // The bytecode remains empty, and we expect the empty hash in return
-    let mut ca_address = deploy_contract_account(evm_address, array![].span());
-    let account = Account {
-        account_type: AccountType::ContractAccount,
-        address: ca_address,
-        code: array![].span(),
-        nonce: 1,
-        balance: 1,
-        selfdestruct: false
-    };
-    account.selfdestruct();
-
-    vm.stack.push(evm_address.into()).expect('push failed');
-
-    // When
-    vm.exec_extcodehash().unwrap();
-
-    // Then
-    assert(
-        vm
-            .stack
-            .peek()
-            .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
-        'expected empty hash'
-    );
-}
-
-#[test]
-fn test_exec_extcodehash_eoa() {
+fn test_exec_extcodehash_eoa_empty_eoa() {
     // Given
     let evm_address = evm_address();
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
     let (_, kakarot_core) = setup_contracts_for_testing();
-    kakarot_core.deploy_eoa(evm_address);
+    kakarot_core.deploy_externally_owned_account(evm_address);
+
     vm.stack.push(evm_address.into()).expect('push failed');
 
     // When
     vm.exec_extcodehash().unwrap();
 
     // Then
-    assert(
-        vm
-            .stack
-            .peek()
-            .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
-        'expected empty hash'
-    );
+    assert_eq!(vm.stack.peek().unwrap(), 0);
 }
 
 

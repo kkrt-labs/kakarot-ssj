@@ -2,63 +2,40 @@
 //! This aims at having only one class hash for all the contracts deployed by Kakarot, thus enforcing a unique and consistent address mapping Eth Address <=> Starknet Address
 
 use starknet::ClassHash;
+use starknet::{ContractAddress, EthAddress};
 
 #[starknet::interface]
-trait IUninitializedAccount<TContractState> {
-    fn initialize(ref self: TContractState, new_class_hash: ClassHash);
+trait IAccount<TContractState> {
+    fn initialize(
+        ref self: TContractState,
+        kakarot_address: ContractAddress,
+        evm_address: EthAddress,
+        implementation_class: ClassHash
+    );
 }
 
 
 #[starknet::contract]
-mod UninitializedAccount {
-    use contracts::components::upgradeable::IUpgradeable;
-    use contracts::components::upgradeable::upgradeable_component;
+pub mod UninitializedAccount {
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
-    use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+    use core::starknet::SyscallResultTrait;
+    use starknet::syscalls::replace_class_syscall;
     use starknet::{ContractAddress, EthAddress, ClassHash, get_caller_address};
-    use super::IUninitializedAccount;
-    component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
-
-    impl UpgradeableImpl = upgradeable_component::Upgradeable<ContractState>;
+    use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait};
 
     #[storage]
-    struct Storage {
-        evm_address: EthAddress,
-        kakarot_core_address: ContractAddress,
-        #[substorage(v0)]
-        upgradeable: upgradeable_component::Storage,
-    }
-
-    #[event]
-    #[derive(Drop, starknet::Event)]
-    enum Event {
-        UpgradeableEvent: upgradeable_component::Event,
-    }
+    struct Storage {}
 
     #[constructor]
     fn constructor(
         ref self: ContractState, kakarot_address: ContractAddress, evm_address: EthAddress
     ) {
-        self.kakarot_core_address.write(kakarot_address);
-        self.evm_address.write(evm_address);
-    }
+        let implementation_class = IKakarotCoreDispatcher { contract_address: kakarot_address }
+            .get_account_contract_class_hash();
 
-    #[abi(embed_v0)]
-    impl UninitializedAccountImpl of IUninitializedAccount<ContractState> {
-        fn initialize(ref self: ContractState, new_class_hash: ClassHash) {
-            assert(
-                get_caller_address() == self.kakarot_core_address.read(),
-                'Caller not Kakarot Core address'
-            );
-            let kakarot = self.kakarot_core_address.read();
-            let native_token = IKakarotCoreDispatcher { contract_address: kakarot }.native_token();
-            // To internally perform value transfer of the network's native
-            // token (which conforms to the ERC20 standard), we need to give the
-            // KakarotCore contract infinite allowance
-            IERC20CamelDispatcher { contract_address: native_token }
-                .approve(kakarot, integer::BoundedInt::<u256>::max());
+        IAccountLibraryDispatcher { class_hash: implementation_class }
+            .initialize(kakarot_address, evm_address, implementation_class);
 
-            self.upgradeable.upgrade_contract(new_class_hash);
-        }
+        replace_class_syscall(implementation_class).unwrap_syscall();
     }
 }

@@ -1,4 +1,4 @@
-use integer::BoundedInt;
+use core::integer::BoundedInt;
 use utils::i256::{i256, i256_neg, i256_signed_div_rem};
 use utils::math::Bitshift;
 

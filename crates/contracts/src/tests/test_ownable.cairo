@@ -1,6 +1,7 @@
 use contracts::components::ownable::{ownable_component};
 use contracts::tests::test_utils::constants::{ZERO, OWNER, OTHER};
 use contracts::tests::test_utils;
+use core::num::traits::Zero;
 
 
 use ownable_component::{InternalImpl, OwnableImpl};

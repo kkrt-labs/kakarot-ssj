@@ -1,8 +1,8 @@
+use core::integer::BoundedInt;
 use evm::instructions::DuplicationOperationsTrait;
 use evm::stack::Stack;
 use evm::stack::StackTrait;
 use evm::tests::test_utils::VMBuilderTrait;
-use integer::BoundedInt;
 
 
 // ensures all values start from index `from` upto index `to` of stack are `0x0`

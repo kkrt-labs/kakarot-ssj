@@ -1,15 +1,15 @@
 use contracts::tests::test_utils::{setup_contracts_for_testing, deploy_contract_account};
+use core::integer::BoundedInt;
 use core::result::ResultTrait;
+use evm::backend::starknet_backend;
 use evm::errors::{EVMError, INVALID_DESTINATION};
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
-use evm::model::contract_account::{ContractAccountTrait};
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{Account, AccountType};
+use evm::model::{Account, AccountTrait};
 use evm::stack::StackTrait;
-use evm::state::{StateTrait, StateInternalTrait, compute_storage_address};
+use evm::state::{StateTrait, compute_storage_address};
 use evm::tests::test_utils::{evm_address, VMBuilderTrait};
-use integer::BoundedInt;
 use starknet::get_contract_address;
 
 #[test]
@@ -514,7 +514,6 @@ fn test_exec_sload_from_storage() {
     let mut vm = VMBuilderTrait::new_with_presets().build();
     let mut ca_address = deploy_contract_account(vm.message().target.evm, array![].span());
     let account = Account {
-        account_type: AccountType::ContractAccount,
         address: ca_address,
         code: array![0xab, 0xcd, 0xef].span(),
         nonce: 1,
@@ -584,7 +583,6 @@ fn test_exec_sstore_on_contract_account_alive() {
 
     // When
     let account = Account {
-        account_type: AccountType::ContractAccount,
         address: vm.message().target,
         code: array![].span(),
         nonce: 1,
@@ -629,12 +627,7 @@ fn test_exec_sstore_finalized() {
     // Deploys the contract account to be able to commit storage changes.
     let ca_address = deploy_contract_account(vm.message().target.evm, array![].span());
     let account = Account {
-        account_type: AccountType::ContractAccount,
-        address: ca_address,
-        code: array![].span(),
-        nonce: 1,
-        balance: 0,
-        selfdestruct: false
+        address: ca_address, code: array![].span(), nonce: 1, balance: 0, selfdestruct: false
     };
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
@@ -643,10 +636,10 @@ fn test_exec_sstore_finalized() {
 
     // When
     vm.exec_sstore().expect('exec_sstore failed');
-    vm.env.state.commit_storage().expect('commit storage failed');
+    starknet_backend::commit(ref vm.env.state).expect('commit storage failed');
 
     // Then
-    assert(account.fetch_storage(key) == value, 'wrong committed value')
+    assert(account.read_storage(key) == value, 'wrong committed value')
 }
 
 #[test]

@@ -1,7 +1,6 @@
 use core::fmt::{Display, Debug, Formatter, Error};
 use starknet::{EthAddress, ContractAddress};
 use utils::set::{SpanSet, SpanSetTrait};
-use utils::traits::EthSignature;
 
 mod display_felt252_based {
     use core::fmt::{Display, Formatter, Error};

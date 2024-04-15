@@ -1,7 +1,8 @@
-//! CREATE, CREATE2 opcode helpers
-use cmp::min;
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
+//! CREATE, CREATE2 opcode helpers
+use core::cmp::min;
+use core::integer::BoundedInt;
 use evm::errors::{
     ensure, EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION
 };
@@ -11,7 +12,7 @@ use evm::memory::MemoryTrait;
 use evm::model::account::{Account, AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{ExecutionResult, ExecutionResultTrait, ExecutionSummary, Environment};
-use evm::model::{Message, Address, AccountType, Transfer};
+use evm::model::{Message, Address, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use keccak::cairo_keccak;
@@ -97,7 +98,7 @@ impl CreateHelpersImpl of CreateHelpers {
         let mut sender = self.env.state.get_account(sender_address.evm);
         let sender_current_nonce = sender.nonce();
         if sender.balance() < create_args.value
-            || sender_current_nonce == integer::BoundedInt::<u64>::max()
+            || sender_current_nonce == BoundedInt::<u64>::max()
             || self.message.depth == constants::STACK_MAX_DEPTH {
             self.gas_left += create_message_gas;
             return self.stack.push(0);

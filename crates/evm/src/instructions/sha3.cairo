@@ -58,6 +58,7 @@ impl Sha3Impl of Sha3Trait {
 
 
 mod internal {
+    use core::cmp::min;
     use evm::memory::MemoryTrait;
     use evm::model::vm::{VM, VMTrait};
     use evm::stack::StackTrait;
@@ -87,7 +88,7 @@ mod internal {
             return (1, (size / 32) - 1);
         }
 
-        let bytes_to_read = cmp::min(mem_len - offset, size);
+        let bytes_to_read = min(mem_len - offset, size);
         let nb_words = bytes_to_read / 32;
         (nb_words, (size / 32) - nb_words)
     }

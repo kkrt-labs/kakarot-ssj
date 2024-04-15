@@ -125,7 +125,7 @@ fn test_gaslimit() {
 fn test_exec_selfbalance_eoa() {
     // Given
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let eoa = kakarot_core.deploy_eoa(evm_address());
+    let eoa = kakarot_core.deploy_externally_owned_account(evm_address());
 
     fund_account_with_native_token(eoa, native_token, 0x1);
 

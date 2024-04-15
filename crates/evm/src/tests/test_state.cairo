@@ -70,11 +70,10 @@ mod test_state {
     use contracts::kakarot_core::interface::{IExtendedKakarotCoreDispatcherTrait};
     use contracts::tests::test_utils as contract_utils;
     use contracts::uninitialized_account::UninitializedAccount;
-    use evm::model::account::{Account, AccountType, AccountTrait, AccountInternalTrait};
-    use evm::model::contract_account::{ContractAccountTrait};
-    use evm::model::eoa::EOATrait;
+    use evm::backend::starknet_backend;
+    use evm::model::account::{Account, AccountTrait, AccountInternalTrait};
     use evm::model::{Event, Transfer, Address};
-    use evm::state::{State, StateTrait, StateInternalTrait};
+    use evm::state::{State, StateTrait};
     use evm::tests::test_utils;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use starknet::EthAddress;
@@ -94,9 +93,7 @@ mod test_state {
             evm_address,
             UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
         );
-        let expected_type = AccountType::Unknown;
         let expected_account = Account {
-            account_type: expected_type,
             address: Address { evm: evm_address, starknet: starknet_address },
             code: Default::default().span(),
             nonce: 0,
@@ -121,9 +118,7 @@ mod test_state {
         let starknet_address = compute_starknet_address(
             deployer.into(), evm_address, UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
         );
-        let expected_type = AccountType::ContractAccount;
         let expected_account = Account {
-            account_type: expected_type,
             address: Address { evm: evm_address, starknet: starknet_address },
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,
@@ -151,9 +146,7 @@ mod test_state {
         contract_utils::fund_account_with_native_token(ca.starknet, native_token, 420);
 
         let starknet_address = kakarot_core.compute_starknet_address(evm_address);
-        let expected_type = AccountType::ContractAccount;
         let expected_account = Account {
-            account_type: expected_type,
             address: Address { evm: evm_address, starknet: starknet_address },
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,
@@ -191,7 +184,6 @@ mod test_state {
         let key = 10;
         let value = 100;
         let account = Account {
-            account_type: AccountType::ContractAccount,
             address: ca_address,
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,
@@ -344,7 +336,7 @@ mod test_state {
         // Transfer native tokens to sender
         let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
         let evm_address: EthAddress = test_utils::evm_address();
-        let eoa_account = EOATrait::deploy(evm_address).expect('sender deploy failed');
+        let eoa_account = starknet_backend::deploy(evm_address).expect('sender deploy failed');
         // Transfer native tokens to sender - we need to set the contract address for this
         set_contract_address(contract_utils::constants::ETH_BANK());
         IERC20CamelDispatcher { contract_address: native_token.contract_address }

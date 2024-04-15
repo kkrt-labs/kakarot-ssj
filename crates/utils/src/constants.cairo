@@ -34,6 +34,8 @@ const MAX_INITCODE_SIZE: usize = consteval_int!(0x6000 * 2);
 // <https://emn178.github.io/online-tools/keccak_256.html?input=&input_type=hex>
 const EMPTY_KECCAK: u256 = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
 
+const BURN_ADDRESS: felt252 = 0xdead;
+
 //PRECOMPILES
 fn precompile_addresses() -> Set<EthAddress> {
     let inner: Array<EthAddress> = array![

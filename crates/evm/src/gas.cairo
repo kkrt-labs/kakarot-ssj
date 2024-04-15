@@ -1,3 +1,4 @@
+use core::cmp::min;
 use starknet::EthAddress;
 use utils::eth_transaction::{AccessListItem, EthereumTransaction, EthereumTransactionTrait};
 use utils::helpers;
@@ -111,7 +112,7 @@ fn calculate_message_call_gas(
     let gas = if gas_left < extra_gas + memory_cost {
         gas
     } else {
-        cmp::min(gas, max_message_call_gas(gas_left - memory_cost - extra_gas))
+        min(gas, max_message_call_gas(gas_left - memory_cost - extra_gas))
     };
 
     return MessageCallGas { cost: gas + extra_gas, stipend: gas + call_stipend };

@@ -1,19 +1,18 @@
 use contracts::kakarot_core::interface::{IKakarotCore};
 use contracts::kakarot_core::{KakarotCore};
 use core::hash::{HashStateExTrait, HashStateTrait};
+use core::integer::{u32_overflowing_add, u32_as_non_zero};
+use core::num::traits::Zero;
+use core::pedersen::{PedersenTrait, HashState};
 use evm::errors::{ensure, EVMError, READ_SYSCALL_FAILED};
 use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{AccountType};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use integer::u32_as_non_zero;
-use integer::u32_overflowing_add;
 use keccak::cairo_keccak;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use pedersen::{PedersenTrait, HashState};
 use starknet::{Store, storage_base_address_from_felt252, ContractAddress, get_contract_address};
 use utils::constants::EMPTY_KECCAK;
 use utils::helpers::ResultExTrait;
@@ -92,7 +91,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         }
 
         // Slice the calldata
-        let bytes_len = cmp::min(32, calldata_len - offset);
+        let bytes_len = core::cmp::min(32, calldata_len - offset);
         let sliced = calldata.slice(offset, bytes_len);
 
         // Fill data to load with bytes in calldata
@@ -298,12 +297,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         }
 
         let account = self.env.state.get_account(evm_address);
-        // UnknownAccount can either be
-        // -> Undeployed CAs that might be deployed later, but currently don't
-        // exist and have only been touched for value transfers
-        // -> Undeployed EOAs
-        // Selfdestructed CAs still exist until the end of the TX.
-        if account.is_precompile() || (account.account_type == AccountType::Unknown) {
+        // Relevant cases:
+        // https://github.com/ethereum/go-ethereum/blob/master/core/vm/instructions.go#L392
+        if account.is_precompile() || (!account.has_code_or_nonce() && account.balance.is_zero()) {
             return self.stack.push(0);
         }
         let bytecode = account.code;

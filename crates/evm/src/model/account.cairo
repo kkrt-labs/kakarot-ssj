@@ -1,20 +1,21 @@
-use contracts::contract_account::{
-    IContractAccountDispatcher, IContractAccountDispatcherTrait, IContractAccount,
-};
+use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait, IAccount};
 use contracts::kakarot_core::kakarot::KakarotCore::KakarotCoreInternal;
-use contracts::kakarot_core::kakarot::StoredAccountType;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
+use core::num::traits::Zero;
+use core::traits::TryInto;
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
-use evm::model::contract_account::ContractAccountTrait;
-use evm::model::{Address, AddressTrait, AccountType};
+use evm::model::{Address, AddressTrait, Transfer};
+use evm::state::State;
+use evm::state::StateTrait;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use starknet::{ContractAddress, EthAddress, get_contract_address};
+use starknet::{
+    ContractAddress, EthAddress, get_contract_address, deploy_syscall, get_tx_info,
+    SyscallResultTrait
+};
 use utils::helpers::{ResultExTrait, ByteArrayExTrait, compute_starknet_address};
-
 
 #[derive(Copy, Drop, PartialEq)]
 struct Account {
-    account_type: AccountType,
     address: Address,
     code: Span<u8>,
     nonce: u64,
@@ -32,7 +33,6 @@ impl AccountBuilderImpl of AccountBuilderTrait {
     fn new(address: Address) -> AccountBuilder {
         AccountBuilder {
             account: Account {
-                account_type: AccountType::Unknown,
                 address: address,
                 code: Default::default().span(),
                 nonce: 0,
@@ -43,12 +43,6 @@ impl AccountBuilderImpl of AccountBuilderTrait {
     }
 
     #[inline(always)]
-    fn set_type(mut self: AccountBuilder, account_type: AccountType) -> AccountBuilder {
-        self.account.account_type = account_type;
-        self
-    }
-
-    #[inline(always)]
     fn fetch_balance(mut self: AccountBuilder) -> AccountBuilder {
         self.account.balance = self.account.address.fetch_balance();
         self
@@ -56,14 +50,8 @@ impl AccountBuilderImpl of AccountBuilderTrait {
 
     #[inline(always)]
     fn fetch_nonce(mut self: AccountBuilder) -> AccountBuilder {
-        assert!(
-            self.account.account_type == AccountType::ContractAccount,
-            "Cannot fetch nonce of an EOA"
-        );
-        let contract_account = IContractAccountDispatcher {
-            contract_address: self.account.address.starknet
-        };
-        self.account.nonce = contract_account.nonce();
+        let account = IAccountDispatcher { contract_address: self.account.address.starknet };
+        self.account.nonce = account.get_nonce();
         self
     }
 
@@ -79,10 +67,8 @@ impl AccountBuilderImpl of AccountBuilderTrait {
     /// # Returns
     /// * The bytecode of the Contract Account as a ByteArray
     fn fetch_bytecode(mut self: AccountBuilder) -> AccountBuilder {
-        let contract_account = IContractAccountDispatcher {
-            contract_address: self.account.address.starknet
-        };
-        let bytecode = contract_account.bytecode();
+        let account = IAccountDispatcher { contract_address: self.account.address.starknet };
+        let bytecode = account.bytecode();
         self.account.code = bytecode;
         self
     }
@@ -132,35 +118,14 @@ impl AccountImpl of AccountTrait {
     /// The fetched account if it existed, otherwise `None`.
     fn fetch(evm_address: EthAddress) -> Option<Account> {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let maybe_stored_account = kakarot_state.address_registry(evm_address);
-        let mut account = match maybe_stored_account {
-            Option::Some((
-                account_type, starknet_address
-            )) => {
-                let address = Address { evm: evm_address, starknet: starknet_address };
-                match account_type {
-                    AccountType::EOA => Option::Some(
-                        AccountBuilderTrait::new(address)
-                            .set_type(AccountType::EOA)
-                            .set_nonce(1)
-                            .fetch_balance()
-                            .build()
-                    ),
-                    AccountType::ContractAccount => {
-                        let account = AccountBuilderTrait::new(address)
-                            .set_type(AccountType::ContractAccount)
-                            .fetch_nonce()
-                            .fetch_bytecode()
-                            .fetch_balance()
-                            .build();
-                        Option::Some(account)
-                    },
-                    AccountType::Unknown => Option::None,
-                }
-            },
-            Option::None => Option::None,
-        };
-        account
+        let starknet_address = kakarot_state.address_registry(evm_address);
+        if starknet_address.is_zero() {
+            return Option::None;
+        }
+        let address = Address { starknet: starknet_address, evm: evm_address };
+        Option::Some(
+            AccountBuilderTrait::new(address).fetch_nonce().fetch_bytecode().fetch_balance().build()
+        )
     }
 
 
@@ -186,73 +151,25 @@ impl AccountImpl of AccountTrait {
         false
     }
 
-    /// Commits the account to Starknet by updating the account state if it
-    /// exists, or deploying a new account if it doesn't.
-    ///
-    /// Only Contract Accounts can be modified.
-    ///
-    /// # Arguments
-    /// * `self` - The account to commit
-    ///
-    /// # Returns
-    ///
-    /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
-    fn commit(self: @Account) {
-        let is_deployed = self.evm_address().is_deployed();
-        let is_ca = self.is_ca();
 
-        // If a Starknet account is already deployed for this evm address, we
-        // should "EVM-Deploy" only if the nonce is different.
-        let should_deploy = if is_deployed && is_ca {
-            let deployed_nonce = ContractAccountTrait::fetch_nonce(self);
-            if (deployed_nonce == 0 && deployed_nonce != *self.nonce) {
-                true
-            } else {
-                false
-            }
-        } else if is_ca {
-            // Otherwise, the deploy condition is simply has_code_or_nonce - if the account is a CA.
-            self.has_code_or_nonce()
-        } else {
-            false
-        };
+    fn is_created(self: @Account) -> bool {
+        panic!("unimplemented is created")
+    }
 
-        if should_deploy {
-            // If SELFDESTRUCT, deploy empty SN account
-            let (initial_nonce, initial_code) = if (*self.selfdestruct == true) {
-                (0, Default::default().span())
-            } else {
-                (*self.nonce, *self.code)
-            };
-            ContractAccountTrait::deploy(
-                self.evm_address(),
-                initial_nonce,
-                initial_code,
-                deploy_starknet_contract: !is_deployed
-            );
-            //Storage is handled outside of the account and must be committed after all accounts are committed.
-            return;
-        };
+    fn deploy(self: @Account) {
+        let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
+        let uninitialized_account_class_hash = kakarot_state.uninitialized_account_class_hash();
+        let kakarot_address = get_contract_address();
+        let calldata: Span<felt252> = array![kakarot_address.into(), self.address().evm.into()]
+            .span();
 
-        // If the account was not scheduled for deployment - then update it if it's deployed.
-        // Only CAs have components committed on starknet.
-        if is_deployed && is_ca {
-            if *self.selfdestruct {
-                return ContractAccountTrait::selfdestruct(self);
-            }
-            self.store_nonce(*self.nonce);
-        };
+        deploy_syscall(uninitialized_account_class_hash, self.address().evm.into(), calldata, true)
+            .unwrap_syscall();
     }
 
     fn commit_storage(self: @Account, key: u256, value: u256) {
-        if self.is_selfdestruct() {
-            return;
-        }
-        match self.account_type {
-            AccountType::EOA => { panic_with_felt252('EOA account commitment') },
-            AccountType::ContractAccount => { self.store_storage(key, value) },
-            AccountType::Unknown(_) => { panic_with_felt252('Unknown account commitment') }
-        }
+        IAccountDispatcher { contract_address: self.get_registered_starknet_address() }
+            .write_storage(key, value);
     }
 
 
@@ -275,24 +192,13 @@ impl AccountImpl of AccountTrait {
         false
     }
 
-
-    /// Returns `true` if the account is a Contract Account (CA).
-    #[inline(always)]
-    fn is_ca(self: @Account) -> bool {
-        match self.account_type {
-            AccountType::EOA => false,
-            AccountType::ContractAccount => true,
-            AccountType::Unknown => false
-        }
-    }
-
     #[inline(always)]
     fn evm_address(self: @Account) -> EthAddress {
         *self.address.evm
     }
 
     #[inline(always)]
-    fn starknet_address(self: @Account) -> ContractAddress {
+    fn get_registered_starknet_address(self: @Account) -> ContractAddress {
         *self.address.starknet
     }
 
@@ -315,16 +221,27 @@ impl AccountImpl of AccountTrait {
     /// A `Result` containing the value stored at the given key or an `EVMError` if there was an error.
     fn read_storage(self: @Account, key: u256) -> u256 {
         let is_deployed = self.address().evm.is_deployed();
-        if *self.account_type == AccountType::ContractAccount && is_deployed {
-            return ContractAccountTrait::fetch_storage(self, key);
+        if is_deployed {
+            return IAccountDispatcher { contract_address: self.address().starknet }.storage(key);
         }
         0
     }
 
+    /// Sets the value stored at a `u256` key inside the Contract Account storage.
+    /// The new value is written in Kakarot Core's contract storage.
+    /// The storage address used is h(sn_keccak("contract_account_storage_keys"), evm_address, key), where `h` is the poseidon hash function.
+    /// # Arguments
+    /// * `self` - The address of the Contract Account
+    /// * `key` - The key to set
+    /// * `value` - The value to set
     #[inline(always)]
-    fn set_type(ref self: Account, account_type: AccountType) {
-        self.account_type = account_type;
+    fn store_storage(self: @Account, key: u256, value: u256) {
+        let mut contract_account = IAccountDispatcher {
+            contract_address: self.get_registered_starknet_address()
+        };
+        contract_account.write_storage(key, value);
     }
+
 
     /// Sets the nonce of the Account
     /// # Arguments
