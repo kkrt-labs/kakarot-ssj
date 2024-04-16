@@ -12,3 +12,7 @@ mod tests;
 
 // Account transparent proxy
 mod uninitialized_account;
+
+mod mocks {
+    mod cairo1_helpers_fixture;
+}

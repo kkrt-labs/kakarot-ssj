@@ -57,8 +57,8 @@ pub trait IHelpers<T> {
     );
 }
 
-#[starknet::contract]
-pub mod Cairo1Helpers {
+
+mod embeddable_impls {
     use core::keccak::cairo_keccak;
     use core::traits::Into;
     use core::{starknet, starknet::SyscallResultTrait};
@@ -69,19 +69,14 @@ pub mod Cairo1Helpers {
     use evm::precompiles::modexp::ModExp;
     use evm::precompiles::sha256::Sha256;
     use starknet::EthAddress;
-    use starknet::eth_signature::{verify_eth_signature};
-    use starknet::secp256_trait::{Signature};
-
-    use super::{IPrecompiles, IHelpers};
+    use starknet::eth_signature::{Signature, verify_eth_signature};
     use utils::helpers::U256Trait;
 
-    #[storage]
-    struct Storage {}
 
-    #[abi(embed_v0)]
-    impl Precompiles of IPrecompiles<ContractState> {
+    #[starknet::embeddable]
+    pub impl Precompiles<TContractState> of super::IPrecompiles<TContractState> {
         fn exec_precompile(
-            self: @ContractState, address: felt252, data: Span<u8>
+            self: @TContractState, address: felt252, data: Span<u8>
         ) -> (bool, u128, Span<u8>) {
             let result = match address {
                 0 => Result::Err(EVMError::NotImplemented),
@@ -98,14 +93,14 @@ pub mod Cairo1Helpers {
         }
     }
 
-    #[abi(embed_v0)]
-    pub impl Helpers of IHelpers<ContractState> {
-        fn get_block_hash(self: @ContractState, block_number: u64) -> felt252 {
+    #[starknet::embeddable]
+    pub impl Helpers<TContractState> of super::IHelpers<TContractState> {
+        fn get_block_hash(self: @TContractState, block_number: u64) -> felt252 {
             starknet::syscalls::get_block_hash_syscall(block_number).unwrap_syscall()
         }
 
         fn keccak(
-            self: @ContractState,
+            self: @TContractState,
             mut words: Array<u64>,
             last_input_word: u64,
             last_input_num_bytes: usize
@@ -114,9 +109,21 @@ pub mod Cairo1Helpers {
         }
 
         fn verify_eth_signature(
-            self: @ContractState, msg_hash: u256, signature: Signature, eth_address: EthAddress
+            self: @TContractState, msg_hash: u256, signature: Signature, eth_address: EthAddress
         ) {
             verify_eth_signature(msg_hash, signature, eth_address);
         }
     }
+}
+
+#[starknet::contract]
+pub mod Cairo1Helpers {
+    #[storage]
+    struct Storage {}
+
+    #[abi(embed_v0)]
+    impl Precompiles = super::embeddable_impls::Precompiles<ContractState>;
+
+    #[abi(embed_v0)]
+    impl Helpers = super::embeddable_impls::Helpers<ContractState>;
 }
