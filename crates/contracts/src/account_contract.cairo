@@ -186,34 +186,41 @@ pub mod AccountContract {
             let tx = EthTransactionTrait::decode(encoded_tx.span())
                 .expect('rlp decoding of tx failed');
 
-            let kakarot = IKakarotCoreDispatcher { contract_address: self.Kakarot_address.read() };
-            let block_gas_limit = kakarot.get_block_gas_limit();
-            let tx_gas_limit = tx.gas_limit();
-            assert(tx_gas_limit < block_gas_limit, 'tx gas does not fit in block');
+            match tx.try_into_fee_market_transaction() {
+                Option::Some(tx_fee_infos) => {
+                    let kakarot = IKakarotCoreDispatcher {
+                        contract_address: self.Kakarot_address.read()
+                    };
+                    let block_gas_limit = kakarot.get_block_gas_limit();
+                    let tx_gas_limit = tx.gas_limit();
+                    assert(tx_gas_limit < block_gas_limit, 'tx gas does not fit in block');
 
-            let base_fee = kakarot.get_base_fee();
-            let native_token = kakarot.get_native_token();
-            let balance = ERC20ABIDispatcher { contract_address: native_token }
-                .balance_of(get_contract_address());
+                    let base_fee = kakarot.get_base_fee();
+                    let native_token = kakarot.get_native_token();
+                    let balance = ERC20ABIDispatcher { contract_address: native_token }
+                        .balance_of(get_contract_address());
 
-            let tx_fee_infos = tx.try_into_fee_market_transaction().unwrap();
-            let max_fee_per_gas = tx_fee_infos.max_fee_per_gas;
-            let max_priority_fee_per_gas = tx_fee_infos.max_priority_fee_per_gas;
+                    let max_fee_per_gas = tx_fee_infos.max_fee_per_gas;
+                    let max_priority_fee_per_gas = tx_fee_infos.max_priority_fee_per_gas;
 
-            // ensure that the user was willing to at least pay the base fee
-            assert(base_fee < max_fee_per_gas, 'max fee per gas is too low');
-            // ensure that the max priority fee per gas is not greater than the max fee per gas
-            assert(max_priority_fee_per_gas < max_fee_per_gas, 'priority fee is too high');
+                    // ensure that the user was willing to at least pay the base fee
+                    assert(base_fee < max_fee_per_gas, 'max fee per gas is too low');
+                    // ensure that the max priority fee per gas is not greater than the max fee per gas
+                    assert(max_priority_fee_per_gas < max_fee_per_gas, 'priority fee is too high');
 
-            let max_gas_fee = tx_gas_limit * max_fee_per_gas;
-            let tx_cost = max_gas_fee.into() + tx_fee_infos.amount;
-            assert(tx_cost < balance, 'balance cannot cover tx cost');
+                    let max_gas_fee = tx_gas_limit * max_fee_per_gas;
+                    let tx_cost = max_gas_fee.into() + tx_fee_infos.amount;
+                    assert(tx_cost < balance, 'balance cannot cover tx cost');
 
-            // priority fee is capped because the base fee is filled first
-            let possible_priority_fee = max_fee_per_gas - base_fee;
-            assert(
-                max_priority_fee_per_gas < possible_priority_fee, 'max priority is fee too high'
-            );
+                    // priority fee is capped because the base fee is filled first
+                    let possible_priority_fee = max_fee_per_gas - base_fee;
+                    assert(
+                        max_priority_fee_per_gas < possible_priority_fee,
+                        'max priority is fee too high'
+                    );
+                },
+                Option::None => ()
+            }
 
             VALIDATED
         }
@@ -249,9 +256,9 @@ pub mod AccountContract {
             //TODO execute checks
 
             let call: @Call = calls[0];
-            let calldata = deserialize_bytes(*call.calldata).expect('conversion failed').span();
+            let encoded_tx = deserialize_bytes(*call.calldata).expect('conversion failed').span();
 
-            let tx = EthTransactionTrait::decode(calldata).expect('rlp decoding of tx failed');
+            let tx = EthTransactionTrait::decode(encoded_tx).expect('rlp decoding of tx failed');
 
             let (success, return_data, gas_used) = kakarot.eth_send_transaction(tx);
             let return_data = serialize_bytes(return_data).span();
