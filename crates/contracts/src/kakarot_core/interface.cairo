@@ -51,6 +51,11 @@ pub trait IKakarotCore<TContractState> {
     fn set_account_class_hash(ref self: TContractState, new_class_hash: ClassHash);
 
     fn register_account(ref self: TContractState, evm_address: EthAddress);
+
+    // Getter for the Block Gas Limit
+    fn get_block_gas_limit(self: @TContractState) -> u128;
+    // Getter for the Base Fee
+    fn get_base_fee(self: @TContractState) -> u128;
 }
 
 #[starknet::interface]

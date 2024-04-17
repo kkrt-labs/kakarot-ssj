@@ -224,6 +224,15 @@ pub mod KakarotCore {
             self.Kakarot_evm_to_starknet_address.write(evm_address, starknet_address);
             self.emit(AccountDeployed { evm_address, starknet_address });
         }
+
+        fn get_block_gas_limit(self: @ContractState) -> u128 {
+            self.Kakarot_block_gas_limit.read()
+        }
+
+
+        fn get_base_fee(self: @ContractState) -> u128 {
+            self.Kakarot_base_fee.read()
+        }
     }
 
     #[generate_trait]

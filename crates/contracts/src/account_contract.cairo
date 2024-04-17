@@ -32,6 +32,7 @@ pub trait IAccount<TContractState> {
 
 #[starknet::contract]
 pub mod AccountContract {
+    use utils::eth_transaction::EthereumTransactionTrait;
     use contracts::components::ownable::IOwnable;
     use contracts::components::ownable::ownable_component::InternalTrait;
     use contracts::components::ownable::ownable_component;
@@ -48,7 +49,8 @@ pub mod AccountContract {
     use core::starknet::storage_access::{storage_base_address_from_felt252, StorageBaseAddress};
     use core::starknet::syscalls::{replace_class_syscall};
     use core::starknet::{
-        ContractAddress, EthAddress, ClassHash, VALIDATED, get_caller_address, get_tx_info, Store
+        ContractAddress, EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address,
+        get_tx_info, Store
     };
     use core::traits::TryInto;
     use openzeppelin::token::erc20::{ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
@@ -81,6 +83,7 @@ pub mod AccountContract {
         Account_nonce: u64,
         Account_implementation: ClassHash,
         Account_evm_address: EthAddress,
+        Kakarot_address: ContractAddress,
         #[substorage(v0)]
         ownable: ownable_component::Storage
     }
@@ -117,6 +120,7 @@ pub mod AccountContract {
             self.ownable.initializer(kakarot_address);
             self.Account_evm_address.write(evm_address);
             self.Account_implementation.write(implementation_class);
+            self.Kakarot_address.write(kakarot_address);
 
             let kakarot = IKakarotCoreDispatcher { contract_address: kakarot_address };
 
@@ -178,6 +182,38 @@ pub mod AccountContract {
                 .expect('failed to validate eth tx');
 
             assert(validation_result, 'transaction validation failed');
+
+            let tx = EthTransactionTrait::decode(encoded_tx.span())
+                .expect('rlp decoding of tx failed');
+
+            let kakarot = IKakarotCoreDispatcher { contract_address: self.Kakarot_address.read() };
+            let block_gas_limit = kakarot.get_block_gas_limit();
+            let tx_gas_limit = tx.gas_limit();
+            assert(tx_gas_limit < block_gas_limit, 'tx gas does not fit in block');
+
+            let base_fee = kakarot.get_base_fee();
+            let native_token = kakarot.get_native_token();
+            let balance = ERC20ABIDispatcher { contract_address: native_token }
+                .balance_of(get_contract_address());
+
+            let tx_fee_infos = tx.try_into_fee_market_transaction().unwrap();
+            let max_fee_per_gas = tx_fee_infos.max_fee_per_gas;
+            let max_priority_fee_per_gas = tx_fee_infos.max_priority_fee_per_gas;
+
+            // ensure that the user was willing to at least pay the base fee
+            assert(base_fee < max_fee_per_gas, 'max fee per gas is too low');
+            // ensure that the max priority fee per gas is not greater than the max fee per gas
+            assert(max_priority_fee_per_gas < max_fee_per_gas, 'priority fee is too high');
+
+            let max_gas_fee = tx_gas_limit * max_fee_per_gas;
+            let tx_cost = max_gas_fee.into() + tx_fee_infos.amount;
+            assert(tx_cost < balance, 'balance cannot cover tx cost');
+
+            // priority fee is capped because the base fee is filled first
+            let possible_priority_fee = max_fee_per_gas - base_fee;
+            assert(
+                max_priority_fee_per_gas < possible_priority_fee, 'max priority is fee too high'
+            );
 
             VALIDATED
         }
