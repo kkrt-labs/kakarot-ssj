@@ -32,7 +32,6 @@ pub trait IAccount<TContractState> {
 
 #[starknet::contract]
 pub mod AccountContract {
-    use utils::eth_transaction::EthereumTransactionTrait;
     use contracts::components::ownable::IOwnable;
     use contracts::components::ownable::ownable_component::InternalTrait;
     use contracts::components::ownable::ownable_component;
@@ -56,6 +55,7 @@ pub mod AccountContract {
     use openzeppelin::token::erc20::{ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
     use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait};
     use utils::constants::{POW_2_32};
+    use utils::eth_transaction::EthereumTransactionTrait;
     use utils::eth_transaction::{EthTransactionTrait, TransactionMetadata};
     use utils::helpers::SpanExtTrait;
     use utils::helpers::{ByteArrayExTrait, ResultExTrait};
