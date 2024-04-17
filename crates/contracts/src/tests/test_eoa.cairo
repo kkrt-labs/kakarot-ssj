@@ -214,9 +214,11 @@ mod test_external_owned_account {
 
     #[test]
     fn test___validate__legacy_transaction() {
-        let (_, kakarot_core) = setup_contracts_for_testing();
+        let (native_token, kakarot_core) = setup_contracts_for_testing();
         let evm_address: EthAddress = 0xaA36F24f65b5F0f2c642323f3d089A3F0f2845Bf_u256.into();
         let eoa = kakarot_core.deploy_externally_owned_account(evm_address);
+        fund_account_with_native_token(eoa, native_token, 0xfffffffffffffffffffffffffff);
+
         let eoa_contract = IAccountDispatcher { contract_address: eoa };
 
         set_chain_id(chain_id().into());
@@ -249,9 +251,11 @@ mod test_external_owned_account {
 
     #[test]
     fn test___validate__eip_2930_transaction() {
-        let (_, kakarot_core) = setup_contracts_for_testing();
+        let (native_token, kakarot_core) = setup_contracts_for_testing();
         let evm_address: EthAddress = 0xaA36F24f65b5F0f2c642323f3d089A3F0f2845Bf_u256.into();
         let eoa = kakarot_core.deploy_externally_owned_account(evm_address);
+        fund_account_with_native_token(eoa, native_token, 0xfffffffffffffffffffffffffff);
+
         let eoa_contract = IAccountDispatcher { contract_address: eoa };
 
         set_chain_id(chain_id().into());
@@ -285,9 +289,11 @@ mod test_external_owned_account {
 
     #[test]
     fn test___validate__eip_1559_transaction() {
-        let (_, kakarot_core) = setup_contracts_for_testing();
+        let (native_token, kakarot_core) = setup_contracts_for_testing();
         let evm_address: EthAddress = 0xaA36F24f65b5F0f2c642323f3d089A3F0f2845Bf_u256.into();
         let eoa = kakarot_core.deploy_externally_owned_account(evm_address);
+        fund_account_with_native_token(eoa, native_token, 0xfffffffffffffffffffffffffff);
+
         let eoa_contract = IAccountDispatcher { contract_address: eoa };
 
         set_chain_id(chain_id().into());
