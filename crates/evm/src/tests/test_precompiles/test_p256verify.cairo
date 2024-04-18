@@ -10,11 +10,11 @@ use evm::tests::test_utils::{VMBuilderTrait, native_token, other_starknet_addres
 use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 
-// source: <https://github.com/ethereum/go-ethereum/pull/27540/files#diff-b8e213cc8b44bc7d5d5e727524d63e19dd0f21312713ce2471948d1f64db212c>
+// source: <https://github.com/ethereum/go-ethereum/pull/27540/files#diff-3548292e7ee4a75fc8146397c6baf5c969f6fe6cd9355df322cdb4f11103e004>
 #[test]
 fn test_p256verify_precompile() {
     let (_, _) = setup_contracts_for_testing();
-    
+
     let msg_hash = 0x4cee90eb86eaa050036147a12d49004b6b9c72bd725d39d4785011fe190f0b4d_u256
         .to_be_bytes_padded();
     let r = 0xa73bd4903f0ce3b639bbbf6e8e80d16931ff4bcf5993d58468e8fb19086e8cac_u256
@@ -40,14 +40,16 @@ fn test_p256verify_precompile() {
     assert_eq!(gas, 3450);
 }
 
-// source: <https://github.com/ethereum/go-ethereum/pull/27540/files#diff-b8e213cc8b44bc7d5d5e727524d63e19dd0f21312713ce2471948d1f64db212c>
+// source: <https://github.com/ethereum/go-ethereum/pull/27540/files#diff-3548292e7ee4a75fc8146397c6baf5c969f6fe6cd9355df322cdb4f11103e004>
 #[test]
 fn test_p256verify_precompile_static_call() {
     let (_, _) = setup_contracts_for_testing();
-    
+
     let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    vm.memory.store(0x4cee90eb86eaa050036147a12d49004b6b9c72bd725d39d4785011fe190f0b4d, 0x0); // msg_hash
+    vm
+        .memory
+        .store(0x4cee90eb86eaa050036147a12d49004b6b9c72bd725d39d4785011fe190f0b4d, 0x0); // msg_hash
     vm.memory.store(0xa73bd4903f0ce3b639bbbf6e8e80d16931ff4bcf5993d58468e8fb19086e8cac, 0x20); // r
     vm.memory.store(0x36dbcd03009df8c59286b162af3bd7fcc0450c9aa81be5d10d312af6c66b1d60, 0x40); // s
     vm.memory.store(0x4aebd3099c618202fcfe16ae7770b0c49ab5eadf74b754204a3bb6060e44eff3, 0x60); // x
@@ -64,6 +66,6 @@ fn test_p256verify_precompile_static_call() {
 
     let mut result = Default::default();
     vm.memory.load_n(0x1, ref result, 0xa0);
-    
+
     assert_eq!(result, array![0x01]);
 }

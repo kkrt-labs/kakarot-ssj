@@ -2,8 +2,8 @@ mod blake2f;
 mod ec_recover;
 mod identity;
 mod modexp;
-mod sha256;
 mod p256verify;
+mod sha256;
 
 use core::traits::Into;
 use evm::errors::EVMError;
@@ -13,8 +13,8 @@ use evm::precompiles::blake2f::Blake2f;
 use evm::precompiles::ec_recover::EcRecover;
 use evm::precompiles::identity::Identity;
 use evm::precompiles::modexp::ModExp;
-use evm::precompiles::sha256::Sha256;
 use evm::precompiles::p256verify::P256Verify;
+use evm::precompiles::sha256::Sha256;
 use starknet::EthAddress;
 
 
