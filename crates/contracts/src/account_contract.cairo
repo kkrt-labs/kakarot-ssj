@@ -219,7 +219,7 @@ pub mod AccountContract {
 
             match tx.try_into_fee_market_transaction() {
                 Option::Some(tx_fee_infos) => {
-                    let result = self.eip1559_checks(@tx, tx_fee_infos);
+                    let result = self.validate_eip1559_tx(@tx, tx_fee_infos);
                     if result[0] != @ArrayTrait::new().span() {
                         return result;
                     }
@@ -266,8 +266,8 @@ pub mod AccountContract {
     }
 
     #[generate_trait]
-    impl IntImpl of IntTrait {
-        fn eip1559_checks(
+    impl Eip1559TransactionImpl of Eip1559TransactionTrait {
+        fn validate_eip1559_tx(
             ref self: ContractState,
             tx: @utils::eth_transaction::EthereumTransaction,
             tx_fee_infos: utils::eth_transaction::FeeMarketTransaction
