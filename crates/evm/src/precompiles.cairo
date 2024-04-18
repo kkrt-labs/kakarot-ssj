@@ -3,6 +3,7 @@ mod ec_recover;
 mod identity;
 mod modexp;
 mod sha256;
+mod p256verify;
 
 use core::traits::Into;
 use evm::errors::EVMError;
@@ -13,6 +14,7 @@ use evm::precompiles::ec_recover::EcRecover;
 use evm::precompiles::identity::Identity;
 use evm::precompiles::modexp::ModExp;
 use evm::precompiles::sha256::Sha256;
+use evm::precompiles::p256verify::P256Verify;
 use starknet::EthAddress;
 
 
@@ -61,6 +63,13 @@ impl PrecompilesImpl of Precompiles {
                 )
             },
             9 => { Blake2f::exec(input)? },
+            10 => {
+                // we should never reach this branch!
+                panic!(
+                    "pre-compile at address {} isn't implemented yet", precompile_address.address
+                )
+            },
+            11 => { P256Verify::exec(input)? },
             _ => {
                 // we should never reach this branch!
                 panic!("address {} isn't a pre-compile", precompile_address.address)
