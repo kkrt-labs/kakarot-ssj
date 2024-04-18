@@ -83,7 +83,6 @@ pub mod AccountContract {
         Account_nonce: u64,
         Account_implementation: ClassHash,
         Account_evm_address: EthAddress,
-        Kakarot_address: ContractAddress,
         #[substorage(v0)]
         ownable: ownable_component::Storage
     }
@@ -120,7 +119,6 @@ pub mod AccountContract {
             self.ownable.initializer(kakarot_address);
             self.Account_evm_address.write(evm_address);
             self.Account_implementation.write(implementation_class);
-            self.Kakarot_address.write(kakarot_address);
 
             let kakarot = IKakarotCoreDispatcher { contract_address: kakarot_address };
 
@@ -183,45 +181,6 @@ pub mod AccountContract {
 
             assert(validation_result, 'transaction validation failed');
 
-            let tx = EthTransactionTrait::decode(encoded_tx.span())
-                .expect('rlp decoding of tx failed');
-
-            match tx.try_into_fee_market_transaction() {
-                Option::Some(tx_fee_infos) => {
-                    let kakarot = IKakarotCoreDispatcher {
-                        contract_address: self.Kakarot_address.read()
-                    };
-                    let block_gas_limit = kakarot.get_block_gas_limit();
-                    let tx_gas_limit = tx.gas_limit();
-                    assert(tx_gas_limit < block_gas_limit, 'tx gas does not fit in block');
-
-                    let base_fee = kakarot.get_base_fee();
-                    let native_token = kakarot.get_native_token();
-                    let balance = ERC20ABIDispatcher { contract_address: native_token }
-                        .balance_of(get_contract_address());
-
-                    let max_fee_per_gas = tx_fee_infos.max_fee_per_gas;
-                    let max_priority_fee_per_gas = tx_fee_infos.max_priority_fee_per_gas;
-
-                    // ensure that the user was willing to at least pay the base fee
-                    assert(base_fee < max_fee_per_gas, 'max fee per gas is too low');
-                    // ensure that the max priority fee per gas is not greater than the max fee per gas
-                    assert(max_priority_fee_per_gas < max_fee_per_gas, 'priority fee is too high');
-
-                    let max_gas_fee = tx_gas_limit * max_fee_per_gas;
-                    let tx_cost = max_gas_fee.into() + tx_fee_infos.amount;
-                    assert(tx_cost < balance, 'balance cannot cover tx cost');
-
-                    // priority fee is capped because the base fee is filled first
-                    let possible_priority_fee = max_fee_per_gas - base_fee;
-                    assert(
-                        max_priority_fee_per_gas < possible_priority_fee,
-                        'max priority is fee too high'
-                    );
-                },
-                Option::None => ()
-            }
-
             VALIDATED
         }
 
@@ -241,6 +200,66 @@ pub mod AccountContract {
             let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
             let latest_class = kakarot.get_account_contract_class_hash();
             let this_class = self.Account_implementation.read();
+
+            let call = calls.at(0);
+            let encoded_tx = deserialize_bytes(*call.calldata)
+                .expect('conversion to Span<u8> failed');
+            let tx = EthTransactionTrait::decode(encoded_tx.span())
+                .expect('rlp decoding of tx failed');
+
+            match tx.try_into_fee_market_transaction() {
+                Option::Some(tx_fee_infos) => {
+                    let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
+                    let block_gas_limit = kakarot.get_block_gas_limit();
+
+                    if tx.gas_limit() >= block_gas_limit {
+                        let error: felt252 = 'tx gas does not fit in block';
+                        let result: Array<Span<felt252>> = array![array![error].span()];
+                        return result;
+                    }
+
+                    let base_fee = kakarot.get_base_fee();
+                    let native_token = kakarot.get_native_token();
+                    let balance = ERC20ABIDispatcher { contract_address: native_token }
+                        .balance_of(get_contract_address());
+
+                    let max_fee_per_gas = tx_fee_infos.max_fee_per_gas;
+                    let max_priority_fee_per_gas = tx_fee_infos.max_priority_fee_per_gas;
+
+                    // ensure that the user was willing to at least pay the base fee
+                    if base_fee >= max_fee_per_gas {
+                        let error: felt252 = 'max fee per gas is too low';
+                        let result: Array<Span<felt252>> = array![array![error].span()];
+                        return result;
+                    }
+
+                    // ensure that the max priority fee per gas is not greater than the max fee per gas
+                    if max_priority_fee_per_gas >= max_fee_per_gas {
+                        let error: felt252 = 'priority fee is too high';
+                        let result: Array<Span<felt252>> = array![array![error].span()];
+                        return result;
+                    }
+
+                    let max_gas_fee = tx.gas_limit() * max_fee_per_gas;
+                    let tx_cost = max_gas_fee.into() + tx_fee_infos.amount;
+
+                    if tx_cost >= balance {
+                        let error: felt252 = 'balance cannot cover tx cost';
+                        let result: Array<Span<felt252>> = array![array![error].span()];
+                        return result;
+                    }
+
+                    // priority fee is capped because the base fee is filled first
+                    let possible_priority_fee = max_fee_per_gas - base_fee;
+
+                    if max_priority_fee_per_gas >= possible_priority_fee {
+                        let error: felt252 = 'max priority is fee too high';
+                        let result: Array<Span<felt252>> = array![array![error].span()];
+                        return result;
+                    }
+                },
+                Option::None => ()
+            }
 
             if (latest_class != this_class) {
                 self.Account_implementation.write(latest_class);
