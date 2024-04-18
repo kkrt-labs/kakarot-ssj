@@ -6,7 +6,7 @@ use evm::memory::MemoryTrait;
 
 use evm::precompiles::p256verify::P256Verify;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
+use evm::tests::test_utils::{VMBuilderTrait};
 use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 
