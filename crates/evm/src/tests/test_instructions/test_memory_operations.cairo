@@ -1,6 +1,8 @@
+use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::tests::test_utils::{setup_contracts_for_testing, deploy_contract_account};
 use core::integer::BoundedInt;
 use core::result::ResultTrait;
+use evm::backend::starknet_backend::fetch_original_storage;
 use evm::backend::starknet_backend;
 use evm::errors::{EVMError, INVALID_DESTINATION};
 use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
@@ -522,7 +524,7 @@ fn test_exec_sload_from_storage() {
     };
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
-    account.store_storage(key, value);
+    IAccountDispatcher { contract_address: account.starknet_address() }.write_storage(key, value);
 
     vm.stack.push(key.into()).expect('push failed');
 
@@ -639,7 +641,7 @@ fn test_exec_sstore_finalized() {
     starknet_backend::commit(ref vm.env.state).expect('commit storage failed');
 
     // Then
-    assert(account.read_storage(key) == value, 'wrong committed value')
+    assert(fetch_original_storage(@account, key) == value, 'wrong committed value')
 }
 
 #[test]

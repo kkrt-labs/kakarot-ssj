@@ -1,3 +1,4 @@
+use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::tests::test_utils::{deploy_contract_account};
 use contracts::uninitialized_account::UninitializedAccount;
 use core::nullable::{match_nullable, FromNullableResult};
@@ -259,7 +260,8 @@ fn initialize_contract_account(
             break;
         };
         let (key, value) = storage.get(i).unwrap().unbox();
-        account.store_storage(*key, *value);
+        IAccountDispatcher { contract_address: account.starknet_address() }
+            .write_storage(*key, *value);
         i += 1;
     };
 

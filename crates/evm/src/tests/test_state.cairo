@@ -1,4 +1,5 @@
 use contracts::tests::test_utils::{deploy_contract_account, deploy_eoa};
+
 use evm::state::compute_state_key;
 use evm::tests::test_utils;
 
@@ -67,6 +68,7 @@ mod test_state_changelog {
 }
 
 mod test_state {
+    use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::kakarot_core::interface::{IExtendedKakarotCoreDispatcherTrait};
     use contracts::tests::test_utils as contract_utils;
     use contracts::uninitialized_account::UninitializedAccount;
@@ -190,7 +192,8 @@ mod test_state {
             balance: 0,
             selfdestruct: false
         };
-        account.store_storage(key, value);
+        IAccountDispatcher { contract_address: account.starknet_address() }
+            .write_storage(key, value);
 
         let read_value = state.read_state(evm_address, key);
 

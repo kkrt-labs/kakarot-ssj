@@ -1,4 +1,3 @@
-use evm::call_helpers::is_precompile;
 use evm::create_helpers::CreateHelpers;
 use evm::errors::{EVMError, ensure, PC_OUT_OF_BOUNDS, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
 
@@ -14,7 +13,7 @@ use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{
     Message, Environment, Address, Transfer, ExecutionSummary, ExecutionSummaryTrait,
-    ExecutionResult, ExecutionResultTrait
+    ExecutionResult, ExecutionResultTrait, AddressTrait
 };
 use evm::precompiles::Precompiles;
 use evm::stack::{Stack, StackTrait};
@@ -140,7 +139,7 @@ impl EVMImpl of EVMTrait {
 
     fn execute_code(ref vm: VM) -> ExecutionResult {
         // Handle precompile logic
-        if is_precompile(vm.message.target.evm) {
+        if vm.message.target.evm.is_precompile() {
             let result = Precompiles::exec_precompile(ref vm);
 
             match result {
