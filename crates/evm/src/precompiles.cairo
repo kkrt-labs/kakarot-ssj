@@ -2,6 +2,7 @@ mod blake2f;
 mod ec_recover;
 mod identity;
 mod modexp;
+mod p256verify;
 mod sha256;
 
 use core::traits::Into;
@@ -12,6 +13,7 @@ use evm::precompiles::blake2f::Blake2f;
 use evm::precompiles::ec_recover::EcRecover;
 use evm::precompiles::identity::Identity;
 use evm::precompiles::modexp::ModExp;
+use evm::precompiles::p256verify::P256Verify;
 use evm::precompiles::sha256::Sha256;
 use starknet::EthAddress;
 
@@ -27,43 +29,51 @@ impl PrecompilesImpl of Precompiles {
         let precompile_address = vm.message.target.evm;
         let input = vm.message().data;
 
-        let (gas, result) = match precompile_address.address {
-            0 => {
-                // we should never reach this branch!
-                panic!("pre-compile address can't be 0")
-            },
-            1 => { EcRecover::exec(input)? },
-            2 => { Sha256::exec(input)? },
-            3 => {
-                // we should never reach this branch!
-                panic!(
-                    "pre-compile at address {} isn't implemented yet", precompile_address.address
-                )
-            },
-            4 => { Identity::exec(input)? },
-            5 => { ModExp::exec(input)? },
-            6 => {
-                // we should never reach this branch!
-                panic!(
-                    "pre-compile at address {} isn't implemented yet", precompile_address.address
-                )
-            },
-            7 => {
-                // we should never reach this branch!
-                panic!(
-                    "pre-compile at address {} isn't implemented yet", precompile_address.address
-                )
-            },
-            8 => {
-                // we should never reach this branch!
-                panic!(
-                    "pre-compile at address {} isn't implemented yet", precompile_address.address
-                )
-            },
-            9 => { Blake2f::exec(input)? },
-            _ => {
-                // we should never reach this branch!
-                panic!("address {} isn't a pre-compile", precompile_address.address)
+        let (gas, result) = if precompile_address.address == 0x100 {
+            P256Verify::exec(input)?
+        } else {
+            match precompile_address.address {
+                0 => {
+                    // we should never reach this branch!
+                    panic!("pre-compile address can't be 0")
+                },
+                1 => { EcRecover::exec(input)? },
+                2 => { Sha256::exec(input)? },
+                3 => {
+                    // we should never reach this branch!
+                    panic!(
+                        "pre-compile at address {} isn't implemented yet",
+                        precompile_address.address
+                    )
+                },
+                4 => { Identity::exec(input)? },
+                5 => { ModExp::exec(input)? },
+                6 => {
+                    // we should never reach this branch!
+                    panic!(
+                        "pre-compile at address {} isn't implemented yet",
+                        precompile_address.address
+                    )
+                },
+                7 => {
+                    // we should never reach this branch!
+                    panic!(
+                        "pre-compile at address {} isn't implemented yet",
+                        precompile_address.address
+                    )
+                },
+                8 => {
+                    // we should never reach this branch!
+                    panic!(
+                        "pre-compile at address {} isn't implemented yet",
+                        precompile_address.address
+                    )
+                },
+                9 => { Blake2f::exec(input)? },
+                _ => {
+                    // we should never reach this branch!
+                    panic!("address {} isn't a pre-compile", precompile_address.address)
+                }
             }
         };
 

@@ -95,7 +95,7 @@ fn test_exec_call() {
     kakarot_core.deploy_externally_owned_account(evm_address);
 
     // Set vm bytecode
-    // (call 0xffffff 0x100 0 0 0 0 1)
+    // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
     let bytecode = array![
         0x60,
         0x01,
@@ -107,9 +107,12 @@ fn test_exec_call() {
         0x00,
         0x60,
         0x00,
-        0x61,
-        0x01,
-        0x00,
+        0x64,
+        0xab,
+        0xfa,
+        0x74,
+        0x0c,
+        0xcd,
         0x62,
         0xff,
         0xff,
@@ -122,13 +125,13 @@ fn test_exec_call() {
 
     let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
-    // Deploy bytecode at 0x100
+    // Deploy bytecode at 0xabfa740ccd
     // ret (+ 0x1 0x1)
     let deployed_bytecode = array![
         0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
     ]
         .span();
-    let eth_address: EthAddress = 0x100_u256.into();
+    let eth_address: EthAddress = 0xabfa740ccd_u256.into();
     initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
         .expect('set code failed');
 
@@ -150,7 +153,7 @@ fn test_exec_call_no_return() {
     kakarot_core.deploy_externally_owned_account(evm_address);
 
     // Set vm bytecode
-    // (call 0xffffff 0x100 0 0 0 0 1)
+    // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
     let bytecode = array![
         0x60,
         0x01,
@@ -162,9 +165,12 @@ fn test_exec_call_no_return() {
         0x00,
         0x60,
         0x00,
-        0x61,
-        0x01,
-        0x00,
+        0x64,
+        0xab,
+        0xfa,
+        0x74,
+        0x0c,
+        0xcd,
         0x62,
         0xff,
         0xff,
@@ -177,10 +183,10 @@ fn test_exec_call_no_return() {
 
     let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
-    // Deploy bytecode at 0x100
+    // Deploy bytecode at 0xabfa740ccd
     // (+ 0x1 0x1)
     let deployed_bytecode = array![0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
-    let eth_address: EthAddress = 0x100_u256.into();
+    let eth_address: EthAddress = 0xabfa740ccd_u256.into();
     initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
         .expect('set code failed');
 
@@ -202,7 +208,7 @@ fn test_exec_staticcall() {
     kakarot_core.deploy_externally_owned_account(evm_address);
 
     // Set vm bytecode
-    // (call 0xffffff 0x100 0 0 0 0 1)
+    // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
     let bytecode = array![
         0x60,
         0x01,
@@ -212,9 +218,12 @@ fn test_exec_staticcall() {
         0x00,
         0x60,
         0x00,
-        0x61,
-        0x01,
-        0x00,
+        0x64,
+        0xab,
+        0xfa,
+        0x74,
+        0x0c,
+        0xcd,
         0x62,
         0xff,
         0xff,
@@ -226,13 +235,13 @@ fn test_exec_staticcall() {
         .span();
 
     let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
-    // Deploy bytecode at 0x100
+    // Deploy bytecode at 0xabfa740ccd
     // ret (+ 0x1 0x1)
     let deployed_bytecode = array![
         0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
     ]
         .span();
-    let eth_address: EthAddress = 0x100_u256.into();
+    let eth_address: EthAddress = 0xabfa740ccd_u256.into();
     initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
         .expect('set code failed');
 
@@ -254,7 +263,7 @@ fn test_exec_staticcall_no_return() {
     kakarot_core.deploy_externally_owned_account(evm_address);
 
     // Set vm bytecode
-    // (call 0xffffff 0x100 0 0 0 0 1)
+    // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
     let bytecode = array![
         0x60,
         0x01,
@@ -266,9 +275,12 @@ fn test_exec_staticcall_no_return() {
         0x00,
         0x60,
         0x00,
-        0x61,
-        0x01,
-        0x00,
+        0x64,
+        0xab,
+        0xfa,
+        0x74,
+        0x0c,
+        0xcd,
         0x62,
         0xff,
         0xff,
@@ -281,10 +293,10 @@ fn test_exec_staticcall_no_return() {
 
     let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
-    // Deploy bytecode at 0x100
+    // Deploy bytecode at 0xabfa740ccd
     // (+ 0x1 0x1)
     let deployed_bytecode = array![0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
-    let eth_address: EthAddress = 0x100_u256.into();
+    let eth_address: EthAddress = 0xabfa740ccd_u256.into();
     initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
         .expect('set code failed');
 
