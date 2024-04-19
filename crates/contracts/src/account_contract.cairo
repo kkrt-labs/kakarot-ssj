@@ -48,12 +48,14 @@ pub mod AccountContract {
     use core::starknet::storage_access::{storage_base_address_from_felt252, StorageBaseAddress};
     use core::starknet::syscalls::{replace_class_syscall};
     use core::starknet::{
-        ContractAddress, EthAddress, ClassHash, VALIDATED, get_caller_address, get_tx_info, Store
+        ContractAddress, EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address,
+        get_tx_info, Store
     };
     use core::traits::TryInto;
     use openzeppelin::token::erc20::{ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
     use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait};
     use utils::constants::{POW_2_32};
+    use utils::eth_transaction::EthereumTransactionTrait;
     use utils::eth_transaction::{EthTransactionTrait, TransactionMetadata};
     use utils::helpers::SpanExtTrait;
     use utils::helpers::{ByteArrayExTrait, ResultExTrait};
@@ -210,12 +212,20 @@ pub mod AccountContract {
             // Increment nonce to match protocol's nonce for EOAs.
             self.Account_nonce.write(tx_info.nonce.try_into().unwrap() + 1);
 
-            //TODO execute checks
-
             let call: @Call = calls[0];
-            let calldata = deserialize_bytes(*call.calldata).expect('conversion failed').span();
+            let encoded_tx = deserialize_bytes(*call.calldata).expect('conversion failed').span();
 
-            let tx = EthTransactionTrait::decode(calldata).expect('rlp decoding of tx failed');
+            let tx = EthTransactionTrait::decode(encoded_tx).expect('rlp decoding of tx failed');
+
+            match tx.try_into_fee_market_transaction() {
+                Option::Some(tx_fee_infos) => {
+                    let result = self.validate_eip1559_tx(@tx, tx_fee_infos);
+                    if result[0] != @ArrayTrait::new().span() {
+                        return result;
+                    }
+                },
+                Option::None => ()
+            }
 
             let (success, return_data, gas_used) = kakarot.eth_send_transaction(tx);
             let return_data = serialize_bytes(return_data).span();
@@ -252,6 +262,66 @@ pub mod AccountContract {
         fn set_nonce(ref self: ContractState, nonce: u64) {
             self.ownable.assert_only_owner();
             self.Account_nonce.write(nonce);
+        }
+    }
+
+    #[generate_trait]
+    impl Eip1559TransactionImpl of Eip1559TransactionTrait {
+        fn validate_eip1559_tx(
+            ref self: ContractState,
+            tx: @utils::eth_transaction::EthereumTransaction,
+            tx_fee_infos: utils::eth_transaction::FeeMarketTransaction
+        ) -> Array<Span<felt252>> {
+            let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
+            let block_gas_limit = kakarot.get_block_gas_limit();
+
+            if tx.gas_limit() >= block_gas_limit {
+                let error: felt252 = 'tx gas does not fit in block';
+                let result: Array<Span<felt252>> = array![array![error].span()];
+                return result;
+            }
+
+            let base_fee = kakarot.get_base_fee();
+            let native_token = kakarot.get_native_token();
+            let balance = ERC20ABIDispatcher { contract_address: native_token }
+                .balance_of(get_contract_address());
+
+            let max_fee_per_gas = tx_fee_infos.max_fee_per_gas;
+            let max_priority_fee_per_gas = tx_fee_infos.max_priority_fee_per_gas;
+
+            // ensure that the user was willing to at least pay the base fee
+            if base_fee >= max_fee_per_gas {
+                let error: felt252 = 'max fee per gas is too low';
+                let result: Array<Span<felt252>> = array![array![error].span()];
+                return result;
+            }
+
+            // ensure that the max priority fee per gas is not greater than the max fee per gas
+            if max_priority_fee_per_gas >= max_fee_per_gas {
+                let error: felt252 = 'priority fee is too high';
+                let result: Array<Span<felt252>> = array![array![error].span()];
+                return result;
+            }
+
+            let max_gas_fee = tx.gas_limit() * max_fee_per_gas;
+            let tx_cost = max_gas_fee.into() + tx_fee_infos.amount;
+
+            if tx_cost >= balance {
+                let error: felt252 = 'balance cannot cover tx cost';
+                let result: Array<Span<felt252>> = array![array![error].span()];
+                return result;
+            }
+
+            // priority fee is capped because the base fee is filled first
+            let possible_priority_fee = max_fee_per_gas - base_fee;
+
+            if max_priority_fee_per_gas >= possible_priority_fee {
+                let error: felt252 = 'max priority is fee too high';
+                let result: Array<Span<felt252>> = array![array![error].span()];
+                return result;
+            }
+
+            return array![array![].span()];
         }
     }
 }
