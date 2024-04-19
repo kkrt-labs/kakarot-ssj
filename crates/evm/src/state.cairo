@@ -4,6 +4,7 @@ use core::integer::{u256_overflow_sub, u256_overflowing_add};
 use core::nullable::{match_nullable, FromNullableResult};
 use core::poseidon::PoseidonTrait;
 use core::starknet::SyscallResultTrait;
+use evm::backend::starknet_backend::fetch_original_storage;
 
 use evm::errors::{ensure, EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, BALANCE_OVERFLOW};
 use evm::model::account::{AccountTrait, AccountInternalTrait};
@@ -145,7 +146,7 @@ impl StateImpl of StateTrait {
             Option::Some((_, _, value)) => { return value; },
             Option::None => {
                 let account = self.get_account(evm_address);
-                return account.read_storage(key);
+                return fetch_original_storage(@account, key);
             }
         }
     }

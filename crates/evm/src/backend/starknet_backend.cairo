@@ -8,8 +8,9 @@ use contracts::kakarot_core::{
 };
 use core::num::traits::zero::Zero;
 use evm::errors::{ensure, EVMError, EOA_EXISTS};
-use evm::model::{Address, AddressTrait, Environment};
+use evm::model::{Address, AddressTrait, Environment, Account, AccountTrait};
 use evm::state::{State, StateTrait};
+use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::{
     EthAddress, get_contract_address, deploy_syscall, get_tx_info, get_block_info,
     SyscallResultTrait
@@ -17,13 +18,21 @@ use starknet::{
 use utils::constants;
 
 
+/// Commits the state changes to Starknet.
+///
+/// # Arguments
+///
+/// * `state` - The state to commit.
+///
+/// # Returns
+///
+/// `Ok(())` if the commit was successful, otherwise an `EVMError`.
 fn commit(ref state: State) -> Result<(), EVMError> {
     internals::commit_accounts(ref state)?;
     internals::transfer_native_token(ref state)?;
     internals::emit_events(ref state)?;
     internals::commit_storage(ref state)
 }
-
 
 /// Deploys a new EOA contract.
 ///
@@ -59,6 +68,7 @@ fn get_bytecode(evm_address: EthAddress) -> Span<u8> {
     }
 }
 
+/// Populate an Environment with Starknet syscalls.
 fn get_env(origin: EthAddress, gas_price: u128) -> Environment {
     let kakarot_state = KakarotCore::unsafe_new_contract_state();
     let block_info = get_block_info().unbox();
@@ -79,6 +89,41 @@ fn get_env(origin: EthAddress, gas_price: u128) -> Environment {
     }
 }
 
+/// Fetches the value stored at the given key for the corresponding contract accounts.
+/// If the account is not deployed (in case of a create/deploy transaction), returns 0.
+/// # Arguments
+///
+/// * `account` The account to read from.
+/// * `key` The key to read.
+///
+/// # Returns
+///
+/// A `Result` containing the value stored at the given key or an `EVMError` if there was an error.
+fn fetch_original_storage(account: @Account, key: u256) -> u256 {
+    let is_deployed = account.evm_address().is_deployed();
+    if is_deployed {
+        return IAccountDispatcher { contract_address: account.starknet_address() }.storage(key);
+    }
+    0
+}
+
+/// Fetches the balance of the given address.
+///
+/// # Arguments
+///
+/// * `self` - The address to fetch the balance of.
+///
+/// # Returns
+///
+/// The balance of the given address.
+fn fetch_balance(self: @Address) -> u256 {
+    let kakarot_state = KakarotCore::unsafe_new_contract_state();
+    let native_token_address = kakarot_state.get_native_token();
+    let native_token = IERC20CamelDispatcher { contract_address: native_token_address };
+    native_token.balanceOf(*self.starknet)
+}
+
+
 mod internals {
     use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::kakarot_core::{KakarotCore, KakarotCore::KakarotCoreImpl};
@@ -88,11 +133,20 @@ mod internals {
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use starknet::SyscallResultTrait;
     use starknet::syscalls::{emit_event_syscall};
-    use super::{State, StateTrait};
+    use super::{State, StateTrait, deploy};
     use utils::constants::BURN_ADDRESS;
     use utils::set::{Set, SetTrait};
 
 
+    /// Commits the account changes to Starknet.
+    ///
+    /// # Arguments
+    ///
+    /// * `state` - The state containing the accounts to commit.
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
     fn commit_accounts(ref state: State) -> Result<(), EVMError> {
         let mut account_keys = state.accounts.keyset.to_span();
         loop {
@@ -109,26 +163,21 @@ mod internals {
     /// Commits the account to Starknet by updating the account state if it
     /// exists, or deploying a new account if it doesn't.
     ///
-    /// Only Contract Accounts can be modified.
-    ///
     /// # Arguments
     /// * `self` - The account to commit
+    /// * `state` - The state, modified in the case of selfdestruct transfers
     ///
     /// # Returns
     ///
     /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
-    //TODO: move state out in starknet backend
     fn commit(self: @Account, ref state: State) {
-        let is_deployed = self.evm_address().is_deployed();
-
-        if self.is_precompile() {
+        if self.evm_address().is_precompile() {
             return;
         }
 
         // Case new account
-        if !is_deployed {
-            // If SELFDESTRUCT, deploy empty SN account
-            self.deploy();
+        if !self.evm_address().is_deployed() {
+            deploy(self.evm_address()).expect('account deployment failed');
 
             let has_code_or_nonce = self.has_code_or_nonce();
             if !has_code_or_nonce {
@@ -140,10 +189,10 @@ mod internals {
             // burning any leftover balance.
             if (self.is_selfdestruct()) {
                 let kakarot_state = KakarotCore::unsafe_new_contract_state();
-                let starknet_address = kakarot_state
+                let burn_starknet_address = kakarot_state
                     .compute_starknet_address(BURN_ADDRESS.try_into().unwrap());
                 let burn_address = Address {
-                    starknet: starknet_address, evm: BURN_ADDRESS.try_into().unwrap()
+                    starknet: burn_starknet_address, evm: BURN_ADDRESS.try_into().unwrap()
                 };
                 state
                     .add_transfer(
@@ -155,37 +204,34 @@ mod internals {
                 return;
             }
 
-            let account = IAccountDispatcher {
-                contract_address: self.get_registered_starknet_address()
-            };
-            account.write_bytecode(self.bytecode());
-            account.set_nonce(*self.nonce);
+            // Write bytecode and set nonce
+            let starknet_account = IAccountDispatcher { contract_address: self.starknet_address() };
+            starknet_account.write_bytecode(self.bytecode());
+            starknet_account.set_nonce(*self.nonce);
 
             //TODO: storage commits are done in the State commitment
             //Storage is handled outside of the account and must be committed after all accounts are committed.
             return;
         };
 
-        // If the account was not scheduled for deployment - then update it if it's deployed.
-
+        // @dev: EIP-6780 - If selfdestruct on an account created, dont commit data
         let is_created_selfdestructed = self.is_selfdestruct() && self.is_created();
         if is_created_selfdestructed {
             // If the account was created and selfdestructed in the same transaction, we don't need to commit it.
             return;
         }
 
-        let account = IAccountDispatcher {
-            contract_address: self.get_registered_starknet_address()
-        };
+        let starknet_account = IAccountDispatcher { contract_address: self.starknet_address() };
 
-        account.set_nonce(*self.nonce);
-        //TODO: handle storage commitment
+        starknet_account.set_nonce(*self.nonce);
+        //TODO: storage commits are done in the State commitment
+        //Storage is handled outside of the account and must be committed after all accounts are committed.
 
         // Update bytecode if required (SELFDESTRUCTed contract committed and redeployed)
         //TODO: add bytecode_len entrypoint for optimization
-        let bytecode_len = account.bytecode().len();
+        let bytecode_len = starknet_account.bytecode().len();
         if bytecode_len != self.bytecode().len() {
-            account.write_bytecode(self.bytecode());
+            starknet_account.write_bytecode(self.bytecode());
         }
     }
 
@@ -237,7 +283,8 @@ mod internals {
                         .get(*state_key)
                         .deref();
                     let mut account = self.get_account(evm_address);
-                    account.commit_storage(key, value);
+                    IAccountDispatcher { contract_address: account.starknet_address() }
+                        .write_storage(key, value);
                 },
                 Option::None => { break Result::Ok(()); }
             }

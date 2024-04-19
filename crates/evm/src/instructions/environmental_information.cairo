@@ -9,6 +9,7 @@ use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
+use evm::model::{AddressTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use keccak::cairo_keccak;
@@ -299,7 +300,8 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let account = self.env.state.get_account(evm_address);
         // Relevant cases:
         // https://github.com/ethereum/go-ethereum/blob/master/core/vm/instructions.go#L392
-        if account.is_precompile() || (!account.has_code_or_nonce() && account.balance.is_zero()) {
+        if account.evm_address().is_precompile()
+            || (!account.has_code_or_nonce() && account.balance.is_zero()) {
             return self.stack.push(0);
         }
         let bytecode = account.code;
