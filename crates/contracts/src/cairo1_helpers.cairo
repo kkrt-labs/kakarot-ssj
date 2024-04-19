@@ -52,6 +52,10 @@ pub trait IHelpers<T> {
         self: @T, words: Array<u64>, last_input_word: u64, last_input_num_bytes: usize
     ) -> u256;
 
+    fn verify_eth_signature(
+        self: @T, msg_hash: u256, signature: Signature, eth_address: EthAddress
+    );
+
     /// Recovers the Ethereum address from a message hash and a signature.
     ///
     /// # Arguments
@@ -76,7 +80,7 @@ mod embeddable_impls {
     use evm::precompiles::modexp::ModExp;
     use evm::precompiles::sha256::Sha256;
     use starknet::EthAddress;
-    use starknet::eth_signature::{Signature, public_key_point_to_eth_address};
+    use starknet::eth_signature::{Signature, verify_eth_signature, public_key_point_to_eth_address};
     use starknet::secp256_trait::{recover_public_key};
     use starknet::secp256k1::Secp256k1Point;
     use utils::helpers::U256Trait;
@@ -115,6 +119,13 @@ mod embeddable_impls {
             last_input_num_bytes: usize
         ) -> u256 {
             cairo_keccak(ref words, last_input_word, last_input_num_bytes).reverse_endianness()
+        }
+
+
+        fn verify_eth_signature(
+            self: @TContractState, msg_hash: u256, signature: Signature, eth_address: EthAddress
+        ) {
+            verify_eth_signature(msg_hash, signature, eth_address);
         }
 
         fn recover_eth_address(
