@@ -283,7 +283,6 @@ fn test_exec_jump_valid() {
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
     let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
-    vm.init_valid_jump_destinations();
 
     let counter = 0x03;
     vm.stack.push(counter).expect('push failed');
@@ -359,7 +358,6 @@ fn test_exec_jumpi_valid_non_zero_1() {
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
     let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
-    vm.init_valid_jump_destinations();
 
     let b = 0x1;
     vm.stack.push(b).expect('push failed');
@@ -380,7 +378,6 @@ fn test_exec_jumpi_valid_non_zero_2() {
     let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
     let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
-    vm.init_valid_jump_destinations();
 
     let b = 0x69;
     vm.stack.push(b).expect('push failed');

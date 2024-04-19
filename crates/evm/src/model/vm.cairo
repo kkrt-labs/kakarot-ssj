@@ -1,7 +1,7 @@
 use core::integer::u128_overflowing_sub;
 use evm::errors::{EVMError, ensure};
 use evm::memory::{Memory, MemoryTrait};
-use evm::model::{Message, Environment, ExecutionResult};
+use evm::model::{Message, Environment, ExecutionResult, AccountTrait};
 use evm::stack::{Stack, StackTrait};
 use starknet::EthAddress;
 use utils::helpers::{SpanExtTrait, ArrayExtTrait};
@@ -13,7 +13,7 @@ struct VM {
     stack: Stack,
     memory: Memory,
     pc: usize,
-    valid_jumpdests: Span<usize>,
+    valid_jumpdests: Felt252Dict<bool>,
     return_data: Span<u8>,
     env: Environment,
     message: Message,
@@ -34,7 +34,7 @@ impl VMImpl of VMTrait {
             stack: Default::default(),
             memory: Default::default(),
             pc: 0,
-            valid_jumpdests: Default::default().span(),
+            valid_jumpdests: AccountTrait::get_jumpdests(message.code),
             return_data: Default::default().span(),
             env,
             message,
@@ -69,48 +69,9 @@ impl VMImpl of VMTrait {
         self.pc = pc;
     }
 
-    fn init_valid_jump_destinations(ref self: VM) {
-        let bytecode = self.message.code;
-        let mut valid_jumpdests: Array<usize> = array![];
-
-        let mut i = 0;
-        loop {
-            if (i >= bytecode.len()) {
-                break;
-            }
-
-            let opcode = *bytecode.at(i);
-            // checking for PUSH opcode family
-            if (opcode >= 0x5f && opcode <= 0x7f) {
-                let number_of_args = opcode - 0x5f;
-                i += (number_of_args + 1).into();
-                continue;
-            }
-
-            // JUMPDEST
-            if (opcode == 0x5B) {
-                valid_jumpdests.append(i.into());
-            }
-
-            i += 1;
-        };
-
-        self.set_valid_jumpdests(valid_jumpdests.span());
-    }
-
     #[inline(always)]
-    fn valid_jumpdests(self: @VM) -> Span<usize> {
-        *self.valid_jumpdests
-    }
-
-    #[inline(always)]
-    fn set_valid_jumpdests(ref self: VM, valid_jumpdests: Span<usize>) {
-        self.valid_jumpdests = valid_jumpdests;
-    }
-
-    #[inline(always)]
-    fn is_valid_jump(self: @VM, dest: u32) -> bool {
-        self.valid_jumpdests().contains(dest)
+    fn is_valid_jump(ref self: VM, dest: u32) -> bool {
+        self.valid_jumpdests.get(dest.into())
     }
 
     #[inline(always)]

@@ -12,14 +12,7 @@ fn test_is_valid_jump_destinations() {
 
     let mut vm = VMTrait::new(message, Default::default());
 
-    vm.init_valid_jump_destinations();
-
     let expected_valid_jump_destinations = array![3, 9].span();
-    assert!(
-        vm.valid_jumpdests == expected_valid_jump_destinations,
-        "expected valid_jump_destinations to be [3, 9]"
-    );
-
     assert!(vm.is_valid_jump(0x3) == true, "expected jump to be valid");
     assert!(vm.is_valid_jump(0x9) == true, "expected jump to be valid");
 
@@ -34,7 +27,5 @@ fn test_valid_jump_destination_inside_jumpn() {
     message.code = bytecode.span();
 
     let mut vm = VMTrait::new(message, Default::default());
-    vm.init_valid_jump_destinations();
-
     assert!(vm.is_valid_jump(0x1) == false, "expected false");
 }

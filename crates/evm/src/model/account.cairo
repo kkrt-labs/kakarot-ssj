@@ -279,6 +279,44 @@ impl AccountImpl of AccountTrait {
     fn is_selfdestruct(self: @Account) -> bool {
         *self.selfdestruct
     }
+
+    /// Initializes a dictionary of valid jump destinations in EVM bytecode.
+    /// 
+    /// This function iterates over the bytecode from the current index 'i'.
+    /// If the opcode at the current index is between 0x5f and 0x7f (PUSHN opcodes) (inclusive),
+    /// it skips the next 'n_args' opcodes, where 'n_args' is the opcode minus 0x5f.
+    /// If the opcode is 0x5b (JUMPDEST), it marks the current index as a valid jump destination.
+    /// It continues by jumping back to the body flag until it has processed the entire bytecode.
+    ///
+    /// # Arguments
+    /// * `bytecode` The bytecode to analyze
+    ///
+    /// # Returns
+    /// A dictionary of valid jump destinations in the bytecode
+    fn get_jumpdests(mut bytecode: Span<u8>) -> Felt252Dict<bool> {
+        let mut jumpdests: Felt252Dict<bool> = Default::default();
+        let mut i: usize = 0;
+        loop {
+            if (i >= bytecode.len()) {
+                break;
+            }
+
+            let opcode = *bytecode[i];
+            // checking for PUSH opcode family
+            if opcode >= 0x5f && opcode <= 0x7f {
+                let n_args = opcode.into() - 0x5f;
+                i += n_args + 1;
+                continue;
+            }
+
+            if opcode == 0x5b {
+                jumpdests.insert(i.into(), true);
+            }
+
+            i += 1;
+        };
+        jumpdests
+    }
 }
 
 #[generate_trait]
