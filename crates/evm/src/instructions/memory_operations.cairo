@@ -146,7 +146,6 @@ impl MemoryOperation of MemoryOperationTrait {
                 }
             }
         }
-
         self.charge_gas(gas_cost)?;
 
         self.env.state.write_state(:evm_address, :key, value: new_value);

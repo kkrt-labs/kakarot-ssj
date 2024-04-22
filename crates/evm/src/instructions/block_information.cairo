@@ -78,9 +78,7 @@ impl BlockInformation of BlockInformationTrait {
     fn exec_prevrandao(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
 
-        // PREVRANDAO does not exist in Starknet
-        // PREVRANDAO used to be DIFFICULTY, which returns 0 for non-POW chains
-        self.stack.push(0x00)
+        self.stack.push(self.env.prevrandao)
     }
 
     /// 0x45 - GASLIMIT

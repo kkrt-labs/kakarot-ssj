@@ -52,7 +52,7 @@ pub mod AccountContract {
         get_tx_info, Store
     };
     use core::traits::TryInto;
-    use openzeppelin::token::erc20::{ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
+    use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait};
     use utils::constants::{POW_2_32};
     use utils::eth_transaction::EthereumTransactionTrait;
@@ -126,7 +126,7 @@ pub mod AccountContract {
             // To internally perform value transfer of the network's native
             // token (which conforms to the ERC20 standard), we need to give the
             // KakarotCore contract infinite allowance
-            ERC20ABIDispatcher { contract_address: native_token }
+            IERC20CamelDispatcher { contract_address: native_token }
                 .approve(kakarot_address, integer::BoundedInt::<u256>::max());
 
             kakarot.register_account(evm_address);
@@ -217,17 +217,52 @@ pub mod AccountContract {
 
             let tx = EthTransactionTrait::decode(encoded_tx).expect('rlp decoding of tx failed');
 
-            match tx.try_into_fee_market_transaction() {
-                Option::Some(tx_fee_infos) => {
-                    let result = self.validate_eip1559_tx(@tx, tx_fee_infos);
-                    if result[0] != @ArrayTrait::new().span() {
-                        return result;
-                    }
-                },
-                Option::None => ()
-            }
+            let is_valid = match tx.try_into_fee_market_transaction() {
+                Option::Some(tx_fee_infos) => { self.validate_eip1559_tx(@tx, tx_fee_infos) },
+                Option::None => true
+            };
 
-            let (success, return_data, gas_used) = kakarot.eth_send_transaction(tx);
+            let (success, return_data, gas_used) = if is_valid {
+                kakarot.eth_send_transaction(tx)
+            } else {
+                (
+                    false,
+                    array![
+                        'K',
+                        'a',
+                        'k',
+                        'a',
+                        'r',
+                        'o',
+                        't',
+                        ':',
+                        ' ',
+                        'e',
+                        't',
+                        'h',
+                        ' ',
+                        'v',
+                        'a',
+                        'l',
+                        'i',
+                        'd',
+                        'a',
+                        't',
+                        'i',
+                        'o',
+                        'n',
+                        ' ',
+                        'f',
+                        'a',
+                        'i',
+                        'l',
+                        'e',
+                        'd'
+                    ]
+                        .span(),
+                    0
+                )
+            };
             let return_data = serialize_bytes(return_data).span();
 
             self.emit(TransactionExecuted { response: return_data, success: success, gas_used });
@@ -271,57 +306,47 @@ pub mod AccountContract {
             ref self: ContractState,
             tx: @utils::eth_transaction::EthereumTransaction,
             tx_fee_infos: utils::eth_transaction::FeeMarketTransaction
-        ) -> Array<Span<felt252>> {
+        ) -> bool {
             let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
             let block_gas_limit = kakarot.get_block_gas_limit();
 
             if tx.gas_limit() >= block_gas_limit {
-                let error: felt252 = 'tx gas does not fit in block';
-                let result: Array<Span<felt252>> = array![array![error].span()];
-                return result;
+                return false;
             }
 
             let base_fee = kakarot.get_base_fee();
             let native_token = kakarot.get_native_token();
-            let balance = ERC20ABIDispatcher { contract_address: native_token }
-                .balance_of(get_contract_address());
+            let balance = IERC20CamelDispatcher { contract_address: native_token }
+                .balanceOf(get_contract_address());
 
             let max_fee_per_gas = tx_fee_infos.max_fee_per_gas;
             let max_priority_fee_per_gas = tx_fee_infos.max_priority_fee_per_gas;
 
             // ensure that the user was willing to at least pay the base fee
             if base_fee >= max_fee_per_gas {
-                let error: felt252 = 'max fee per gas is too low';
-                let result: Array<Span<felt252>> = array![array![error].span()];
-                return result;
+                return false;
             }
 
             // ensure that the max priority fee per gas is not greater than the max fee per gas
             if max_priority_fee_per_gas >= max_fee_per_gas {
-                let error: felt252 = 'priority fee is too high';
-                let result: Array<Span<felt252>> = array![array![error].span()];
-                return result;
+                return false;
             }
 
             let max_gas_fee = tx.gas_limit() * max_fee_per_gas;
             let tx_cost = max_gas_fee.into() + tx_fee_infos.amount;
 
             if tx_cost >= balance {
-                let error: felt252 = 'balance cannot cover tx cost';
-                let result: Array<Span<felt252>> = array![array![error].span()];
-                return result;
+                return false;
             }
 
             // priority fee is capped because the base fee is filled first
             let possible_priority_fee = max_fee_per_gas - base_fee;
 
             if max_priority_fee_per_gas >= possible_priority_fee {
-                let error: felt252 = 'max priority is fee too high';
-                let result: Array<Span<felt252>> = array![array![error].span()];
-                return result;
+                return false;
             }
 
-            return array![array![].span()];
+            return true;
         }
     }
 }
