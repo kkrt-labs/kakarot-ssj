@@ -64,13 +64,16 @@ pub trait IHelpers<T> {
     /// * `signature` - The signature to recover the address from.
     ///
     /// # Returns
-    /// The Ethereum address recovered from the signature.
-    fn recover_eth_address(self: @T, msg_hash: u256, signature: Signature) -> EthAddress;
+    /// A tuple containing:
+    /// * A boolean indicating whether the recovery was successful.
+    /// * The recovered Ethereum address.
+    fn recover_eth_address(self: @T, msg_hash: u256, signature: Signature) -> (bool, EthAddress);
 }
 
 
 mod embeddable_impls {
-    use core::keccak::cairo_keccak;
+    use core::keccak::{cairo_keccak, keccak_u256s_be_inputs};
+    use core::num::traits::Zero;
     use core::traits::Into;
     use core::{starknet, starknet::SyscallResultTrait};
     use evm::errors::EVMError;
@@ -81,7 +84,7 @@ mod embeddable_impls {
     use evm::precompiles::sha256::Sha256;
     use starknet::EthAddress;
     use starknet::eth_signature::{Signature, verify_eth_signature, public_key_point_to_eth_address};
-    use starknet::secp256_trait::{recover_public_key};
+    use starknet::secp256_trait::{recover_public_key, Secp256PointTrait};
     use starknet::secp256k1::Secp256k1Point;
     use utils::helpers::U256Trait;
 
@@ -130,10 +133,24 @@ mod embeddable_impls {
 
         fn recover_eth_address(
             self: @TContractState, msg_hash: u256, signature: Signature
-        ) -> EthAddress {
-            let public_key_point = recover_public_key::<Secp256k1Point>(:msg_hash, :signature)
-                .unwrap();
-            public_key_point_to_eth_address(:public_key_point)
+        ) -> (bool, EthAddress) {
+            match recover_public_key::<Secp256k1Point>(:msg_hash, :signature) {
+                Option::Some(public_key_point) => {
+                    let (x, y) = public_key_point.get_coordinates().unwrap_syscall();
+                    if (x == 0 && y == 0) {
+                        return (false, Zero::zero());
+                    }
+                    // Keccak output is little endian.
+                    let point_hash_le = keccak_u256s_be_inputs(array![x, y].span());
+                    let point_hash = u256 {
+                        low: core::integer::u128_byte_reverse(point_hash_le.high),
+                        high: core::integer::u128_byte_reverse(point_hash_le.low)
+                    };
+
+                    (true, point_hash.into())
+                },
+                Option::None => (false, Zero::zero())
+            }
         }
     }
 }
