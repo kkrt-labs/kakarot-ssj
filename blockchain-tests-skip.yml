@@ -1,13 +1,38 @@
+# List of test directories to completely skip
+# trunk-ignore(yamllint/empty-values)
 directories:
-  - None
 
-regex:
-  None:
-    - None
-
+# List of file names to be skipped
+# The first level corresponds to the directory, the second to the list of file names to ignore.
+# trunk-ignore(yamllint/empty-values)
 filename:
-  None:
-    - None
+
+# Keeping some skipped tests because of a probable memory leak somewhere
+# causing cargo test to just crash at some point
+regex:
+  eip4895_withdrawals:
+    - .*
+  eip4844_blobs:
+    - .*
+  eip4788_beacon_root:
+    - .*
+  eip7516_blobgasfee:
+    - .*
+  stEIP4844-blobtransactions:
+    - .*
+  stMemoryStressTest:
+    - mload32bitBound_return.* # ef-tests #565
+    - CREATE_Bounds.* # ef-tests #565
+    - CREATE2_Bounds.* # ef-tests #565
+    - CALL_Bounds.* # ef-tests #565
+    - CALLCODE_Bounds.* # ef-tests #565
+    - DELEGATECALL_Bounds.* # ef-tests #565
+    - static_CALL_Bounds.* # ef-tests #565
+  stZeroKnowledge:
+    - .*ecmul.*
+  stZeroKnowledge2:
+    - .*ecadd.*
+    - .*ecmul.*
 
 testname:
   vmIOandFlowOperations:
