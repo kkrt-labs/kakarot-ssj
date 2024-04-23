@@ -628,7 +628,12 @@ fn test_exec_sstore_finalized() {
     // Deploys the contract account to be able to commit storage changes.
     let ca_address = deploy_contract_account(vm.message().target.evm, array![].span());
     let account = Account {
-        address: ca_address, code: array![].span(), nonce: 1, balance: 0, selfdestruct: false, is_created: false,
+        address: ca_address,
+        code: array![].span(),
+        nonce: 1,
+        balance: 0,
+        selfdestruct: false,
+        is_created: false,
     };
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
