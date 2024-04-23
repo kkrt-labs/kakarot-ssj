@@ -223,6 +223,7 @@ fn test_account_commit_undeployed() {
         code: array![0x69].span(),
         balance: 0,
         selfdestruct: false,
+        is_created: false,
     };
     account.nonce = 420;
     account.code = array![0x1].span();

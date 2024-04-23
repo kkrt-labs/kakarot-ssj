@@ -35,6 +35,7 @@ impl EVMImpl of EVMTrait {
                     EVMError::DeployError(CONTRACT_ACCOUNT_EXISTS).to_bytes(),
                 );
             }
+
             let mut result = EVMTrait::process_create_message(message, ref env);
             if result.success {
                 result.return_data = message.target.evm.to_bytes().span();
@@ -65,6 +66,8 @@ impl EVMImpl of EVMTrait {
 
         // Increment nonce of target
         target_account.set_nonce(1);
+        // Set the target as created
+        target_account.set_created(true);
         target_account.address = message.target;
         env.state.set_account(target_account);
 

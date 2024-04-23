@@ -30,6 +30,7 @@ impl AccountBuilderImpl of AccountBuilderTrait {
                 nonce: 0,
                 balance: 0,
                 selfdestruct: false,
+                is_created: false
             }
         }
     }
@@ -65,7 +66,6 @@ impl AccountBuilderImpl of AccountBuilderTrait {
     }
 }
 
-
 #[derive(Copy, Drop, PartialEq)]
 struct Account {
     address: Address,
@@ -73,6 +73,7 @@ struct Account {
     nonce: u64,
     balance: u256,
     selfdestruct: bool,
+    is_created: bool,
 }
 
 #[generate_trait]
@@ -137,8 +138,14 @@ impl AccountImpl of AccountTrait {
         return !(*self.code).is_empty() || *self.nonce != 0;
     }
 
+    #[inline(always)]
     fn is_created(self: @Account) -> bool {
-        panic!("unimplemented is created")
+        *self.is_created
+    }
+
+    #[inline(always)]
+    fn set_created(ref self: Account, is_created: bool) {
+        self.is_created = is_created;
     }
 
     #[inline(always)]

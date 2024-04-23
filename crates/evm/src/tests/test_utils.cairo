@@ -253,7 +253,8 @@ fn initialize_contract_account(
         code: array![0xab, 0xcd, 0xef].span(),
         nonce: 1,
         balance: 0,
-        selfdestruct: false
+        selfdestruct: false,
+        is_created: false,
     };
     let mut i = 0;
     loop {

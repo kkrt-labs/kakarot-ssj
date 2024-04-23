@@ -517,7 +517,8 @@ fn test_exec_sload_from_storage() {
         code: array![0xab, 0xcd, 0xef].span(),
         nonce: 1,
         balance: 0,
-        selfdestruct: false
+        selfdestruct: false,
+        is_created: false,
     };
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
@@ -586,7 +587,8 @@ fn test_exec_sstore_on_contract_account_alive() {
         code: array![].span(),
         nonce: 1,
         balance: 0,
-        selfdestruct: false
+        selfdestruct: false,
+        is_created: false,
     };
     vm.env.state.set_account(account);
     assert!(vm.env.state.is_account_alive(account.address.evm));
@@ -626,7 +628,7 @@ fn test_exec_sstore_finalized() {
     // Deploys the contract account to be able to commit storage changes.
     let ca_address = deploy_contract_account(vm.message().target.evm, array![].span());
     let account = Account {
-        address: ca_address, code: array![].span(), nonce: 1, balance: 0, selfdestruct: false
+        address: ca_address, code: array![].span(), nonce: 1, balance: 0, selfdestruct: false, is_created: false,
     };
     let key: u256 = 0x100000000000000000000000000000001;
     let value: u256 = 0xABDE1E11A5;
