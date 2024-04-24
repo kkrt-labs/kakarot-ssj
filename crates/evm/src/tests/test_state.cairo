@@ -100,7 +100,8 @@ mod test_state {
             code: Default::default().span(),
             nonce: 0,
             balance: 0,
-            selfdestruct: false
+            selfdestruct: false,
+            is_created: false,
         };
 
         let account = state.get_account(evm_address);
@@ -125,7 +126,8 @@ mod test_state {
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,
             balance: 420,
-            selfdestruct: false
+            selfdestruct: false,
+            is_created: false,
         };
 
         state.set_account(expected_account);
@@ -153,7 +155,8 @@ mod test_state {
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,
             balance: 420,
-            selfdestruct: false
+            selfdestruct: false,
+            is_created: false,
         };
 
         let account = state.get_account(evm_address);
@@ -190,7 +193,8 @@ mod test_state {
             code: array![0xab, 0xcd, 0xef].span(),
             nonce: 1,
             balance: 0,
-            selfdestruct: false
+            selfdestruct: false,
+            is_created: false,
         };
         IAccountDispatcher { contract_address: account.starknet_address() }
             .write_storage(key, value);
