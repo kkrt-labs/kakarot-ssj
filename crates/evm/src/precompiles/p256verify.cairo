@@ -19,7 +19,7 @@ impl P256Verify of Precompile {
         let gas: u128 = P256VERIFY_PRECOMPILE_GAS_COST;
 
         if input.len() != 160 {
-            return Result::Ok((gas, array![0].span()));
+            return Result::Ok((gas, array![].span()));
         }
 
         let message_hash = input.slice(0, 32);
@@ -59,7 +59,7 @@ impl P256Verify of Precompile {
         };
 
         if !is_valid_signature(message_hash, r, s, public_key) {
-            return Result::Ok((gas, array![0].span()));
+            return Result::Ok((gas, array![].span()));
         }
 
         return Result::Ok((gas, array![1].span()));

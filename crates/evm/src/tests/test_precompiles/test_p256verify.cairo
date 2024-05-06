@@ -87,8 +87,7 @@ fn test_p256verify_precompile_input_too_short() {
 
     let (gas, result) = P256Verify::exec(calldata.span()).unwrap();
 
-    let result: u256 = result.from_be_bytes().unwrap();
-    assert_eq!(result, 0x00);
+    assert_eq!(result, array![].span());
     assert_eq!(gas, 3450);
 }
 
@@ -117,5 +116,5 @@ fn test_p256verify_precompile_input_too_short_static_call() {
     let mut result = Default::default();
     vm.memory.load_n(0x1, ref result, 0x80);
 
-    assert_eq!(result, array![0x00]);
+    assert_eq!(result, array![0]);
 }
