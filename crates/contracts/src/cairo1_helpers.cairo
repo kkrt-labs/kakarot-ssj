@@ -30,7 +30,7 @@ pub trait IHelpers<T> {
     ///
     /// # Returns
     /// The hash of the specified block.
-    /// 
+    ///
     /// # Errors
     /// `Block number out of range` - If the block number is greater than `current_block - 10`.
     /// `0`: The block number is inferior to `first_v0_12_0_block`.
@@ -52,6 +52,7 @@ pub trait IHelpers<T> {
         self: @T, words: Array<u64>, last_input_word: u64, last_input_num_bytes: usize
     ) -> u256;
 
+    // DEPRECATED
     fn verify_eth_signature(
         self: @T, msg_hash: u256, signature: Signature, eth_address: EthAddress
     );
@@ -68,6 +69,22 @@ pub trait IHelpers<T> {
     /// * A boolean indicating whether the recovery was successful.
     /// * The recovered Ethereum address.
     fn recover_eth_address(self: @T, msg_hash: u256, signature: Signature) -> (bool, EthAddress);
+
+    /// Performs signature verification in the secp256r1 ellipitic curve.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg_hash` - The hash of the message.
+    /// * `r` - The r component of the signature.
+    /// * `s` - The s component of the signature.
+    /// * `x` - The x coordinate of the public key.
+    /// * `y` - The y coordinate of the public key.
+    ///
+    /// # Returns
+    /// A boolean indicating whether the signature is valid.
+    fn verify_signature_secp256r1(
+        self: @T, msg_hash: u256, r: u256, s: u256, x: u256, y: u256
+    ) -> bool;
 }
 
 
@@ -84,8 +101,9 @@ mod embeddable_impls {
     use evm::precompiles::sha256::Sha256;
     use starknet::EthAddress;
     use starknet::eth_signature::{Signature, verify_eth_signature, public_key_point_to_eth_address};
-    use starknet::secp256_trait::{recover_public_key, Secp256PointTrait};
+    use starknet::secp256_trait::{recover_public_key, Secp256PointTrait, is_valid_signature};
     use starknet::secp256k1::Secp256k1Point;
+    use starknet::secp256r1::{secp256r1_new_syscall, Secp256r1Point};
     use utils::helpers::U256Trait;
 
 
@@ -124,7 +142,7 @@ mod embeddable_impls {
             cairo_keccak(ref words, last_input_word, last_input_num_bytes).reverse_endianness()
         }
 
-
+        // DEPRECATED
         fn verify_eth_signature(
             self: @TContractState, msg_hash: u256, signature: Signature, eth_address: EthAddress
         ) {
@@ -151,6 +169,19 @@ mod embeddable_impls {
                 },
                 Option::None => (false, Zero::zero())
             }
+        }
+
+        fn verify_signature_secp256r1(
+            self: @TContractState, msg_hash: u256, r: u256, s: u256, x: u256, y: u256
+        ) -> bool {
+            let maybe_public_key: Option<Secp256r1Point> = secp256r1_new_syscall(x, y)
+                .unwrap_syscall();
+            let public_key = match maybe_public_key {
+                Option::Some(public_key) => public_key,
+                Option::None => { return false; }
+            };
+
+            return is_valid_signature(msg_hash, r, s, public_key);
         }
     }
 }
