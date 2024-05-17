@@ -11,7 +11,7 @@ mod test_external_owned_account {
         setup_contracts_for_testing, deploy_eoa, deploy_contract_account, pop_log, pop_log_debug,
         fund_account_with_native_token, call_transaction
     };
-    use contracts::tests::test_upgradeable::{
+    use contracts_tests::test_upgradeable::{
         IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
         MockContractUpgradeableV1
     };

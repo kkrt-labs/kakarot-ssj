@@ -9,11 +9,11 @@ use contracts::kakarot_core::{
 };
 use contracts::test_data::{deploy_counter_calldata, counter_evm_bytecode};
 use contracts::test_utils as contract_utils;
-use contracts::tests::test_upgradeable::{
+use contracts::uninitialized_account::UninitializedAccount;
+use contracts_tests::test_upgradeable::{
     MockContractUpgradeableV1, IMockContractUpgradeableDispatcher,
     IMockContractUpgradeableDispatcherTrait
 };
-use contracts::uninitialized_account::UninitializedAccount;
 use core::num::traits::Zero;
 use core::option::OptionTrait;
 

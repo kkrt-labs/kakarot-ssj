@@ -14,7 +14,7 @@ use utils::crypto::modexp::mpnat::{
 use utils::helpers::{Felt252VecTrait, ToBytes};
 use utils::helpers::{U128Trait};
 use utils::math::{WrappingMul, WrappingBitshift, WrappingExponentiation};
-use utils::tests::test_modexp::test_mpnat::{mp_nat_to_u128};
+use utils_tests::test_modexp::test_mpnat::{mp_nat_to_u128};
 
 // the tests are taken from [aurora-engine](https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/arith.rs#L401)
 

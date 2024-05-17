@@ -10,9 +10,6 @@ mod test_data;
 
 mod test_utils;
 
-#[cfg(test)]
-mod tests;
-
 // Account transparent proxy
 mod uninitialized_account;
 

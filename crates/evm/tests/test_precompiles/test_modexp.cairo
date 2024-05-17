@@ -8,7 +8,7 @@ use evm::precompiles::Precompiles;
 use evm::stack::StackTrait;
 use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
 
-use evm::tests::test_precompiles::test_data::test_data_modexp::{
+use evm_tests::test_precompiles::test_data::test_data_modexp::{
     test_modexp_modsize0_returndatasizeFiller_data,
     test_modexp_create2callPrecompiles_test0_berlin_data, test_modexp_eip198_example_1_data,
     test_modexp_eip198_example_2_data, test_modexp_nagydani_1_square_data,
