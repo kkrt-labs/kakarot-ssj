@@ -1,7 +1,7 @@
 use evm::errors::DebugEVMError;
 use evm::errors::{EVMError, READ_SYSCALL_FAILED};
 use evm::model::vm::{VM, VMTrait};
-use evm::tests::test_utils::{
+use evm::test_utils::{
     tx_gas_limit, evm_address, starknet_address, VMBuilderTrait, test_address, gas_price
 };
 
@@ -86,4 +86,3 @@ fn test_return_data() {
     let return_data = vm.return_data();
     assert(return_data.len() == 0, 'wrong length');
 }
-

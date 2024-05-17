@@ -1,6 +1,6 @@
 use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore};
-use contracts::tests::test_data::counter_evm_bytecode;
-use contracts::tests::test_utils::{
+use contracts::test_data::counter_evm_bytecode;
+use contracts::test_utils::{
     setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
 };
 use core::integer::u32_overflowing_add;
@@ -12,7 +12,7 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{Account};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use evm::tests::test_utils::{
+use evm::test_utils::{
     VMBuilderTrait, evm_address, origin, callvalue, native_token, other_address, gas_price,
     tx_gas_limit
 };
@@ -917,7 +917,7 @@ fn test_exec_extcodehash_precompile() {
 //     // The bytecode remains empty, and we expect the empty hash in return
 //     let mut ca_address = deploy_contract_account(evm_address, array![].span());
 //     let account = Account {
-//         
+//
 //         address: ca_address,
 //         code: array![].span(),
 //         nonce: 1,

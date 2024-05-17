@@ -1,7 +1,7 @@
 use MockContractUpgradeableV0::HasComponentImpl_upgradeable_component;
 use contracts::components::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use contracts::components::upgradeable::{upgradeable_component};
-use contracts::tests::test_utils;
+use contracts::test_utils;
 use core::serde::Serde;
 use starknet::{deploy_syscall, ClassHash, ContractAddress, testing};
 

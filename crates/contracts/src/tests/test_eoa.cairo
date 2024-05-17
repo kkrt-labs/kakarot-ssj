@@ -6,21 +6,21 @@ mod test_external_owned_account {
         IKakarotCore, KakarotCore, KakarotCore::KakarotCoreInternal,
         interface::IExtendedKakarotCoreDispatcherTrait
     };
-    use contracts::tests::test_data::{counter_evm_bytecode, eip_2930_rlp_encoded_counter_inc_tx,};
+    use contracts::test_data::{counter_evm_bytecode, eip_2930_rlp_encoded_counter_inc_tx,};
+    use contracts::test_utils::{
+        setup_contracts_for_testing, deploy_eoa, deploy_contract_account, pop_log, pop_log_debug,
+        fund_account_with_native_token, call_transaction
+    };
     use contracts::tests::test_upgradeable::{
         IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
         MockContractUpgradeableV1
-    };
-    use contracts::tests::test_utils::{
-        setup_contracts_for_testing, deploy_eoa, deploy_contract_account, pop_log, pop_log_debug,
-        fund_account_with_native_token, call_transaction
     };
     use core::array::SpanTrait;
     use core::box::BoxTrait;
     use core::starknet::account::{Call};
 
     use evm::model::{Address, AddressTrait};
-    use evm::tests::test_utils::{
+    use evm::test_utils::{
         kakarot_address, evm_address, other_evm_address, other_starknet_address, eoa_address,
         chain_id, tx_gas_limit, gas_price, VMBuilderTrait
     };
@@ -36,7 +36,7 @@ mod test_external_owned_account {
     };
     use utils::helpers::{U8SpanExTrait, u256_to_bytes_array};
     use utils::serialization::{serialize_bytes, serialize_transaction_signature};
-    use utils::tests::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
+    use utils::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
 
 
     #[test]

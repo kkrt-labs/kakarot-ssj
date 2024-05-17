@@ -1,4 +1,4 @@
-use contracts::tests::test_data::counter_evm_bytecode;
+use contracts::test_data::counter_evm_bytecode;
 use starknet::EthAddress;
 use utils::address::{compute_contract_address, compute_create2_contract_address};
 

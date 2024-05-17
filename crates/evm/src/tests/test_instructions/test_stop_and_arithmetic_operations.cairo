@@ -3,7 +3,7 @@ use core::result::ResultTrait;
 use evm::instructions::StopAndArithmeticOperationsTrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
-use evm::tests::test_utils::VMBuilderTrait;
+use evm::test_utils::VMBuilderTrait;
 
 
 #[test]
@@ -467,4 +467,3 @@ fn test_exec_signextend_on_negative() {
         vm.stack.peek().unwrap() == 0x01, 'stack top should be 0'
     ); // The 241-th bit of x is 0, so all bits before t are switched to 0
 }
-

@@ -1,4 +1,4 @@
-use contracts::tests::test_utils::setup_contracts_for_testing;
+use contracts::test_utils::setup_contracts_for_testing;
 use core::array::ArrayTrait;
 use evm::instructions::system_operations::SystemOperationsTrait;
 use evm::memory::InternalMemoryTrait;
@@ -6,7 +6,7 @@ use evm::memory::MemoryTrait;
 
 use evm::precompiles::ec_recover::EcRecover;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
+use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
 use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 

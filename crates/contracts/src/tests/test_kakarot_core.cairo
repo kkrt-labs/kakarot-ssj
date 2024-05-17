@@ -7,12 +7,12 @@ use contracts::kakarot_core::interface::{
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
 };
-use contracts::tests::test_data::{deploy_counter_calldata, counter_evm_bytecode};
+use contracts::test_data::{deploy_counter_calldata, counter_evm_bytecode};
+use contracts::test_utils as contract_utils;
 use contracts::tests::test_upgradeable::{
     MockContractUpgradeableV1, IMockContractUpgradeableDispatcher,
     IMockContractUpgradeableDispatcherTrait
 };
-use contracts::tests::test_utils as contract_utils;
 use contracts::uninitialized_account::UninitializedAccount;
 use core::num::traits::Zero;
 use core::option::OptionTrait;
@@ -20,8 +20,8 @@ use core::option::OptionTrait;
 
 use core::traits::TryInto;
 use evm::model::{Address};
-use evm::tests::test_utils::{sequencer_evm_address, chain_id};
-use evm::tests::test_utils;
+use evm::test_utils::{sequencer_evm_address, chain_id};
+use evm::test_utils;
 use starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};
 use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, LegacyTransaction};
 use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};

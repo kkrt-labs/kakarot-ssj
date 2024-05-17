@@ -5,7 +5,7 @@ use evm::instructions::LoggingOperationsTrait;
 use evm::memory::MemoryTrait;
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use evm::tests::test_utils::{VMBuilderTrait};
+use evm::test_utils::{VMBuilderTrait};
 use utils::helpers::u256_to_bytes_array;
 
 #[test]

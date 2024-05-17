@@ -1,7 +1,7 @@
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
-use contracts::tests::test_data::{storage_evm_bytecode, storage_evm_initcode};
-use contracts::tests::test_eoa::test_external_owned_account::deploy_eoa;
-use contracts::tests::test_utils::{
+use contracts::test_data::{storage_evm_bytecode, storage_evm_initcode};
+use contracts::test_utils::deploy_eoa;
+use contracts::test_utils::{
     fund_account_with_native_token, setup_contracts_for_testing, deploy_contract_account
 };
 use core::result::ResultTrait;
@@ -18,7 +18,7 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{AccountTrait, Address, Transfer};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, State};
-use evm::tests::test_utils::{
+use evm::test_utils::{
     VMBuilderTrait, initialize_contract_account, native_token, evm_address, test_address,
     other_evm_address,
 };
@@ -485,8 +485,8 @@ fn test_exec_create_no_value_transfer() {
     vm.exec_create().unwrap();
     EVMTrait::execute_code(ref vm);
 
-    // computed using `compute_create_address` script  
-    // run `bun run compute_create_address` -> CREATE -> EthAddress = evm_address() -> nonce = 1  
+    // computed using `compute_create_address` script
+    // run `bun run compute_create_address` -> CREATE -> EthAddress = evm_address() -> nonce = 1
     let account = vm
         .env
         .state
@@ -681,4 +681,3 @@ fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
     assert(sender_balance == 0, 'sender wrong balance');
     assert(ca_balance == 150, 'ca wrong balance');
 }
-

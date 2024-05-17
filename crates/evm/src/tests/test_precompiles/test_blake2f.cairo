@@ -1,4 +1,4 @@
-use contracts::tests::test_utils::{setup_contracts_for_testing};
+use contracts::test_utils::{setup_contracts_for_testing};
 use core::array::SpanTrait;
 use evm::errors::EVMError;
 use evm::instructions::memory_operations::MemoryOperationTrait;
@@ -8,7 +8,7 @@ use evm::memory::InternalMemoryTrait;
 use evm::memory::MemoryTrait;
 use evm::precompiles::blake2f::Blake2f;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
+use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
 use starknet::testing::set_contract_address;
 use super::test_data::test_data_blake2f::{
     blake2_precompile_fail_wrong_length_input_1_test_case,

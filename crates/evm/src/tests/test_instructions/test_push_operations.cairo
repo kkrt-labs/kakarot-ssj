@@ -1,6 +1,6 @@
 use evm::instructions::PushOperationsTrait;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::{VMBuilderTrait};
+use evm::test_utils::{VMBuilderTrait};
 
 fn get_n_0xFF(mut n: u8) -> Span<u8> {
     let mut array: Array<u8> = ArrayTrait::new();

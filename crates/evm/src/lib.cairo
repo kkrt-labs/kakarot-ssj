@@ -33,5 +33,7 @@ mod stack;
 mod state;
 
 // tests
+mod test_utils; // exported to other packages
+
 #[cfg(test)]
 mod tests;

@@ -1,7 +1,7 @@
 use core::integer::BoundedInt;
 use evm::instructions::ComparisonAndBitwiseOperationsTrait;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::VMBuilderTrait;
+use evm::test_utils::VMBuilderTrait;
 
 #[test]
 fn test_eq_same_pair() {

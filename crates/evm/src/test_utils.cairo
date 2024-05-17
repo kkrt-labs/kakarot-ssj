@@ -1,5 +1,5 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-use contracts::tests::test_utils::{deploy_contract_account};
+use contracts::test_utils::{deploy_contract_account};
 use contracts::uninitialized_account::UninitializedAccount;
 use core::nullable::{match_nullable, FromNullableResult};
 use core::traits::TryInto;

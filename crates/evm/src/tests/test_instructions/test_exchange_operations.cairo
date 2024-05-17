@@ -1,7 +1,7 @@
 use core::array::ArrayTrait;
 use evm::instructions::exchange_operations::ExchangeOperationsTrait;
 use evm::stack::StackTrait;
-use evm::tests::test_utils::VMBuilderTrait;
+use evm::test_utils::VMBuilderTrait;
 
 
 #[test]

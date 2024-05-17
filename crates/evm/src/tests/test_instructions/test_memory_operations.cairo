@@ -1,5 +1,5 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-use contracts::tests::test_utils::{setup_contracts_for_testing, deploy_contract_account};
+use contracts::test_utils::{setup_contracts_for_testing, deploy_contract_account};
 use core::integer::BoundedInt;
 use core::result::ResultTrait;
 use evm::backend::starknet_backend::fetch_original_storage;
@@ -11,7 +11,7 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{Account, AccountTrait};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, compute_storage_address};
-use evm::tests::test_utils::{evm_address, VMBuilderTrait};
+use evm::test_utils::{evm_address, VMBuilderTrait};
 use starknet::get_contract_address;
 
 #[test]
