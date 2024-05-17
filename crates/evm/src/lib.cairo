@@ -31,6 +31,3 @@ mod stack;
 
 // Local state
 mod state;
-
-// tests
-mod test_utils; // exported to other packages

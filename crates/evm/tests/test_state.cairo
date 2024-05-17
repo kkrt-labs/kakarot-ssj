@@ -1,7 +1,7 @@
-use contracts::test_utils::{deploy_contract_account, deploy_eoa};
+use contracts_tests::test_utils::{deploy_contract_account, deploy_eoa};
 
 use evm::state::compute_state_key;
-use evm::test_utils;
+use evm_tests::test_utils;
 
 #[test]
 fn test_compute_state_key() {
@@ -33,7 +33,7 @@ fn test_compute_state_key() {
 
 mod test_state_changelog {
     use evm::state::{StateChangeLog, StateChangeLogTrait};
-    use evm::test_utils;
+    use evm_tests::test_utils;
     use utils::set::{Set, SetTrait};
     use utils::traits::StorageBaseAddressIntoFelt252;
 
@@ -70,13 +70,13 @@ mod test_state_changelog {
 mod test_state {
     use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::kakarot_core::interface::{IExtendedKakarotCoreDispatcherTrait};
-    use contracts::test_utils as contract_utils;
     use contracts::uninitialized_account::UninitializedAccount;
+    use contracts_tests::test_utils as contract_utils;
     use evm::backend::starknet_backend;
     use evm::model::account::{Account, AccountTrait, AccountInternalTrait};
     use evm::model::{Event, Transfer, Address};
     use evm::state::{State, StateTrait};
-    use evm::test_utils;
+    use evm_tests::test_utils;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use starknet::EthAddress;
     use starknet::testing::set_contract_address;

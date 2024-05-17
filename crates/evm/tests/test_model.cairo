@@ -1,7 +1,7 @@
 mod test_vm;
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
-use contracts::test_utils::{
+use contracts_tests::test_utils::{
     setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
 };
 use core::starknet::EthAddress;
@@ -11,7 +11,7 @@ use evm::model::account::AccountTrait;
 use evm::model::{Address, Account, AddressTrait};
 use evm::state::StateTrait;
 use evm::state::{State, StateChangeLog, StateChangeLogTrait};
-use evm::test_utils::{evm_address};
+use evm_tests::test_utils::{evm_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::set_contract_address;
 

@@ -1,7 +1,7 @@
 use contracts::account_contract::{AccountContract, IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::test_data::counter_evm_bytecode;
-use contracts::test_utils::{setup_contracts_for_testing, deploy_contract_account};
-use evm::test_utils::{ca_address, native_token};
+use contracts_tests::test_utils::{setup_contracts_for_testing, deploy_contract_account};
+use evm_tests::test_utils::{ca_address, native_token};
 
 #[test]
 fn test_ca_deploy() {

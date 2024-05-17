@@ -3,7 +3,7 @@ use evm::instructions::Sha3Trait;
 use evm::instructions::sha3::internal;
 use evm::memory::{InternalMemoryTrait, MemoryTrait};
 use evm::stack::StackTrait;
-use evm::test_utils::VMBuilderTrait;
+use evm_tests::test_utils::VMBuilderTrait;
 
 #[test]
 fn test_exec_sha3_size_0_offset_0() {

@@ -2,13 +2,13 @@ use contracts::kakarot_core::interface::{
     IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
 
-use contracts::test_utils::{
+use contracts_tests::test_utils::{
     setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account,
 };
 use core::result::ResultTrait;
 use evm::instructions::BlockInformationTrait;
 use evm::stack::StackTrait;
-use evm::test_utils::{evm_address, VMBuilderTrait, tx_gas_limit, gas_price};
+use evm_tests::test_utils::{evm_address, VMBuilderTrait, tx_gas_limit, gas_price};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::{
     set_block_timestamp, set_block_number, set_contract_address, set_sequencer_address,

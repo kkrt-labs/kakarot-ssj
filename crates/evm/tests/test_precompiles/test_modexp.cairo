@@ -1,4 +1,4 @@
-use contracts::test_utils::{setup_contracts_for_testing};
+use contracts_tests::test_utils::{setup_contracts_for_testing};
 use core::result::ResultTrait;
 
 use evm::instructions::system_operations::SystemOperationsTrait;
@@ -6,7 +6,6 @@ use evm::instructions::system_operations::SystemOperationsTrait;
 use evm::memory::MemoryTrait;
 use evm::precompiles::Precompiles;
 use evm::stack::StackTrait;
-use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
 
 use evm_tests::test_precompiles::test_data::test_data_modexp::{
     test_modexp_modsize0_returndatasizeFiller_data,
@@ -14,6 +13,7 @@ use evm_tests::test_precompiles::test_data::test_data_modexp::{
     test_modexp_eip198_example_2_data, test_modexp_nagydani_1_square_data,
     test_modexp_nagydani_1_qube_data
 };
+use evm_tests::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
 use starknet::EthAddress;
 use starknet::testing::set_contract_address;
 use utils::helpers::U256Trait;

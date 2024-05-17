@@ -1,11 +1,11 @@
-use contracts::test_utils::{setup_contracts_for_testing};
+use contracts_tests::test_utils::{setup_contracts_for_testing};
 use core::result::ResultTrait;
 use evm::instructions::system_operations::SystemOperationsTrait;
 
 use evm::memory::MemoryTrait;
 use evm::precompiles::sha256::Sha256;
 use evm::stack::StackTrait;
-use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
+use evm_tests::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
 use starknet::testing::set_contract_address;
 use utils::helpers::{FromBytes};
 

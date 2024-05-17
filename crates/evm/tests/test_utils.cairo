@@ -1,8 +1,8 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-use contracts::test_utils::{deploy_contract_account};
 use contracts::uninitialized_account::UninitializedAccount;
 use core::nullable::{match_nullable, FromNullableResult};
 use core::traits::TryInto;
+use evm::backend::starknet_backend;
 use evm::errors::{EVMError};
 
 use evm::model::vm::{VM, VMTrait};
@@ -14,6 +14,13 @@ use starknet::{
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
 };
 use utils::constants;
+
+pub fn deploy_contract_account(evm_address: EthAddress, bytecode: Span<u8>) -> Address {
+    let ca_address = starknet_backend::deploy(evm_address).expect('failed to deploy CA');
+    IAccountDispatcher { contract_address: ca_address.starknet }.set_nonce(1);
+    IAccountDispatcher { contract_address: ca_address.starknet }.write_bytecode(bytecode);
+    ca_address
+}
 
 #[derive(Destruct)]
 struct VMBuilder {

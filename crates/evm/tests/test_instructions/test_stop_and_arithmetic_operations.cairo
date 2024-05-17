@@ -3,7 +3,7 @@ use core::result::ResultTrait;
 use evm::instructions::StopAndArithmeticOperationsTrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
-use evm::test_utils::VMBuilderTrait;
+use evm_tests::test_utils::VMBuilderTrait;
 
 
 #[test]

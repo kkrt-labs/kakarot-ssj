@@ -7,20 +7,20 @@ mod test_external_owned_account {
         interface::IExtendedKakarotCoreDispatcherTrait
     };
     use contracts::test_data::{counter_evm_bytecode, eip_2930_rlp_encoded_counter_inc_tx,};
-    use contracts::test_utils::{
-        setup_contracts_for_testing, deploy_eoa, deploy_contract_account, pop_log, pop_log_debug,
-        fund_account_with_native_token, call_transaction
-    };
     use contracts_tests::test_upgradeable::{
         IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
         MockContractUpgradeableV1
+    };
+    use contracts_tests::test_utils::{
+        setup_contracts_for_testing, deploy_eoa, deploy_contract_account, pop_log, pop_log_debug,
+        fund_account_with_native_token, call_transaction
     };
     use core::array::SpanTrait;
     use core::box::BoxTrait;
     use core::starknet::account::{Call};
 
     use evm::model::{Address, AddressTrait};
-    use evm::test_utils::{
+    use evm_tests::test_utils::{
         kakarot_address, evm_address, other_evm_address, other_starknet_address, eoa_address,
         chain_id, tx_gas_limit, gas_price, VMBuilderTrait
     };

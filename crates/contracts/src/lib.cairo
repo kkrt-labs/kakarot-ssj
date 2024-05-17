@@ -8,8 +8,6 @@ mod errors;
 mod kakarot_core;
 mod test_data;
 
-mod test_utils;
-
 // Account transparent proxy
 mod uninitialized_account;
 

@@ -1,10 +1,10 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::KakarotCore;
-use contracts::test_utils as contract_utils;
-use contracts::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
+use contracts_tests::test_utils as contract_utils;
+use contracts_tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
 use evm::backend::starknet_backend;
 use evm::errors::EVMErrorTrait;
-use evm::test_utils::{chain_id, evm_address, VMBuilderTrait};
+use evm_tests::test_utils::{chain_id, evm_address, VMBuilderTrait};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use starknet::testing::{set_contract_address, set_chain_id};
 

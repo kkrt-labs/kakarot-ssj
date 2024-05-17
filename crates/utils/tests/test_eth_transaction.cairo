@@ -1,4 +1,4 @@
-use contracts::test_utils::chain_id;
+use contracts_tests::test_utils::chain_id;
 use core::option::OptionTrait;
 use core::starknet::eth_signature::{EthAddress, Signature};
 
