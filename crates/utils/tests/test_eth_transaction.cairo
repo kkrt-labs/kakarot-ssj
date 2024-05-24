@@ -1,6 +1,5 @@
 use core::option::OptionTrait;
 use core::starknet::eth_signature::{EthAddress, Signature};
-use test_utils::test_utils::evm_utils::chain_id;
 
 use utils::eth_transaction::{
     deserialize_encoded_transaction, EthTransactionTrait, EncodedTransactionTrait,
@@ -12,6 +11,10 @@ use utils::rlp::{RLPTrait, RLPItem, RLPHelpersTrait};
 use utils::test_data::{
     legacy_rlp_encoded_tx, legacy_rlp_encoded_deploy_tx, eip_2930_encoded_tx, eip_1559_encoded_tx
 };
+
+fn chain_id() -> u128 {
+    'KKRT'.try_into().unwrap()
+}
 
 
 #[test]
