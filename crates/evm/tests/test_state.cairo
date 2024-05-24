@@ -1,12 +1,11 @@
-use contracts_tests::test_utils::{deploy_contract_account, deploy_eoa};
-
 use evm::state::compute_state_key;
-use evm_tests::test_utils;
+use evm_tests::test_utils::evm_utils::{deploy_contract_account, deploy_eoa};
+use evm_tests::test_utils::evm_utils;
 
 #[test]
 fn test_compute_state_key() {
     let key = 100;
-    let evm_address = test_utils::evm_address();
+    let evm_address = evm_utils::evm_address();
 
     // The values can be computed externally by running a Rust program using the `starknet_crypto` crate and `poseidon_hash_many`.
     // ```rust
@@ -33,7 +32,7 @@ fn test_compute_state_key() {
 
 mod test_state_changelog {
     use evm::state::{StateChangeLog, StateChangeLogTrait};
-    use evm_tests::test_utils;
+    use evm_tests::test_utils::evm_utils;
     use utils::set::{Set, SetTrait};
     use utils::traits::StorageBaseAddressIntoFelt252;
 
@@ -41,14 +40,14 @@ mod test_state_changelog {
     #[test]
     fn test_read_empty_log() {
         let mut changelog: StateChangeLog<felt252> = Default::default();
-        let key = test_utils::storage_base_address().into();
+        let key = evm_utils::storage_base_address().into();
         assert(changelog.read(key).is_none(), 'should return None');
     }
 
     #[test]
     fn test_write_read() {
         let mut changelog: StateChangeLog = Default::default();
-        let key = test_utils::storage_base_address().into();
+        let key = evm_utils::storage_base_address().into();
 
         changelog.write(key, 42);
         assert(changelog.read(key).unwrap() == 42, 'value not stored correctly');
@@ -71,12 +70,12 @@ mod test_state {
     use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::kakarot_core::interface::{IExtendedKakarotCoreDispatcherTrait};
     use contracts::uninitialized_account::UninitializedAccount;
-    use contracts_tests::test_utils as contract_utils;
     use evm::backend::starknet_backend;
     use evm::model::account::{Account, AccountTrait, AccountInternalTrait};
     use evm::model::{Event, Transfer, Address};
     use evm::state::{State, StateTrait};
-    use evm_tests::test_utils;
+    use evm_tests::test_utils::contracts_utils;
+    use evm_tests::test_utils::evm_utils;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use starknet::EthAddress;
     use starknet::testing::set_contract_address;
@@ -88,8 +87,8 @@ mod test_state {
     fn test_get_account_when_not_present() {
         let mut state: State = Default::default();
         // Transfer native tokens to sender
-        let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
-        let evm_address: EthAddress = test_utils::evm_address();
+        let (_, kakarot_core) = contracts_utils::setup_contracts_for_testing();
+        let evm_address: EthAddress = evm_utils::evm_address();
         let starknet_address = compute_starknet_address(
             kakarot_core.contract_address.into(),
             evm_address,
@@ -114,10 +113,10 @@ mod test_state {
     #[test]
     fn test_get_account_when_present() {
         let mut state: State = Default::default();
-        let deployer = test_utils::kakarot_address();
+        let deployer = evm_utils::kakarot_address();
         set_contract_address(deployer);
 
-        let evm_address: EthAddress = test_utils::evm_address();
+        let evm_address: EthAddress = evm_utils::evm_address();
         let starknet_address = compute_starknet_address(
             deployer.into(), evm_address, UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
         );
@@ -142,12 +141,12 @@ mod test_state {
     #[ignore]
     fn test_get_account_when_deployed() {
         let mut state: State = Default::default();
-        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
-        let evm_address: EthAddress = test_utils::evm_address();
-        let ca = contract_utils::deploy_contract_account(
+        let (native_token, kakarot_core) = contracts_utils::setup_contracts_for_testing();
+        let evm_address: EthAddress = evm_utils::evm_address();
+        let ca = contracts_utils::deploy_contract_account(
             evm_address, array![0xab, 0xcd, 0xef].span()
         );
-        contract_utils::fund_account_with_native_token(ca.starknet, native_token, 420);
+        contracts_utils::fund_account_with_native_token(ca.starknet, native_token, 420);
 
         let starknet_address = kakarot_core.compute_starknet_address(evm_address);
         let expected_account = Account {
@@ -168,7 +167,7 @@ mod test_state {
     #[test]
     fn test_write_read_cached_storage() {
         let mut state: State = Default::default();
-        let evm_address: EthAddress = test_utils::evm_address();
+        let evm_address: EthAddress = evm_utils::evm_address();
         let key = 10;
         let value = 100;
 
@@ -181,9 +180,9 @@ mod test_state {
     #[test]
     fn test_read_state_from_sn_storage() {
         // Transfer native tokens to sender
-        contract_utils::setup_contracts_for_testing();
-        let evm_address: EthAddress = test_utils::evm_address();
-        let mut ca_address = contract_utils::deploy_contract_account(evm_address, array![].span());
+        contracts_utils::setup_contracts_for_testing();
+        let evm_address: EthAddress = evm_utils::evm_address();
+        let mut ca_address = contracts_utils::deploy_contract_account(evm_address, array![].span());
 
         let mut state: State = Default::default();
         let key = 10;
@@ -219,14 +218,14 @@ mod test_state {
     fn test_add_transfer() {
         //Given
         let mut state: State = Default::default();
-        contract_utils::setup_contracts_for_testing();
+        contracts_utils::setup_contracts_for_testing();
 
-        let sender_evm_address = test_utils::evm_address();
-        let sender_starknet_address = contract_utils::deploy_eoa(sender_evm_address)
+        let sender_evm_address = evm_utils::evm_address();
+        let sender_starknet_address = contracts_utils::deploy_eoa(sender_evm_address)
             .contract_address;
         let sender_address = Address { evm: sender_evm_address, starknet: sender_starknet_address };
-        let recipient_evm_address = test_utils::other_evm_address();
-        let recipient_starknet_address = contract_utils::deploy_eoa(recipient_evm_address)
+        let recipient_evm_address = evm_utils::other_evm_address();
+        let recipient_starknet_address = contracts_utils::deploy_eoa(recipient_evm_address)
             .contract_address;
         let recipient_address = Address {
             evm: recipient_evm_address, starknet: recipient_starknet_address
@@ -256,10 +255,10 @@ mod test_state {
     fn test_add_transfer_with_same_sender_and_recipient() {
         //Given
         let mut state: State = Default::default();
-        contract_utils::setup_contracts_for_testing();
+        contracts_utils::setup_contracts_for_testing();
 
-        let sender_evm_address = test_utils::evm_address();
-        let sender_starknet_address = contract_utils::deploy_eoa(sender_evm_address)
+        let sender_evm_address = evm_utils::evm_address();
+        let sender_starknet_address = contracts_utils::deploy_eoa(sender_evm_address)
             .contract_address;
         let sender_address = Address { evm: sender_evm_address, starknet: sender_starknet_address };
 
@@ -284,14 +283,14 @@ mod test_state {
     fn test_add_transfer_when_amount_is_zero() {
         //Given
         let mut state: State = Default::default();
-        contract_utils::setup_contracts_for_testing();
+        contracts_utils::setup_contracts_for_testing();
 
-        let sender_evm_address = test_utils::evm_address();
-        let sender_starknet_address = contract_utils::deploy_eoa(sender_evm_address)
+        let sender_evm_address = evm_utils::evm_address();
+        let sender_starknet_address = contracts_utils::deploy_eoa(sender_evm_address)
             .contract_address;
         let sender_address = Address { evm: sender_evm_address, starknet: sender_starknet_address };
-        let recipient_evm_address = test_utils::other_evm_address();
-        let recipient_starknet_address = contract_utils::deploy_eoa(recipient_evm_address)
+        let recipient_evm_address = evm_utils::other_evm_address();
+        let recipient_starknet_address = contracts_utils::deploy_eoa(recipient_evm_address)
             .contract_address;
         let recipient_address = Address {
             evm: recipient_evm_address, starknet: recipient_starknet_address
@@ -321,10 +320,10 @@ mod test_state {
     #[test]
     fn test_read_balance_cached() {
         let mut state: State = Default::default();
-        contract_utils::setup_contracts_for_testing();
+        contracts_utils::setup_contracts_for_testing();
 
-        let evm_address = test_utils::evm_address();
-        let starknet_address = contract_utils::deploy_eoa(evm_address).contract_address;
+        let evm_address = evm_utils::evm_address();
+        let starknet_address = contracts_utils::deploy_eoa(evm_address).contract_address;
         let address = Address { evm: evm_address, starknet: starknet_address };
 
         let balance = 100;
@@ -341,11 +340,11 @@ mod test_state {
     #[test]
     fn test_read_balance_from_storage() {
         // Transfer native tokens to sender
-        let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
-        let evm_address: EthAddress = test_utils::evm_address();
+        let (native_token, kakarot_core) = contracts_utils::setup_contracts_for_testing();
+        let evm_address: EthAddress = evm_utils::evm_address();
         let eoa_account = starknet_backend::deploy(evm_address).expect('sender deploy failed');
         // Transfer native tokens to sender - we need to set the contract address for this
-        set_contract_address(contract_utils::constants::ETH_BANK());
+        set_contract_address(contracts_utils::constants::ETH_BANK());
         IERC20CamelDispatcher { contract_address: native_token.contract_address }
             .transfer(eoa_account.starknet, 10000);
         // Revert back to contract_address = kakarot for the test

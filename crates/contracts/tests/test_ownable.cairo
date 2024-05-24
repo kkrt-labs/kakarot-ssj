@@ -1,8 +1,7 @@
 use contracts::components::ownable::{ownable_component};
-use contracts_tests::test_utils::constants::{ZERO, OWNER, OTHER};
-use contracts_tests::test_utils;
+use contracts_tests::test_utils::contracts_utils::constants::{ZERO, OWNER, OTHER};
+use contracts_tests::test_utils::contracts_utils;
 use core::num::traits::Zero;
-
 
 use ownable_component::{InternalImpl, OwnableImpl};
 use starknet::ContractAddress;
@@ -46,7 +45,7 @@ impl TestingStateImpl of TestingStateTrait {
     fn new_with(owner: ContractAddress) -> TestingState {
         let mut ownable: TestingState = Default::default();
         ownable.initializer(owner);
-        test_utils::drop_event(ZERO());
+        contracts_utils::drop_event(ZERO());
         ownable
     }
 }
@@ -169,8 +168,8 @@ fn test_renounce_ownership_from_nonowner() {
 
 
 fn assert_event_ownership_transferred(previous_owner: ContractAddress, new_owner: ContractAddress) {
-    let event = test_utils::pop_log::<ownable_component::OwnershipTransferred>(ZERO()).unwrap();
+    let event = contracts_utils::pop_log::<ownable_component::OwnershipTransferred>(ZERO()).unwrap();
     assert(event.previous_owner == previous_owner, 'Invalid `previous_owner`');
     assert(event.new_owner == new_owner, 'Invalid `new_owner`');
-    test_utils::assert_no_events_left(ZERO());
+    contracts_utils::assert_no_events_left(ZERO());
 }

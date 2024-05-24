@@ -1,4 +1,3 @@
-use contracts_tests::test_utils::{setup_contracts_for_testing};
 use core::clone::Clone;
 use core::result::ResultTrait;
 use evm::instructions::system_operations::SystemOperationsTrait;
@@ -6,7 +5,8 @@ use evm::instructions::system_operations::SystemOperationsTrait;
 use evm::memory::MemoryTrait;
 use evm::precompiles::identity::Identity;
 use evm::stack::StackTrait;
-use evm_tests::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
+use evm_tests::test_utils::contracts_utils::{setup_contracts_for_testing};
+use evm_tests::test_utils::evm_utils::{VMBuilderTrait, native_token, other_starknet_address};
 use starknet::testing::set_contract_address;
 
 // source: <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='wFirsWplaceqparameters%20in%20memorybFFjdata~0vMSTOREvvwDoqcall~1QX3FQ_1YX1FY_4jaddressZ4%200xFFFFFFFFjgasvSTATICCALLvvwPutqresulWalonVonqstackvPOPb20vMLOAD'~Z1j//%20v%5Cnq%20thVj%20wb~0x_Offset~ZvPUSHYjargsXSizebWt%20Ve%20Qjret%01QVWXYZ_bjqvw~_>

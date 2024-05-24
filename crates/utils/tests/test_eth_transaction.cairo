@@ -1,6 +1,6 @@
-use contracts_tests::test_utils::chain_id;
 use core::option::OptionTrait;
 use core::starknet::eth_signature::{EthAddress, Signature};
+use test_utils::test_utils::evm_utils::chain_id;
 
 use utils::eth_transaction::{
     deserialize_encoded_transaction, EthTransactionTrait, EncodedTransactionTrait,

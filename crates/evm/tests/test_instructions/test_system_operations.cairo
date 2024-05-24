@@ -1,9 +1,5 @@
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::test_data::{storage_evm_bytecode, storage_evm_initcode};
-use contracts_tests::test_utils::deploy_eoa;
-use contracts_tests::test_utils::{
-    fund_account_with_native_token, setup_contracts_for_testing, deploy_contract_account
-};
 use core::result::ResultTrait;
 use core::traits::TryInto;
 use evm::backend::starknet_backend;
@@ -18,7 +14,11 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{AccountTrait, Address, Transfer};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, State};
-use evm_tests::test_utils::{
+use evm_tests::test_utils::contracts_utils::{
+    fund_account_with_native_token, setup_contracts_for_testing, deploy_contract_account
+};
+use evm_tests::test_utils::evm_utils::deploy_eoa;
+use evm_tests::test_utils::evm_utils::{
     VMBuilderTrait, initialize_contract_account, native_token, evm_address, test_address,
     other_evm_address,
 };

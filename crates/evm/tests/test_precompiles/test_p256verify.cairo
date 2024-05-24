@@ -1,4 +1,3 @@
-use contracts_tests::test_utils::setup_contracts_for_testing;
 use core::array::ArrayTrait;
 use evm::instructions::system_operations::SystemOperationsTrait;
 use evm::memory::InternalMemoryTrait;
@@ -6,7 +5,8 @@ use evm::memory::MemoryTrait;
 
 use evm::precompiles::p256verify::P256Verify;
 use evm::stack::StackTrait;
-use evm_tests::test_utils::{VMBuilderTrait};
+use evm_tests::test_utils::contracts_utils::setup_contracts_for_testing;
+use evm_tests::test_utils::evm_utils::{VMBuilderTrait};
 use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 
