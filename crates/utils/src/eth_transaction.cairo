@@ -22,7 +22,7 @@ struct AccessListItem {
 #[generate_trait]
 impl AccessListItemImpl of AccessListItemTrait {
     fn to_storage_keys(self: @AccessListItem) -> Span<(EthAddress, u256)> {
-        let AccessListItem{ethereum_address, mut storage_keys } = *self;
+        let AccessListItem { ethereum_address, mut storage_keys } = *self;
 
         let mut storage_keys_arr = array![];
         loop {
@@ -459,7 +459,7 @@ impl EthTransactionImpl of EthTransactionTrait {
     fn validate_eth_tx(
         tx_metadata: TransactionMetadata, encoded_tx_data: Span<u8>
     ) -> Result<bool, EthTransactionError> {
-        let TransactionMetadata{address, account_nonce, chain_id, signature } = tx_metadata;
+        let TransactionMetadata { address, account_nonce, chain_id, signature } = tx_metadata;
 
         let decoded_tx = EthTransactionTrait::decode(encoded_tx_data)?;
 
