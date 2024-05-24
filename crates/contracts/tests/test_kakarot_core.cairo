@@ -14,8 +14,8 @@ use contracts_tests::test_upgradeable::{
     IMockContractUpgradeableDispatcherTrait
 };
 use contracts_tests::test_utils::contracts_utils;
-use contracts_tests::test_utils::evm_utils::{sequencer_evm_address, chain_id};
 use contracts_tests::test_utils::evm_utils as evm_utils;
+use contracts_tests::test_utils::evm_utils::{sequencer_evm_address, chain_id};
 use core::num::traits::Zero;
 use core::option::OptionTrait;
 
@@ -92,8 +92,7 @@ fn test_kakarot_core_eoa_mapping() {
     // Given
     let (_, kakarot_core) = contracts_utils::setup_contracts_for_testing();
     assert(
-        kakarot_core.address_registry(evm_utils::evm_address()).is_zero(),
-        'should be uninitialized'
+        kakarot_core.address_registry(evm_utils::evm_address()).is_zero(), 'should be uninitialized'
     );
 
     let expected_eoa_starknet_address = kakarot_core
