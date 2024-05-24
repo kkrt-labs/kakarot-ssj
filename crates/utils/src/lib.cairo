@@ -15,6 +15,7 @@ mod serialization;
 mod set;
 mod storage;
 
-#[cfg(test)]
-mod tests;
+#[cfg(target: 'test')]
+mod test_data;
+
 mod traits;
