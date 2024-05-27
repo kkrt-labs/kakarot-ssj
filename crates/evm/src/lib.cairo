@@ -32,6 +32,5 @@ mod stack;
 // Local state
 mod state;
 
-// tests
-#[cfg(test)]
-mod tests;
+#[cfg(target: 'test')]
+mod test_utils;
