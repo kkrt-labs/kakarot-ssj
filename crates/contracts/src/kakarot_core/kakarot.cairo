@@ -165,7 +165,7 @@ pub mod KakarotCore {
 
             let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
 
-            let TransactionResult { success, return_data, gas_used, state: _ } = self
+            let TransactionResult{success, return_data, gas_used, state: _ } = self
                 .process_transaction(origin, tx);
 
             (success, return_data, gas_used)
@@ -180,7 +180,7 @@ pub mod KakarotCore {
                 evm: account.get_evm_address(), starknet: starknet_caller_address
             };
 
-            let TransactionResult { success, return_data, gas_used, mut state } = self
+            let TransactionResult{success, return_data, gas_used, mut state } = self
                 .process_transaction(origin, tx);
             starknet_backend::commit(ref state).expect('Committing state failed');
             (success, return_data, gas_used)
@@ -323,7 +323,7 @@ pub mod KakarotCore {
                     loop {
                         match access_list.pop_front() {
                             Option::Some(access_list_item) => {
-                                let AccessListItem { ethereum_address, storage_keys: _ } =
+                                let AccessListItem{ethereum_address, storage_keys: _ } =
                                     *access_list_item;
                                 let storage_keys = access_list_item.to_storage_keys();
 

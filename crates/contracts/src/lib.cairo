@@ -6,7 +6,9 @@ mod errors;
 
 // Kakarot smart contract
 mod kakarot_core;
-mod test_data;
+
+#[cfg(test)]
+mod tests;
 
 // Account transparent proxy
 mod uninitialized_account;

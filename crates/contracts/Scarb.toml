@@ -12,7 +12,6 @@ openzeppelin = { path = "../openzeppelin" }
 utils = { path = "../utils" }
 alexandria_storage = { path = "../alexandria_storage" }
 
-
 [tool]
 fmt.workspace = true
 
