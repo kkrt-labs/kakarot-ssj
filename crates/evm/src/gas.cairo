@@ -227,7 +227,7 @@ fn calculate_intrinsic_gas_cost(tx: @EthereumTransaction) -> u128 {
             loop {
                 match access_list.pop_front() {
                     Option::Some(access_list_item) => {
-                        let AccessListItem { ethereum_address: _, storage_keys } = access_list_item;
+                        let AccessListItem{ethereum_address: _, storage_keys } = access_list_item;
                         access_list_cost += ACCESS_LIST_ADDRESS
                             + (ACCESS_LIST_STORAGE_KEY * (*storage_keys).len().into());
                     },
