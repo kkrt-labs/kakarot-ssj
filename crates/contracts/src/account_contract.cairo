@@ -152,7 +152,7 @@ pub mod AccountContract {
             // todo: activate check once using snfoundry
             // assert(tx_info.version.try_into().unwrap() >= 1_u128, 'EOA: deprecated tx version');
             assert(self.Account_bytecode.read().len().is_zero(), 'EOAs: Cannot have code');
-            assert(tx_info.signature.len() == 6, 'EOA: invalid signature length');
+            assert(tx_info.signature.len() == 5, 'EOA: invalid signature length');
 
             let call = calls.at(0);
             assert(*call.to == self.ownable.owner(), 'to is not kakarot core');
