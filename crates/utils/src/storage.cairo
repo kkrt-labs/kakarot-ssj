@@ -16,9 +16,7 @@ use starknet::{
 ///  # Returns
 ///  * The StorageBaseAddress of the storage variable, calculated as
 ///    the sequential hashes of the selector and the keys.
-pub fn compute_storage_base_address(
-    selector: felt252, mut keys: Span<felt252>
-) -> StorageBaseAddress {
+pub fn compute_storage_base_address(selector: felt252, mut keys: Span<felt252>) -> StorageBaseAddress {
     //TODO: if we want compatibility with LegacyMaps, we should use pedersen
     // it might not be required.
     let mut state = PoseidonTrait::new().update(selector);
