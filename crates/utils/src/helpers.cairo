@@ -562,7 +562,8 @@ impl U8SpanExImpl of U8SpanExTrait {
 
         hash
     }
-    /// Transforms a Span<u8> into an Array of u64 full words, a pending u64 word and its length in bytes
+    /// Transforms a Span<u8> into an Array of u64 full words, a pending u64 word and its length in
+    /// bytes
     fn to_u64_words(self: Span<u8>) -> (Array<u64>, u64, usize) {
         let (full_u64_word_count, last_input_num_bytes) = DivRem::div_rem(
             self.len(), u32_as_non_zero(8)
@@ -600,8 +601,8 @@ impl U8SpanExImpl of U8SpanExTrait {
 
         // We enter a second loop for clarity.
         // O(2n) should be okay
-        // We might want to regroup every computation into a single loop with appropriate `if` branching
-        // For optimisation
+        // We might want to regroup every computation into a single loop with appropriate `if`
+        // branching For optimisation
         loop {
             if byte_counter.into() == last_input_num_bytes {
                 break self;
@@ -634,7 +635,9 @@ impl U8SpanExImpl of U8SpanExTrait {
     /// * `len` - The length of the slice
     ///
     /// # Returns
-    /// * A span of length `len` starting from `offset` right padded with 0s if `offset` is greater than the span length, returns an empty span of length `len` if offset is grearter than the span length
+    /// * A span of length `len` starting from `offset` right padded with 0s if `offset` is greater
+    /// than the span length, returns an empty span of length `len` if offset is grearter than the
+    /// span length
     fn slice_right_padded(self: Span<u8>, offset: usize, len: usize) -> Span<u8> {
         let mut arr = array![];
 
@@ -666,8 +669,8 @@ impl U8SpanExImpl of U8SpanExTrait {
         arr.span()
     }
 
-    /// Clones and pads the given span with 0s to the given length, if data is more than the given length, it is truncated from the right side
-    /// # Examples
+    /// Clones and pads the given span with 0s to the given length, if data is more than the given
+    /// length, it is truncated from the right side # Examples
     /// ```
     ///  let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
     ///  let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
@@ -686,7 +689,9 @@ impl U8SpanExImpl of U8SpanExTrait {
     /// * `len` - The length of the padded span
     ///
     /// # Returns
-    /// * A span of length `len` left padded with 0s if the span length is less than `len`, returns a span of length `len` if the span length is greater than `len` then the data is truncated from the right side
+    /// * A span of length `len` left padded with 0s if the span length is less than `len`, returns
+    /// a span of length `len` if the span length is greater than `len` then the data is truncated
+    /// from the right side
     fn pad_left_with_zeroes(self: Span<u8>, len: usize) -> Span<u8> {
         if self.len() >= len {
             return self.slice(0, len);
@@ -824,7 +829,7 @@ impl ToBytesImpl<
     +TryInto<T, u8>,
     +Copy<T>,
     +Drop<T>,
-    +AddEq<T>,
+    +core::ops::AddAssign<T, T>,
     +PartialEq<T>
 > of ToBytes<T> {
     fn to_be_bytes(self: T) -> Span<u8> {
@@ -894,7 +899,8 @@ trait FromBytes<T> {
     /// * `self` a span of big endian bytes.
     ///
     /// # Returns
-    /// * The Option::(value) represented by the bytes in big endian, Option::None if the span is longer than the byte size of T.
+    /// * The Option::(value) represented by the bytes in big endian, Option::None if the span is
+    /// longer than the byte size of T.
     fn from_be_bytes(self: Span<u8>) -> Option<T>;
     /// Parses a span of little endian bytes into a type T
     ///
@@ -902,7 +908,8 @@ trait FromBytes<T> {
     /// * `self` a span of little endian bytes.
     ///
     /// # Returns
-    /// * The Option::(value) represented by the bytes in little endian, Option::None if the span is longer than the byte size of T.
+    /// * The Option::(value) represented by the bytes in little endian, Option::None if the span is
+    /// longer than the byte size of T.
     fn from_le_bytes(self: Span<u8>) -> Option<T>;
 }
 
@@ -922,7 +929,7 @@ impl FromBytesImpl<
     +TryInto<T, u8>,
     +Copy<T>,
     +Drop<T>,
-    +AddEq<T>,
+    +core::ops::AddAssign<T, T>,
     +PartialEq<T>
 > of FromBytes<T> {
     fn from_be_bytes(self: Span<u8>) -> Option<T> {
@@ -943,7 +950,8 @@ impl FromBytesImpl<
                 break ();
             }
             let byte: T = (*self.at(i)).into();
-            // Safe unwrap, since offset - i is inbound in case of u8 { offset - i = 0 }, and TryInto<u32, u32>, TryInto<u32, u64>, TryInto<u32, u128>, TryInto<u32, 256> are safe
+            // Safe unwrap, since offset - i is inbound in case of u8 { offset - i = 0 }, and
+            // TryInto<u32, u32>, TryInto<u32, u64>, TryInto<u32, u128>, TryInto<u32, 256> are safe
             result += byte.shl((8 * (offset - i)).into());
 
             i += 1;
@@ -969,7 +977,8 @@ impl FromBytesImpl<
                 break ();
             }
             let byte: T = (*self.at(i)).into();
-            // safe unwrap, as i is inbound in case of u8 { max value can be 8 * 1 = 8 }, and TryInto<u32, u32>, TryInto<u32, u64>, TryInto<u32, u128>, TryInto<u32, 256> are safe
+            // safe unwrap, as i is inbound in case of u8 { max value can be 8 * 1 = 8 }, and
+            // TryInto<u32, u32>, TryInto<u32, u64>, TryInto<u32, u128>, TryInto<u32, 256> are safe
             result += byte.shl((8 * i).into());
 
             i += 1;
@@ -1051,7 +1060,8 @@ impl ByteArrayExt of ByteArrayExTrait {
     }
 
 
-    /// Transforms a ByteArray into an Array of u64 full words, a pending u64 word and its length in bytes
+    /// Transforms a ByteArray into an Array of u64 full words, a pending u64 word and its length in
+    /// bytes
     fn to_u64_words(self: ByteArray) -> (Array<u64>, u64, usize) {
         // We pass it by value because we want to take ownership, but we snap it
         // because `at` takes a snap and if this snap is automatically done by
@@ -1093,8 +1103,8 @@ impl ByteArrayExt of ByteArrayExTrait {
 
         // We enter a second loop for clarity.
         // O(2n) should be okay
-        // We might want to regroup every computation into a single loop with appropriate `if` branching
-        // For optimisation
+        // We might want to regroup every computation into a single loop with appropriate `if`
+        // branching For optimisation
         loop {
             if byte_counter.into() == last_input_num_bytes {
                 break;
@@ -1131,10 +1141,11 @@ fn compute_starknet_address(
     // Deployer is always 0
     // pedersen(a1, a2, a3) is defined as:
     // pedersen(pedersen(pedersen(a1, a2), a3), len([a1, a2, a3]))
+    //
+    // 
     // https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/hash_state.py#L6
     // https://github.com/xJonathanLEI/starknet-rs/blob/master/starknet-core/src/crypto.rs#L49
-    // Constructor Calldata
-    // For an Account, the constructor calldata is:
+    // Constructor Calldata For an Account, the constructor calldata is:
     // [kakarot_address, evm_address]
     let constructor_calldata_hash = PedersenTrait::new(0)
         .update_with(kakarot_address)
@@ -1479,7 +1490,8 @@ impl Felt252VecTraitImpl<
     /// * Result::<(), Felt252VecTraitErrors>
     ///
     /// # Errors
-    /// * Felt252VecTraitErrors::SizeLessThanCurrentLength if the new length is less than the current length
+    /// * Felt252VecTraitErrors::SizeLessThanCurrentLength if the new length is less than the
+    /// current length
     fn expand(ref self: Felt252Vec<T>, new_length: usize) -> Result<(), Felt252VecTraitErrors> {
         if (new_length < self.len) {
             return Result::Err(Felt252VecTraitErrors::SizeLessThanCurrentLength);
@@ -1522,8 +1534,10 @@ impl Felt252VecTraitImpl<
 
     /// Resizes the Felt252Vec<T> in-place so that len is equal to new_len.
     ///
-    /// This function will mutate the Felt252Vec in-place and will resize its length to the new length.
-    /// If new_len is greater than len, the Vec is extended by the difference, with each additional slot filled with 0. If new_len is less than len, the Vec is simply truncated from the right.
+    /// This function will mutate the Felt252Vec in-place and will resize its length to the new
+    /// length.
+    /// If new_len is greater than len, the Vec is extended by the difference, with each additional
+    /// slot filled with 0. If new_len is less than len, the Vec is simply truncated from the right.
     ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
@@ -1533,7 +1547,8 @@ impl Felt252VecTraitImpl<
     }
 
 
-    /// Copies the elements from a Span<u8> into the Felt252Vec<T> in little endian format, in case of overflow or index being out of bounds, an error is returned
+    /// Copies the elements from a Span<u8> into the Felt252Vec<T> in little endian format, in case
+    /// of overflow or index being out of bounds, an error is returned
     ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
@@ -1569,7 +1584,8 @@ impl Felt252VecTraitImpl<
         Result::Ok(())
     }
 
-    /// Copies the elements from a Felt252Vec<T> into the Felt252Vec<T> in little endian format, If length of both Felt252Vecs are not same, it will return an error
+    /// Copies the elements from a Felt252Vec<T> into the Felt252Vec<T> in little endian format, If
+    /// length of both Felt252Vecs are not same, it will return an error
     ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
@@ -1589,7 +1605,8 @@ impl Felt252VecTraitImpl<
         Result::Ok(())
     }
 
-    /// Insert elements of Felt252Vec into another Felt252Vec at a given index, in case of overflow or index being out of bounds, an error is returned
+    /// Insert elements of Felt252Vec into another Felt252Vec at a given index, in case of overflow
+    /// or index being out of bounds, an error is returned
     ///
     /// # Arguments
     /// * `self` a ref Felt252Vec<T>
@@ -1688,7 +1705,8 @@ impl Felt252VecTraitImpl<
 
     /// Returns a new Felt252Vec<T> with elements starting from `idx` to `idx + len`
     ///
-    /// This function will start cloning from `idx` and will clone `len` elements, it will firstly clone the elements and then return a new Felt252Vec<T>
+    /// This function will start cloning from `idx` and will clone `len` elements, it will firstly
+    /// clone the elements and then return a new Felt252Vec<T>
     /// In case of overflow return Option::None
     ///
     /// # Arguments

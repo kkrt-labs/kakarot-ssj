@@ -96,7 +96,7 @@ impl RLPImpl of RLPTrait {
                 Option::Some(item) => {
                     match item {
                         RLPItem::String(string) => {
-                            joined_encodings.append_span(RLPTrait::encode_string(*string));
+                            joined_encodings.append_span(Self::encode_string(*string));
                         },
                         RLPItem::List(_) => { panic_with_felt252('List encoding unimplemented') }
                     }
@@ -168,7 +168,7 @@ impl RLPImpl of RLPTrait {
         let mut output: Array<RLPItem> = Default::default();
         let input_len = input.len();
 
-        let (rlp_type, offset, len) = RLPTrait::decode_type(input)?;
+        let (rlp_type, offset, len) = Self::decode_type(input)?;
 
         if input_len < offset + len {
             return Result::Err(RLPError::InputTooShort);
@@ -186,7 +186,7 @@ impl RLPImpl of RLPTrait {
                 if len == 0 {
                     output.append(RLPItem::List(array![].span()));
                 } else {
-                    let res = RLPTrait::decode(input.slice(offset, len))?;
+                    let res = Self::decode(input.slice(offset, len))?;
                     output.append(RLPItem::List(res));
                 }
             }
@@ -196,7 +196,7 @@ impl RLPImpl of RLPTrait {
         if total_item_len < input_len {
             output
                 .append_span(
-                    RLPTrait::decode(input.slice(total_item_len, input_len - total_item_len))?
+                    Self::decode(input.slice(total_item_len, input_len - total_item_len))?
                 );
         }
 
@@ -348,7 +348,8 @@ mod tests {
     use utils::eth_transaction::AccessListItem;
     use utils::rlp::{RLPType, RLPTrait, RLPItem, RLPHelpersTrait};
 
-    // Tests source : https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
+    // Tests source :
+    // https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo
     //                https://github.com/ethereum/tests/blob/develop/RLPTests/rlptest.json
 
     #[test]
@@ -2499,7 +2500,8 @@ mod tests {
 
     #[test]
     fn test_rlp_item_parse_access_list() {
-        // [ [ "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", [ "0x01", "0x02", "0x03", "0x04", "0x05" ] ]]
+        // [ [ "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", [ "0x01", "0x02", "0x03", "0x04",
+        // "0x05" ] ]]
         let rlp_encoded_access_list: Span<u8> = array![
             220,
             219,

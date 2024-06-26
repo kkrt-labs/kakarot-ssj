@@ -51,7 +51,7 @@ pub mod KakarotCore {
 
 
     #[storage]
-    struct Storage {
+    pub struct Storage {
         Kakarot_evm_to_starknet_address: LegacyMap::<EthAddress, ContractAddress>,
         Kakarot_uninitialized_account_class_hash: ClassHash,
         Kakarot_account_contract_class_hash: ClassHash,
@@ -241,8 +241,8 @@ pub mod KakarotCore {
             let tx_info = get_tx_info().unbox();
 
             // If the account that originated the transaction is not zero, this means we
-            // are in an invoke transaction instead of a call; therefore, `eth_call` is being wrongly called
-            // For invoke transactions, `eth_send_transaction` must be used
+            // are in an invoke transaction instead of a call; therefore, `eth_call` is being
+            // wrongly called For invoke transactions, `eth_send_transaction` must be used
             if !tx_info.account_contract_address.is_zero() {
                 return false;
             }
@@ -305,7 +305,7 @@ pub mod KakarotCore {
                     let to_starknet_address = self.compute_starknet_address(to_evm_address);
                     let to = Address { evm: to_evm_address, starknet: to_starknet_address };
                     let code = tx.calldata();
-                    let calldata = Default::default().span();
+                    let calldata = array![].span();
                     (to, true, code, calldata)
                 },
             };
@@ -358,18 +358,20 @@ pub mod KakarotCore {
             let gas_refund = core::cmp::min(gas_used / 5, summary.gas_refund);
 
             // Charging gas fees to the sender
-            // At the end of the tx, the sender must have paid 
-            // (gas_used - gas_refund) * gas_price to the miner 
-            // Because tx.gas_price == env.gas_price, and we checked the sender has enough balance to cover
-            // the gas fees + the value transfer, this transfer should never fail.
+            // At the end of the tx, the sender must have paid
+            // (gas_used - gas_refund) * gas_price to the miner
+            // Because tx.gas_price == env.gas_price, and we checked the sender has enough balance
+            // to cover the gas fees + the value transfer, this transfer should never fail.
             // We can thus directly charge the sender for the effective gas fees,
             // without pre-emtively charging for the tx gas fee and then refund.
             // This is not true for EIP-1559 transactions - not supported yet.
             let total_gas_used = gas_used - gas_refund;
             let _transaction_fee = total_gas_used * gas_price;
 
-            //TODO(gas): EF-tests doesn't yet support in-EVM gas charging, they assume that the gas charged is always correct for now.
-            // As correct gas accounting is not an immediate priority, we can just ignore the gas charging for now.
+            //TODO(gas): EF-tests doesn't yet support in-EVM gas charging, they assume that the gas
+            //charged is always correct for now.
+            // As correct gas accounting is not an immediate priority, we can just ignore the gas
+            // charging for now.
             // match summary
             //     .state
             //     .add_transfer(
@@ -383,7 +385,7 @@ pub mod KakarotCore {
             //     ) {
             //     Result::Ok(_) => {},
             //     Result::Err(err) => {
-            //         
+            //
             //         return TransactionResultTrait::exceptional_failure(
             //             err.to_bytes(), tx.gas_limit()
             //         );

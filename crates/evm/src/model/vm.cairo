@@ -35,7 +35,7 @@ impl VMImpl of VMTrait {
             memory: Default::default(),
             pc: 0,
             valid_jumpdests: AccountTrait::get_jumpdests(message.code),
-            return_data: Default::default().span(),
+            return_data: array![].span(),
             env,
             message,
             gas_left: message.gas_limit,

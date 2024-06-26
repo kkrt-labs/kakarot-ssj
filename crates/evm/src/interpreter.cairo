@@ -36,13 +36,13 @@ impl EVMImpl of EVMTrait {
                 );
             }
 
-            let mut result = EVMTrait::process_create_message(message, ref env);
+            let mut result = Self::process_create_message(message, ref env);
             if result.success {
                 result.return_data = message.target.evm.to_bytes().span();
             }
             result
         } else {
-            EVMTrait::process_message(message, ref env)
+            Self::process_message(message, ref env)
         };
 
         // No need to take snapshot of state, as the state is still empty at this point.
@@ -71,7 +71,7 @@ impl EVMImpl of EVMTrait {
         target_account.address = message.target;
         env.state.set_account(target_account);
 
-        let mut result = EVMTrait::process_message(message, ref env);
+        let mut result = Self::process_message(message, ref env);
 
         if result.success {
             // Write the return_data of the initcode
@@ -80,7 +80,7 @@ impl EVMImpl of EVMTrait {
                 Result::Ok(account_created) => { env.state.set_account(account_created) },
                 Result::Err(err) => {
                     env.state = state_snapshot;
-                    result.return_data = Default::default().span();
+                    result.return_data = array![].span();
                     return ExecutionResultTrait::exceptional_failure(
                         err.to_bytes(), result.accessed_addresses, result.accessed_storage_keys
                     );
@@ -124,7 +124,7 @@ impl EVMImpl of EVMTrait {
         // Decode and execute the current opcode.
         // until we have processed all opcodes or until we have stopped.
         // Use a recursive function to allow passing VM by ref - which wouldn't work in a loop;
-        let result = EVMTrait::execute_code(ref vm);
+        let result = Self::execute_code(ref vm);
 
         // Retrieve ownership of the `env` variable
         // The state in the environment has been modified by the VM.
@@ -198,10 +198,10 @@ impl EVMImpl of EVMTrait {
         // Increment pc
         vm.set_pc(pc + 1);
 
-        match EVMTrait::execute_opcode(ref vm, opcode) {
+        match Self::execute_opcode(ref vm, opcode) {
             Result::Ok(_) => {
                 if vm.is_running() {
-                    return EVMTrait::execute_code(ref vm);
+                    return Self::execute_code(ref vm);
                 }
                 // REVERT opcode case
                 if vm.is_error() {

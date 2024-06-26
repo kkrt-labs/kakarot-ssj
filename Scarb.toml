@@ -12,6 +12,10 @@ license-file = "LICENSE"
 
 [workspace.dependencies]
 starknet = "2.4.0-rc6"
+cairo_test = "2.6.4+nightly-2024-06-26"
 
 [workspace.tool.fmt]
 sort-module-level-items = true
+
+[dev-dependencies]
+cairo_test = "2.6.4+nightly-2024-06-26"

@@ -91,7 +91,7 @@ impl CreateHelpersImpl of CreateHelpers {
         self.gas_left -= create_message_gas;
 
         ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
-        self.return_data = Default::default().span();
+        self.return_data = array![].span();
 
         // The sender in the subcontext is the message's target
         let sender_address = self.message().target;
@@ -124,7 +124,7 @@ impl CreateHelpersImpl of CreateHelpers {
             caller: sender_address,
             target: target_address,
             gas_limit: create_message_gas,
-            data: Default::default().span(),
+            data: array![].span(),
             code: create_args.bytecode,
             value: create_args.value,
             should_transfer_value: true,
@@ -138,7 +138,7 @@ impl CreateHelpersImpl of CreateHelpers {
         self.merge_child(@result);
 
         if result.success {
-            self.return_data = Default::default().span();
+            self.return_data = array![].span();
             self.stack.push(target_address.evm.into())?;
         } else {
             self.return_data = result.return_data;

@@ -1,11 +1,8 @@
+use core::ops::deref::SnapshotDeref;
+use core::starknet::storage::StoragePointerWriteAccess;
+use core::starknet::storage::StoragePointerReadAccess;
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-use contracts::kakarot_core::{
-    KakarotCore, KakarotCore::KakarotCoreImpl,
-    KakarotCore::{
-        Kakarot_prev_randaoContractMemberStateTrait, Kakarot_coinbaseContractMemberStateTrait,
-        Kakarot_block_gas_limitContractMemberStateTrait, Kakarot_base_feeContractMemberStateTrait
-    }
-};
+use contracts::kakarot_core::{KakarotCore, KakarotCore::KakarotCoreImpl};
 use core::num::traits::zero::Zero;
 use evm::errors::{ensure, EVMError, EOA_EXISTS};
 use evm::model::{Address, AddressTrait, Environment, Account, AccountTrait};
@@ -40,7 +37,8 @@ fn commit(ref state: State) -> Result<(), EVMError> {
 ///
 /// * `evm_address` - The EVM address of the EOA to deploy.
 fn deploy(evm_address: EthAddress) -> Result<Address, EVMError> {
-    // Unlike CAs, there is not check for the existence of an EOA prealably to calling `EOATrait::deploy` - therefore, we need to check that there is no collision.
+    // Unlike CAs, there is not check for the existence of an EOA prealably to calling
+    // `EOATrait::deploy` - therefore, we need to check that there is no collision.
     let mut is_deployed = evm_address.is_deployed();
     ensure(!is_deployed, EVMError::DeployError(EOA_EXISTS))?;
 
@@ -70,7 +68,7 @@ fn get_bytecode(evm_address: EthAddress) -> Span<u8> {
 
 /// Populate an Environment with Starknet syscalls.
 fn get_env(origin: EthAddress, gas_price: u128) -> Environment {
-    let kakarot_state = KakarotCore::unsafe_new_contract_state();
+    let kakarot_state = KakarotCore::unsafe_new_contract_state().snapshot_deref();
     let block_info = get_block_info().unbox();
 
     // tx.gas_price and env.gas_price have the same values here
@@ -210,14 +208,16 @@ mod internals {
             starknet_account.set_nonce(*self.nonce);
 
             //TODO: storage commits are done in the State commitment
-            //Storage is handled outside of the account and must be committed after all accounts are committed.
+            //Storage is handled outside of the account and must be committed after all accounts are
+            //committed.
             return;
         };
 
         // @dev: EIP-6780 - If selfdestruct on an account created, dont commit data
         let is_created_selfdestructed = self.is_selfdestruct() && self.is_created();
         if is_created_selfdestructed {
-            // If the account was created and selfdestructed in the same transaction, we don't need to commit it.
+            // If the account was created and selfdestructed in the same transaction, we don't need
+            // to commit it.
             return;
         }
 
@@ -225,7 +225,8 @@ mod internals {
 
         starknet_account.set_nonce(*self.nonce);
         //TODO: storage commits are done in the State commitment
-        //Storage is handled outside of the account and must be committed after all accounts are committed.
+        //Storage is handled outside of the account and must be committed after all accounts are
+        //committed.
 
         // Update bytecode if required (SELFDESTRUCTed contract committed and redeployed)
         //TODO: add bytecode_len entrypoint for optimization

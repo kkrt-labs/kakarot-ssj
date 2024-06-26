@@ -214,26 +214,28 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
     fn decode(self: EncodedTransaction) -> Result<EthereumTransaction, EthTransactionError> {
         match self {
             EncodedTransaction::Legacy(encoded_tx_data) => {
-                EncodedTransactionTrait::decode_legacy_tx(encoded_tx_data)
+                Self::decode_legacy_tx(encoded_tx_data)
             },
             EncodedTransaction::EIP1559(encoded_tx_data) => {
-                EncodedTransactionTrait::decode_typed_tx(encoded_tx_data)
+                Self::decode_typed_tx(encoded_tx_data)
             },
             EncodedTransaction::EIP2930(encoded_tx_data) => {
-                EncodedTransactionTrait::decode_typed_tx(encoded_tx_data)
+                Self::decode_typed_tx(encoded_tx_data)
             },
         }
     }
 
     /// Decode a legacy Ethereum transaction
     /// This function decodes a legacy Ethereum transaction in accordance with EIP-155.
-    /// It returns transaction details including nonce, gas price, gas limit, destination address, amount, payload,
-    /// message hash, chain id. The transaction hash is computed by keccak hashing the signed
-    /// transaction data, which includes the chain ID in accordance with EIP-155.
+    /// It returns transaction details including nonce, gas price, gas limit, destination address,
+    /// amount, payload, message hash, chain id. The transaction hash is computed by keccak hashing
+    /// the signed transaction data, which includes the chain ID in accordance with EIP-155.
     /// # Arguments
     /// * encoded_tx_data - The raw rlp encoded transaction data
-    /// * encoded_tx_data - is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data, chainId, 0, 0]
-    /// Note: this function assumes that tx_type has been checked to make sure it is a legacy transaction
+    /// * encoded_tx_data - is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data,
+    /// chainId, 0, 0]
+    /// Note: this function assumes that tx_type has been checked to make sure it is a legacy
+    /// transaction
     fn decode_legacy_tx(
         encoded_tx_data: Span<u8>
     ) -> Result<EthereumTransaction, EthTransactionError> {
@@ -289,12 +291,14 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
 
     /// Decode a modern Ethereum transaction
     /// This function decodes a modern Ethereum transaction in accordance with EIP-2718.
-    /// It returns transaction details including nonce, gas price, gas limit, destination address, amount, payload,
-    /// message hash, and chain id. The transaction hash is computed by keccak hashing the signed
-    /// transaction data, which includes the chain ID as part of the transaction data itself.
+    /// It returns transaction details including nonce, gas price, gas limit, destination address,
+    /// amount, payload, message hash, and chain id. The transaction hash is computed by keccak
+    /// hashing the signed transaction data, which includes the chain ID as part of the transaction
+    /// data itself.
     /// # Arguments
     /// * `encoded_tx_data` - The raw rlp encoded transaction data
-    /// Note: this function assumes that tx_type has been checked to make sure it is either EIP-2930 or EIP-1559 transaction
+    /// Note: this function assumes that tx_type has been checked to make sure it is either EIP-2930
+    /// or EIP-1559 transaction
     fn decode_typed_tx(
         encoded_tx_data: Span<u8>
     ) -> Result<EthereumTransaction, EthTransactionError> {
@@ -322,7 +326,8 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
             TransactionType::Legacy => {
                 return Result::Err(EthTransactionError::TransactionTypeError);
             },
-            // tx_format (EIP-2930, unsigned):  0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList])
+            // tx_format (EIP-2930, unsigned):  0x01  || rlp([chainId, nonce, gasPrice, gasLimit,
+            // to, value, data, accessList])
             TransactionType::EIP2930 => {
                 let chain_id = (*decoded_data.at(0)).parse_u128_from_string().map_err()?;
                 let nonce = (*decoded_data.at(1)).parse_u128_from_string().map_err()?;
@@ -348,7 +353,9 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
                     )
                 )
             },
-            // tx_format (EIP-1559, unsigned):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, destination, amount, data, access_list])
+            // tx_format (EIP-1559, unsigned):  0x02 || rlp([chain_id, nonce,
+            // max_priority_fee_per_gas, max_fee_per_gas, gas_limit, destination, amount, data,
+            // access_list])
             TransactionType::EIP1559 => {
                 let chain_id = (*decoded_data.at(0)).parse_u128_from_string().map_err()?;
                 let nonce = (*decoded_data.at(1)).parse_u128_from_string().map_err()?;
@@ -383,13 +390,14 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
     }
 
     /// Check if a raw transaction is a legacy Ethereum transaction
-    /// This function checks if a raw transaction is a legacy Ethereum transaction by checking the transaction type
-    /// according to EIP-2718.
+    /// This function checks if a raw transaction is a legacy Ethereum transaction by checking the
+    /// transaction type according to EIP-2718.
     /// # Arguments
     /// * `encoded_tx_data` - The raw rlp encoded transaction data
     #[inline(always)]
     fn is_legacy_tx(encoded_tx_data: Span<u8>) -> bool {
-        // From EIP2718: if it starts with a value in the range [0xc0, 0xfe] then it is a legacy transaction type
+        // From EIP2718: if it starts with a value in the range [0xc0, 0xfe] then it is a legacy
+        // transaction type
         if (*encoded_tx_data[0] > 0xbf && *encoded_tx_data[0] < 0xff) {
             return true;
         }
@@ -461,7 +469,7 @@ impl EthTransactionImpl of EthTransactionTrait {
     ) -> Result<bool, EthTransactionError> {
         let TransactionMetadata { address, account_nonce, chain_id, signature } = tx_metadata;
 
-        let decoded_tx = EthTransactionTrait::decode(encoded_tx_data)?;
+        let decoded_tx = Self::decode(encoded_tx_data)?;
 
         if (decoded_tx.nonce() != account_nonce) {
             return Result::Err(EthTransactionError::IncorrectAccountNonce);
@@ -502,8 +510,11 @@ mod tests {
 
     #[test]
     fn test_decode_legacy_tx() {
-        // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0, 0]
-        // expected rlp decoding:  [ '0x', '0x3b9aca00', '0x1e8480', '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984', '0x016345785d8a0000', '0xabcdef', '0x434841494e5f4944', '0x', '0x' ]
+        // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0,
+        // 0]
+        // expected rlp decoding:  [ '0x', '0x3b9aca00', '0x1e8480',
+        // '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984', '0x016345785d8a0000', '0xabcdef',
+        // '0x434841494e5f4944', '0x', '0x' ]
         // message_hash: 0x1026be08dc5113457dc5550128d53b1d2b2b6418ffe098468f805ecdcf34efd1
         // chain id used: 0x434841494e5f4944
         let data = legacy_rlp_encoded_tx();
@@ -536,8 +547,10 @@ mod tests {
 
     #[test]
     fn test_decode_legacy_deploy_tx() {
-        // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0, 0]
-        // expected rlp decoding:  ["0x","0x0a","0x061a80","0x","0x0186a0","0x600160010a5060006000f3","0x4b4b5254","0x","0x"]
+        // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0,
+        // 0]
+        // expected rlp decoding:
+        // ["0x","0x0a","0x061a80","0x","0x0186a0","0x600160010a5060006000f3","0x4b4b5254","0x","0x"]
         let data = legacy_rlp_encoded_deploy_tx();
 
         let encoded_tx: Option<EncodedTransaction> = deserialize_encoded_transaction(data);
@@ -559,8 +572,13 @@ mod tests {
 
     #[test]
     fn test_decode_eip_2930_tx() {
-        // tx_format (EIP-2930, unsigned): 0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList])
-        // expected rlp decoding:   [ "0x434841494e5f4944", "0x", "0x3b9aca00", "0x1e8480", "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef", [["0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", ["0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65", "0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94"]]] ]
+        // tx_format (EIP-2930, unsigned): 0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to,
+        // value, data, accessList])
+        // expected rlp decoding:   [ "0x434841494e5f4944", "0x", "0x3b9aca00", "0x1e8480",
+        // "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef",
+        // [["0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+        // ["0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65",
+        // "0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94"]]] ]
         // message_hash: 0xc00f61dcc99a78934275c404267b9d035cad7f71cf3ae2ed2c5a55b601a5c107
         // chain id used: 0x434841494e5f4944
         let data = eip_2930_encoded_tx();
@@ -604,8 +622,13 @@ mod tests {
 
     #[test]
     fn test_decode_eip_1559_tx() {
-        // tx_format (EIP-1559, unsigned):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, destination, amount, data, access_list])
-        // expected rlp decoding: [ "0x434841494e5f4944", "0x", "0x", "0x3b9aca00", "0x1e8480", "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef", [[["0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", ["0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65", "0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94"]]] ] ]
+        // tx_format (EIP-1559, unsigned):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas,
+        // max_fee_per_gas, gas_limit, destination, amount, data, access_list])
+        // expected rlp decoding: [ "0x434841494e5f4944", "0x", "0x", "0x3b9aca00", "0x1e8480",
+        // "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef",
+        // [[["0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+        // ["0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65",
+        // "0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94"]]] ] ]
         // message_hash: 0xa2de478d0c94b4be637523b818d03b6a1841fca63fd044976fcdbef3c57a87b0
         // chain id used: 0x434841494e5f4944
         let data = eip_1559_encoded_tx();

@@ -92,7 +92,7 @@ impl SystemOperations of SystemOperationsTrait {
         // The gas cost relative to the transfer is refunded.
         let sender_balance = self.env.state.get_account(self.message().target.evm).balance();
         if sender_balance < value {
-            self.return_data = Default::default().span();
+            self.return_data = array![].span();
             self.gas_left += message_call_gas.stipend;
             return self.stack.push(0);
         }
@@ -168,7 +168,7 @@ impl SystemOperations of SystemOperationsTrait {
         // The gas cost relative to the transfer is refunded.
         let sender_balance = self.env.state.get_account(self.message().target.evm).balance();
         if sender_balance < value {
-            self.return_data = Default::default().span();
+            self.return_data = array![].span();
             self.gas_left += message_call_gas.stipend;
             return self.stack.push(0);
         }

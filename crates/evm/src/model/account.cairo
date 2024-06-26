@@ -26,7 +26,7 @@ impl AccountBuilderImpl of AccountBuilderTrait {
         AccountBuilder {
             account: Account {
                 address: address,
-                code: Default::default().span(),
+                code: array![].span(),
                 nonce: 0,
                 balance: 0,
                 selfdestruct: false,
@@ -48,7 +48,8 @@ impl AccountBuilderImpl of AccountBuilderTrait {
         self
     }
 
-    /// Loads the bytecode of a ContractAccount from Kakarot Core's contract storage into a Span<u8>.
+    /// Loads the bytecode of a ContractAccount from Kakarot Core's contract storage into a
+    /// Span<u8>.
     /// # Arguments
     /// * `self` - The address of the Contract Account to load the bytecode from
     /// # Returns
@@ -86,7 +87,7 @@ impl AccountImpl of AccountTrait {
     /// # Returns
     /// The fetched account if it existed, otherwise a new empty account.
     fn fetch_or_create(evm_address: EthAddress) -> Account {
-        let maybe_acc = AccountTrait::fetch(evm_address);
+        let maybe_acc = Self::fetch(evm_address);
 
         match maybe_acc {
             Option::Some(account) => account,
@@ -213,7 +214,7 @@ impl AccountImpl of AccountTrait {
     }
 
     /// Initializes a dictionary of valid jump destinations in EVM bytecode.
-    /// 
+    ///
     /// This function iterates over the bytecode from the current index 'i'.
     /// If the opcode at the current index is between 0x5f and 0x7f (PUSHN opcodes) (inclusive),
     /// it skips the next 'n_args' opcodes, where 'n_args' is the opcode minus 0x5f.

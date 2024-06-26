@@ -172,7 +172,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let bytecode: Span<u8> = self.message().code;
 
         let copied: Span<u8> = if offset > bytecode.len() {
-            Default::default().span()
+            array![].span()
         } else if (offset + size > bytecode.len()) {
             bytecode.slice(offset, bytecode.len() - offset)
         } else {
@@ -236,7 +236,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let bytecode_slice = if offset < bytecode_len {
             bytecode.slice(offset, bytecode_len - offset)
         } else {
-            Default::default().span()
+            array![].span()
         };
         self.memory.store_padded_segment(dest_offset, size, bytecode_slice);
         Result::Ok(())
