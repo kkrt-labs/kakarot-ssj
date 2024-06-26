@@ -33,4 +33,7 @@ mod stack;
 mod state;
 
 #[cfg(target: 'test')]
+mod test_data;
+
+#[cfg(target: 'test')]
 mod test_utils;
