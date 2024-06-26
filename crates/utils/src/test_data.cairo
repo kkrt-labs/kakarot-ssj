@@ -1,6 +1,8 @@
 fn legacy_rlp_encoded_tx() -> Span<u8> {
     // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0, 0]
-    // expected rlp decoding:  [ "0x", "0x3b9aca00", "0x1e8480", "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef", "0x4b4b5254", "0x", "0x" ]
+    // expected rlp decoding:  [ "0x", "0x3b9aca00", "0x1e8480",
+    // "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef", "0x4b4b5254",
+    // "0x", "0x" ]
     // message_hash: 0xcf71743e6e25fef715398915997f782b95554c8bbfb7b3f7701e007332ed31b4
     // chain id used: 'KKRT'
     array![
@@ -62,7 +64,8 @@ fn legacy_rlp_encoded_tx() -> Span<u8> {
 
 fn legacy_rlp_encoded_deploy_tx() -> Span<u8> {
     // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0, 0]
-    // expected rlp decoding:  ["0x","0x0a","0x061a80","0x","0x0186a0","0x600160010a5060006000f3","0x4b4b5254","0x","0x"]
+    // expected rlp decoding:
+    // ["0x","0x0a","0x061a80","0x","0x0186a0","0x600160010a5060006000f3","0x4b4b5254","0x","0x"]
     array![
         222,
         128,
@@ -101,8 +104,13 @@ fn legacy_rlp_encoded_deploy_tx() -> Span<u8> {
 
 
 fn eip_2930_encoded_tx() -> Span<u8> {
-    // tx_format (EIP-2930, unsigned): 0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList])
-    // expected rlp decoding:   [ "0x4b4b5254", "0x", "0x3b9aca00", "0x1e8480", "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef", [["0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", ["0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65", "0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94"]]] ]
+    // tx_format (EIP-2930, unsigned): 0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value,
+    // data, accessList])
+    // expected rlp decoding:   [ "0x4b4b5254", "0x", "0x3b9aca00", "0x1e8480",
+    // "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef",
+    // [["0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+    // ["0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65",
+    // "0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94"]]] ]
     // message_hash: 0xc00f61dcc99a78934275c404267b9d035cad7f71cf3ae2ed2c5a55b601a5c107
     // chain id used: 'KKRT'
     array![
@@ -256,8 +264,13 @@ fn eip_2930_encoded_tx() -> Span<u8> {
 }
 
 fn eip_1559_encoded_tx() -> Span<u8> {
-    // tx_format (EIP-1559, unsigned):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, destination, amount, data, access_list])
-    // expected rlp decoding: [ "0x4b4b5254", "0x", "0x", "0x3b9aca00", "0x1e8480", "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef", [[["0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", ["0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65", "0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94"]]] ] ]
+    // tx_format (EIP-1559, unsigned):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas,
+    // max_fee_per_gas, gas_limit, destination, amount, data, access_list])
+    // expected rlp decoding: [ "0x4b4b5254", "0x", "0x", "0x3b9aca00", "0x1e8480",
+    // "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef",
+    // [[["0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+    // ["0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65",
+    // "0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94"]]] ] ]
     // message_hash: 0xa2de478d0c94b4be637523b818d03b6a1841fca63fd044976fcdbef3c57a87b0
     // chain id used: 'KKRT'
     array![

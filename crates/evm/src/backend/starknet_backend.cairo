@@ -1,9 +1,9 @@
-use core::ops::deref::SnapshotDeref;
-use core::starknet::storage::StoragePointerWriteAccess;
-use core::starknet::storage::StoragePointerReadAccess;
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::{KakarotCore, KakarotCore::KakarotCoreImpl};
 use core::num::traits::zero::Zero;
+use core::ops::deref::SnapshotDeref;
+use core::starknet::storage::StoragePointerReadAccess;
+use core::starknet::storage::StoragePointerWriteAccess;
 use evm::errors::{ensure, EVMError, EOA_EXISTS};
 use evm::model::{Address, AddressTrait, Environment, Account, AccountTrait};
 use evm::state::{State, StateTrait};

@@ -95,8 +95,10 @@ fn max_message_call_gas(gas: u128) -> u128 {
 /// * `gas`: The amount of gas provided to the message-call.
 /// * `gas_left`: The amount of gas left in the current frame.
 /// * `memory_cost`: The amount needed to extend the memory in the current frame.
-/// * `extra_gas`: The amount of gas needed for transferring value + creating a new account inside a message call.
-/// * `call_stipend`: The amount of stipend provided to a message call to execute code while transferring value(native token).
+/// * `extra_gas`: The amount of gas needed for transferring value + creating a new account inside a
+/// message call.
+/// * `call_stipend`: The amount of stipend provided to a message call to execute code while
+/// transferring value(native token).
 ///
 /// # Returns
 ///

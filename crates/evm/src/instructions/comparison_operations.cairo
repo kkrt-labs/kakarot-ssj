@@ -120,7 +120,8 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
 
     /// 0x1A - BYTE
     /// # Specification: https://www.evm.codes/#1a?fork=shanghai
-    /// Retrieve single byte located at the byte offset of value, starting from the most significant byte.
+    /// Retrieve single byte located at the byte offset of value, starting from the most significant
+    /// byte.
     fn exec_byte(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::VERYLOW)?;
         let popped = self.stack.pop_n(2)?;

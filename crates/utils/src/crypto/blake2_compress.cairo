@@ -127,8 +127,16 @@ fn compress(rounds: usize, h: Span<u64>, m: Span<u64>, t: Span<u64>, f: bool) ->
     result.span()
 }
 
+// TODO: remove once https://github.com/starkware-libs/cairo/issues/4744 is resolved
+#[inline(never)]
+fn no_op() {}
+
+
+// TODO: remove use no_op() and tmp once https://github.com/starkware-libs/cairo/issues/4744 is
+// resolved
 /// Mixing Function G
-/// It mixes input words into four words indexed by "a", "b", "c", and "d" in the working vector, see [spec](https://datatracker.ietf.org/doc/html/rfc7693#section-3.1)
+/// It mixes input words into four words indexed by "a", "b", "c", and "d" in the working vector,
+/// see [spec](https://datatracker.ietf.org/doc/html/rfc7693#section-3.1)
 ///
 /// # Parameters
 /// * `v` - working vector

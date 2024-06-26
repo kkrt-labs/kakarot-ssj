@@ -224,7 +224,8 @@ impl MemoryOperation of MemoryOperationTrait {
 
 
     /// 0x5A - GAS operation
-    /// Get the amount of available gas, including the corresponding reduction for the cost of this instruction.
+    /// Get the amount of available gas, including the corresponding reduction for the cost of this
+    /// instruction.
     /// # Specification: https://www.evm.codes/#5a?fork=shanghai
     fn exec_gas(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;

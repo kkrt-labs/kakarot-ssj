@@ -34,10 +34,13 @@ impl BlockInformation of BlockInformationTrait {
 
         // If input block number is lower than current_block - 256, return 0
         // If input block number is higher than current_block - 10, return 0
-        // Note: in the specs, input block number can be equal - at most - to the current block number minus one.
+        // Note: in the specs, input block number can be equal - at most - to the current block
+        // number minus one.
         // In Starknet, the `get_block_hash_syscall` is capped at current block minus ten.
         // TODO: monitor the changes in the `get_block_hash_syscall` syscall.
-        // source: https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/system-calls-cairo1/#get_block_hash
+        // source:
+        // 
+        // https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/system-calls-cairo1/#get_block_hash
         if block_number + 10 > current_block || block_number + 256 < current_block {
             return self.stack.push(0);
         }

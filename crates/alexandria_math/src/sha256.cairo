@@ -1,5 +1,7 @@
-// note: the code has been taken from <https://github.com/keep-starknet-strange/alexandria/blob/main/src/math/src/sha256.cairo>
-// this has been done to make the code work with our scarb version, this is a temporary solution, and we should rely on adding alexandria as a dependency
+// note: the code has been taken from
+// <https://github.com/keep-starknet-strange/alexandria/blob/main/src/math/src/sha256.cairo>
+// this has been done to make the code work with our scarb version, this is a temporary solution,
+// and we should rely on adding alexandria as a dependency
 
 use integer::{u32_wrapping_add, BoundedInt};
 
@@ -17,7 +19,8 @@ fn bsig0(x: u32) -> u32 {
     let x2 = (x / 0x2000) | (x * 0x80000);
     let x3 = (x / 0x400000) | (x * 0x400);
     let result = (x1 ^ x2 ^ x3) & BoundedInt::<u32>::max().into();
-    // safe unwrap as at end we do an & with max u32, hence the number can be max 2**32 which can fit into a u32
+    // safe unwrap as at end we do an & with max u32, hence the number can be max 2**32 which can
+    // fit into a u32
     result.try_into().unwrap()
 }
 
@@ -27,7 +30,8 @@ fn bsig1(x: u32) -> u32 {
     let x2 = (x / 0x800) | (x * 0x200000);
     let x3 = (x / 0x2000000) | (x * 0x80);
     let result = (x1 ^ x2 ^ x3) & BoundedInt::<u32>::max().into();
-    // safe unwrap as at end we do an & with max u32, hence the number can be max 2**32 which can fit into a u32
+    // safe unwrap as at end we do an & with max u32, hence the number can be max 2**32 which can
+    // fit into a u32
     result.try_into().unwrap()
 }
 
@@ -37,7 +41,8 @@ fn ssig0(x: u32) -> u32 {
     let x2 = (x / 0x40000) | (x * 0x4000);
     let x3 = (x / 0x8);
     let result = (x1 ^ x2 ^ x3) & BoundedInt::<u32>::max().into();
-    // safe unwrap as at end we do an & with max u32, hence the number can be max 2**32 which can fit into a u32
+    // safe unwrap as at end we do an & with max u32, hence the number can be max 2**32 which can
+    // fit into a u32
     result.try_into().unwrap()
 }
 
@@ -64,7 +69,8 @@ fn sha256(mut data: Array<u8>) -> Array<u8> {
     };
 
     // add length to the end
-    // all these are safe unwraps, the max number we can end up with via these operations is 2**8, which can fit in u32
+    // all these are safe unwraps, the max number we can end up with via these operations is 2**8,
+    // which can fit in u32
     let mut res = (data_len & 0xff00000000000000) / 0x100000000000000;
     data.append(res.try_into().unwrap());
     res = (data_len.into() & 0xff000000000000) / 0x1000000000000;
@@ -95,7 +101,8 @@ fn from_u32Array_to_u8Array(mut data: Span<u32>) -> Array<u8> {
     loop {
         match data.pop_front() {
             Option::Some(val) => {
-                // all these are safe unwraps, the max number we can end up with via these operations is 2**8, which can fit in u8
+                // all these are safe unwraps, the max number we can end up with via these
+                // operations is 2**8, which can fit in u8
                 let mut res = (*val & 0xff000000) / 0x1000000;
                 result.append(res.try_into().unwrap());
                 res = (*val & 0xff0000) / 0x10000;

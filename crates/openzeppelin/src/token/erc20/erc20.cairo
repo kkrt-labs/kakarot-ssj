@@ -1,13 +1,16 @@
 // Due to the following error, we have to manually copy paste contracts from Open Zeppelin
 // error: Version solving failed:
-// - openzeppelin v0.7.0 (git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v0.7.0#61a2505fe0c0f19b5de2b3f8dedf421ba2cff657) cannot use starknet v2.3.0-rc0 (std), because openzeppelin requires starknet >=2.2.0
+// - openzeppelin v0.7.0
+// 
+// (git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v0.7.0#61a2505fe0c0f19b5de2b3f8dedf421ba2cff657)
+// cannot use starknet v2.3.0-rc0 (std), because openzeppelin requires starknet >=2.2.0
 
 // Scarb does not have real version solving algorithm yet.
 // Perhaps in the future this conflict could be resolved, but currently,
 // please upgrade your dependencies to use latest versions of their dependencies.
-// 
-// 
-// Credits: "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.7.0" 
+//
+//
+// Credits: "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.7.0"
 
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts for Cairo v0.7.0 (token/erc20/erc20.cairo)
