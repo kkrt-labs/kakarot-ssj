@@ -128,8 +128,10 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
 
     /// 0x07 - SMOD
     /// Signed modulo operation
-    /// a % b: integer result of the signed integer modulo. If the denominator is 0, the result will be 0.
-    /// All values are treated as two’s complement signed 256-bit integers. Note the overflow semantic when −2^255 is negated.
+    /// a % b: integer result of the signed integer modulo. If the denominator is 0, the result will
+    /// be 0.
+    /// All values are treated as two’s complement signed 256-bit integers. Note the overflow
+    /// semantic when −2^255 is negated.
     /// # Specification: https://www.evm.codes/#07?fork=shanghai
     fn exec_smod(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::LOW)?;
@@ -146,7 +148,8 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
 
     /// 0x08 - ADDMOD
     /// Addition and modulo operation
-    /// (a + b) % N: integer result of the addition followed by a modulo. If the denominator is 0, the result will be 0.
+    /// (a + b) % N: integer result of the addition followed by a modulo. If the denominator is 0,
+    /// the result will be 0.
     /// All intermediate calculations of this operation are not subject to the 2256 modulo.
     /// # Specification: https://www.evm.codes/#08?fork=shanghai
     fn exec_addmod(ref self: VM) -> Result<(), EVMError> {
@@ -218,14 +221,17 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// x as a two’s complement signed integer.
     /// The first `i` bits of the output (numbered from the /!\LEFT/!\ counting from zero)
     /// are equal to the `t`-th bit of `x`, where `t` is equal to
-    /// `256 - 8(b + 1)`. The remaining bits of the output are equal to the corresponding bits of `x`.
+    /// `256 - 8(b + 1)`. The remaining bits of the output are equal to the corresponding bits of
+    /// `x`.
     /// If b >= 32, then the output is x because t<=0.
-    /// To efficiently implement this algorithm we can implement it using a mask, which is all zeroes until the t-th bit included,
-    /// and all ones afterwards. The index of `t` when numbered from the RIGHT is s = `255 - t` = `8b + 7`; so the integer value
-    /// of the mask used is 2^s - 1.
-    /// Let v be the t-th bit of x. If v == 1, then the output should be all 1s until the t-th bit included,
-    /// followed by the remaining bits of x; which is corresponds to (x | !mask).
-    /// If v == 0, then the output should be all 0s until the t-th bit included, followed by the remaining bits of x;
+    /// To efficiently implement this algorithm we can implement it using a mask, which is all
+    /// zeroes until the t-th bit included, and all ones afterwards. The index of `t` when numbered
+    /// from the RIGHT is s = `255 - t` = `8b + 7`; so the integer value of the mask used is 2^s -
+    /// 1.
+    /// Let v be the t-th bit of x. If v == 1, then the output should be all 1s until the t-th bit
+    /// included, followed by the remaining bits of x; which is corresponds to (x | !mask).
+    /// If v == 0, then the output should be all 0s until the t-th bit included, followed by the
+    /// remaining bits of x;
     /// which corresponds to (x & mask).
     /// # Specification: https://www.evm.codes/#0b?fork=shanghai
     /// Complex opcode, check: https://ethereum.github.io/yellowpaper/paper.pdf
@@ -237,7 +243,8 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let result = if b < 32 {
             let s = 8 * b + 7;
             let two_pow_s = 2.pow(s);
-            // Get v, the t-th bit of x. To do this we bitshift x by s bits to the right and apply a mask to get the last bit.
+            // Get v, the t-th bit of x. To do this we bitshift x by s bits to the right and apply a
+            // mask to get the last bit.
             let v = (x / two_pow_s) & 1;
             // Compute the mask with 8b+7 bits set to one
             let mask = two_pow_s - 1;

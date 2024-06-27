@@ -16,10 +16,11 @@ use starknet::{
 };
 use utils::helpers::{ArrayExtTrait, ResultExTrait};
 use utils::set::{Set, SetTrait};
-use utils::traits::{StorageBaseAddressPartialEq, StorageBaseAddressIntoFelt252};
 
-/// The `StateChangeLog` tracks the changes applied to storage during the execution of a transaction.
-/// Upon exiting an execution context, contextual changes must be finalized into transactional changes.
+/// The `StateChangeLog` tracks the changes applied to storage during the execution of a
+/// transaction.
+/// Upon exiting an execution context, contextual changes must be finalized into transactional
+/// changes.
 /// Upon exiting the transaction, transactional changes must be finalized into storage updates.
 ///
 /// # Type Parameters
@@ -28,7 +29,8 @@ use utils::traits::{StorageBaseAddressPartialEq, StorageBaseAddressIntoFelt252};
 ///
 /// # Fields
 ///
-/// * `changes` - A `Felt252Dict` of contextual changes. Tracks the changes applied inside a single execution context.
+/// * `changes` - A `Felt252Dict` of contextual changes. Tracks the changes applied inside a single
+/// execution context.
 /// * `keyset` - An `Array` of contextual keys.
 struct StateChangeLog<T> {
     changes: Felt252Dict<Nullable<T>>,
@@ -70,7 +72,8 @@ impl StateChangeLogImpl<T, +Drop<T>, +Copy<T>> of StateChangeLogTrait<T> {
     }
 
     /// Writes a value to the StateChangeLog.
-    /// Values written to the StateChangeLog are not written to storage until the StateChangeLog is totally finalized at the end of the transaction.
+    /// Values written to the StateChangeLog are not written to storage until the StateChangeLog is
+    /// totally finalized at the end of the transaction.
     ///
     /// # Arguments
     ///
@@ -217,8 +220,8 @@ fn compute_state_key(evm_address: EthAddress, key: u256) -> felt252 {
 /// The storage address is computed as follows:
 /// 1. Compute the hash of the key (low, high) using Poseidon.
 /// 2. Use `storage_base_address_from_felt252` to obtain the starknet storage base address.
-/// Note: the storage_base_address_from_felt252 function always works for any felt - and returns the number
-/// normalized into the range [0, 2^251 - 256). (x % (2^251 - 256))
+/// Note: the storage_base_address_from_felt252 function always works for any felt - and returns the
+/// number normalized into the range [0, 2^251 - 256). (x % (2^251 - 256))
 /// https://github.com/starkware-libs/cairo/issues/4187
 fn compute_storage_address(key: u256) -> StorageBaseAddress {
     let hash = PoseidonTrait::new().update_with(key).finalize();
@@ -237,7 +240,8 @@ mod tests {
         let key = 100;
         let evm_address = test_utils::evm_address();
 
-        // The values can be computed externally by running a Rust program using the `starknet_crypto` crate and `poseidon_hash_many`.
+        // The values can be computed externally by running a Rust program using the
+        // `starknet_crypto` crate and `poseidon_hash_many`.
         // ```rust
         //     use starknet_crypto::{FieldElement,poseidon_hash_many};
         // use crypto_bigint::{U256};
@@ -264,8 +268,6 @@ mod tests {
         use evm::state::{StateChangeLog, StateChangeLogTrait};
         use evm::test_utils;
         use utils::set::{Set, SetTrait};
-        use utils::traits::StorageBaseAddressIntoFelt252;
-
 
         #[test]
         fn test_read_empty_log() {
@@ -328,7 +330,7 @@ mod tests {
             );
             let expected_account = Account {
                 address: Address { evm: evm_address, starknet: starknet_address },
-                code: Default::default().span(),
+                code: array![].span(),
                 nonce: 0,
                 balance: 0,
                 selfdestruct: false,

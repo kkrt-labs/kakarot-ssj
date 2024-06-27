@@ -1,5 +1,7 @@
-//! The generic account that is deployed by Kakarot Core before being "specialized" into an Externally Owned Account or a Contract Account
-//! This aims at having only one class hash for all the contracts deployed by Kakarot, thus enforcing a unique and consistent address mapping Eth Address <=> Starknet Address
+//! The generic account that is deployed by Kakarot Core before being "specialized" into an
+//! Externally Owned Account or a Contract Account This aims at having only one class hash for all
+//! the contracts deployed by Kakarot, thus enforcing a unique and consistent address mapping Eth
+//! Address <=> Starknet Address
 
 use starknet::ClassHash;
 use starknet::{ContractAddress, EthAddress};

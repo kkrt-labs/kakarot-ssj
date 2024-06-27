@@ -34,10 +34,12 @@ impl BlockInformation of BlockInformationTrait {
 
         // If input block number is lower than current_block - 256, return 0
         // If input block number is higher than current_block - 10, return 0
-        // Note: in the specs, input block number can be equal - at most - to the current block number minus one.
+        // Note: in the specs, input block number can be equal - at most - to the current block
+        // number minus one.
         // In Starknet, the `get_block_hash_syscall` is capped at current block minus ten.
         // TODO: monitor the changes in the `get_block_hash_syscall` syscall.
-        // source: https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/system-calls-cairo1/#get_block_hash
+        // source:
+        // https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/system-calls-cairo1/#get_block_hash
         if block_number + 10 > current_block || block_number + 256 < current_block {
             return self.stack.push(0);
         }
@@ -141,8 +143,8 @@ mod tests {
     use evm::test_utils::{evm_address, VMBuilderTrait, tx_gas_limit, gas_price};
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
     use starknet::testing::{
-        set_block_timestamp, set_block_number, set_contract_address, set_sequencer_address,
-        ContractAddress
+        set_block_timestamp, set_block_number, set_block_hash, set_contract_address,
+        set_sequencer_address, ContractAddress
     };
     use utils::constants;
     use utils::traits::{EthAddressIntoU256};
@@ -182,16 +184,17 @@ mod tests {
     // TODO: implement exec_blockhash testing for block number within bounds
     // https://github.com/starkware-libs/cairo/blob/77a7e7bc36aa1c317bb8dd5f6f7a7e6eef0ab4f3/crates/cairo-lang-starknet/cairo_level_tests/interoperability.cairo#L173
     #[test]
-    #[should_panic(expected: ('GET_BLOCK_HASH_UNIMPLEMENTED',))]
     fn test_exec_blockhash_within_bounds() {
         // If not set the default block number is 0.
+        let queried_block = 244;
         set_block_number(500);
+        set_block_hash(queried_block, 0xF);
 
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
         // When
-        vm.stack.push(244).expect('push failed');
+        vm.stack.push(queried_block.into()).expect('push failed');
         vm.exec_blockhash().expect('exec failed');
         //TODO the CASM runner used in tests doesn't implement
         //`get_block_hash_syscall` yet. As such, this test should fail no if the

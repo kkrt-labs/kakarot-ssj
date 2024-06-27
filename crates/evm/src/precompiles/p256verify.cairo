@@ -80,7 +80,8 @@ mod tests {
     use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 
-    // source: <https://github.com/ethereum/go-ethereum/pull/27540/files#diff-3548292e7ee4a75fc8146397c6baf5c969f6fe6cd9355df322cdb4f11103e004>
+    // source:
+    // <https://github.com/ethereum/go-ethereum/pull/27540/files#diff-3548292e7ee4a75fc8146397c6baf5c969f6fe6cd9355df322cdb4f11103e004>
     #[test]
     fn test_p256verify_precompile() {
         let msg_hash = 0x4cee90eb86eaa050036147a12d49004b6b9c72bd725d39d4785011fe190f0b4d_u256
@@ -108,7 +109,8 @@ mod tests {
         assert_eq!(gas, 3450);
     }
 
-    // source: <https://github.com/ethereum/go-ethereum/pull/27540/files#diff-3548292e7ee4a75fc8146397c6baf5c969f6fe6cd9355df322cdb4f11103e004>
+    // source:
+    // <https://github.com/ethereum/go-ethereum/pull/27540/files#diff-3548292e7ee4a75fc8146397c6baf5c969f6fe6cd9355df322cdb4f11103e004>
     #[test]
     fn test_p256verify_precompile_static_call() {
         let (_, _) = setup_contracts_for_testing();

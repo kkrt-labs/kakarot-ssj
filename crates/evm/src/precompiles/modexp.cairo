@@ -1,7 +1,8 @@
 use core::cmp::{min, max};
 
 use core::integer::{u32_overflowing_add, BoundedInt};
-// CREDITS: The implementation has take reference from [revm](https://github.com/bluealloy/revm/blob/main/crates/precompile/src/modexp.rs)
+// CREDITS: The implementation has take reference from
+// [revm](https://github.com/bluealloy/revm/blob/main/crates/precompile/src/modexp.rs)
 
 use core::option::OptionTrait;
 use core::traits::TryInto;
@@ -35,7 +36,8 @@ impl ModExp of Precompile {
         let exp_len: u256 = input.slice_right_padded(32, 32).from_be_bytes().unwrap();
         let mod_len: u256 = input.slice_right_padded(64, 32).from_be_bytes().unwrap();
 
-        // cast base_len, exp_len , modulus_len to usize, it does not make sense to handle larger values
+        // cast base_len, exp_len , modulus_len to usize, it does not make sense to handle larger
+        // values
         let base_len: usize = match base_len.try_into() {
             Option::Some(base_len) => { base_len },
             Option::None => {
@@ -70,7 +72,8 @@ impl ModExp of Precompile {
         };
 
         let exp_highp = {
-            // get right padded bytes so if data.len is less then exp_len we will get right padded zeroes.
+            // get right padded bytes so if data.len is less then exp_len we will get right padded
+            // zeroes.
             let right_padded_highp = input.slice_right_padded(base_len, 32);
             // If exp_len is less then 32 bytes get only exp_len bytes and do left padding.
             let out = right_padded_highp.slice(0, exp_highp_len).pad_left_with_zeroes(32);
@@ -173,7 +176,8 @@ mod tests {
     use starknet::testing::set_contract_address;
     use utils::helpers::U256Trait;
 
-    // the tests are taken from [revm](https://github.com/bluealloy/revm/blob/0629883f5a40e913a5d9498fa37886348c858c70/crates/precompile/src/modexp.rs#L175)
+    // the tests are taken from
+    // [revm](https://github.com/bluealloy/revm/blob/0629883f5a40e913a5d9498fa37886348c858c70/crates/precompile/src/modexp.rs#L175)
 
     #[test]
     fn test_modexp_modsize0_returndatasizeFiller_filler() {

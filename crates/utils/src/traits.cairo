@@ -9,7 +9,7 @@ use utils::math::{Zero, One, Bitshift};
 impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
     #[inline(always)]
     fn default() -> Span<T> {
-        Default::default().span()
+        array![].span()
     }
 }
 
@@ -54,14 +54,6 @@ impl U256TryIntoContractAddress of TryInto<u256, ContractAddress> {
         }
     }
 }
-
-//TODO remove once merged in corelib
-impl StorageBaseAddressIntoFelt252 of Into<StorageBaseAddress, felt252> {
-    fn into(self: StorageBaseAddress) -> felt252 {
-        storage_address_from_base(self).into()
-    }
-}
-
 
 impl StorageBaseAddressIntoU256 of Into<StorageBaseAddress, u256> {
     fn into(self: StorageBaseAddress) -> u256 {

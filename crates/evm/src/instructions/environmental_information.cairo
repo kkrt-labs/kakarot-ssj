@@ -172,7 +172,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let bytecode: Span<u8> = self.message().code;
 
         let copied: Span<u8> = if offset > bytecode.len() {
-            Default::default().span()
+            array![].span()
         } else if (offset + size > bytecode.len()) {
             bytecode.slice(offset, bytecode.len() - offset)
         } else {
@@ -236,7 +236,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let bytecode_slice = if offset < bytecode_len {
             bytecode.slice(offset, bytecode_len - offset)
         } else {
-            Default::default().span()
+            array![].span()
         };
         self.memory.store_padded_segment(dest_offset, size, bytecode_slice);
         Result::Ok(())
@@ -363,7 +363,8 @@ mod tests {
     #[test]
     #[ignore]
     fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls)-> C (smart contract)
-    // TODO: Once we have ability to do nested smart contract calls, check that in `C`s context `ADDRESS` should return address `B`
+    // TODO: Once we have ability to do nested smart contract calls, check that in `C`s context
+    // `ADDRESS` should return address `B`
     // ref: https://github.com/kkrt-labs/kakarot-ssj/issues/183
     }
 
@@ -683,7 +684,8 @@ mod tests {
         vm.stack.push(offset.into()).expect('push failed');
         vm.stack.push(dest_offset.into()).expect('push failed');
 
-        // Memory initialization with a value to verify that if the offset + size is out of the bound bytes, 0's have been copied.
+        // Memory initialization with a value to verify that if the offset + size is out of the
+        // bound bytes, 0's have been copied.
         // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
         let mut i = 0;
         loop {
@@ -1352,7 +1354,9 @@ mod tests {
             vm
                 .stack
                 .peek()
-                // extcodehash(Counter.sol) := 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275 (source: remix)
+                // extcodehash(Counter.sol) :=
+                // 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275 (source:
+                // remix)
                 // <https://emn178.github.io/online-tools/keccak_256.html?input=608060405234801561000f575f80fd5b506004361061004a575f3560e01c806306661abd1461004e578063371303c01461006c5780636d4ce63c14610076578063b3bcfa8214610094575b5f80fd5b61005661009e565b60405161006391906100f7565b60405180910390f35b6100746100a3565b005b61007e6100bd565b60405161008b91906100f7565b60405180910390f35b61009c6100c5565b005b5f5481565b60015f808282546100b4919061013d565b92505081905550565b5f8054905090565b60015f808282546100d69190610170565b92505081905550565b5f819050919050565b6100f1816100df565b82525050565b5f60208201905061010a5f8301846100e8565b92915050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52601160045260245ffd5b5f610147826100df565b9150610152836100df565b925082820190508082111561016a57610169610110565b5b92915050565b5f61017a826100df565b9150610185836100df565b925082820390508181111561019d5761019c610110565b5b9291505056fea26469706673582212207e792fcff28a4bf0bad8675c5bc2288b07835aebaa90b8dc5e0df19183fb72cf64736f6c63430008160033&input_type=hex>
                 .unwrap() == 0xec976f44607e73ea88910411e3da156757b63bea5547b169e1e0d733443f73b0,
             'expected counter SC code hash'

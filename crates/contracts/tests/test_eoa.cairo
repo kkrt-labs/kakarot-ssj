@@ -55,7 +55,7 @@ fn test___execute__a() {
     let evm_address = evm_address();
     let eoa = kakarot_core.deploy_externally_owned_account(evm_address);
     // pop ownership transfer event
-    core::starknet::testing::pop_log_raw(eoa);
+    core::starknet::testing::pop_log_raw(eoa).unwrap();
     fund_account_with_native_token(eoa, native_token, 0xfffffffffffffffffffffffffff);
 
     let kakarot_address = kakarot_core.contract_address;

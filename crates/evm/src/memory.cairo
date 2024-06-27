@@ -50,8 +50,8 @@ impl MemoryImpl of MemoryTrait {
     /// If the offset is aligned with the 16-bytes words in memory, the element is stored directly.
     /// Otherwise, the element is split and stored in multiple words.
     ///
-    /// If we want to store an item at offset Y of the memory relative to the execution context of id i
-    /// the internal index will be:
+    /// If we want to store an item at offset Y of the memory relative to the execution context of
+    /// id i the internal index will be:
     /// index = Y + i * MEMORY_SEGMENT_SIZE
     #[inline(always)]
     fn store(ref self: Memory, element: u256, offset: usize) {
@@ -80,8 +80,8 @@ impl MemoryImpl of MemoryTrait {
 
 
     /// Stores a single byte into memory at a specified offset.
-    /// If we want to store a byte at offset Y of the memory relative to the execution context of id i
-    /// the internal index will be:
+    /// If we want to store a byte at offset Y of the memory relative to the execution context of id
+    /// i the internal index will be:
     /// index = Y + i * MEMORY_SEGMENT_SIZE
     ///
     /// # Arguments
@@ -94,7 +94,8 @@ impl MemoryImpl of MemoryTrait {
         let new_min_bytes_len = helpers::ceil32(offset + 1);
         self.bytes_len = max(new_min_bytes_len, self.size());
 
-        // Compute actual offset in Memory, given active_segment of Memory (current Execution Context id)
+        // Compute actual offset in Memory, given active_segment of Memory (current Execution
+        // Context id)
         // And Memory Segment Size
 
         // Get offset's memory word index and left-based offset of byte in word.
@@ -114,13 +115,14 @@ impl MemoryImpl of MemoryTrait {
 
     /// Stores a span of N bytes into memory at a specified offset.
     ///
-    /// This function checks the alignment of the offset to 16-byte chunks, and handles the special case where the bytes to be
-    /// stored are within the same word in memory using the `store_bytes_in_single_chunk` function. If the bytes
-    /// span multiple words, the function stores the first word using the `store_first_word` function, the aligned
-    /// words using the `store_aligned_words` function, and the last word using the `store_last_word` function.
+    /// This function checks the alignment of the offset to 16-byte chunks, and handles the special
+    /// case where the bytes to be stored are within the same word in memory using the
+    /// `store_bytes_in_single_chunk` function. If the bytes span multiple words, the function
+    /// stores the first word using the `store_first_word` function, the aligned words using the
+    /// `store_aligned_words` function, and the last word using the `store_last_word` function.
     ///
-    /// If we want to store n bytes at offset Y of the memory relative to the execution context of id i
-    /// the internal index will be:
+    /// If we want to store n bytes at offset Y of the memory relative to the execution context of
+    /// id i the internal index will be:
     /// index = Y + i * MEMORY_SEGMENT_SIZE
     ///
     /// # Arguments
@@ -174,7 +176,8 @@ impl MemoryImpl of MemoryTrait {
         self.store_last_word(final_chunk, offset_in_chunk_f, mask_f, final_bytes);
     }
 
-    /// Stores a span of N bytes into memory at a specified offset with padded with 0s to match the size parameter.
+    /// Stores a span of N bytes into memory at a specified offset with padded with 0s to match the
+    /// size parameter.
     ///
     /// # Arguments
     ///
@@ -188,7 +191,8 @@ impl MemoryImpl of MemoryTrait {
             return;
         }
 
-        // For performance reasons, we don't add the zeros directly to the source, which would generate an implicit copy, which might be expensive if the source is big.
+        // For performance reasons, we don't add the zeros directly to the source, which would
+        // generate an implicit copy, which might be expensive if the source is big.
         // Instead, we'll copy the source into memory, then create a new span containing the zeros.
         // TODO: optimize this with a specific function
         let mut slice_size = min(source.len(), length);
@@ -224,7 +228,8 @@ impl MemoryImpl of MemoryTrait {
         self.load_internal(offset)
     }
 
-    /// Expands memory if necessary, then load elements_len bytes from the memory at given offset inside elements.
+    /// Expands memory if necessary, then load elements_len bytes from the memory at given offset
+    /// inside elements.
     #[inline(always)]
     fn load_n(ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize) {
         self.ensure_length(elements_len + offset);
@@ -238,9 +243,9 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// Stores a `u256` element at a specified offset within a memory chunk.
     ///
     /// It first computes the
-    /// masks for the high and low parts of the element, then splits the `u256` element into high and low
-    /// parts, and computes the new words to write to memory using the masks and the high and low parts
-    /// of the element. Finally, it writes the new words to memory.
+    /// masks for the high and low parts of the element, then splits the `u256` element into high
+    /// and low parts, and computes the new words to write to memory using the masks and the high
+    /// and low parts of the element. Finally, it writes the new words to memory.
     ///
     /// # Arguments
     ///
@@ -279,7 +284,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// Stores a span of bytes into a single memory chunk.
     ///
     /// This function computes new word to be stored by multiplying the
-    /// high part of the current word by the `mask_i` value, adding the loaded bytes multiplied by the `mask_f`
+    /// high part of the current word by the `mask_i` value, adding the loaded bytes multiplied by
+    /// the `mask_f`
     /// value, and adding the low part of the current word.
     ///
     /// # Arguments
@@ -307,7 +313,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     ///
     /// It combines each byte in the span into a single 16-byte value in big-endian order,
     /// and stores this value in memory. The function then updates
-    /// the chunk index and slices the byte span to the next 16 bytes until all chunks have been stored.
+    /// the chunk index and slices the byte span to the next 16 bytes until all chunks have been
+    /// stored.
     ///
     /// # Arguments
     ///
@@ -343,12 +350,13 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         }
     }
 
-    /// Retrieves aligned values from the memory structure, converts them back into a bytes array, and appends them
-    /// to the `elements` array.
+    /// Retrieves aligned values from the memory structure, converts them back into a bytes array,
+    /// and appends them to the `elements` array.
     ///
     /// It iterates
-    /// over the chunks between the first and last chunk indices, retrieves the `u128` values from the memory chunk,
-    /// and splits them into big-endian byte arrays and concatenates using the `split_word_128` function.
+    /// over the chunks between the first and last chunk indices, retrieves the `u128` values from
+    /// the memory chunk, and splits them into big-endian byte arrays and concatenates using the
+    /// `split_word_128` function.
     /// The results are concatenated to the `elements` array.
     ///
     /// # Arguments
@@ -373,11 +381,12 @@ impl InternalMemoryMethods of InternalMemoryTrait {
 
     /// Loads a `u256` element from the memory chunk at a specified offset.
     ///
-    /// If the offset is aligned with the memory words, the function returns the `u256` element at the
-    /// specified offset directly from the memory chunk. If the offset is misaligned, the function computes the masks
-    /// for the high and low parts of the first and last words of the `u256` element, reads the words at the specified
-    /// offset and the next two offsets, and computes the high and low parts of the `u256` element using the masks and
-    /// the read words. The resulting `u256` element is then returned.
+    /// If the offset is aligned with the memory words, the function returns the `u256` element at
+    /// the specified offset directly from the memory chunk. If the offset is misaligned, the
+    /// function computes the masks for the high and low parts of the first and last words of the
+    /// `u256` element, reads the words at the specified offset and the next two offsets, and
+    /// computes the high and low parts of the `u256` element using the masks and the read words.
+    /// The resulting `u256` element is then returned.
     ///
     /// # Arguments
     ///
@@ -486,8 +495,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
 
     /// Expands the memory by a specified length
     ///
-    /// The function updates the `bytes_len` field of the `Memory` instance to reflect the new size of the memory
-    /// chunk,
+    /// The function updates the `bytes_len` field of the `Memory` instance to reflect the new size
+    /// of the memory chunk,
     ///
     /// # Arguments
     ///
@@ -508,10 +517,10 @@ impl InternalMemoryMethods of InternalMemoryTrait {
 
 
     /// Stores the first word of a span of bytes in the memory chunk at a specified offset.
-    /// The function computes the high part of the word by dividing the current word at the specified offset
-    /// by the mask, and computes the low part of the word by loading the remaining bytes from the span of bytes. It
-    /// then combines the high and low parts of the word using the mask and stores the resulting word in the memory
-    /// chunk at the specified offset.
+    /// The function computes the high part of the word by dividing the current word at the
+    /// specified offset by the mask, and computes the low part of the word by loading the remaining
+    /// bytes from the span of bytes. It then combines the high and low parts of the word using the
+    /// mask and stores the resulting word in the memory chunk at the specified offset.
     ///
     /// # Arguments
     ///
@@ -523,7 +532,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     ///
     /// # Panics
     ///
-    /// This function panics if the resulting word cannot be converted to a `u128` - which should never happen.
+    /// This function panics if the resulting word cannot be converted to a `u128` - which should
+    /// never happen.
     #[inline(always)]
     fn store_first_word(
         ref self: Memory,
@@ -540,10 +550,10 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     }
 
     /// Stores the last word of a span of bytes in the memory chunk at a specified offset.
-    /// The function computes the low part of the word by taking the current word at the specified offset modulo the mask,
-    /// and computes the high part of the word by loading the remaining bytes from the span of bytes. It then combines
-    /// the high and low parts of the word using the mask and stores the resulting word in the memory chunk at the
-    /// specified offset.
+    /// The function computes the low part of the word by taking the current word at the specified
+    /// offset modulo the mask, and computes the high part of the word by loading the remaining
+    /// bytes from the span of bytes. It then combines the high and low parts of the word using the
+    /// mask and stores the resulting word in the memory chunk at the specified offset.
     ///
     /// # Arguments
     ///
@@ -555,7 +565,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     ///
     /// # Panics
     ///
-    /// This function panics if the resulting word cannot be converted to a `u128` - which should never happen.
+    /// This function panics if the resulting word cannot be converted to a `u128` - which should
+    /// never happen.
     #[inline(always)]
     fn store_last_word(
         ref self: Memory,
@@ -1023,7 +1034,7 @@ mod tests {
         let mut memory = MemoryTrait::new();
 
         // When
-        let bytes = Default::default().span();
+        let bytes = array![].span();
         memory.store_padded_segment(10, 10, bytes);
 
         // Then
@@ -1058,7 +1069,8 @@ mod tests {
         // Given
         let mut memory = MemoryTrait::new();
 
-        // Memory initialization with a value to verify that if the size is out of the bound bytes, 0's have been copied.
+        // Memory initialization with a value to verify that if the size is out of the bound bytes,
+        // 0's have been copied.
         // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
 
@@ -1082,7 +1094,8 @@ mod tests {
         // Given
         let mut memory = MemoryTrait::new();
 
-        // Memory initialization with a value to verify that if the size is out of the bound bytes, 0's have been copied.
+        // Memory initialization with a value to verify that if the size is out of the bound bytes,
+        // 0's have been copied.
         // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
 
@@ -1106,7 +1119,8 @@ mod tests {
         // Given
         let mut memory = MemoryTrait::new();
 
-        // Memory initialization with a value to verify that if the size is out of the bound bytes, 0's have been copied.
+        // Memory initialization with a value to verify that if the size is out of the bound bytes,
+        // 0's have been copied.
         // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 32);

@@ -294,7 +294,8 @@ fn test_eth_send_transaction_deploy_tx() {
     let value = 0;
 
     // When
-    // Set the contract address to the EOA address, so that the caller of the `eth_send_transaction` is an eoa
+    // Set the contract address to the EOA address, so that the caller of the `eth_send_transaction`
+    // is an eoa
     let tx = LegacyTransaction {
         chain_id: chain_id(),
         nonce: 0,
@@ -314,8 +315,8 @@ fn test_eth_send_transaction_deploy_tx() {
         .unwrap();
     assert(deploy_result == expected_address.to_bytes().span(), 'returndata not counter bytecode');
 
-    // Set back the contract address to Kakarot for the calculation of the deployed SN contract address, where we use a kakarot
-    // internal functions and thus must "mock" its address.
+    // Set back the contract address to Kakarot for the calculation of the deployed SN contract
+    // address, where we use a kakarot internal functions and thus must "mock" its address.
     let computed_sn_addr = kakarot_core.compute_starknet_address(expected_address);
     let CA = IAccountDispatcher { contract_address: computed_sn_addr };
     let bytecode = CA.bytecode();

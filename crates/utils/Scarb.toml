@@ -10,3 +10,6 @@ alexandria_data_structures = { path = "../alexandria_data_structures" }
 
 [tool]
 fmt.workspace = true
+
+[dev-dependencies]
+cairo_test.workspace = true

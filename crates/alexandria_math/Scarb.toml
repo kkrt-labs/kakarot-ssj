@@ -6,3 +6,6 @@ version = "0.1.0"
 
 [dependencies]
 utils = { path = "../utils" }
+
+[dev-dependencies]
+cairo_test = "2.6.4+nightly-2024-06-26"

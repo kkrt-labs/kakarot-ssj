@@ -1,6 +1,8 @@
 use core::starknet::account::{Call};
-//! The generic account that is deployed by Kakarot Core before being "specialized" into an Externally Owned Account or a Contract Account
-//! This aims at having only one class hash for all the contracts deployed by Kakarot, thus enforcing a unique and consistent address mapping Eth Address <=> Starknet Address
+//! The generic account that is deployed by Kakarot Core before being "specialized" into an
+//! Externally Owned Account or a Contract Account This aims at having only one class hash for all
+//! the contracts deployed by Kakarot, thus enforcing a unique and consistent address mapping Eth
+//! Address <=> Starknet Address
 
 use core::starknet::{ContractAddress, EthAddress, ClassHash};
 
@@ -30,7 +32,7 @@ pub trait IAccount<TContractState> {
     fn set_nonce(ref self: TContractState, nonce: u64);
 }
 
-#[starknet::contract]
+#[starknet::contract(account)]
 pub mod AccountContract {
     use contracts::components::ownable::IOwnable;
     use contracts::components::ownable::ownable_component::InternalTrait;
@@ -62,7 +64,6 @@ pub mod AccountContract {
     use utils::math::OverflowingMul;
     use utils::serialization::{deserialize_signature, deserialize_bytes, serialize_bytes};
     use utils::storage::{compute_storage_base_address};
-    use utils::traits::{StorageBaseAddressIntoFelt252};
 
     // Add ownable component
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);

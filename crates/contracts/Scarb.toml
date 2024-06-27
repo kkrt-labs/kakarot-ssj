@@ -21,3 +21,6 @@ casm-add-pythonic-hints = true
 
 [lib]
 name = "contracts"
+
+[dev-dependencies]
+cairo_test = "2.6.4+nightly-2024-06-26"

@@ -92,7 +92,7 @@ impl SystemOperations of SystemOperationsTrait {
         // The gas cost relative to the transfer is refunded.
         let sender_balance = self.env.state.get_account(self.message().target.evm).balance();
         if sender_balance < value {
-            self.return_data = Default::default().span();
+            self.return_data = array![].span();
             self.gas_left += message_call_gas.stipend;
             return self.stack.push(0);
         }
@@ -168,7 +168,7 @@ impl SystemOperations of SystemOperationsTrait {
         // The gas cost relative to the transfer is refunded.
         let sender_balance = self.env.state.get_account(self.message().target.evm).balance();
         if sender_balance < value {
-            self.return_data = Default::default().span();
+            self.return_data = array![].span();
             self.gas_left += message_call_gas.stipend;
             return self.stack.push(0);
         }
@@ -540,7 +540,7 @@ mod tests {
         ]
             .span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
             .expect('set code failed');
 
         // When
@@ -595,7 +595,7 @@ mod tests {
         // (+ 0x1 0x1)
         let deployed_bytecode = array![0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
             .expect('set code failed');
 
         // When
@@ -650,7 +650,7 @@ mod tests {
         ]
             .span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
             .expect('set code failed');
 
         // When
@@ -705,7 +705,7 @@ mod tests {
         // (+ 0x1 0x1)
         let deployed_bytecode = array![0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
             .expect('set code failed');
 
         // When
@@ -777,7 +777,7 @@ mod tests {
         ]
             .span();
         let eth_address: EthAddress = 0x100_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
             .expect('set code failed');
 
         // When
@@ -853,7 +853,7 @@ mod tests {
         ]
             .span();
         let eth_address: EthAddress = 0x100_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
             .expect('set code failed');
 
         // When
@@ -977,9 +977,9 @@ mod tests {
         //     import { getContractAddress } from 'viem'
 
         // const address = getContractAddress({
-        //   bytecode: '0x608060405234801561000f575f80fd5b506101438061001d5f395ff3fe608060405234801561000f575f80fd5b5060043610610034575f3560e01c80632e64cec1146100385780636057361d14610056575b5f80fd5b610040610072565b60405161004d919061009b565b60405180910390f35b610070600480360381019061006b91906100e2565b61007a565b005b5f8054905090565b805f8190555050565b5f819050919050565b61009581610083565b82525050565b5f6020820190506100ae5f83018461008c565b92915050565b5f80fd5b6100c181610083565b81146100cb575f80fd5b50565b5f813590506100dc816100b8565b92915050565b5f602082840312156100f7576100f66100b4565b5b5f610104848285016100ce565b9150509291505056fea2646970667358221220b5c3075f2f2034d039a227fac6dd314b052ffb2b3da52c7b6f5bc374d528ed3664736f6c63430008140033',
-        //   from: '0x00000000000000000065766d5f61646472657373',
-        //   opcode: 'CREATE2',
+        //   bytecode:
+        //   '0x608060405234801561000f575f80fd5b506101438061001d5f395ff3fe608060405234801561000f575f80fd5b5060043610610034575f3560e01c80632e64cec1146100385780636057361d14610056575b5f80fd5b610040610072565b60405161004d919061009b565b60405180910390f35b610070600480360381019061006b91906100e2565b61007a565b005b5f8054905090565b805f8190555050565b5f819050919050565b61009581610083565b82525050565b5f6020820190506100ae5f83018461008c565b92915050565b5f80fd5b6100c181610083565b81146100cb575f80fd5b50565b5f813590506100dc816100b8565b92915050565b5f602082840312156100f7576100f66100b4565b5b5f610104848285016100ce565b9150509291505056fea2646970667358221220b5c3075f2f2034d039a227fac6dd314b052ffb2b3da52c7b6f5bc374d528ed3664736f6c63430008140033',
+        //   from: '0x00000000000000000065766d5f61646472657373', opcode: 'CREATE2',
         //   salt: '0x00',
         // });
         // console.log(address)
@@ -1032,8 +1032,8 @@ mod tests {
         let ca_balance = 1000;
         fund_account_with_native_token(ca_address.starknet, native_token, ca_balance);
         let mut vm = VMBuilderTrait::new_with_presets().with_target(ca_address).build();
-        // - call `get_account` on an undeployed account, set its type to CA, its nonce to 1, its code to something
-        // to mock a cached CA that has not been committed yet.
+        // - call `get_account` on an undeployed account, set its type to CA, its nonce to 1, its
+        // code to something to mock a cached CA that has not been committed yet.
         let mut ca_account = vm.env.state.get_account(ca_address.evm);
         ca_account.set_code(array![0x1, 0x2, 0x3].span());
         ca_account.set_nonce(1);
@@ -1059,7 +1059,8 @@ mod tests {
         // Given
         let (native_token, _) = setup_contracts_for_testing();
 
-        // Deploy sender and recipiens EOAs, and CA that will be selfdestructed and funded with 100 tokens
+        // Deploy sender and recipiens EOAs, and CA that will be selfdestructed and funded with 100
+        // tokens
         let sender = starknet_backend::deploy('sender'.try_into().unwrap())
             .expect('failed deploy EOA',);
         let recipient = starknet_backend::deploy('recipient'.try_into().unwrap())
@@ -1075,7 +1076,8 @@ mod tests {
         // When
         vm.stack.push(recipient.evm.into()).unwrap();
         vm.exec_selfdestruct().expect('selfdestruct failed');
-        // Add a transfer from sender to CA - after it was selfdestructed in local state. This transfer should go through.
+        // Add a transfer from sender to CA - after it was selfdestructed in local state. This
+        // transfer should go through.
         let transfer = Transfer { sender, recipient: ca_address, amount: 150 };
         vm.env.state.add_transfer(transfer).unwrap();
         starknet_backend::commit(ref vm.env.state).expect('commit state failed');

@@ -63,7 +63,7 @@ impl CallHelpersImpl of CallHelpers {
         ret_offset: usize,
         ret_size: usize
     ) -> Result<(), EVMError> {
-        self.return_data = Default::default().span();
+        self.return_data = array![].span();
         if self.message().depth >= constants::STACK_MAX_DEPTH {
             self.gas_left += gas;
             return self.stack.push(0);
@@ -110,11 +110,11 @@ impl CallHelpersImpl of CallHelpers {
         let actual_returndata_len = min(result.return_data.len(), ret_size);
 
         let actual_return_data = result.return_data.slice(0, actual_returndata_len);
-        // TODO: Check if need to pad the memory with zeroes if result.return_data.len() < call_ctx.ret_size and memory is not empty at
-        // offset call_args.ret_offset + result.return_data.len()
+        // TODO: Check if need to pad the memory with zeroes if result.return_data.len() <
+        // call_ctx.ret_size and memory is not empty at offset call_args.ret_offset +
+        // result.return_data.len()
         self.memory.store_n(actual_return_data, ret_offset);
 
         Result::Ok(())
     }
 }
-

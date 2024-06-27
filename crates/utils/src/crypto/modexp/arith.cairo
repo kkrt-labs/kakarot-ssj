@@ -1,4 +1,5 @@
-// CREDITS: The implementation has been take from [aurora-engine](https://github.com/aurora-is-near/aurora-engine/tree/develop/engine-modexp)
+// CREDITS: The implementation has been take from
+// [aurora-engine](https://github.com/aurora-is-near/aurora-engine/tree/develop/engine-modexp)
 use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
 use core::option::OptionTrait;
 use core::traits::TryInto;

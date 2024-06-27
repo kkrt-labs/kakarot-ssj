@@ -1,4 +1,5 @@
-// CREDITS: The implementation has been take from [aurora-engine](https://github.com/aurora-is-near/aurora-engine/tree/develop/engine-modexp)
+// CREDITS: The implementation has been take from
+// [aurora-engine](https://github.com/aurora-is-near/aurora-engine/tree/develop/engine-modexp)
 use alexandria_data_structures::vec::VecTrait;
 use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
 use core::array::ArrayTrait;
@@ -311,7 +312,8 @@ impl MPNatTraitImpl of MPNatTrait {
             if x != 0 {
                 if !neg {
                     // b = a - b
-                    //TODO: optimize with [#720](https://github.com/kkrt-labs/kakarot-ssj/issues/720)
+                    //TODO: optimize with
+                    //[#720](https://github.com/kkrt-labs/kakarot-ssj/issues/720)
                     let mut tmp = MPNat { digits: a.digits.duplicate(), };
                     in_place_mul_sub(ref tmp.digits, ref b.digits, 1);
                     b = tmp;
@@ -344,7 +346,7 @@ impl MPNatTraitImpl of MPNatTrait {
         // exp must be stripped because it is iterated over in
         // big_wrapping_pow and modpow_montgomery, and a large
         // zero-padded exp leads to performance issues.
-        let (exp, exp_is_zero) = MPNatTrait::strip_leading_zeroes(exp);
+        let (exp, exp_is_zero) = Self::strip_leading_zeroes(exp);
 
         // base^0 is always 1, regardless of base.
         // Hence the result is 0 for (base^0) % 1, and 1
@@ -372,7 +374,8 @@ impl MPNatTraitImpl of MPNatTrait {
             match self.digits.len().checked_mul(exp_as_number) {
                 Option::Some(max_output_digits) => {
                     if (modulus.digits.len() > max_output_digits) {
-                        // Special case: modulus is larger than `base ^ exp`, so division is not relevant
+                        // Special case: modulus is larger than `base ^ exp`, so division is not
+                        // relevant
                         let mut scratch_space: Felt252Vec<Word> = Felt252VecImpl::new();
                         scratch_space.expand(max_output_digits).unwrap();
 
@@ -437,7 +440,8 @@ impl MPNatTraitImpl of MPNatTrait {
                     i += 1;
                 };
             } else {
-                // TODO: explore if we can avoid this clone and just use a copy to avoid deep cloning
+                // TODO: explore if we can avoid this clone and just use a copy to avoid deep
+                // cloning
                 let mut slice = modulus
                     .digits
                     .clone_slice(trailing_zeros, modulus.digits.len() - trailing_zeros);
@@ -459,7 +463,7 @@ impl MPNatTraitImpl of MPNatTrait {
         let mut x1 = base_copy.modpow_montgomery(exp, ref odd);
         let mut x2 = self.modpow_with_power_of_two(exp, ref power_of_two);
 
-        let mut odd_inv = MPNatTrait::koc_2017_inverse(
+        let mut odd_inv = Self::koc_2017_inverse(
             ref odd, trailing_zeros * WORD_BITS + additional_zero_bits
         );
 
@@ -665,7 +669,8 @@ impl MPNatTraitImpl of MPNatTrait {
     /// # Arguments
     /// * `input` a Span<u8> in little endian
     /// # Returns
-    /// * (Span<8>, bool), where span is the resulting Span after removing leading zeroes, and the boolean indicates if all bytes were zero
+    /// * (Span<8>, bool), where span is the resulting Span after removing leading zeroes, and the
+    /// boolean indicates if all bytes were zero
     fn strip_leading_zeroes(mut v: Span<u8>) -> (Span<u8>, bool) {
         loop {
             let stripped_span = v;

@@ -1,5 +1,6 @@
 use core::keccak::u128_split;
 use core::num::traits::{Zero, One, BitSize};
+use core::ops;
 use core::starknet::secp256_trait::Secp256PointTrait;
 use integer::{
     u256, u256_overflow_mul as u256_overflowing_mul, u256_overflowing_add, u512, BoundedInt,
@@ -109,7 +110,7 @@ impl WrappingExponentiationImpl<
     +Drop<T>,
     +PartialEq<T>,
     +PartialOrd<T>,
-    +SubEq<T>
+    +core::ops::SubAssign<T, T>
 > of WrappingExponentiation<T> {
     fn wrapping_pow(self: T, exponent: T) -> T {
         if exponent == Zero::zero() {
@@ -180,7 +181,8 @@ trait SaturatingAdd<T> {
     /// * `rhs` - The second operand of type `T` in the addition.
     ///
     /// # Returns
-    /// - The result of the addition, of type `T`, saturating at the numeric bounds instead of overflowing.
+    /// - The result of the addition, of type `T`, saturating at the numeric bounds instead of
+    /// overflowing.
     fn saturating_add(self: T, rhs: T) -> T;
 }
 
@@ -391,7 +393,8 @@ trait WrappingMul<T> {
     /// - `rhs`: The second operand of type `T` in the multiplication.
     ///
     /// # Returns
-    /// - Returns the result of multiplying `self` by `rhs`, of type `T`. If overflow occurs, the higher bits are discarded.
+    /// - Returns the result of multiplying `self` by `rhs`, of type `T`. If overflow occurs, the
+    /// higher bits are discarded.
     fn wrapping_mul(self: T, rhs: T) -> T;
 }
 
