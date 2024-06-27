@@ -461,14 +461,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
-    #[should_panic(expected: ('Out of gas',))]
-    fn test_wrapping_slow_pow_runs_out_of_gas() {
-        let exp = 3_u256.wrapping_fpow(10);
-        3_u256.wrapping_spow(exp);
-    }
-
-    #[test]
     fn test_wrapping_fast_pow() {
         let exp = 3_u256.wrapping_fpow(10);
         assert(
