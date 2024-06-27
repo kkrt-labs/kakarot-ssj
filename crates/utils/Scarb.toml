@@ -13,3 +13,7 @@ fmt.workspace = true
 
 [dev-dependencies]
 cairo_test.workspace = true
+
+[scripts]
+test = "snforge test --max-n-steps 4294967295"
+test-profiling = "snforge test --max-n-steps 4294967295 --build-profile"
