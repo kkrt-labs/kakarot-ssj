@@ -100,7 +100,7 @@ fn serialize_bytes(self: Span<u8>) -> Array<felt252> {
 
 #[cfg(test)]
 mod tests {
-    use starknet::eth_signature::Signature;
+    use core::starknet::eth_signature::Signature;
     use utils::constants::CHAIN_ID;
     use utils::eth_transaction::TransactionType;
     use utils::serialization::{deserialize_signature, serialize_transaction_signature};

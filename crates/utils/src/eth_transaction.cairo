@@ -1,9 +1,9 @@
 use core::array::SpanTrait;
-use core::option::OptionTrait;
-use core::traits::TryInto;
 
-use keccak::cairo_keccak;
-use starknet::{EthAddress, eth_signature::{Signature, verify_eth_signature}};
+use core::keccak::cairo_keccak;
+use core::option::OptionTrait;
+use core::starknet::{EthAddress, eth_signature::{Signature, verify_eth_signature}};
+use core::traits::TryInto;
 use utils::errors::RLPErrorTrait;
 
 use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl, RLPHelpersErrorTrait};
@@ -14,13 +14,13 @@ use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
 
 #[derive(Copy, Clone, Drop, Serde, PartialEq, Debug)]
-struct AccessListItem {
-    ethereum_address: EthAddress,
-    storage_keys: Span<u256>
+pub struct AccessListItem {
+    pub ethereum_address: EthAddress,
+    pub storage_keys: Span<u256>
 }
 
 #[generate_trait]
-impl AccessListItemImpl of AccessListItemTrait {
+pub impl AccessListItemImpl of AccessListItemTrait {
     fn to_storage_keys(self: @AccessListItem) -> Span<(EthAddress, u256)> {
         let AccessListItem { ethereum_address, mut storage_keys } = *self;
 
@@ -40,7 +40,7 @@ impl AccessListItemImpl of AccessListItemTrait {
 
 
 #[derive(Drop)]
-struct TransactionMetadata {
+pub struct TransactionMetadata {
     address: EthAddress,
     account_nonce: u128,
     chain_id: u128,
@@ -48,7 +48,7 @@ struct TransactionMetadata {
 }
 
 #[derive(Drop, Copy, Clone, Serde, Debug)]
-struct LegacyTransaction {
+pub struct LegacyTransaction {
     chain_id: u128,
     nonce: u128,
     gas_price: u128,
@@ -59,7 +59,7 @@ struct LegacyTransaction {
 }
 
 #[derive(Drop, Copy, Clone, Serde, Debug)]
-struct AccessListTransaction {
+pub struct AccessListTransaction {
     chain_id: u128,
     nonce: u128,
     gas_price: u128,
@@ -71,7 +71,7 @@ struct AccessListTransaction {
 }
 
 #[derive(Drop, Copy, Clone, Serde, Debug)]
-struct FeeMarketTransaction {
+pub struct FeeMarketTransaction {
     chain_id: u128,
     nonce: u128,
     max_priority_fee_per_gas: u128,
@@ -84,7 +84,7 @@ struct FeeMarketTransaction {
 }
 
 #[derive(Drop, Serde, Debug)]
-enum EthereumTransaction {
+pub enum EthereumTransaction {
     LegacyTransaction: LegacyTransaction,
     AccessListTransaction: AccessListTransaction,
     FeeMarketTransaction: FeeMarketTransaction
@@ -184,7 +184,7 @@ pub impl EthereumTransactionImpl of EthereumTransactionTrait {
 }
 
 #[derive(Drop, PartialEq)]
-enum EncodedTransaction {
+pub enum EncodedTransaction {
     Legacy: Span<u8>,
     EIP1559: Span<u8>,
     EIP2930: Span<u8>,
@@ -209,7 +209,7 @@ fn deserialize_encoded_transaction(self: Span<u8>) -> Option<EncodedTransaction>
 }
 
 #[generate_trait]
-impl EncodedTransactionImpl of EncodedTransactionTrait {
+pub impl EncodedTransactionImpl of EncodedTransactionTrait {
     #[inline(always)]
     fn decode(self: EncodedTransaction) -> Result<EthereumTransaction, EthTransactionError> {
         match self {
@@ -407,13 +407,13 @@ impl EncodedTransactionImpl of EncodedTransactionTrait {
 }
 
 #[derive(Drop, PartialEq)]
-enum TransactionType {
+pub enum TransactionType {
     Legacy,
     EIP2930,
     EIP1559
 }
 
-impl TranscationTypeIntoU8Impl of Into<TransactionType, u8> {
+pub impl TranscationTypeIntoU8Impl of Into<TransactionType, u8> {
     fn into(self: TransactionType) -> u8 {
         match self {
             TransactionType::Legacy => { 0 },
@@ -423,7 +423,7 @@ impl TranscationTypeIntoU8Impl of Into<TransactionType, u8> {
     }
 }
 
-impl TryIntoTransactionTypeImpl of TryInto<u8, TransactionType> {
+pub impl TryIntoTransactionTypeImpl of TryInto<u8, TransactionType> {
     fn try_into(self: u8) -> Option<TransactionType> {
         if (self == 0) {
             return Option::Some(TransactionType::Legacy);
@@ -440,7 +440,7 @@ impl TryIntoTransactionTypeImpl of TryInto<u8, TransactionType> {
 }
 
 #[generate_trait]
-impl EthTransactionImpl of EthTransactionTrait {
+pub impl EthTransactionImpl of EthTransactionTrait {
     /// Decode a raw Ethereum transaction
     /// This function decodes a raw Ethereum transaction. It checks if the transaction
     /// is a legacy transaction or a modern transaction, and calls the appropriate decode function

@@ -1,8 +1,8 @@
 use core::array::ArrayTrait;
+use core::starknet::EthAddress;
 use core::traits::TryInto;
 
 use evm::errors::EVMError;
-use starknet::EthAddress;
 use utils::errors::RLPErrorTrait;
 use utils::helpers::{U8SpanExTrait, U64Trait, U256Trait, EthAddressExTrait, ArrayExtTrait, ToBytes};
 use utils::math::WrappingBitshift;
@@ -68,7 +68,7 @@ pub fn compute_create2_contract_address(
 #[cfg(test)]
 mod tests {
     use contracts::test_data::counter_evm_bytecode;
-    use starknet::EthAddress;
+    use core::starknet::EthAddress;
     use utils::address::{compute_contract_address, compute_create2_contract_address};
 
     #[test]

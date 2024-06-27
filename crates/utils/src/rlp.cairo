@@ -2,9 +2,10 @@ use core::array::ArrayTrait;
 use core::array::SpanTrait;
 use core::byte_array::ByteArrayTrait;
 use core::option::OptionTrait;
+use core::panic_with_felt252;
 use core::result::ResultTrait;
+use core::starknet::EthAddress;
 
-use starknet::EthAddress;
 use utils::errors::RLPHelpersErrorTrait;
 use utils::errors::{RLPError, RLPHelpersError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
 use utils::eth_transaction::AccessListItem;
@@ -12,19 +13,19 @@ use utils::helpers::{EthAddressExTrait, ArrayExtension, ToBytes, FromBytes};
 
 // Possible RLP types
 #[derive(Drop, PartialEq)]
-enum RLPType {
+pub enum RLPType {
     String,
     List
 }
 
 #[derive(Drop, Copy, PartialEq)]
-enum RLPItem {
+pub enum RLPItem {
     String: Span<u8>,
     List: Span<RLPItem>
 }
 
 #[generate_trait]
-impl RLPImpl of RLPTrait {
+pub impl RLPImpl of RLPTrait {
     /// Returns RLPType from the leading byte with
     /// its offset in the array as well as its size.
     ///
@@ -205,7 +206,7 @@ impl RLPImpl of RLPTrait {
 }
 
 #[generate_trait]
-impl RLPHelpersImpl of RLPHelpersTrait {
+pub impl RLPHelpersImpl of RLPHelpersTrait {
     fn parse_u128_from_string(self: RLPItem) -> Result<u128, RLPHelpersError> {
         match self {
             RLPItem::String(bytes) => {
@@ -339,11 +340,11 @@ impl RLPHelpersImpl of RLPHelpersTrait {
 mod tests {
     use core::array::SpanTrait;
     use core::option::OptionTrait;
+
+    use core::result::ResultTrait;
+
+    use core::starknet::eth_address::EthAddress;
     use core::traits::Into;
-
-    use result::ResultTrait;
-
-    use starknet::eth_address::EthAddress;
     use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
     use utils::eth_transaction::AccessListItem;
     use utils::rlp::{RLPType, RLPTrait, RLPItem, RLPHelpersTrait};
@@ -2540,7 +2541,7 @@ mod tests {
         let rlp_item = *decoded_data[0];
 
         let expected_access_list_item = AccessListItem {
-            ethereum_address: EthAddress { address: 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984 },
+            ethereum_address: 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.try_into().unwrap(),
             storage_keys: array![0x1, 0x2, 0x3, 0x4, 0x5].span()
         };
 

@@ -1,11 +1,11 @@
 // CREDITS: The implementation has been take from
 // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/tree/develop/engine-modexp)
 use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
+
+use core::integer::{u64_wide_mul, u64_overflowing_add, u64_overflowing_sub, u128_overflowing_add};
+use core::keccak::u128_split;
 use core::option::OptionTrait;
 use core::traits::TryInto;
-
-use integer::{u64_wide_mul, u64_overflowing_add, u64_overflowing_sub, u128_overflowing_add};
-use keccak::u128_split;
 use super::mpnat::{MPNat, Word, DoubleWord, WORD_BITS, BASE, DOUBLE_WORD_MAX, WORD_MAX};
 use utils::helpers::{Felt252VecTrait, U128Trait};
 use utils::math::WrappingBitshift;
@@ -616,7 +616,7 @@ mod tests {
     use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
     use core::result::ResultTrait;
     use core::traits::Into;
-    use integer::u128_wrapping_sub;
+    use core::integer::u128_wrapping_sub;
 
     use utils::crypto::modexp::arith::{
         mod_inv, monsq, monpro, compute_r_mod_n, in_place_shl, in_place_shr, big_wrapping_pow,

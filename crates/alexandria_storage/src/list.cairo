@@ -1,4 +1,4 @@
-use integer::U32DivRem;
+use core::integer::U32DivRem;
 use poseidon::poseidon_hash_span;
 use starknet::storage_access::{
     Store, StorageBaseAddress, storage_address_to_felt252, storage_address_from_base,

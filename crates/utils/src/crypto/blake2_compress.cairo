@@ -1,7 +1,7 @@
 use alexandria_data_structures::vec::{Felt252Vec, VecTrait};
+use core::integer::{BoundedInt, u64_wrapping_add};
 use core::num::traits::BitSize;
 use core::option::OptionTrait;
-use integer::{BoundedInt, u64_wrapping_add};
 use utils::math::{Bitshift, WrappingBitshift};
 
 /// SIGMA from [spec](https://datatracker.ietf.org/doc/html/rfc7693#section-2.7)

@@ -1,4 +1,4 @@
-use starknet::EthAddress;
+use core::starknet::EthAddress;
 use utils::set::{Set};
 use utils::traits::{U8IntoEthAddress};
 // FELT PRIME
@@ -37,7 +37,7 @@ const EMPTY_KECCAK: u256 = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bf
 const BURN_ADDRESS: felt252 = 0xdead;
 
 //PRECOMPILES
-fn precompile_addresses() -> Set<EthAddress> {
+pub fn precompile_addresses() -> Set<EthAddress> {
     let inner: Array<EthAddress> = array![
         0x01_u8.into(),
         0x02_u8.into(),
