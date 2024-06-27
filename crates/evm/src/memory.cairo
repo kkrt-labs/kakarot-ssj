@@ -1034,7 +1034,7 @@ mod tests {
         let mut memory = MemoryTrait::new();
 
         // When
-        let bytes = Default::default().span();
+        let bytes = array![].span();
         memory.store_padded_segment(10, 10, bytes);
 
         // Then

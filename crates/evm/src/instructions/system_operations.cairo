@@ -540,7 +540,7 @@ mod tests {
         ]
             .span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
             .expect('set code failed');
 
         // When
@@ -595,7 +595,7 @@ mod tests {
         // (+ 0x1 0x1)
         let deployed_bytecode = array![0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
             .expect('set code failed');
 
         // When
@@ -650,7 +650,7 @@ mod tests {
         ]
             .span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
             .expect('set code failed');
 
         // When
@@ -705,7 +705,7 @@ mod tests {
         // (+ 0x1 0x1)
         let deployed_bytecode = array![0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
             .expect('set code failed');
 
         // When
@@ -777,7 +777,7 @@ mod tests {
         ]
             .span();
         let eth_address: EthAddress = 0x100_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
             .expect('set code failed');
 
         // When
@@ -853,7 +853,7 @@ mod tests {
         ]
             .span();
         let eth_address: EthAddress = 0x100_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, Default::default().span())
+        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
             .expect('set code failed');
 
         // When

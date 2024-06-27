@@ -268,8 +268,6 @@ mod tests {
         use evm::state::{StateChangeLog, StateChangeLogTrait};
         use evm::test_utils;
         use utils::set::{Set, SetTrait};
-        use utils::traits::StorageBaseAddressIntoFelt252;
-
 
         #[test]
         fn test_read_empty_log() {
@@ -332,7 +330,7 @@ mod tests {
             );
             let expected_account = Account {
                 address: Address { evm: evm_address, starknet: starknet_address },
-                code: Default::default().span(),
+                code: array![].span(),
                 nonce: 0,
                 balance: 0,
                 selfdestruct: false,
