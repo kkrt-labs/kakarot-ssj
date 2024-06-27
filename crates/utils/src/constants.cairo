@@ -6,8 +6,6 @@ use utils::traits::{U8IntoEthAddress};
 const FELT252_PRIME: u256 = 0x800000000000011000000000000000000000000000000000000000000000001;
 
 // Prefix used to compute the address of a Starknet contract being deployed.
-//
-// 
 // <https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/starknet/core/os/contract_address/contract_address.cairo>
 const CONTRACT_ADDRESS_PREFIX: felt252 = 'STARKNET_CONTRACT_ADDRESS';
 

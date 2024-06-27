@@ -1141,9 +1141,6 @@ fn compute_starknet_address(
     // Deployer is always 0
     // pedersen(a1, a2, a3) is defined as:
     // pedersen(pedersen(pedersen(a1, a2), a3), len([a1, a2, a3]))
-    //
-    //
-    // 
     // https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/hash_state.py#L6
     // https://github.com/xJonathanLEI/starknet-rs/blob/master/starknet-core/src/crypto.rs#L49
     // Constructor Calldata For an Account, the constructor calldata is:

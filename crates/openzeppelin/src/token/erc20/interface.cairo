@@ -7,8 +7,6 @@
 // Scarb does not have real version solving algorithm yet.
 // Perhaps in the future this conflict could be resolved, but currently,
 // please upgrade your dependencies to use latest versions of their dependencies.
-//
-//
 // Credits: "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.7.0"
 
 // SPDX-License-Identifier: MIT
