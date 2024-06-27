@@ -240,7 +240,8 @@ mod tests {
         let key = 100;
         let evm_address = test_utils::evm_address();
 
-        // The values can be computed externally by running a Rust program using the `starknet_crypto` crate and `poseidon_hash_many`.
+        // The values can be computed externally by running a Rust program using the
+        // `starknet_crypto` crate and `poseidon_hash_many`.
         // ```rust
         //     use starknet_crypto::{FieldElement,poseidon_hash_many};
         // use crypto_bigint::{U256};

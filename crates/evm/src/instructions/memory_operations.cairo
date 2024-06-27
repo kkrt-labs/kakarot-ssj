@@ -662,7 +662,8 @@ mod tests {
 
         // Then
         let pc = vm.pc();
-        // ideally we should assert that it incremented, but incrementing is done by `decode_and_execute`
+        // ideally we should assert that it incremented, but incrementing is done by
+        // `decode_and_execute`
         // so we can assume that will be done
         assert(pc == old_pc, 'PC should be same');
     }
@@ -706,7 +707,8 @@ mod tests {
 
         // Then
         let pc = vm.pc();
-        // ideally we should assert that it incremented, but incrementing is done by `decode_and_execute`
+        // ideally we should assert that it incremented, but incrementing is done by
+        // `decode_and_execute`
         // so we can assume that will be done
         assert(pc == old_pc, 'PC should be same');
     }

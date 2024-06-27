@@ -1069,7 +1069,8 @@ mod tests {
         // Given
         let mut memory = MemoryTrait::new();
 
-        // Memory initialization with a value to verify that if the size is out of the bound bytes, 0's have been copied.
+        // Memory initialization with a value to verify that if the size is out of the bound bytes,
+        // 0's have been copied.
         // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
 
@@ -1093,7 +1094,8 @@ mod tests {
         // Given
         let mut memory = MemoryTrait::new();
 
-        // Memory initialization with a value to verify that if the size is out of the bound bytes, 0's have been copied.
+        // Memory initialization with a value to verify that if the size is out of the bound bytes,
+        // 0's have been copied.
         // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
 
@@ -1117,7 +1119,8 @@ mod tests {
         // Given
         let mut memory = MemoryTrait::new();
 
-        // Memory initialization with a value to verify that if the size is out of the bound bytes, 0's have been copied.
+        // Memory initialization with a value to verify that if the size is out of the bound bytes,
+        // 0's have been copied.
         // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 32);

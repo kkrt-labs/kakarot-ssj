@@ -550,7 +550,7 @@ mod tests {
         // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0,
         // 0]
         // expected rlp decoding:
-        // 
+        //
         // ["0x","0x0a","0x061a80","0x","0x0186a0","0x600160010a5060006000f3","0x4b4b5254","0x","0x"]
         let data = legacy_rlp_encoded_deploy_tx();
 
