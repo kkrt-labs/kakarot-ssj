@@ -1,21 +1,24 @@
 use alexandria_data_structures::vec::VecTrait;
 use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
-use cmp::min;
 use core::array::ArrayTrait;
 use core::array::SpanTrait;
+use core::cmp::min;
 use core::hash::{HashStateExTrait, HashStateTrait};
-use core::num::traits::{Zero, One, BitSize};
-use core::pedersen::{HashState, PedersenTrait};
-use core::traits::TryInto;
+use core::integer::{BoundedInt, u32_as_non_zero, U32TryIntoNonZero};
+use core::integer::{u32_overflowing_add};
 
-use integer::{BoundedInt, u32_as_non_zero, U32TryIntoNonZero};
-use integer::{u32_overflowing_add};
-use keccak::{cairo_keccak, u128_split};
-use starknet::{
+use core::integer;
+use core::keccak::{cairo_keccak, u128_split};
+use core::num::traits::{Zero, One, BitSize};
+use core::panic_with_felt252;
+use core::pedersen::{HashState, PedersenTrait};
+use core::starknet::{
     EthAddress, EthAddressIntoFelt252, ContractAddress, ClassHash,
     eth_signature::{Signature as EthSignature}
 };
-use traits::DivRem;
+use core::traits::DivRem;
+use core::traits::TryInto;
+
 use utils::constants::{
     POW_256_0, POW_256_1, POW_256_2, POW_256_3, POW_256_4, POW_256_5, POW_256_6, POW_256_7,
     POW_256_8, POW_256_9, POW_256_10, POW_256_11, POW_256_12, POW_256_13, POW_256_14, POW_256_15,
@@ -39,7 +42,7 @@ use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, TryIntoResul
 /// # Examples
 /// ceil32(2) = 32
 /// ceil32(34) = 64
-fn ceil32(value: usize) -> usize {
+pub fn ceil32(value: usize) -> usize {
     let ceiling = 32_u32;
     let (_q, r) = DivRem::div_rem(value, ceiling.try_into().unwrap());
     if r == 0_u8.into() {
@@ -50,7 +53,7 @@ fn ceil32(value: usize) -> usize {
 }
 
 /// Computes 256 ** (16 - i) for 0 <= i <= 16.
-fn pow256_rev(i: usize) -> u256 {
+pub fn pow256_rev(i: usize) -> u256 {
     if (i > 16) {
         panic_with_felt252('pow256_rev: i > 16');
     }
@@ -93,7 +96,7 @@ fn pow256_rev(i: usize) -> u256 {
 }
 
 // Computes 2**pow for 0 <= pow < 128.
-fn pow2(pow: usize) -> u128 {
+pub fn pow2(pow: usize) -> u128 {
     if pow == 0 {
         return 0x1;
     } else if pow == 1 {
@@ -357,13 +360,13 @@ fn pow2(pow: usize) -> u128 {
 
 
 /// Splits a u256 into `len` bytes, big-endian, and appends the result to `dst`.
-fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
+pub fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
     let word_le = split_word_le(value, len);
     let word_be = ArrayExtTrait::reverse(word_le.span());
     ArrayExtTrait::concat(ref dst, word_be.span());
 }
 
-fn split_u128_le(ref dest: Array<u8>, mut value: u128, mut len: usize) {
+pub fn split_u128_le(ref dest: Array<u8>, mut value: u128, mut len: usize) {
     loop {
         if len == 0 {
             assert(value == 0, 'split_words:value not 0');
@@ -376,7 +379,7 @@ fn split_u128_le(ref dest: Array<u8>, mut value: u128, mut len: usize) {
 }
 
 /// Splits a u256 into `len` bytes, little-endian, and returns the bytes array.
-fn split_word_le(mut value: u256, mut len: usize) -> Array<u8> {
+pub fn split_word_le(mut value: u256, mut len: usize) -> Array<u8> {
     let mut dst: Array<u8> = ArrayTrait::new();
     let low_len = min(len, 16);
     split_u128_le(ref dst, value.low, low_len);
@@ -386,7 +389,7 @@ fn split_word_le(mut value: u256, mut len: usize) -> Array<u8> {
 }
 
 /// Splits a u256 into 16 bytes, big-endian, and appends the result to `dst`.
-fn split_word_128(value: u256, ref dst: Array<u8>) {
+pub fn split_word_128(value: u256, ref dst: Array<u8>) {
     split_word(value, 16, ref dst)
 }
 
@@ -399,7 +402,7 @@ fn split_word_128(value: u256, ref dst: Array<u8>) {
 ///
 /// # Returns
 /// The packed u256
-fn load_word(mut len: usize, words: Span<u8>) -> u256 {
+pub fn load_word(mut len: usize, words: Span<u8>) -> u256 {
     if len == 0 {
         return 0;
     }
@@ -428,7 +431,7 @@ fn load_word(mut len: usize, words: Span<u8>) -> u256 {
 ///
 /// # Returns
 /// The bytes array representation of the value.
-fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
+pub fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
     let mut counter = 0;
     let mut bytes_arr: Array<u8> = ArrayTrait::new();
     // low part
@@ -466,7 +469,7 @@ fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
 }
 
 #[generate_trait]
-impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
+pub impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
     // Concatenates two arrays by adding the elements of arr2 to arr1.
     fn concat<+Copy<T>>(ref self: Array<T>, mut arr2: Span<T>) {
         loop {
@@ -524,7 +527,7 @@ impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
 }
 
 #[generate_trait]
-impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
+pub impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
     // Returns true if the array contains an item.
     fn contains<+PartialEq<T>>(mut self: Span<T>, value: T) -> bool {
         loop {
@@ -553,7 +556,7 @@ impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
 }
 
 #[generate_trait]
-impl U8SpanExImpl of U8SpanExTrait {
+pub impl U8SpanExImpl of U8SpanExTrait {
     // keccack256 on a bytes message
     fn compute_keccak256_hash(self: Span<u8>) -> u256 {
         let (mut keccak_input, last_input_word, last_input_num_bytes) = self.to_u64_words();
@@ -723,7 +726,7 @@ impl U8SpanExImpl of U8SpanExTrait {
 }
 
 #[generate_trait]
-impl U64Impl of U64Trait {
+pub impl U64Impl of U64Trait {
     /// Returns the number of trailing zeroes in the bit representation of `self`.
     /// # Arguments
     /// * `self` a `u64` value.
@@ -753,7 +756,7 @@ impl U64Impl of U64Trait {
 
 
 #[generate_trait]
-impl U128Impl of U128Trait {
+pub impl U128Impl of U128Trait {
     /// Returns the Least signficant 64 bits of a u128
     fn as_u64(self: u128) -> u64 {
         let (_, bottom_word) = u128_split(self);
@@ -762,7 +765,7 @@ impl U128Impl of U128Trait {
 }
 
 #[generate_trait]
-impl U256Impl of U256Trait {
+pub impl U256Impl of U256Trait {
     /// Splits an u256 into 4 little endian u64.
     /// Returns ((high_high, high_low),(low_high, low_low))
     fn split_into_u64_le(self: u256) -> ((u64, u64), (u64, u64)) {
@@ -779,7 +782,7 @@ impl U256Impl of U256Trait {
     }
 }
 
-trait ToBytes<T> {
+pub trait ToBytes<T> {
     /// Unpacks a type T into a span of big endian bytes
     ///
     /// # Arguments
@@ -814,7 +817,7 @@ trait ToBytes<T> {
     fn to_le_bytes_padded(self: T) -> Span<u8>;
 }
 
-impl ToBytesImpl<
+pub impl ToBytesImpl<
     T,
     +Zero<T>,
     +One<T>,
@@ -892,7 +895,7 @@ impl ToBytesImpl<
     }
 }
 
-trait FromBytes<T> {
+pub trait FromBytes<T> {
     /// Parses a span of big endian bytes into a type T
     ///
     /// # Arguments
@@ -913,7 +916,7 @@ trait FromBytes<T> {
     fn from_le_bytes(self: Span<u8>) -> Option<T>;
 }
 
-impl FromBytesImpl<
+pub impl FromBytesImpl<
     T,
     +Zero<T>,
     +One<T>,
@@ -989,7 +992,7 @@ impl FromBytesImpl<
 
 
 #[generate_trait]
-impl ByteArrayExt of ByteArrayExTrait {
+pub impl ByteArrayExt of ByteArrayExTrait {
     fn append_span_bytes(ref self: ByteArray, mut bytes: Span<u8>) {
         loop {
             match bytes.pop_front() {
@@ -1124,7 +1127,7 @@ impl ByteArrayExt of ByteArrayExTrait {
 }
 
 #[generate_trait]
-impl ResultExImpl<T, E, +Drop<T>, +Drop<E>> of ResultExTrait<T, E> {
+pub impl ResultExImpl<T, E, +Drop<T>, +Drop<E>> of ResultExTrait<T, E> {
     /// Converts a Result<T,E> to a Result<T,F>
     fn map_err<F, +Drop<F>>(self: Result<T, E>, err: F) -> Result<T, F> {
         match self {
@@ -1135,7 +1138,7 @@ impl ResultExImpl<T, E, +Drop<T>, +Drop<E>> of ResultExTrait<T, E> {
 }
 
 
-fn compute_starknet_address(
+pub fn compute_starknet_address(
     kakarot_address: ContractAddress, evm_address: EthAddress, class_hash: ClassHash
 ) -> ContractAddress {
     // Deployer is always 0
@@ -1167,7 +1170,7 @@ fn compute_starknet_address(
 
 
 #[generate_trait]
-impl EthAddressExImpl of EthAddressExTrait {
+pub impl EthAddressExImpl of EthAddressExTrait {
     fn to_bytes(self: EthAddress) -> Array<u8> {
         let bytes_used: u256 = 20;
         let value: u256 = self.into();
@@ -1213,7 +1216,7 @@ impl EthAddressExImpl of EthAddressExTrait {
 }
 
 
-trait BytesUsedTrait<T> {
+pub trait BytesUsedTrait<T> {
     /// Returns the number of bytes used to represent a `T` value.
     /// # Arguments
     /// * `self` - The value to check.
@@ -1222,7 +1225,7 @@ trait BytesUsedTrait<T> {
     fn bytes_used(self: T) -> u8;
 }
 
-impl U8BytesUsedTraitImpl of BytesUsedTrait<u8> {
+pub impl U8BytesUsedTraitImpl of BytesUsedTrait<u8> {
     fn bytes_used(self: u8) -> u8 {
         if self == 0 {
             return 0;
@@ -1232,7 +1235,7 @@ impl U8BytesUsedTraitImpl of BytesUsedTrait<u8> {
     }
 }
 
-impl USizeBytesUsedTraitImpl of BytesUsedTrait<usize> {
+pub impl USizeBytesUsedTraitImpl of BytesUsedTrait<usize> {
     fn bytes_used(self: usize) -> u8 {
         if self < 0x10000 { // 256^2
             if self < 0x100 { // 256^1
@@ -1252,7 +1255,7 @@ impl USizeBytesUsedTraitImpl of BytesUsedTrait<usize> {
     }
 }
 
-impl U64BytesUsedTraitImpl of BytesUsedTrait<u64> {
+pub impl U64BytesUsedTraitImpl of BytesUsedTrait<u64> {
     fn bytes_used(self: u64) -> u8 {
         if self <= BoundedInt::<u32>::max().into() { // 256^4
             return BytesUsedTrait::<u32>::bytes_used(self.try_into().unwrap());
@@ -1276,7 +1279,7 @@ impl U64BytesUsedTraitImpl of BytesUsedTrait<u64> {
     }
 }
 
-impl U128BytesTraitUsedImpl of BytesUsedTrait<u128> {
+pub impl U128BytesTraitUsedImpl of BytesUsedTrait<u128> {
     fn bytes_used(self: u128) -> u8 {
         let (u64high, u64low) = u128_split(self);
         if u64high == 0 {
@@ -1287,7 +1290,7 @@ impl U128BytesTraitUsedImpl of BytesUsedTrait<u128> {
     }
 }
 
-impl U256BytesUsedTraitImpl of BytesUsedTrait<u256> {
+pub impl U256BytesUsedTraitImpl of BytesUsedTrait<u256> {
     fn bytes_used(self: u256) -> u8 {
         if self.high == 0 {
             return BytesUsedTrait::<u128>::bytes_used(self.low.try_into().unwrap());
@@ -1297,17 +1300,17 @@ impl U256BytesUsedTraitImpl of BytesUsedTrait<u256> {
     }
 }
 
-trait ByteSize<T> {
+pub trait ByteSize<T> {
     fn byte_size() -> usize;
 }
 
-impl ByteSizeImpl<T, +BitSize<T>> of ByteSize<T> {
+pub impl ByteSizeImpl<T, +BitSize<T>> of ByteSize<T> {
     fn byte_size() -> usize {
         BitSize::<T>::bits() / 8
     }
 }
 
-trait BitsUsed<T> {
+pub trait BitsUsed<T> {
     /// Returns the number of bits required to represent `self`, ignoring leading zeros.
     /// # Arguments
     /// `self` - The value to check.
@@ -1323,7 +1326,7 @@ trait BitsUsed<T> {
     fn count_leading_zeroes(self: T) -> u32;
 }
 
-impl BitsUsedImpl<
+pub impl BitsUsedImpl<
     T,
     +Zero<T>,
     +One<T>,
@@ -1401,7 +1404,7 @@ mod bits_used_internal {
 }
 
 #[derive(Drop, Debug, PartialEq)]
-enum Felt252VecTraitErrors {
+pub enum Felt252VecTraitErrors {
     IndexOutOfBound,
     Overflow,
     LengthIsNotSame,
@@ -1409,7 +1412,7 @@ enum Felt252VecTraitErrors {
 }
 
 #[generate_trait]
-impl Felt252VecTraitImpl<
+pub impl Felt252VecTraitImpl<
     T,
     +Drop<T>,
     +Copy<T>,

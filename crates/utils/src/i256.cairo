@@ -1,27 +1,27 @@
-use integer::{u256_try_as_non_zero, BoundedInt};
+use core::integer::{u256_try_as_non_zero, BoundedInt};
 use utils::constants::POW_2_127;
 use utils::math::{Bitshift, Exponentiation};
 
 #[derive(Copy, Drop, PartialEq)]
-struct i256 {
+pub struct i256 {
     value: u256,
 }
 
-impl U256IntoI256 of Into<u256, i256> {
+pub impl U256IntoI256 of Into<u256, i256> {
     #[inline(always)]
     fn into(self: u256) -> i256 {
         i256 { value: self }
     }
 }
 
-impl I256IntoU256 of Into<i256, u256> {
+pub impl I256IntoU256 of Into<i256, u256> {
     #[inline(always)]
     fn into(self: i256) -> u256 {
         self.value
     }
 }
 
-impl I256PartialOrd of PartialOrd<i256> {
+pub impl I256PartialOrd of PartialOrd<i256> {
     #[inline(always)]
     fn le(lhs: i256, rhs: i256) -> bool {
         !(rhs < lhs)
@@ -57,14 +57,14 @@ impl I256PartialOrd of PartialOrd<i256> {
     }
 }
 
-impl I256Div of Div<i256> {
+pub impl I256Div of Div<i256> {
     fn div(lhs: i256, rhs: i256) -> i256 {
         let (q, _) = i256_signed_div_rem(lhs, rhs.value.try_into().expect('Division by 0'));
         return q.into();
     }
 }
 
-impl I256Rem of Rem<i256> {
+pub impl I256Rem of Rem<i256> {
     fn rem(lhs: i256, rhs: i256) -> i256 {
         let (_, r) = i256_signed_div_rem(lhs, rhs.value.try_into().expect('Division by 0'));
         return r.into();

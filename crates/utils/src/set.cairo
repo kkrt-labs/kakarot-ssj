@@ -1,11 +1,11 @@
 use utils::helpers::{SpanExtTrait, ArrayExtTrait};
 
 #[derive(Drop, PartialEq)]
-struct Set<T> {
+pub struct Set<T> {
     inner: Array<T>
 }
 
-impl SetDefault<T, +Drop<T>> of Default<Set<T>> {
+pub impl SetDefault<T, +Drop<T>> of Default<Set<T>> {
     #[inline]
     fn default() -> Set<T> {
         let arr: Array<T> = Default::default();
@@ -15,7 +15,7 @@ impl SetDefault<T, +Drop<T>> of Default<Set<T>> {
 
 
 #[generate_trait]
-impl SetImpl<T, +Drop<T>, +Copy<T>> of SetTrait<T> {
+pub impl SetImpl<T, +Drop<T>, +Copy<T>> of SetTrait<T> {
     #[inline]
     fn new() -> Set<T> {
         Set { inner: Default::default() }
@@ -68,7 +68,7 @@ impl SetImpl<T, +Drop<T>, +Copy<T>> of SetTrait<T> {
     }
 }
 
-impl SetTCloneImpl<T, +Clone<T>, +Drop<T>, +PartialEq<T>, +Copy<T>> of Clone<Set<T>> {
+pub impl SetTCloneImpl<T, +Clone<T>, +Drop<T>, +PartialEq<T>, +Copy<T>> of Clone<Set<T>> {
     fn clone(self: @Set<T>) -> Set<T> {
         let mut response: Array<T> = Default::default();
         let mut span = self.to_span();
@@ -83,11 +83,11 @@ impl SetTCloneImpl<T, +Clone<T>, +Drop<T>, +PartialEq<T>, +Copy<T>> of Clone<Set
 }
 
 #[derive(Copy, Drop, PartialEq)]
-struct SpanSet<T> {
+pub struct SpanSet<T> {
     inner: @Set<T>
 }
 
-impl SpanSetDefault<T, +Drop<T>> of Default<SpanSet<T>> {
+pub impl SpanSetDefault<T, +Drop<T>> of Default<SpanSet<T>> {
     #[inline]
     fn default() -> SpanSet<T> {
         let set: Set<T> = Default::default();
@@ -96,11 +96,11 @@ impl SpanSetDefault<T, +Drop<T>> of Default<SpanSet<T>> {
 }
 
 
-// impl SpanSetCopy<T> of Copy<SpanSet<T>>;
-// impl SpanSetDrop<T> of Drop<SpanSet<T>>;
+// pub impl SpanSetCopy<T> of Copy<SpanSet<T>>;
+// pub impl SpanSetDrop<T> of Drop<SpanSet<T>>;
 
 #[generate_trait]
-impl SpanSetImpl<T, +Copy<T>, +Drop<T>> of SpanSetTrait<T> {
+pub impl SpanSetImpl<T, +Copy<T>, +Drop<T>> of SpanSetTrait<T> {
     #[inline]
     fn contains<+PartialEq<T>>(self: SpanSet<T>, item: T) -> bool {
         self.inner.contains(item)

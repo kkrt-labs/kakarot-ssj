@@ -31,13 +31,13 @@ const DOUBLE_WORD_MAX: DoubleWord = 340282366920938463463374607431768211455;
 /// The digits are stored in little-endian order, i.e. digits[0] is the least
 /// significant digit.
 #[derive(Destruct)]
-struct MPNat {
+pub struct MPNat {
     digits: Felt252Vec<u64>
 }
 
 
 #[generate_trait]
-impl MPNatTraitImpl of MPNatTrait {
+pub impl MPNatTraitImpl of MPNatTrait {
     fn from_big_endian(bytes: Span<u8>) -> MPNat {
         if bytes.is_empty() {
             let mut digits = Default::default();

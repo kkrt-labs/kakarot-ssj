@@ -1,20 +1,20 @@
 //! Utilities for kakarot standard library.
 
-mod address;
-mod checked_math;
-mod constants;
-mod crypto;
-mod errors;
-mod eth_transaction;
-mod fmt;
-mod helpers;
-mod i256;
-mod math;
-mod rlp;
-mod serialization;
-mod set;
-mod storage;
+pub mod address;
+pub mod checked_math;
+pub mod constants;
+pub mod crypto;
+pub mod errors;
+pub mod eth_transaction;
+pub mod fmt;
+pub mod helpers;
+pub mod i256;
+pub mod math;
+pub mod rlp;
+pub mod serialization;
+pub mod set;
+pub mod storage;
 
 mod test_data;
 
-mod traits;
+pub mod traits;

@@ -1,6 +1,6 @@
-use hash::{HashStateTrait, HashStateExTrait};
-use poseidon::PoseidonTrait;
-use starknet::{
+use core::hash::{HashStateTrait, HashStateExTrait};
+use core::poseidon::PoseidonTrait;
+use core::starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, Store, EthAddress, SyscallResult,
     storage_write_syscall, storage_address_from_base, storage_read_syscall,
     storage_address_from_base_and_offset
@@ -34,7 +34,7 @@ pub fn compute_storage_base_address(
 
 #[cfg(test)]
 mod tests {
-    use starknet::{
+    use core::starknet::{
         StorageBaseAddress, storage_base_address_from_felt252, storage_address_from_base
     };
     use utils::storage::compute_storage_base_address;

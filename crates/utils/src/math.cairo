@@ -1,23 +1,24 @@
-use core::keccak::u128_split;
-use core::num::traits::{Zero, One, BitSize};
-use core::ops;
-use core::starknet::secp256_trait::Secp256PointTrait;
-use integer::{
+use core::integer::{
     u256, u256_overflow_mul as u256_overflowing_mul, u256_overflowing_add, u512, BoundedInt,
     u128_overflowing_mul, u64_wide_mul, u64_to_felt252, u32_wide_mul, u32_to_felt252, u8_wide_mul,
     u16_to_felt252
 };
+use core::keccak::u128_split;
+use core::num::traits::{Zero, One, BitSize};
+use core::ops;
+use core::panic_with_felt252;
+use core::starknet::secp256_trait::Secp256PointTrait;
 
 // === Exponentiation ===
 
-trait Exponentiation<T> {
+pub trait Exponentiation<T> {
     /// Raise a number to a power.
     /// # Panics
     /// Panics if the result overflows the type T.
     fn pow(self: T, exponent: T) -> T;
 }
 
-impl ExponentiationImpl<
+pub impl ExponentiationImpl<
     T,
     +Zero<T>,
     +One<T>,
@@ -55,7 +56,7 @@ impl ExponentiationImpl<
     }
 }
 
-trait WrappingExponentiation<T> {
+pub trait WrappingExponentiation<T> {
     /// Raise a number to a power modulo MAX<T> (max value of type T).
     /// Instead of explicitly providing a modulo, we use overflowing functions
     /// from the core library, which wrap around when overflowing.
@@ -97,7 +98,7 @@ trait WrappingExponentiation<T> {
 }
 
 
-impl WrappingExponentiationImpl<
+pub impl WrappingExponentiationImpl<
     T,
     +OverflowingMul<T>,
     +Zero<T>,
@@ -169,7 +170,7 @@ impl WrappingExponentiationImpl<
     }
 }
 
-trait SaturatingAdd<T> {
+pub trait SaturatingAdd<T> {
     /// Adds two numbers, saturating at the numeric bounds instead of overflowing.
     /// # Examples
     /// ```
@@ -186,7 +187,7 @@ trait SaturatingAdd<T> {
     fn saturating_add(self: T, rhs: T) -> T;
 }
 
-impl SaturatingAddImpl<
+pub impl SaturatingAddImpl<
     T, +Add<T>, +Sub<T>, +BoundedInt<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>
 > of SaturatingAdd<T> {
     fn saturating_add(self: T, rhs: T) -> T {
@@ -202,7 +203,7 @@ impl SaturatingAddImpl<
 
 // === BitShift ===
 
-trait Bitshift<T> {
+pub trait Bitshift<T> {
     // Shift a number left by a given number of bits.
     // # Panics
     // Panics if the shift is greater than 255.
@@ -215,7 +216,7 @@ trait Bitshift<T> {
     fn shr(self: T, shift: T) -> T;
 }
 
-impl BitshiftImpl<
+pub impl BitshiftImpl<
     T,
     +Zero<T>,
     +One<T>,
@@ -250,7 +251,7 @@ impl BitshiftImpl<
     }
 }
 
-trait WrappingBitshift<T> {
+pub trait WrappingBitshift<T> {
     // Shift a number left by a given number of bits.
     // If the shift is greater than 255, the result is 0.
     // The bits moved after the 256th one are discarded, the new bits are set to 0.
@@ -261,7 +262,7 @@ trait WrappingBitshift<T> {
     fn wrapping_shr(self: T, shift: T) -> T;
 }
 
-impl WrappingBitshiftImpl<
+pub impl WrappingBitshiftImpl<
     T,
     +Zero<T>,
     +One<T>,
@@ -293,7 +294,7 @@ impl WrappingBitshiftImpl<
     }
 }
 
-trait OverflowingMul<T> {
+pub trait OverflowingMul<T> {
     /// Performs multiplication on two numbers of type `T`.
     ///
     /// This function multiplies two numbers and checks for overflow. If an overflow occurs,
@@ -319,7 +320,7 @@ trait OverflowingMul<T> {
     fn overflowing_mul(self: T, rhs: T) -> (T, bool);
 }
 
-impl U8OverflowingMul of OverflowingMul<u8> {
+pub impl U8OverflowingMul of OverflowingMul<u8> {
     fn overflowing_mul(self: u8, rhs: u8) -> (u8, bool) {
         let result = u8_wide_mul(self, rhs);
         let mask: u16 = BoundedInt::<u8>::max().into();
@@ -331,7 +332,7 @@ impl U8OverflowingMul of OverflowingMul<u8> {
     }
 }
 
-impl U16OverflowingMul of OverflowingMul<u16> {
+pub impl U16OverflowingMul of OverflowingMul<u16> {
     fn overflowing_mul(self: u16, rhs: u16) -> (u16, bool) {
         let result: u32 = self.into() * rhs.into();
         let mask: u32 = BoundedInt::<u8>::max().into();
@@ -344,7 +345,7 @@ impl U16OverflowingMul of OverflowingMul<u16> {
 }
 
 
-impl U32OverflowingMul of OverflowingMul<u32> {
+pub impl U32OverflowingMul of OverflowingMul<u32> {
     fn overflowing_mul(self: u32, rhs: u32) -> (u32, bool) {
         let result = u32_wide_mul(self, rhs);
 
@@ -356,7 +357,7 @@ impl U32OverflowingMul of OverflowingMul<u32> {
     }
 }
 
-impl U64OverflowingMul of OverflowingMul<u64> {
+pub impl U64OverflowingMul of OverflowingMul<u64> {
     fn overflowing_mul(self: u64, rhs: u64) -> (u64, bool) {
         let result = u64_wide_mul(self, rhs);
         let (top_word, bottom_word) = u128_split(result);
@@ -368,20 +369,20 @@ impl U64OverflowingMul of OverflowingMul<u64> {
     }
 }
 
-impl U128OverflowingMul of OverflowingMul<u128> {
+pub impl U128OverflowingMul of OverflowingMul<u128> {
     fn overflowing_mul(self: u128, rhs: u128) -> (u128, bool) {
         u128_overflowing_mul(self, rhs)
     }
 }
 
-impl U256OverflowingMul of OverflowingMul<u256> {
+pub impl U256OverflowingMul of OverflowingMul<u256> {
     fn overflowing_mul(self: u256, rhs: u256) -> (u256, bool) {
         u256_overflowing_mul(self, rhs)
     }
 }
 
 
-trait WrappingMul<T> {
+pub trait WrappingMul<T> {
     /// Performs multiplication on two numbers of type `T`, discarding any overflow.
     ///
     /// This function multiplies two numbers and applies a wrapping strategy for handling
@@ -398,7 +399,7 @@ trait WrappingMul<T> {
     fn wrapping_mul(self: T, rhs: T) -> T;
 }
 
-impl WrappingMulImpl<T, +OverflowingMul<T>> of WrappingMul<T> {
+pub impl WrappingMulImpl<T, +OverflowingMul<T>> of WrappingMul<T> {
     fn wrapping_mul(self: T, rhs: T) -> T {
         let (res, _) = self.overflowing_mul(rhs);
         res
@@ -412,7 +413,7 @@ impl WrappingMulImpl<T, +OverflowingMul<T>> of WrappingMul<T> {
 ///
 /// limb3 will always be 0, because the maximum sum of two 256-bit numbers is at most
 /// 2**257 - 2 which fits in 257 bits.
-fn u256_wide_add(a: u256, b: u256) -> u512 {
+pub fn u256_wide_add(a: u256, b: u256) -> u512 {
     let (sum, overflow) = u256_overflowing_add(a, b);
 
     let limb0 = sum.low;
@@ -431,7 +432,7 @@ fn u256_wide_add(a: u256, b: u256) -> u512 {
 
 #[cfg(test)]
 mod tests {
-    use integer::{u256_overflowing_add, BoundedInt, u512, u256_overflow_mul};
+    use core::integer::{u256_overflowing_add, BoundedInt, u512, u256_overflow_mul};
     use utils::math::{
         Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift,
         OverflowingMul, WrappingMul, SaturatingAdd

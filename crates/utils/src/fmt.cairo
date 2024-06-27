@@ -1,11 +1,11 @@
 use core::fmt::{Display, Debug, Formatter, Error};
-use starknet::{EthAddress, ContractAddress};
+use core::starknet::{EthAddress, ContractAddress};
 use utils::set::{SpanSet, SpanSetTrait};
 
 mod display_felt252_based {
     use core::fmt::{Display, Formatter, Error};
     use core::to_byte_array::AppendFormattedToByteArray;
-    impl TDisplay<T, +Into<T, felt252>, +Copy<T>> of Display<T> {
+    pub impl TDisplay<T, +Into<T, felt252>, +Copy<T>> of Display<T> {
         fn fmt(self: @T, ref f: Formatter) -> Result<(), Error> {
             let value: felt252 = (*self).into();
             let base: felt252 = 10_u8.into();
@@ -18,14 +18,14 @@ mod display_felt252_based {
 mod debug_display_based {
     use core::fmt::{Display, Debug, Formatter, Error};
     use core::to_byte_array::AppendFormattedToByteArray;
-    impl TDisplay<T, +Display<T>> of Debug<T> {
+    pub impl TDisplay<T, +Display<T>> of Debug<T> {
         fn fmt(self: @T, ref f: Formatter) -> Result<(), Error> {
             Display::fmt(self, ref f)
         }
     }
 }
 
-impl TSpanSetDebug<T, +Debug<T>, +Copy<T>, +Drop<T>> of Debug<SpanSet<T>> {
+pub impl TSpanSetDebug<T, +Debug<T>, +Copy<T>, +Drop<T>> of Debug<SpanSet<T>> {
     fn fmt(self: @SpanSet<T>, ref f: Formatter) -> Result<(), Error> {
         // For a reason I don't understand, the following code doesn't compile:
         // Debug::fmt(@(*self.to_span())sc, ref f)
