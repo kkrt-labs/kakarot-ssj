@@ -622,15 +622,16 @@ mod tests {
         mod_inv, monsq, monpro, compute_r_mod_n, in_place_shl, in_place_shr, big_wrapping_pow,
         big_wrapping_mul, big_sq, borrowing_sub, shifted_carrying_mul
     };
+    use utils::crypto::modexp::mpnat::tests::{mp_nat_to_u128};
     use utils::crypto::modexp::mpnat::{
         MPNat, MPNatTrait, WORD_MAX, DOUBLE_WORD_MAX, BASE, Word, DoubleWord, WORD_BYTES
     };
     use utils::helpers::{Felt252VecTrait, ToBytes};
     use utils::helpers::{U128Trait};
     use utils::math::{WrappingMul, WrappingBitshift, WrappingExponentiation};
-    use utils::crypto::modexp::mpnat::tests::{mp_nat_to_u128};
 
-    // the tests are taken from [aurora-engine](https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/arith.rs#L401)
+    // the tests are taken from
+    // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/arith.rs#L401)
 
     fn check_monsq(x: u128, n: u128) {
         let mut a = MPNatTrait::from_big_endian(x.to_be_bytes_padded());
