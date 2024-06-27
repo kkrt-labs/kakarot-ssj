@@ -154,6 +154,7 @@ mod internal {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
     use evm::instructions::Sha3Trait;
