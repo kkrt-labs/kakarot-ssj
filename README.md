@@ -234,7 +234,3 @@ Thanks goes to these wonderful people
 This project follows the
 [all-contributors](https://github.com/all-contributors/all-contributors)
 specification. Contributions of any kind welcome!
-
-<p align="center">
-    <img src="docs/img/kakarot_github_banner_footer.png" height="200">
-</p>
