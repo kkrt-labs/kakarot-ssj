@@ -1,6 +1,11 @@
 <p align="center">
-    <img src="docs/img/kakarot_github_banner.png" height="200">
+    <img src="docs/img/kakarot_github_banner.png" width="700">
 </p>
+<div align="center">
+  <h3 align="center">
+  Kakarot, the zkEVM written in Cairo.
+  </h3>
+</div>
 
 <div align="center">
 <br />
@@ -234,7 +239,3 @@ Thanks goes to these wonderful people
 This project follows the
 [all-contributors](https://github.com/all-contributors/all-contributors)
 specification. Contributions of any kind welcome!
-
-<p align="center">
-    <img src="docs/img/kakarot_github_banner_footer.png" height="200">
-</p>
