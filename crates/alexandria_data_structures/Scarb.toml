@@ -7,4 +7,4 @@ version = "0.1.0"
 [dependencies]
 
 [dev-dependencies]
-cairo_test = "2.6.4+nightly-2024-06-26"
+cairo_test = "2.7.0"

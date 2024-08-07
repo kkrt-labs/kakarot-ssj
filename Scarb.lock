@@ -6,21 +6,9 @@ name = "alexandria_data_structures"
 version = "0.1.0"
 
 [[package]]
-name = "alexandria_math"
-version = "0.1.0"
-dependencies = [
- "utils",
-]
-
-[[package]]
-name = "alexandria_storage"
-version = "0.1.0"
-
-[[package]]
 name = "contracts"
 version = "0.1.0"
 dependencies = [
- "alexandria_storage",
  "evm",
  "openzeppelin",
  "utils",
@@ -30,7 +18,6 @@ dependencies = [
 name = "evm"
 version = "0.1.0"
 dependencies = [
- "alexandria_math",
  "contracts",
  "openzeppelin",
  "utils",

@@ -1,8 +1,12 @@
-use alexandria_math::sha256::sha256;
+use core::circuit::CircuitInputs;
+use core::iter::IntoIterator;
 use evm::errors::EVMError;
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 use evm::precompiles::Precompile;
+use utils::helpers::{FromBytes, ToBytes};
+use core::sha256::compute_sha256_u32_array;
+use utils::helpers::Bitshift;
 use starknet::EthAddress;
 
 const BASE_COST: u128 = 60;
@@ -14,15 +18,37 @@ impl Sha256 of Precompile {
         EthAddress { address: 0x2 }
     }
 
-    fn exec(input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
+    fn exec(mut input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
         let data_word_size = ((input.len() + 31) / 32).into();
         let gas = BASE_COST + data_word_size * COST_PER_WORD;
 
-        let mut input_array = array![];
-        input_array.append_span(input);
-        let result = sha256(input_array);
+        let mut sha256_input: Array<u32> = array![];
+        while let Option::Some(bytes4) = input.multi_pop_front::<4>() {
+            let bytes4 = (*bytes4).unbox();
+            sha256_input.append(FromBytes::from_be_bytes(bytes4.span()).unwrap());
+        };
+        let (last_input_word, last_input_num_bytes) = if input.len() == 0 {
+            (0, 0)
+        } else {
+            let mut last_input_word: u32 = 0;
+            let mut last_input_num_bytes: u32 = 0;
+            while let Option::Some(byte) = input.pop_front() {
+                last_input_word = last_input_word.shl(8) + (*byte).into();
+                last_input_num_bytes += 1;
+            };
+            (last_input_word, last_input_num_bytes)
+        };
+        let result_words_32: [u32; 8] = compute_sha256_u32_array(
+            sha256_input, last_input_word, last_input_num_bytes
+        );
+        let mut result_bytes = array![];
+        for word in result_words_32
+            .span() {
+                let word_bytes = (*word).to_be_bytes();
+                result_bytes.append_span(word_bytes);
+            };
 
-        return Result::Ok((gas, result.span()));
+        return Result::Ok((gas, result_bytes.span()));
     }
 }
 
@@ -44,6 +70,21 @@ mod tests {
     #[test]
     fn test_sha_256_precompile() {
         let calldata = array![0xFF];
+
+        let (gas, result) = Sha256::exec(calldata.span()).unwrap();
+
+        let result: u256 = result.from_be_bytes().unwrap();
+        let expected_result = 0xa8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89;
+
+        assert_eq!(result, expected_result);
+        assert_eq!(gas, 72);
+    }
+
+    #[test]
+    fn test_sha_256_precompile_full_word() {
+        let calldata = ToBytes::to_bytes(
+            0xa8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89
+        );
 
         let (gas, result) = Sha256::exec(calldata.span()).unwrap();
 

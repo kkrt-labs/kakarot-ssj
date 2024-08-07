@@ -9,11 +9,10 @@ edition = "2023_10"
 starknet.workspace = true
 utils = { path = "../utils" }
 contracts = { path = "../contracts" }
-alexandria_math = { path = "../alexandria_math" }
 openzeppelin = { path = "../openzeppelin" }
 
 [tool]
 fmt.workspace = true
 
 [dev-dependencies]
-cairo_test = "2.6.4+nightly-2024-06-26"
+cairo_test = "2.7.0"
