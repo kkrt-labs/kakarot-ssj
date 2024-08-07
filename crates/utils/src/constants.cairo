@@ -21,7 +21,7 @@ const STACK_MAX_DEPTH: usize = 1024;
 
 // CODE
 const MAX_CODE_SIZE: usize = 0x6000;
-const MAX_INITCODE_SIZE: usize = consteval_int!(0x6000 * 2);
+const MAX_INITCODE_SIZE: usize = 0x6000 * 2;
 
 // KECCAK
 // The empty keccak256 hash, Solidity equivalent:

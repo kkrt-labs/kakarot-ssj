@@ -1,6 +1,6 @@
-mod erc20;
-mod interface;
+pub mod erc20;
+pub mod interface;
 
-use erc20::ERC20;
-use interface::ERC20ABIDispatcher;
-use interface::ERC20ABIDispatcherTrait;
+pub use erc20::ERC20;
+pub use interface::ERC20ABIDispatcher;
+pub use interface::ERC20ABIDispatcherTrait;

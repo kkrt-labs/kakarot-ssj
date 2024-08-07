@@ -1,7 +1,7 @@
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
 use core::hash::{HashStateTrait, HashStateExTrait};
-use core::integer::{u256_overflow_sub, u256_overflowing_add};
 use core::nullable::{match_nullable, FromNullableResult};
+use core::num::traits::{OverflowingAdd, OverflowingSub, OverflowingMul};
 use core::poseidon::PoseidonTrait;
 use core::starknet::SyscallResultTrait;
 use evm::backend::starknet_backend::fetch_original_storage;
@@ -173,12 +173,10 @@ impl StateImpl of StateTrait {
         let mut sender = self.get_account(transfer.sender.evm);
         let mut recipient = self.get_account(transfer.recipient.evm);
 
-        let (new_sender_balance, underflow) = u256_overflow_sub(sender.balance(), transfer.amount);
+        let (new_sender_balance, underflow) = sender.balance().overflowing_sub(transfer.amount);
         ensure(!underflow, EVMError::InsufficientBalance)?;
 
-        let (new_recipient_balance, overflow) = u256_overflowing_add(
-            recipient.balance, transfer.amount
-        );
+        let (new_recipient_balance, overflow) = recipient.balance.overflowing_add(transfer.amount);
         ensure(!overflow, EVMError::NumericOperations(BALANCE_OVERFLOW))?;
 
         sender.set_balance(new_sender_balance);

@@ -1,34 +1,29 @@
-// Due to the following error, we have to manually copy paste contracts from Open Zeppelin
-// error: Version solving failed:
-// - openzeppelin v0.7.0
-// (git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v0.7.0#61a2505fe0c0f19b5de2b3f8dedf421ba2cff657)
-// cannot use starknet v2.3.0-rc0 (std), because openzeppelin requires starknet >=2.2.0
-
-// Scarb does not have real version solving algorithm yet.
-// Perhaps in the future this conflict could be resolved, but currently,
-// please upgrade your dependencies to use latest versions of their dependencies.
-//
-//
+// We manually copy pasted contracts from Open Zeppelin
+// We adapted it to 2.7.0 version of Cairo
 // Credits: "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.7.0"
 
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts for Cairo v0.7.0 (token/erc20/erc20.cairo)
 
 #[starknet::contract]
-mod ERC20 {
-    use core::integer::BoundedInt;
+pub mod ERC20 {
+    use core::num::traits::Bounded;
+    use core::num::traits::Zero;
+    use core::starknet::storage::{
+        Map, StorageMapWriteAccess, StorageMapReadAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess,
+    };
     use openzeppelin::token::erc20::interface::{IERC20, IERC20CamelOnly};
     use starknet::ContractAddress;
     use starknet::get_caller_address;
-    use zeroable::Zeroable;
 
     #[storage]
     struct Storage {
         _name: felt252,
         _symbol: felt252,
         _total_supply: u256,
-        _balances: LegacyMap<ContractAddress, u256>,
-        _allowances: LegacyMap<(ContractAddress, ContractAddress), u256>,
+        _balances: Map<ContractAddress, u256>,
+        _allowances: Map<(ContractAddress, ContractAddress), u256>,
     }
 
     #[event]
@@ -57,12 +52,12 @@ mod ERC20 {
     }
 
     mod Errors {
-        const APPROVE_FROM_ZERO: felt252 = 'ERC20: approve from 0';
-        const APPROVE_TO_ZERO: felt252 = 'ERC20: approve to 0';
-        const TRANSFER_FROM_ZERO: felt252 = 'ERC20: transfer from 0';
-        const TRANSFER_TO_ZERO: felt252 = 'ERC20: transfer to 0';
-        const BURN_FROM_ZERO: felt252 = 'ERC20: burn from 0';
-        const MINT_TO_ZERO: felt252 = 'ERC20: mint to 0';
+        pub const APPROVE_FROM_ZERO: felt252 = 'ERC20: approve from 0';
+        pub const APPROVE_TO_ZERO: felt252 = 'ERC20: approve to 0';
+        pub const TRANSFER_FROM_ZERO: felt252 = 'ERC20: transfer from 0';
+        pub const TRANSFER_TO_ZERO: felt252 = 'ERC20: transfer to 0';
+        pub const BURN_FROM_ZERO: felt252 = 'ERC20: burn from 0';
+        pub const MINT_TO_ZERO: felt252 = 'ERC20: mint to 0';
     }
 
     #[constructor]
@@ -220,14 +215,14 @@ mod ERC20 {
             assert(!recipient.is_zero(), Errors::MINT_TO_ZERO);
             self._total_supply.write(self._total_supply.read() + amount);
             self._balances.write(recipient, self._balances.read(recipient) + amount);
-            self.emit(Transfer { from: Zeroable::zero(), to: recipient, value: amount });
+            self.emit(Transfer { from: Zero::zero(), to: recipient, value: amount });
         }
 
         fn _burn(ref self: ContractState, account: ContractAddress, amount: u256) {
             assert(!account.is_zero(), Errors::BURN_FROM_ZERO);
             self._total_supply.write(self._total_supply.read() - amount);
             self._balances.write(account, self._balances.read(account) - amount);
-            self.emit(Transfer { from: account, to: Zeroable::zero(), value: amount });
+            self.emit(Transfer { from: account, to: Zero::zero(), value: amount });
         }
 
         fn _approve(
@@ -256,7 +251,7 @@ mod ERC20 {
             ref self: ContractState, owner: ContractAddress, spender: ContractAddress, amount: u256
         ) {
             let current_allowance = self._allowances.read((owner, spender));
-            if current_allowance != BoundedInt::max() {
+            if current_allowance != Bounded::MAX {
                 self._approve(owner, spender, current_allowance - amount);
             }
         }

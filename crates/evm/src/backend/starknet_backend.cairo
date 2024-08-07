@@ -323,11 +323,8 @@ mod tests {
         assert(event.starknet_address.into() == eoa_address.starknet, 'wrong starknet address');
 
         set_chain_id(chain_id().into());
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-        let chain_id = vm.env.chain_id;
 
         let eoa = IAccountDispatcher { contract_address: eoa_address.starknet };
-        let evm_address = eoa.get_evm_address();
         assert!(eoa.is_initialized());
     }
 }

@@ -43,10 +43,15 @@ pub mod AccountContract {
     };
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use core::integer;
+    use core::num::traits::Bounded;
     use core::num::traits::zero::Zero;
     use core::panic_with_felt252;
     use core::starknet::SyscallResultTrait;
     use core::starknet::account::{Call};
+    use core::starknet::storage::{
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess
+    };
     use core::starknet::storage_access::{storage_base_address_from_felt252, StorageBaseAddress};
     use core::starknet::syscalls::{replace_class_syscall};
     use core::starknet::{
@@ -79,7 +84,7 @@ pub mod AccountContract {
     #[storage]
     struct Storage {
         Account_bytecode: ByteArray,
-        Account_storage: LegacyMap<u256, u256>,
+        Account_storage: Map<u256, u256>,
         Account_is_initialized: bool,
         Account_nonce: u64,
         Account_implementation: ClassHash,
@@ -128,7 +133,7 @@ pub mod AccountContract {
             // token (which conforms to the ERC20 standard), we need to give the
             // KakarotCore contract infinite allowance
             IERC20CamelDispatcher { contract_address: native_token }
-                .approve(kakarot_address, integer::BoundedInt::<u256>::max());
+                .approve(kakarot_address, Bounded::<u256>::MAX);
 
             kakarot.register_account(evm_address);
         }

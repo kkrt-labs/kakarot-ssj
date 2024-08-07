@@ -1,4 +1,5 @@
-use core::integer::{u256_try_as_non_zero, BoundedInt};
+use core::integer::{u256_try_as_non_zero};
+use core::num::traits::Bounded;
 use utils::constants::POW_2_127;
 use utils::math::{Bitshift, Exponentiation};
 
@@ -85,7 +86,7 @@ fn i256_signed_div_rem(a: i256, div: NonZero<u256>) -> (i256, i256) {
     let mut div = i256 { value: div.into() };
 
     // When div=-1, simply return -a.
-    if div.value == BoundedInt::<u256>::max() {
+    if div.value == Bounded::<u256>::MAX {
         return (i256_neg(a).into(), 0_u256.into());
     }
 
@@ -137,7 +138,7 @@ fn i256_neg(a: i256) -> i256 {
 
 #[cfg(test)]
 mod tests {
-    use core::integer::BoundedInt;
+    use core::num::traits::Bounded;
     use utils::i256::{i256, i256_neg, i256_signed_div_rem};
     use utils::math::Bitshift;
 
@@ -169,7 +170,7 @@ mod tests {
 
     #[test]
     fn test_i256_negative() {
-        let val: i256 = BoundedInt::<u256>::max().into(); // -1
+        let val: i256 = Bounded::<u256>::MAX.into(); // -1
 
         assert(val < 0_u256.into(), 'i256 should be negative');
     }
@@ -184,15 +185,15 @@ mod tests {
 
     #[test]
     fn test_lt_negative_negative() {
-        let lhs: i256 = (BoundedInt::<u256>::max() - 1).into(); // -2
-        let rhs: i256 = BoundedInt::<u256>::max().into(); // -1
+        let lhs: i256 = (Bounded::<u256>::MAX - 1).into(); // -2
+        let rhs: i256 = Bounded::<u256>::MAX.into(); // -1
 
         assert(lhs < rhs == true, 'lhs should be lt rhs');
     }
 
     #[test]
     fn test_lt_negative_positive() {
-        let lhs: i256 = BoundedInt::<u256>::max().into(); // -1
+        let lhs: i256 = Bounded::<u256>::MAX.into(); // -1
         let rhs: i256 = 1_u256.into();
 
         assert(lhs < rhs == true, 'lhs should be lt rhs');
@@ -201,7 +202,7 @@ mod tests {
     #[test]
     fn test_lt_positive_negative() {
         let lhs: i256 = 1_u256.into();
-        let rhs: i256 = BoundedInt::<u256>::max().into(); // -1
+        let rhs: i256 = Bounded::<u256>::MAX.into(); // -1
 
         assert(lhs < rhs == false, 'lhs should not be lt rhs');
     }
@@ -224,15 +225,15 @@ mod tests {
 
     #[test]
     fn test_le_negative_negative() {
-        let lhs: i256 = (BoundedInt::<u256>::max() - 1).into(); // -2
-        let rhs: i256 = BoundedInt::<u256>::max().into(); // -1
+        let lhs: i256 = (Bounded::<u256>::MAX - 1).into(); // -2
+        let rhs: i256 = Bounded::<u256>::MAX.into(); // -1
 
         assert(lhs <= rhs == true, 'lhs should be le rhs');
     }
 
     #[test]
     fn test_le_negative_positive() {
-        let lhs: i256 = BoundedInt::<u256>::max().into(); // -1
+        let lhs: i256 = Bounded::<u256>::MAX.into(); // -1
         let rhs: i256 = 1_u256.into();
 
         assert(lhs <= rhs == true, 'lhs should be le rhs');
@@ -241,7 +242,7 @@ mod tests {
     #[test]
     fn test_le_positive_negative() {
         let lhs: i256 = 1_u256.into();
-        let rhs: i256 = BoundedInt::<u256>::max().into(); // -1
+        let rhs: i256 = Bounded::<u256>::MAX.into(); // -1
 
         assert(lhs <= rhs == false, 'lhs should not be le rhs');
     }
@@ -264,15 +265,15 @@ mod tests {
 
     #[test]
     fn test_gt_negative_negative() {
-        let lhs: i256 = BoundedInt::<u256>::max().into(); // -1
-        let rhs: i256 = (BoundedInt::<u256>::max() - 1).into(); // -2
+        let lhs: i256 = Bounded::<u256>::MAX.into(); // -1
+        let rhs: i256 = (Bounded::<u256>::MAX - 1).into(); // -2
 
         assert(lhs > rhs == true, 'lhs should be gt rhs');
     }
 
     #[test]
     fn test_gt_negative_positive() {
-        let lhs: i256 = BoundedInt::<u256>::max().into(); // -1
+        let lhs: i256 = Bounded::<u256>::MAX.into(); // -1
         let rhs: i256 = 1_u256.into();
 
         assert(lhs > rhs == false, 'lhs should not be gt rhs');
@@ -281,7 +282,7 @@ mod tests {
     #[test]
     fn test_gt_positive_negative() {
         let lhs: i256 = 1_u256.into();
-        let rhs: i256 = BoundedInt::<u256>::max().into(); // -1
+        let rhs: i256 = Bounded::<u256>::MAX.into(); // -1
 
         assert(lhs > rhs == true, 'lhs should be gt rhs');
     }
@@ -304,15 +305,15 @@ mod tests {
 
     #[test]
     fn test_ge_negative_negative() {
-        let lhs: i256 = BoundedInt::<u256>::max().into(); // -1
-        let rhs: i256 = (BoundedInt::<u256>::max() - 1).into(); // -2
+        let lhs: i256 = Bounded::<u256>::MAX.into(); // -1
+        let rhs: i256 = (Bounded::<u256>::MAX - 1).into(); // -2
 
         assert(lhs >= rhs == true, 'lhs should be ge rhs');
     }
 
     #[test]
     fn test_ge_negative_positive() {
-        let lhs: i256 = BoundedInt::<u256>::max().into(); // -1
+        let lhs: i256 = Bounded::<u256>::MAX.into(); // -1
         let rhs: i256 = 1_u256.into();
 
         assert(lhs >= rhs == false, 'lhs should not be ge rhs');
@@ -321,7 +322,7 @@ mod tests {
     #[test]
     fn test_ge_positive_negative() {
         let lhs: i256 = 1_u256.into();
-        let rhs: i256 = BoundedInt::<u256>::max().into(); // -1
+        let rhs: i256 = Bounded::<u256>::MAX.into(); // -1
 
         assert(lhs >= rhs == true, 'lhs should be ge rhs');
     }
@@ -336,7 +337,7 @@ mod tests {
 
     #[test]
     fn test_i256_neg() {
-        let max_u256 = BoundedInt::<u256>::max();
+        let max_u256 = Bounded::<u256>::MAX;
         let x = i256_neg(1_u256.into());
         // 0000_0001 turns into 1111_1110 + 1 = 1111_1111
         assert(x.value.low == max_u256.low && x.value.high == max_u256.high, 'i256_neg failed.');
@@ -352,7 +353,7 @@ mod tests {
 
     #[test]
     fn test_signed_div_rem() {
-        let max_u256 = BoundedInt::<u256>::max();
+        let max_u256 = Bounded::<u256>::MAX;
         let max_i256 = i256 { value: max_u256 };
         // Division by -1
         assert(

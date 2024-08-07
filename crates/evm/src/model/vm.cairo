@@ -1,4 +1,4 @@
-use core::integer::u128_overflowing_sub;
+use core::num::traits::CheckedSub;
 use evm::errors::{EVMError, ensure};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Message, Environment, ExecutionResult, AccountTrait};
@@ -51,9 +51,9 @@ impl VMImpl of VMTrait {
     /// # Error : returns `EVMError::OutOfGas` if gas_left - value < 0
     #[inline(always)]
     fn charge_gas(ref self: VM, value: u128) -> Result<(), EVMError> {
-        self.gas_left = match u128_overflowing_sub(self.gas_left, value) {
-            Result::Ok(gas_left) => gas_left,
-            Result::Err(_) => { return Result::Err(EVMError::OutOfGas); },
+        self.gas_left = match self.gas_left.checked_sub(value) {
+            Option::Some(gas_left) => gas_left,
+            Option::None => { return Result::Err(EVMError::OutOfGas); },
         };
         Result::Ok(())
     }
@@ -260,7 +260,6 @@ mod tests {
 
         let mut vm = VMTrait::new(message, Default::default());
 
-        let expected_valid_jump_destinations = array![3, 9].span();
         assert!(vm.is_valid_jump(0x3) == true, "expected jump to be valid");
         assert!(vm.is_valid_jump(0x9) == true, "expected jump to be valid");
 

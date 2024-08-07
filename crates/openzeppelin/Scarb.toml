@@ -13,6 +13,7 @@
 [package]
 name = "openzeppelin"
 version = "0.1.0"
+edition = "2024_07"
 
 # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
@@ -23,4 +24,4 @@ starknet.workspace = true
 fmt.workspace = true
 
 [dev-dependencies]
-cairo_test = "2.6.4+nightly-2024-06-26"
+cairo_test = "2.7.0"

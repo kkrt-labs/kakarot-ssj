@@ -1,4 +1,4 @@
-use core::integer::BoundedInt;
+use core::num::traits::Bounded;
 use evm::errors::EVMError;
 use evm::gas;
 use evm::model::vm::{VM, VMTrait};
@@ -181,7 +181,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
             0
         } else {
             // If sign is negative, set the number to -1.
-            BoundedInt::<u256>::max()
+            Bounded::<u256>::MAX
         };
 
         if (shift > 256) {
@@ -197,7 +197,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
 
 #[cfg(test)]
 mod tests {
-    use core::integer::BoundedInt;
+    use core::num::traits::Bounded;
     use evm::instructions::ComparisonAndBitwiseOperationsTrait;
     use evm::stack::StackTrait;
     use evm::test_utils::VMBuilderTrait;
@@ -249,7 +249,7 @@ mod tests {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
         vm.stack.push(0x00).expect('push failed');
-        vm.stack.push(BoundedInt::<u256>::max()).unwrap();
+        vm.stack.push(Bounded::<u256>::MAX).unwrap();
 
         // When
         vm.exec_and().expect('exec_and failed');
@@ -263,17 +263,15 @@ mod tests {
     fn test_and_max_and_max() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        vm.stack.push(BoundedInt::<u256>::max()).unwrap();
-        vm.stack.push(BoundedInt::<u256>::max()).unwrap();
+        vm.stack.push(Bounded::<u256>::MAX).unwrap();
+        vm.stack.push(Bounded::<u256>::MAX).unwrap();
 
         // When
         vm.exec_and().expect('exec_and failed');
 
         // Then
         assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == BoundedInt::<u256>::max(), 'stack top should be 0xFF...FFF'
-        );
+        assert(vm.stack.peek().unwrap() == Bounded::<u256>::MAX, 'stack top should be 0xFF...FFF');
     }
 
     #[test]
@@ -361,16 +359,14 @@ mod tests {
 
         // Then
         assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == BoundedInt::<u256>::max(), 'stack top should be 0xFFF..FFFF'
-        );
+        assert(vm.stack.peek().unwrap() == Bounded::<u256>::MAX, 'stack top should be 0xFFF..FFFF');
     }
 
     #[test]
     fn test_not_max_uint() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        vm.stack.push(BoundedInt::<u256>::max()).unwrap();
+        vm.stack.push(Bounded::<u256>::MAX).unwrap();
 
         // When
         vm.exec_not().expect('exec_not failed');

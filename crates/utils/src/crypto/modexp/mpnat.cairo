@@ -6,6 +6,7 @@ use core::array::ArrayTrait;
 use core::array::SpanTrait;
 use core::dict::Felt252DictTrait;
 use core::num::traits::BitSize;
+use core::num::traits::{CheckedAdd, CheckedSub, CheckedMul};
 use core::option::OptionTrait;
 use core::result::ResultTrait;
 use core::traits::Destruct;
@@ -15,7 +16,6 @@ use super::arith::{
     big_wrapping_pow, mod_inv, compute_r_mod_n, join_as_double, in_place_shl, in_place_shr,
     in_place_add, in_place_mul_sub, big_wrapping_mul, monsq, monpro, borrowing_sub, carrying_add
 };
-use utils::checked_math::CheckedMath;
 use utils::helpers::{FromBytes, U64Trait, Felt252VecTrait, U128Trait, BitsUsed, ByteSize};
 use utils::math::{Bitshift, WrappingBitshift};
 

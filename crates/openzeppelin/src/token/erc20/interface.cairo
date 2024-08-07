@@ -15,7 +15,7 @@
 use starknet::ContractAddress;
 
 #[starknet::interface]
-trait IERC20<TState> {
+pub trait IERC20<TState> {
     fn name(self: @TState) -> felt252;
     fn symbol(self: @TState) -> felt252;
     fn decimals(self: @TState) -> u8;
@@ -30,7 +30,7 @@ trait IERC20<TState> {
 }
 
 #[starknet::interface]
-trait IERC20Camel<TState> {
+pub trait IERC20Camel<TState> {
     fn name(self: @TState) -> felt252;
     fn symbol(self: @TState) -> felt252;
     fn decimals(self: @TState) -> u8;
@@ -45,7 +45,7 @@ trait IERC20Camel<TState> {
 }
 
 #[starknet::interface]
-trait IERC20CamelOnly<TState> {
+pub trait IERC20CamelOnly<TState> {
     fn totalSupply(self: @TState) -> u256;
     fn balanceOf(self: @TState, account: ContractAddress) -> u256;
     fn transferFrom(
@@ -54,7 +54,7 @@ trait IERC20CamelOnly<TState> {
 }
 
 #[starknet::interface]
-trait ERC20ABI<TState> {
+pub trait ERC20ABI<TState> {
     fn name(self: @TState) -> felt252;
     fn symbol(self: @TState) -> felt252;
     fn decimals(self: @TState) -> u8;
@@ -73,7 +73,7 @@ trait ERC20ABI<TState> {
 }
 
 #[starknet::interface]
-trait ERC20CamelABI<TState> {
+pub trait ERC20CamelABI<TState> {
     fn name(self: @TState) -> felt252;
     fn symbol(self: @TState) -> felt252;
     fn decimals(self: @TState) -> u8;

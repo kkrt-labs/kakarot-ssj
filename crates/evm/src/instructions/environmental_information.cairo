@@ -1,7 +1,7 @@
 use contracts::kakarot_core::interface::{IKakarotCore};
 use contracts::kakarot_core::{KakarotCore};
 use core::hash::{HashStateExTrait, HashStateTrait};
-use core::integer::{u32_overflowing_add, u32_as_non_zero};
+use core::num::traits::OverflowingAdd;
 use core::num::traits::Zero;
 use core::pedersen::{PedersenTrait, HashState};
 use evm::errors::{ensure, EVMError, READ_SYSCALL_FAILED};
@@ -260,15 +260,20 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let size = self.stack.pop_usize()?;
         let return_data: Span<u8> = self.return_data();
 
-        let last_returndata_index = u32_overflowing_add(offset, size)
-            .map_err(EVMError::ReturnDataOutOfBounds)?;
+        let (last_returndata_index, overflow) = offset.overflowing_add(size);
+        if overflow {
+            return Result::Err(EVMError::ReturnDataOutOfBounds);
+        }
         ensure(!(last_returndata_index > return_data.len()), EVMError::ReturnDataOutOfBounds)?;
 
         //TODO: handle overflow in ceil32 function.
         let words_size: u128 = (ceil32(size.into()) / 32).into();
         let copy_gas_cost = gas::COPY * words_size;
 
-        let max_memory_size = u32_overflowing_add(dest_offset, size).map_err(EVMError::OutOfGas)?;
+        let (max_memory_size, overflow) = dest_offset.overflowing_add(size);
+        if overflow {
+            return Result::Err(EVMError::OutOfGas);
+        }
 
         let memory_expansion = gas::memory_expansion(self.memory.size(), max_memory_size);
         self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
@@ -324,7 +329,7 @@ mod tests {
     use contracts::test_utils::{
         setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
     };
-    use core::integer::u32_overflowing_add;
+    use core::num::traits::CheckedAdd;
     use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
     use evm::instructions::EnvironmentInformationTrait;
     use evm::memory::{InternalMemoryTrait, MemoryTrait};
@@ -1174,8 +1179,8 @@ mod tests {
         // Then
         assert(vm.stack.is_empty(), 'stack should be empty');
 
-        match u32_overflowing_add(offset, size) {
-            Result::Ok(x) => {
+        match offset.checked_add(size) {
+            Option::Some(x) => {
                 if (x > return_data.len()) {
                     assert(
                         res.unwrap_err() == EVMError::ReturnDataOutOfBounds,
@@ -1184,7 +1189,7 @@ mod tests {
                     return;
                 }
             },
-            Result::Err(_) => {
+            Option::None => {
                 assert(
                     res.unwrap_err() == EVMError::ReturnDataOutOfBounds,
                     'should return out of bounds'
