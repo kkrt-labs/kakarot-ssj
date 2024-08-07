@@ -9,13 +9,14 @@ pub mod KakarotCore {
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::kakarot_core::interface::IKakarotCore;
-    use core::array::SpanTrait;
-    use core::num::traits::zero::Zero;
-    use core::num::traits::{CheckedAdd, CheckedSub, CheckedMul};
+    use core::num::traits::{Zero, CheckedAdd, CheckedSub, CheckedMul};
     use core::starknet::SyscallResultTrait;
     use core::starknet::event::EventEmitter;
+    use core::starknet::storage::{
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess
+    };
     use evm::backend::starknet_backend;
-
     use evm::errors::{EVMError, ensure, EVMErrorTrait,};
     use evm::gas;
     use evm::interpreter::{EVMTrait};
@@ -52,7 +53,7 @@ pub mod KakarotCore {
 
     #[storage]
     pub struct Storage {
-        Kakarot_evm_to_starknet_address: LegacyMap::<EthAddress, ContractAddress>,
+        Kakarot_evm_to_starknet_address: Map::<EthAddress, ContractAddress>,
         Kakarot_uninitialized_account_class_hash: ClassHash,
         Kakarot_account_contract_class_hash: ClassHash,
         Kakarot_native_token_address: ContractAddress,

@@ -1,13 +1,13 @@
 use core::circuit::CircuitInputs;
 use core::iter::IntoIterator;
+use core::sha256::compute_sha256_u32_array;
 use evm::errors::EVMError;
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 use evm::precompiles::Precompile;
-use utils::helpers::{FromBytes, ToBytes};
-use core::sha256::compute_sha256_u32_array;
-use utils::helpers::Bitshift;
 use starknet::EthAddress;
+use utils::helpers::Bitshift;
+use utils::helpers::{FromBytes, ToBytes};
 
 const BASE_COST: u128 = 60;
 const COST_PER_WORD: u128 = 12;
@@ -63,13 +63,14 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
     use starknet::testing::set_contract_address;
+    use utils::helpers::ToBytes;
     use utils::helpers::{FromBytes};
 
     //source:
     //<https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='wFirsWplaceqparameters%20in%20memorybFFjdata~0vMSTOREvvwDoqcallZSizeZ_1XSizeb1FX_2jaddressY4%200xFFFFFFFFjgasvSTATICCALLvvwPutqresulWalonVonqstackvPOPb20vMLOAD'~Y1j//%20v%5Cnq%20thVj%20wb~0x_Offset~Zb20jretYvPUSHXjargsWt%20Ve%20%01VWXYZ_bjqvw~_>
     #[test]
     fn test_sha_256_precompile() {
-        let calldata = array![0xFF];
+        let calldata = array![0xFF,];
 
         let (gas, result) = Sha256::exec(calldata.span()).unwrap();
 
@@ -82,14 +83,14 @@ mod tests {
 
     #[test]
     fn test_sha_256_precompile_full_word() {
-        let calldata = ToBytes::to_bytes(
-            0xa8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89
+        let calldata = ToBytes::to_be_bytes(
+            0xa8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89_u256
         );
 
-        let (gas, result) = Sha256::exec(calldata.span()).unwrap();
+        let (gas, result) = Sha256::exec(calldata).unwrap();
 
         let result: u256 = result.from_be_bytes().unwrap();
-        let expected_result = 0xa8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89;
+        let expected_result = 0xc0b057f584795eff8b06d5e420e71d747587d20de836f501921fd1b5741f1283;
 
         assert_eq!(result, expected_result);
         assert_eq!(gas, 72);
