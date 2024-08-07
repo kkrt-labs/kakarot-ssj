@@ -52,6 +52,34 @@ pub trait IHelpers<T> {
         self: @T, words: Array<u64>, last_input_word: u64, last_input_num_bytes: usize
     ) -> u256;
 
+    /// Computes the SHA-256 of the provided data.
+    ///
+    /// The data is expected to be an array of full 32-bit unsigned words.
+    /// The last u32-word to hash may be incomplete and is provided separately.
+    /// # Arguments
+    ///
+    /// * `input` - The full 32-bit unsigned words to hash.
+    /// * `last_input_word` - the last word to hash.
+    /// * `last_input_num_bytes` - the number of bytes in the last word.
+    ///
+    /// # Returns
+    /// The SHA-256 of the provided data.
+    fn compute_sha256_u32_array(
+        self: @T, input: Array<u32>, last_input_word: u32, last_input_num_bytes: u32
+        ) -> [
+        u32
+    ; 8];
+
+    /// Computes the SHA-256 of the provided byte array.
+    ///
+    /// # Arguments
+    ///
+    /// * `arr` - the byte array to hash.
+    ///
+    /// # Returns
+    /// The SHA-256 of the provided byte array.
+    fn compute_sha256_byte_array(self: @T, arr: ByteArray) -> [u32; 8];
+
     // DEPRECATED
     fn verify_eth_signature(
         self: @T, msg_hash: u256, signature: Signature, eth_address: EthAddress
@@ -140,6 +168,21 @@ mod embeddable_impls {
             last_input_num_bytes: usize
         ) -> u256 {
             cairo_keccak(ref words, last_input_word, last_input_num_bytes).reverse_endianness()
+        }
+
+        fn compute_sha256_u32_array(
+            self: @TContractState,
+            input: Array<u32>,
+            last_input_word: u32,
+            last_input_num_bytes: u32
+            ) -> [
+            u32
+        ; 8] {
+            core::sha256::compute_sha256_u32_array(input, last_input_word, last_input_num_bytes)
+        }
+
+        fn compute_sha256_byte_array(self: @TContractState, arr: ByteArray) -> [u32; 8] {
+            core::sha256::compute_sha256_byte_array(@arr)
         }
 
         // DEPRECATED
