@@ -250,7 +250,7 @@ impl MemoryOperation of MemoryOperationTrait {
 mod tests {
     use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::test_utils::{setup_contracts_for_testing, deploy_contract_account};
-    use core::integer::BoundedInt;
+    use core::num::traits::Bounded;
     use core::result::ResultTrait;
     use evm::backend::starknet_backend::fetch_original_storage;
     use evm::backend::starknet_backend;
@@ -360,7 +360,7 @@ mod tests {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
-        vm.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+        vm.stack.push(Bounded::<u256>::MAX).expect('push failed');
         vm.stack.push(0x00).expect('push failed');
 
         // When
@@ -370,7 +370,7 @@ mod tests {
         assert(result.is_ok(), 'should have succeeded');
         assert(vm.memory.size() == 32, 'memory should be 32 bytes long');
         let stored = vm.memory.load(0);
-        assert(stored == BoundedInt::<u256>::max(), 'should have stored max_uint256');
+        assert(stored == Bounded::<u256>::MAX, 'should have stored max_uint256');
     }
 
     #[test]
@@ -378,7 +378,7 @@ mod tests {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
-        vm.stack.push(BoundedInt::<u256>::max()).expect('push failed');
+        vm.stack.push(Bounded::<u256>::MAX).expect('push failed');
         vm.stack.push(0x01).expect('push failed');
 
         // When
@@ -388,7 +388,7 @@ mod tests {
         assert(result.is_ok(), 'should have succeeded');
         assert(vm.memory.size() == 64, 'memory should be 64 bytes long');
         let stored = vm.memory.load(1);
-        assert(stored == BoundedInt::<u256>::max(), 'should have stored max_uint256');
+        assert(stored == Bounded::<u256>::MAX, 'should have stored max_uint256');
     }
 
     #[test]
@@ -503,7 +503,7 @@ mod tests {
     fn test_exec_msize_store_max_offset_0() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        vm.memory.store(BoundedInt::<u256>::max(), 0x00);
+        vm.memory.store(Bounded::<u256>::MAX, 0x00);
 
         // When
         let result = vm.exec_msize();
@@ -518,7 +518,7 @@ mod tests {
     fn test_exec_msize_store_max_offset_1() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        vm.memory.store(BoundedInt::<u256>::max(), 0x01);
+        vm.memory.store(Bounded::<u256>::MAX, 0x01);
 
         // When
         let result = vm.exec_msize();

@@ -2,7 +2,7 @@ use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
 //! CREATE, CREATE2 opcode helpers
 use core::cmp::min;
-use core::integer::BoundedInt;
+use core::num::traits::Bounded;
 use evm::errors::{
     ensure, EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION
 };
@@ -98,7 +98,7 @@ impl CreateHelpersImpl of CreateHelpers {
         let mut sender = self.env.state.get_account(sender_address.evm);
         let sender_current_nonce = sender.nonce();
         if sender.balance() < create_args.value
-            || sender_current_nonce == BoundedInt::<u64>::max()
+            || sender_current_nonce == Bounded::<u64>::MAX
             || self.message.depth == constants::STACK_MAX_DEPTH {
             self.gas_left += create_message_gas;
             return self.stack.push(0);

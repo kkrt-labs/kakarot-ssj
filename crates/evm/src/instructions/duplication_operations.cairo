@@ -120,7 +120,7 @@ impl DuplicationOperations of DuplicationOperationsTrait {
 
 #[cfg(test)]
 mod tests {
-    use core::integer::BoundedInt;
+    use core::num::traits::Bounded;
     use evm::instructions::DuplicationOperationsTrait;
     use evm::stack::Stack;
     use evm::stack::StackTrait;

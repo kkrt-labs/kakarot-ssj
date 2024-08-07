@@ -1,3 +1,4 @@
+use core::num::traits::CheckedSub;
 use evm::errors::{EVMError, ensure};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Message, Environment, ExecutionResult, AccountTrait};
@@ -6,7 +7,6 @@ use starknet::EthAddress;
 use utils::helpers::{SpanExtTrait, ArrayExtTrait};
 use utils::set::{Set, SetTrait, SpanSet};
 use utils::traits::{SpanDefault};
-use core::num::traits::CheckedSub;
 
 #[derive(Default, Destruct)]
 struct VM {
@@ -260,7 +260,6 @@ mod tests {
 
         let mut vm = VMTrait::new(message, Default::default());
 
-        let expected_valid_jump_destinations = array![3, 9].span();
         assert!(vm.is_valid_jump(0x3) == true, "expected jump to be valid");
         assert!(vm.is_valid_jump(0x9) == true, "expected jump to be valid");
 

@@ -1,7 +1,7 @@
 use contracts::kakarot_core::{IKakarotCore, KakarotCore};
 use core::hash::{HashStateTrait, HashStateExTrait};
-use core::num::traits::{OverflowingAdd, OverflowingSub, OverflowingMul};
 use core::nullable::{match_nullable, FromNullableResult};
+use core::num::traits::{OverflowingAdd, OverflowingSub, OverflowingMul};
 use core::poseidon::PoseidonTrait;
 use core::starknet::SyscallResultTrait;
 use evm::backend::starknet_backend::fetch_original_storage;

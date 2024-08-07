@@ -624,7 +624,7 @@ impl Felt252DictExtensionImpl of Felt252DictExtension {
 
 #[cfg(test)]
 mod tests {
-    use core::integer::BoundedInt;
+    use core::num::traits::Bounded;
     use evm::memory::{MemoryTrait, InternalMemoryTrait};
     use utils::constants::{POW_2_8, POW_2_56, POW_2_64, POW_2_120};
     use utils::{math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtTrait};

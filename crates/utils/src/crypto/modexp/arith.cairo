@@ -1,9 +1,9 @@
 // CREDITS: The implementation has been take from
 // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/tree/develop/engine-modexp)
 use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
+use core::keccak::u128_split;
 
 use core::num::traits::{WideMul, OverflowingAdd, OverflowingSub};
-use core::keccak::u128_split;
 use core::option::OptionTrait;
 use core::traits::TryInto;
 use super::mpnat::{MPNat, Word, DoubleWord, WORD_BITS, BASE, DOUBLE_WORD_MAX, WORD_MAX};
@@ -592,9 +592,9 @@ fn in_place_mul_sub(ref a: Felt252Vec<Word>, ref x: Felt252Vec<Word>, y: Word) -
 mod tests {
     use alexandria_data_structures::vec::VecTrait;
     use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
+    use core::integer::u128_wrapping_sub;
     use core::result::ResultTrait;
     use core::traits::Into;
-    use core::integer::u128_wrapping_sub;
 
     use utils::crypto::modexp::arith::{
         mod_inv, monsq, monpro, compute_r_mod_n, in_place_shl, in_place_shr, big_wrapping_pow,

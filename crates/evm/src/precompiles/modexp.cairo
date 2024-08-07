@@ -1,6 +1,6 @@
 use core::cmp::{min, max};
 
-use core::integer::{BoundedInt};
+use core::num::traits::Bounded;
 use core::num::traits::OverflowingAdd;
 // CREDITS: The implementation has take reference from
 // [revm](https://github.com/bluealloy/revm/blob/main/crates/precompile/src/modexp.rs)
@@ -111,7 +111,7 @@ fn calc_gas(base_length: u64, exp_length: u64, mod_length: u64, exp_highp: u256)
     let iteration_count = calculate_iteration_count(exp_length, exp_highp);
 
     let gas = (multiplication_complexity * iteration_count.into()) / 3;
-    let gas: u64 = gas.try_into().unwrap_or(BoundedInt::<u64>::max());
+    let gas: u64 = gas.try_into().unwrap_or(Bounded::<u64>::MAX);
 
     max(gas, 200)
 }

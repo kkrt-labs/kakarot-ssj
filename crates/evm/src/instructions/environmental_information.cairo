@@ -1,7 +1,7 @@
-use core::num::traits::OverflowingAdd;
 use contracts::kakarot_core::interface::{IKakarotCore};
 use contracts::kakarot_core::{KakarotCore};
 use core::hash::{HashStateExTrait, HashStateTrait};
+use core::num::traits::OverflowingAdd;
 use core::num::traits::Zero;
 use core::pedersen::{PedersenTrait, HashState};
 use evm::errors::{ensure, EVMError, READ_SYSCALL_FAILED};

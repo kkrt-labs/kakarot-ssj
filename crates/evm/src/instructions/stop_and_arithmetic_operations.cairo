@@ -260,7 +260,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
 
 #[cfg(test)]
 mod tests {
-    use core::integer::BoundedInt;
+    use core::num::traits::Bounded;
     use core::result::ResultTrait;
     use evm::instructions::StopAndArithmeticOperationsTrait;
     use evm::model::vm::{VM, VMTrait};
@@ -301,7 +301,7 @@ mod tests {
     fn test_exec_add_overflow() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        vm.stack.push(BoundedInt::<u256>::max()).unwrap();
+        vm.stack.push(Bounded::<u256>::MAX).unwrap();
         vm.stack.push(1).expect('push failed');
 
         // When
@@ -331,7 +331,7 @@ mod tests {
     fn test_exec_mul_overflow() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        vm.stack.push(BoundedInt::<u256>::max()).unwrap();
+        vm.stack.push(Bounded::<u256>::MAX).unwrap();
         vm.stack.push(2).expect('push failed');
 
         // When
@@ -339,7 +339,7 @@ mod tests {
 
         // Then
         assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == BoundedInt::<u256>::max() - 1, 'expected MAX_U256 -1');
+        assert(vm.stack.peek().unwrap() == Bounded::<u256>::MAX - 1, 'expected MAX_U256 -1');
     }
 
     #[test]
@@ -369,9 +369,7 @@ mod tests {
 
         // Then
         assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == BoundedInt::<u256>::max(), 'stack top should be MAX_U256'
-        );
+        assert(vm.stack.peek().unwrap() == Bounded::<u256>::MAX, 'stack top should be MAX_U256');
     }
 
 
@@ -424,7 +422,7 @@ mod tests {
     fn test_exec_sdiv_neg() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        vm.stack.push(BoundedInt::max()).unwrap();
+        vm.stack.push(Bounded::MAX).unwrap();
         vm.stack.push(2).expect('push failed');
 
         // When
@@ -432,7 +430,7 @@ mod tests {
 
         // Then
         assert(vm.stack.len() == 1, 'stack len should be 1');
-        assert(vm.stack.peek().unwrap() == BoundedInt::max() - 1, 'sdiv_neg failed');
+        assert(vm.stack.peek().unwrap() == Bounded::MAX - 1, 'sdiv_neg failed');
     }
 
     #[test]
@@ -577,7 +575,7 @@ mod tests {
         let mut vm = VMBuilderTrait::new_with_presets().build();
         vm.stack.push(3).expect('push failed');
         vm.stack.push(2).expect('push failed');
-        vm.stack.push(BoundedInt::<u256>::max()).unwrap();
+        vm.stack.push(Bounded::<u256>::MAX).unwrap();
 
         // When
         vm.exec_addmod().expect('exec_addmod failed');
@@ -620,8 +618,8 @@ mod tests {
     fn test_mulmod_overflow() {
         let mut vm = VMBuilderTrait::new_with_presets().build();
         vm.stack.push(12).expect('push failed');
-        vm.stack.push(BoundedInt::<u256>::max()).unwrap();
-        vm.stack.push(BoundedInt::<u256>::max()).unwrap();
+        vm.stack.push(Bounded::<u256>::MAX).unwrap();
+        vm.stack.push(Bounded::<u256>::MAX).unwrap();
 
         vm.exec_mulmod().expect('exec_mulmod failed');
 
@@ -664,7 +662,7 @@ mod tests {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
         vm.stack.push(2).expect('push failed');
-        vm.stack.push(BoundedInt::<u128>::max().into() + 1).unwrap();
+        vm.stack.push(Bounded::<u128>::MAX.into() + 1).unwrap();
 
         // When
         vm.exec_exp().expect('exec exp failed');
