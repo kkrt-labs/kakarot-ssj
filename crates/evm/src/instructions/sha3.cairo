@@ -107,10 +107,7 @@ mod internal {
     fn fill_array_with_memory_words(
         ref self: VM, ref to_hash: Array<u64>, mut offset: u32, mut amount: u32
     ) -> u32 {
-        loop {
-            if amount == 0 {
-                break;
-            }
+        while amount != 0 {
             let loaded = self.memory.load(offset);
             let ((high_h, low_h), (high_l, low_l)) = loaded.split_into_u64_le();
             to_hash.append(low_h);
@@ -439,10 +436,7 @@ mod tests {
         vm.stack.push(0x00).expect('push failed');
 
         let mut mem_dst: u32 = 0;
-        loop {
-            if mem_dst > 0x0C80 {
-                break;
-            }
+        while mem_dst <= 0x0C80 {
             vm
                 .memory
                 .store(0xFAFAFAFA00000000000000000000000000000000000000000000000000000000, mem_dst);

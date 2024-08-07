@@ -135,23 +135,16 @@ mod tests {
             return;
         }
 
-        loop {
-            if idx == to {
-                break;
-            }
-
+        while idx != to {
             assert(stack.peek_at(idx).unwrap() == 0x00, 'should be zero');
             idx += 1;
-        }
+        };
     }
 
     // push `n` number of `0x0` to the stack
     fn push_zeros(ref stack: Stack, n: u8) {
         let mut i = 0;
-        loop {
-            if i == n {
-                break;
-            }
+        while i != n {
             stack.push(0x0).unwrap();
             i += 1;
         }

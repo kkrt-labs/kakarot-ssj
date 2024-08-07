@@ -592,7 +592,7 @@ fn in_place_mul_sub(ref a: Felt252Vec<Word>, ref x: Felt252Vec<Word>, y: Word) -
 mod tests {
     use alexandria_data_structures::vec::VecTrait;
     use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
-    use core::integer::u128_wrapping_sub;
+    use core::num::traits::WrappingSub;
     use core::result::ResultTrait;
     use core::traits::Into;
 
@@ -661,7 +661,7 @@ mod tests {
         in_place_shl(ref x.digits, shift);
         let mut result = mp_nat_to_u128(ref x);
 
-        let mask = u128_wrapping_sub(BASE.wrapping_pow(x.digits.len().into()), 1);
+        let mask = BASE.wrapping_pow(x.digits.len().into()).wrapping_sub(1);
         assert_eq!(result, n.wrapping_shl(shift.into()) & mask);
     }
 

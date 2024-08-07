@@ -42,11 +42,7 @@ impl Blake2f of Precompile {
 
         let mut i = 0;
         let mut pos = 4;
-        loop {
-            if i == 8 {
-                break;
-            }
-
+        while i != 8 {
             // safe unwrap, because we have made sure of the input length to be 213
             h.append(input.slice(pos, 8).from_le_bytes().unwrap());
             i += 1;
@@ -55,11 +51,7 @@ impl Blake2f of Precompile {
 
         let mut i = 0;
         let mut pos = 68;
-        loop {
-            if i == 16 {
-                break;
-            }
-
+        while i != 16 {
             // safe unwrap, because we have made sure of the input length to be 213
             m.append(input.slice(pos, 8).from_le_bytes().unwrap());
             i += 1;
@@ -78,11 +70,7 @@ impl Blake2f of Precompile {
         let mut return_data: Array<u8> = Default::default();
 
         let mut i = 0;
-        loop {
-            if i == res.len() {
-                break;
-            }
-
+        while i != res.len() {
             let bytes = (*res[i]).to_le_bytes_padded();
             return_data.append_span(bytes);
 

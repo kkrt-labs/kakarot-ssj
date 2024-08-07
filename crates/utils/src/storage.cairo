@@ -22,13 +22,10 @@ pub fn compute_storage_base_address(
     //TODO: if we want compatibility with LegacyMaps, we should use pedersen
     // it might not be required.
     let mut state = PoseidonTrait::new().update(selector);
-    let hash = loop {
-        match keys.pop_front() {
-            Option::Some(val) => { state = state.update(*val); },
-            Option::None => { break state.finalize(); }
-        };
+    for val in keys {
+        state = state.update(*val);
     };
-
+    let hash = state.finalize();
     storage_base_address_from_felt252(hash)
 }
 

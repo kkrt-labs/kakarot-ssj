@@ -286,10 +286,7 @@ mod tests {
 
     fn get_n_0xFF(mut n: u8) -> Span<u8> {
         let mut array: Array<u8> = ArrayTrait::new();
-        loop {
-            if n == 0 {
-                break;
-            }
+        while n != 0 {
             array.append(0xFF);
             n -= 1;
         };

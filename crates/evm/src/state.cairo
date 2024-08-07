@@ -89,14 +89,9 @@ impl StateChangeLogImpl<T, +Drop<T>, +Copy<T>> of StateChangeLogTrait<T> {
     fn clone(ref self: StateChangeLog<T>) -> StateChangeLog<T> {
         let mut cloned_changes = Default::default();
         let mut keyset_span = self.keyset.to_span();
-        loop {
-            match keyset_span.pop_front() {
-                Option::Some(key) => {
-                    let value = self.changes.get(*key).deref();
-                    cloned_changes.insert(*key, NullableTrait::new(value));
-                },
-                Option::None => { break; }
-            }
+        while let Option::Some(key) = keyset_span.pop_front() {
+            let value = self.changes.get(*key).deref();
+            cloned_changes.insert(*key, NullableTrait::new(value));
         };
 
         StateChangeLog { changes: cloned_changes, keyset: self.keyset.clone(), }

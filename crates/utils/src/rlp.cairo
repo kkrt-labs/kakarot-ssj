@@ -92,17 +92,12 @@ pub impl RLPImpl of RLPTrait {
     /// * RLPError::RlpEmptyInput - if the input is empty
     fn encode_sequence(mut input: Span<RLPItem>) -> Span<u8> {
         let mut joined_encodings: Array<u8> = Default::default();
-        loop {
-            match input.pop_front() {
-                Option::Some(item) => {
-                    match item {
-                        RLPItem::String(string) => {
-                            joined_encodings.append_span(Self::encode_string(*string));
-                        },
-                        RLPItem::List(_) => { panic_with_felt252('List encoding unimplemented') }
-                    }
+        while let Option::Some(item) = input.pop_front() {
+            match item {
+                RLPItem::String(string) => {
+                    joined_encodings.append_span(Self::encode_string(*string));
                 },
-                Option::None => { break; }
+                RLPItem::List(_) => { panic_with_felt252('List encoding unimplemented') }
             }
         };
         let len_joined_encodings = joined_encodings.len();

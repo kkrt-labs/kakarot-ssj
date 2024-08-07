@@ -147,15 +147,11 @@ mod internals {
     /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
     fn commit_accounts(ref state: State) -> Result<(), EVMError> {
         let mut account_keys = state.accounts.keyset.to_span();
-        loop {
-            match account_keys.pop_front() {
-                Option::Some(evm_address) => {
-                    let account = state.accounts.changes.get(*evm_address).deref();
-                    commit(@account, ref state);
-                },
-                Option::None => { break Result::Ok(()); }
-            };
-        }
+        while let Option::Some(evm_address) = account_keys.pop_front() {
+            let account = state.accounts.changes.get(*evm_address).deref();
+            commit(@account, ref state);
+        };
+        return Result::Ok(());
     }
 
     /// Commits the account to Starknet by updating the account state if it
@@ -240,34 +236,25 @@ mod internals {
     fn transfer_native_token(ref self: State) -> Result<(), EVMError> {
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
         let native_token = kakarot_state.get_native_token();
-        loop {
-            match self.transfers.pop_front() {
-                Option::Some(transfer) => {
-                    IERC20CamelDispatcher { contract_address: native_token }
-                        .transferFrom(
-                            transfer.sender.starknet, transfer.recipient.starknet, transfer.amount
-                        );
-                },
-                Option::None => { break; }
-            }
+        while let Option::Some(transfer) = self.transfers.pop_front() {
+            IERC20CamelDispatcher { contract_address: native_token }
+                .transferFrom(
+                    transfer.sender.starknet, transfer.recipient.starknet, transfer.amount
+                );
         };
         Result::Ok(())
     }
 
     /// Iterates through the list of events and emits them.
     fn emit_events(ref self: State) -> Result<(), EVMError> {
-        loop {
-            match self.events.pop_front() {
-                Option::Some(event) => {
-                    let mut keys = Default::default();
-                    let mut data = Default::default();
-                    Serde::<Array<u256>>::serialize(@event.keys, ref keys);
-                    Serde::<Array<u8>>::serialize(@event.data, ref data);
-                    emit_event_syscall(keys.span(), data.span()).unwrap_syscall();
-                },
-                Option::None => { break Result::Ok(()); }
-            }
-        }
+        while let Option::Some(event) = self.events.pop_front() {
+            let mut keys = Default::default();
+            let mut data = Default::default();
+            Serde::<Array<u256>>::serialize(@event.keys, ref keys);
+            Serde::<Array<u8>>::serialize(@event.data, ref data);
+            emit_event_syscall(keys.span(), data.span()).unwrap_syscall();
+        };
+        return Result::Ok(());
     }
 
     /// Commits storage changes to the KakarotCore contract by writing pending
@@ -275,22 +262,13 @@ mod internals {
     /// commit_storage MUST be called after commit_accounts.
     fn commit_storage(ref self: State) -> Result<(), EVMError> {
         let mut storage_keys = self.accounts_storage.keyset.to_span();
-        let result = loop {
-            match storage_keys.pop_front() {
-                Option::Some(state_key) => {
-                    let (evm_address, key, value) = self
-                        .accounts_storage
-                        .changes
-                        .get(*state_key)
-                        .deref();
-                    let mut account = self.get_account(evm_address);
-                    IAccountDispatcher { contract_address: account.starknet_address() }
-                        .write_storage(key, value);
-                },
-                Option::None => { break Result::Ok(()); }
-            }
+        while let Option::Some(state_key) = storage_keys.pop_front() {
+            let (evm_address, key, value) = self.accounts_storage.changes.get(*state_key).deref();
+            let mut account = self.get_account(evm_address);
+            IAccountDispatcher { contract_address: account.starknet_address() }
+                .write_storage(key, value);
         };
-        result
+        Result::Ok(())
     }
 }
 

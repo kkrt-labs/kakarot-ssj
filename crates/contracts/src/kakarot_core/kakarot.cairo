@@ -119,12 +119,9 @@ pub mod KakarotCore {
         self.Kakarot_uninitialized_account_class_hash.write(uninitialized_account_class_hash);
         self.Kakarot_coinbase.write(coinbase);
         self.Kakarot_block_gas_limit.write(block_gas_limit);
-        loop {
-            match eoas_to_deploy.pop_front() {
-                Option::Some(eoa_address) => self.deploy_externally_owned_account(*eoa_address),
-                Option::None => { break; },
-            };
-        }
+        for eoa_address in eoas_to_deploy {
+            self.deploy_externally_owned_account(*eoa_address);
+        };
     }
 
     #[abi(embed_v0)]
@@ -319,23 +316,13 @@ pub mod KakarotCore {
 
             let mut accessed_storage_keys: Set<(EthAddress, u256)> = Default::default();
 
-            match tx.try_access_list() {
-                Option::Some(mut access_list) => {
-                    loop {
-                        match access_list.pop_front() {
-                            Option::Some(access_list_item) => {
-                                let AccessListItem { ethereum_address, storage_keys: _ } =
-                                    *access_list_item;
-                                let storage_keys = access_list_item.to_storage_keys();
-
-                                accessed_addresses.add(ethereum_address);
-                                accessed_storage_keys.extend_from_span(storage_keys);
-                            },
-                            Option::None => { break; }
-                        }
-                    }
-                },
-                Option::None => {}
+            if let Option::Some(mut access_list) = tx.try_access_list() {
+                for access_list_item in access_list {
+                    let AccessListItem { ethereum_address, storage_keys: _ } = *access_list_item;
+                    let storage_keys = access_list_item.to_storage_keys();
+                    accessed_addresses.add(ethereum_address);
+                    accessed_storage_keys.extend_from_span(storage_keys);
+                }
             };
 
             let message = Message {

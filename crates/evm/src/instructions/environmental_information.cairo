@@ -101,14 +101,10 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         // Fill the rest of the data to load with zeros
         // TODO: optimize once we have dw-based exponentiation
         let mut i = 32 - bytes_len;
-        loop {
-            if i == 0 {
-                break;
-            }
+        while i != 0 {
             data_to_load *= 256;
             i -= 1;
         };
-
         self.stack.push(data_to_load)
     }
 
@@ -693,11 +689,7 @@ mod tests {
         // bound bytes, 0's have been copied.
         // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
         let mut i = 0;
-        loop {
-            if i == (size / 32) + 1 {
-                break;
-            }
-
+        while i != (size / 32) + 1 {
             vm
                 .memory
                 .store(
@@ -834,11 +826,7 @@ mod tests {
         let mut results: Array<u8> = u256_to_bytes_array(result);
 
         let mut i = 0;
-        loop {
-            if (i == size) {
-                break;
-            }
-
+        while i != size {
             // For out of bound bytes, 0s will be copied.
             if (i + offset >= bytecode.len()) {
                 assert(*results[i] == 0, 'wrong data value');
@@ -1202,11 +1190,7 @@ mod tests {
         let mut results: Array<u8> = ArrayTrait::new();
 
         let mut i = 0;
-        loop {
-            if i == (size / 32) + 1 {
-                break;
-            }
-
+        while i != (size / 32) + 1 {
             let result: u256 = vm.memory.load_internal(dest_offset + (i * 32)).into();
             let result_span = u256_to_bytes_array(result).span();
 
@@ -1375,10 +1359,7 @@ mod tests {
         setup_contracts_for_testing();
 
         let mut i = 0;
-        loop {
-            if i == 0x10 {
-                break;
-            }
+        while i != 0x10 {
             vm.stack.push(i.into()).expect('push failed');
             // When
             vm.exec_extcodehash().unwrap();

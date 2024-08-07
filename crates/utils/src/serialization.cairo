@@ -56,16 +56,12 @@ fn deserialize_bytes(self: Span<felt252>) -> Option<Array<u8>> {
     let mut i = 0;
     let mut bytes: Array<u8> = Default::default();
 
-    loop {
-        if (i == self.len()) {
-            break ();
-        };
-
+    while i != self.len() {
         let v: Option<u8> = (*self[i]).try_into();
 
         match v {
             Option::Some(v) => { bytes.append(v); },
-            Option::None => { break (); }
+            Option::None => { break; }
         }
 
         i += 1;
@@ -84,11 +80,7 @@ fn serialize_bytes(self: Span<u8>) -> Array<felt252> {
 
     let mut i = 0;
 
-    loop {
-        if (i == self.len()) {
-            break ();
-        }
-
+    while i != self.len() {
         let value: felt252 = (*self[i]).into();
         array.append(value);
 

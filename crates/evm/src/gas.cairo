@@ -203,18 +203,13 @@ fn calculate_intrinsic_gas_cost(tx: @EthereumTransaction) -> u128 {
     let mut calldata = tx.calldata();
     let calldata_len: usize = calldata.len();
 
-    loop {
-        match calldata.pop_front() {
-            Option::Some(data) => {
-                data_cost +=
-                    if *data == 0 {
-                        TRANSACTION_ZERO_DATA
-                    } else {
-                        TRANSACTION_NON_ZERO_DATA_INIT
-                    };
-            },
-            Option::None => { break; },
-        }
+    for data in calldata {
+        data_cost +=
+            if *data == 0 {
+                TRANSACTION_ZERO_DATA
+            } else {
+                TRANSACTION_NON_ZERO_DATA_INIT
+            };
     };
 
     let create_cost = if target.is_none() {
@@ -223,21 +218,16 @@ fn calculate_intrinsic_gas_cost(tx: @EthereumTransaction) -> u128 {
         0
     };
 
-    let access_list_cost = match tx.try_access_list() {
-        Option::Some(mut access_list) => {
-            let mut access_list_cost = 0;
-            loop {
-                match access_list.pop_front() {
-                    Option::Some(access_list_item) => {
-                        let AccessListItem { ethereum_address: _, storage_keys } = access_list_item;
-                        access_list_cost += ACCESS_LIST_ADDRESS
-                            + (ACCESS_LIST_STORAGE_KEY * (*storage_keys).len().into());
-                    },
-                    Option::None => { break access_list_cost; }
-                }
-            }
-        },
-        Option::None => { 0 }
+    let access_list_cost = if let Option::Some(mut access_list) = tx.try_access_list() {
+        let mut access_list_cost: u128 = 0;
+        for access_list_item in access_list {
+            let AccessListItem { ethereum_address: _, storage_keys } = *access_list_item;
+            access_list_cost += ACCESS_LIST_ADDRESS
+                + (ACCESS_LIST_STORAGE_KEY * storage_keys.len().into());
+        };
+        access_list_cost
+    } else {
+        0
     };
 
     TRANSACTION_BASE_COST + data_cost + create_cost + access_list_cost

@@ -136,14 +136,12 @@ pub impl WrappingExponentiationImpl<
         let mut base = self;
         let mut result = One::one();
 
-        loop {
-            if exponent == Zero::zero() {
-                break result;
-            }
+        while exponent != Zero::zero() {
             let (new_result, _) = result.overflowing_mul(base);
             result = new_result;
             exponent -= One::one();
-        }
+        };
+        result
     }
 
     fn wrapping_fpow(self: T, exponent: T) -> T {
