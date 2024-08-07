@@ -7,7 +7,7 @@ use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
 use evm::model::account::{Account, AccountTrait};
 use evm::state::State;
 use starknet::{EthAddress, get_contract_address, ContractAddress};
-use utils::checked_math::CheckedMath;
+use core::num::traits::{CheckedAdd, CheckedSub, CheckedMul};
 use utils::fmt::{TSpanSetDebug};
 use utils::helpers::{ResultExTrait};
 use utils::set::{Set, SpanSet};

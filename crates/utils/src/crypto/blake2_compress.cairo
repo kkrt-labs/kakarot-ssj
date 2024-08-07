@@ -1,6 +1,6 @@
 use alexandria_data_structures::vec::{Felt252Vec, VecTrait};
-use core::integer::{BoundedInt, u64_wrapping_add};
-use core::num::traits::BitSize;
+use core::num::traits::Bounded;
+use core::num::traits::{BitSize, WrappingAdd};
 use core::option::OptionTrait;
 use utils::math::{Bitshift, WrappingBitshift};
 
@@ -127,13 +127,7 @@ fn compress(rounds: usize, h: Span<u64>, m: Span<u64>, t: Span<u64>, f: bool) ->
     result.span()
 }
 
-// TODO: remove once https://github.com/starkware-libs/cairo/issues/4744 is resolved
-#[inline(never)]
-fn no_op() {}
 
-
-// TODO: remove use no_op() and tmp once https://github.com/starkware-libs/cairo/issues/4744 is
-// resolved
 /// Mixing Function G
 /// It mixes input words into four words indexed by "a", "b", "c", and "d" in the working vector,
 /// see [spec](https://datatracker.ietf.org/doc/html/rfc7693#section-3.1)
@@ -152,16 +146,16 @@ fn g(ref v: Felt252Vec<u64>, a: usize, b: usize, c: usize, d: usize, x: u64, y: 
     let mut v_c = v[c];
     let mut v_d = v[d];
 
-    let tmp = u64_wrapping_add(v_a, v_b);
-    v_a = u64_wrapping_add(tmp, x);
+    let tmp = v_a.wrapping_add(v_b);
+    v_a = tmp.wrapping_add(x);
     v_d = rotate_right(v_d ^ v_a, 32);
-    v_c = u64_wrapping_add(v_c, v_d);
+    v_c = v_c.wrapping_add(v_d);
     v_b = rotate_right(v_b ^ v_c, 24);
 
-    let tmp = u64_wrapping_add(v_a, v_b);
-    v_a = u64_wrapping_add(tmp, y);
+    let tmp = v_a.wrapping_add(v_b);
+    v_a = tmp.wrapping_add(y);
     v_d = rotate_right(v_d ^ v_a, 16);
-    v_c = u64_wrapping_add(v_c, v_d);
+    v_c = v_c.wrapping_add(v_d);
     v_b = rotate_right(v_b ^ v_c, 63);
 
     v.set(a, v_a);

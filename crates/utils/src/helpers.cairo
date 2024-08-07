@@ -4,9 +4,8 @@ use core::array::ArrayTrait;
 use core::array::SpanTrait;
 use core::cmp::min;
 use core::hash::{HashStateExTrait, HashStateTrait};
-use core::integer::{BoundedInt, u32_as_non_zero, U32TryIntoNonZero};
-use core::integer::{u32_overflowing_add};
-
+use core::integer::{u32_as_non_zero, U32TryIntoNonZero};
+use core::num::traits::Bounded;
 use core::integer;
 use core::keccak::{cairo_keccak, u128_split};
 use core::num::traits::{Zero, One, BitSize};
@@ -843,7 +842,7 @@ pub impl ToBytesImpl<
         let eight = two * two * two;
 
         // 0xFF
-        let mask = BoundedInt::<u8>::max().into();
+        let mask = Bounded::<u8>::MAX.into();
 
         let mut bytes: Array<u8> = Default::default();
         let mut i: u8 = 0;
@@ -872,7 +871,7 @@ pub impl ToBytesImpl<
         let eight = two * two * two;
 
         // 0xFF
-        let mask = BoundedInt::<u8>::max().into();
+        let mask = Bounded::<u8>::MAX.into();
 
         let mut bytes: Array<u8> = Default::default();
 
@@ -1257,7 +1256,7 @@ pub impl USizeBytesUsedTraitImpl of BytesUsedTrait<usize> {
 
 pub impl U64BytesUsedTraitImpl of BytesUsedTrait<u64> {
     fn bytes_used(self: u64) -> u8 {
-        if self <= BoundedInt::<u32>::max().into() { // 256^4
+        if self <= Bounded::<u32>::MAX.into() { // 256^4
             return BytesUsedTrait::<u32>::bytes_used(self.try_into().unwrap());
         } else {
             if self < 0x1000000000000 { // 256^6
@@ -2167,7 +2166,7 @@ mod tests {
     }
 
     mod u128_test {
-        use core::integer::BoundedInt;
+        use core::num::traits::Bounded;
         use utils::helpers::Bitshift;
         use utils::helpers::U128Trait;
         use utils::helpers::{BitsUsed, BytesUsedTrait, ToBytes};
@@ -2189,7 +2188,7 @@ mod tests {
 
         #[test]
         fn test_u128_to_bytes_full() {
-            let input: u128 = BoundedInt::max();
+            let input: u128 = Bounded::MAX;
             let result: Span<u8> = input.to_be_bytes();
             let expected = array![
                 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255

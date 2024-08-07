@@ -1,7 +1,6 @@
 //! Utilities for kakarot standard library.
 
 pub mod address;
-pub mod checked_math;
 pub mod constants;
 pub mod crypto;
 pub mod errors;

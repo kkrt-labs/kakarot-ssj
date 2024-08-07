@@ -31,7 +31,7 @@ pub mod KakarotCore {
     };
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use utils::address::compute_contract_address;
-    use utils::checked_math::CheckedMath;
+    use core::num::traits::{CheckedAdd, CheckedSub, CheckedMul};
     use utils::constants;
     use utils::eth_transaction::AccessListItemTrait;
     use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, AccessListItem};

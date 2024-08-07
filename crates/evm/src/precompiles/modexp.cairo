@@ -1,6 +1,7 @@
 use core::cmp::{min, max};
 
-use core::integer::{u32_overflowing_add, BoundedInt};
+use core::integer::{BoundedInt};
+use core::num::traits::OverflowingAdd;
 // CREDITS: The implementation has take reference from
 // [revm](https://github.com/bluealloy/revm/blob/main/crates/precompile/src/modexp.rs)
 
@@ -91,10 +92,7 @@ impl ModExp of Precompile {
         let base = input.slice_right_padded(0, base_len);
         let exponent = input.slice_right_padded(base_len, exp_len);
 
-        let mod_start_idx = match u32_overflowing_add(base_len, exp_len) {
-            Result::Ok(v) => v,
-            Result::Err(v) => v
-        };
+        let (mod_start_idx, _) = base_len.overflowing_add(exp_len);
 
         let modulus = input.slice_right_padded(mod_start_idx, mod_len);
 

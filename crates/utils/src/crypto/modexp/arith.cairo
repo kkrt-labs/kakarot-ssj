@@ -2,7 +2,7 @@
 // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/tree/develop/engine-modexp)
 use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
 
-use core::integer::{u64_wide_mul, u64_overflowing_add, u64_overflowing_sub, u128_overflowing_add};
+use core::num::traits::{WideMul, OverflowingAdd, OverflowingSub};
 use core::keccak::u128_split;
 use core::option::OptionTrait;
 use core::traits::TryInto;
@@ -377,7 +377,7 @@ fn compute_r_mod_n(ref n: MPNat, ref out: Felt252Vec<Word>) {
 /// guaranteed to never overflow because even when all 4 variables are
 /// equal to `WORD_MAX` the output is smaller than `DOUBLEWORD_MAX`.
 fn shifted_carrying_mul(a: Word, x: Word, y: Word, c: Word) -> (Word, Word) {
-    let res: DoubleWord = a.into() + u64_wide_mul(x, y) + c.into();
+    let res: DoubleWord = a.into() + WideMul::wide_mul(x, y) + c.into();
     let (top_word, bottom_word) = u128_split(res);
     (bottom_word, top_word)
 }
@@ -387,35 +387,22 @@ fn shifted_carrying_mul(a: Word, x: Word, y: Word, c: Word) -> (Word, Word) {
 /// guaranteed to never overflow because even when all 3 variables are
 /// equal to `Word::MAX` the output is smaller than `DoubleWord::MAX`.
 fn carrying_mul(x: Word, y: Word, c: Word) -> (Word, Word) {
-    let wide = u64_wide_mul(x, y) + c.into();
+    let wide = WideMul::wide_mul(x, y) + c.into();
     let (top_word, bottom_word) = u128_split(wide);
     (bottom_word, top_word)
 }
 
 /// computes x + y accounting for any carry from a previous addition
 fn carrying_add(x: Word, y: Word, carry: bool) -> (Word, bool) {
-    let (a, b) = match u64_overflowing_add(x, y) {
-        Result::Ok(x) => (x, false),
-        Result::Err(x) => (x, true)
-    };
-    let (c, d) = match u64_overflowing_add(a, carry.into()) {
-        Result::Ok(x) => (x, false),
-        Result::Err(x) => (x, true)
-    };
+    let (a, b) = x.overflowing_add(y);
+    let (c, d) = a.overflowing_add(carry.into());
     (c, b | d)
 }
 
 // Computes `x - y` accounting for any borrow from a previous subtraction
 pub fn borrowing_sub(x: Word, y: Word, borrow: bool) -> (Word, bool) {
-    let (a, b) = match u64_overflowing_sub(x, y) {
-        Result::Ok(x) => (x, false),
-        Result::Err(x) => (x, true)
-    };
-    let (c, d) = match u64_overflowing_sub(a, borrow.into()) {
-        Result::Ok(x) => (x, false),
-        Result::Err(x) => (x, true)
-    };
-
+    let (a, b) = x.overflowing_sub(y);
+    let (c, d) = a.overflowing_sub(borrow.into());
     (c, b | d)
 }
 
@@ -455,29 +442,20 @@ fn big_sq(ref x: MPNat, ref out: Felt252Vec<Word>) {
 
             let mut new_c: DoubleWord = 0;
             let res: DoubleWord = (x.digits[i].into()) * (x.digits[j].into());
-            let res = match u128_overflowing_add(res, res) {
-                Result::Ok(res) => { res },
-                Result::Err(res) => {
-                    new_c += BASE;
-                    res
-                }
-            };
+            let (res, overflow) = res.overflowing_add(res);
+            if overflow {
+                new_c += BASE;
+            }
 
-            let res = match u128_overflowing_add(out[i + j].into(), res) {
-                Result::Ok(res) => { res },
-                Result::Err(res) => {
-                    new_c += BASE;
-                    res
-                }
-            };
+            let (res, overflow) = out[i + j].into().overflowing_add(res);
+            if overflow {
+                new_c += BASE;
+            }
 
-            let res = match u128_overflowing_add(res, c) {
-                Result::Ok(res) => { res },
-                Result::Err(res) => {
-                    new_c += BASE;
-                    res
-                }
-            };
+            let (res, overflow) = res.overflowing_add(c);
+            if overflow {
+                new_c += BASE;
+            }
 
             out.set(i + j, res.as_u64());
             c = new_c + ((res.shr(WORD_BITS.into())));

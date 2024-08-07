@@ -1,4 +1,3 @@
-use core::integer::u128_overflowing_sub;
 use evm::errors::{EVMError, ensure};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Message, Environment, ExecutionResult, AccountTrait};
@@ -7,6 +6,7 @@ use starknet::EthAddress;
 use utils::helpers::{SpanExtTrait, ArrayExtTrait};
 use utils::set::{Set, SetTrait, SpanSet};
 use utils::traits::{SpanDefault};
+use core::num::traits::CheckedSub;
 
 #[derive(Default, Destruct)]
 struct VM {
@@ -51,9 +51,9 @@ impl VMImpl of VMTrait {
     /// # Error : returns `EVMError::OutOfGas` if gas_left - value < 0
     #[inline(always)]
     fn charge_gas(ref self: VM, value: u128) -> Result<(), EVMError> {
-        self.gas_left = match u128_overflowing_sub(self.gas_left, value) {
-            Result::Ok(gas_left) => gas_left,
-            Result::Err(_) => { return Result::Err(EVMError::OutOfGas); },
+        self.gas_left = match self.gas_left.checked_sub(value) {
+            Option::Some(gas_left) => gas_left,
+            Option::None => { return Result::Err(EVMError::OutOfGas); },
         };
         Result::Ok(())
     }

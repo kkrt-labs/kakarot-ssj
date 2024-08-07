@@ -1,10 +1,9 @@
-use core::integer::{
-    u256, u256_overflow_mul as u256_overflowing_mul, u256_overflowing_add, u512, BoundedInt,
-    u128_overflowing_mul, u64_wide_mul, u64_to_felt252, u32_wide_mul, u32_to_felt252, u8_wide_mul,
-    u16_to_felt252
-};
+use core::integer::{u512};
+use core::num::traits::Bounded;
 use core::keccak::u128_split;
-use core::num::traits::{Zero, One, BitSize};
+use core::num::traits::{
+    Zero, One, BitSize, OverflowingAdd, OverflowingMul, WrappingMul, SaturatingAdd
+};
 use core::ops;
 use core::panic_with_felt252;
 use core::starknet::secp256_trait::Secp256PointTrait;
@@ -170,37 +169,6 @@ pub impl WrappingExponentiationImpl<
     }
 }
 
-pub trait SaturatingAdd<T> {
-    /// Adds two numbers, saturating at the numeric bounds instead of overflowing.
-    /// # Examples
-    /// ```
-    /// let max = BoundedInt::<u8>::max();
-    /// assert_eq!(max.saturating_add(max), max);
-    // ```
-    /// #Arguments
-    /// * `self` - The first operand of type `T` in the addition.
-    /// * `rhs` - The second operand of type `T` in the addition.
-    ///
-    /// # Returns
-    /// - The result of the addition, of type `T`, saturating at the numeric bounds instead of
-    /// overflowing.
-    fn saturating_add(self: T, rhs: T) -> T;
-}
-
-pub impl SaturatingAddImpl<
-    T, +Add<T>, +Sub<T>, +BoundedInt<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>
-> of SaturatingAdd<T> {
-    fn saturating_add(self: T, rhs: T) -> T {
-        let max = BoundedInt::<T>::max();
-
-        if self > max - rhs {
-            max
-        } else {
-            self + rhs
-        }
-    }
-}
-
 // === BitShift ===
 
 pub trait Bitshift<T> {
@@ -294,119 +262,6 @@ pub impl WrappingBitshiftImpl<
     }
 }
 
-pub trait OverflowingMul<T> {
-    /// Performs multiplication on two numbers of type `T`.
-    ///
-    /// This function multiplies two numbers and checks for overflow. If an overflow occurs,
-    /// the overflow is discarded, and a boolean value is returned to indicate that the
-    /// overflow happened. The function returns a tuple where the first element is the
-    /// result of the multiplication (with overflow being wrapped) and the second element
-    /// is a boolean flag that is `true` if an overflow occurred and `false` otherwise.
-    ///
-    /// let (result, overflowed) = BoundedInt::<u32>::max().overflowing_mul(BoundedInt::max());
-    /// assert_eq!(result, u32::MAX.wrapping_mul(1));
-    /// assert!(overflowed);
-    /// ```
-    ///
-    /// # Parameters
-    /// - `self`: The first operand of type `T` in the multiplication.
-    /// - `rhs`: The second operand of type `T` in the multiplication.
-    ///
-    /// # Returns
-    /// - A tuple `(T, bool)`. The first element of the tuple is the result of the
-    ///   multiplication, and the second element is a boolean flag that is `true` if
-    ///   an overflow occurred during the multiplication.
-    ///
-    fn overflowing_mul(self: T, rhs: T) -> (T, bool);
-}
-
-pub impl U8OverflowingMul of OverflowingMul<u8> {
-    fn overflowing_mul(self: u8, rhs: u8) -> (u8, bool) {
-        let result = u8_wide_mul(self, rhs);
-        let mask: u16 = BoundedInt::<u8>::max().into();
-
-        let bottom_word = (result & mask).try_into().unwrap();
-
-        let is_overflown = result > mask;
-        (bottom_word, is_overflown)
-    }
-}
-
-pub impl U16OverflowingMul of OverflowingMul<u16> {
-    fn overflowing_mul(self: u16, rhs: u16) -> (u16, bool) {
-        let result: u32 = self.into() * rhs.into();
-        let mask: u32 = BoundedInt::<u8>::max().into();
-
-        let bottom_word = (result & mask).try_into().unwrap();
-
-        let is_overflown = result > mask;
-        (bottom_word, is_overflown)
-    }
-}
-
-
-pub impl U32OverflowingMul of OverflowingMul<u32> {
-    fn overflowing_mul(self: u32, rhs: u32) -> (u32, bool) {
-        let result = u32_wide_mul(self, rhs);
-
-        let mask: u64 = BoundedInt::<u32>::max().into();
-        let bottom_word = (result & mask).try_into().unwrap();
-
-        let is_overflown = result > mask;
-        (bottom_word, is_overflown)
-    }
-}
-
-pub impl U64OverflowingMul of OverflowingMul<u64> {
-    fn overflowing_mul(self: u64, rhs: u64) -> (u64, bool) {
-        let result = u64_wide_mul(self, rhs);
-        let (top_word, bottom_word) = u128_split(result);
-
-        match u64_to_felt252(top_word) {
-            0 => (bottom_word, false),
-            _ => (bottom_word, true),
-        }
-    }
-}
-
-pub impl U128OverflowingMul of OverflowingMul<u128> {
-    fn overflowing_mul(self: u128, rhs: u128) -> (u128, bool) {
-        u128_overflowing_mul(self, rhs)
-    }
-}
-
-pub impl U256OverflowingMul of OverflowingMul<u256> {
-    fn overflowing_mul(self: u256, rhs: u256) -> (u256, bool) {
-        u256_overflowing_mul(self, rhs)
-    }
-}
-
-
-pub trait WrappingMul<T> {
-    /// Performs multiplication on two numbers of type `T`, discarding any overflow.
-    ///
-    /// This function multiplies two numbers and applies a wrapping strategy for handling
-    /// overflow. If the result of the multiplication overflows the type `T`, it wraps
-    /// around by discarding the higer bits.
-    ///
-    /// # Parameters
-    /// - `self`: The first operand of type `T` in the multiplication.
-    /// - `rhs`: The second operand of type `T` in the multiplication.
-    ///
-    /// # Returns
-    /// - Returns the result of multiplying `self` by `rhs`, of type `T`. If overflow occurs, the
-    /// higher bits are discarded.
-    fn wrapping_mul(self: T, rhs: T) -> T;
-}
-
-pub impl WrappingMulImpl<T, +OverflowingMul<T>> of WrappingMul<T> {
-    fn wrapping_mul(self: T, rhs: T) -> T {
-        let (res, _) = self.overflowing_mul(rhs);
-        res
-    }
-}
-
-
 // === Standalone functions ===
 
 /// Adds two 256-bit unsigned integers, returning a 512-bit unsigned integer result.
@@ -414,7 +269,7 @@ pub impl WrappingMulImpl<T, +OverflowingMul<T>> of WrappingMul<T> {
 /// limb3 will always be 0, because the maximum sum of two 256-bit numbers is at most
 /// 2**257 - 2 which fits in 257 bits.
 pub fn u256_wide_add(a: u256, b: u256) -> u512 {
-    let (sum, overflow) = u256_overflowing_add(a, b);
+    let (sum, overflow) = a.overflowing_add(b);
 
     let limb0 = sum.low;
     let limb1 = sum.high;
@@ -432,7 +287,9 @@ pub fn u256_wide_add(a: u256, b: u256) -> u512 {
 
 #[cfg(test)]
 mod tests {
-    use core::integer::{u256_overflowing_add, BoundedInt, u512, u256_overflow_mul};
+    use super::OverflowingAdd;
+    use core::integer::{u512};
+    use core::num::traits::Bounded;
     use utils::math::{
         Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift,
         OverflowingMul, WrappingMul, SaturatingAdd
@@ -500,7 +357,7 @@ mod tests {
         let a = 1000;
         let b = 500;
 
-        let (_, overflow) = u256_overflowing_add(a, b);
+        let (_, overflow) = a.overflowing_add(b);
 
         let expected = u512 { limb0: 1500, limb1: 0, limb2: 0, limb3: 0, };
 
@@ -512,10 +369,10 @@ mod tests {
 
     #[test]
     fn test_wide_add_overflow() {
-        let a = BoundedInt::<u256>::max();
+        let a = Bounded::<u256>::MAX;
         let b = 1;
 
-        let (_, overflow) = u256_overflowing_add(a, b);
+        let (_, overflow) = a.overflowing_add(b);
 
         let expected = u512 { limb0: 0, limb1: 0, limb2: 1, limb3: 0, };
 
@@ -527,8 +384,8 @@ mod tests {
 
     #[test]
     fn test_wide_add_max_values() {
-        let a = BoundedInt::<u256>::max();
-        let b = BoundedInt::<u256>::max();
+        let a = Bounded::<u256>::MAX;
+        let b = Bounded::<u256>::MAX;
 
         let expected = u512 {
             limb0: 0xfffffffffffffffffffffffffffffffe,
@@ -679,7 +536,7 @@ mod tests {
 
     #[test]
     fn test_u8_overflowing_mul_overflow_case() {
-        let result = BoundedInt::<u8>::max().overflowing_mul(BoundedInt::max());
+        let result = Bounded::<u8>::MAX.overflowing_mul(Bounded::MAX);
         assert_eq!(result, (1, true));
     }
 
@@ -691,7 +548,7 @@ mod tests {
 
     #[test]
     fn test_u8_wrapping_mul_overflow_case() {
-        let result = BoundedInt::<u8>::max().wrapping_mul(BoundedInt::max());
+        let result = Bounded::<u8>::MAX.wrapping_mul(Bounded::MAX);
         assert_eq!(result, 1);
     }
 
@@ -703,7 +560,7 @@ mod tests {
 
     #[test]
     fn test_u32_overflowing_mul_overflow_case() {
-        let result = BoundedInt::<u32>::max().overflowing_mul(BoundedInt::max());
+        let result = Bounded::<u32>::MAX.overflowing_mul(Bounded::MAX);
         assert_eq!(result, (1, true));
     }
 
@@ -715,7 +572,7 @@ mod tests {
 
     #[test]
     fn test_u32_wrapping_mul_overflow_case() {
-        let result = BoundedInt::<u32>::max().wrapping_mul(BoundedInt::max());
+        let result = Bounded::<u32>::MAX.wrapping_mul(Bounded::MAX);
         assert_eq!(result, 1);
     }
 
@@ -728,7 +585,7 @@ mod tests {
 
     #[test]
     fn test_u64_overflowing_mul_overflow_case() {
-        let result = BoundedInt::<u64>::max().overflowing_mul(BoundedInt::max());
+        let result = Bounded::<u64>::MAX.overflowing_mul(Bounded::MAX);
         assert_eq!(result, (1, true));
     }
 
@@ -740,7 +597,7 @@ mod tests {
 
     #[test]
     fn test_u64_wrapping_mul_overflow_case() {
-        let result = BoundedInt::<u64>::max().wrapping_mul(BoundedInt::max());
+        let result = Bounded::<u64>::MAX.wrapping_mul(Bounded::MAX);
         assert_eq!(result, 1);
     }
 
@@ -753,7 +610,7 @@ mod tests {
 
     #[test]
     fn test_u128_overflowing_mul_overflow_case() {
-        let result = BoundedInt::<u128>::max().overflowing_mul(BoundedInt::max());
+        let result = Bounded::<u128>::MAX.overflowing_mul(Bounded::MAX);
         assert_eq!(result, (1, true));
     }
 
@@ -765,7 +622,7 @@ mod tests {
 
     #[test]
     fn test_u128_wrapping_mul_overflow_case() {
-        let result = BoundedInt::<u128>::max().wrapping_mul(BoundedInt::max());
+        let result = Bounded::<u128>::MAX.wrapping_mul(Bounded::MAX);
         assert_eq!(result, 1);
     }
 
@@ -777,7 +634,7 @@ mod tests {
 
     #[test]
     fn test_u256_overflowing_mul_overflow_case() {
-        let result = BoundedInt::<u256>::max().overflowing_mul(BoundedInt::max());
+        let result = Bounded::<u256>::MAX.overflowing_mul(Bounded::MAX);
         assert_eq!(result, (1, true));
     }
 
@@ -789,15 +646,15 @@ mod tests {
 
     #[test]
     fn test_u256_wrapping_mul_overflow_case() {
-        let result = BoundedInt::<u256>::max().wrapping_mul(BoundedInt::max());
+        let result = Bounded::<u256>::MAX.wrapping_mul(Bounded::MAX);
         assert_eq!(result, 1);
     }
 
     #[test]
     fn test_saturating_add() {
-        let max = BoundedInt::<u8>::max();
+        let max = Bounded::<u8>::MAX;
 
-        assert_eq!(max.saturating_add(1), BoundedInt::<u8>::max());
+        assert_eq!(max.saturating_add(1), Bounded::<u8>::MAX);
         assert_eq!((max - 2).saturating_add(1), max - 1);
     }
 }

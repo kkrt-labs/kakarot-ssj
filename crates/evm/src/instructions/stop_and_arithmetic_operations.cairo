@@ -1,9 +1,6 @@
-use core::integer::{
-    u256_overflowing_add, u256_overflow_sub, u256_overflow_mul, u256_safe_divmod,
-    u512_safe_div_rem_by_u256, u256_try_as_non_zero
-};
 //! Stop and Arithmetic Operations.
-
+use core::integer::{u512_safe_div_rem_by_u256, u256_try_as_non_zero};
+use core::num::traits::{OverflowingAdd, OverflowingMul, OverflowingSub};
 use evm::errors::EVMError;
 use evm::gas;
 use evm::model::vm::{VM, VMTrait};
@@ -31,7 +28,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let popped = self.stack.pop_n(2)?;
 
         // Compute the addition
-        let (result, _) = u256_overflowing_add(*popped[0], *popped[1]);
+        let (result, _) = (*popped[0]).overflowing_add(*popped[1]);
 
         self.stack.push(result)
     }
@@ -45,7 +42,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let popped = self.stack.pop_n(2)?;
 
         // Compute the multiplication
-        let (result, _) = u256_overflow_mul(*popped[0], *popped[1]);
+        let (result, _) = (*popped[0]).overflowing_mul(*popped[1]);
 
         self.stack.push(result)
     }
@@ -59,7 +56,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let popped = self.stack.pop_n(2)?;
 
         // Compute the subtraction
-        let (result, _) = u256_overflow_sub(*popped[0], *popped[1]);
+        let (result, _) = (*popped[0]).overflowing_sub(*popped[1]);
 
         self.stack.push(result)
     }
