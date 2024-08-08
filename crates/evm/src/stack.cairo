@@ -171,10 +171,7 @@ impl StackImpl of StackTrait {
     fn pop_n(ref self: Stack, mut n: usize) -> Result<Array<u256>, EVMError> {
         ensure(!(n > self.len()), EVMError::StackUnderflow)?;
         let mut popped_items = ArrayTrait::<u256>::new();
-        loop {
-            if n == 0 {
-                break ();
-            }
+        while n != 0 {
             popped_items.append(self.pop().unwrap());
             n -= 1;
         };
@@ -315,12 +312,8 @@ mod tests {
             let mut i = 0;
 
             // When
-            loop {
-                if i == constants::STACK_MAX_DEPTH {
-                    break;
-                }
+            while i != constants::STACK_MAX_DEPTH {
                 i += 1;
-
                 stack.push(1).unwrap();
             };
 

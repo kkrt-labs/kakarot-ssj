@@ -366,15 +366,11 @@ pub fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
 }
 
 pub fn split_u128_le(ref dest: Array<u8>, mut value: u128, mut len: usize) {
-    loop {
-        if len == 0 {
-            assert(value == 0, 'split_words:value not 0');
-            break;
-        }
+    while len != 0 {
         dest.append((value % 256).try_into().unwrap());
         value /= 256;
         len -= 1;
-    }
+    };
 }
 
 /// Splits a u256 into `len` bytes, little-endian, and returns the bytes array.
@@ -409,10 +405,7 @@ pub fn load_word(mut len: usize, words: Span<u8>) -> u256 {
     let mut current: u256 = 0;
     let mut counter = 0;
 
-    loop {
-        if len == 0 {
-            break;
-        }
+    while len != 0 {
         let loaded: u8 = *words[counter];
         let tmp = current * 256;
         current = tmp + loaded.into();
@@ -434,10 +427,7 @@ pub fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
     let mut counter = 0;
     let mut bytes_arr: Array<u8> = ArrayTrait::new();
     // low part
-    loop {
-        if counter == 16 {
-            break ();
-        }
+    while counter != 16 {
         bytes_arr.append((value.low & 0xFF).try_into().unwrap());
         value.low /= 256;
         counter += 1;
@@ -445,10 +435,7 @@ pub fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
 
     let mut counter = 0;
     // high part
-    loop {
-        if counter == 16 {
-            break ();
-        }
+    while counter != 16 {
         bytes_arr.append((value.high & 0xFF).try_into().unwrap());
         value.high /= 256;
         counter += 1;
@@ -457,10 +444,7 @@ pub fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
     // Reverse the array as memory is arranged in big endian order.
     let mut counter = bytes_arr.len();
     let mut bytes_arr_reversed: Array<u8> = ArrayTrait::new();
-    loop {
-        if counter == 0 {
-            break ();
-        }
+    while counter != 0 {
         bytes_arr_reversed.append(*bytes_arr[counter - 1]);
         counter -= 1;
     };
@@ -471,11 +455,8 @@ pub fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
 pub impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
     // Concatenates two arrays by adding the elements of arr2 to arr1.
     fn concat<+Copy<T>>(ref self: Array<T>, mut arr2: Span<T>) {
-        loop {
-            match arr2.pop_front() {
-                Option::Some(elem) => self.append(*elem),
-                Option::None => { break; }
-            };
+        for elem in arr2 {
+            self.append(*elem);
         };
     }
 
@@ -483,10 +464,7 @@ pub impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
     fn reverse<+Copy<T>>(self: Span<T>) -> Array<T> {
         let mut counter = self.len();
         let mut dst: Array<T> = ArrayTrait::new();
-        loop {
-            if counter == 0 {
-                break ();
-            }
+        while counter != 0 {
             dst.append(*self[counter - 1]);
             counter -= 1;
         };
@@ -495,11 +473,7 @@ pub impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
 
     // Appends n time value to the Array
     fn append_n<+Copy<T>>(ref self: Array<T>, value: T, mut n: usize) {
-        loop {
-            if n == 0 {
-                break;
-            }
-
+        while n != 0 {
             self.append(value);
 
             n -= 1;
@@ -516,11 +490,8 @@ pub impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
 
     // Concatenates two arrays by adding the elements of arr2 to arr1.
     fn concat_unique<+Copy<T>, +PartialEq<T>>(ref self: Array<T>, mut arr2: Span<T>) {
-        loop {
-            match arr2.pop_front() {
-                Option::Some(elem) => self.append_unique(*elem),
-                Option::None => { break; }
-            };
+        for elem in arr2 {
+            self.append_unique(*elem)
         };
     }
 }
@@ -529,28 +500,26 @@ pub impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
 pub impl SpanExtension<T, +Copy<T>, +Drop<T>> of SpanExtTrait<T> {
     // Returns true if the array contains an item.
     fn contains<+PartialEq<T>>(mut self: Span<T>, value: T) -> bool {
-        loop {
-            match self.pop_front() {
-                Option::Some(elem) => { if *elem == value {
-                    break true;
-                } },
-                Option::None => { break false; }
+        let mut result = false;
+        for elem in self {
+            if *elem == value {
+                result = true;
             }
-        }
+        };
+        result
     }
 
     // Returns the index of an item in the array.
     fn index_of<+PartialEq<T>>(mut self: Span<T>, value: T) -> Option<u128> {
         let mut i = 0;
-        loop {
-            match self.pop_front() {
-                Option::Some(elem) => { if *elem == value {
-                    break Option::Some(i);
-                } },
-                Option::None => { break Option::None; }
+        let mut result = Option::None;
+        for elem in self {
+            if *elem == value {
+                result = Option::Some(i);
             }
             i += 1;
-        }
+        };
+        return result;
     }
 }
 
@@ -576,10 +545,7 @@ pub impl U8SpanExImpl of U8SpanExTrait {
         let mut pending_word: u64 = 0;
         let mut u64_word_counter: usize = 0;
 
-        loop {
-            if u64_word_counter == full_u64_word_count {
-                break self;
-            }
+        while u64_word_counter != full_u64_word_count {
             if byte_counter == 8 {
                 u64_words.append(pending_word);
                 byte_counter = 0;
@@ -592,7 +558,7 @@ pub impl U8SpanExImpl of U8SpanExTrait {
                     // Accumulate pending_word in a little endian manner
                     byte.shl(8_u64 * byte_counter.into())
                 },
-                Option::None => { break self; },
+                Option::None => { break; },
             };
             byte_counter += 1;
         };
@@ -605,16 +571,13 @@ pub impl U8SpanExImpl of U8SpanExTrait {
         // O(2n) should be okay
         // We might want to regroup every computation into a single loop with appropriate `if`
         // branching For optimisation
-        loop {
-            if byte_counter.into() == last_input_num_bytes {
-                break self;
-            }
+        while byte_counter.into() != last_input_num_bytes {
             last_input_word += match self.get(full_u64_word_count * 8 + byte_counter.into()) {
                 Option::Some(byte) => {
                     let byte: u64 = (*byte.unbox()).into();
                     byte.shl(8_u64 * byte_counter.into())
                 },
-                Option::None => { break self; },
+                Option::None => { break; },
             };
             byte_counter += 1;
         };
@@ -660,11 +623,7 @@ pub impl U8SpanExImpl of U8SpanExTrait {
         // Copy the span
         arr.append_span(slice);
 
-        loop {
-            if arr.len() == len {
-                break;
-            };
-
+        while arr.len() != len {
             arr.append(0);
         };
 
@@ -701,21 +660,13 @@ pub impl U8SpanExImpl of U8SpanExTrait {
 
         // left pad with 0
         let mut arr = array![];
-        loop {
-            if arr.len() == (len - self.len()) {
-                break;
-            };
-
+        while arr.len() != (len - self.len()) {
             arr.append(0);
         };
 
         // append the data
         let mut i = 0;
-        loop {
-            if i == self.len() {
-                break;
-            };
-
+        while i != self.len() {
             arr.append(*self[i]);
             i += 1;
         };
@@ -740,11 +691,7 @@ pub impl U64Impl of U64Trait {
 
         let mut mask = 1;
 
-        loop {
-            if (self & mask) != 0 {
-                break;
-            }
-
+        while (self & mask) == 0 {
             count += 1;
             mask *= 2;
         };
@@ -846,11 +793,7 @@ pub impl ToBytesImpl<
 
         let mut bytes: Array<u8> = Default::default();
         let mut i: u8 = 0;
-        loop {
-            if i == bytes_used {
-                break ();
-            }
-
+        while i != bytes_used {
             let val = Bitshift::<T>::shr(self, eight * (bytes_used - i - 1).into());
             bytes.append((val & mask).try_into().unwrap());
             i += 1;
@@ -876,10 +819,7 @@ pub impl ToBytesImpl<
         let mut bytes: Array<u8> = Default::default();
 
         let mut i: u8 = 0;
-        loop {
-            if i == bytes_used {
-                break ();
-            }
+        while i != bytes_used {
             let val = self.shr(eight * i.into());
             bytes.append((val & mask).try_into().unwrap());
             i += 1;
@@ -947,10 +887,7 @@ pub impl FromBytesImpl<
         let offset: u32 = len - 1;
         let mut result: T = Zero::zero();
         let mut i: u32 = 0;
-        loop {
-            if i == len {
-                break ();
-            }
+        while i != len {
             let byte: T = (*self.at(i)).into();
             // Safe unwrap, since offset - i is inbound in case of u8 { offset - i = 0 }, and
             // TryInto<u32, u32>, TryInto<u32, u64>, TryInto<u32, u128>, TryInto<u32, 256> are safe
@@ -974,10 +911,7 @@ pub impl FromBytesImpl<
 
         let mut result: T = Zero::zero();
         let mut i: u32 = 0;
-        loop {
-            if i == len {
-                break ();
-            }
+        while i != len {
             let byte: T = (*self.at(i)).into();
             // safe unwrap, as i is inbound in case of u8 { max value can be 8 * 1 = 8 }, and
             // TryInto<u32, u32>, TryInto<u32, u64>, TryInto<u32, u128>, TryInto<u32, 256> are safe
@@ -993,12 +927,9 @@ pub impl FromBytesImpl<
 #[generate_trait]
 pub impl ByteArrayExt of ByteArrayExTrait {
     fn append_span_bytes(ref self: ByteArray, mut bytes: Span<u8>) {
-        loop {
-            match bytes.pop_front() {
-                Option::Some(val) => { self.append_byte(*val) },
-                Option::None => { break; }
-            }
-        }
+        for val in bytes {
+            self.append_byte(*val);
+        };
     }
 
     fn from_bytes(mut bytes: Span<u8>) -> ByteArray {
@@ -1007,16 +938,10 @@ pub impl ByteArrayExt of ByteArrayExTrait {
             bytes.len(), 31_u32.try_into().unwrap()
         );
         let mut i = 0;
-        loop {
-            if i == nb_full_words {
-                break;
-            };
+        while i != nb_full_words {
             let mut word: felt252 = 0;
             let mut j = 0;
-            loop {
-                if j == 31 {
-                    break;
-                };
+            while j != 31 {
                 word = word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
                 j += 1;
             };
@@ -1031,10 +956,7 @@ pub impl ByteArrayExt of ByteArrayExTrait {
         let mut pending_word: felt252 = 0;
         let mut i = 0;
 
-        loop {
-            if i == pending_word_len {
-                break;
-            };
+        while i != pending_word_len {
             pending_word = pending_word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
             i += 1;
         };
@@ -1051,10 +973,7 @@ pub impl ByteArrayExt of ByteArrayExTrait {
         let mut output: Array<u8> = Default::default();
         let len = self.len();
         let mut i = 0;
-        loop {
-            if i == len {
-                break;
-            };
+        while i != len {
             output.append(self[i]);
             i += 1;
         };
@@ -1078,10 +997,7 @@ pub impl ByteArrayExt of ByteArrayExTrait {
         let mut pending_word: u64 = 0;
         let mut u64_word_counter: usize = 0;
 
-        loop {
-            if u64_word_counter == full_u64_word_count {
-                break;
-            }
+        while u64_word_counter != full_u64_word_count {
             if byte_counter == 8 {
                 u64_words.append(pending_word);
                 byte_counter = 0;
@@ -1107,10 +1023,7 @@ pub impl ByteArrayExt of ByteArrayExTrait {
         // O(2n) should be okay
         // We might want to regroup every computation into a single loop with appropriate `if`
         // branching For optimisation
-        loop {
-            if byte_counter.into() == last_input_num_bytes {
-                break;
-            }
+        while byte_counter.into() != last_input_num_bytes {
             last_input_word += match self.at(full_u64_word_count * 8 + byte_counter.into()) {
                 Option::Some(byte) => {
                     let byte: u64 = byte.into();
@@ -1175,10 +1088,7 @@ pub impl EthAddressExImpl of EthAddressExTrait {
         let value: u256 = self.into();
         let mut bytes: Array<u8> = Default::default();
         let mut i = 0;
-        loop {
-            if i == bytes_used {
-                break ();
-            }
+        while i != bytes_used {
             let val = value.wrapping_shr(8 * (bytes_used - i - 1));
             bytes.append((val & 0xFF).try_into().unwrap());
             i += 1;
@@ -1201,10 +1111,7 @@ pub impl EthAddressExImpl of EthAddressExTrait {
         let offset: u32 = len - 1;
         let mut result: u256 = 0;
         let mut i: u32 = 0;
-        loop {
-            if i == len {
-                break ();
-            }
+        while i != len {
             let byte: u256 = (*input.at(i)).into();
             result += byte.shl((8 * (offset - i)).into());
 
@@ -1438,12 +1345,8 @@ pub impl Felt252VecTraitImpl<
 
         let mut i = self.len();
 
-        loop {
-            if i == 0 {
-                break;
-            }
+        while i != 0 {
             i -= 1;
-
             res.append_span(self[i].to_be_bytes_padded());
         };
 
@@ -1459,11 +1362,7 @@ pub impl Felt252VecTraitImpl<
         let mut res: Array<u8> = array![];
         let mut i = 0;
 
-        loop {
-            if i == self.len() {
-                break;
-            }
-
+        while i != self.len() {
             if self[i] == Zero::zero() {
                 res.append(Zero::zero());
             } else {
@@ -1521,11 +1420,7 @@ pub impl Felt252VecTraitImpl<
     /// * The number of leading zeroes in `self`.
     fn count_leading_zeroes(ref self: Felt252Vec<T>) -> usize {
         let mut i = 0;
-        loop {
-            if i == self.len || self[i] != Zero::zero() {
-                break;
-            }
-
+        while i != self.len() && self[i] == Zero::zero() {
             i += 1;
         };
 
@@ -1570,14 +1465,9 @@ pub impl Felt252VecTraitImpl<
         }
 
         let mut i = index;
-        loop {
-            let val = slice.pop_front();
-            if val.is_none() {
-                break;
-            }
-
+        for val in slice {
             // safe unwrap, as in case of none, we will never reach this branch
-            self.set(i, (*(val.unwrap())).into());
+            self.set(i, (*val).into());
             i += 1;
         };
 
@@ -1629,11 +1519,7 @@ pub impl Felt252VecTraitImpl<
 
         let stop = idx + vec.len();
         let mut i = idx;
-        loop {
-            if i == stop {
-                break;
-            }
-
+        while i != stop {
             self.set(i, vec[i - idx]);
             i += 1;
         };
@@ -1648,11 +1534,7 @@ pub impl Felt252VecTraitImpl<
     /// * `input` a ref Felt252Vec<T>
     fn remove_trailing_zeroes(ref self: Felt252Vec<T>) {
         let mut new_len = self.len;
-        loop {
-            if (new_len == 0) || (self[new_len - 1] != Zero::zero()) {
-                break;
-            }
-
+        while (new_len != 0) && (self[new_len - 1] == Zero::zero()) {
             new_len -= 1;
         };
 
@@ -1690,13 +1572,8 @@ pub impl Felt252VecTraitImpl<
 
         let mut i: u32 = 0;
 
-        loop {
-            if i == self.len {
-                break;
-            }
-
+        while i != self.len {
             new_vec.push(self[i]);
-
             i += 1;
         };
 
@@ -1726,11 +1603,7 @@ pub impl Felt252VecTraitImpl<
 
         let mut i: u32 = 0;
 
-        loop {
-            if i == len {
-                break;
-            }
-
+        while i != len {
             new_vec.push(self[idx + i]);
 
             i += 1;
@@ -1760,17 +1633,15 @@ pub impl Felt252VecTraitImpl<
         };
 
         let mut i = 0;
-        loop {
-            if i == lhs.len() {
-                break true;
-            }
-
+        let mut result = true;
+        while i != lhs.len() {
             if lhs[i] != rhs[i] {
-                break false;
+                result = false;
+                break;
             }
-
             i += 1;
-        }
+        };
+        result
     }
 
     /// Fills a Felt252Vec<T> with a given `value` starting from `start_idx` to `start_idx + len`
@@ -1802,11 +1673,7 @@ pub impl Felt252VecTraitImpl<
         }
 
         let mut i = start_idx;
-        loop {
-            if i == start_idx + len {
-                break;
-            }
-
+        while i != start_idx + len {
             self.set(i, value);
 
             i += 1;
@@ -1872,10 +1739,7 @@ mod tests {
         let mut arr6 = ArrayTrait::new();
         arr6.append(0xff);
         let mut counter: u128 = 0;
-        loop {
-            if counter >= 15 {
-                break ();
-            }
+        while counter < 15 {
             arr6.append(0xff);
             counter += 1;
         };
@@ -1916,10 +1780,7 @@ mod tests {
         assert(*res4[0] == 0xfe, 'res4: wrong MSB value');
 
         let mut counter: usize = 1;
-        loop {
-            if counter >= 16 {
-                break ();
-            }
+        while counter < 16 {
             assert(*res4[counter] == 0xff, 'res4: wrong value at index');
             counter += 1;
         };
@@ -1961,11 +1822,8 @@ mod tests {
         assert(dst4.len() == 16, 'dst4: wrong length');
         let mut counter: usize = 0;
         assert(*dst4[15] == 0xfe, 'dst4: wrong LSB value');
-        loop {
-            if counter >= 15 {
-                break ();
-            }
-            assert(*dst4[counter] == 0xff, 'dst4: wrong value at index');
+        while counter < 15 {
+            assert_eq!(*dst4[counter], 0xff);
             counter += 1;
         };
     }
@@ -2327,10 +2185,7 @@ mod tests {
 
             // Ensure that the result is complete and keeps the same order
             let mut i = 0;
-            loop {
-                if i == arr.len() {
-                    break;
-                };
+            while i != arr.len() {
                 assert(*arr[i] == res[i], 'byte mismatch');
                 i += 1;
             };
@@ -2403,10 +2258,7 @@ mod tests {
 
             // Ensure that the result is complete and keeps the same order
             let mut i = 0;
-            loop {
-                if i == arr.len() {
-                    break;
-                };
+            while i != arr.len() {
                 assert(*arr[i] == res[i], 'byte mismatch');
                 i += 1;
             };

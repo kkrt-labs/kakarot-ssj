@@ -60,12 +60,8 @@ fn rotate_right(value: u64, n: u32) -> u64 {
 fn compress(rounds: usize, h: Span<u64>, m: Span<u64>, t: Span<u64>, f: bool) -> Span<u64> {
     let mut v = VecTrait::<Felt252Vec, u64>::new();
     let mut i = 0;
-    loop {
-        if i == 16 {
-            break;
-        }
+    while i != 16 {
         v.push(0);
-
         i += 1;
     };
 

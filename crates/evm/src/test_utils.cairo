@@ -256,11 +256,9 @@ fn initialize_contract_account(
         selfdestruct: false,
         is_created: false,
     };
+
     let mut i = 0;
-    loop {
-        if i == storage.len() {
-            break;
-        };
+    while i != storage.len() {
         let (key, value) = storage.get(i).unwrap().unbox();
         IAccountDispatcher { contract_address: account.starknet_address() }
             .write_storage(*key, *value);

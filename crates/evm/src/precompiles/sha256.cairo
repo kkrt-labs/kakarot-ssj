@@ -32,8 +32,8 @@ impl Sha256 of Precompile {
         } else {
             let mut last_input_word: u32 = 0;
             let mut last_input_num_bytes: u32 = 0;
-            while let Option::Some(byte) = input.pop_front() {
-                last_input_word = last_input_word.shl(8) + (*byte).into();
+            for remaining_byte in input {
+                last_input_word = last_input_word.shl(8) + (*remaining_byte).into();
                 last_input_num_bytes += 1;
             };
             (last_input_word, last_input_num_bytes)

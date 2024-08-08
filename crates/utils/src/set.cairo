@@ -34,11 +34,8 @@ pub impl SetImpl<T, +Drop<T>, +Copy<T>> of SetTrait<T> {
 
     #[inline]
     fn extend_from_span<+PartialEq<T>>(ref self: Set<T>, mut other: Span<T>) {
-        loop {
-            match other.pop_front() {
-                Option::Some(v) => { self.add(*v); },
-                Option::None => { break (); },
-            };
+        for v in other {
+            self.add(*v);
         };
     }
 
@@ -72,11 +69,8 @@ pub impl SetTCloneImpl<T, +Clone<T>, +Drop<T>, +PartialEq<T>, +Copy<T>> of Clone
     fn clone(self: @Set<T>) -> Set<T> {
         let mut response: Array<T> = Default::default();
         let mut span = self.to_span();
-        loop {
-            match span.pop_front() {
-                Option::Some(v) => { response.append(*v); },
-                Option::None => { break (); },
-            };
+        for v in span {
+            response.append(*v);
         };
         Set { inner: response }
     }
@@ -114,11 +108,8 @@ pub impl SpanSetImpl<T, +Copy<T>, +Drop<T>> of SpanSetTrait<T> {
     fn clone_set(self: SpanSet<T>) -> Set<T> {
         let mut response: Array<T> = Default::default();
         let mut span = self.to_span();
-        loop {
-            match span.pop_front() {
-                Option::Some(v) => { response.append(*v); },
-                Option::None => { break (); },
-            };
+        for v in span {
+            response.append(*v);
         };
         Set { inner: response }
     }

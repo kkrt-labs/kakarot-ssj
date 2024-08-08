@@ -229,11 +229,7 @@ impl AccountImpl of AccountTrait {
     fn get_jumpdests(mut bytecode: Span<u8>) -> Felt252Dict<bool> {
         let mut jumpdests: Felt252Dict<bool> = Default::default();
         let mut i: usize = 0;
-        loop {
-            if (i >= bytecode.len()) {
-                break;
-            }
-
+        while i < bytecode.len() {
             let opcode = *bytecode[i];
             // checking for PUSH opcode family
             if opcode >= 0x5f && opcode <= 0x7f {

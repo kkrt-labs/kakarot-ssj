@@ -322,31 +322,27 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     /// * `chunk_index` - The index of the chunk to start storing at.
     /// * `elements` - A span of bytes to store in memory.
     fn store_aligned_words(ref self: Memory, mut chunk_index: usize, mut elements: Span<u8>) {
-        loop {
-            if elements.len() == 0 {
-                break;
-            }
-
-            let current: u128 = ((*elements[0]).into() * POW_2_120
-                + (*elements[1]).into() * POW_2_112
-                + (*elements[2]).into() * POW_2_104
-                + (*elements[3]).into() * POW_2_96
-                + (*elements[4]).into() * POW_2_88
-                + (*elements[5]).into() * POW_2_80
-                + (*elements[6]).into() * POW_2_72
-                + (*elements[7]).into() * POW_2_64
-                + (*elements[8]).into() * POW_2_56
-                + (*elements[9]).into() * POW_2_48
-                + (*elements[10]).into() * POW_2_40
-                + (*elements[11]).into() * POW_2_32
-                + (*elements[12]).into() * POW_2_24
-                + (*elements[13]).into() * POW_2_16
-                + (*elements[14]).into() * POW_2_8
-                + (*elements[15]).into() * POW_2_0);
+        while let Option::Some(words) = elements.multi_pop_front::<16>() {
+            let words = (*words).unbox().span();
+            let current: u128 = ((*words[0]).into() * POW_2_120
+                + (*words[1]).into() * POW_2_112
+                + (*words[2]).into() * POW_2_104
+                + (*words[3]).into() * POW_2_96
+                + (*words[4]).into() * POW_2_88
+                + (*words[5]).into() * POW_2_80
+                + (*words[6]).into() * POW_2_72
+                + (*words[7]).into() * POW_2_64
+                + (*words[8]).into() * POW_2_56
+                + (*words[9]).into() * POW_2_48
+                + (*words[10]).into() * POW_2_40
+                + (*words[11]).into() * POW_2_32
+                + (*words[12]).into() * POW_2_24
+                + (*words[13]).into() * POW_2_16
+                + (*words[14]).into() * POW_2_8
+                + (*words[15]).into() * POW_2_0);
 
             self.items.insert(chunk_index.into(), current);
             chunk_index += 1;
-            elements = elements.slice(16, elements.len() - 16);
         }
     }
 
@@ -368,10 +364,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     fn load_aligned_words(
         ref self: Memory, mut chunk_index: usize, final_chunk: usize, ref elements: Array<u8>
     ) {
-        loop {
-            if chunk_index == final_chunk {
-                break;
-            }
+        while chunk_index != final_chunk {
             let value = self.items.get(chunk_index.into());
             // Pushes 16 items to `elements`
             helpers::split_word_128(value.into(), ref elements);
@@ -805,10 +798,7 @@ mod tests {
 
         assert(results.len() == 16, 'error');
         let mut i = 0;
-        loop {
-            if i == results.len() {
-                break;
-            }
+        while i != results.len() {
             assert(*results[i] == 0xFF, 'byte value loaded not correct');
             i += 1;
         }
