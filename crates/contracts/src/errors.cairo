@@ -6,3 +6,38 @@ pub const STORAGE_WRITE_ERROR: felt252 = 'CA: Storage Write Error';
 
 pub const NONCE_READ_ERROR: felt252 = 'CA: Nonce Read Error';
 pub const NONCE_WRITE_ERROR: felt252 = 'CA: Nonce Write Error';
+
+pub const KAKAROT_VALIDATION_FAILED: [
+    u8
+    ; 30] = [
+    'K',
+    'a',
+    'k',
+    'a',
+    'r',
+    'o',
+    't',
+    ':',
+    ' ',
+    'e',
+    't',
+    'h',
+    ' ',
+    'v',
+    'a',
+    'l',
+    'i',
+    'd',
+    'a',
+    't',
+    'i',
+    'o',
+    'n',
+    ' ',
+    'f',
+    'a',
+    'i',
+    'l',
+    'e',
+    'd'
+];
