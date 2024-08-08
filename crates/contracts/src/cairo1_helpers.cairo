@@ -140,7 +140,7 @@ mod embeddable_impls {
             };
             match result {
                 Result::Ok((gas, output)) => (true, gas, output),
-                Result::Err(_) => (false, 0, array![].span())
+                Result::Err(_) => (false, 0, [].span())
             }
         }
     }
@@ -188,7 +188,7 @@ mod embeddable_impls {
                         return (false, Zero::zero());
                     }
                     // Keccak output is little endian.
-                    let point_hash_le = keccak_u256s_be_inputs(array![x, y].span());
+                    let point_hash_le = keccak_u256s_be_inputs([x, y].span());
                     let point_hash = u256 {
                         low: core::integer::u128_byte_reverse(point_hash_le.high),
                         high: core::integer::u128_byte_reverse(point_hash_le.low)

@@ -596,19 +596,17 @@ mod tests {
         assert_eq!(tx.destination.unwrap().into(), 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984);
         assert_eq!(tx.amount, 0x016345785d8a0000);
 
-        let expected_access_list = array![
+        let expected_access_list = [
             AccessListItem {
                 ethereum_address: EthAddress {
                     address: 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984
                 },
-                storage_keys: array![
+                storage_keys: [
                     0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65,
                     0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94
-                ]
-                    .span()
+                ].span()
             }
-        ]
-            .span();
+        ].span();
         assert!(tx.access_list == expected_access_list, "access lists are not equal");
 
         let expected_calldata = 0xabcdef_u32.to_be_bytes();
@@ -647,19 +645,17 @@ mod tests {
         assert_eq!(tx.destination.unwrap().into(), 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984);
         assert_eq!(tx.amount, 0x016345785d8a0000);
 
-        let expected_access_list = array![
+        let expected_access_list = [
             AccessListItem {
                 ethereum_address: EthAddress {
                     address: 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984
                 },
-                storage_keys: array![
+                storage_keys: [
                     0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65,
                     0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94
-                ]
-                    .span()
+                ].span()
             }
-        ]
-            .span();
+        ].span();
         assert!(tx.access_list == expected_access_list, "access lists are not equal");
 
         let expected_calldata = 0xabcdef_u32.to_be_bytes();

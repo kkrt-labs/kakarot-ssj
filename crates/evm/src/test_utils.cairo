@@ -173,8 +173,8 @@ fn ca_address() -> EthAddress {
 }
 
 fn preset_message() -> Message {
-    let code: Span<u8> = array![0x00].span();
-    let data: Span<u8> = array![4, 5, 6].span();
+    let code: Span<u8> = [0x00].span();
+    let data: Span<u8> = [4, 5, 6].span();
     let value: u256 = callvalue();
     let caller = Address {
         evm: origin(),
@@ -222,7 +222,7 @@ fn preset_environment() -> Environment {
 fn preset_vm() -> VM {
     let message = preset_message();
     let environment = preset_environment();
-    let return_data = array![1, 2, 3].span();
+    let return_data = [1, 2, 3].span();
     VM {
         stack: Default::default(),
         memory: Default::default(),
@@ -249,12 +249,9 @@ fn initialize_contract_account(
     let mut ca_address = deploy_contract_account(eth_address, bytecode);
     // Set the storage of the contract account
     let account = Account {
-        address: ca_address,
-        code: array![0xab, 0xcd, 0xef].span(),
-        nonce: 1,
-        balance: 0,
-        selfdestruct: false,
-        is_created: false,
+        address: ca_address, code: [
+            0xab, 0xcd, 0xef
+        ].span(), nonce: 1, balance: 0, selfdestruct: false, is_created: false,
     };
 
     let mut i = 0;

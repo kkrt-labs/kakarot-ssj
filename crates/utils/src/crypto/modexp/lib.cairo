@@ -11,7 +11,7 @@ pub fn modexp(base: Span<u8>, exp: Span<u8>, modulus: Span<u8>) -> Span<u8> {
     let mut m = MPNatTrait::from_big_endian(modulus);
 
     if m.digits.len == 1 && m.digits[0] == 0 {
-        return array![].span();
+        return [].span();
     }
 
     let mut result = x.modpow(exp, ref m);

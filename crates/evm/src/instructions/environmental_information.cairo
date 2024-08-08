@@ -168,7 +168,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let bytecode: Span<u8> = self.message().code;
 
         let copied: Span<u8> = if offset > bytecode.len() {
-            array![].span()
+            [].span()
         } else if (offset + size > bytecode.len()) {
             bytecode.slice(offset, bytecode.len() - offset)
         } else {
@@ -232,7 +232,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let bytecode_slice = if offset < bytecode_len {
             bytecode.slice(offset, bytecode_len - offset)
         } else {
-            array![].span()
+            [].span()
         };
         self.memory.store_padded_segment(dest_offset, size, bytecode_slice);
         Result::Ok(())
@@ -415,7 +415,7 @@ mod tests {
     fn test_exec_balance_contract_account() {
         // Given
         let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let mut ca_address = deploy_contract_account(evm_address(), array![].span());
+        let mut ca_address = deploy_contract_account(evm_address(), [].span());
 
         fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
 
@@ -649,12 +649,12 @@ mod tests {
 
     #[test]
     fn test_calldatacopy_basic() {
-        test_calldatacopy(32, 0, 3, array![4, 5, 6].span());
+        test_calldatacopy(32, 0, 3, [4, 5, 6].span());
     }
 
     #[test]
     fn test_calldatacopy_with_offset() {
-        test_calldatacopy(32, 2, 1, array![6].span());
+        test_calldatacopy(32, 2, 1, [6].span());
     }
 
     #[test]
@@ -726,7 +726,7 @@ mod tests {
     #[test]
     fn test_codesize() {
         // Given
-        let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
+        let bytecode: Span<u8> = [1, 2, 3, 4, 5].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -745,7 +745,7 @@ mod tests {
     #[test]
     fn test_codecopy_type_conversion_error() {
         // Given
-        let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
+        let bytecode: Span<u8> = [1, 2, 3, 4, 5].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -795,7 +795,7 @@ mod tests {
 
     fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
         // Given
-        let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
+        let bytecode: Span<u8> = [1, 2, 3, 4, 5].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -886,7 +886,7 @@ mod tests {
         setup_contracts_for_testing();
 
         // The bytecode remains empty, and we expect the empty hash in return
-        let _ca_address = deploy_contract_account(evm_address(), array![].span());
+        let _ca_address = deploy_contract_account(evm_address(), [].span());
 
         vm.stack.push(evm_address.into()).expect('push failed');
 
@@ -977,7 +977,7 @@ mod tests {
         // Then
         let mut bytecode_slice = array![];
         vm.memory.load_n(5, ref bytecode_slice, 20);
-        assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
+        assert(bytecode_slice.span() == [0, 0, 0, 0, 0].span(), 'wrong bytecode');
     }
 
     fn test_exec_extcodecopy_eoa() {
@@ -1002,7 +1002,7 @@ mod tests {
         // Then
         let mut bytecode_slice = array![];
         vm.memory.load_n(5, ref bytecode_slice, 20);
-        assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
+        assert(bytecode_slice.span() == [0, 0, 0, 0, 0].span(), 'wrong bytecode');
     }
 
 
@@ -1027,7 +1027,7 @@ mod tests {
         // Then
         let mut bytecode_slice = array![];
         vm.memory.load_n(5, ref bytecode_slice, 20);
-        assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
+        assert(bytecode_slice.span() == [0, 0, 0, 0, 0].span(), 'wrong bytecode');
     }
 
 
@@ -1236,11 +1236,11 @@ mod tests {
     //     setup_contracts_for_testing();
 
     //     // The bytecode remains empty, and we expect the empty hash in return
-    //     let mut ca_address = deploy_contract_account(evm_address, array![].span());
+    //     let mut ca_address = deploy_contract_account(evm_address, [].span());
     //     let account = Account {
     //
     //         address: ca_address,
-    //         code: array![].span(),
+    //         code: [].span(),
     //         nonce: 1,
     //         balance: 1,
     //         selfdestruct: false
@@ -1289,7 +1289,7 @@ mod tests {
 
         setup_contracts_for_testing();
         // The bytecode remains empty, and we expect the empty hash in return
-        deploy_contract_account(evm_address(), array![].span());
+        deploy_contract_account(evm_address(), [].span());
 
         vm.stack.push(evm_address.into()).expect('push failed');
 

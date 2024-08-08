@@ -27,7 +27,7 @@ impl EcRecover of Precompile {
         let message_hash = input.slice(0, 32);
         let message_hash = match message_hash.from_be_bytes() {
             Option::Some(message_hash) => message_hash,
-            Option::None => { return Result::Ok((gas, array![].span())); }
+            Option::None => { return Result::Ok((gas, [].span())); }
         };
 
         let v: Option<u256> = input.slice(32, 32).from_be_bytes();
@@ -37,22 +37,22 @@ impl EcRecover of Precompile {
                 if (y_parity == 0 || y_parity == 1) {
                     y_parity == 1
                 } else {
-                    return Result::Ok((gas, array![].span()));
+                    return Result::Ok((gas, [].span()));
                 }
             },
-            Option::None => { return Result::Ok((gas, array![].span())); }
+            Option::None => { return Result::Ok((gas, [].span())); }
         };
 
         let r: Option<u256> = input.slice(64, 32).from_be_bytes();
         let r = match r {
             Option::Some(r) => r,
-            Option::None => { return Result::Ok((gas, array![].span())); }
+            Option::None => { return Result::Ok((gas, [].span())); }
         };
 
         let s: Option<u256> = input.slice(96, 32).from_be_bytes();
         let s = match s {
             Option::Some(s) => s,
-            Option::None => { return Result::Ok((gas, array![].span())); }
+            Option::None => { return Result::Ok((gas, [].span())); }
         };
 
         let signature = Signature { r, s, y_parity };
@@ -60,7 +60,7 @@ impl EcRecover of Precompile {
         let recovered_public_key =
             match recover_public_key::<Secp256k1Point>(message_hash, signature) {
             Option::Some(public_key_point) => public_key_point,
-            Option::None => { return Result::Ok((gas, array![].span())); }
+            Option::None => { return Result::Ok((gas, [].span())); }
         };
 
         let eth_address: u256 = public_key_point_to_eth_address(recovered_public_key).into();

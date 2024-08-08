@@ -26,7 +26,7 @@ impl AccountBuilderImpl of AccountBuilderTrait {
         AccountBuilder {
             account: Account {
                 address: address,
-                code: array![].span(),
+                code: [].span(),
                 nonce: 0,
                 balance: 0,
                 selfdestruct: false,

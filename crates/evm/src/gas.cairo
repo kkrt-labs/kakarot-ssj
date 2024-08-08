@@ -295,12 +295,9 @@ mod tests {
         let calldata = rlp_encoded.to_be_bytes();
         let destination: Option<EthAddress> = 'vitalik.eth'.try_into();
 
-        let access_list = array![
-            AccessListItem {
-                ethereum_address: evm_address(), storage_keys: array![1, 2, 3, 4, 5].span()
-            }
-        ]
-            .span();
+        let access_list = [
+            AccessListItem { ethereum_address: evm_address(), storage_keys: [1, 2, 3, 4, 5].span() }
+        ].span();
 
         let tx: EthereumTransaction = EthereumTransaction::AccessListTransaction(
             AccessListTransaction {

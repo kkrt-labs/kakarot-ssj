@@ -880,7 +880,7 @@ mod tests {
         // Test that borrow equals self_most_sig at end of sub_to_same_size */
         {
             let mut x = MPNatTrait::from_big_endian(
-                array![
+                [
                     0x00,
                     0x00,
                     0x00,
@@ -913,11 +913,10 @@ mod tests {
                     0x00,
                     0x00,
                     0x00,
-                ]
-                    .span()
+                ].span()
             );
             let mut y = MPNatTrait::from_big_endian(
-                array![
+                [
                     0xae,
                     0x5f,
                     0xf0,
@@ -934,8 +933,7 @@ mod tests {
                     0x00,
                     0x00,
                     0x00,
-                ]
-                    .span()
+                ].span()
             );
             x.sub_to_same_size(ref y);
         }
@@ -943,7 +941,7 @@ mod tests {
         // Additional test for sub_to_same_size q_hat/r_hat adjustment logic */
         {
             let mut x = MPNatTrait::from_big_endian(
-                array![
+                [
                     0x00,
                     0x00,
                     0x00,
@@ -976,11 +974,10 @@ mod tests {
                     0x00,
                     0x00,
                     0x00,
-                ]
-                    .span()
+                ].span()
             );
             let mut y = MPNatTrait::from_big_endian(
-                array![
+                [
                     0xff,
                     0xff,
                     0xff,
@@ -997,8 +994,7 @@ mod tests {
                     0x00,
                     0x00,
                     0x00,
-                ]
-                    .span()
+                ].span()
             );
             x.sub_to_same_size(ref y);
         }

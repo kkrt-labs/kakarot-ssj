@@ -45,7 +45,7 @@ fn deploy(evm_address: EthAddress) -> Result<Address, EVMError> {
     let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
     let uninitialized_account_class_hash = kakarot_state.uninitialized_account_class_hash();
     let kakarot_address = get_contract_address();
-    let calldata: Span<felt252> = array![kakarot_address.into(), evm_address.into()].span();
+    let calldata: Span<felt252> = [kakarot_address.into(), evm_address.into()].span();
 
     let (starknet_address, _) = deploy_syscall(
         uninitialized_account_class_hash, evm_address.into(), calldata, true
@@ -62,7 +62,7 @@ fn get_bytecode(evm_address: EthAddress) -> Span<u8> {
         let account = IAccountDispatcher { contract_address: starknet_address };
         account.bytecode()
     } else {
-        array![].span()
+        [].span()
     }
 }
 

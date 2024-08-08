@@ -63,7 +63,7 @@ impl CallHelpersImpl of CallHelpers {
         ret_offset: usize,
         ret_size: usize
     ) -> Result<(), EVMError> {
-        self.return_data = array![].span();
+        self.return_data = [].span();
         if self.message().depth >= constants::STACK_MAX_DEPTH {
             self.gas_left += gas;
             return self.stack.push(0);

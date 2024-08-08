@@ -35,7 +35,7 @@ impl VMImpl of VMTrait {
             memory: Default::default(),
             pc: 0,
             valid_jumpdests: AccountTrait::get_jumpdests(message.code),
-            return_data: array![].span(),
+            return_data: [].span(),
             env,
             message,
             gas_left: message.gas_limit,
@@ -221,14 +221,14 @@ mod tests {
     fn test_read_code() {
         // Given a vm with some bytecode in the call context
 
-        let bytecode = array![0x01, 0x02, 0x03, 0x04, 0x05].span();
+        let bytecode = [0x01, 0x02, 0x03, 0x04, 0x05].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
         // When we read a code slice
         let read_code = vm.read_code(3);
 
         // Then the read code should be the expected slice and the PC should be updated
-        assert(read_code == array![0x01, 0x02, 0x03].span(), 'wrong bytecode read');
+        assert(read_code == [0x01, 0x02, 0x03].span(), 'wrong bytecode read');
         // Read Code should not modify PC
         assert(vm.pc() == 0, 'wrong pc');
     }
@@ -236,9 +236,9 @@ mod tests {
     #[test]
     fn test_set_return() {
         let mut vm = VMTrait::new(Default::default(), Default::default());
-        vm.set_return_data(array![0x01, 0x02, 0x03].span());
+        vm.set_return_data([0x01, 0x02, 0x03].span());
         let return_data = vm.return_data();
-        assert(return_data == array![0x01, 0x02, 0x03].span(), 'wrong return data');
+        assert(return_data == [0x01, 0x02, 0x03].span(), 'wrong return data');
     }
 
     #[test]
@@ -252,11 +252,8 @@ mod tests {
     #[test]
     fn test_is_valid_jump_destinations() {
         // PUSH1, 0x03, JUMP, JUMPDEST, PUSH1, 0x09, JUMP, PUSH1 0x2, JUMPDDEST, PUSH1 0x2
-        let bytecode: Array<u8> = array![
-            0x60, 0x3, 0x56, 0x5b, 0x60, 0x9, 0x56, 0x60, 0x2, 0x5b, 0x60, 0x2
-        ];
         let mut message: Message = Default::default();
-        message.code = bytecode.span();
+        message.code = [0x60, 0x3, 0x56, 0x5b, 0x60, 0x9, 0x56, 0x60, 0x2, 0x5b, 0x60, 0x2].span();
 
         let mut vm = VMTrait::new(message, Default::default());
 
@@ -269,9 +266,8 @@ mod tests {
 
     #[test]
     fn test_valid_jump_destination_inside_jumpn() {
-        let bytecode: Array<u8> = array![0x60, 0x5B, 0x60, 0x00];
         let mut message: Message = Default::default();
-        message.code = bytecode.span();
+        message.code = [0x60, 0x5B, 0x60, 0x00].span();
 
         let mut vm = VMTrait::new(message, Default::default());
         assert!(vm.is_valid_jump(0x1) == false, "expected false");

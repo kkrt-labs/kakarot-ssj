@@ -733,14 +733,14 @@ mod tests {
     #[test]
     fn test_store_n_no_aligned_words() {
         let mut memory = MemoryTrait::new();
-        memory.store_n(array![1, 2].span(), 15);
+        memory.store_n([1, 2].span(), 15);
         assert(memory.size() == 32, 'memory should be 32 bytes');
     }
 
     #[test]
     fn test_store_n_2_aligned_words() {
         let mut memory = MemoryTrait::new();
-        let bytes_arr = array![
+        let bytes_arr = [
             1,
             2,
             3,
@@ -776,8 +776,7 @@ mod tests {
             33,
             34,
             35
-        ]
-            .span();
+        ].span();
         memory.store_n(bytes_arr, 15);
         // value [1], will be stored in first word, values [2:34] will be stored in aligned words,
         // value [35] will be stored in final word
@@ -1010,7 +1009,7 @@ mod tests {
         let mut memory = MemoryTrait::new();
 
         // When
-        let bytes = array![1, 2, 3, 4, 5].span();
+        let bytes = [1, 2, 3, 4, 5].span();
         memory.store_padded_segment(0, 0, bytes);
 
         // Then
@@ -1024,7 +1023,7 @@ mod tests {
         let mut memory = MemoryTrait::new();
 
         // When
-        let bytes = array![].span();
+        let bytes = [].span();
         memory.store_padded_segment(10, 10, bytes);
 
         // Then
@@ -1040,7 +1039,7 @@ mod tests {
         let mut memory = MemoryTrait::new();
 
         // When
-        let bytes = array![1, 2, 3, 4, 5].span();
+        let bytes = [1, 2, 3, 4, 5].span();
         memory.store_padded_segment(0, 5, bytes);
 
         // Then
@@ -1065,7 +1064,7 @@ mod tests {
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
 
         // When
-        let bytes = array![1, 2, 3, 4, 5].span();
+        let bytes = [1, 2, 3, 4, 5].span();
         memory.store_padded_segment(0, 10, bytes);
 
         // Then
@@ -1090,7 +1089,7 @@ mod tests {
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
 
         // When
-        let bytes = array![1, 2, 3, 4, 5].span();
+        let bytes = [1, 2, 3, 4, 5].span();
         memory.store_padded_segment(5, 10, bytes);
 
         // Then
@@ -1116,7 +1115,7 @@ mod tests {
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 32);
 
         // When
-        let bytes = array![1, 2, 3, 4, 5].span();
+        let bytes = [1, 2, 3, 4, 5].span();
         memory.store_padded_segment(30, 10, bytes);
 
         // Then

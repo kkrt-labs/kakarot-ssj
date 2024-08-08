@@ -323,7 +323,7 @@ mod tests {
             );
             let expected_account = Account {
                 address: Address { evm: evm_address, starknet: starknet_address },
-                code: array![].span(),
+                code: [].span(),
                 nonce: 0,
                 balance: 0,
                 selfdestruct: false,
@@ -350,12 +350,9 @@ mod tests {
                 UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
             );
             let expected_account = Account {
-                address: Address { evm: evm_address, starknet: starknet_address },
-                code: array![0xab, 0xcd, 0xef].span(),
-                nonce: 1,
-                balance: 420,
-                selfdestruct: false,
-                is_created: false,
+                address: Address { evm: evm_address, starknet: starknet_address }, code: [
+                    0xab, 0xcd, 0xef
+                ].span(), nonce: 1, balance: 420, selfdestruct: false, is_created: false,
             };
 
             state.set_account(expected_account);
@@ -373,18 +370,15 @@ mod tests {
             let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
             let evm_address: EthAddress = test_utils::evm_address();
             let ca = contract_utils::deploy_contract_account(
-                evm_address, array![0xab, 0xcd, 0xef].span()
+                evm_address, [0xab, 0xcd, 0xef].span()
             );
             contract_utils::fund_account_with_native_token(ca.starknet, native_token, 420);
 
             let starknet_address = kakarot_core.compute_starknet_address(evm_address);
             let expected_account = Account {
-                address: Address { evm: evm_address, starknet: starknet_address },
-                code: array![0xab, 0xcd, 0xef].span(),
-                nonce: 1,
-                balance: 420,
-                selfdestruct: false,
-                is_created: false,
+                address: Address { evm: evm_address, starknet: starknet_address }, code: [
+                    0xab, 0xcd, 0xef
+                ].span(), nonce: 1, balance: 420, selfdestruct: false, is_created: false,
             };
 
             let account = state.get_account(evm_address);
@@ -411,20 +405,15 @@ mod tests {
             // Transfer native tokens to sender
             contract_utils::setup_contracts_for_testing();
             let evm_address: EthAddress = test_utils::evm_address();
-            let mut ca_address = contract_utils::deploy_contract_account(
-                evm_address, array![].span()
-            );
+            let mut ca_address = contract_utils::deploy_contract_account(evm_address, [].span());
 
             let mut state: State = Default::default();
             let key = 10;
             let value = 100;
             let account = Account {
-                address: ca_address,
-                code: array![0xab, 0xcd, 0xef].span(),
-                nonce: 1,
-                balance: 0,
-                selfdestruct: false,
-                is_created: false,
+                address: ca_address, code: [
+                    0xab, 0xcd, 0xef
+                ].span(), nonce: 1, balance: 0, selfdestruct: false, is_created: false,
             };
             IAccountDispatcher { contract_address: account.starknet_address() }
                 .write_storage(key, value);

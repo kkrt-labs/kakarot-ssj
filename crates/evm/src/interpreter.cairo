@@ -80,7 +80,7 @@ impl EVMImpl of EVMTrait {
                 Result::Ok(account_created) => { env.state.set_account(account_created) },
                 Result::Err(err) => {
                     env.state = state_snapshot;
-                    result.return_data = array![].span();
+                    result.return_data = [].span();
                     return ExecutionResultTrait::exceptional_failure(
                         err.to_bytes(), result.accessed_addresses, result.accessed_storage_keys
                     );

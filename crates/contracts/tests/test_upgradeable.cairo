@@ -70,7 +70,7 @@ mod MockContractUpgradeableV1 {
 #[test]
 fn test_upgradeable_update_contract() {
     let (contract_address, _) = deploy_syscall(
-        MockContractUpgradeableV0::TEST_CLASS_HASH.try_into().unwrap(), 0, array![].span(), false
+        MockContractUpgradeableV0::TEST_CLASS_HASH.try_into().unwrap(), 0, [].span(), false
     )
         .unwrap();
 

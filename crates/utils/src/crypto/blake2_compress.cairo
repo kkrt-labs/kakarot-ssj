@@ -30,7 +30,7 @@ const IV_DATA: [
 
 /// SIGMA from [spec](https://datatracker.ietf.org/doc/html/rfc7693#section-2.7)
 fn SIGMA() -> Span<Span<usize>> {
-    array![
+    [
         SIGMA_LINE_1.span(),
         SIGMA_LINE_2.span(),
         SIGMA_LINE_3.span(),
@@ -41,8 +41,7 @@ fn SIGMA() -> Span<Span<usize>> {
         SIGMA_LINE_8.span(),
         SIGMA_LINE_9.span(),
         SIGMA_LINE_10.span(),
-    ]
-        .span()
+    ].span()
 }
 
 /// got IV from [here](https://en.wikipedia.org/wiki/BLAKE_(hash_function))

@@ -297,8 +297,8 @@ pub impl U8SpanExImpl of U8SpanExTrait {
     /// # Examples
     ///
     /// ```
-    ///   let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-    ///   let expected = array![0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
+    ///   let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+    ///   let expected = [0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
     ///   let result = span.slice_right_padded(4, 10);
     ///   assert_eq!(result, expected);
     /// ```
@@ -340,15 +340,15 @@ pub impl U8SpanExImpl of U8SpanExTrait {
     /// Clones and pads the given span with 0s to the given length, if data is more than the given
     /// length, it is truncated from the right side # Examples
     /// ```
-    ///  let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-    ///  let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+    ///  let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+    ///  let expected = [0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
     ///  let result = span.pad_left_with_zeroes(10);
     ///
     ///  assert_eq!(result, expected);
     ///
     ///  // Truncates the data if it is more than the given length
-    ///  let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
-    ///  let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
+    ///  let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+    ///  let expected = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
     ///  let result = span.pad_left_with_zeroes(9);
     ///
     ///  assert_eq!(result, expected);
@@ -1639,7 +1639,7 @@ mod tests {
         fn test_u32_to_be_bytes_padded() {
             let input: u32 = 7;
             let result = input.to_be_bytes_padded();
-            let expected = array![0x0, 0x0, 0x0, 7].span();
+            let expected = [0x0, 0x0, 0x0, 7].span();
 
             assert_eq!(result, expected);
         }
@@ -1694,7 +1694,7 @@ mod tests {
         fn test_u64_to_be_bytes_padded() {
             let input: u64 = 7;
             let result = input.to_be_bytes_padded();
-            let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 7].span();
+            let expected = [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 7].span();
 
             assert_eq!(result, expected);
         }
@@ -1755,10 +1755,9 @@ mod tests {
         fn test_u128_to_bytes_full() {
             let input: u128 = Bounded::MAX;
             let result: Span<u8> = input.to_be_bytes();
-            let expected = array![
+            let expected = [
                 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
-            ]
-                .span();
+            ].span();
 
             assert_eq!(result, expected);
         }
@@ -1767,7 +1766,7 @@ mod tests {
         fn test_u128_to_bytes_partial() {
             let input: u128 = 0xf43215;
             let result: Span<u8> = input.to_be_bytes();
-            let expected = array![0xf4, 0x32, 0x15].span();
+            let expected = [0xf4, 0x32, 0x15].span();
 
             assert_eq!(result, expected);
         }
@@ -1776,10 +1775,9 @@ mod tests {
         fn test_u128_to_bytes_padded() {
             let input: u128 = 0xf43215;
             let result: Span<u8> = input.to_be_bytes_padded();
-            let expected = array![
+            let expected = [
                 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x32, 0x15
-            ]
-                .span();
+            ].span();
 
             assert_eq!(result, expected);
         }
@@ -1974,9 +1972,7 @@ mod tests {
 
         #[test]
         fn test_bytearray_to_64_words_partial() {
-            let input = ByteArrayExTrait::from_bytes(
-                array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span()
-            );
+            let input = ByteArrayExTrait::from_bytes([0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span());
             let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
             assert(pending_word == 6618611909121, 'wrong pending word');
             assert(pending_word_len == 6, 'wrong pending word length');
@@ -1986,7 +1982,7 @@ mod tests {
         #[test]
         fn test_bytearray_to_64_words_full() {
             let input = ByteArrayExTrait::from_bytes(
-                array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span()
+                [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span()
             );
             let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
 
@@ -2002,7 +1998,7 @@ mod tests {
 
         #[test]
         fn test_span_u8_to_64_words_partial() {
-            let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span();
+            let mut input: Span<u8> = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span();
             let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
             assert(pending_word == 6618611909121, 'wrong pending word');
             assert(pending_word_len == 6, 'wrong pending word length');
@@ -2011,7 +2007,7 @@ mod tests {
 
         #[test]
         fn test_span_u8_to_64_words_full() {
-            let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span();
+            let mut input: Span<u8> = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span();
             let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
 
             assert(pending_word == 0, 'wrong pending word');
@@ -2032,8 +2028,8 @@ mod tests {
 
         #[test]
         fn test_right_padded_span_offset_0() {
-            let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-            let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x0, 0x0, 0x0, 0x0].span();
+            let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+            let expected = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x0, 0x0, 0x0, 0x0].span();
             let result = span.slice_right_padded(0, 10);
 
             assert_eq!(result, expected);
@@ -2041,8 +2037,8 @@ mod tests {
 
         #[test]
         fn test_right_padded_span_offset_4() {
-            let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-            let expected = array![0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
+            let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+            let expected = [0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
             let result = span.slice_right_padded(4, 10);
 
             assert_eq!(result, expected);
@@ -2050,8 +2046,8 @@ mod tests {
 
         #[test]
         fn test_right_padded_span_offset_greater_than_span_len() {
-            let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-            let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
+            let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+            let expected = [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
             let result = span.slice_right_padded(6, 10);
 
             assert_eq!(result, expected);
@@ -2059,8 +2055,8 @@ mod tests {
 
         #[test]
         fn test_pad_left_with_zeroes_len_10() {
-            let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-            let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+            let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+            let expected = [0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
             let result = span.pad_left_with_zeroes(10);
 
             assert_eq!(result, expected);
@@ -2068,8 +2064,8 @@ mod tests {
 
         #[test]
         fn test_pad_left_with_zeroes_len_equal_than_data_len() {
-            let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
-            let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+            let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+            let expected = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
             let result = span.pad_left_with_zeroes(10);
 
             assert_eq!(result, expected);
@@ -2077,8 +2073,8 @@ mod tests {
 
         #[test]
         fn test_pad_left_with_zeroes_len_equal_than_smaller_len() {
-            let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
-            let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
+            let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+            let expected = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
             let result = span.pad_left_with_zeroes(9);
 
             assert_eq!(result, expected);
@@ -2099,7 +2095,7 @@ mod tests {
             vec.push(3);
 
             let result = vec.to_le_bytes();
-            let expected = array![0, 1, 2, 3].span();
+            let expected = [0, 1, 2, 3].span();
 
             assert_eq!(result, expected);
         }
@@ -2118,7 +2114,7 @@ mod tests {
             vec.push(3);
 
             let result = vec.to_le_bytes();
-            let expected = array![0, 1, 2, 3].span();
+            let expected = [0, 1, 2, 3].span();
 
             assert_eq!(result, expected);
         }
@@ -2132,7 +2128,7 @@ mod tests {
             vec.push(3);
 
             let result = vec.to_be_bytes();
-            let expected = array![
+            let expected = [
                 0,
                 0,
                 0,
@@ -2165,8 +2161,7 @@ mod tests {
                 0,
                 0,
                 0
-            ]
-                .span();
+            ].span();
 
             assert_eq!(result, expected);
         }
@@ -2274,7 +2269,7 @@ mod tests {
             let mut vec: Felt252Vec<u64> = Default::default();
             vec.expand(4).unwrap();
 
-            let bytes = array![1, 2, 3, 4].span();
+            let bytes = [1, 2, 3, 4].span();
             vec.copy_from_bytes_le(0, bytes).unwrap();
 
             assert_eq!(vec.len(), 4);
@@ -2289,7 +2284,7 @@ mod tests {
             let mut vec: Felt252Vec<u64> = Default::default();
             vec.expand(4).unwrap();
 
-            let bytes = array![1, 2].span();
+            let bytes = [1, 2].span();
             vec.copy_from_bytes_le(2, bytes).unwrap();
 
             assert_eq!(vec.len(), 4);
@@ -2304,7 +2299,7 @@ mod tests {
             let mut vec: Felt252Vec<u64> = Default::default();
             vec.expand(4).unwrap();
 
-            let bytes = array![1, 2, 3, 4].span();
+            let bytes = [1, 2, 3, 4].span();
             let result = vec.copy_from_bytes_le(2, bytes);
 
             assert_eq!(result, Result::Err(Felt252VecTraitErrors::Overflow));
@@ -2315,7 +2310,7 @@ mod tests {
             let mut vec: Felt252Vec<u64> = Default::default();
             vec.expand(4).unwrap();
 
-            let bytes = array![1, 2].span();
+            let bytes = [1, 2].span();
             let result = vec.copy_from_bytes_le(4, bytes);
 
             assert_eq!(result, Result::Err(Felt252VecTraitErrors::IndexOutOfBound));

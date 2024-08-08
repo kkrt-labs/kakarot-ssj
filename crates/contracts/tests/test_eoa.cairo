@@ -67,7 +67,7 @@ fn test___execute__a() {
 
     // Then
     // selector: function get()
-    let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+    let data_get_tx = [0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // check counter value is 0 before doing inc
     let tx = call_transaction(chain_id(), Option::Some(other_evm_address()), data_get_tx);
@@ -169,7 +169,7 @@ fn test___validate__fail__to_address_not_kakarot_core() {
     let call = Call {
         to: other_starknet_address(),
         selector: selector!("eth_send_transaction"),
-        calldata: array![].span()
+        calldata: [].span()
     };
 
     eoa_contract.__validate__(array![call]);
@@ -202,9 +202,7 @@ fn test___validate__fail__selector_not_eth_send_transaction() {
     );
 
     let call = Call {
-        to: kakarot_core.contract_address,
-        selector: selector!("eth_call"),
-        calldata: array![].span()
+        to: kakarot_core.contract_address, selector: selector!("eth_call"), calldata: [].span()
     };
 
     eoa_contract.__validate__(array![call]);
