@@ -23,7 +23,7 @@ pub fn compute_contract_address(sender_address: EthAddress, sender_nonce: u64) -
     let mut sender_address: RLPItem = RLPItem::String(sender_address.to_bytes().span());
     let sender_nonce: RLPItem = RLPItem::String(sender_nonce.to_be_bytes());
     let computed_address = U8SpanExTrait::compute_keccak256_hash(
-        RLPTrait::encode_sequence(array![sender_address, sender_nonce].span())
+        RLPTrait::encode_sequence([sender_address, sender_nonce].span())
     );
     let canonical_address = computed_address & 0xffffffffffffffffffffffffffffffffffffffff;
     canonical_address.try_into().unwrap()
@@ -53,7 +53,7 @@ pub fn compute_create2_contract_address(
 
     let mut preimage: Array<u8> = array![];
 
-    preimage.append_span(array![0xff].span());
+    preimage.append_span([0xff].span());
     preimage.append_span(sender_address);
     preimage.append_span(salt);
     preimage.append_span(hash);

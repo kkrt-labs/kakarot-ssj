@@ -131,32 +131,29 @@ mod tests {
             y_parity: false
         };
 
-        let expected_signature_0: Span<felt252> = array![
+        let expected_signature_0: Span<felt252> = [
             signature_0.r.low.into(),
             signature_0.r.high.into(),
             signature_0.s.low.into(),
             signature_0.s.high.into(),
             0x9696a4cb
-        ]
-            .span();
+        ].span();
 
-        let expected_signature_1: Span<felt252> = array![
+        let expected_signature_1: Span<felt252> = [
             signature_1.r.low.into(),
             signature_1.r.high.into(),
             signature_1.s.low.into(),
             signature_1.s.high.into(),
             0x0_felt252,
-        ]
-            .span();
+        ].span();
 
-        let expected_signature_2: Span<felt252> = array![
+        let expected_signature_2: Span<felt252> = [
             signature_2.r.low.into(),
             signature_2.r.high.into(),
             signature_2.s.low.into(),
             signature_2.s.high.into(),
             0x0_felt252,
-        ]
-            .span();
+        ].span();
 
         let result = serialize_transaction_signature(signature_0, TransactionType::Legacy, CHAIN_ID)
             .span();

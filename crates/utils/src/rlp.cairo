@@ -131,7 +131,7 @@ pub impl RLPImpl of RLPTrait {
     fn encode_string(input: Span<u8>) -> Span<u8> {
         let len = input.len();
         if len == 0 {
-            return array![0x80].span();
+            return [0x80].span();
         } else if len == 1 && *input[0] < 0x80 {
             return input;
         } else if len < 56 {
@@ -173,14 +173,14 @@ pub impl RLPImpl of RLPTrait {
         match rlp_type {
             RLPType::String => {
                 if (len == 0) {
-                    output.append(RLPItem::String(array![].span()));
+                    output.append(RLPItem::String([].span()));
                 } else {
                     output.append(RLPItem::String(input.slice(offset, len)));
                 }
             },
             RLPType::List => {
                 if len == 0 {
-                    output.append(RLPItem::List(array![].span()));
+                    output.append(RLPItem::List([].span()));
                 } else {
                     let res = Self::decode(input.slice(offset, len))?;
                     output.append(RLPItem::List(res));
@@ -543,7 +543,7 @@ mod tests {
 
     #[test]
     fn test_rlp_encode_sequence_empty() {
-        let res = RLPTrait::encode_sequence(array![].span());
+        let res = RLPTrait::encode_sequence([].span());
 
         assert(res.len() == 1, 'wrong len');
         assert(*res[0] == 0xC0, 'wrong encoded value');
@@ -551,13 +551,13 @@ mod tests {
 
     #[test]
     fn test_rlp_encode_sequence() {
-        let cat = RLPItem::String(array![0x63, 0x61, 0x74].span());
-        let dog = RLPItem::String(array![0x64, 0x6f, 0x67].span());
+        let cat = RLPItem::String([0x63, 0x61, 0x74].span());
+        let dog = RLPItem::String([0x64, 0x6f, 0x67].span());
         let input = array![cat, dog];
 
         let encoding = RLPTrait::encode_sequence(input.span());
 
-        let expected = array![0xc8, 0x83, 0x63, 0x61, 0x74, 0x83, 0x64, 0x6f, 0x67].span();
+        let expected = [0xc8, 0x83, 0x63, 0x61, 0x74, 0x83, 0x64, 0x6f, 0x67].span();
         assert(expected == encoding, 'wrong rlp encoding')
     }
 
@@ -566,7 +566,7 @@ mod tests {
     fn test_rlp_encode_sequence_long_sequence() {
         // encoding of a sequence with more than 55 bytes
         let mut lorem_ipsum = RLPItem::String(
-            array![
+            [
                 0x4c,
                 0x6f,
                 0x72,
@@ -623,13 +623,12 @@ mod tests {
                 0x6c,
                 0x69,
                 0x74
-            ]
-                .span()
+            ].span()
         );
-        let input = array![lorem_ipsum].span();
+        let input = [lorem_ipsum].span();
         let encoding = RLPTrait::encode_sequence(input);
 
-        let expected = array![
+        let expected = [
             0xf8,
             0x3a,
             0xb8,
@@ -690,8 +689,7 @@ mod tests {
             0x6c,
             0x69,
             0x74
-        ]
-            .span();
+        ].span();
         assert(expected == encoding, 'wrong rlp encoding')
     }
 
@@ -700,7 +698,7 @@ mod tests {
         let mut arr = array![0x80];
 
         let rlp_item = RLPTrait::decode(arr.span()).unwrap();
-        let expected = RLPItem::String(array![].span());
+        let expected = RLPItem::String([].span());
 
         assert(rlp_item.len() == 1, 'item length not 1');
         assert(*rlp_item[0] == expected, 'default value not 0');
@@ -718,7 +716,7 @@ mod tests {
 
             let res = RLPTrait::decode(arr.span()).unwrap();
 
-            assert(res == array![RLPItem::String(arr.span())].span(), 'Wrong value');
+            assert(res == [RLPItem::String(arr.span())].span(), 'Wrong value');
 
             i += 1;
         };
@@ -761,7 +759,7 @@ mod tests {
 
         // Remove the byte representing the data type
         arr.pop_front().expect('pop_front failed');
-        let expected_item = array![RLPItem::String(arr.span())].span();
+        let expected_item = [RLPItem::String(arr.span())].span();
 
         assert(res == expected_item, 'Wrong value');
     }
@@ -875,7 +873,7 @@ mod tests {
         // Remove the bytes representing the data type and their length
         arr.pop_front().expect('pop_front failed');
         arr.pop_front().expect('pop_front failed');
-        let expected_item = array![RLPItem::String(arr.span())].span();
+        let expected_item = [RLPItem::String(arr.span())].span();
 
         assert(res == expected_item, 'Wrong value');
     }
@@ -1222,7 +1220,7 @@ mod tests {
         arr.pop_front().expect('pop_front failed');
         arr.pop_front().expect('pop_front failed');
         arr.pop_front().expect('pop_front failed');
-        let expected_item = array![RLPItem::String(arr.span())].span();
+        let expected_item = [RLPItem::String(arr.span())].span();
 
         assert(res == expected_item, 'Wrong value');
     }
@@ -1242,13 +1240,13 @@ mod tests {
         let mut arr = array![0xc9, 0x83, 0x35, 0x35, 0x35, 0x42, 0x83, 0x45, 0x38, 0x92];
         let res = RLPTrait::decode(arr.span()).unwrap();
 
-        let mut expected_0 = RLPItem::String(array![0x35, 0x35, 0x35].span());
-        let mut expected_1 = RLPItem::String(array![0x42].span());
-        let mut expected_2 = RLPItem::String(array![0x45, 0x38, 0x92].span());
+        let mut expected_0 = RLPItem::String([0x35, 0x35, 0x35].span());
+        let mut expected_1 = RLPItem::String([0x42].span());
+        let mut expected_2 = RLPItem::String([0x45, 0x38, 0x92].span());
 
-        let expected_list = RLPItem::List(array![expected_0, expected_1, expected_2].span());
+        let expected_list = RLPItem::List([expected_0, expected_1, expected_2].span());
 
-        assert(res == array![expected_list].span(), 'Wrong value');
+        assert(res == [expected_list].span(), 'Wrong value');
     }
 
     #[test]
@@ -1256,13 +1254,13 @@ mod tests {
         let mut arr = array![0xc7, 0xc0, 0xc1, 0xc0, 0xc3, 0xc0, 0xc1, 0xc0];
         let res = RLPTrait::decode(arr.span()).unwrap();
 
-        let mut expected_0 = RLPItem::List(array![].span());
-        let mut expected_1 = RLPItem::List(array![expected_0].span());
-        let mut expected_2 = RLPItem::List(array![expected_0, expected_1].span());
+        let mut expected_0 = RLPItem::List([].span());
+        let mut expected_1 = RLPItem::List([expected_0].span());
+        let mut expected_2 = RLPItem::List([expected_0, expected_1].span());
 
-        let expected = RLPItem::List(array![expected_0, expected_1, expected_2].span());
+        let expected = RLPItem::List([expected_0, expected_1, expected_2].span());
 
-        assert(res == array![expected].span(), 'Wrong value');
+        assert(res == [expected].span(), 'Wrong value');
     }
 
     #[test]
@@ -1271,13 +1269,13 @@ mod tests {
 
         let res = RLPTrait::decode(arr.span()).unwrap();
 
-        let mut expected_0 = RLPItem::String(array![0x7a, 0x77].span());
-        let mut expected_1 = RLPItem::String(array![0x04].span());
-        let mut expected_1 = RLPItem::List(array![expected_1].span());
-        let mut expected_2 = RLPItem::String(array![0x01].span());
-        let mut expected = RLPItem::List(array![expected_0, expected_1, expected_2].span());
+        let mut expected_0 = RLPItem::String([0x7a, 0x77].span());
+        let mut expected_1 = RLPItem::String([0x04].span());
+        let mut expected_1 = RLPItem::List([expected_1].span());
+        let mut expected_2 = RLPItem::String([0x01].span());
+        let mut expected = RLPItem::List([expected_0, expected_1, expected_2].span());
 
-        assert(res == array![expected].span(), 'Wrong value');
+        assert(res == [expected].span(), 'Wrong value');
     }
 
     #[test]
@@ -1828,7 +1826,7 @@ mod tests {
         let res = RLPTrait::decode(arr.span()).unwrap();
 
         let mut expected_0 = RLPItem::String(
-            array![
+            [
                 0x77,
                 0x70,
                 0xcf,
@@ -1861,11 +1859,10 @@ mod tests {
                 0xc1,
                 0x4a,
                 0xf4
-            ]
-                .span()
+            ].span()
         );
         let mut expected_1 = RLPItem::String(
-            array![
+            [
                 0x1e,
                 0xa3,
                 0x85,
@@ -1898,11 +1895,10 @@ mod tests {
                 0x50,
                 0x71,
                 0xb4
-            ]
-                .span()
+            ].span()
         );
         let mut expected_2 = RLPItem::String(
-            array![
+            [
                 0x2c,
                 0x4c,
                 0x04,
@@ -1935,11 +1931,10 @@ mod tests {
                 0x3f,
                 0xcd,
                 0xee
-            ]
-                .span()
+            ].span()
         );
         let mut expected_3 = RLPItem::String(
-            array![
+            [
                 0xa9,
                 0xdc,
                 0x77,
@@ -1972,11 +1967,10 @@ mod tests {
                 0xa6,
                 0x38,
                 0x51
-            ]
-                .span()
+            ].span()
         );
         let mut expected_4 = RLPItem::String(
-            array![
+            [
                 0xa9,
                 0x5f,
                 0x4d,
@@ -2009,11 +2003,10 @@ mod tests {
                 0x97,
                 0x18,
                 0xd7
-            ]
-                .span()
+            ].span()
         );
         let mut expected_5 = RLPItem::String(
-            array![
+            [
                 0x39,
                 0xd4,
                 0x06,
@@ -2046,11 +2039,10 @@ mod tests {
                 0xe2,
                 0x03,
                 0x4c
-            ]
-                .span()
+            ].span()
         );
         let mut expected_6 = RLPItem::String(
-            array![
+            [
                 0x7a,
                 0xcc,
                 0x7c,
@@ -2083,11 +2075,10 @@ mod tests {
                 0x13,
                 0x01,
                 0x30
-            ]
-                .span()
+            ].span()
         );
         let mut expected_7 = RLPItem::String(
-            array![
+            [
                 0x15,
                 0x35,
                 0x8a,
@@ -2120,11 +2111,10 @@ mod tests {
                 0xf8,
                 0x52,
                 0xae
-            ]
-                .span()
+            ].span()
         );
         let mut expected_8 = RLPItem::String(
-            array![
+            [
                 0x68,
                 0x91,
                 0x42,
@@ -2157,11 +2147,10 @@ mod tests {
                 0x4a,
                 0x96,
                 0x58
-            ]
-                .span()
+            ].span()
         );
         let mut expected_9 = RLPItem::String(
-            array![
+            [
                 0xdc,
                 0x36,
                 0x50,
@@ -2194,11 +2183,10 @@ mod tests {
                 0xc4,
                 0xc1,
                 0xa3
-            ]
-                .span()
+            ].span()
         );
         let mut expected_10 = RLPItem::String(
-            array![
+            [
                 0x20,
                 0xb0,
                 0x68,
@@ -2231,11 +2219,10 @@ mod tests {
                 0x03,
                 0x42,
                 0xe7
-            ]
-                .span()
+            ].span()
         );
         let mut expected_11 = RLPItem::String(
-            array![
+            [
                 0x8e,
                 0xed,
                 0xeb,
@@ -2268,11 +2255,10 @@ mod tests {
                 0x9b,
                 0x26,
                 0x14
-            ]
-                .span()
+            ].span()
         );
         let mut expected_12 = RLPItem::String(
-            array![
+            [
                 0x79,
                 0x23,
                 0xa3,
@@ -2305,11 +2291,10 @@ mod tests {
                 0xe6,
                 0x09,
                 0xf3
-            ]
-                .span()
+            ].span()
         );
         let mut expected_13 = RLPItem::String(
-            array![
+            [
                 0x65,
                 0x34,
                 0xd7,
@@ -2342,11 +2327,10 @@ mod tests {
                 0x2a,
                 0xb1,
                 0xfd
-            ]
-                .span()
+            ].span()
         );
         let mut expected_14 = RLPItem::String(
-            array![
+            [
                 0xbf,
                 0xf9,
                 0xc2,
@@ -2379,11 +2363,10 @@ mod tests {
                 0xe2,
                 0x50,
                 0x2f
-            ]
-                .span()
+            ].span()
         );
         let mut expected_15 = RLPItem::String(
-            array![
+            [
                 0x7f,
                 0x14,
                 0x61,
@@ -2416,11 +2399,10 @@ mod tests {
                 0xe2,
                 0xb3,
                 0x5f
-            ]
-                .span()
+            ].span()
         );
 
-        let mut expected_16 = RLPItem::String(array![].span());
+        let mut expected_16 = RLPItem::String([].span());
 
         let mut expected = array![
             expected_0,
@@ -2444,7 +2426,7 @@ mod tests {
 
         let expected_item = RLPItem::List(expected.span());
 
-        assert(res == array![expected_item].span(), 'Wrong value');
+        assert(res == [expected_item].span(), 'Wrong value');
     }
 
     #[test]
@@ -2498,7 +2480,7 @@ mod tests {
     fn test_rlp_item_parse_access_list() {
         // [ [ "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", [ "0x01", "0x02", "0x03", "0x04",
         // "0x05" ] ]]
-        let rlp_encoded_access_list: Span<u8> = array![
+        let rlp_encoded_access_list: Span<u8> = [
             220,
             219,
             148,
@@ -2528,8 +2510,7 @@ mod tests {
             3,
             4,
             5
-        ]
-            .span();
+        ].span();
         let decoded_data = RLPTrait::decode(rlp_encoded_access_list).unwrap();
         assert_eq!(decoded_data.len(), 1);
 
@@ -2537,10 +2518,12 @@ mod tests {
 
         let expected_access_list_item = AccessListItem {
             ethereum_address: 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.try_into().unwrap(),
-            storage_keys: array![0x1, 0x2, 0x3, 0x4, 0x5].span()
+            storage_keys: [
+                0x1, 0x2, 0x3, 0x4, 0x5
+            ].span()
         };
 
-        let expected_access_list = array![expected_access_list_item].span();
+        let expected_access_list = [expected_access_list_item].span();
 
         let res = rlp_item.parse_access_list().unwrap();
         assert_eq!(res.len(), 1);

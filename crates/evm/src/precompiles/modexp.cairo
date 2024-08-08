@@ -60,7 +60,7 @@ impl ModExp of Precompile {
 
         // Handle a special case when both the base and mod length is zero
         if base_len == 0 && mod_len == 0 {
-            return Result::Ok((MIN_GAS, array![].span()));
+            return Result::Ok((MIN_GAS, [].span()));
         }
 
         // Used to extract ADJUSTED_EXPONENT_LENGTH.
@@ -69,7 +69,7 @@ impl ModExp of Precompile {
         let input = if input.len() >= HEADER_LENGTH {
             input.slice(HEADER_LENGTH, input.len() - HEADER_LENGTH)
         } else {
-            array![].span()
+            [].span()
         };
 
         let exp_highp = {
@@ -291,8 +291,8 @@ mod tests {
     fn test_modexp_berlin_empty_input() {
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
-        let calldata = array![].span();
-        let expected = array![].span();
+        let calldata = [].span();
+        let expected = [].span();
 
         vm.message.target.evm = EthAddress { address: 5 };
         vm.message.data = calldata;

@@ -17,13 +17,9 @@ use core::starknet::{
 };
 use core::traits::DivRem;
 use core::traits::TryInto;
-
-use utils::constants::{
-    POW_256_0, POW_256_1, POW_256_2, POW_256_3, POW_256_4, POW_256_5, POW_256_6, POW_256_7,
-    POW_256_8, POW_256_9, POW_256_10, POW_256_11, POW_256_12, POW_256_13, POW_256_14, POW_256_15,
-    POW_256_16,
-};
 use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
+
+use utils::constants::{POW_2, POW_256_1, POW_256_REV};
 use utils::eth_transaction::{TransactionType};
 use utils::math::{Bitshift, WrappingBitshift, Exponentiation, SaturatingAdd};
 use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, TryIntoResult, BoolIntoNumeric};
@@ -56,307 +52,18 @@ pub fn pow256_rev(i: usize) -> u256 {
     if (i > 16) {
         panic_with_felt252('pow256_rev: i > 16');
     }
-
-    if i == 0 {
-        return POW_256_16;
-    } else if i == 1 {
-        return POW_256_15.into();
-    } else if i == 2 {
-        return POW_256_14.into();
-    } else if i == 3 {
-        return POW_256_13.into();
-    } else if i == 4 {
-        return POW_256_12.into();
-    } else if i == 5 {
-        return POW_256_11.into();
-    } else if i == 6 {
-        return POW_256_10.into();
-    } else if i == 7 {
-        return POW_256_9.into();
-    } else if i == 8 {
-        return POW_256_8.into();
-    } else if i == 9 {
-        return POW_256_7.into();
-    } else if i == 10 {
-        return POW_256_6.into();
-    } else if i == 11 {
-        return POW_256_5.into();
-    } else if i == 12 {
-        return POW_256_4.into();
-    } else if i == 13 {
-        return POW_256_3.into();
-    } else if i == 14 {
-        return POW_256_2.into();
-    } else if i == 15 {
-        return POW_256_1.into();
-    } else {
-        return POW_256_0.into();
-    }
+    let v = POW_256_REV.span().at(i);
+    *v
 }
 
 // Computes 2**pow for 0 <= pow < 128.
 pub fn pow2(pow: usize) -> u128 {
-    if pow == 0 {
-        return 0x1;
-    } else if pow == 1 {
-        return 0x2;
-    } else if pow == 2 {
-        return 0x4;
-    } else if pow == 3 {
-        return 0x8;
-    } else if pow == 4 {
-        return 0x10;
-    } else if pow == 5 {
-        return 0x20;
-    } else if pow == 6 {
-        return 0x40;
-    } else if pow == 7 {
-        return 0x80;
-    } else if pow == 8 {
-        return 0x100;
-    } else if pow == 9 {
-        return 0x200;
-    } else if pow == 10 {
-        return 0x400;
-    } else if pow == 11 {
-        return 0x800;
-    } else if pow == 12 {
-        return 0x1000;
-    } else if pow == 13 {
-        return 0x2000;
-    } else if pow == 14 {
-        return 0x4000;
-    } else if pow == 15 {
-        return 0x8000;
-    } else if pow == 16 {
-        return 0x10000;
-    } else if pow == 17 {
-        return 0x20000;
-    } else if pow == 18 {
-        return 0x40000;
-    } else if pow == 19 {
-        return 0x80000;
-    } else if pow == 20 {
-        return 0x100000;
-    } else if pow == 21 {
-        return 0x200000;
-    } else if pow == 22 {
-        return 0x400000;
-    } else if pow == 23 {
-        return 0x800000;
-    } else if pow == 24 {
-        return 0x1000000;
-    } else if pow == 25 {
-        return 0x2000000;
-    } else if pow == 26 {
-        return 0x4000000;
-    } else if pow == 27 {
-        return 0x8000000;
-    } else if pow == 28 {
-        return 0x10000000;
-    } else if pow == 29 {
-        return 0x20000000;
-    } else if pow == 30 {
-        return 0x40000000;
-    } else if pow == 31 {
-        return 0x80000000;
-    } else if pow == 32 {
-        return 0x100000000;
-    } else if pow == 33 {
-        return 0x200000000;
-    } else if pow == 34 {
-        return 0x400000000;
-    } else if pow == 35 {
-        return 0x800000000;
-    } else if pow == 36 {
-        return 0x1000000000;
-    } else if pow == 37 {
-        return 0x2000000000;
-    } else if pow == 38 {
-        return 0x4000000000;
-    } else if pow == 39 {
-        return 0x8000000000;
-    } else if pow == 40 {
-        return 0x10000000000;
-    } else if pow == 41 {
-        return 0x20000000000;
-    } else if pow == 42 {
-        return 0x40000000000;
-    } else if pow == 43 {
-        return 0x80000000000;
-    } else if pow == 44 {
-        return 0x100000000000;
-    } else if pow == 45 {
-        return 0x200000000000;
-    } else if pow == 46 {
-        return 0x400000000000;
-    } else if pow == 47 {
-        return 0x800000000000;
-    } else if pow == 48 {
-        return 0x1000000000000;
-    } else if pow == 49 {
-        return 0x2000000000000;
-    } else if pow == 50 {
-        return 0x4000000000000;
-    } else if pow == 51 {
-        return 0x8000000000000;
-    } else if pow == 52 {
-        return 0x10000000000000;
-    } else if pow == 53 {
-        return 0x20000000000000;
-    } else if pow == 54 {
-        return 0x40000000000000;
-    } else if pow == 55 {
-        return 0x80000000000000;
-    } else if pow == 56 {
-        return 0x100000000000000;
-    } else if pow == 57 {
-        return 0x200000000000000;
-    } else if pow == 58 {
-        return 0x400000000000000;
-    } else if pow == 59 {
-        return 0x800000000000000;
-    } else if pow == 60 {
-        return 0x1000000000000000;
-    } else if pow == 61 {
-        return 0x2000000000000000;
-    } else if pow == 62 {
-        return 0x4000000000000000;
-    } else if pow == 63 {
-        return 0x8000000000000000;
-    } else if pow == 64 {
-        return 0x10000000000000000;
-    } else if pow == 65 {
-        return 0x20000000000000000;
-    } else if pow == 66 {
-        return 0x40000000000000000;
-    } else if pow == 67 {
-        return 0x80000000000000000;
-    } else if pow == 68 {
-        return 0x100000000000000000;
-    } else if pow == 69 {
-        return 0x200000000000000000;
-    } else if pow == 70 {
-        return 0x400000000000000000;
-    } else if pow == 71 {
-        return 0x800000000000000000;
-    } else if pow == 72 {
-        return 0x1000000000000000000;
-    } else if pow == 73 {
-        return 0x2000000000000000000;
-    } else if pow == 74 {
-        return 0x4000000000000000000;
-    } else if pow == 75 {
-        return 0x8000000000000000000;
-    } else if pow == 76 {
-        return 0x10000000000000000000;
-    } else if pow == 77 {
-        return 0x20000000000000000000;
-    } else if pow == 78 {
-        return 0x40000000000000000000;
-    } else if pow == 79 {
-        return 0x80000000000000000000;
-    } else if pow == 80 {
-        return 0x100000000000000000000;
-    } else if pow == 81 {
-        return 0x200000000000000000000;
-    } else if pow == 82 {
-        return 0x400000000000000000000;
-    } else if pow == 83 {
-        return 0x800000000000000000000;
-    } else if pow == 84 {
-        return 0x1000000000000000000000;
-    } else if pow == 85 {
-        return 0x2000000000000000000000;
-    } else if pow == 86 {
-        return 0x4000000000000000000000;
-    } else if pow == 87 {
-        return 0x8000000000000000000000;
-    } else if pow == 88 {
-        return 0x10000000000000000000000;
-    } else if pow == 89 {
-        return 0x20000000000000000000000;
-    } else if pow == 90 {
-        return 0x40000000000000000000000;
-    } else if pow == 91 {
-        return 0x80000000000000000000000;
-    } else if pow == 92 {
-        return 0x100000000000000000000000;
-    } else if pow == 93 {
-        return 0x200000000000000000000000;
-    } else if pow == 94 {
-        return 0x400000000000000000000000;
-    } else if pow == 95 {
-        return 0x800000000000000000000000;
-    } else if pow == 96 {
-        return 0x1000000000000000000000000;
-    } else if pow == 97 {
-        return 0x2000000000000000000000000;
-    } else if pow == 98 {
-        return 0x4000000000000000000000000;
-    } else if pow == 99 {
-        return 0x8000000000000000000000000;
-    } else if pow == 100 {
-        return 0x10000000000000000000000000;
-    } else if pow == 101 {
-        return 0x20000000000000000000000000;
-    } else if pow == 102 {
-        return 0x40000000000000000000000000;
-    } else if pow == 103 {
-        return 0x80000000000000000000000000;
-    } else if pow == 104 {
-        return 0x100000000000000000000000000;
-    } else if pow == 105 {
-        return 0x200000000000000000000000000;
-    } else if pow == 106 {
-        return 0x400000000000000000000000000;
-    } else if pow == 107 {
-        return 0x800000000000000000000000000;
-    } else if pow == 108 {
-        return 0x1000000000000000000000000000;
-    } else if pow == 109 {
-        return 0x2000000000000000000000000000;
-    } else if pow == 110 {
-        return 0x4000000000000000000000000000;
-    } else if pow == 111 {
-        return 0x8000000000000000000000000000;
-    } else if pow == 112 {
-        return 0x10000000000000000000000000000;
-    } else if pow == 113 {
-        return 0x20000000000000000000000000000;
-    } else if pow == 114 {
-        return 0x40000000000000000000000000000;
-    } else if pow == 115 {
-        return 0x80000000000000000000000000000;
-    } else if pow == 116 {
-        return 0x100000000000000000000000000000;
-    } else if pow == 117 {
-        return 0x200000000000000000000000000000;
-    } else if pow == 118 {
-        return 0x400000000000000000000000000000;
-    } else if pow == 119 {
-        return 0x800000000000000000000000000000;
-    } else if pow == 120 {
-        return 0x1000000000000000000000000000000;
-    } else if pow == 121 {
-        return 0x2000000000000000000000000000000;
-    } else if pow == 122 {
-        return 0x4000000000000000000000000000000;
-    } else if pow == 123 {
-        return 0x8000000000000000000000000000000;
-    } else if pow == 124 {
-        return 0x10000000000000000000000000000000;
-    } else if pow == 125 {
-        return 0x20000000000000000000000000000000;
-    } else if pow == 126 {
-        return 0x40000000000000000000000000000000;
-    } else if pow == 127 {
-        return 0x80000000000000000000000000000000;
-    } else {
+    if (pow > 127) {
         return panic_with_felt252('pow2: pow >= 128');
     }
+    let v = POW_2.span().at(pow);
+    *v
 }
-
 
 /// Splits a u256 into `len` bytes, big-endian, and appends the result to `dst`.
 pub fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
@@ -590,8 +297,8 @@ pub impl U8SpanExImpl of U8SpanExTrait {
     /// # Examples
     ///
     /// ```
-    ///   let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-    ///   let expected = array![0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
+    ///   let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+    ///   let expected = [0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
     ///   let result = span.slice_right_padded(4, 10);
     ///   assert_eq!(result, expected);
     /// ```
@@ -633,15 +340,15 @@ pub impl U8SpanExImpl of U8SpanExTrait {
     /// Clones and pads the given span with 0s to the given length, if data is more than the given
     /// length, it is truncated from the right side # Examples
     /// ```
-    ///  let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-    ///  let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+    ///  let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+    ///  let expected = [0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
     ///  let result = span.pad_left_with_zeroes(10);
     ///
     ///  assert_eq!(result, expected);
     ///
     ///  // Truncates the data if it is more than the given length
-    ///  let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
-    ///  let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
+    ///  let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+    ///  let expected = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
     ///  let result = span.pad_left_with_zeroes(9);
     ///
     ///  assert_eq!(result, expected);
@@ -1932,7 +1639,7 @@ mod tests {
         fn test_u32_to_be_bytes_padded() {
             let input: u32 = 7;
             let result = input.to_be_bytes_padded();
-            let expected = array![0x0, 0x0, 0x0, 7].span();
+            let expected = [0x0, 0x0, 0x0, 7].span();
 
             assert_eq!(result, expected);
         }
@@ -1987,7 +1694,7 @@ mod tests {
         fn test_u64_to_be_bytes_padded() {
             let input: u64 = 7;
             let result = input.to_be_bytes_padded();
-            let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 7].span();
+            let expected = [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 7].span();
 
             assert_eq!(result, expected);
         }
@@ -2048,10 +1755,9 @@ mod tests {
         fn test_u128_to_bytes_full() {
             let input: u128 = Bounded::MAX;
             let result: Span<u8> = input.to_be_bytes();
-            let expected = array![
+            let expected = [
                 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
-            ]
-                .span();
+            ].span();
 
             assert_eq!(result, expected);
         }
@@ -2060,7 +1766,7 @@ mod tests {
         fn test_u128_to_bytes_partial() {
             let input: u128 = 0xf43215;
             let result: Span<u8> = input.to_be_bytes();
-            let expected = array![0xf4, 0x32, 0x15].span();
+            let expected = [0xf4, 0x32, 0x15].span();
 
             assert_eq!(result, expected);
         }
@@ -2069,10 +1775,9 @@ mod tests {
         fn test_u128_to_bytes_padded() {
             let input: u128 = 0xf43215;
             let result: Span<u8> = input.to_be_bytes_padded();
-            let expected = array![
+            let expected = [
                 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x32, 0x15
-            ]
-                .span();
+            ].span();
 
             assert_eq!(result, expected);
         }
@@ -2267,9 +1972,7 @@ mod tests {
 
         #[test]
         fn test_bytearray_to_64_words_partial() {
-            let input = ByteArrayExTrait::from_bytes(
-                array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span()
-            );
+            let input = ByteArrayExTrait::from_bytes([0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span());
             let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
             assert(pending_word == 6618611909121, 'wrong pending word');
             assert(pending_word_len == 6, 'wrong pending word length');
@@ -2279,7 +1982,7 @@ mod tests {
         #[test]
         fn test_bytearray_to_64_words_full() {
             let input = ByteArrayExTrait::from_bytes(
-                array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span()
+                [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span()
             );
             let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
 
@@ -2295,7 +1998,7 @@ mod tests {
 
         #[test]
         fn test_span_u8_to_64_words_partial() {
-            let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span();
+            let mut input: Span<u8> = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span();
             let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
             assert(pending_word == 6618611909121, 'wrong pending word');
             assert(pending_word_len == 6, 'wrong pending word length');
@@ -2304,7 +2007,7 @@ mod tests {
 
         #[test]
         fn test_span_u8_to_64_words_full() {
-            let mut input: Span<u8> = array![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span();
+            let mut input: Span<u8> = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span();
             let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
 
             assert(pending_word == 0, 'wrong pending word');
@@ -2325,8 +2028,8 @@ mod tests {
 
         #[test]
         fn test_right_padded_span_offset_0() {
-            let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-            let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x0, 0x0, 0x0, 0x0].span();
+            let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+            let expected = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x0, 0x0, 0x0, 0x0].span();
             let result = span.slice_right_padded(0, 10);
 
             assert_eq!(result, expected);
@@ -2334,8 +2037,8 @@ mod tests {
 
         #[test]
         fn test_right_padded_span_offset_4() {
-            let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-            let expected = array![0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
+            let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+            let expected = [0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
             let result = span.slice_right_padded(4, 10);
 
             assert_eq!(result, expected);
@@ -2343,8 +2046,8 @@ mod tests {
 
         #[test]
         fn test_right_padded_span_offset_greater_than_span_len() {
-            let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-            let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
+            let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+            let expected = [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0].span();
             let result = span.slice_right_padded(6, 10);
 
             assert_eq!(result, expected);
@@ -2352,8 +2055,8 @@ mod tests {
 
         #[test]
         fn test_pad_left_with_zeroes_len_10() {
-            let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-            let expected = array![0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+            let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
+            let expected = [0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
             let result = span.pad_left_with_zeroes(10);
 
             assert_eq!(result, expected);
@@ -2361,8 +2064,8 @@ mod tests {
 
         #[test]
         fn test_pad_left_with_zeroes_len_equal_than_data_len() {
-            let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
-            let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+            let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+            let expected = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
             let result = span.pad_left_with_zeroes(10);
 
             assert_eq!(result, expected);
@@ -2370,8 +2073,8 @@ mod tests {
 
         #[test]
         fn test_pad_left_with_zeroes_len_equal_than_smaller_len() {
-            let span = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
-            let expected = array![0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
+            let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
+            let expected = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
             let result = span.pad_left_with_zeroes(9);
 
             assert_eq!(result, expected);
@@ -2392,7 +2095,7 @@ mod tests {
             vec.push(3);
 
             let result = vec.to_le_bytes();
-            let expected = array![0, 1, 2, 3].span();
+            let expected = [0, 1, 2, 3].span();
 
             assert_eq!(result, expected);
         }
@@ -2411,7 +2114,7 @@ mod tests {
             vec.push(3);
 
             let result = vec.to_le_bytes();
-            let expected = array![0, 1, 2, 3].span();
+            let expected = [0, 1, 2, 3].span();
 
             assert_eq!(result, expected);
         }
@@ -2425,7 +2128,7 @@ mod tests {
             vec.push(3);
 
             let result = vec.to_be_bytes();
-            let expected = array![
+            let expected = [
                 0,
                 0,
                 0,
@@ -2458,8 +2161,7 @@ mod tests {
                 0,
                 0,
                 0
-            ]
-                .span();
+            ].span();
 
             assert_eq!(result, expected);
         }
@@ -2567,7 +2269,7 @@ mod tests {
             let mut vec: Felt252Vec<u64> = Default::default();
             vec.expand(4).unwrap();
 
-            let bytes = array![1, 2, 3, 4].span();
+            let bytes = [1, 2, 3, 4].span();
             vec.copy_from_bytes_le(0, bytes).unwrap();
 
             assert_eq!(vec.len(), 4);
@@ -2582,7 +2284,7 @@ mod tests {
             let mut vec: Felt252Vec<u64> = Default::default();
             vec.expand(4).unwrap();
 
-            let bytes = array![1, 2].span();
+            let bytes = [1, 2].span();
             vec.copy_from_bytes_le(2, bytes).unwrap();
 
             assert_eq!(vec.len(), 4);
@@ -2597,7 +2299,7 @@ mod tests {
             let mut vec: Felt252Vec<u64> = Default::default();
             vec.expand(4).unwrap();
 
-            let bytes = array![1, 2, 3, 4].span();
+            let bytes = [1, 2, 3, 4].span();
             let result = vec.copy_from_bytes_le(2, bytes);
 
             assert_eq!(result, Result::Err(Felt252VecTraitErrors::Overflow));
@@ -2608,7 +2310,7 @@ mod tests {
             let mut vec: Felt252Vec<u64> = Default::default();
             vec.expand(4).unwrap();
 
-            let bytes = array![1, 2].span();
+            let bytes = [1, 2].span();
             let result = vec.copy_from_bytes_le(4, bytes);
 
             assert_eq!(result, Result::Err(Felt252VecTraitErrors::IndexOutOfBound));

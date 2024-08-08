@@ -1,5 +1,5 @@
 fn test_modexp_modsize0_returndatasizeFiller_data() -> (Span<u8>, Span<u8>) {
-    let calldata = array![
+    let calldata = [
         0,
         0,
         0,
@@ -246,10 +246,9 @@ fn test_modexp_modsize0_returndatasizeFiller_data() -> (Span<u8>, Span<u8>) {
         245,
         239,
         53
-    ]
-        .span();
+    ].span();
 
-    let expected = array![
+    let expected = [
         0,
         0,
         0,
@@ -350,14 +349,13 @@ fn test_modexp_modsize0_returndatasizeFiller_data() -> (Span<u8>, Span<u8>) {
         0,
         0,
         0
-    ]
-        .span();
+    ].span();
 
     (calldata, expected)
 }
 
 fn test_modexp_create2callPrecompiles_test0_berlin_data() -> (Span<u8>, Span<u8>) {
-    let calldata = array![
+    let calldata = [
         0,
         0,
         0,
@@ -509,10 +507,9 @@ fn test_modexp_create2callPrecompiles_test0_berlin_data() -> (Span<u8>, Span<u8>
         255,
         255,
         47
-    ]
-        .span();
+    ].span();
 
-    let expected = array![
+    let expected = [
         22,
         46,
         173,
@@ -545,14 +542,13 @@ fn test_modexp_create2callPrecompiles_test0_berlin_data() -> (Span<u8>, Span<u8>
         246,
         181,
         249
-    ]
-        .span();
+    ].span();
 
     (calldata, expected)
 }
 
 fn test_modexp_eip198_example_1_data() -> (Span<u8>, Span<u8>) {
-    let calldata = array![
+    let calldata = [
         0,
         0,
         0,
@@ -714,10 +710,9 @@ fn test_modexp_eip198_example_1_data() -> (Span<u8>, Span<u8>) {
         255,
         252,
         47
-    ]
-        .span();
+    ].span();
 
-    let expected = array![
+    let expected = [
         0,
         0,
         0,
@@ -750,15 +745,14 @@ fn test_modexp_eip198_example_1_data() -> (Span<u8>, Span<u8>) {
         0,
         0,
         1
-    ]
-        .span();
+    ].span();
 
     (calldata, expected)
 }
 
 
 fn test_modexp_eip198_example_2_data() -> (Span<u8>, Span<u8>) {
-    let calldata = array![
+    let calldata = [
         0,
         0,
         0,
@@ -919,10 +913,9 @@ fn test_modexp_eip198_example_2_data() -> (Span<u8>, Span<u8>) {
         255,
         252,
         47
-    ]
-        .span();
+    ].span();
 
-    let expected = array![
+    let expected = [
         0,
         0,
         0,
@@ -955,15 +948,14 @@ fn test_modexp_eip198_example_2_data() -> (Span<u8>, Span<u8>) {
         0,
         0,
         0
-    ]
-        .span();
+    ].span();
 
     (calldata, expected)
 }
 
 
 fn test_modexp_nagydani_1_square_data() -> (Span<u8>, Span<u8>) {
-    let calldata = array![
+    let calldata = [
         0,
         0,
         0,
@@ -1189,10 +1181,9 @@ fn test_modexp_nagydani_1_square_data() -> (Span<u8>, Span<u8>) {
         36,
         140,
         107
-    ]
-        .span();
+    ].span();
 
-    let expected = array![
+    let expected = [
         96,
         0,
         143,
@@ -1257,14 +1248,13 @@ fn test_modexp_nagydani_1_square_data() -> (Span<u8>, Span<u8>) {
         120,
         58,
         220
-    ]
-        .span();
+    ].span();
 
     (calldata, expected)
 }
 
 fn test_modexp_nagydani_1_qube_data() -> (Span<u8>, Span<u8>) {
-    let calldata = array![
+    let calldata = [
         0,
         0,
         0,
@@ -1490,10 +1480,9 @@ fn test_modexp_nagydani_1_qube_data() -> (Span<u8>, Span<u8>) {
         36,
         140,
         107
-    ]
-        .span();
+    ].span();
 
-    let expected = array![
+    let expected = [
         72,
         52,
         164,
@@ -1558,8 +1547,7 @@ fn test_modexp_nagydani_1_qube_data() -> (Span<u8>, Span<u8>) {
         106,
         127,
         236
-    ]
-        .span();
+    ].span();
 
     (calldata, expected)
 }

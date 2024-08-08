@@ -92,7 +92,7 @@ impl SystemOperations of SystemOperationsTrait {
         // The gas cost relative to the transfer is refunded.
         let sender_balance = self.env.state.get_account(self.message().target.evm).balance();
         if sender_balance < value {
-            self.return_data = array![].span();
+            self.return_data = [].span();
             self.gas_left += message_call_gas.stipend;
             return self.stack.push(0);
         }
@@ -168,7 +168,7 @@ impl SystemOperations of SystemOperationsTrait {
         // The gas cost relative to the transfer is refunded.
         let sender_balance = self.env.state.get_account(self.message().target.evm).balance();
         if sender_balance < value {
-            self.return_data = array![].span();
+            self.return_data = [].span();
             self.gas_left += message_call_gas.stipend;
             return self.stack.push(0);
         }
@@ -504,7 +504,7 @@ mod tests {
 
         // Set vm bytecode
         // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
-        let bytecode = array![
+        let bytecode = [
             0x60,
             0x01,
             0x60,
@@ -528,19 +528,17 @@ mod tests {
             // CALL
             0xf1,
             0x00
-        ]
-            .span();
+        ].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
         // Deploy bytecode at 0xabfa740ccd
         // ret (+ 0x1 0x1)
-        let deployed_bytecode = array![
+        let deployed_bytecode = [
             0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
-        ]
-            .span();
+        ].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
+        initialize_contract_account(eth_address, deployed_bytecode, [].span())
             .expect('set code failed');
 
         // When
@@ -562,7 +560,7 @@ mod tests {
 
         // Set vm bytecode
         // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
-        let bytecode = array![
+        let bytecode = [
             0x60,
             0x01,
             0x60,
@@ -586,16 +584,15 @@ mod tests {
             // CALL
             0xf1,
             0x00
-        ]
-            .span();
+        ].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
         // Deploy bytecode at 0xabfa740ccd
         // (+ 0x1 0x1)
-        let deployed_bytecode = array![0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
+        let deployed_bytecode = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
+        initialize_contract_account(eth_address, deployed_bytecode, [].span())
             .expect('set code failed');
 
         // When
@@ -617,7 +614,7 @@ mod tests {
 
         // Set vm bytecode
         // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
-        let bytecode = array![
+        let bytecode = [
             0x60,
             0x01,
             0x60,
@@ -639,18 +636,16 @@ mod tests {
             // STATICCALL
             0xfa,
             0x00
-        ]
-            .span();
+        ].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
         // Deploy bytecode at 0xabfa740ccd
         // ret (+ 0x1 0x1)
-        let deployed_bytecode = array![
+        let deployed_bytecode = [
             0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
-        ]
-            .span();
+        ].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
+        initialize_contract_account(eth_address, deployed_bytecode, [].span())
             .expect('set code failed');
 
         // When
@@ -672,7 +667,7 @@ mod tests {
 
         // Set vm bytecode
         // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
-        let bytecode = array![
+        let bytecode = [
             0x60,
             0x01,
             0x60,
@@ -696,16 +691,15 @@ mod tests {
             // STATICCALL
             0xfa,
             0x00
-        ]
-            .span();
+        ].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
         // Deploy bytecode at 0xabfa740ccd
         // (+ 0x1 0x1)
-        let deployed_bytecode = array![0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
+        let deployed_bytecode = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
+        initialize_contract_account(eth_address, deployed_bytecode, [].span())
             .expect('set code failed');
 
         // When
@@ -723,11 +717,11 @@ mod tests {
         let (_, _) = setup_contracts_for_testing();
 
         let evm_address = evm_address();
-        deploy_contract_account(evm_address, array![].span());
+        deploy_contract_account(evm_address, [].span());
 
         // Set vm bytecode
         // (call 0xffffff 0x100 0 0 0 0 1)
-        let bytecode = array![
+        let bytecode = [
             0x60,
             0x01,
             0x60,
@@ -750,12 +744,11 @@ mod tests {
             // CALLCODE
             0xf2,
             0x00
-        ]
-            .span();
+        ].span();
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
         // Deploy bytecode at 0x100
         // ret (+ 0x1 0x1)
-        let deployed_bytecode = array![
+        let deployed_bytecode = [
             0x60,
             0x01,
             0x60,
@@ -774,10 +767,9 @@ mod tests {
             0x60,
             0x00,
             0xf3
-        ]
-            .span();
+        ].span();
         let eth_address: EthAddress = 0x100_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
+        initialize_contract_account(eth_address, deployed_bytecode, [].span())
             .expect('set code failed');
 
         // When
@@ -800,11 +792,11 @@ mod tests {
         let (_, _) = setup_contracts_for_testing();
 
         let evm_address = evm_address();
-        deploy_contract_account(evm_address, array![].span());
+        deploy_contract_account(evm_address, [].span());
 
         // Set vm bytecode
         // (call 0xffffff 0x100 0 0 0 0 1)
-        let bytecode = array![
+        let bytecode = [
             0x60,
             0x01,
             0x60,
@@ -825,13 +817,12 @@ mod tests {
             // DELEGATECALL
             0xf4,
             0x00
-        ]
-            .span();
+        ].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
         // ret (+ 0x1 0x1)
-        let deployed_bytecode = array![
+        let deployed_bytecode = [
             0x60,
             0x01,
             0x60,
@@ -850,10 +841,9 @@ mod tests {
             0x60,
             0x00,
             0xf3
-        ]
-            .span();
+        ].span();
         let eth_address: EthAddress = 0x100_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, array![].span())
+        initialize_contract_account(eth_address, deployed_bytecode, [].span())
             .expect('set code failed');
 
         // When
@@ -873,7 +863,7 @@ mod tests {
     fn test_exec_create_no_value_transfer() {
         // Given
         let (native_token, _) = setup_contracts_for_testing();
-        let deployed_bytecode = array![0xff].span();
+        let deployed_bytecode = [0xff].span();
         let eth_address: EthAddress = evm_address();
         let contract_address = deploy_contract_account(eth_address, deployed_bytecode);
 
@@ -917,14 +907,14 @@ mod tests {
         // Given
         let (native_token, _) = setup_contracts_for_testing();
 
-        let deployed_bytecode = array![0xFF].span();
+        let deployed_bytecode = [0xFF].span();
         let eth_address: EthAddress = evm_address();
         let contract_address = deploy_contract_account(eth_address, deployed_bytecode);
         fund_account_with_native_token(contract_address.starknet, native_token, 2);
         let mut vm = VMBuilderTrait::new_with_presets().with_target(contract_address).build();
 
         // Load into memory the bytecode to init, which is the revert opcode
-        let revert_initcode = array![0xFD].span();
+        let revert_initcode = [0xFD].span();
         vm.memory.store_n(revert_initcode, 0);
 
         vm.stack.push(revert_initcode.len().into()).unwrap();
@@ -953,7 +943,7 @@ mod tests {
         // Given
         setup_contracts_for_testing();
 
-        let deployed_bytecode = array![0xff].span();
+        let deployed_bytecode = [0xff].span();
         let eth_address: EthAddress = evm_address();
         let contract_address = deploy_contract_account(eth_address, deployed_bytecode);
         let mut vm = VMBuilderTrait::new_with_presets().with_caller(contract_address).build();
@@ -998,7 +988,7 @@ mod tests {
         // Given
         let (native_token, _) = setup_contracts_for_testing();
         let destroyed_address = test_address().evm; // address in vm call context
-        let ca_address = deploy_contract_account(destroyed_address, array![0x1, 0x2, 0x3].span());
+        let ca_address = deploy_contract_account(destroyed_address, [0x1, 0x2, 0x3].span());
         fund_account_with_native_token(ca_address.starknet, native_token, 1000);
         let recipient = starknet_backend::deploy(other_evm_address())
             .expect('failed deploying eoa');
@@ -1035,7 +1025,7 @@ mod tests {
         // - call `get_account` on an undeployed account, set its type to CA, its nonce to 1, its
         // code to something to mock a cached CA that has not been committed yet.
         let mut ca_account = vm.env.state.get_account(ca_address.evm);
-        ca_account.set_code(array![0x1, 0x2, 0x3].span());
+        ca_account.set_code([0x1, 0x2, 0x3].span());
         ca_account.set_nonce(1);
         vm.env.state.set_account(ca_account);
         // - call selfdestruct and commit the state
@@ -1065,7 +1055,7 @@ mod tests {
             .expect('failed deploy EOA',);
         let recipient = starknet_backend::deploy('recipient'.try_into().unwrap())
             .expect('failed deploy EOA',);
-        let ca_address = deploy_contract_account('contract'.try_into().unwrap(), array![].span());
+        let ca_address = deploy_contract_account('contract'.try_into().unwrap(), [].span());
         fund_account_with_native_token(sender.starknet, native_token, 150);
         fund_account_with_native_token(ca_address.starknet, native_token, 100);
         let mut vm = VMBuilderTrait::new_with_presets().with_target(ca_address).build();

@@ -39,7 +39,7 @@ pub mod AccountContract {
     use contracts::components::ownable::ownable_component;
     use contracts::errors::{
         BYTECODE_READ_ERROR, BYTECODE_WRITE_ERROR, STORAGE_READ_ERROR, STORAGE_WRITE_ERROR,
-        NONCE_READ_ERROR, NONCE_WRITE_ERROR
+        NONCE_READ_ERROR, NONCE_WRITE_ERROR, KAKAROT_VALIDATION_FAILED
     };
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use core::integer;
@@ -80,6 +80,7 @@ pub mod AccountContract {
 
 
     const VERSION: u32 = 000_001_000;
+
 
     #[storage]
     struct Storage {
@@ -231,43 +232,7 @@ pub mod AccountContract {
             let (success, return_data, gas_used) = if is_valid {
                 kakarot.eth_send_transaction(tx)
             } else {
-                (
-                    false,
-                    array![
-                        'K',
-                        'a',
-                        'k',
-                        'a',
-                        'r',
-                        'o',
-                        't',
-                        ':',
-                        ' ',
-                        'e',
-                        't',
-                        'h',
-                        ' ',
-                        'v',
-                        'a',
-                        'l',
-                        'i',
-                        'd',
-                        'a',
-                        't',
-                        'i',
-                        'o',
-                        'n',
-                        ' ',
-                        'f',
-                        'a',
-                        'i',
-                        'l',
-                        'e',
-                        'd'
-                    ]
-                        .span(),
-                    0
-                )
+                (false, KAKAROT_VALIDATION_FAILED.span(), 0)
             };
             let return_data = serialize_bytes(return_data).span();
 

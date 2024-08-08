@@ -952,34 +952,34 @@ mod tests {
 
     #[test]
     fn test_big_wrapping_pow_0() {
-        let expected_bytes: Span<u8> = array![1].span();
+        let expected_bytes: Span<u8> = [1].span();
         check_big_wrapping_pow(1, 1, expected_bytes);
     }
 
     #[test]
     fn test_big_wrapping_pow_1() {
-        let expected_bytes: Span<u8> = array![100].span();
+        let expected_bytes: Span<u8> = [100].span();
 
         check_big_wrapping_pow(10, 2, expected_bytes);
     }
 
     #[test]
     fn test_big_wrapping_pow_2() {
-        let expected_bytes: Span<u8> = array![1, 0, 0, 0, 0].span();
+        let expected_bytes: Span<u8> = [1, 0, 0, 0, 0].span();
 
         check_big_wrapping_pow(2, 32, expected_bytes);
     }
 
     #[test]
     fn test_big_wrapping_pow_3() {
-        let expected_bytes: Span<u8> = array![1, 0, 0, 0, 0, 0, 0, 0, 0].span();
+        let expected_bytes: Span<u8> = [1, 0, 0, 0, 0, 0, 0, 0, 0].span();
         check_big_wrapping_pow(2, 64, expected_bytes);
     }
 
     #[test]
     #[available_gas(10000000000000)]
     fn test_big_wrapping_pow_4() {
-        let expected_bytes: Span<u8> = array![
+        let expected_bytes: Span<u8> = [
             3,
             218,
             116,
@@ -2187,8 +2187,7 @@ mod tests {
             0,
             0,
             0
-        ]
-            .span();
+        ].span();
         check_big_wrapping_pow(2766, 844, expected_bytes);
     }
 
@@ -2406,7 +2405,7 @@ mod tests {
     #[test]
     fn test_big_sq_10() {
         let mut x = MPNatTrait::from_big_endian(
-            array![
+            [
                 0xff,
                 0xff,
                 0xff,
@@ -2431,8 +2430,7 @@ mod tests {
                 0x00,
                 0x00,
                 0x00,
-            ]
-                .span()
+            ].span()
         );
 
         let mut out = Felt252VecImpl::new();
@@ -2442,7 +2440,7 @@ mod tests {
         let mut result = MPNat { digits: out };
 
         let mut expected = MPNatTrait::from_big_endian(
-            array![
+            [
                 0xff,
                 0xff,
                 0xff,
@@ -2491,8 +2489,7 @@ mod tests {
                 0x00,
                 0x00,
                 0x00,
-            ]
-                .span()
+            ].span()
         );
 
         assert!(result.digits.equal_remove_trailing_zeroes(ref expected.digits));

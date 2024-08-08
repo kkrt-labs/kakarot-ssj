@@ -532,7 +532,7 @@ mod tests {
     #[test]
     fn test_exec_jump_valid() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = [0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -551,7 +551,7 @@ mod tests {
     #[test]
     fn test_exec_jump_invalid() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = [0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -569,7 +569,7 @@ mod tests {
     #[test]
     fn test_exec_jump_out_of_bounds() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = [0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -589,7 +589,7 @@ mod tests {
     #[test]
     fn test_exec_jump_inside_pushn() {
         // Given
-        let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
+        let bytecode: Span<u8> = [0x60, 0x5B, 0x60, 0x00].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -607,7 +607,7 @@ mod tests {
     #[test]
     fn test_exec_jumpi_valid_non_zero_1() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = [0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -627,7 +627,7 @@ mod tests {
     #[test]
     fn test_exec_jumpi_valid_non_zero_2() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = [0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -647,7 +647,7 @@ mod tests {
     #[test]
     fn test_exec_jumpi_valid_zero() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = [0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -671,7 +671,7 @@ mod tests {
     #[test]
     fn test_exec_jumpi_invalid_non_zero() {
         // Given
-        let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
+        let bytecode: Span<u8> = [0x60, 0x5B, 0x60, 0x00].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -692,7 +692,7 @@ mod tests {
     #[test]
     fn test_exec_jumpi_invalid_zero() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = [0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -721,7 +721,7 @@ mod tests {
     #[should_panic(expected: ('exec_jump should throw error',))]
     fn test_exec_jumpi_inside_pushn() {
         // Given
-        let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
+        let bytecode: Span<u8> = [0x60, 0x5B, 0x60, 0x00].span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -763,14 +763,11 @@ mod tests {
         // Given
         setup_contracts_for_testing();
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        let mut ca_address = deploy_contract_account(vm.message().target.evm, array![].span());
+        let mut ca_address = deploy_contract_account(vm.message().target.evm, [].span());
         let account = Account {
-            address: ca_address,
-            code: array![0xab, 0xcd, 0xef].span(),
-            nonce: 1,
-            balance: 0,
-            selfdestruct: false,
-            is_created: false,
+            address: ca_address, code: [
+                0xab, 0xcd, 0xef
+            ].span(), nonce: 1, balance: 0, selfdestruct: false, is_created: false,
         };
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
@@ -793,7 +790,7 @@ mod tests {
         // Given
         setup_contracts_for_testing();
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        deploy_contract_account(vm.message().target.evm, array![].span());
+        deploy_contract_account(vm.message().target.evm, [].span());
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
         vm.stack.push(value).expect('push failed');
@@ -837,7 +834,7 @@ mod tests {
         // When
         let account = Account {
             address: vm.message().target,
-            code: array![].span(),
+            code: [].span(),
             nonce: 1,
             balance: 0,
             selfdestruct: false,
@@ -857,7 +854,7 @@ mod tests {
         // Given
         setup_contracts_for_testing();
         let mut vm = VMBuilderTrait::new_with_presets().with_read_only().build();
-        deploy_contract_account(vm.message().target.evm, array![].span());
+        deploy_contract_account(vm.message().target.evm, [].span());
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
         vm.stack.push(value).expect('push failed');
@@ -879,10 +876,10 @@ mod tests {
         setup_contracts_for_testing();
         let mut vm = VMBuilderTrait::new_with_presets().build();
         // Deploys the contract account to be able to commit storage changes.
-        let ca_address = deploy_contract_account(vm.message().target.evm, array![].span());
+        let ca_address = deploy_contract_account(vm.message().target.evm, [].span());
         let account = Account {
             address: ca_address,
-            code: array![].span(),
+            code: [].span(),
             nonce: 1,
             balance: 0,
             selfdestruct: false,

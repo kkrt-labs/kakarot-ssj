@@ -6,7 +6,7 @@ use evm::test_utils::{ca_address, native_token};
 #[test]
 fn test_ca_deploy() {
     setup_contracts_for_testing();
-    let ca_address = deploy_contract_account(ca_address(), array![].span());
+    let ca_address = deploy_contract_account(ca_address(), [].span());
     let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
 
     let initial_bytecode = contract_account.bytecode();
@@ -30,7 +30,7 @@ fn test_ca_bytecode() {
 #[test]
 fn test_ca_get_nonce() {
     setup_contracts_for_testing();
-    let ca_address = deploy_contract_account(ca_address(), array![].span());
+    let ca_address = deploy_contract_account(ca_address(), [].span());
     let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
 
     let initial_nonce = contract_account.get_nonce();
@@ -48,7 +48,7 @@ fn test_ca_get_nonce() {
 #[test]
 fn test_ca_storage() {
     setup_contracts_for_testing();
-    let ca_address = deploy_contract_account(ca_address(), array![].span());
+    let ca_address = deploy_contract_account(ca_address(), [].span());
     let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
 
     let storage_slot = 0x555;

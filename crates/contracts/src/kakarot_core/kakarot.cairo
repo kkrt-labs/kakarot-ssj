@@ -303,7 +303,7 @@ pub mod KakarotCore {
                     let to_starknet_address = self.compute_starknet_address(to_evm_address);
                     let to = Address { evm: to_evm_address, starknet: to_starknet_address };
                     let code = tx.calldata();
-                    let calldata = array![].span();
+                    let calldata = [].span();
                     (to, true, code, calldata)
                 },
             };

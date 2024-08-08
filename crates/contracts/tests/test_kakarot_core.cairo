@@ -161,7 +161,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
 
     // Then
     // selector: function get()
-    let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+    let data_get_tx = [0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // check counter value is 0 before doing inc
     let tx = contract_utils::call_transaction(
@@ -173,7 +173,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
     assert_eq!(return_data, u256_to_bytes_array(0).span());
 
     // selector: function inc()
-    let data_increment_counter = array![0x37, 0x13, 0x03, 0xc0].span();
+    let data_increment_counter = [0x37, 0x13, 0x03, 0xc0].span();
 
     // When
     testing::set_contract_address(eoa);
@@ -194,7 +194,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
 
     // Then
     // selector: function get()
-    let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+    let data_get_tx = [0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // check counter value is 1
     let tx = contract_utils::call_transaction(
@@ -225,7 +225,7 @@ fn test_eth_call() {
 
     let to = Option::Some(test_utils::other_evm_address());
     // selector: function get()
-    let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+    let calldata = [0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // When
     let tx = contract_utils::call_transaction(chain_id(), to, calldata);
@@ -259,7 +259,7 @@ fn test_process_transaction() {
     let gas_price = test_utils::gas_price();
     let value = 0;
     // selector: function get()
-    let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+    let calldata = [0x6d, 0x4c, 0xe6, 0x3c].span();
 
     let tx = EthereumTransaction::LegacyTransaction(
         LegacyTransaction {
@@ -323,7 +323,7 @@ fn test_eth_send_transaction_deploy_tx() {
     assert(bytecode == counter_evm_bytecode(), 'wrong bytecode');
 
     // Check that the account was created and `get` returns 0.
-    let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
+    let calldata = [0x6d, 0x4c, 0xe6, 0x3c].span();
     let to = Option::Some(expected_address);
 
     // No need to set address back to eoa, as eth_call doesn't use the caller address.

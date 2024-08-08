@@ -1,6 +1,6 @@
 // source: [EIP-152](https://eips.ethereum.org/EIPS/eip-152), Test Vector 1
 fn blake2_precompile_fail_wrong_length_input_1_test_case() -> (Span<u8>, Span<u8>) {
-    let input = array![
+    let input = [
         0,
         0,
         12,
@@ -213,16 +213,16 @@ fn blake2_precompile_fail_wrong_length_input_1_test_case() -> (Span<u8>, Span<u8
         0,
         0,
         1
-    ];
+    ].span();
 
-    let output = array![];
+    let output = [].span();
 
-    (input.span(), output.span())
+    (input, output)
 }
 
 // source: [EIP-152](https://eips.ethereum.org/EIPS/eip-152), Test Vector 2
 fn blake2_precompile_fail_wrong_length_input_2_test_case() -> (Span<u8>, Span<u8>) {
-    let input = array![
+    let input = [
         0,
         0,
         0,
@@ -437,16 +437,16 @@ fn blake2_precompile_fail_wrong_length_input_2_test_case() -> (Span<u8>, Span<u8
         0,
         0,
         1
-    ];
+    ].span();
 
-    let output = array![];
+    let output = [].span();
 
-    (input.span(), output.span())
+    (input, output)
 }
 
 // source: [EIP-152](https://eips.ethereum.org/EIPS/eip-152), Test Vector 3
 fn blake2_precompile_fail_wrong_length_input_3_test_case() -> (Span<u8>, Span<u8>) {
-    let input = array![
+    let input = [
         0,
         0,
         0,
@@ -660,16 +660,16 @@ fn blake2_precompile_fail_wrong_length_input_3_test_case() -> (Span<u8>, Span<u8
         0,
         0,
         2
-    ];
+    ].span();
 
-    let output = array![];
+    let output = [].span();
 
-    (input.span(), output.span())
+    (input, output)
 }
 
 // source: [EIP-152](https://eips.ethereum.org/EIPS/eip-152), Test Vector 4
 fn blake2_precompile_pass_0_test_case() -> (Span<u8>, Span<u8>) {
-    let input = array![
+    let input = [
         0,
         0,
         0,
@@ -883,9 +883,9 @@ fn blake2_precompile_pass_0_test_case() -> (Span<u8>, Span<u8>) {
         0,
         0,
         1
-    ];
+    ].span();
 
-    let output = array![
+    let output = [
         8,
         201,
         188,
@@ -950,15 +950,15 @@ fn blake2_precompile_pass_0_test_case() -> (Span<u8>, Span<u8>) {
         205,
         224,
         91
-    ];
+    ].span();
 
-    (input.span(), output.span())
+    (input, output)
 }
 
 
 // source: [EIP-152](https://eips.ethereum.org/EIPS/eip-152), Test Vector 5
 fn blake2_precompile_pass_1_test_case() -> (Span<u8>, Span<u8>) {
-    let input = array![
+    let input = [
         0,
         0,
         0,
@@ -1172,9 +1172,9 @@ fn blake2_precompile_pass_1_test_case() -> (Span<u8>, Span<u8>) {
         0,
         0,
         1
-    ];
+    ].span();
 
-    let output = array![
+    let output = [
         186,
         128,
         165,
@@ -1239,14 +1239,14 @@ fn blake2_precompile_pass_1_test_case() -> (Span<u8>, Span<u8>) {
         0,
         153,
         35
-    ];
+    ].span();
 
-    (input.span(), output.span())
+    (input, output)
 }
 
 // source: [EIP-152](https://eips.ethereum.org/EIPS/eip-152), Test Vector 6
 fn blake2_precompile_pass_2_test_case() -> (Span<u8>, Span<u8>) {
-    let input = array![
+    let input = [
         0,
         0,
         0,
@@ -1460,9 +1460,9 @@ fn blake2_precompile_pass_2_test_case() -> (Span<u8>, Span<u8>) {
         0,
         0,
         0
-    ];
+    ].span();
 
-    let output = array![
+    let output = [
         117,
         171,
         105,
@@ -1527,7 +1527,7 @@ fn blake2_precompile_pass_2_test_case() -> (Span<u8>, Span<u8>) {
         222,
         71,
         53
-    ];
+    ].span();
 
-    (input.span(), output.span())
+    (input, output)
 }

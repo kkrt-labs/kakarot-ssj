@@ -39,7 +39,7 @@ mod tests {
     #[test]
     fn test_compute_storage_base_address() {
         let selector = selector!("my_storage_var");
-        let keys = array![0x01, 0x02].span();
+        let keys = [0x01, 0x02].span();
 
         let base = compute_storage_base_address(selector, keys);
         let addr = storage_address_from_base(base);

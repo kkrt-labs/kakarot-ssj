@@ -25,7 +25,7 @@
 // }
 
 pub(crate) fn deploy_counter_calldata() -> Span<u8> {
-    array![
+    [
         0x60,
         0x80,
         0x60,
@@ -528,12 +528,11 @@ pub(crate) fn deploy_counter_calldata() -> Span<u8> {
         0x16,
         0x00,
         0x33
-    ]
-        .span()
+    ].span()
 }
 
 pub(crate) fn counter_evm_bytecode() -> Span<u8> {
-    array![
+    [
         0x60,
         0x80,
         0x60,
@@ -1007,8 +1006,7 @@ pub(crate) fn counter_evm_bytecode() -> Span<u8> {
         0x16,
         0x00,
         0x33
-    ]
-        .span()
+    ].span()
 }
 
 
@@ -1043,7 +1041,7 @@ pub(crate) fn counter_evm_bytecode() -> Span<u8> {
 // }
 // Remix compiler: 0.8.20+commit.a1b79de6
 pub(crate) fn storage_evm_initcode() -> Span<u8> {
-    array![
+    [
         0x60,
         0x80,
         0x60,
@@ -1396,12 +1394,11 @@ pub(crate) fn storage_evm_initcode() -> Span<u8> {
         0x14,
         0x00,
         0x33
-    ]
-        .span()
+    ].span()
 }
 
 pub(crate) fn storage_evm_bytecode() -> Span<u8> {
-    array![
+    [
         0x60,
         0x80,
         0x60,
@@ -1725,8 +1722,7 @@ pub(crate) fn storage_evm_bytecode() -> Span<u8> {
         0x14,
         0x00,
         0x33
-    ]
-        .span()
+    ].span()
 }
 
 
@@ -1735,7 +1731,7 @@ pub(crate) fn storage_evm_bytecode() -> Span<u8> {
 // rlp decoding:  [ '0x01', '0x', '0x3b9aca00', '0x1e8480',
 // '0x0000006f746865725f65766d5f61646472657373', '0x', '0x371303c0', [] ]
 pub(crate) fn eip_2930_rlp_encoded_counter_inc_tx() -> Span<u8> {
-    array![
+    [
         1,
         231,
         1,
@@ -1777,6 +1773,5 @@ pub(crate) fn eip_2930_rlp_encoded_counter_inc_tx() -> Span<u8> {
         3,
         192,
         192,
-    ]
-        .span()
+    ].span()
 }
