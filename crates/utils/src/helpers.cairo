@@ -8,6 +8,7 @@ use core::integer::{u32_as_non_zero, U32TryIntoNonZero};
 use core::integer;
 use core::keccak::{cairo_keccak, u128_split};
 use core::num::traits::Bounded;
+use core::num::traits::{SaturatingAdd};
 use core::num::traits::{Zero, One, BitSize};
 use core::panic_with_felt252;
 use core::pedersen::{HashState, PedersenTrait};
@@ -22,7 +23,6 @@ use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 use utils::constants::{POW_2, POW_256_1, POW_256_REV};
 use utils::eth_transaction::{TransactionType};
 use utils::math::{Bitshift, WrappingBitshift, Exponentiation};
-use core::num::traits::{SaturatingAdd};
 use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, TryIntoResult, BoolIntoNumeric};
 
 /// Converts a value to the next closest multiple of 32
