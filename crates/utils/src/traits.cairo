@@ -127,6 +127,15 @@ pub impl U8IntoEthAddress of Into<u8, EthAddress> {
     }
 }
 
+// Note: DerefBox is already implemented in corelib::box
+
+impl DerefMutBox<T, +Copy<T>, +Drop<T>> of core::ops::DerefMut<Box<T>> {
+    type Target = T;
+    fn deref_mut(ref self: Box<T>) -> T {
+        self.unbox()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use core::starknet::{
@@ -148,5 +157,26 @@ mod tests {
         let val_2 = storage_base_address_from_felt252(0x02);
 
         assert_ne!(@val_1, @val_2)
+    }
+
+    #[derive(Copy, Drop)]
+    struct Type1 {
+        x: u8
+    }
+
+    fn f(ref b: Box<Type1>) -> u8 {
+        b.x
+    }
+
+    #[test]
+    fn test_deref_box() {
+        let boxed = BoxTrait::new(Type1 { x: 42 });
+        assert_eq!(boxed.x, 42)
+    }
+
+    #[test]
+    fn test_deref_mut_box() {
+        let mut boxed = BoxTrait::new(Type1 { x: 42 });
+        assert_eq!(f(ref boxed), 42)
     }
 }
