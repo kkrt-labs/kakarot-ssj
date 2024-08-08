@@ -286,11 +286,10 @@ pub fn u256_wide_add(a: u256, b: u256) -> u512 {
 #[cfg(test)]
 mod tests {
     use core::integer::{u512};
-    use core::num::traits::Bounded;
+    use core::num::traits::{OverflowingMul, WrappingMul, SaturatingAdd, Bounded};
     use super::OverflowingAdd;
     use utils::math::{
         Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift,
-        OverflowingMul, WrappingMul, SaturatingAdd
     };
 
     #[test]

@@ -21,7 +21,8 @@ use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 
 use utils::constants::{POW_2, POW_256_1, POW_256_REV};
 use utils::eth_transaction::{TransactionType};
-use utils::math::{Bitshift, WrappingBitshift, Exponentiation, SaturatingAdd};
+use utils::math::{Bitshift, WrappingBitshift, Exponentiation};
+use core::num::traits::{SaturatingAdd};
 use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, TryIntoResult, BoolIntoNumeric};
 
 /// Converts a value to the next closest multiple of 32
