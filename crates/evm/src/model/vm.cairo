@@ -167,6 +167,9 @@ mod tests {
         tx_gas_limit, evm_address, starknet_address, VMBuilderTrait, test_address, gas_price
     };
 
+    const ARRAY_3: [u8; 3] = [0x01, 0x02, 0x03];
+    const ARRAY_5: [u8; 5] = [0x01, 0x02, 0x03, 0x04, 0x05];
+
     #[test]
     fn test_vm_default() {
         let mut vm = VMTrait::new(Default::default(), Default::default());
@@ -221,14 +224,14 @@ mod tests {
     fn test_read_code() {
         // Given a vm with some bytecode in the call context
 
-        let bytecode = array![0x01, 0x02, 0x03, 0x04, 0x05].span();
+        let bytecode = ARRAY_5.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
         // When we read a code slice
         let read_code = vm.read_code(3);
 
         // Then the read code should be the expected slice and the PC should be updated
-        assert(read_code == array![0x01, 0x02, 0x03].span(), 'wrong bytecode read');
+        assert(read_code == ARRAY_3.span(), 'wrong bytecode read');
         // Read Code should not modify PC
         assert(vm.pc() == 0, 'wrong pc');
     }
@@ -236,9 +239,9 @@ mod tests {
     #[test]
     fn test_set_return() {
         let mut vm = VMTrait::new(Default::default(), Default::default());
-        vm.set_return_data(array![0x01, 0x02, 0x03].span());
+        vm.set_return_data(ARRAY_3.span());
         let return_data = vm.return_data();
-        assert(return_data == array![0x01, 0x02, 0x03].span(), 'wrong return data');
+        assert(return_data == ARRAY_3.span(), 'wrong return data');
     }
 
     #[test]

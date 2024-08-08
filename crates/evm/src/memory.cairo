@@ -622,6 +622,48 @@ mod tests {
     use utils::constants::{POW_2_8, POW_2_56, POW_2_64, POW_2_120};
     use utils::{math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtTrait};
 
+    const ARRAY_2: [u8; 2] = [1, 2];
+    const ARRAY_5: [u8; 5] = [1, 2, 3, 4, 5];
+    const ARRAY_35: [
+        u8
+        ; 35] = [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+    ];
+
     mod internal {
         use evm::memory::{MemoryTrait, InternalMemoryTrait};
         use utils::{math::Exponentiation, helpers};
@@ -733,59 +775,21 @@ mod tests {
     #[test]
     fn test_store_n_no_aligned_words() {
         let mut memory = MemoryTrait::new();
-        memory.store_n(array![1, 2].span(), 15);
+        memory.store_n(ARRAY_2.span(), 15);
         assert(memory.size() == 32, 'memory should be 32 bytes');
     }
 
     #[test]
     fn test_store_n_2_aligned_words() {
         let mut memory = MemoryTrait::new();
-        let bytes_arr = array![
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26,
-            27,
-            28,
-            29,
-            30,
-            31,
-            32,
-            33,
-            34,
-            35
-        ]
-            .span();
-        memory.store_n(bytes_arr, 15);
+        memory.store_n(ARRAY_35.span(), 15);
         // value [1], will be stored in first word, values [2:34] will be stored in aligned words,
         // value [35] will be stored in final word
         assert(memory.size() == 64, 'memory should be 64 bytes');
 
         let mut stored_bytes = Default::default();
         memory.load_n_internal(35, ref stored_bytes, 15);
-        assert(stored_bytes.span() == bytes_arr, 'stored bytes not == expected');
+        assert(stored_bytes.span() == ARRAY_35.span(), 'stored bytes not == expected');
     }
 
     #[test]
@@ -1010,8 +1014,7 @@ mod tests {
         let mut memory = MemoryTrait::new();
 
         // When
-        let bytes = array![1, 2, 3, 4, 5].span();
-        memory.store_padded_segment(0, 0, bytes);
+        memory.store_padded_segment(0, 0, ARRAY_5.span());
 
         // Then
         let len = memory.size();
@@ -1040,8 +1043,7 @@ mod tests {
         let mut memory = MemoryTrait::new();
 
         // When
-        let bytes = array![1, 2, 3, 4, 5].span();
-        memory.store_padded_segment(0, 5, bytes);
+        memory.store_padded_segment(0, 5, ARRAY_5.span());
 
         // Then
         let len = memory.size();
@@ -1065,8 +1067,7 @@ mod tests {
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
 
         // When
-        let bytes = array![1, 2, 3, 4, 5].span();
-        memory.store_padded_segment(0, 10, bytes);
+        memory.store_padded_segment(0, 10, ARRAY_5.span());
 
         // Then
         let len = memory.size();
@@ -1090,8 +1091,7 @@ mod tests {
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 0);
 
         // When
-        let bytes = array![1, 2, 3, 4, 5].span();
-        memory.store_padded_segment(5, 10, bytes);
+        memory.store_padded_segment(5, 10, ARRAY_5.span());
 
         // Then
         let len = memory.size();
@@ -1116,8 +1116,7 @@ mod tests {
         memory.store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 32);
 
         // When
-        let bytes = array![1, 2, 3, 4, 5].span();
-        memory.store_padded_segment(30, 10, bytes);
+        memory.store_padded_segment(30, 10, ARRAY_5.span());
 
         // Then
         let len = memory.size();

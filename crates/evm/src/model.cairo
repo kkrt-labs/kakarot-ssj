@@ -170,6 +170,8 @@ mod tests {
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
     use starknet::testing::set_contract_address;
 
+    const ACCOUNT_CODE: [u8; 1] = [0x1];
+
     #[test]
     fn test_is_deployed_eoa_exists() {
         // Given
@@ -298,7 +300,7 @@ mod tests {
         let mut account = AccountTrait::fetch_or_create(evm_address());
         // Mock account as an existing contract account in the cached state.
         account.nonce = 1;
-        account.code = array![0x1].span();
+        account.code = ACCOUNT_CODE.span();
 
         // Then
         assert(account.has_code_or_nonce() == true, 'account should exist');
@@ -331,7 +333,7 @@ mod tests {
         // When
         let mut account = AccountTrait::fetch(evm_address()).unwrap();
         account.nonce = 420;
-        account.code = array![0x1].span();
+        account.code = ACCOUNT_CODE.span();
         state.set_account(account);
         starknet_backend::commit(ref state).expect('commitment failed');
 
@@ -340,7 +342,7 @@ mod tests {
         let nonce = account_dispatcher.get_nonce();
         let code = account_dispatcher.bytecode();
         assert(nonce == 420, 'wrong nonce');
-        assert(code == array![0x1].span(), 'notdeploying =  unmodified code');
+        assert(code == ACCOUNT_CODE.span(), 'notdeploying =  unmodified code');
     }
 
     //TODO unskip after selfdestruct rework
@@ -355,7 +357,7 @@ mod tests {
     //     IAccountDispatcher { contract_address: ca_address.starknet }.selfdestruct();
     //     let mut account = AccountTrait::fetch(evm_address()).unwrap();
     //     account.nonce = 420;
-    //     account.code = array![0x1].span();
+    //     account.code = ACCOUNT_CODE.span();
     //     account.commit();
 
     //     // Then
@@ -363,7 +365,7 @@ mod tests {
     //     let nonce = account_dispatcher.nonce();
     //     let code = account_dispatcher.bytecode();
     //     assert(nonce == 420, 'nonce should be modified');
-    //     assert(code == array![0x1].span(), 'code should be modified');
+    //     assert(code == ACCOUNT_CODE.span(), 'code should be modified');
     // }
 
     #[test]
@@ -383,7 +385,7 @@ mod tests {
             is_created: false,
         };
         account.nonce = 420;
-        account.code = array![0x1].span();
+        account.code = ACCOUNT_CODE.span();
         state.set_account(account);
         starknet_backend::commit(ref state).expect('commitment failed');
 
@@ -392,7 +394,7 @@ mod tests {
         let nonce = account_dispatcher.get_nonce();
         let code = account_dispatcher.bytecode();
         assert(nonce == 420, 'nonce should be modified');
-        assert(code == array![0x1].span(), 'code should be modified');
+        assert(code == ACCOUNT_CODE.span(), 'code should be modified');
     }
 
     #[test]

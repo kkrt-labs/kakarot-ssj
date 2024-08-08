@@ -344,6 +344,10 @@ mod tests {
     use utils::helpers::{u256_to_bytes_array, ArrayExtTrait};
     use utils::traits::{EthAddressIntoU256};
 
+    const ARRAY_3: [u8; 3] = [4, 5, 6];
+    const ARRAY_5: [u8; 5] = [1, 2, 3, 4, 5];
+    const ARRAY_5_ZEROES: [u8; 5] = [0, 0, 0, 0, 0];
+
     // *************************************************************************
     // 0x30: ADDRESS
     // *************************************************************************
@@ -649,7 +653,7 @@ mod tests {
 
     #[test]
     fn test_calldatacopy_basic() {
-        test_calldatacopy(32, 0, 3, array![4, 5, 6].span());
+        test_calldatacopy(32, 0, 3, ARRAY_3.span());
     }
 
     #[test]
@@ -660,7 +664,7 @@ mod tests {
     #[test]
     fn test_calldatacopy_with_out_of_bound_bytes() {
         // For out of bound bytes, 0s will be copied.
-        let mut expected = array![4, 5, 6];
+        let mut expected: Array<u8> = ARRAY_3.span().into();
         expected.append_n(0, 5);
 
         test_calldatacopy(32, 0, 8, expected.span());
@@ -669,7 +673,7 @@ mod tests {
     #[test]
     fn test_calldatacopy_with_out_of_bound_bytes_multiple_words() {
         // For out of bound bytes, 0s will be copied.
-        let mut expected = array![4, 5, 6];
+        let mut expected: Array<u8> = ARRAY_3.span().into();
         expected.append_n(0, 31);
 
         test_calldatacopy(32, 0, 34, expected.span());
@@ -726,7 +730,7 @@ mod tests {
     #[test]
     fn test_codesize() {
         // Given
-        let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
+        let bytecode: Span<u8> = ARRAY_5.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -745,7 +749,7 @@ mod tests {
     #[test]
     fn test_codecopy_type_conversion_error() {
         // Given
-        let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
+        let bytecode: Span<u8> = ARRAY_5.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -795,7 +799,7 @@ mod tests {
 
     fn test_codecopy(dest_offset: u32, offset: u32, mut size: u32) {
         // Given
-        let bytecode: Span<u8> = array![1, 2, 3, 4, 5].span();
+        let bytecode: Span<u8> = ARRAY_5.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -977,7 +981,7 @@ mod tests {
         // Then
         let mut bytecode_slice = array![];
         vm.memory.load_n(5, ref bytecode_slice, 20);
-        assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
+        assert(bytecode_slice.span() == ARRAY_5_ZEROES.span(), 'wrong bytecode');
     }
 
     fn test_exec_extcodecopy_eoa() {
@@ -1002,7 +1006,7 @@ mod tests {
         // Then
         let mut bytecode_slice = array![];
         vm.memory.load_n(5, ref bytecode_slice, 20);
-        assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
+        assert(bytecode_slice.span() == ARRAY_5_ZEROES.span(), 'wrong bytecode');
     }
 
 
@@ -1027,14 +1031,14 @@ mod tests {
         // Then
         let mut bytecode_slice = array![];
         vm.memory.load_n(5, ref bytecode_slice, 20);
-        assert(bytecode_slice.span() == array![0, 0, 0, 0, 0].span(), 'wrong bytecode');
+        assert(bytecode_slice.span() == ARRAY_5_ZEROES.span(), 'wrong bytecode');
     }
 
 
     #[test]
     fn test_exec_returndatasize() {
         // Given
-        let return_data: Array<u8> = array![1, 2, 3, 4, 5];
+        let return_data: Array<u8> = ARRAY_5.span().into();
         let size = return_data.len();
 
         let mut vm = VMBuilderTrait::new_with_presets()
@@ -1055,7 +1059,7 @@ mod tests {
     #[test]
     fn test_returndata_copy_type_conversion_error() {
         // Given
-        let return_data: Array<u8> = array![1, 2, 3, 4, 5];
+        let return_data: Array<u8> = ARRAY_5.span().into();
         let mut vm = VMBuilderTrait::new_with_presets()
             .with_return_data(return_data.span())
             .build();

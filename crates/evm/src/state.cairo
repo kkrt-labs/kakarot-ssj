@@ -309,6 +309,7 @@ mod tests {
         use utils::helpers::compute_starknet_address;
         use utils::set::{Set, SetTrait};
 
+        const ACCOUNT_CODE: [u8; 3] = [0xab, 0xcd, 0xef];
 
         #[test]
         fn test_get_account_when_not_present() {
@@ -351,7 +352,7 @@ mod tests {
             );
             let expected_account = Account {
                 address: Address { evm: evm_address, starknet: starknet_address },
-                code: array![0xab, 0xcd, 0xef].span(),
+                code: ACCOUNT_CODE.span(),
                 nonce: 1,
                 balance: 420,
                 selfdestruct: false,
@@ -372,15 +373,13 @@ mod tests {
             let mut state: State = Default::default();
             let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
             let evm_address: EthAddress = test_utils::evm_address();
-            let ca = contract_utils::deploy_contract_account(
-                evm_address, array![0xab, 0xcd, 0xef].span()
-            );
+            let ca = contract_utils::deploy_contract_account(evm_address, ACCOUNT_CODE.span());
             contract_utils::fund_account_with_native_token(ca.starknet, native_token, 420);
 
             let starknet_address = kakarot_core.compute_starknet_address(evm_address);
             let expected_account = Account {
                 address: Address { evm: evm_address, starknet: starknet_address },
-                code: array![0xab, 0xcd, 0xef].span(),
+                code: ACCOUNT_CODE.span(),
                 nonce: 1,
                 balance: 420,
                 selfdestruct: false,
@@ -420,7 +419,7 @@ mod tests {
             let value = 100;
             let account = Account {
                 address: ca_address,
-                code: array![0xab, 0xcd, 0xef].span(),
+                code: ACCOUNT_CODE.span(),
                 nonce: 1,
                 balance: 0,
                 selfdestruct: false,

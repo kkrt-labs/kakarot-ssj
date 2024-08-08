@@ -264,6 +264,9 @@ mod tests {
     use evm::test_utils::{evm_address, VMBuilderTrait};
     use starknet::get_contract_address;
 
+    const BYTE_CODE_1: [u8; 6] = [0x01, 0x02, 0x03, 0x5B, 0x04, 0x05];
+    const BYTE_CODE_2: [u8; 4] = [0x60, 0x5B, 0x60, 0x00];
+
     #[test]
     fn test_pc_basic() {
         // Given
@@ -532,7 +535,7 @@ mod tests {
     #[test]
     fn test_exec_jump_valid() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = BYTE_CODE_1.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -551,7 +554,7 @@ mod tests {
     #[test]
     fn test_exec_jump_invalid() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = BYTE_CODE_1.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -569,7 +572,7 @@ mod tests {
     #[test]
     fn test_exec_jump_out_of_bounds() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = BYTE_CODE_1.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -589,7 +592,7 @@ mod tests {
     #[test]
     fn test_exec_jump_inside_pushn() {
         // Given
-        let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
+        let bytecode: Span<u8> = BYTE_CODE_2.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -607,7 +610,7 @@ mod tests {
     #[test]
     fn test_exec_jumpi_valid_non_zero_1() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = BYTE_CODE_1.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -627,7 +630,7 @@ mod tests {
     #[test]
     fn test_exec_jumpi_valid_non_zero_2() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = BYTE_CODE_1.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -647,7 +650,7 @@ mod tests {
     #[test]
     fn test_exec_jumpi_valid_zero() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = BYTE_CODE_1.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -671,7 +674,7 @@ mod tests {
     #[test]
     fn test_exec_jumpi_invalid_non_zero() {
         // Given
-        let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
+        let bytecode: Span<u8> = BYTE_CODE_2.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -692,7 +695,7 @@ mod tests {
     #[test]
     fn test_exec_jumpi_invalid_zero() {
         // Given
-        let bytecode: Span<u8> = array![0x01, 0x02, 0x03, 0x5B, 0x04, 0x05].span();
+        let bytecode: Span<u8> = BYTE_CODE_1.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 
@@ -721,7 +724,7 @@ mod tests {
     #[should_panic(expected: ('exec_jump should throw error',))]
     fn test_exec_jumpi_inside_pushn() {
         // Given
-        let bytecode: Span<u8> = array![0x60, 0x5B, 0x60, 0x00].span();
+        let bytecode: Span<u8> = BYTE_CODE_2.span();
 
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
 

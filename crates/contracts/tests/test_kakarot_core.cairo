@@ -26,6 +26,12 @@ use starknet::{testing, contract_address_const, ContractAddress, EthAddress, Cla
 use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, LegacyTransaction};
 use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
 
+// selector: function get()
+const FUNC_GET_SELECTOR: [u8; 4] = [0x6d, 0x4c, 0xe6, 0x3c];
+
+// selector: function inc()
+const FUNC_INC_SELECTOR: [u8; 4] = [0x37, 0x13, 0x03, 0xc0];
+
 #[test]
 fn test_kakarot_core_owner() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -160,20 +166,14 @@ fn test_eth_send_transaction_non_deploy_tx() {
     let value = 0;
 
     // Then
-    // selector: function get()
-    let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
-
     // check counter value is 0 before doing inc
     let tx = contract_utils::call_transaction(
-        chain_id(), Option::Some(counter_address), data_get_tx
+        chain_id(), Option::Some(counter_address), FUNC_GET_SELECTOR.span()
     );
     let (_, return_data) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
 
     assert_eq!(return_data, u256_to_bytes_array(0).span());
-
-    // selector: function inc()
-    let data_increment_counter = array![0x37, 0x13, 0x03, 0xc0].span();
 
     // When
     testing::set_contract_address(eoa);
@@ -185,7 +185,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
         amount: value,
         gas_price,
         gas_limit,
-        calldata: data_increment_counter
+        calldata: FUNC_INC_SELECTOR.span()
     };
 
     let (success, _) = kakarot_core
@@ -193,12 +193,9 @@ fn test_eth_send_transaction_non_deploy_tx() {
     assert!(success);
 
     // Then
-    // selector: function get()
-    let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
-
     // check counter value is 1
     let tx = contract_utils::call_transaction(
-        chain_id(), Option::Some(counter_address), data_get_tx
+        chain_id(), Option::Some(counter_address), FUNC_GET_SELECTOR.span()
     );
     let (_, _) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
@@ -224,11 +221,8 @@ fn test_eth_call() {
     counter.write_storage(0, 1);
 
     let to = Option::Some(test_utils::other_evm_address());
-    // selector: function get()
-    let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
-
     // When
-    let tx = contract_utils::call_transaction(chain_id(), to, calldata);
+    let tx = contract_utils::call_transaction(chain_id(), to, FUNC_GET_SELECTOR.span());
     let (success, return_data) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
 
@@ -258,12 +252,15 @@ fn test_process_transaction() {
     let gas_limit = test_utils::tx_gas_limit();
     let gas_price = test_utils::gas_price();
     let value = 0;
-    // selector: function get()
-    let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
-
     let tx = EthereumTransaction::LegacyTransaction(
         LegacyTransaction {
-            chain_id, nonce, destination: to, amount: value, gas_price, gas_limit, calldata
+            chain_id,
+            nonce,
+            destination: to,
+            amount: value,
+            gas_price,
+            gas_limit,
+            calldata: FUNC_GET_SELECTOR.span()
         }
     );
 
@@ -323,7 +320,6 @@ fn test_eth_send_transaction_deploy_tx() {
     assert(bytecode == counter_evm_bytecode(), 'wrong bytecode');
 
     // Check that the account was created and `get` returns 0.
-    let calldata = array![0x6d, 0x4c, 0xe6, 0x3c].span();
     let to = Option::Some(expected_address);
 
     // No need to set address back to eoa, as eth_call doesn't use the caller address.
@@ -334,7 +330,7 @@ fn test_eth_send_transaction_deploy_tx() {
         amount: value,
         gas_price,
         gas_limit,
-        calldata
+        calldata: FUNC_GET_SELECTOR.span()
     };
     let (_, result) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));

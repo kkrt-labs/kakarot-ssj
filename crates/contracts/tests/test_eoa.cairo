@@ -36,6 +36,8 @@ use utils::helpers::{U8SpanExTrait, u256_to_bytes_array};
 use utils::serialization::{serialize_bytes, serialize_transaction_signature};
 use utils::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
 
+// selector: function get()
+const FUNC_GET_SELECTOR: [u8; 4] = [0x6d, 0x4c, 0xe6, 0x3c];
 
 #[test]
 fn test_get_evm_address() {
@@ -66,11 +68,10 @@ fn test___execute__a() {
     let eoa_contract = IAccountDispatcher { contract_address: eoa };
 
     // Then
-    // selector: function get()
-    let data_get_tx = array![0x6d, 0x4c, 0xe6, 0x3c].span();
-
     // check counter value is 0 before doing inc
-    let tx = call_transaction(chain_id(), Option::Some(other_evm_address()), data_get_tx);
+    let tx = call_transaction(
+        chain_id(), Option::Some(other_evm_address()), FUNC_GET_SELECTOR.span()
+    );
 
     let (_, return_data) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx),);
@@ -98,7 +99,9 @@ fn test___execute__a() {
     assert_ne!(event.gas_used, 0);
 
     // check counter value has increased
-    let tx = call_transaction(chain_id(), Option::Some(other_evm_address()), data_get_tx);
+    let tx = call_transaction(
+        chain_id(), Option::Some(other_evm_address()), FUNC_GET_SELECTOR.span()
+    );
     let (_, return_data) = kakarot_core
         .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx),);
     assert_eq!(return_data, u256_to_bytes_array(1).span());

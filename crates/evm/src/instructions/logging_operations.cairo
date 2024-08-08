@@ -100,6 +100,9 @@ mod tests {
     use evm::test_utils::{VMBuilderTrait};
     use utils::helpers::u256_to_bytes_array;
 
+    const EXPECTED_DATA_1: [u8; 8] = [0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF];
+    const EXPECTED_DATA_2: [u8; 10] = [0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x00, 0x00];
+
     #[test]
     fn test_exec_log0() {
         // Given
@@ -223,8 +226,9 @@ mod tests {
         assert(event.data.len() == 40, 'event should have 40 bytes');
         let data_expected = u256_to_bytes_array(Bounded::<u256>::MAX).span();
         assert(event.data.span().slice(0, 32) == data_expected, 'event data are incorrect');
-        let data_expected = array![0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF].span();
-        assert(event.data.span().slice(32, 8) == data_expected, 'event data are incorrect');
+        assert(
+            event.data.span().slice(32, 8) == EXPECTED_DATA_1.span(), 'event data are incorrect'
+        );
     }
 
     #[test]
@@ -260,9 +264,7 @@ mod tests {
         assert(*event.keys[3] == Bounded::<u256>::MAX, 'event key is not correct');
 
         assert(event.data.len() == 10, 'event should have 10 bytes');
-        let data_expected = array![0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x00, 0x00]
-            .span();
-        assert(event.data.span() == data_expected, 'event data are incorrect');
+        assert(event.data.span() == EXPECTED_DATA_2.span(), 'event data are incorrect');
     }
 
     #[test]
@@ -397,8 +399,9 @@ mod tests {
         assert(event1.data.len() == 40, 'event1 should have 40 bytes');
         let data_expected = u256_to_bytes_array(Bounded::<u256>::MAX).span();
         assert(event1.data.span().slice(0, 32) == data_expected, 'event1 data are incorrect');
-        let data_expected = array![0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF].span();
-        assert(event1.data.span().slice(32, 8) == data_expected, 'event1 data are incorrect');
+        assert(
+            event1.data.span().slice(32, 8) == EXPECTED_DATA_1.span(), 'event1 data are incorrect'
+        );
 
         let event2 = events.pop_front().unwrap();
         assert(event2.keys.len() == 4, 'event2 should have 4 keys');
@@ -408,8 +411,6 @@ mod tests {
         assert(*event2.keys[3] == Bounded::<u256>::MAX, 'event2 key is not correct');
 
         assert(event2.data.len() == 10, 'event2 should have 10 bytes');
-        let data_expected = array![0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x00, 0x00]
-            .span();
-        assert(event2.data.span() == data_expected, 'event2 data are incorrect');
+        assert(event2.data.span() == EXPECTED_DATA_2.span(), 'event2 data are incorrect');
     }
 }
