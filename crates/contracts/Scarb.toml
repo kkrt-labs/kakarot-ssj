@@ -22,4 +22,4 @@ casm-add-pythonic-hints = true
 name = "contracts"
 
 [dev-dependencies]
-cairo_test = "2.7.0"
+cairo_test = "2.7.1"

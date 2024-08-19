@@ -1,5 +1,5 @@
 // We manually copy pasted contracts from Open Zeppelin
-// We adapted it to 2.7.0 version of Cairo
+// We adapted it to 2.7.1 version of Cairo
 // Credits: "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.7.0"
 
 // SPDX-License-Identifier: MIT

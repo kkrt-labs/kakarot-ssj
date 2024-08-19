@@ -24,4 +24,4 @@ starknet.workspace = true
 fmt.workspace = true
 
 [dev-dependencies]
-cairo_test = "2.7.0"
+cairo_test = "2.7.1"

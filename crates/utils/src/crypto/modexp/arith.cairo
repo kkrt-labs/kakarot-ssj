@@ -377,7 +377,7 @@ fn compute_r_mod_n(ref n: MPNat, ref out: Felt252Vec<Word>) {
 /// guaranteed to never overflow because even when all 4 variables are
 /// equal to `WORD_MAX` the output is smaller than `DOUBLEWORD_MAX`.
 fn shifted_carrying_mul(a: Word, x: Word, y: Word, c: Word) -> (Word, Word) {
-    let res: DoubleWord = a.into() + WideMul::wide_mul(x, y) + c.into();
+    let res: DoubleWord = a.into() + x.wide_mul(y) + c.into();
     let (top_word, bottom_word) = u128_split(res);
     (bottom_word, top_word)
 }
@@ -387,7 +387,7 @@ fn shifted_carrying_mul(a: Word, x: Word, y: Word, c: Word) -> (Word, Word) {
 /// guaranteed to never overflow because even when all 3 variables are
 /// equal to `Word::MAX` the output is smaller than `DoubleWord::MAX`.
 fn carrying_mul(x: Word, y: Word, c: Word) -> (Word, Word) {
-    let wide = WideMul::wide_mul(x, y) + c.into();
+    let wide = x.wide_mul(y) + c.into();
     let (top_word, bottom_word) = u128_split(wide);
     (bottom_word, top_word)
 }
