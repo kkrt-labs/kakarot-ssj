@@ -3,7 +3,7 @@ use contracts::components::upgradeable::{IUpgradeableDispatcher, IUpgradeableDis
 use contracts::components::upgradeable::{upgradeable_component};
 use contracts::test_utils;
 use core::serde::Serde;
-use starknet::{deploy_syscall, ClassHash, ContractAddress, testing};
+use core::starknet::{deploy_syscall, ClassHash, ContractAddress, testing};
 
 use upgradeable_component::{UpgradeableImpl};
 

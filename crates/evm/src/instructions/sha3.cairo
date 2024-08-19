@@ -6,7 +6,7 @@ use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
-use keccak::{cairo_keccak, u128_split};
+use core::keccak::{cairo_keccak, u128_split};
 use utils::helpers::{ArrayExtTrait, U256Trait, ceil32};
 
 #[generate_trait]

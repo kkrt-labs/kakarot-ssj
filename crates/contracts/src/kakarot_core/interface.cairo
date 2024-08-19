@@ -1,4 +1,4 @@
-use starknet::{ContractAddress, EthAddress, ClassHash};
+use core::starknet::{ContractAddress, EthAddress, ClassHash};
 use utils::eth_transaction::EthereumTransaction;
 
 #[starknet::interface]

@@ -1,4 +1,4 @@
-use starknet::{ContractAddress, EthAddress, ClassHash};
+use core::starknet::{ContractAddress, EthAddress, ClassHash};
 
 const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
@@ -26,8 +26,8 @@ pub mod KakarotCore {
         ExecutionSummaryTrait, Address, AddressTrait
     };
     use evm::state::{State, StateTrait};
-    use starknet::syscalls::deploy_syscall;
-    use starknet::{
+    use core::starknet::syscalls::deploy_syscall;
+    use core::starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address,
         get_caller_address
     };

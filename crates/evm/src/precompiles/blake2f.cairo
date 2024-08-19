@@ -4,7 +4,7 @@ use core::option::OptionTrait;
 use evm::errors::{EVMError, ensure};
 use evm::model::vm::{VM, VMTrait};
 use evm::precompiles::Precompile;
-use starknet::EthAddress;
+use core::starknet::EthAddress;
 use utils::crypto::blake2_compress::compress;
 use utils::helpers::{FromBytes, ToBytes};
 
@@ -100,7 +100,7 @@ mod tests {
         blake2_precompile_pass_0_test_case, blake2_precompile_pass_2_test_case
     };
     use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
-    use starknet::testing::set_contract_address;
+    use core::starknet::testing::set_contract_address;
     use utils::helpers::FromBytes;
 
     #[test]

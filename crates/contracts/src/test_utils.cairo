@@ -13,7 +13,7 @@ use evm::model::{Address};
 use evm::test_utils::{ca_address, other_starknet_address, chain_id, sequencer_evm_address};
 use openzeppelin::token::erc20::ERC20;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use starknet::{
+use core::starknet::{
     testing, contract_address_const, EthAddress, ContractAddress, deploy_syscall,
     get_contract_address
 };
@@ -60,7 +60,7 @@ fn assert_no_events_left(address: ContractAddress) {
 }
 
 mod constants {
-    use starknet::{EthAddress, testing, contract_address_const, ContractAddress};
+    use core::starknet::{EthAddress, testing, contract_address_const, ContractAddress};
     fn ZERO() -> ContractAddress {
         contract_address_const::<0>()
     }

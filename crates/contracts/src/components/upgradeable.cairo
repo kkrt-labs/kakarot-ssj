@@ -1,4 +1,4 @@
-use starknet::ClassHash;
+use core::starknet::ClassHash;
 
 #[starknet::interface]
 pub trait IUpgradeable<TContractState> {
@@ -8,8 +8,8 @@ pub trait IUpgradeable<TContractState> {
 
 #[starknet::component]
 pub mod upgradeable_component {
-    use starknet::syscalls::{replace_class_syscall};
-    use starknet::{get_caller_address, ClassHash};
+    use core::starknet::syscalls::{replace_class_syscall};
+    use core::starknet::{get_caller_address, ClassHash};
 
 
     #[storage]

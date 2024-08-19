@@ -13,7 +13,7 @@ use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 
 use evm::precompiles::Precompile;
-use starknet::EthAddress;
+use core::starknet::EthAddress;
 use utils::crypto::modexp::lib::modexp;
 use utils::helpers::{U256Trait, U8SpanExTrait, U64Trait, FromBytes, BitsUsed};
 
@@ -170,8 +170,8 @@ mod tests {
         test_modexp_eip198_example_2_data, test_modexp_nagydani_1_square_data,
         test_modexp_nagydani_1_qube_data
     };
-    use starknet::EthAddress;
-    use starknet::testing::set_contract_address;
+    use core::starknet::EthAddress;
+    use core::starknet::testing::set_contract_address;
     use utils::helpers::U256Trait;
 
     // the tests are taken from

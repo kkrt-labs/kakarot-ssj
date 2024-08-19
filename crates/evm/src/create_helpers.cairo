@@ -15,8 +15,8 @@ use evm::model::{ExecutionResult, ExecutionResultTrait, ExecutionSummary, Enviro
 use evm::model::{Message, Address, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use keccak::cairo_keccak;
-use starknet::{EthAddress, get_tx_info};
+use core::keccak::cairo_keccak;
+use core::starknet::{EthAddress, get_tx_info};
 use utils::address::{compute_contract_address, compute_create2_contract_address};
 use utils::constants;
 use utils::helpers::ArrayExtTrait;
@@ -179,7 +179,7 @@ mod tests {
     use contracts::test_data::counter_evm_bytecode;
     use evm::create_helpers::CreateHelpers;
     use evm::test_utils::{VMBuilderTrait};
-    use starknet::EthAddress;
+    use core::starknet::EthAddress;
     use utils::address::{compute_contract_address, compute_create2_contract_address};
     //TODO: test create helpers
 

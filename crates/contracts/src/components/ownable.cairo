@@ -1,7 +1,7 @@
 // This implementation of an Ownable is inspired by Openzeppelin's work on
 // OpenZeppelin Contracts for Cairo available here: https://github.com/OpenZeppelin/cairo-contracts
 
-use starknet::ContractAddress;
+use core::starknet::ContractAddress;
 pub mod Errors {
     pub const NOT_OWNER: felt252 = 'Caller is not the owner';
     pub const ZERO_ADDRESS_CALLER: felt252 = 'Caller is the zero address';
@@ -18,8 +18,8 @@ pub trait IOwnable<TContractState> {
 #[starknet::component]
 pub mod ownable_component {
     use core::num::traits::Zero;
-    use starknet::ContractAddress;
-    use starknet::get_caller_address;
+    use core::starknet::ContractAddress;
+    use core::starknet::get_caller_address;
     use super::Errors;
 
     #[storage]

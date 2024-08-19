@@ -12,7 +12,7 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{Transfer, Address, Message};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use starknet::{EthAddress, get_contract_address};
+use core::starknet::{EthAddress, get_contract_address};
 use utils::constants;
 use utils::helpers::compute_starknet_address;
 use utils::set::SetTrait;

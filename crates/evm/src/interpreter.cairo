@@ -18,7 +18,7 @@ use evm::model::{
 use evm::precompiles::Precompiles;
 use evm::stack::{Stack, StackTrait};
 use evm::state::{State, StateTrait};
-use starknet::{EthAddress, ContractAddress};
+use core::starknet::{EthAddress, ContractAddress};
 use utils::constants;
 use utils::helpers::{U256Trait, compute_starknet_address, EthAddressExTrait};
 
