@@ -147,68 +147,6 @@ fn test___validate__fail__call_data_len_not_1() {
 }
 
 #[test]
-#[should_panic(expected: ('to is not kakarot core', 'ENTRYPOINT_FAILED'))]
-fn test___validate__fail__to_address_not_kakarot_core() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let evm_address = evm_address();
-    let eoa = kakarot_core.deploy_externally_owned_account(evm_address);
-    fund_account_with_native_token(eoa, native_token, 0xfffffffffffffffffffffffffff);
-    let eoa_contract = IAccountDispatcher { contract_address: eoa };
-
-    // to reproduce locally:
-    // run: cp .env.example .env
-    // bun install & bun run scripts/compute_rlp_encoding.ts
-    let signature = Signature {
-        r: 0xaae7c4f6e4caa03257e37a6879ed5b51a6f7db491d559d10a0594f804aa8d797,
-        s: 0x2f3d9634f8cb9b9a43b048ee3310be91c2d3dc3b51a3313b473ef2260bbf6bc7,
-        y_parity: true
-    };
-    set_signature(serialize_transaction_signature(signature, TransactionType::Legacy, 1).span());
-    set_contract_address(contract_address_const::<0>());
-
-    let call = Call {
-        to: other_starknet_address(),
-        selector: selector!("eth_send_transaction"),
-        calldata: [].span()
-    };
-
-    eoa_contract.__validate__(array![call]);
-}
-
-#[test]
-#[should_panic(expected: ("Validate: selector must be eth_send_transaction", 'ENTRYPOINT_FAILED'))]
-fn test___validate__fail__selector_not_eth_send_transaction() {
-    let (native_token, kakarot_core) = setup_contracts_for_testing();
-    let evm_address = evm_address();
-    let eoa = kakarot_core.deploy_externally_owned_account(evm_address);
-    fund_account_with_native_token(eoa, native_token, 0xfffffffffffffffffffffffffff);
-    let eoa_contract = IAccountDispatcher { contract_address: eoa };
-
-    set_chain_id(chain_id().into());
-    let mut vm = VMBuilderTrait::new_with_presets().build();
-    let chain_id = vm.env.chain_id;
-    set_contract_address(contract_address_const::<0>());
-
-    // to reproduce locally:
-    // run: cp .env.example .env
-    // bun install & bun run scripts/compute_rlp_encoding.ts
-    let signature = Signature {
-        r: 0xaae7c4f6e4caa03257e37a6879ed5b51a6f7db491d559d10a0594f804aa8d797,
-        s: 0x2f3d9634f8cb9b9a43b048ee3310be91c2d3dc3b51a3313b473ef2260bbf6bc7,
-        y_parity: true
-    };
-    set_signature(
-        serialize_transaction_signature(signature, TransactionType::Legacy, chain_id).span()
-    );
-
-    let call = Call {
-        to: kakarot_core.contract_address, selector: selector!("eth_call"), calldata: [].span()
-    };
-
-    eoa_contract.__validate__(array![call]);
-}
-
-#[test]
 fn test___validate__legacy_transaction() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let evm_address: EthAddress = 0xaA36F24f65b5F0f2c642323f3d089A3F0f2845Bf_u256.into();

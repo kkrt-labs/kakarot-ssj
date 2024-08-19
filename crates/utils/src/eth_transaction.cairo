@@ -85,6 +85,8 @@ pub enum EthereumTransaction {
     FeeMarketTransaction: FeeMarketTransaction
 }
 
+
+
 #[generate_trait]
 pub impl EthereumTransactionImpl of EthereumTransactionTrait {
     fn chain_id(self: @EthereumTransaction) -> u128 {

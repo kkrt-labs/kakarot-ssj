@@ -15,6 +15,7 @@ pub trait IAccount<TContractState> {
         implementation_class: ClassHash
     );
     fn get_implementation(self: @TContractState) -> ClassHash;
+    fn set_implementation(ref self: TContractState, new_class_hash: ClassHash);
     fn get_evm_address(self: @TContractState) -> EthAddress;
     fn is_initialized(self: @TContractState) -> bool;
 
@@ -129,9 +130,7 @@ pub mod AccountContract {
             let kakarot = IKakarotCoreDispatcher { contract_address: kakarot_address };
 
             let native_token = kakarot.get_native_token();
-            // To internally perform value transfer of the network's native
-            // token (which conforms to the ERC20 standard), we need to give the
-            // KakarotCore contract infinite allowance
+            // Give infinite ETH transfer allowance to Kakarot
             IERC20CamelDispatcher { contract_address: native_token }
                 .approve(kakarot_address, Bounded::<u256>::MAX);
 
@@ -140,6 +139,11 @@ pub mod AccountContract {
 
         fn get_implementation(self: @ContractState) -> ClassHash {
             self.Account_implementation.read()
+        }
+
+        fn set_implementation(ref self: ContractState, new_class_hash: ClassHash) {
+            replace_class_syscall(new_class_hash).unwrap_syscall();
+            self.Account_implementation.write(new_class_hash);
         }
 
         fn get_evm_address(self: @ContractState) -> EthAddress {
@@ -158,16 +162,9 @@ pub mod AccountContract {
             // todo: activate check once using snfoundry
             // assert(tx_info.version.try_into().unwrap() >= 1_u128, 'EOA: deprecated tx version');
             assert(self.Account_bytecode.read().len().is_zero(), 'EOAs: Cannot have code');
-            assert(tx_info.signature.len() == 5, 'EOA: invalid signature length');
-
-            let call = calls.at(0);
-            assert(*call.to == self.ownable.owner(), 'to is not kakarot core');
-            assert!(
-                *call.selector == selector!("eth_send_transaction"),
-                "Validate: selector must be eth_send_transaction"
-            );
 
             let chain_id: u128 = tx_info.chain_id.try_into().unwrap() % POW_2_32;
+            assert(tx_info.signature.len() == 5, 'EOA: invalid signature length');
             let signature = deserialize_signature(tx_info.signature, chain_id)
                 .expect('EOA: invalid signature');
 
@@ -178,7 +175,7 @@ pub mod AccountContract {
                 signature
             };
 
-            let encoded_tx = deserialize_bytes(*call.calldata)
+            let encoded_tx = deserialize_bytes(*calls[0].calldata)
                 .expect('conversion to Span<u8> failed');
             let validation_result = EthTransactionTrait::validate_eth_tx(
                 tx_metadata, encoded_tx.span()
@@ -214,19 +211,37 @@ pub mod AccountContract {
                 replace_class_syscall(latest_class).unwrap_syscall();
                 return response;
             }
+            let encoded_tx = deserialize_bytes(*calls[0].calldata)
+                .expect('conversion failed')
+                .span();
+            let tx = EthTransactionTrait::decode(encoded_tx).expect('rlp decoding of tx failed');
 
             // Increment nonce to match protocol's nonce for EOAs.
             self.Account_nonce.write(tx_info.nonce.try_into().unwrap() + 1);
 
-            let call: @Call = calls[0];
-            let encoded_tx = deserialize_bytes(*call.calldata).expect('conversion failed').span();
+            let block_gas_limit = kakarot.get_block_gas_limit();
+            let tx_gas_fits_in_block = tx.gas_limit() <= block_gas_limit;
 
-            let tx = EthTransactionTrait::decode(encoded_tx).expect('rlp decoding of tx failed');
+            let base_fee = kakarot.get_base_fee();
+            let native_token = kakarot.get_native_token();
+            let balance = IERC20CamelDispatcher { contract_address: native_token }
+                .balanceOf(get_contract_address());
 
-            let is_valid = match tx.try_into_fee_market_transaction() {
-                Option::Some(tx_fee_infos) => { self.validate_eip1559_tx(@tx, tx_fee_infos) },
-                Option::None => true
-            };
+            // ensure that the user was willing to at least pay the base fee
+            let enough_fee = base_fee <= tx.gas_price();
+            let max_gas_fee = tx.gas_limit() + tx.gas_price();
+            let tx_cost = tx.value() + max_gas_fee.into();
+            let is_balance_enough = tx_cost <= balance;
+            let mut is_eip1559_valid = true;
+
+            if let Option::Some(tx_fee_infos) = tx.try_into_fee_market_transaction() {
+                is_eip1559_valid = self.validate_eip1559_tx(@tx, tx_fee_infos)
+            }
+
+            let is_valid = tx_gas_fits_in_block
+                && enough_fee
+                && is_balance_enough
+                && is_eip1559_valid;
 
             let (success, return_data, gas_used) = if is_valid {
                 kakarot.eth_send_transaction(tx)
@@ -278,11 +293,6 @@ pub mod AccountContract {
             tx_fee_infos: utils::eth_transaction::FeeMarketTransaction
         ) -> bool {
             let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
-            let block_gas_limit = kakarot.get_block_gas_limit();
-
-            if tx.gas_limit() >= block_gas_limit {
-                return false;
-            }
 
             let base_fee = kakarot.get_base_fee();
             let native_token = kakarot.get_native_token();
