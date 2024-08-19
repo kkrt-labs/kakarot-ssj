@@ -236,7 +236,7 @@ mod tests {
         // The values can be computed externally by running a Rust program using the
         // `starknet_crypto` crate and `poseidon_hash_many`.
         // ```rust
-        //     use core::starknet_crypto::{FieldElement,poseidon_hash_many};
+        //     use starknet_crypto::{FieldElement,poseidon_hash_many};
         // use crypto_bigint::{U256};
 
         // fn main() {
