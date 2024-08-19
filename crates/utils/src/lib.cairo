@@ -1,5 +1,3 @@
-//! Utilities for kakarot standard library.
-
 pub mod address;
 pub mod constants;
 pub mod crypto;
@@ -16,3 +14,6 @@ pub mod set;
 mod test_data;
 
 pub mod traits;
+//! Utilities for kakarot standard library.
+
+pub mod utils;
