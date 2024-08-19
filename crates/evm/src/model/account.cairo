@@ -9,7 +9,7 @@ use evm::model::{Address, AddressTrait, Transfer};
 use evm::state::State;
 use evm::state::StateTrait;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use starknet::{
+use core::starknet::{
     ContractAddress, EthAddress, get_contract_address, deploy_syscall, get_tx_info,
     SyscallResultTrait
 };

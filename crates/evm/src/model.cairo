@@ -7,7 +7,7 @@ use core::num::traits::{CheckedAdd, CheckedSub, CheckedMul};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
 use evm::model::account::{Account, AccountTrait};
 use evm::state::State;
-use starknet::{EthAddress, get_contract_address, ContractAddress};
+use core::starknet::{EthAddress, get_contract_address, ContractAddress};
 use utils::fmt::{TSpanSetDebug};
 use utils::helpers::{ResultExTrait};
 use utils::set::{Set, SpanSet};
@@ -168,7 +168,7 @@ mod tests {
     use evm::state::{State, StateChangeLog, StateChangeLogTrait};
     use evm::test_utils::{evm_address};
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-    use starknet::testing::set_contract_address;
+    use core::starknet::testing::set_contract_address;
 
     #[test]
     fn test_is_deployed_eoa_exists() {

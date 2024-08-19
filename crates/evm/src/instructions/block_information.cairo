@@ -15,8 +15,8 @@ use evm::stack::StackTrait;
 use evm::state::StateTrait;
 
 // Corelib imports
-use starknet::info::get_block_number;
-use starknet::{get_block_hash_syscall, EthAddress};
+use core::starknet::info::get_block_number;
+use core::starknet::{get_block_hash_syscall, EthAddress};
 
 use utils::helpers::ResultExTrait;
 use utils::traits::{EthAddressTryIntoResultContractAddress, EthAddressIntoU256};
@@ -142,7 +142,7 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::test_utils::{evm_address, VMBuilderTrait, tx_gas_limit, gas_price};
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-    use starknet::testing::{
+    use core::starknet::testing::{
         set_block_timestamp, set_block_number, set_block_hash, set_contract_address,
         set_sequencer_address, ContractAddress
     };

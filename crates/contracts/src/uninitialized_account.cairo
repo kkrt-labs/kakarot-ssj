@@ -3,8 +3,8 @@
 //! the contracts deployed by Kakarot, thus enforcing a unique and consistent address mapping Eth
 //! Address <=> Starknet Address
 
-use starknet::ClassHash;
-use starknet::{ContractAddress, EthAddress};
+use core::starknet::ClassHash;
+use core::starknet::{ContractAddress, EthAddress};
 
 #[starknet::interface]
 trait IAccount<TContractState> {
@@ -21,8 +21,8 @@ trait IAccount<TContractState> {
 pub mod UninitializedAccount {
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use core::starknet::SyscallResultTrait;
-    use starknet::syscalls::replace_class_syscall;
-    use starknet::{ContractAddress, EthAddress, ClassHash, get_caller_address};
+    use core::starknet::syscalls::replace_class_syscall;
+    use core::starknet::{ContractAddress, EthAddress, ClassHash, get_caller_address};
     use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait};
 
     #[storage]

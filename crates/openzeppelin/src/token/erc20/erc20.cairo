@@ -14,8 +14,8 @@ pub mod ERC20 {
         StoragePointerWriteAccess,
     };
     use openzeppelin::token::erc20::interface::{IERC20, IERC20CamelOnly};
-    use starknet::ContractAddress;
-    use starknet::get_caller_address;
+    use core::starknet::ContractAddress;
+    use core::starknet::get_caller_address;
 
     #[storage]
     struct Storage {

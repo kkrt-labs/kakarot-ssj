@@ -16,7 +16,7 @@ use core::nullable::{NullableTrait};
 //! let value = stack.pop()?;
 //! ```
 use evm::errors::{ensure, EVMError, TYPE_CONVERSION_ERROR};
-use starknet::{StorageBaseAddress, EthAddress};
+use core::starknet::{StorageBaseAddress, EthAddress};
 
 use utils::constants;
 use utils::i256::i256;
@@ -327,7 +327,7 @@ mod tests {
 
     mod pop {
         use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
-        use starknet::storage_base_address_const;
+        use core::starknet::storage_base_address_const;
         use super::StackTrait;
         use utils::traits::StorageBaseAddressPartialEq;
 

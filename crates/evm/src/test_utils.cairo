@@ -9,7 +9,7 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{Message, Environment, Address, Account, AccountTrait};
 use evm::state::State;
 use evm::{stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}};
-use starknet::{
+use core::starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
 };

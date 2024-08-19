@@ -12,7 +12,7 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts for Cairo v0.7.0 (token/erc20/interface.cairo)
 
-use starknet::ContractAddress;
+use core::starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IERC20<TState> {

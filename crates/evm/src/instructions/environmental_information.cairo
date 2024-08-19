@@ -12,9 +12,11 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{AddressTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use keccak::cairo_keccak;
+use core::keccak::cairo_keccak;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use starknet::{Store, storage_base_address_from_felt252, ContractAddress, get_contract_address};
+use core::starknet::{
+    Store, storage_base_address_from_felt252, ContractAddress, get_contract_address
+};
 use utils::constants::EMPTY_KECCAK;
 use utils::helpers::ResultExTrait;
 use utils::helpers::{ceil32, load_word, U256Trait, U8SpanExTrait};
@@ -340,7 +342,7 @@ mod tests {
     };
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 
-    use starknet::testing::set_contract_address;
+    use core::starknet::testing::set_contract_address;
     use utils::helpers::{u256_to_bytes_array, ArrayExtTrait};
     use utils::traits::{EthAddressIntoU256};
 

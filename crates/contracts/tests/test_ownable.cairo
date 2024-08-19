@@ -5,8 +5,8 @@ use core::num::traits::Zero;
 
 
 use ownable_component::{InternalImpl, OwnableImpl};
-use starknet::ContractAddress;
-use starknet::testing;
+use core::starknet::ContractAddress;
+use core::starknet::testing;
 
 
 #[starknet::contract]

@@ -23,9 +23,11 @@ use evm::test_utils::{
     tx_gas_limit, gas_price, VMBuilderTrait
 };
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-use starknet::class_hash::Felt252TryIntoClassHash;
-use starknet::testing::{set_caller_address, set_contract_address, set_signature, set_chain_id};
-use starknet::{
+use core::starknet::class_hash::Felt252TryIntoClassHash;
+use core::starknet::testing::{
+    set_caller_address, set_contract_address, set_signature, set_chain_id
+};
+use core::starknet::{
     deploy_syscall, ContractAddress, ClassHash, VALIDATED, get_contract_address,
     contract_address_const, EthAddress, eth_signature::{Signature}, get_tx_info
 };

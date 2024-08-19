@@ -1,5 +1,5 @@
 use core::cmp::min;
-use starknet::EthAddress;
+use core::starknet::EthAddress;
 use utils::eth_transaction::{AccessListItem, EthereumTransaction, EthereumTransactionTrait};
 use utils::helpers;
 
@@ -242,7 +242,7 @@ mod tests {
         ACCESS_LIST_STORAGE_KEY
     };
     use evm::test_utils::evm_address;
-    use starknet::EthAddress;
+    use core::starknet::EthAddress;
     use utils::eth_transaction::{
         EthereumTransaction, LegacyTransaction, AccessListTransaction, EthereumTransactionTrait,
         AccessListItem

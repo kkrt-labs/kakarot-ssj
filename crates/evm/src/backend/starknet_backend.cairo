@@ -8,7 +8,7 @@ use evm::errors::{ensure, EVMError, EOA_EXISTS};
 use evm::model::{Address, AddressTrait, Environment, Account, AccountTrait};
 use evm::state::{State, StateTrait};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use starknet::{
+use core::starknet::{
     EthAddress, get_contract_address, deploy_syscall, get_tx_info, get_block_info,
     SyscallResultTrait
 };
@@ -129,8 +129,8 @@ mod internals {
     use evm::model::account::{Account, AccountTrait};
     use evm::model::{Address, AddressTrait, Transfer};
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-    use starknet::SyscallResultTrait;
-    use starknet::syscalls::{emit_event_syscall};
+    use core::starknet::SyscallResultTrait;
+    use core::starknet::syscalls::{emit_event_syscall};
     use super::{State, StateTrait, deploy};
     use utils::constants::BURN_ADDRESS;
     use utils::set::{Set, SetTrait};
@@ -282,7 +282,7 @@ mod tests {
     use evm::errors::EVMErrorTrait;
     use evm::test_utils::{chain_id, evm_address, VMBuilderTrait};
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-    use starknet::testing::{set_contract_address, set_chain_id};
+    use core::starknet::testing::{set_contract_address, set_chain_id};
 
 
     #[test]

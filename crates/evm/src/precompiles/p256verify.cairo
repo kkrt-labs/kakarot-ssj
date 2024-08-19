@@ -1,7 +1,7 @@
 use core::starknet::SyscallResultTrait;
 use evm::errors::{EVMError};
 use evm::precompiles::Precompile;
-use starknet::{
+use core::starknet::{
     EthAddress, eth_signature::{recover_public_key, public_key_point_to_eth_address, Signature},
     secp256r1::{Secp256r1Point, secp256r1_new_syscall}, secp256_trait::is_valid_signature
 };

@@ -5,7 +5,7 @@ use evm::errors::EVMError;
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 use evm::precompiles::Precompile;
-use starknet::EthAddress;
+use core::starknet::EthAddress;
 use utils::helpers::Bitshift;
 use utils::helpers::{FromBytes, ToBytes};
 
@@ -62,7 +62,7 @@ mod tests {
     use evm::precompiles::sha256::Sha256;
     use evm::stack::StackTrait;
     use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
-    use starknet::testing::set_contract_address;
+    use core::starknet::testing::set_contract_address;
     use utils::helpers::ToBytes;
     use utils::helpers::{FromBytes};
 

@@ -10,7 +10,7 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{AddressTrait};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, compute_state_key};
-use starknet::{storage_base_address_from_felt252, Store};
+use core::starknet::{storage_base_address_from_felt252, Store};
 use utils::helpers::U256Trait;
 use utils::set::SetTrait;
 
@@ -262,7 +262,7 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::state::{StateTrait, compute_storage_address};
     use evm::test_utils::{evm_address, VMBuilderTrait};
-    use starknet::get_contract_address;
+    use core::starknet::get_contract_address;
 
     #[test]
     fn test_pc_basic() {

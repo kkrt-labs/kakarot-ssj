@@ -431,8 +431,8 @@ mod tests {
         other_evm_address,
     };
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-    use starknet::EthAddress;
-    use starknet::testing::set_contract_address;
+    use core::starknet::EthAddress;
+    use core::starknet::testing::set_contract_address;
     use utils::helpers::load_word;
     use utils::traits::{EthAddressIntoU256};
 

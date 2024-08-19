@@ -10,7 +10,7 @@ use evm::errors::{ensure, EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, B
 use evm::model::account::{AccountTrait, AccountInternalTrait};
 use evm::model::{Event, Transfer, Account, Address, AddressTrait};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use starknet::{
+use core::starknet::{
     Store, StorageBaseAddress, storage_base_address_from_felt252, ContractAddress, EthAddress,
     emit_event_syscall
 };
@@ -304,8 +304,8 @@ mod tests {
         use openzeppelin::token::erc20::interface::{
             IERC20CamelDispatcher, IERC20CamelDispatcherTrait
         };
-        use starknet::EthAddress;
-        use starknet::testing::set_contract_address;
+        use core::starknet::EthAddress;
+        use core::starknet::testing::set_contract_address;
         use utils::helpers::compute_starknet_address;
         use utils::set::{Set, SetTrait};
 
