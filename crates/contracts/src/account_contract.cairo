@@ -6,6 +6,15 @@ use core::starknet::account::{Call};
 
 use core::starknet::{ContractAddress, EthAddress, ClassHash};
 
+#[derive(Copy, Drop, Serde, Debug)]
+pub struct OutsideExecution {
+    pub caller: ContractAddress,
+    pub nonce: u64,
+    pub execute_after: u64,
+    pub execute_before: u64,
+    pub calls: Span<Call>
+}
+
 #[starknet::interface]
 pub trait IAccount<TContractState> {
     fn initialize(
@@ -30,6 +39,9 @@ pub trait IAccount<TContractState> {
     fn get_nonce(self: @TContractState) -> u64;
     fn set_nonce(ref self: TContractState, nonce: u64);
     fn execute_starknet_call(ref self: TContractState, call: Call) -> (bool, Span<felt252>);
+    fn execute_from_outside(
+        ref self: TContractState, outside_execution: OutsideExecution, signature: Span<felt252>,
+    ) -> Array<Span<felt252>>;
 }
 
 #[starknet::contract(account)]
@@ -49,6 +61,7 @@ pub mod AccountContract {
     use core::panic_with_felt252;
     use core::starknet::SyscallResultTrait;
     use core::starknet::account::{Call};
+    use core::starknet::secp256_trait::Signature;
     use core::starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess
@@ -57,11 +70,11 @@ pub mod AccountContract {
     use core::starknet::syscalls::{call_contract_syscall, replace_class_syscall};
     use core::starknet::{
         ContractAddress, EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address,
-        get_tx_info, Store
+        get_tx_info, Store, get_block_timestamp
     };
     use core::traits::TryInto;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-    use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait};
+    use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait, OutsideExecution};
     use utils::constants::{POW_2_32};
     use utils::eth_transaction::EthereumTransactionTrait;
     use utils::eth_transaction::{EthTransactionTrait, TransactionMetadata};
@@ -288,6 +301,75 @@ pub mod AccountContract {
                 return (true, response.unwrap().into());
             }
             return (false, response.unwrap_err().into());
+        }
+
+        fn execute_from_outside(
+            ref self: ContractState, outside_execution: OutsideExecution, signature: Span<felt252>,
+        ) -> Array<Span<felt252>> {
+            let caller = get_caller_address();
+            let tx_info = get_tx_info();
+
+            if (outside_execution.caller.into() != 'ANY_CALLER') {
+                assert(caller == outside_execution.caller, 'Invalid caller');
+            }
+
+            let block_timestamp = get_block_timestamp();
+            assert(block_timestamp > outside_execution.execute_after, 'Too early call');
+            assert(block_timestamp < outside_execution.execute_before, 'Too late call');
+
+            assert(self.Account_bytecode_len.read().is_zero(), 'EOAs cannot have code');
+            assert(tx_info.version.into() >= 1_u256, 'Deprecated tx version');
+            assert(signature.len() == 5, 'Invalid signature length');
+
+            assert(outside_execution.calls.len() == 1, 'Multicall not supported');
+
+            let call = outside_execution.calls.at(0);
+            assert(*call.to == self.ownable.owner(), 'to is not kakarot core');
+            assert!(
+                *call.selector == selector!("eth_send_transaction"),
+                "selector must be eth_send_transaction"
+            );
+
+            let chain_id: u128 = tx_info.chain_id.try_into().unwrap() % POW_2_32;
+
+            let signature = deserialize_signature(signature, chain_id).expect('invalid signature');
+
+            let eth_caller_address: felt252 = outside_execution.caller.into();
+
+            let tx_metadata = TransactionMetadata {
+                address: eth_caller_address.try_into().unwrap(),
+                chain_id,
+                account_nonce: outside_execution.nonce.into(),
+                signature
+            };
+
+            let encoded_tx = deserialize_bytes(*outside_execution.calls[0].calldata)
+                .expect('conversion to Span<u8> failed')
+                .span();
+
+            let validation_result = EthTransactionTrait::validate_eth_tx(tx_metadata, encoded_tx)
+                .expect('failed to validate eth tx');
+
+            assert(validation_result, 'transaction validation failed');
+
+            let tx = EthTransactionTrait::decode(encoded_tx).expect('rlp decoding of tx failed');
+
+            let is_valid = match tx.try_into_fee_market_transaction() {
+                Option::Some(tx_fee_infos) => { self.validate_eip1559_tx(@tx, tx_fee_infos) },
+                Option::None => true
+            };
+
+            let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
+
+            let return_data = if is_valid {
+                let (_, return_data, _) = kakarot.eth_send_transaction(tx);
+                return_data
+            } else {
+                KAKAROT_VALIDATION_FAILED.span()
+            };
+            let return_data = serialize_bytes(return_data).span();
+
+            array![return_data]
         }
     }
 
