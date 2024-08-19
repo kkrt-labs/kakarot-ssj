@@ -12,7 +12,6 @@ pub mod math;
 pub mod rlp;
 pub mod serialization;
 pub mod set;
-pub mod storage;
 
 mod test_data;
 

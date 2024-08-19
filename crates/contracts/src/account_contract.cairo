@@ -68,7 +68,6 @@ pub mod AccountContract {
     use utils::helpers::{ByteArrayExTrait, ResultExTrait};
     use utils::math::OverflowingMul;
     use utils::serialization::{deserialize_signature, deserialize_bytes, serialize_bytes};
-    use utils::storage::{compute_storage_base_address};
 
     // Add ownable component
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
