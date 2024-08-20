@@ -16,6 +16,8 @@ pub trait IAccount<TContractState> {
     );
     fn get_implementation(self: @TContractState) -> ClassHash;
     fn get_evm_address(self: @TContractState) -> EthAddress;
+    fn get_code_hash(self: @TContractState) -> u256;
+    fn set_code_hash(ref self: TContractState, code_hash: u256);
     fn is_initialized(self: @TContractState) -> bool;
 
     // EOA functions
@@ -91,6 +93,7 @@ pub mod AccountContract {
         Account_nonce: u64,
         Account_implementation: ClassHash,
         Account_evm_address: EthAddress,
+        Account_code_hash: u256,
         #[substorage(v0)]
         ownable: ownable_component::Storage
     }
@@ -146,6 +149,14 @@ pub mod AccountContract {
 
         fn get_evm_address(self: @ContractState) -> EthAddress {
             self.Account_evm_address.read()
+        }
+
+        fn get_code_hash(self: @ContractState) -> u256 {
+            self.Account_code_hash.read()
+        }
+
+        fn set_code_hash(ref self: ContractState, code_hash: u256) {
+            self.Account_code_hash.write(code_hash);
         }
 
         fn is_initialized(self: @ContractState) -> bool {
