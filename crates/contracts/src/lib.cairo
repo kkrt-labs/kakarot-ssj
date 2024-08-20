@@ -19,3 +19,5 @@ mod uninitialized_account;
 mod mocks {
     mod cairo1_helpers_fixture;
 }
+
+mod storage;

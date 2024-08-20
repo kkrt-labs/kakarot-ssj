@@ -37,6 +37,7 @@ pub mod AccountContract {
     use contracts::components::ownable::IOwnable;
     use contracts::components::ownable::ownable_component::InternalTrait;
     use contracts::components::ownable::ownable_component;
+    use contracts::storage::StorageBytecode;
     use contracts::errors::{
         BYTECODE_READ_ERROR, BYTECODE_WRITE_ERROR, STORAGE_READ_ERROR, STORAGE_WRITE_ERROR,
         NONCE_READ_ERROR, NONCE_WRITE_ERROR, KAKAROT_VALIDATION_FAILED
@@ -82,8 +83,9 @@ pub mod AccountContract {
 
 
     #[storage]
-    struct Storage {
-        Account_bytecode: ByteArray,
+    pub(crate) struct Storage {
+        Account_bytecode: StorageBytecode,
+        pub(crate) Account_bytecode_len: u32,
         Account_storage: Map<u256, u256>,
         Account_is_initialized: bool,
         Account_nonce: u64,
@@ -157,7 +159,7 @@ pub mod AccountContract {
             assert(calls.len() == 1, 'EOA: multicall not supported');
             // todo: activate check once using snfoundry
             // assert(tx_info.version.try_into().unwrap() >= 1_u128, 'EOA: deprecated tx version');
-            assert(self.Account_bytecode.read().len().is_zero(), 'EOAs: Cannot have code');
+            assert(self.Account_bytecode_len.read().is_zero(), 'EOAs: Cannot have code');
             assert(tx_info.signature.len() == 5, 'EOA: invalid signature length');
 
             let call = calls.at(0);
@@ -242,13 +244,11 @@ pub mod AccountContract {
 
         fn write_bytecode(ref self: ContractState, bytecode: Span<u8>) {
             self.ownable.assert_only_owner();
-            let packed_bytecode: ByteArray = ByteArrayExTrait::from_bytes(bytecode);
-            self.Account_bytecode.write(packed_bytecode);
+            self.Account_bytecode.write(StorageBytecode { bytecode });
         }
 
         fn bytecode(self: @ContractState) -> Span<u8> {
-            let packed_bytecode = self.Account_bytecode.read();
-            packed_bytecode.into_bytes()
+            self.Account_bytecode.read().bytecode
         }
 
         fn write_storage(ref self: ContractState, key: u256, value: u256) {
