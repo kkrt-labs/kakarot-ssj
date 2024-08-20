@@ -16,6 +16,11 @@ pub mod KakarotCore {
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess
     };
+    use core::starknet::syscalls::deploy_syscall;
+    use core::starknet::{
+        EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address,
+        get_caller_address
+    };
     use evm::backend::starknet_backend;
     use evm::errors::{EVMError, ensure, EVMErrorTrait,};
     use evm::gas;
@@ -26,11 +31,6 @@ pub mod KakarotCore {
         ExecutionSummaryTrait, Address, AddressTrait
     };
     use evm::state::{State, StateTrait};
-    use core::starknet::syscalls::deploy_syscall;
-    use core::starknet::{
-        EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address,
-        get_caller_address
-    };
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use utils::address::compute_contract_address;
     use utils::constants;

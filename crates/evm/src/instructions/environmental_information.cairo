@@ -1,9 +1,13 @@
 use contracts::kakarot_core::interface::{IKakarotCore};
 use contracts::kakarot_core::{KakarotCore};
 use core::hash::{HashStateExTrait, HashStateTrait};
+use core::keccak::cairo_keccak;
 use core::num::traits::OverflowingAdd;
 use core::num::traits::Zero;
 use core::pedersen::{PedersenTrait, HashState};
+use core::starknet::{
+    Store, storage_base_address_from_felt252, ContractAddress, get_contract_address
+};
 use evm::errors::{ensure, EVMError, READ_SYSCALL_FAILED};
 use evm::gas;
 use evm::memory::MemoryTrait;
@@ -12,11 +16,7 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{AddressTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use core::keccak::cairo_keccak;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use core::starknet::{
-    Store, storage_base_address_from_felt252, ContractAddress, get_contract_address
-};
 use utils::constants::EMPTY_KECCAK;
 use utils::helpers::ResultExTrait;
 use utils::helpers::{ceil32, load_word, U256Trait, U8SpanExTrait};
@@ -328,6 +328,8 @@ mod tests {
         setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
     };
     use core::num::traits::CheckedAdd;
+
+    use core::starknet::testing::set_contract_address;
     use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
     use evm::instructions::EnvironmentInformationTrait;
     use evm::memory::{InternalMemoryTrait, MemoryTrait};
@@ -341,8 +343,6 @@ mod tests {
         tx_gas_limit
     };
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-
-    use core::starknet::testing::set_contract_address;
     use utils::helpers::{u256_to_bytes_array, ArrayExtTrait};
     use utils::traits::{EthAddressIntoU256};
 

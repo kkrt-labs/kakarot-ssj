@@ -1,10 +1,10 @@
 use core::array::ArrayTrait;
 use core::option::OptionTrait;
+use core::starknet::EthAddress;
 
 use evm::errors::{EVMError, ensure};
 use evm::model::vm::{VM, VMTrait};
 use evm::precompiles::Precompile;
-use core::starknet::EthAddress;
 use utils::crypto::blake2_compress::compress;
 use utils::helpers::{FromBytes, ToBytes};
 
@@ -85,6 +85,7 @@ impl Blake2f of Precompile {
 mod tests {
     use contracts::test_utils::{setup_contracts_for_testing};
     use core::array::SpanTrait;
+    use core::starknet::testing::set_contract_address;
     use evm::errors::EVMError;
     use evm::instructions::memory_operations::MemoryOperationTrait;
     use evm::instructions::system_operations::SystemOperationsTrait;
@@ -100,7 +101,6 @@ mod tests {
         blake2_precompile_pass_0_test_case, blake2_precompile_pass_2_test_case
     };
     use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
-    use core::starknet::testing::set_contract_address;
     use utils::helpers::FromBytes;
 
     #[test]

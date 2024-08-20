@@ -1,14 +1,14 @@
-use starknet::storage::StorageTraitMut;
+use contracts::account_contract::AccountContract::unsafe_new_contract_state as account_contract_state;
 use core::ops::DerefMut;
-use starknet::storage::StorageTrait;
 use core::ops::SnapshotDeref;
-use super::account_contract::IAccount;
 use core::starknet::{
     SyscallResult, storage_read_syscall, Store, StorageBaseAddress, StorageAddress,
     storage_write_syscall
 };
+use starknet::storage::StorageTrait;
+use starknet::storage::StorageTraitMut;
+use super::account_contract::IAccount;
 use utils::utils::{pack_bytes, load_packed_bytes};
-use contracts::account_contract::AccountContract::unsafe_new_contract_state as account_contract_state;
 
 /// A wrapper type for the bytecode storage. Packing / unpacking is done transparently inside the
 /// `read` and `write` methods of `Store`.
@@ -88,22 +88,22 @@ impl StoreBytecode of Store<StorageBytecode> {
 
 #[cfg(test)]
 mod tests {
-    use super::StorageTrait;
-    use super::SnapshotDeref;
-    use super::StorageTraitMut;
-    use super::DerefMut;
-    use starknet::testing::set_contract_address;
+    use contracts::account_contract::AccountContract::{
+        unsafe_new_contract_state as account_contract_state, ContractState as AccountContractState
+    };
     use starknet::contract_address::ContractAddress;
+    use starknet::storage_access::Store;
     use starknet::storage_access::{
         StorageBaseAddress, StorageAddress, storage_base_address_from_felt252
     };
     use starknet::syscalls::storage_read_syscall;
-    use starknet::storage_access::Store;
-    use utils::utils::{pack_bytes, load_packed_bytes};
-    use contracts::account_contract::AccountContract::{
-        unsafe_new_contract_state as account_contract_state, ContractState as AccountContractState
-    };
+    use starknet::testing::set_contract_address;
+    use super::DerefMut;
+    use super::SnapshotDeref;
     use super::StorageBytecode;
+    use super::StorageTrait;
+    use super::StorageTraitMut;
+    use utils::utils::{pack_bytes, load_packed_bytes};
 
     #[test]
     fn test_store_bytecode_empty() {

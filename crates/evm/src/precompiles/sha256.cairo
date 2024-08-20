@@ -1,11 +1,11 @@
 use core::circuit::CircuitInputs;
 use core::iter::IntoIterator;
 use core::sha256::compute_sha256_u32_array;
+use core::starknet::EthAddress;
 use evm::errors::EVMError;
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 use evm::precompiles::Precompile;
-use core::starknet::EthAddress;
 use utils::helpers::Bitshift;
 use utils::helpers::{FromBytes, ToBytes};
 
@@ -56,13 +56,13 @@ impl Sha256 of Precompile {
 mod tests {
     use contracts::test_utils::{setup_contracts_for_testing};
     use core::result::ResultTrait;
+    use core::starknet::testing::set_contract_address;
     use evm::instructions::system_operations::SystemOperationsTrait;
 
     use evm::memory::MemoryTrait;
     use evm::precompiles::sha256::Sha256;
     use evm::stack::StackTrait;
     use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
-    use core::starknet::testing::set_contract_address;
     use utils::helpers::ToBytes;
     use utils::helpers::{FromBytes};
 

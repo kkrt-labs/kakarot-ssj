@@ -6,6 +6,7 @@ use core::num::traits::OverflowingAdd;
 // [revm](https://github.com/bluealloy/revm/blob/main/crates/precompile/src/modexp.rs)
 
 use core::option::OptionTrait;
+use core::starknet::EthAddress;
 use core::traits::TryInto;
 
 use evm::errors::EVMError;
@@ -13,7 +14,6 @@ use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 
 use evm::precompiles::Precompile;
-use core::starknet::EthAddress;
 use utils::crypto::modexp::lib::modexp;
 use utils::helpers::{U256Trait, U8SpanExTrait, U64Trait, FromBytes, BitsUsed};
 
@@ -156,6 +156,8 @@ fn calculate_iteration_count(exp_length: u64, exp_highp: u256) -> u64 {
 mod tests {
     use contracts::test_utils::{setup_contracts_for_testing};
     use core::result::ResultTrait;
+    use core::starknet::EthAddress;
+    use core::starknet::testing::set_contract_address;
 
     use evm::instructions::system_operations::SystemOperationsTrait;
 
@@ -170,8 +172,6 @@ mod tests {
         test_modexp_eip198_example_2_data, test_modexp_nagydani_1_square_data,
         test_modexp_nagydani_1_qube_data
     };
-    use core::starknet::EthAddress;
-    use core::starknet::testing::set_contract_address;
     use utils::helpers::U256Trait;
 
     // the tests are taken from

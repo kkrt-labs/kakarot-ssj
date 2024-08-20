@@ -109,6 +109,13 @@ pub trait IHelpers<T> {
 mod embeddable_impls {
     use core::keccak::{cairo_keccak, keccak_u256s_be_inputs};
     use core::num::traits::Zero;
+    use core::starknet::EthAddress;
+    use core::starknet::eth_signature::{
+        Signature, verify_eth_signature, public_key_point_to_eth_address
+    };
+    use core::starknet::secp256_trait::{recover_public_key, Secp256PointTrait, is_valid_signature};
+    use core::starknet::secp256k1::Secp256k1Point;
+    use core::starknet::secp256r1::{secp256r1_new_syscall, Secp256r1Point};
     use core::traits::Into;
     use core::{starknet, starknet::SyscallResultTrait};
     use evm::errors::EVMError;
@@ -117,13 +124,6 @@ mod embeddable_impls {
     use evm::precompiles::identity::Identity;
     use evm::precompiles::modexp::ModExp;
     use evm::precompiles::sha256::Sha256;
-    use core::starknet::EthAddress;
-    use core::starknet::eth_signature::{
-        Signature, verify_eth_signature, public_key_point_to_eth_address
-    };
-    use core::starknet::secp256_trait::{recover_public_key, Secp256PointTrait, is_valid_signature};
-    use core::starknet::secp256k1::Secp256k1Point;
-    use core::starknet::secp256r1::{secp256r1_new_syscall, Secp256r1Point};
     use utils::helpers::U256Trait;
 
 

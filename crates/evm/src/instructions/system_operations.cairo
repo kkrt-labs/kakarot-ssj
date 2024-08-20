@@ -413,6 +413,8 @@ mod tests {
         deploy_eoa
     };
     use core::result::ResultTrait;
+    use core::starknet::EthAddress;
+    use core::starknet::testing::set_contract_address;
     use core::traits::TryInto;
     use evm::backend::starknet_backend;
     use evm::call_helpers::{CallHelpers, CallHelpersImpl};
@@ -431,8 +433,6 @@ mod tests {
         other_evm_address,
     };
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-    use core::starknet::EthAddress;
-    use core::starknet::testing::set_contract_address;
     use utils::helpers::load_word;
     use utils::traits::{EthAddressIntoU256};
 

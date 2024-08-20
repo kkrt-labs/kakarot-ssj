@@ -16,13 +16,6 @@ use contracts_tests::test_upgradeable::{
 use core::array::SpanTrait;
 use core::box::BoxTrait;
 use core::starknet::account::{Call};
-
-use evm::model::{Address, AddressTrait};
-use evm::test_utils::{
-    kakarot_address, evm_address, other_evm_address, other_starknet_address, eoa_address, chain_id,
-    tx_gas_limit, gas_price, VMBuilderTrait
-};
-use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use core::starknet::class_hash::Felt252TryIntoClassHash;
 use core::starknet::testing::{
     set_caller_address, set_contract_address, set_signature, set_chain_id
@@ -31,6 +24,13 @@ use core::starknet::{
     deploy_syscall, ContractAddress, ClassHash, VALIDATED, get_contract_address,
     contract_address_const, EthAddress, eth_signature::{Signature}, get_tx_info
 };
+
+use evm::model::{Address, AddressTrait};
+use evm::test_utils::{
+    kakarot_address, evm_address, other_evm_address, other_starknet_address, eoa_address, chain_id,
+    tx_gas_limit, gas_price, VMBuilderTrait
+};
+use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use utils::eth_transaction::{
     TransactionType, EthereumTransaction, EthereumTransactionTrait, LegacyTransaction
 };

@@ -37,12 +37,12 @@ pub mod AccountContract {
     use contracts::components::ownable::IOwnable;
     use contracts::components::ownable::ownable_component::InternalTrait;
     use contracts::components::ownable::ownable_component;
-    use contracts::storage::StorageBytecode;
     use contracts::errors::{
         BYTECODE_READ_ERROR, BYTECODE_WRITE_ERROR, STORAGE_READ_ERROR, STORAGE_WRITE_ERROR,
         NONCE_READ_ERROR, NONCE_WRITE_ERROR, KAKAROT_VALIDATION_FAILED
     };
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
+    use contracts::storage::StorageBytecode;
     use core::integer;
     use core::num::traits::Bounded;
     use core::num::traits::zero::Zero;

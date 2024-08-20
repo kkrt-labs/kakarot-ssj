@@ -2,7 +2,9 @@ use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
 //! CREATE, CREATE2 opcode helpers
 use core::cmp::min;
+use core::keccak::cairo_keccak;
 use core::num::traits::Bounded;
+use core::starknet::{EthAddress, get_tx_info};
 use evm::errors::{
     ensure, EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION
 };
@@ -15,8 +17,6 @@ use evm::model::{ExecutionResult, ExecutionResultTrait, ExecutionSummary, Enviro
 use evm::model::{Message, Address, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use core::keccak::cairo_keccak;
-use core::starknet::{EthAddress, get_tx_info};
 use utils::address::{compute_contract_address, compute_create2_contract_address};
 use utils::constants;
 use utils::helpers::ArrayExtTrait;
@@ -177,9 +177,9 @@ impl CreateHelpersImpl of CreateHelpers {
 #[cfg(test)]
 mod tests {
     use contracts::test_data::counter_evm_bytecode;
+    use core::starknet::EthAddress;
     use evm::create_helpers::CreateHelpers;
     use evm::test_utils::{VMBuilderTrait};
-    use core::starknet::EthAddress;
     use utils::address::{compute_contract_address, compute_create2_contract_address};
     //TODO: test create helpers
 

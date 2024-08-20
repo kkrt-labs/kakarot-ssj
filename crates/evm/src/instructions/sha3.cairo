@@ -1,3 +1,4 @@
+use core::keccak::{cairo_keccak, u128_split};
 //! SHA3.
 
 use evm::errors::EVMError;
@@ -6,7 +7,6 @@ use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
-use core::keccak::{cairo_keccak, u128_split};
 use utils::helpers::{ArrayExtTrait, U256Trait, ceil32};
 
 #[generate_trait]

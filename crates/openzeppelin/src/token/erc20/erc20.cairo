@@ -9,13 +9,13 @@
 pub mod ERC20 {
     use core::num::traits::Bounded;
     use core::num::traits::Zero;
+    use core::starknet::ContractAddress;
+    use core::starknet::get_caller_address;
     use core::starknet::storage::{
         Map, StorageMapWriteAccess, StorageMapReadAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess,
     };
     use openzeppelin::token::erc20::interface::{IERC20, IERC20CamelOnly};
-    use core::starknet::ContractAddress;
-    use core::starknet::get_caller_address;
 
     #[storage]
     struct Storage {

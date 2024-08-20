@@ -4,6 +4,7 @@ mod identity;
 mod modexp;
 mod p256verify;
 mod sha256;
+use core::starknet::EthAddress;
 
 use core::traits::Into;
 use evm::errors::EVMError;
@@ -15,7 +16,6 @@ use evm::precompiles::identity::Identity;
 use evm::precompiles::modexp::ModExp;
 use evm::precompiles::p256verify::P256Verify;
 use evm::precompiles::sha256::Sha256;
-use core::starknet::EthAddress;
 
 
 trait Precompile {

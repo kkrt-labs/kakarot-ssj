@@ -2,6 +2,7 @@ use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
 //! CALL, CALLCODE, DELEGATECALL, STATICCALL opcode helpers
 use core::cmp::min;
+use core::starknet::{EthAddress, get_contract_address};
 
 use evm::errors::{EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION};
 use evm::gas;
@@ -12,7 +13,6 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{Transfer, Address, Message};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use core::starknet::{EthAddress, get_contract_address};
 use utils::constants;
 use utils::helpers::compute_starknet_address;
 use utils::set::SetTrait;

@@ -1,3 +1,4 @@
+use core::starknet::{EthAddress, ContractAddress};
 use evm::create_helpers::CreateHelpers;
 use evm::errors::{EVMError, ensure, PC_OUT_OF_BOUNDS, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
 
@@ -18,7 +19,6 @@ use evm::model::{
 use evm::precompiles::Precompiles;
 use evm::stack::{Stack, StackTrait};
 use evm::state::{State, StateTrait};
-use core::starknet::{EthAddress, ContractAddress};
 use utils::constants;
 use utils::helpers::{U256Trait, compute_starknet_address, EthAddressExTrait};
 

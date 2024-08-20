@@ -1,13 +1,13 @@
+use core::starknet::{
+    EthAddress, eth_signature::{recover_public_key, public_key_point_to_eth_address, Signature},
+    secp256k1::{Secp256k1Point}
+};
 use core::traits::Into;
 use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 use evm::precompiles::Precompile;
 use evm::stack::StackTrait;
-use core::starknet::{
-    EthAddress, eth_signature::{recover_public_key, public_key_point_to_eth_address, Signature},
-    secp256k1::{Secp256k1Point}
-};
 use utils::helpers::EthAddressExTrait;
 use utils::helpers::U8SpanExTrait;
 use utils::helpers::{U256Trait, BoolIntoNumeric, ToBytes, FromBytes};

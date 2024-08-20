@@ -2,6 +2,10 @@ use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait, I
 use contracts::kakarot_core::kakarot::KakarotCore::KakarotCoreInternal;
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use core::num::traits::Zero;
+use core::starknet::{
+    ContractAddress, EthAddress, get_contract_address, deploy_syscall, get_tx_info,
+    SyscallResultTrait
+};
 use core::traits::TryInto;
 use evm::backend::starknet_backend::fetch_balance;
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
@@ -9,10 +13,6 @@ use evm::model::{Address, AddressTrait, Transfer};
 use evm::state::State;
 use evm::state::StateTrait;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use core::starknet::{
-    ContractAddress, EthAddress, get_contract_address, deploy_syscall, get_tx_info,
-    SyscallResultTrait
-};
 use utils::helpers::{ResultExTrait, ByteArrayExTrait, compute_starknet_address};
 
 #[derive(Drop)]

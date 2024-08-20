@@ -16,13 +16,13 @@ use contracts_tests::test_upgradeable::{
 };
 use core::num::traits::Zero;
 use core::option::OptionTrait;
+use core::starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};
 
 
 use core::traits::TryInto;
 use evm::model::{Address};
 use evm::test_utils::{sequencer_evm_address, chain_id};
 use evm::test_utils;
-use core::starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};
 use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, LegacyTransaction};
 use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
 
