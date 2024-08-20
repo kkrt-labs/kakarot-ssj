@@ -17,7 +17,7 @@ pub trait IAccount<TContractState> {
     fn get_implementation(self: @TContractState) -> ClassHash;
     fn get_evm_address(self: @TContractState) -> EthAddress;
     fn get_code_hash(self: @TContractState) -> u256;
-    fn set_code_hash(self: @TContractState, code_hash: u256);
+    fn set_code_hash(ref self: TContractState, code_hash: u256);
     fn is_initialized(self: @TContractState) -> bool;
 
     // EOA functions
@@ -155,7 +155,7 @@ pub mod AccountContract {
             self.Account_code_hash.read()
         }
 
-        fn set_code_hash(self: @ContractState, code_hash: u256) {
+        fn set_code_hash(ref self: ContractState, code_hash: u256) {
             self.Account_code_hash.write(code_hash);
         }
 
