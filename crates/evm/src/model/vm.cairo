@@ -1,9 +1,9 @@
 use core::num::traits::CheckedSub;
+use core::starknet::EthAddress;
 use evm::errors::{EVMError, ensure};
 use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Message, Environment, ExecutionResult, AccountTrait};
 use evm::stack::{Stack, StackTrait};
-use core::starknet::EthAddress;
 use utils::helpers::{SpanExtTrait, ArrayExtTrait};
 use utils::set::{Set, SetTrait, SpanSet};
 use utils::traits::{SpanDefault};

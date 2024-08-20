@@ -4,10 +4,10 @@ use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 
 use core::num::traits::Zero;
 use core::num::traits::{CheckedAdd, CheckedSub, CheckedMul};
+use core::starknet::{EthAddress, get_contract_address, ContractAddress};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
 use evm::model::account::{Account, AccountTrait};
 use evm::state::State;
-use core::starknet::{EthAddress, get_contract_address, ContractAddress};
 use utils::fmt::{TSpanSetDebug};
 use utils::helpers::{ResultExTrait};
 use utils::set::{Set, SpanSet};
@@ -160,6 +160,7 @@ mod tests {
         setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
     };
     use core::starknet::EthAddress;
+    use core::starknet::testing::set_contract_address;
     use evm::backend::starknet_backend;
     use evm::model::account::AccountTrait;
 
@@ -168,7 +169,6 @@ mod tests {
     use evm::state::{State, StateChangeLog, StateChangeLogTrait};
     use evm::test_utils::{evm_address};
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-    use core::starknet::testing::set_contract_address;
 
     #[test]
     fn test_is_deployed_eoa_exists() {

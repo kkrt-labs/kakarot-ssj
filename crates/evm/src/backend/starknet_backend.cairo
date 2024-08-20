@@ -4,14 +4,14 @@ use core::num::traits::zero::Zero;
 use core::ops::deref::SnapshotDeref;
 use core::starknet::storage::StoragePointerReadAccess;
 use core::starknet::storage::StoragePointerWriteAccess;
-use evm::errors::{ensure, EVMError, EOA_EXISTS};
-use evm::model::{Address, AddressTrait, Environment, Account, AccountTrait};
-use evm::state::{State, StateTrait};
-use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use core::starknet::{
     EthAddress, get_contract_address, deploy_syscall, get_tx_info, get_block_info,
     SyscallResultTrait
 };
+use evm::errors::{ensure, EVMError, EOA_EXISTS};
+use evm::model::{Address, AddressTrait, Environment, Account, AccountTrait};
+use evm::state::{State, StateTrait};
+use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use utils::constants;
 
 
@@ -125,12 +125,12 @@ fn fetch_balance(self: @Address) -> u256 {
 mod internals {
     use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::kakarot_core::{KakarotCore, KakarotCore::KakarotCoreImpl};
+    use core::starknet::SyscallResultTrait;
+    use core::starknet::syscalls::{emit_event_syscall};
     use evm::errors::EVMError;
     use evm::model::account::{Account, AccountTrait};
     use evm::model::{Address, AddressTrait, Transfer};
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-    use core::starknet::SyscallResultTrait;
-    use core::starknet::syscalls::{emit_event_syscall};
     use super::{State, StateTrait, deploy};
     use utils::constants::BURN_ADDRESS;
     use utils::set::{Set, SetTrait};
@@ -278,11 +278,11 @@ mod tests {
     use contracts::kakarot_core::KakarotCore;
     use contracts::test_utils as contract_utils;
     use contracts::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
+    use core::starknet::testing::{set_contract_address, set_chain_id};
     use evm::backend::starknet_backend;
     use evm::errors::EVMErrorTrait;
     use evm::test_utils::{chain_id, evm_address, VMBuilderTrait};
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-    use core::starknet::testing::{set_contract_address, set_chain_id};
 
 
     #[test]

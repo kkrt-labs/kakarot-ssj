@@ -1,10 +1,10 @@
 use core::starknet::SyscallResultTrait;
-use evm::errors::{EVMError};
-use evm::precompiles::Precompile;
 use core::starknet::{
     EthAddress, eth_signature::{recover_public_key, public_key_point_to_eth_address, Signature},
     secp256r1::{Secp256r1Point, secp256r1_new_syscall}, secp256_trait::is_valid_signature
 };
+use evm::errors::{EVMError};
+use evm::precompiles::Precompile;
 use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 const P256VERIFY_PRECOMPILE_GAS_COST: u128 = 3450;

@@ -236,13 +236,13 @@ fn calculate_intrinsic_gas_cost(tx: @EthereumTransaction) -> u128 {
 #[cfg(test)]
 mod tests {
     use core::option::OptionTrait;
+    use core::starknet::EthAddress;
 
     use evm::gas::{
         calculate_intrinsic_gas_cost, calculate_memory_gas_cost, ACCESS_LIST_ADDRESS,
         ACCESS_LIST_STORAGE_KEY
     };
     use evm::test_utils::evm_address;
-    use core::starknet::EthAddress;
     use utils::eth_transaction::{
         EthereumTransaction, LegacyTransaction, AccessListTransaction, EthereumTransactionTrait,
         AccessListItem

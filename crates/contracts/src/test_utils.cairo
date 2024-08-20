@@ -7,16 +7,16 @@ use contracts::kakarot_core::{
 use contracts::uninitialized_account::{UninitializedAccount};
 use core::fmt::Debug;
 use core::result::ResultTrait;
+use core::starknet::{
+    testing, contract_address_const, EthAddress, ContractAddress, deploy_syscall,
+    get_contract_address
+};
 use evm::backend::starknet_backend;
 use evm::model::{Address};
 
 use evm::test_utils::{ca_address, other_starknet_address, chain_id, sequencer_evm_address};
 use openzeppelin::token::erc20::ERC20;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use core::starknet::{
-    testing, contract_address_const, EthAddress, ContractAddress, deploy_syscall,
-    get_contract_address
-};
 use utils::constants::BLOCK_GAS_LIMIT;
 use utils::eth_transaction::LegacyTransaction;
 

@@ -1,5 +1,6 @@
 use core::hash::{HashStateTrait, HashStateExTrait};
 use core::poseidon::PoseidonTrait;
+use core::starknet::{storage_base_address_from_felt252, Store};
 use evm::backend::starknet_backend::fetch_original_storage;
 //! Stack Memory Storage and Flow Operations.
 use evm::errors::{EVMError, ensure, INVALID_DESTINATION, READ_SYSCALL_FAILED};
@@ -10,7 +11,6 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{AddressTrait};
 use evm::stack::StackTrait;
 use evm::state::{StateTrait, compute_state_key};
-use core::starknet::{storage_base_address_from_felt252, Store};
 use utils::helpers::U256Trait;
 use utils::set::SetTrait;
 
@@ -252,6 +252,7 @@ mod tests {
     use contracts::test_utils::{setup_contracts_for_testing, deploy_contract_account};
     use core::num::traits::Bounded;
     use core::result::ResultTrait;
+    use core::starknet::get_contract_address;
     use evm::backend::starknet_backend::fetch_original_storage;
     use evm::backend::starknet_backend;
     use evm::errors::{EVMError, INVALID_DESTINATION};
@@ -262,7 +263,6 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::state::{StateTrait, compute_storage_address};
     use evm::test_utils::{evm_address, VMBuilderTrait};
-    use core::starknet::get_contract_address;
 
     #[test]
     fn test_pc_basic() {

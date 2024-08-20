@@ -3,6 +3,10 @@
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use core::starknet::SyscallResultTrait;
 
+// Corelib imports
+use core::starknet::info::get_block_number;
+use core::starknet::{get_block_hash_syscall, EthAddress};
+
 use evm::errors::{
     EVMError, BLOCK_HASH_SYSCALL_FAILED, EXECUTION_INFO_SYSCALL_FAILED, TYPE_CONVERSION_ERROR
 };
@@ -13,10 +17,6 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{Account};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-
-// Corelib imports
-use core::starknet::info::get_block_number;
-use core::starknet::{get_block_hash_syscall, EthAddress};
 
 use utils::helpers::ResultExTrait;
 use utils::traits::{EthAddressTryIntoResultContractAddress, EthAddressIntoU256};
@@ -138,14 +138,14 @@ mod tests {
         setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account,
     };
     use core::result::ResultTrait;
-    use evm::instructions::BlockInformationTrait;
-    use evm::stack::StackTrait;
-    use evm::test_utils::{evm_address, VMBuilderTrait, tx_gas_limit, gas_price};
-    use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
     use core::starknet::testing::{
         set_block_timestamp, set_block_number, set_block_hash, set_contract_address,
         set_sequencer_address, ContractAddress
     };
+    use evm::instructions::BlockInformationTrait;
+    use evm::stack::StackTrait;
+    use evm::test_utils::{evm_address, VMBuilderTrait, tx_gas_limit, gas_price};
+    use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
     use utils::constants;
     use utils::traits::{EthAddressIntoU256};
 

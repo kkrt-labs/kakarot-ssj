@@ -7,6 +7,8 @@ mod errors;
 // Kakarot smart contract
 mod kakarot_core;
 
+mod storage;
+
 #[cfg(target: 'test')]
 mod test_data;
 
