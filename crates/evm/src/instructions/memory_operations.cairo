@@ -14,6 +14,16 @@ use evm::state::{StateTrait, compute_state_key};
 use utils::helpers::U256Trait;
 use utils::set::SetTrait;
 
+#[inline(always)]
+fn jump(ref self: VM, index: usize) -> Result<(), EVMError> {
+    match self.message().code.get(index) {
+        Option::Some(_) => { ensure(self.is_valid_jump(index), EVMError::InvalidJump)?; },
+        Option::None => { return Result::Err(EVMError::InvalidJump); }
+    }
+    self.set_pc(index);
+    Result::Ok(())
+}
+
 #[generate_trait]
 impl MemoryOperation of MemoryOperationTrait {
     /// 0x50 - POP operation.
@@ -169,13 +179,7 @@ impl MemoryOperation of MemoryOperationTrait {
         self.charge_gas(gas::MID)?;
 
         let index = self.stack.pop_usize()?;
-
-        match self.message().code.get(index) {
-            Option::Some(_) => { ensure(self.is_valid_jump(index), EVMError::InvalidJump)?; },
-            Option::None => { return Result::Err(EVMError::InvalidJump); }
-        }
-        self.set_pc(index);
-        Result::Ok(())
+        jump(ref self, index)
     }
 
     /// 0x57 - JUMPI operation.
@@ -189,7 +193,8 @@ impl MemoryOperation of MemoryOperationTrait {
         let b = self.stack.peek_at(1)?;
 
         if b != 0x0 {
-            self.exec_jump()?;
+            let index = self.stack.pop_usize()?;
+            jump(ref self, index)?;
             // counter would have been already popped by `exec_jump`
             // so we just remove `b`
             self.stack.pop()?;
