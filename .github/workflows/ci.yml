@@ -37,7 +37,15 @@ jobs:
           path: target/dev
 
   tests-unit:
-    uses: ./.github/workflows/test.yml
+    # trunk-ignore(actionlint/runner-label)
+    runs-on: ubuntu-latest-16-cores
+    steps:
+      - uses: actions/checkout@v3
+      - uses: foundry-rs/setup-snfoundry@v3
+      - uses: software-mansion/setup-scarb@v1
+      - run: scarb fmt --check
+      - run: scarb build
+      - run: scarb test
 
   ef-tests:
     # trunk-ignore(actionlint/runner-label)
