@@ -81,11 +81,16 @@ jobs:
       - name: Install nextest
         uses: taiki-e/install-action@nextest
 
-      - name: Download Kakarot-SSJ build artifacts in v0
+      - name: Download Kakarot-SSJ build artifacts in v1
         uses: actions/download-artifact@v3
         with:
           name: kakarot-ssj-build
           path: ./build/v1
+
+      - name: Move Cairo1Helpers
+        run:
+          mv build/v1/contracts_Cairo1Helpers.compiled_contract_class.json
+          build/common/cairo1_helpers.json
 
       - name: Set up Python
         uses: actions/setup-python@v4
