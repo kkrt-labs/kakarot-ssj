@@ -22,7 +22,7 @@ def get_github_token_from_env(file_path=".env"):
                     continue
                 key, value = line.strip().split("=", 1)
                 if key == "GITHUB_TOKEN":
-                    return value
+                    return value if value != "" else None
     except FileNotFoundError:
         return None
     except ValueError:

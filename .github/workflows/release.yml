@@ -17,12 +17,12 @@ jobs:
         run: |
           scarb build -p contracts
       - name: Zip dev artifacts
-        run: zip -rj dev-artifacts.zip target/dev
+        run: zip -rj kakarot-ssj-build.zip target/dev
       - name: Upload artifacts to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dev-artifacts.zip
-          asset_name: dev-artifacts.zip
+          file: kakarot-ssj-build.zip
+          asset_name: kakarot-ssj-build.zip
           tag: ${{ github.ref_name }}
           overwrite: true

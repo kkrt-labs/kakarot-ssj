@@ -1,0 +1,164 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request: {}
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: read-all
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      CI_COMMIT_MESSAGE: CI Formatting Auto Commit
+      CI_COMMIT_AUTHOR: ${{ github.event.repository.name }} CI
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Scarb
+        uses: software-mansion/setup-scarb@v1
+
+      - name: Build contracts
+        run: scarb build -p contracts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: kakarot-ssj-build
+          path: target/dev
+
+  tests-unit:
+    uses: ./.github/workflows/test.yml
+
+  ef-tests:
+    # trunk-ignore(actionlint/runner-label)
+    runs-on: ubuntu-latest-32-cores
+    needs: build
+    steps:
+      - name: Checkout ef-tests
+        uses: actions/checkout@v4
+        with:
+          repository: kkrt-labs/ef-tests
+
+      - name: Checkout local skip file
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            blockchain-tests-skip.yml
+          sparse-checkout-cone-mode: false
+          path: skip-file
+
+      - name: Replace the skip files
+        run: mv skip-file/blockchain-tests-skip.yml blockchain-tests-skip.yml
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+
+      - name: Setup
+        run: |
+          mkdir -p build/common
+          make setup setup-kakarot-v0
+
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
+
+      - name: Download Kakarot-SSJ build artifacts in v0
+        uses: actions/download-artifact@v3
+        with:
+          name: kakarot-ssj-build
+          path: ./build/v1
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10.14
+
+      - name: Run tests
+        run: |
+          set -o pipefail
+          make ef-test-v1 | tee data.txt
+          set +o pipefail
+
+      - name: Retrieve ef-tests execution resources
+        run: python scripts/compute_resources.py
+        env:
+          KAKAROT_VERSION: v1
+
+      - name: Upload resources
+        uses: actions/upload-artifact@v3
+        with:
+          path: resources
+          name: resources
+
+      - name: Generate blockchain-tests-skip.yml file
+        if: github.event_name == 'workflow_dispatch'
+        run: make generate-skip-file
+
+      - name: Upload skip file
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v3
+        with:
+          path: blockchain-tests-skip.yml
+          name: blockchain-tests-skip
+
+  resources:
+    runs-on: ubuntu-latest
+    needs: ef-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10.14
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10.14
+
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.local
+          key: poetry-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - run: poetry config installer.modern-installation false
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: make setup
+
+      - name: Load performance artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: resources
+          name: resources
+
+      - name: Check resources evolution
+        run: |
+          result=$(GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} make check-resources 2>&1)
+          echo "$result" >> "$GITHUB_STEP_SUMMARY"
