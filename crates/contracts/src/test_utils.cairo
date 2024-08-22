@@ -129,14 +129,13 @@ pub(crate) fn deploy_contract_account(evm_address: EthAddress, bytecode: Span<u8
 }
 
 fn deploy_eoa(eoa_address: EthAddress) -> IAccountDispatcher {
-    let kakarot_address = get_contract_address();
-    let calldata: Span<felt252> = [kakarot_address.into(), eoa_address.into()].span();
+    let calldata: Span<felt252> = [1, eoa_address.into()].span();
 
     let (starknet_address, _) = deploy_syscall(
         UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(),
         eoa_address.into(),
         calldata,
-        true
+        deploy_from_zero: false
     )
         .expect('failed to deploy EOA');
 

@@ -19,24 +19,49 @@ trait IAccount<TContractState> {
 
 #[starknet::contract]
 pub mod UninitializedAccount {
+    use contracts::components::ownable::IOwnable;
+    use contracts::components::ownable::ownable_component::InternalTrait;
+    use contracts::components::ownable::ownable_component;
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use core::starknet::SyscallResultTrait;
-    use core::starknet::syscalls::replace_class_syscall;
+    use core::starknet::syscalls::{library_call_syscall, replace_class_syscall};
     use core::starknet::{ContractAddress, EthAddress, ClassHash, get_caller_address};
     use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait};
 
+    // Add ownable component
+    component!(path: ownable_component, storage: ownable, event: OwnableEvent);
+    #[abi(embed_v0)]
+    impl OwnableImpl = ownable_component::Ownable<ContractState>;
+    impl OwnableInternal = ownable_component::InternalImpl<ContractState>;
+
     #[storage]
-    struct Storage {}
+    struct Storage {
+        #[substorage(v0)]
+        ownable: ownable_component::Storage,
+    }
+
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        OwnableEvent: ownable_component::Event
+    }
 
     #[constructor]
-    fn constructor(
-        ref self: ContractState, kakarot_address: ContractAddress, evm_address: EthAddress
-    ) {
-        let implementation_class = IKakarotCoreDispatcher { contract_address: kakarot_address }
+    fn constructor(ref self: ContractState, mut calldata: Array<felt252>) {
+        let owner_address: ContractAddress = get_caller_address();
+        self.ownable.initializer(owner_address);
+        let implementation_class = IKakarotCoreDispatcher { contract_address: owner_address }
             .get_account_contract_class_hash();
-
-        IAccountLibraryDispatcher { class_hash: implementation_class }
-            .initialize(kakarot_address, evm_address, implementation_class);
+        //TODO: Difference from KakarotZero in that the account contract takes the class
+        //implementation to write it in storage,
+        // as it is not a transparent proxy in Cairo1
+        calldata.append(implementation_class.into());
+        library_call_syscall(
+            class_hash: implementation_class,
+            function_selector: selector!("initialize"),
+            calldata: calldata.span()
+        )
+            .unwrap_syscall();
 
         replace_class_syscall(implementation_class).unwrap_syscall();
     }
