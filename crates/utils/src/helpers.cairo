@@ -761,22 +761,22 @@ pub impl ResultExImpl<T, E, +Drop<T>, +Drop<E>> of ResultExTrait<T, E> {
 pub fn compute_starknet_address(
     kakarot_address: ContractAddress, evm_address: EthAddress, class_hash: ClassHash
 ) -> ContractAddress {
-    // Deployer is always 0
+    // Deployer is always Kakarot (current contract)
     // pedersen(a1, a2, a3) is defined as:
     // pedersen(pedersen(pedersen(a1, a2), a3), len([a1, a2, a3]))
     // https://github.com/starkware-libs/cairo-lang/blob/master/src/starkware/cairo/common/hash_state.py#L6
     // https://github.com/xJonathanLEI/starknet-rs/blob/master/starknet-core/src/crypto.rs#L49
     // Constructor Calldata For an Account, the constructor calldata is:
-    // [kakarot_address, evm_address]
+    // [1, evm_address]
     let constructor_calldata_hash = PedersenTrait::new(0)
-        .update_with(kakarot_address)
+        .update_with(1)
         .update_with(evm_address)
         .update(2)
         .finalize();
 
     let hash = PedersenTrait::new(0)
         .update_with(CONTRACT_ADDRESS_PREFIX)
-        .update_with(0)
+        .update_with(kakarot_address)
         .update_with(evm_address)
         .update_with(class_hash)
         .update_with(constructor_calldata_hash)
