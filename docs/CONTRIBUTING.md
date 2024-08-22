@@ -6,9 +6,29 @@ before making a change. Please note we have a
 [code of conduct](CODE_OF_CONDUCT.md), please follow it in all your interactions
 with the project.
 
-## Development environment setup
+## Contributing guidelines
 
-> **[?]** Proceed to describe how to setup local development environment. e.g:
+Kakarot is an open-source project and we welcome contributions of all kinds.
+However, we ask that you follow these guidelines when contributing:
+
+- If you have an idea for a new feature or a bug fix, please create an issue
+  first. This will allow us to discuss the idea and provide feedback before you
+  start working on it.
+- If you are working on an issue, please ask to be assigned. This will help us
+  keep track of who is working on what and avoid duplicated work.
+- Do not ask to be assigned to an issue if you are not planning to work on it
+  immediately. We want to keep the project backlog clean and organized. If you
+  are interested in working on an issue, please comment on the issue and we will
+  assign it to you. We will remove the assignment if you do not start working on
+  the issue within 2 days. You can, of course, submit a draft PR if you need
+  more time or have questions regarding the issue.
+- Prefer rebasing over merging when updating your PR. This will keep the commit
+  history clean and make it easier to review your changes.
+- Adopt
+  [conventional commit messages](https://www.conventionalcommits.org/en/v1.0.0/).
+  This will help us when reviewing your PR.
+
+## Prerequisites
 
 To set up a development environment, please follow the steps from
 [the README.md](../README.md#installation). Make sure that your Scarb version
@@ -93,44 +113,6 @@ When working on test utils, script & practical helpers, remember to:
 - Check if the type is still relevant, don't forget: we **should avoid using
   felt252 type as much as possible** and **use unsigned integers as much as
   possible**.
-
-#### Working on precompiles
-
-Precompiles are a tricky bunch! We used to implement most of our precompiles
-using Cairo Zero so-called _hints_. They allowed us to insert arbitrary Python
-code into our Cairo process!
-
-Magic, right? The problem was that this process was not safe for the soundness
-of the chain. It was impossible to prove the failure of a Cairo program, only
-the success. This is a problem for DOS reasons and making people pay for
-reverted transactions (you don't want your sequencer to work for free).
-
-When working with precompiles, one has two options:
-
-1. Implement the precompile in Cairo, fully. This is not optimised and will
-   prove cumbersome, but is the simplest approach. Follow the approach below:
-
-   a. Read the issue's specs, always start with the issue.
-
-   b. Go through the
-   [Ethereum yellow paper's](https://ethereum.github.io/yellowpaper/paper.pdf)
-   paragraph for the issue, there is a non-zero probability that the early
-   implementation missed a specific edge case.
-
-   c. Check the [EVM playground](https://www.evm.codes/precompiled) to be able
-   to read the specs and play around directly on the
-   [playground](https://www.evm.codes/playground).
-
-   d. Read the [Cairo Zero implementation](https://github.com/kkrt-labs/kakarot)
-   that already exists in the above mentioned repo.
-
-2. Implement the precompile as a libfunc. Involvement from the Starkware team is
-   needed here (for whitelist but also support).
-
-When going with option no. 2, one has to first approach the Starkware team with
-the precompile project. That way, they can inform us whether they plan to
-implement the libfunc themselves (e.g. Keccak, Sha2). Otherwise, they can help
-us implement the libfunc ourselves (e.g. RIPEMD-160).
 
 #### Working on data structures
 
