@@ -8,6 +8,7 @@ edition = "2023_10"
 [dependencies]
 evm = { path = "../evm" }
 alexandria_data_structures = { path = "../alexandria_data_structures" }
+alexandria_macros = { git = "https://github.com/keep-starknet-strange/alexandria.git" }
 
 [tool]
 fmt.workspace = true
