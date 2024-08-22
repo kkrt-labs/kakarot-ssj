@@ -9,10 +9,7 @@ use core::starknet::{ContractAddress, EthAddress, ClassHash};
 #[starknet::interface]
 pub trait IAccount<TContractState> {
     fn initialize(
-        ref self: TContractState,
-        kakarot_address: ContractAddress,
-        evm_address: EthAddress,
-        implementation_class: ClassHash
+        ref self: TContractState, evm_address: EthAddress, implementation_class: ClassHash
     );
     fn get_implementation(self: @TContractState) -> ClassHash;
     fn get_evm_address(self: @TContractState) -> EthAddress;
@@ -74,10 +71,8 @@ pub mod AccountContract {
 
     // Add ownable component
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
-
     #[abi(embed_v0)]
     impl OwnableImpl = ownable_component::Ownable<ContractState>;
-
     impl OwnableInternal = ownable_component::InternalImpl<ContractState>;
 
 
@@ -120,19 +115,16 @@ pub mod AccountContract {
     #[abi(embed_v0)]
     impl Account of super::IAccount<ContractState> {
         fn initialize(
-            ref self: ContractState,
-            kakarot_address: ContractAddress,
-            evm_address: EthAddress,
-            implementation_class: ClassHash
+            ref self: ContractState, evm_address: EthAddress, implementation_class: ClassHash
         ) {
             assert(!self.Account_is_initialized.read(), 'Account already initialized');
             self.Account_is_initialized.write(true);
-            self.ownable.initializer(kakarot_address);
+
             self.Account_evm_address.write(evm_address);
             self.Account_implementation.write(implementation_class);
 
+            let kakarot_address = self.ownable.owner();
             let kakarot = IKakarotCoreDispatcher { contract_address: kakarot_address };
-
             let native_token = kakarot.get_native_token();
             // To internally perform value transfer of the network's native
             // token (which conforms to the ERC20 standard), we need to give the
