@@ -5,6 +5,7 @@ mod modexp;
 mod p256verify;
 mod sha256;
 mod ec_add;
+mod ec_mul;
 use core::starknet::EthAddress;
 
 use core::traits::Into;

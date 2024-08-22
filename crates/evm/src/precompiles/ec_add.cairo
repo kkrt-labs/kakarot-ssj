@@ -53,18 +53,13 @@ fn ec_add(x1: u256, y1: u256, x2: u256, y2: u256) -> Option<(u256, u256)> {
             let y2_u384: u384 = y2.into();
 
             if is_on_curve(x1_u384, y1_u384) && is_on_curve(x2_u384, y2_u384) {
-                let same_x = eq_mod_p(x1_u384, x2_u384);
-
-                if same_x {
-                    let opposite_y = eq_neg_mod_p(y1_u384, y2_u384);
-
-                    if opposite_y {
-                        return Option::Some((u256 { low: 0, high: 0 }, u256 { low: 0, high: 0 }));
-                    } else {
-                        return Option::Some(double_ec_point_unchecked(x1_u384, y1_u384));
-                    }
-                } else {
-                    return Option::Some(add_ec_point_unchecked(x1_u384, y1_u384, x2_u384, y2_u384));
+                match ec_safe_add(x1_u384, y1_u384, x2_u384, y2_u384) {
+                    Option::Some((
+                        x, y
+                    )) => Option::Some(
+                        (u384_circuit_output_to_u256(x), u384_circuit_output_to_u256(y))
+                    ),
+                    Option::None => Option::Some((0, 0)),
                 }
             } else {
                 // None of the points are infinity and at least one of them is not on the curve.
@@ -73,6 +68,28 @@ fn ec_add(x1: u256, y1: u256, x2: u256, y2: u256) -> Option<(u256, u256)> {
         }
     }
 }
+
+
+// assumes that the points are on the curve and not the point at infinity.
+// Returns None if the points are the same and opposite y coordinates (Point at infinity)
+fn ec_safe_add(x1: u384, y1: u384, x2: u384, y2: u384) -> Option<(u384, u384)> {
+    let same_x = eq_mod_p(x1, x2);
+
+    if same_x {
+        let opposite_y = eq_neg_mod_p(y1, y2);
+
+        if opposite_y {
+            return Option::None;
+        } else {
+            let (x, y) = double_ec_point_unchecked(x1, y1);
+            return Option::Some((x, y));
+        }
+    } else {
+        let (x, y) = add_ec_point_unchecked(x1, y1, x2, y2);
+        return Option::Some((x, y));
+    }
+}
+
 
 // Check if a point is on the curve.
 // Point at infinity (0,0) will return false.
@@ -108,7 +125,7 @@ fn is_on_curve(x: u384, y: u384) -> bool {
 // - the points are on the curve
 // - the points are not the same
 // - none of the points are the point at infinity
-fn add_ec_point_unchecked(xP: u384, yP: u384, xQ: u384, yQ: u384) -> (u256, u256) {
+fn add_ec_point_unchecked(xP: u384, yP: u384, xQ: u384, yQ: u384) -> (u384, u384) {
     // INPUT stack
     let (_xP, _yP, _xQ, _yQ) = (CE::<CI<0>> {}, CE::<CI<1>> {}, CE::<CI<2>> {}, CE::<CI<3>> {});
 
@@ -135,14 +152,11 @@ fn add_ec_point_unchecked(xP: u384, yP: u384, xQ: u384, yQ: u384) -> (u256, u256
 
     let outputs = circuit_inputs.done_2().eval(modulus).unwrap();
 
-    (
-        u384_circuit_output_to_u256(outputs.get_output(nx)),
-        u384_circuit_output_to_u256(outputs.get_output(ny))
-    )
+    (outputs.get_output(nx), outputs.get_output(ny))
 }
 
 // Double BN254 EC point without checking if the point is on the curve
-fn double_ec_point_unchecked(x: u384, y: u384) -> (u256, u256) {
+fn double_ec_point_unchecked(x: u384, y: u384) -> (u384, u384) {
     // CONSTANT stack
     let in0 = CE::<CI<0>> {}; // 0x3
     // INPUT stack
@@ -172,10 +186,7 @@ fn double_ec_point_unchecked(x: u384, y: u384) -> (u256, u256) {
 
     let outputs = circuit_inputs.done_2().eval(modulus).unwrap();
 
-    (
-        u384_circuit_output_to_u256(outputs.get_output(nx)),
-        u384_circuit_output_to_u256(outputs.get_output(ny))
-    )
+    (outputs.get_output(nx), outputs.get_output(ny))
 }
 // returns true if a == b mod p_bn254
 fn eq_mod_p(a: u384, b: u384) -> bool {
