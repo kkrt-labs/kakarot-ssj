@@ -250,7 +250,7 @@ mod internals {
             let (evm_address, key, value) = self.accounts_storage.changes.get(*state_key).deref();
             let mut account = self.get_account(evm_address);
             // @dev: EIP-6780 - If selfdestruct on an account created, dont commit data
-            if account.is_selfdestruct(){
+            if account.is_selfdestruct() {
                 continue;
             }
             IAccountDispatcher { contract_address: account.starknet_address() }
