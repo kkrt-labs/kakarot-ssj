@@ -120,7 +120,8 @@ impl StateImpl of StateTrait {
     fn get_account(ref self: State, evm_address: EthAddress) -> Account {
         let maybe_account = self.accounts.read(evm_address.into());
         match maybe_account {
-            Option::Some(acc) => { return acc; },
+            Option::Some(acc) => { println!("Returning account {:?} with nonce {:?}", acc.evm_address(), acc.nonce);
+            return acc; },
             Option::None => {
                 let account = AccountTrait::fetch_or_create(evm_address);
                 self.accounts.write(evm_address.into(), account);

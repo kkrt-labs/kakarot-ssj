@@ -88,6 +88,7 @@ impl EVMImpl of EVMTrait {
             };
         } else {
             // Revert state to the snapshot taken before the create processing.
+            println!("Something went wrong, restoring snapshot after create message");
             env.state = state_snapshot;
         }
         result
@@ -134,6 +135,7 @@ impl EVMImpl of EVMTrait {
             // The `process_message` function has mutated the environment state.
             // Revert state changes using the old snapshot as execution failed.
 
+            println!("Something went wrong, restoring snapshot after message");
             env.state = state_snapshot;
         }
 

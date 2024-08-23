@@ -110,7 +110,7 @@ impl CreateHelpersImpl of CreateHelpers {
         // - it's deployed on SN and is an active EVM contract
         // - it's not deployed on SN and is an active EVM contract in the Kakarot cache
         if target_account.has_code_or_nonce() {
-            sender.set_nonce(sender.nonce() + 1);
+            sender.set_nonce(sender_current_nonce + 1);
             self.env.state.set_account(sender);
             return self.stack.push(0);
         };
@@ -118,6 +118,7 @@ impl CreateHelpersImpl of CreateHelpers {
         ensure(create_args.bytecode.len() <= constants::MAX_INITCODE_SIZE, EVMError::OutOfGas)?;
 
         sender.set_nonce(sender_current_nonce + 1);
+        println!("Nonce of account {:?} is set to {:?}", sender_address, sender_current_nonce + 1);
         self.env.state.set_account(sender);
 
         let child_message = Message {

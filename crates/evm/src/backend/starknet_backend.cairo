@@ -133,7 +133,7 @@ mod internals {
     use evm::model::account::{Account, AccountTrait};
     use evm::model::{Address, AddressTrait, Transfer};
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-    use super::{State, StateTrait, deploy};
+    use super::{State, StateTrait, deploy, StateChangeLogTrait};
     use utils::constants::BURN_ADDRESS;
     use utils::set::{Set, SetTrait};
 
@@ -150,7 +150,12 @@ mod internals {
     fn commit_accounts(ref state: State) -> Result<(), EVMError> {
         let mut account_keys = state.accounts.keyset.to_span();
         while let Option::Some(evm_address) = account_keys.pop_front() {
-            let account = state.accounts.changes.get(*evm_address).deref();
+            let account = StateChangeLogTrait::<
+                Account
+            >::read(state.accounts, (*evm_address).into());
+            println!(
+                "Preparing account {:?}, with nonce {:?}", account.evm_address(), account.nonce()
+            );
             commit(@account, ref state);
         };
         return Result::Ok(());
@@ -204,6 +209,7 @@ mod internals {
         //TODO: storage commits are done in the State commitment as they're not part of the account
         //model in SSJ
         let starknet_account = IAccountDispatcher { contract_address: self.starknet_address() };
+        println!("Committing nonce {:?} for account {:?}", self.nonce(), self.evm_address());
         starknet_account.set_nonce(*self.nonce);
 
         //Storage is handled outside of the account and must be committed after all accounts are
@@ -250,7 +256,7 @@ mod internals {
             let (evm_address, key, value) = self.accounts_storage.changes.get(*state_key).deref();
             let mut account = self.get_account(evm_address);
             // @dev: EIP-6780 - If selfdestruct on an account created, dont commit data
-            if account.is_selfdestruct(){
+            if account.is_selfdestruct() {
                 continue;
             }
             IAccountDispatcher { contract_address: account.starknet_address() }
