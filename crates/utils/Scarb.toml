@@ -8,7 +8,7 @@ edition = "2023_10"
 [dependencies]
 evm = { path = "../evm" }
 alexandria_data_structures = { path = "../alexandria_data_structures" }
-alexandria_macros = { git = "https://github.com/keep-starknet-strange/alexandria.git" }
+alexandria_macros.workspace = true
 
 # For profiling
 [cairo]

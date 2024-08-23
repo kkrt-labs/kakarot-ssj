@@ -186,7 +186,7 @@ pub mod AccountContract {
                 "Validate: selector must be eth_send_transaction"
             );
 
-            let chain_id: u128 = tx_info.chain_id.try_into().unwrap() % POW_2_32;
+            let chain_id: u128 = tx_info.chain_id.try_into().unwrap() % pow!(2, 32);
             let signature = deserialize_signature(tx_info.signature, chain_id)
                 .expect('EOA: invalid signature');
 
