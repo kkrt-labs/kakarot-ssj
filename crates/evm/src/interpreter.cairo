@@ -77,10 +77,10 @@ impl EVMImpl of EVMTrait {
         }
 
         let mut result = Self::process_message(message, ref env);
-        let target_account = env.state.get_account(target_evm_address);
         if result.success {
             // Write the return_data of the initcode
             // as the deployed contract's bytecode and charge gas
+            let target_account = env.state.get_account(target_evm_address);
             match result.finalize_creation(target_account) {
                 Result::Ok(account_created) => { env.state.set_account(account_created) },
                 Result::Err(err) => {
