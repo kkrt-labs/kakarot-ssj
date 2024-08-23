@@ -200,14 +200,14 @@ mod internals {
             return;
         }
 
-        // Write bytecode and set nonce
+        // Write updated nonce and storage
+        //TODO: storage commits are done in the State commitment as they're not part of the account
+        //model in SSJ
         let starknet_account = IAccountDispatcher { contract_address: self.starknet_address() };
         starknet_account.set_nonce(*self.nonce);
 
-        //TODO: storage commits are done in the State commitment
         //Storage is handled outside of the account and must be committed after all accounts are
         //committed.
-
         if self.is_created() {
             starknet_account.write_bytecode(self.bytecode());
             //TODO: save valid jumpdests https://github.com/kkrt-labs/kakarot-ssj/issues/839
@@ -249,6 +249,10 @@ mod internals {
         while let Option::Some(state_key) = storage_keys.pop_front() {
             let (evm_address, key, value) = self.accounts_storage.changes.get(*state_key).deref();
             let mut account = self.get_account(evm_address);
+            // @dev: EIP-6780 - If selfdestruct on an account created, dont commit data
+            if account.is_selfdestruct(){
+                continue;
+            }
             IAccountDispatcher { contract_address: account.starknet_address() }
                 .write_storage(key, value);
         };
