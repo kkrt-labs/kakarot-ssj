@@ -30,7 +30,8 @@ impl AccountBuilderImpl of AccountBuilderTrait {
                 nonce: 0,
                 balance: 0,
                 selfdestruct: false,
-                is_created: false
+                is_created: false,
+                // code_hash: None
             }
         }
     }
@@ -65,6 +66,41 @@ impl AccountBuilderImpl of AccountBuilderTrait {
     fn build(self: AccountBuilder) -> Account {
         self.account
     }
+
+    fn compute_code_hash(code_len: felt252, code: ByteArray) -> u256 {
+        if (code_len == 0) {
+            // see https://eips.ethereum.org/EIPS/eip-1052
+            let empty_code_hash = u256(
+                304396909071904405792975023732328604784, 262949717399590921288928019264691438528
+            );
+            return empty_code_hash;
+        }
+
+        // let (local dst: felt*) = alloc();
+        let (dst_len, last_word, last_word_num_bytes) = bytes_to_bytes8_little_endian(
+            dst, code_len, code
+        );
+
+        let (implementation) = Kakarot_cairo1_helpers_class_hash.read();
+        let (code_hash) = ICairo1Helpers
+            .library_call_keccak(
+                class_hash = implementation,
+                words_len = dst_len,
+                words = dst,
+                last_input_word = last_word,
+                last_input_num_bytes = last_word_num_bytes,
+            );
+        return code_hash;
+    }
+
+    #[inline(always)]
+    fn fetch_code_hash(ref self: AccountBuilder) -> u256 {
+        let account = IAccountDispatcher { contract_address: self.account.address.starknet };
+        match account.get_code_hash() {
+            Option::Some(hash) => hash,
+            Option::None => account.set_code_hash(),
+        }
+    }
 }
 
 #[derive(Copy, Drop, PartialEq)]
@@ -75,6 +111,7 @@ struct Account {
     balance: u256,
     selfdestruct: bool,
     is_created: bool,
+    // code_hash: Option<u256>,
 }
 
 #[generate_trait]
@@ -99,6 +136,7 @@ impl AccountImpl of AccountTrait {
                 // empty account with the correct address and return it.
                 AccountBuilderTrait::new(Address { starknet: starknet_address, evm: evm_address })
                     .fetch_balance()
+                    .fetch_code_hash()
                     .build()
             }
         }
