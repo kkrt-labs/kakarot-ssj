@@ -1,3 +1,4 @@
+use core::cmp::max;
 use core::hash::{HashStateTrait, HashStateExTrait};
 use core::poseidon::PoseidonTrait;
 use core::starknet::{storage_base_address_from_felt252, Store};
@@ -189,7 +190,7 @@ impl MemoryOperation of MemoryOperationTrait {
     fn exec_jumpi(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::HIGH)?;
 
-        // Peek the value so we don't need to push it back again incase we want to call `exec_jump`
+        // Peek the value so we don't need to push it back again in case we want to call `exec_jump`
         let b = self.stack.peek_at(1)?;
 
         if b != 0x0 {
@@ -248,6 +249,27 @@ impl MemoryOperation of MemoryOperationTrait {
         self.charge_gas(gas::JUMPDEST)?;
         Result::Ok(())
     }
+
+    /// 0x5e - MCOPY operation.
+    /// Copy memory from one location to another.
+    /// # Specification: https://www.evm.codes/#5e?fork=cancun
+    fn exec_mcopy(ref self: VM) -> Result<(), EVMError> {
+        let size = self.stack.pop_usize()?;
+        let source_offset = self.stack.pop_usize()?;
+        let dest_offset = self.stack.pop_usize()?;
+
+        if size == 0 {
+            return Result::Ok(());
+        }
+
+        let memory_expansion = gas::memory_expansion(
+            self.memory.size(), max(dest_offset, source_offset) + size
+        );
+        self.charge_gas(gas::VERYLOW + memory_expansion.expansion_cost)?;
+
+        self.memory.copy(size, source_offset, dest_offset);
+        Result::Ok(())
+    }
 }
 
 
@@ -255,6 +277,7 @@ impl MemoryOperation of MemoryOperationTrait {
 mod tests {
     use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::test_utils::{setup_contracts_for_testing, deploy_contract_account};
+    use core::cmp::max;
     use core::num::traits::Bounded;
     use core::result::ResultTrait;
     use core::starknet::get_contract_address;
@@ -914,5 +937,46 @@ mod tests {
         // Then
         let result = vm.stack.peek().unwrap();
         assert(result == vm.gas_left().into(), 'stack top should be gas_limit');
+    }
+
+    #[test]
+    fn test_exec_mcopy_should_copy_two_words_at_destination_offset() {
+        let values: Array<u32> = array![0xFF, 0xEE];
+        assert_mcopy(0x00, 0x80, 0x40, values);
+    }
+
+    #[test]
+    fn test_exec_mcopy_should_copy_two_words_at_destination_offset_with_overlap() {
+        let values: Array<u32> = array![0xFF, 0xEE];
+        assert_mcopy(0x00, 0x20, 0x40, values);
+    }
+
+    fn assert_mcopy(source_offset: u32, dest_offset: u32, size: u32, values: Array<u32>) {
+        // Given
+        let mut vm = VMBuilderTrait::new_with_presets().build();
+        let mut i = 0;
+        for element in values
+            .span() {
+                vm.memory.store((*element).into(), source_offset + 0x20 * i);
+                i += 1;
+            };
+        vm.stack.push(dest_offset.into()).expect('push failed');
+        vm.stack.push(source_offset.into()).expect('push failed');
+        vm.stack.push(size.into()).expect('push failed');
+
+        // When
+        let result = vm.exec_mcopy();
+
+        // Then
+        assert(result.is_ok(), 'should have succeeded');
+        assert(vm.stack.is_empty(), 'stack should be empty');
+        assert(vm.memory.size() == dest_offset + size, 'memory size error');
+        i = 0;
+        for element in values
+            .span() {
+                let stored_word = vm.memory.load(dest_offset + 0x20 * i);
+                assert(stored_word == (*element).into(), 'mcopy failed');
+                i += 1;
+            };
     }
 }
