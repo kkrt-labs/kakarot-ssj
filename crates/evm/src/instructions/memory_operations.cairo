@@ -258,14 +258,14 @@ impl MemoryOperation of MemoryOperationTrait {
         let source_offset = self.stack.pop_usize()?;
         let dest_offset = self.stack.pop_usize()?;
 
-        if size == 0 {
-            return Result::Ok(());
-        }
-
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), max(dest_offset, source_offset) + size
         );
         self.charge_gas(gas::VERYLOW + memory_expansion.expansion_cost)?;
+
+        if size == 0 {
+            return Result::Ok(());
+        }
 
         self.memory.copy(size, source_offset, dest_offset);
         Result::Ok(())
@@ -284,6 +284,7 @@ mod tests {
     use evm::backend::starknet_backend::fetch_original_storage;
     use evm::backend::starknet_backend;
     use evm::errors::{EVMError, INVALID_DESTINATION};
+    use evm::gas;
     use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
     use evm::memory::{InternalMemoryTrait, MemoryTrait};
     use evm::model::vm::{VM, VMTrait};
@@ -965,7 +966,12 @@ mod tests {
         vm.stack.push(size.into()).expect('push failed');
 
         // When
+        let expected_gas = gas::VERYLOW
+            + gas::memory_expansion(vm.memory.size(), max(dest_offset, source_offset) + size)
+                .expansion_cost;
+        let gas_before = vm.gas_left();
         let result = vm.exec_mcopy();
+        let gas_after = vm.gas_left();
 
         // Then
         assert(result.is_ok(), 'should have succeeded');
@@ -978,5 +984,6 @@ mod tests {
                 assert(stored_word == (*element).into(), 'mcopy failed');
                 i += 1;
             };
+        assert(gas_before - gas_after == expected_gas, 'gas error');
     }
 }
