@@ -62,20 +62,24 @@ impl EVMImpl of EVMTrait {
         // snapshot of the environment state so that we can revert if the
         let state_snapshot = env.state.clone();
         let target_evm_address = message.target.evm;
-        let mut target_account = env.state.get_account(target_evm_address);
 
-        // Increment nonce of target
-        target_account.set_nonce(1);
-        // Set the target as created
-        target_account.set_created(true);
-        target_account.address = message.target;
-        env.state.set_account(target_account);
+        //@dev: Adding a scope block around `target_account` to ensure that the same instance is not
+        //being accessed after the state has been modified in `process_message`.
+        {
+            let mut target_account = env.state.get_account(target_evm_address);
+            // Increment nonce of target
+            target_account.set_nonce(1);
+            // Set the target as created
+            target_account.set_created(true);
+            target_account.address = message.target;
+            env.state.set_account(target_account);
+        }
 
         let mut result = Self::process_message(message, ref env);
-
         if result.success {
             // Write the return_data of the initcode
             // as the deployed contract's bytecode and charge gas
+            let target_account = env.state.get_account(target_evm_address);
             match result.finalize_creation(target_account) {
                 Result::Ok(account_created) => { env.state.set_account(account_created) },
                 Result::Err(err) => {
