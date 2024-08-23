@@ -144,9 +144,9 @@ impl AddressImpl of AddressTrait {
     fn is_precompile(self: EthAddress) -> bool {
         let self: felt252 = self.into();
         let not_equal_than_zero: bool = self != ZERO;
-        let less_than_mid: bool = self.into() < LIMIT_PRECOMPILE_ADDRESS;
+        let less_than_limit: bool = self.into() < LIMIT_PRECOMPILE_ADDRESS;
         let equal_than_max: bool = self.into() == MAX_PRECOMPILE_ADDRESS;
-        return not_equal_than_zero && (less_than_mid || equal_than_max);
+        return not_equal_than_zero && (less_than_limit || equal_than_max);
     }
 }
 
@@ -411,18 +411,54 @@ mod tests {
         let balance = account.balance();
 
         // Then
-        // Then
         assert(balance == native_token.balanceOf(ca_address.starknet), 'wrong balance');
     }
 
     #[test]
     fn test_is_precompile(){
        // Given
-       let evm_address: EthAddress = 0xca.try_into().unwrap();
+       let evm_address: EthAddress = 5.try_into().unwrap();
+
        // When
        let is_precompile = evm_address.is_precompile();
 
        // Then
-       assert_eq!(false, is_precompile, "is_precompile() - expected{:?}, got{:?}", false, is_precompile);
+       assert_eq!(true, is_precompile, "expected: {:?}, got: {:?}", true, is_precompile);
+    }
+
+    #[test]
+    fn test_is_precompile_zero(){
+      // Given
+      let evm_address: EthAddress = 0.try_into().unwrap();
+
+      // When
+      let is_precompile = evm_address.is_precompile();
+
+      // Then
+      assert_eq!(false, is_precompile, "expected: {:?}, got: {:?}", false, is_precompile);
+    }
+
+    #[test]
+    fn test_is_precompile_ten(){
+      // Given
+      let evm_address: EthAddress = 10.try_into().unwrap();
+
+      // When
+      let is_precompile = evm_address.is_precompile();
+
+      // Then
+      assert_eq!(false, is_precompile, "expected: {:?}, got: {:?}", false, is_precompile);
+    }
+
+    #[test]
+    fn test_is_precompile_two_hundred_fifty_six(){
+      // Given
+      let evm_address: EthAddress = 256.try_into().unwrap();
+
+      // When
+      let is_precompile = evm_address.is_precompile();
+
+      // Then
+      assert_eq!(true, is_precompile, "expected: {:?}, got: {:?}", true, is_precompile);
     }
 }
