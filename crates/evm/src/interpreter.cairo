@@ -64,8 +64,7 @@ impl EVMImpl of EVMTrait {
         let target_evm_address = message.target.evm;
 
         //@dev: Adding a scope block around `target_account` to ensure that the same instance is not
-        //being accessed after
-        // the state has been modified in `process_message`.
+        //being accessed after the state has been modified in `process_message`.
         {
             let mut target_account = env.state.get_account(target_evm_address);
             // Increment nonce of target
