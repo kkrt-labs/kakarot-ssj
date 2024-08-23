@@ -174,64 +174,46 @@ mod internals {
         // Case new account
         if !self.evm_address().is_deployed() {
             deploy(self.evm_address()).expect('account deployment failed');
-
-            let has_code_or_nonce = self.has_code_or_nonce();
-            if !has_code_or_nonce {
-                // Nothing to commit
-                return;
-            }
-
-            // If SELFDESTRUCT, leave the account empty after deploying it - including
-            // burning any leftover balance.
-            if (self.is_selfdestruct()) {
-                let kakarot_state = KakarotCore::unsafe_new_contract_state();
-                let burn_starknet_address = kakarot_state
-                    .compute_starknet_address(BURN_ADDRESS.try_into().unwrap());
-                let burn_address = Address {
-                    starknet: burn_starknet_address, evm: BURN_ADDRESS.try_into().unwrap()
-                };
-                state
-                    .add_transfer(
-                        Transfer {
-                            sender: self.address(), recipient: burn_address, amount: self.balance()
-                        }
-                    )
-                    .expect('Failed to burn on selfdestruct');
-                return;
-            }
-
-            // Write bytecode and set nonce
-            let starknet_account = IAccountDispatcher { contract_address: self.starknet_address() };
-            starknet_account.write_bytecode(self.bytecode());
-            starknet_account.set_nonce(*self.nonce);
-
-            //TODO: storage commits are done in the State commitment
-            //Storage is handled outside of the account and must be committed after all accounts are
-            //committed.
-            return;
-        };
+        }
 
         // @dev: EIP-6780 - If selfdestruct on an account created, dont commit data
-        let is_created_selfdestructed = self.is_selfdestruct() && self.is_created();
-        if is_created_selfdestructed {
-            // If the account was created and selfdestructed in the same transaction, we don't need
-            // to commit it.
+        // and burn any leftover balance.
+        if (self.is_selfdestruct() && self.is_created()) {
+            let kakarot_state = KakarotCore::unsafe_new_contract_state();
+            let burn_starknet_address = kakarot_state
+                .compute_starknet_address(BURN_ADDRESS.try_into().unwrap());
+            let burn_address = Address {
+                starknet: burn_starknet_address, evm: BURN_ADDRESS.try_into().unwrap()
+            };
+            state
+                .add_transfer(
+                    Transfer {
+                        sender: self.address(), recipient: burn_address, amount: self.balance()
+                    }
+                )
+                .expect('Failed to burn on selfdestruct');
             return;
         }
 
-        let starknet_account = IAccountDispatcher { contract_address: self.starknet_address() };
+        if !self.has_code_or_nonce() {
+            // Nothing to commit
+            return;
+        }
 
+        // Write updated nonce and storage
+        //TODO: storage commits are done in the State commitment as they're not part of the account
+        //model in SSJ
+        let starknet_account = IAccountDispatcher { contract_address: self.starknet_address() };
         starknet_account.set_nonce(*self.nonce);
-        //TODO: storage commits are done in the State commitment
+
         //Storage is handled outside of the account and must be committed after all accounts are
         //committed.
-
-        // Update bytecode if required (SELFDESTRUCTed contract committed and redeployed)
-        //TODO: add bytecode_len entrypoint for optimization
-        let bytecode_len = starknet_account.bytecode().len();
-        if bytecode_len != self.bytecode().len() {
+        if self.is_created() {
             starknet_account.write_bytecode(self.bytecode());
+            //TODO: save valid jumpdests https://github.com/kkrt-labs/kakarot-ssj/issues/839
+        //TODO: set code hash https://github.com/kkrt-labs/kakarot-ssj/issues/840
         }
+        return;
     }
 
     /// Iterates through the list of pending transfer and triggers them
@@ -267,6 +249,10 @@ mod internals {
         while let Option::Some(state_key) = storage_keys.pop_front() {
             let (evm_address, key, value) = self.accounts_storage.changes.get(*state_key).deref();
             let mut account = self.get_account(evm_address);
+            // @dev: EIP-6780 - If selfdestruct on an account created, dont commit data
+            if account.is_selfdestruct() {
+                continue;
+            }
             IAccountDispatcher { contract_address: account.starknet_address() }
                 .write_storage(key, value);
         };

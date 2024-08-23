@@ -328,7 +328,7 @@ mod tests {
     }
 
     #[test]
-    fn test_account_commit_already_deployed() {
+    fn test_account_commit_already_deployed_should_not_change_code() {
         setup_contracts_for_testing();
         let mut ca_address = deploy_contract_account(evm_address(), [].span());
 
@@ -345,32 +345,32 @@ mod tests {
         let account_dispatcher = IAccountDispatcher { contract_address: ca_address.starknet };
         let nonce = account_dispatcher.get_nonce();
         let code = account_dispatcher.bytecode();
-        assert(nonce == 420, 'wrong nonce');
-        assert(code == [0x1].span(), 'notdeploying =  unmodified code');
+        assert(nonce == 420, 'account should be committed');
+        assert!(code != [0x1].span(), "code should not be mofidied unless account is created")
     }
 
-    //TODO unskip after selfdestruct rework
-    // #[test]
-    // fn test_account_commit_redeploy_selfdestructed_new_nonce() {
-    //     setup_contracts_for_testing();
-    //     let mut ca_address = deploy_contract_account(evm_address(), [].span());
+    #[test]
+    fn test_account_commit_created_but_already_deployed() {
+        setup_contracts_for_testing();
+        let mut ca_address = deploy_contract_account(evm_address(), [].span());
 
-    //     // When
-    //     // Selfdestructing the deployed CA to reset its code and nonce.
-    //     // Setting the nonce and the code of a CA
-    //     IAccountDispatcher { contract_address: ca_address.starknet }.selfdestruct();
-    //     let mut account = AccountTrait::fetch(evm_address()).unwrap();
-    //     account.nonce = 420;
-    //     account.code = [0x1].span();
-    //     account.commit();
+        // When created in this same tx, the account should have a new code.
 
-    //     // Then
-    //     let account_dispatcher = IAccountDispatcher { contract_address: ca_address.starknet };
-    //     let nonce = account_dispatcher.nonce();
-    //     let code = account_dispatcher.bytecode();
-    //     assert(nonce == 420, 'nonce should be modified');
-    //     assert(code == [0x1].span(), 'code should be modified');
-    // }
+        let mut state: State = Default::default();
+        let mut account = AccountTrait::fetch(evm_address()).unwrap();
+        account.set_created(true);
+        account.nonce = 420;
+        account.code = [0x1].span();
+        state.set_account(account);
+        starknet_backend::commit(ref state).expect('commitment failed');
+
+        // Then
+        let account_dispatcher = IAccountDispatcher { contract_address: ca_address.starknet };
+        let nonce = account_dispatcher.get_nonce();
+        let code = account_dispatcher.bytecode();
+        assert(nonce == 420, 'nonce should be modified');
+        assert(code == [0x1].span(), 'code should be modified');
+    }
 
     #[test]
     fn test_account_commit_undeployed() {
@@ -383,10 +383,8 @@ mod tests {
         let mut account = Account {
             address: Address { evm, starknet }, nonce: 420, code: [
                 0x69
-            ].span(), balance: 0, selfdestruct: false, is_created: false,
+            ].span(), balance: 0, selfdestruct: false, is_created: true,
         };
-        account.nonce = 420;
-        account.code = [0x1].span();
         state.set_account(account);
         starknet_backend::commit(ref state).expect('commitment failed');
 
@@ -394,8 +392,8 @@ mod tests {
         let account_dispatcher = IAccountDispatcher { contract_address: starknet };
         let nonce = account_dispatcher.get_nonce();
         let code = account_dispatcher.bytecode();
-        assert(nonce == 420, 'nonce should be modified');
-        assert(code == [0x1].span(), 'code should be modified');
+        assert(nonce == 420, 'nonce should be committed');
+        assert(code == [0x69].span(), 'code should be committed');
     }
 
     #[test]

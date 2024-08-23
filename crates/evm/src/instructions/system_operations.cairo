@@ -353,52 +353,50 @@ impl SystemOperations of SystemOperationsTrait {
     /// SELFDESTRUCT
     /// # Specification: https://www.evm.codes/#ff?fork=shanghai
     fn exec_selfdestruct(ref self: VM) -> Result<(), EVMError> {
-        let kakarot_state = KakarotCore::unsafe_new_contract_state();
-        let address = self.stack.pop_eth_address()?;
+        let recipient = self.stack.pop_eth_address()?;
 
         // GAS
         let mut gas_cost = gas::SELFDESTRUCT;
-        if !self.accessed_addresses.contains(address) {
+        if !self.accessed_addresses.contains(recipient) {
             gas_cost += gas::COLD_ACCOUNT_ACCESS_COST;
         };
 
-        if (!self.env.state.is_account_alive(address)
-            && self.env.state.get_account(address).balance() != 0) {
+        let mut self_account = self.env.state.get_account(self.message().target.evm);
+        let self_balance = self_account.balance();
+        if (!self.env.state.is_account_alive(recipient) && self_balance != 0) {
             gas_cost += gas::NEWACCOUNT;
         }
         self.charge_gas(gas_cost)?;
 
+        // Operation
         ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
 
-        //TODO Remove this when https://eips.ethereum.org/EIPS/eip-6780 is validated
-        let recipient_evm_address = if (address == self.message().target.evm) {
+        // If the account was created in the same transaction and recipient is self, the native
+        // token is burnt
+        let recipient_evm_address = if (self_account.is_created
+            && recipient == self_account.evm_address()) {
             0.try_into().unwrap()
         } else {
-            address
+            recipient
         };
-        let recipient_starknet_address = kakarot_state
-            .compute_starknet_address(recipient_evm_address);
-        let mut account = self.env.state.get_account(self.message().target.evm);
-
-        let recipient = Address {
-            evm: recipient_evm_address, starknet: recipient_starknet_address
-        };
-
+        let recipient_account = self.env.state.get_account(recipient_evm_address);
         // Transfer balance
         self
             .env
             .state
             .add_transfer(
                 Transfer {
-                    sender: account.address(),
-                    recipient,
-                    amount: self.env.state.get_account(account.address().evm).balance
+                    sender: self_account.address(),
+                    recipient: recipient_account.address(),
+                    amount: self_balance
                 }
             )?;
 
+        //@dev: get_account again because add_transfer modified its balance
+        self_account = self.env.state.get_account(self.message().target.evm);
         // Register for selfdestruct
-        account.selfdestruct();
-        self.env.state.set_account(account);
+        self_account.selfdestruct();
+        self.env.state.set_account(self_account);
         self.stop();
         Result::Ok(())
     }
