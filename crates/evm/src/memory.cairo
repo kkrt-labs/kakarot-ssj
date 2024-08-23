@@ -31,6 +31,7 @@ trait MemoryTrait {
     fn ensure_length(ref self: Memory, length: usize);
     fn load(ref self: Memory, offset: usize) -> u256;
     fn load_n(ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize);
+    fn copy(ref self: Memory, size: usize, source_offset: usize, dest_offset: usize);
 }
 
 impl MemoryImpl of MemoryTrait {
@@ -235,6 +236,14 @@ impl MemoryImpl of MemoryTrait {
         self.ensure_length(elements_len + offset);
 
         self.load_n_internal(elements_len, ref elements, offset);
+    }
+
+    /// Copies a segment of memory from the source offset to the destination offset.
+    #[inline(always)]
+    fn copy(ref self: Memory, size: usize, source_offset: usize, dest_offset: usize) {
+        let mut data: Array<u8> = Default::default();
+        self.load_n(size, ref data, source_offset);
+        self.store_n(data.span(), dest_offset);
     }
 }
 
