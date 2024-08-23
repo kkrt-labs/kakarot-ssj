@@ -13,6 +13,10 @@ use utils::helpers::{ResultExTrait};
 use utils::set::{Set, SpanSet};
 use utils::traits::{EthAddressDefault, ContractAddressDefault, SpanDefault};
 
+const MAX_PRECOMPILE_ADDRESS: u256 = 256;
+const LIMIT_PRECOMPILE_ADDRESS: u256 = 10;
+const ZERO: felt252 = 0;
+
 #[derive(Destruct, Default)]
 struct Environment {
     origin: EthAddress,
@@ -139,7 +143,10 @@ impl AddressImpl of AddressTrait {
     /// Check whether an address for a call-family opcode is a precompile.
     fn is_precompile(self: EthAddress) -> bool {
         let self: felt252 = self.into();
-        return (self != 0 && (self.into() < 10_u256 || self.into() == 256_u256));
+        let not_equal_than_zero: bool = self != ZERO;
+        let less_than_mid: bool = self.into() < LIMIT_PRECOMPILE_ADDRESS;
+        let equal_than_max: bool = self.into() == MAX_PRECOMPILE_ADDRESS;
+        return not_equal_than_zero && (less_than_mid || equal_than_max);
     }
 }
 
@@ -177,8 +184,6 @@ mod tests {
         starknet_backend::deploy(evm_address()).expect('failed deploy eoa account',);
 
         // When
-
-        // When
         set_contract_address(kakarot_core.contract_address);
         let is_deployed = evm_address().is_deployed();
 
@@ -194,6 +199,7 @@ mod tests {
 
         // When
         let is_deployed = evm_address().is_deployed();
+
         // Then
         assert(is_deployed, 'account should be deployed');
     }
@@ -407,5 +413,16 @@ mod tests {
         // Then
         // Then
         assert(balance == native_token.balanceOf(ca_address.starknet), 'wrong balance');
+    }
+
+    #[test]
+    fn test_is_precompile(){
+       // Given
+       let evm_address: EthAddress = 0xca.try_into().unwrap();
+       // When
+       let is_precompile = evm_address.is_precompile();
+
+       // Then
+       assert_eq!(false, is_precompile, "is_precompile() - expected{:?}, got{:?}", false, is_precompile);
     }
 }
