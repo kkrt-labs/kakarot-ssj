@@ -1,7 +1,14 @@
 use contracts::account_contract::{AccountContract, IAccountDispatcher, IAccountDispatcherTrait};
+use contracts::errors::KAKAROT_REENTRANCY;
 use contracts::test_data::counter_evm_bytecode;
-use contracts::test_utils::{setup_contracts_for_testing, deploy_contract_account};
+use contracts::test_utils::{
+    setup_contracts_for_testing, deploy_contract_account, fund_account_with_native_token
+};
+use core::starknet::ContractAddress;
+use core::starknet::account::{Call};
+use core::starknet::testing;
 use evm::test_utils::{ca_address, native_token};
+use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 
 #[test]
 fn test_ca_deploy() {
@@ -62,4 +69,63 @@ fn test_ca_storage() {
     let storage = contract_account.storage(storage_slot);
 
     assert(storage == expected_storage, 'wrong contract storage');
+}
+
+#[test]
+fn test_ca_external_starknet_call_native_token() {
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    let ca_address = deploy_contract_account(ca_address(), [].span());
+    let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
+    fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
+
+    testing::set_contract_address(kakarot_core.contract_address);
+    let call = Call {
+        to: native_token.contract_address,
+        selector: selector!("balanceOf"),
+        calldata: array![ca_address.starknet.into()].span(),
+    };
+    let (success, data) = contract_account.execute_starknet_call(call);
+
+    assert(success == true, 'execute_starknet_call failed');
+    assert(data.len() == 2, 'wrong return data length');
+    let balance = native_token.balanceOf(ca_address.starknet);
+    assert((*data[0], *data[1]) == (balance.low.into(), balance.high.into()), 'wrong return data');
+}
+
+#[test]
+fn test_ca_external_starknet_call_kakarot_get_starknet_address() {
+    let (_, kakarot_core) = setup_contracts_for_testing();
+    let ca_address = deploy_contract_account(ca_address(), [].span());
+    let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
+
+    testing::set_contract_address(kakarot_core.contract_address);
+    let call = Call {
+        to: kakarot_core.contract_address,
+        selector: selector!("get_starknet_address"),
+        calldata: array![ca_address.evm.address].span(),
+    };
+    let (success, data) = contract_account.execute_starknet_call(call);
+
+    assert(success == true, 'execute_starknet_call failed');
+    assert(data.len() == 1, 'wrong return data length');
+    assert(*data[0] == ca_address.starknet.try_into().unwrap(), 'wrong return data');
+}
+
+#[test]
+fn test_ca_external_starknet_call_cannot_call_kakarot_other_selector() {
+    let (_, kakarot_core) = setup_contracts_for_testing();
+    let ca_address = deploy_contract_account(ca_address(), [].span());
+    let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
+
+    testing::set_contract_address(kakarot_core.contract_address);
+    let call = Call {
+        to: kakarot_core.contract_address,
+        selector: selector!("get_native_token"),
+        calldata: array![].span(),
+    };
+    let (success, data) = contract_account.execute_starknet_call(call);
+
+    assert(success == false, 'execute_starknet_call failed');
+    assert(data.len() == 19, 'wrong return data length');
+    assert(data == KAKAROT_REENTRANCY.span(), 'wrong return data');
 }

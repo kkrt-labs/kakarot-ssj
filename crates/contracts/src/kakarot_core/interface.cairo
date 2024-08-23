@@ -56,6 +56,9 @@ pub trait IKakarotCore<TContractState> {
     fn get_block_gas_limit(self: @TContractState) -> u128;
     // Getter for the Base Fee
     fn get_base_fee(self: @TContractState) -> u128;
+
+    // Getter for the Starknet Address
+    fn get_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 }
 
 #[starknet::interface]
@@ -104,6 +107,16 @@ pub trait IExtendedKakarotCore<TContractState> {
     fn uninitialized_account_class_hash(self: @TContractState) -> ClassHash;
     // Setter for the Generic Account Class
     fn set_account_class_hash(ref self: TContractState, new_class_hash: ClassHash);
+
+    fn register_account(ref self: TContractState, evm_address: EthAddress);
+
+    // Getter for the Block Gas Limit
+    fn get_block_gas_limit(self: @TContractState) -> u128;
+    // Getter for the Base Fee
+    fn get_base_fee(self: @TContractState) -> u128;
+
+    // Getter for the Starknet Address
+    fn get_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 
     fn owner(self: @TContractState) -> ContractAddress;
     fn transfer_ownership(ref self: TContractState, new_owner: ContractAddress);
