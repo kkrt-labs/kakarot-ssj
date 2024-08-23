@@ -19,9 +19,15 @@ name = "evm"
 version = "0.1.0"
 dependencies = [
  "contracts",
+ "garaga",
  "openzeppelin",
  "utils",
 ]
+
+[[package]]
+name = "garaga"
+version = "0.1.0"
+source = "git+https://github.com/keep-starknet-strange/garaga.git#933784eee3811334cf1a5b83d9ffcc9cfda3be8c"
 
 [[package]]
 name = "openzeppelin"

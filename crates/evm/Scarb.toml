@@ -10,6 +10,7 @@ starknet.workspace = true
 utils = { path = "../utils" }
 contracts = { path = "../contracts" }
 openzeppelin = { path = "../openzeppelin" }
+garaga = { git = "https://github.com/keep-starknet-strange/garaga.git" }
 
 [tool]
 fmt.workspace = true

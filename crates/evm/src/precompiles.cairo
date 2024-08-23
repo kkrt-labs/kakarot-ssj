@@ -1,4 +1,6 @@
 mod blake2f;
+mod ec_add;
+mod ec_mul;
 mod ec_recover;
 mod identity;
 mod modexp;
