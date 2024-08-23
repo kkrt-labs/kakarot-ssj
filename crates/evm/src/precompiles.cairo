@@ -1,11 +1,11 @@
 mod blake2f;
+mod ec_add;
+mod ec_mul;
 mod ec_recover;
 mod identity;
 mod modexp;
 mod p256verify;
 mod sha256;
-mod ec_add;
-mod ec_mul;
 use core::starknet::EthAddress;
 
 use core::traits::Into;

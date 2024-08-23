@@ -1,19 +1,23 @@
-use core::starknet::SyscallResultTrait;
-use core::starknet::{EthAddress};
-use evm::errors::{EVMError};
-use evm::precompiles::Precompile;
-use utils::helpers::{U256Trait, ToBytes, FromBytes};
+use core::RangeCheck;
+use core::circuit::CircuitElement as CE;
+use core::circuit::CircuitInput as CI;
 
 use core::circuit::{
     RangeCheck96, AddMod, MulMod, u384, u96, CircuitElement, CircuitInput, circuit_add, circuit_sub,
     circuit_mul, circuit_inverse, EvalCircuitResult, EvalCircuitTrait, CircuitOutputsTrait,
     CircuitModulus, AddInputResultTrait, CircuitInputs, CircuitInputAccumulator
 };
+
+
+use core::internal::BoundedInt;
+use core::option::Option;
+use core::starknet::SyscallResultTrait;
+use core::starknet::{EthAddress};
+use evm::errors::{EVMError};
+use evm::precompiles::Precompile;
 use garaga::core::circuit::AddInputResultTrait2;
 use garaga::utils::u384_eq_zero;
-use core::circuit::CircuitElement as CE;
-use core::circuit::CircuitInput as CI;
-use core::option::Option;
+use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 
 fn ec_add(x1: u256, y1: u256, x2: u256, y2: u256) -> Option<(u256, u256)> {
@@ -219,10 +223,6 @@ fn eq_neg_mod_p(a: u384, b: u384) -> bool {
 
     return u384_eq_zero(outputs.get_output(check));
 }
-
-
-use core::internal::BoundedInt;
-use core::RangeCheck;
 type ConstValue<const VALUE: felt252> = BoundedInt<VALUE, VALUE>;
 const POW64: felt252 = 0x10000000000000000;
 const POW32: felt252 = 0x100000000;
@@ -271,11 +271,11 @@ fn u384_circuit_output_to_u256(x: u384) -> u256 {
 
 #[cfg(test)]
 mod tests {
-    use utils::helpers::{U256Trait, ToBytes, FromBytes};
     use super::{
         u384_circuit_output_to_u256, eq_mod_p, eq_neg_mod_p, double_ec_point_unchecked,
         add_ec_point_unchecked, is_on_curve, u384, POW32, POW64, POW96
     };
+    use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
     #[test]
     fn test_u384_circuit_output_to_u256() {

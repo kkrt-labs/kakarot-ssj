@@ -1,24 +1,24 @@
-use core::starknet::SyscallResultTrait;
-use core::starknet::{EthAddress};
-use evm::errors::{EVMError};
-use evm::precompiles::Precompile;
-use utils::helpers::{U256Trait, ToBytes, FromBytes};
+use core::circuit::CircuitElement as CE;
+use core::circuit::CircuitInput as CI;
 
 use core::circuit::{
     RangeCheck96, AddMod, MulMod, u384, u96, CircuitElement, CircuitInput, circuit_add, circuit_sub,
     circuit_mul, circuit_inverse, EvalCircuitResult, EvalCircuitTrait, CircuitOutputsTrait,
     CircuitModulus, AddInputResultTrait, CircuitInputs, CircuitInputAccumulator
 };
-use garaga::core::circuit::AddInputResultTrait2;
-use garaga::utils::u384_eq_zero;
-use core::circuit::CircuitElement as CE;
-use core::circuit::CircuitInput as CI;
 use core::option::Option;
+use core::starknet::SyscallResultTrait;
+use core::starknet::{EthAddress};
+use evm::errors::{EVMError};
+use evm::precompiles::Precompile;
 
 use evm::precompiles::ec_add::{
     is_on_curve, eq_mod_p, eq_neg_mod_p, double_ec_point_unchecked, add_ec_point_unchecked,
     ec_safe_add, u384_circuit_output_to_u256
 };
+use garaga::core::circuit::AddInputResultTrait2;
+use garaga::utils::u384_eq_zero;
+use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 // const BN254_ORDER: u256 = 0x30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001;
 
