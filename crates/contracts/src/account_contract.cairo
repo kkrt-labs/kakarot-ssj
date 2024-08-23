@@ -29,6 +29,7 @@ pub trait IAccount<TContractState> {
     fn storage(self: @TContractState, key: u256) -> u256;
     fn get_nonce(self: @TContractState) -> u64;
     fn set_nonce(ref self: TContractState, nonce: u64);
+    fn execute_starknet_call(ref self: TContractState, call: Call) -> (bool, Span<felt252>);
 }
 
 #[starknet::contract(account)]
@@ -38,7 +39,7 @@ pub mod AccountContract {
     use contracts::components::ownable::ownable_component;
     use contracts::errors::{
         BYTECODE_READ_ERROR, BYTECODE_WRITE_ERROR, STORAGE_READ_ERROR, STORAGE_WRITE_ERROR,
-        NONCE_READ_ERROR, NONCE_WRITE_ERROR, KAKAROT_VALIDATION_FAILED
+        NONCE_READ_ERROR, NONCE_WRITE_ERROR, KAKAROT_VALIDATION_FAILED, KAKAROT_REENTRANCY
     };
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use contracts::storage::StorageBytecode;
@@ -53,7 +54,7 @@ pub mod AccountContract {
         StoragePointerWriteAccess
     };
     use core::starknet::storage_access::{storage_base_address_from_felt252, StorageBaseAddress};
-    use core::starknet::syscalls::{replace_class_syscall};
+    use core::starknet::syscalls::{call_contract_syscall, replace_class_syscall};
     use core::starknet::{
         ContractAddress, EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address,
         get_tx_info, Store
@@ -270,6 +271,23 @@ pub mod AccountContract {
         fn set_nonce(ref self: ContractState, nonce: u64) {
             self.ownable.assert_only_owner();
             self.Account_nonce.write(nonce);
+        }
+
+        // @notice Used to preserve caller in Cairo Precompiles
+        // @dev Reentrency check is done for Kakarot contract, only get_starknet_address is allowed
+        //      for Solidity contracts to be able to get the corresponding Starknet address in their
+        //      calldata.
+        fn execute_starknet_call(ref self: ContractState, call: Call) -> (bool, Span<felt252>) {
+            self.ownable.assert_only_owner();
+            let kakarot_address = self.ownable.owner();
+            if call.to == kakarot_address && call.selector != selector!("get_starknet_address") {
+                return (false, KAKAROT_REENTRANCY.span());
+            }
+            let response = call_contract_syscall(call.to, call.selector, call.calldata);
+            if response.is_ok() {
+                return (true, response.unwrap().into());
+            }
+            return (true, response.unwrap_err().into());
         }
     }
 

@@ -41,3 +41,9 @@ pub const KAKAROT_VALIDATION_FAILED: [
     'e',
     'd'
 ];
+
+pub const KAKAROT_REENTRANCY: [
+    felt252
+    ; 19] = [
+    'K', 'a', 'k', 'a', 'r', 'o', 't', ':', ' ', 'r', 'e', 'e', 'n', 't', 'r', 'a', 'n', 'c', 'y'
+];
