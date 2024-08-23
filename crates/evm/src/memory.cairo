@@ -2,10 +2,6 @@ use core::cmp::{max, min};
 use core::integer::{
     u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_as_non_zero
 };
-use utils::constants::{
-    POW_2_0, POW_2_8, POW_2_16, POW_2_24, POW_2_32, POW_2_40, POW_2_48, POW_2_56, POW_2_64,
-    POW_2_72, POW_2_80, POW_2_88, POW_2_96, POW_2_104, POW_2_112, POW_2_120, POW_256_16
-};
 use utils::{
     helpers, helpers::SpanExtTrait, helpers::ArrayExtTrait, math::Exponentiation,
     math::WrappingExponentiation, math::Bitshift
@@ -256,7 +252,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     #[inline(always)]
     fn store_element(ref self: Memory, element: u256, chunk_index: usize, offset_in_chunk: u32) {
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
-        let mask_c: u256 = POW_256_16 / mask;
+        let mask_c: u256 = pow!(256, 16) / mask;
 
         // Split the 2 input bytes16 chunks at offset_in_chunk.
         let (el_hh, el_hl) = DivRem::div_rem(element.high.into(), u256_as_non_zero(mask_c));
@@ -324,22 +320,22 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     fn store_aligned_words(ref self: Memory, mut chunk_index: usize, mut elements: Span<u8>) {
         while let Option::Some(words) = elements.multi_pop_front::<16>() {
             let words = (*words).unbox().span();
-            let current: u128 = ((*words[0]).into() * POW_2_120
-                + (*words[1]).into() * POW_2_112
-                + (*words[2]).into() * POW_2_104
-                + (*words[3]).into() * POW_2_96
-                + (*words[4]).into() * POW_2_88
-                + (*words[5]).into() * POW_2_80
-                + (*words[6]).into() * POW_2_72
-                + (*words[7]).into() * POW_2_64
-                + (*words[8]).into() * POW_2_56
-                + (*words[9]).into() * POW_2_48
-                + (*words[10]).into() * POW_2_40
-                + (*words[11]).into() * POW_2_32
-                + (*words[12]).into() * POW_2_24
-                + (*words[13]).into() * POW_2_16
-                + (*words[14]).into() * POW_2_8
-                + (*words[15]).into() * POW_2_0);
+            let current: u128 = ((*words[0]).into() * pow!(2, 120)
+                + (*words[1]).into() * pow!(2, 112)
+                + (*words[2]).into() * pow!(2, 104)
+                + (*words[3]).into() * pow!(2, 96)
+                + (*words[4]).into() * pow!(2, 88)
+                + (*words[5]).into() * pow!(2, 80)
+                + (*words[6]).into() * pow!(2, 72)
+                + (*words[7]).into() * pow!(2, 64)
+                + (*words[8]).into() * pow!(2, 56)
+                + (*words[9]).into() * pow!(2, 48)
+                + (*words[10]).into() * pow!(2, 40)
+                + (*words[11]).into() * pow!(2, 32)
+                + (*words[12]).into() * pow!(2, 24)
+                + (*words[13]).into() * pow!(2, 16)
+                + (*words[14]).into() * pow!(2, 8)
+                + (*words[15]).into() * pow!(2, 0));
 
             self.items.insert(chunk_index.into(), current);
             chunk_index += 1;
@@ -411,7 +407,7 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         // Compute mask.
 
         let mask: u256 = helpers::pow256_rev(offset_in_chunk);
-        let mask_c: u256 = POW_256_16 / mask;
+        let mask_c: u256 = pow!(256, 16) / mask;
 
         // Read the words at chunk_index, +1, +2.
         let w0: u128 = self.items.get(chunk_index.into());
@@ -619,7 +615,6 @@ impl Felt252DictExtensionImpl of Felt252DictExtension {
 mod tests {
     use core::num::traits::Bounded;
     use evm::memory::{MemoryTrait, InternalMemoryTrait};
-    use utils::constants::{POW_2_8, POW_2_56, POW_2_64, POW_2_120};
     use utils::{math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtTrait};
 
     mod internal {
@@ -839,32 +834,32 @@ mod tests {
     #[test]
     fn test_load_should_load_an_element_from_the_memory_with_offset_8() {
         internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-            8, 2 * POW_2_64, POW_2_64
+            8, 2 * pow!(2, 64), pow!(2, 64)
         );
     }
     #[test]
     fn test_load_should_load_an_element_from_the_memory_with_offset_7() {
         internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-            7, 2 * POW_2_56, POW_2_56
+            7, 2 * pow!(2, 56), pow!(2, 56)
         );
     }
     #[test]
     fn test_load_should_load_an_element_from_the_memory_with_offset_23() {
         internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-            23, 3 * POW_2_56, 2 * POW_2_56
+            23, 3 * pow!(2, 56), 2 * pow!(2, 56)
         );
     }
 
     #[test]
     fn test_load_should_load_an_element_from_the_memory_with_offset_33() {
         internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-            33, 4 * POW_2_8, 3 * POW_2_8
+            33, 4 * pow!(2, 8), 3 * pow!(2, 8)
         );
     }
     #[test]
     fn test_load_should_load_an_element_from_the_memory_with_offset_63() {
         internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-            63, 0, 4 * POW_2_120
+            63, 0, 4 * pow!(2, 120)
         );
     }
 

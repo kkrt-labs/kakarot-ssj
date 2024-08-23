@@ -19,8 +19,8 @@ use core::starknet::{
 use core::traits::DivRem;
 use core::traits::TryInto;
 use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
+use utils::constants::{POW_2, POW_256_REV};
 
-use utils::constants::{POW_2, POW_256_1, POW_256_REV};
 use utils::eth_transaction::{TransactionType};
 use utils::math::{Bitshift, WrappingBitshift, Exponentiation};
 use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, TryIntoResult, BoolIntoNumeric};
@@ -650,7 +650,7 @@ pub impl ByteArrayExt of ByteArrayExTrait {
             let mut word: felt252 = 0;
             let mut j = 0;
             while j != 31 {
-                word = word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
+                word = word * pow!(256, 1).into() + (*bytes.pop_front().unwrap()).into();
                 j += 1;
             };
             arr.data.append(word.try_into().unwrap());
@@ -665,7 +665,8 @@ pub impl ByteArrayExt of ByteArrayExTrait {
         let mut i = 0;
 
         while i != pending_word_len {
-            pending_word = pending_word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
+            pending_word = pending_word * pow!(256, 1).into()
+                + (*bytes.pop_front().unwrap()).into();
             i += 1;
         };
         arr.pending_word_len = pending_word_len;

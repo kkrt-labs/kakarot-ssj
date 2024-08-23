@@ -13,6 +13,7 @@ license-file = "LICENSE"
 [workspace.dependencies]
 starknet = "2.7.1"
 cairo_test = "2.7.1"
+alexandria_macros = { git = "https://github.com/keep-starknet-strange/alexandria.git" }
 
 [workspace.tool.fmt]
 sort-module-level-items = true

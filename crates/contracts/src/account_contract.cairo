@@ -61,7 +61,6 @@ pub mod AccountContract {
     use core::traits::TryInto;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait};
-    use utils::constants::{POW_2_32};
     use utils::eth_transaction::EthereumTransactionTrait;
     use utils::eth_transaction::{EthTransactionTrait, TransactionMetadata};
     use utils::helpers::SpanExtTrait;
@@ -172,7 +171,7 @@ pub mod AccountContract {
                 "Validate: selector must be eth_send_transaction"
             );
 
-            let chain_id: u128 = tx_info.chain_id.try_into().unwrap() % POW_2_32;
+            let chain_id: u128 = tx_info.chain_id.try_into().unwrap() % pow!(2, 32);
             let signature = deserialize_signature(tx_info.signature, chain_id)
                 .expect('EOA: invalid signature');
 
