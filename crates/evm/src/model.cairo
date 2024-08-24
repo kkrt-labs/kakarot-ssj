@@ -143,7 +143,9 @@ impl AddressImpl of AddressTrait {
     /// Check whether an address for a call-family opcode is a precompile.
     fn is_precompile(self: EthAddress) -> bool {
         let self: felt252 = self.into();
-        return self != ZERO && (self.into() < LAST_ETHEREUM_PRECOMPILE_ADDRESS || self.into() == FIRST_ROLLUP_PRECOMPILE_ADDRESS);
+        return self != ZERO
+            && (self.into() < LAST_ETHEREUM_PRECOMPILE_ADDRESS
+                || self.into() == FIRST_ROLLUP_PRECOMPILE_ADDRESS);
     }
 }
 
@@ -410,12 +412,12 @@ mod tests {
     }
 
     #[test]
-    fn test_is_precompile(){
+    fn test_is_precompile() {
         // Given
-        let valid_precompiles = array![0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0x100];
+        let valid_precompiles = array![0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x100];
 
         //When
-        for el in valid_precompiles{
+        for el in valid_precompiles {
             let evm_address: EthAddress = (el).try_into().unwrap();
             //Then
             assert_eq!(true, evm_address.is_precompile());
@@ -423,24 +425,24 @@ mod tests {
     }
 
     #[test]
-    fn test_is_precompile_zero(){
-      // Given
-      let evm_address: EthAddress = 0x0.try_into().unwrap();
+    fn test_is_precompile_zero() {
+        // Given
+        let evm_address: EthAddress = 0x0.try_into().unwrap();
 
-      // When
-      let is_precompile = evm_address.is_precompile();
+        // When
+        let is_precompile = evm_address.is_precompile();
 
-      // Then
-      assert_eq!(false, is_precompile);
+        // Then
+        assert_eq!(false, is_precompile);
     }
 
     #[test]
-    fn test_is_not_precompile(){
+    fn test_is_not_precompile() {
         // Given
-        let not_valid_precompiles = array![0xa,0xb,0xc,0xd,0xe,0xf,0x99];
+        let not_valid_precompiles = array![0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0x99];
 
         //When
-        for el in not_valid_precompiles{
+        for el in not_valid_precompiles {
             let evm_address: EthAddress = (el).try_into().unwrap();
             //Then
             assert_eq!(false, evm_address.is_precompile());
