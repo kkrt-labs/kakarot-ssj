@@ -411,27 +411,21 @@ mod tests {
 
     #[test]
     fn test_is_precompile(){
-       // Given
-       let mut i = 0;
-       let valid_precompiles = array![0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0x100];
-       let to = valid_precompiles.len() - 1;
+        // Given
+        let valid_precompiles = array![0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0x100];
 
-       // When
-       loop {
-               if i >= to{
-                   break();
-               }
-               let evm_address: EthAddress = (*valid_precompiles.at(i)).try_into().unwrap();
-               //Then
-               assert_eq!(true, evm_address.is_precompile());
-               i = i + 1;
-           };
+        //When
+        for el in valid_precompiles{
+            let evm_address: EthAddress = (el).try_into().unwrap();
+            //Then
+            assert_eq!(true, evm_address.is_precompile());
+        };
     }
 
     #[test]
     fn test_is_precompile_zero(){
       // Given
-      let evm_address: EthAddress = 0.try_into().unwrap();
+      let evm_address: EthAddress = 0x0.try_into().unwrap();
 
       // When
       let is_precompile = evm_address.is_precompile();
@@ -442,20 +436,14 @@ mod tests {
 
     #[test]
     fn test_is_not_precompile(){
-      // Given
-      let mut i = 0;
-      let not_valid_precompiles = array![0xa,0xb,0xc,0xd,0xe,0xf,0x99];
-      let to = not_valid_precompiles.len() - 1;
+        // Given
+        let not_valid_precompiles = array![0xa,0xb,0xc,0xd,0xe,0xf,0x99];
 
-      // When
-      loop {
-               if i >= to{
-                   break();
-               }
-               let evm_address: EthAddress = (*not_valid_precompiles.at(i)).try_into().unwrap();
-               //Then
-               assert_eq!(false, evm_address.is_precompile());
-               i = i + 1;
-           };
+        //When
+        for el in not_valid_precompiles{
+            let evm_address: EthAddress = (el).try_into().unwrap();
+            //Then
+            assert_eq!(false, evm_address.is_precompile());
+        };
     }
 }
