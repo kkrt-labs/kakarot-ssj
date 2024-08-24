@@ -9,15 +9,12 @@ use core::starknet::{
 use core::traits::TryInto;
 use evm::backend::starknet_backend::fetch_balance;
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
-// use evm::instructions::environmental_information::{
-//     EnvironmentInformationTrait, EnvironmentInformationTraitDispatcher,
-//     EnvironmentInformationTraitDispatcherTrait
-// };
 use evm::model::{Address, AddressTrait, Transfer};
 use evm::state::State;
 use evm::state::StateTrait;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use utils::helpers::{ResultExTrait, ByteArrayExTrait, compute_starknet_address};
+use utils::constants::EMPTY_KECCAK;
+use utils::helpers::{ResultExTrait, ByteArrayExTrait, compute_starknet_address, U8SpanExTrait};
 
 #[derive(Drop)]
 struct AccountBuilder {
@@ -35,7 +32,7 @@ impl AccountBuilderImpl of AccountBuilderTrait {
                 balance: 0,
                 selfdestruct: false,
                 is_created: false,
-                code_hash: None
+                code_hash: 0
             }
         }
     }
@@ -73,18 +70,15 @@ impl AccountBuilderImpl of AccountBuilderTrait {
 
     #[inline(always)]
     fn fetch_code_hash(ref self: AccountBuilder) -> u256 {
-        let account = IAccountDispatcher { contract_address: self.account.address.starknet };
-        match account.get_code_hash() {
-            Option::Some(hash) => hash,
-            Option::None => {
-                // let compute_hash = EnvironmentInformationTraitDispatcher {
-                //     contract_address: self.account.address.starknet
-                // };
-                // let hash = compute_hash.exec_extcodehash();
+        let bytecode = self.account.code;
 
-                // account.set_code_hash(*hash.at(0))
-                0_u256
-            },
+        if bytecode.is_empty() {
+            self.account.code_hash = EMPTY_KECCAK;
+            self.account.code_hash
+        } else {
+            let hash = bytecode.compute_keccak256_hash();
+            self.account.code_hash = hash;
+            self.account.code_hash
         }
     }
 }
@@ -97,7 +91,7 @@ struct Account {
     balance: u256,
     selfdestruct: bool,
     is_created: bool,
-    code_hash: Option<u256>,
+    code_hash: u256,
 }
 
 #[generate_trait]
@@ -122,7 +116,7 @@ impl AccountImpl of AccountTrait {
                 // empty account with the correct address and return it.
                 AccountBuilderTrait::new(Address { starknet: starknet_address, evm: evm_address })
                     .fetch_balance()
-                    // .fetch_code_hash()
+                    .fetch_code_hash()
                     .build()
             }
         }
