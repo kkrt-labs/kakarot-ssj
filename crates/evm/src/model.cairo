@@ -165,7 +165,6 @@ mod tests {
     };
     use core::starknet::EthAddress;
     use core::starknet::testing::set_contract_address;
-    use core::iter::{IntoIterator, Iterator};
     use evm::backend::starknet_backend;
     use evm::model::account::AccountTrait;
 
