@@ -76,15 +76,7 @@ impl AccountBuilderImpl of AccountBuilderTrait {
         let account = IAccountDispatcher { contract_address: self.account.address.starknet };
         match account.get_code_hash() {
             Option::Some(hash) => hash,
-            Option::None => {
-                // let compute_hash = EnvironmentInformationTraitDispatcher {
-                //     contract_address: self.account.address.starknet
-                // };
-                // let hash = compute_hash.exec_extcodehash();
-
-                // account.set_code_hash(*hash.at(0))
-                0_u256
-            },
+            Option::None => { 0_u256 },
         }
     }
 }
