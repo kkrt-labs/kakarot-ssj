@@ -13,6 +13,10 @@ use utils::helpers::{ResultExTrait};
 use utils::set::{Set, SpanSet};
 use utils::traits::{EthAddressDefault, ContractAddressDefault, SpanDefault};
 
+const FIRST_ROLLUP_PRECOMPILE_ADDRESS: u256 = 0x100;
+const LAST_ETHEREUM_PRECOMPILE_ADDRESS: u256 = 0x0a;
+const ZERO: felt252 = 0x0;
+
 #[derive(Destruct, Default)]
 struct Environment {
     origin: EthAddress,
@@ -139,7 +143,9 @@ impl AddressImpl of AddressTrait {
     /// Check whether an address for a call-family opcode is a precompile.
     fn is_precompile(self: EthAddress) -> bool {
         let self: felt252 = self.into();
-        return (self != 0 && (self.into() < 10_u256 || self.into() == 256_u256));
+        return self != ZERO
+            && (self.into() < LAST_ETHEREUM_PRECOMPILE_ADDRESS
+                || self.into() == FIRST_ROLLUP_PRECOMPILE_ADDRESS);
     }
 }
 
@@ -177,8 +183,6 @@ mod tests {
         starknet_backend::deploy(evm_address()).expect('failed deploy eoa account',);
 
         // When
-
-        // When
         set_contract_address(kakarot_core.contract_address);
         let is_deployed = evm_address().is_deployed();
 
@@ -194,6 +198,7 @@ mod tests {
 
         // When
         let is_deployed = evm_address().is_deployed();
+
         // Then
         assert(is_deployed, 'account should be deployed');
     }
@@ -403,7 +408,44 @@ mod tests {
         let balance = account.balance();
 
         // Then
-        // Then
         assert(balance == native_token.balanceOf(ca_address.starknet), 'wrong balance');
+    }
+
+    #[test]
+    fn test_is_precompile() {
+        // Given
+        let valid_precompiles = array![0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x100];
+
+        //When
+        for el in valid_precompiles {
+            let evm_address: EthAddress = (el).try_into().unwrap();
+            //Then
+            assert_eq!(true, evm_address.is_precompile());
+        };
+    }
+
+    #[test]
+    fn test_is_precompile_zero() {
+        // Given
+        let evm_address: EthAddress = 0x0.try_into().unwrap();
+
+        // When
+        let is_precompile = evm_address.is_precompile();
+
+        // Then
+        assert_eq!(false, is_precompile);
+    }
+
+    #[test]
+    fn test_is_not_precompile() {
+        // Given
+        let not_valid_precompiles = array![0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0x99];
+
+        //When
+        for el in not_valid_precompiles {
+            let evm_address: EthAddress = (el).try_into().unwrap();
+            //Then
+            assert_eq!(false, evm_address.is_precompile());
+        };
     }
 }
