@@ -97,7 +97,6 @@ mod tests {
         StorageBaseAddress, StorageAddress, storage_base_address_from_felt252
     };
     use starknet::syscalls::storage_read_syscall;
-    use starknet::testing::set_contract_address;
     use super::DerefMut;
     use super::SnapshotDeref;
     use super::StorageBytecode;

@@ -1,5 +1,8 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-use contracts::test_utils::{deploy_contract_account};
+use contracts::test_utils::{
+    deploy_contract_account, class_registry, ITestClassRegistryDispatcher,
+    ITestClassRegistryDispatcherTrait
+};
 use contracts::uninitialized_account::UninitializedAccount;
 use core::nullable::{match_nullable, FromNullableResult};
 use core::starknet::{
@@ -176,12 +179,12 @@ fn preset_message() -> Message {
     let code: Span<u8> = [0x00].span();
     let data: Span<u8> = [4, 5, 6].span();
     let value: u256 = callvalue();
+    let class_registry = class_registry();
+    let uninitialized_account_class_hash = class_registry.get_class_hash("UninitializedAccount");
     let caller = Address {
         evm: origin(),
         starknet: utils::helpers::compute_starknet_address(
-            get_contract_address(),
-            origin(),
-            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
+            get_contract_address(), origin(), uninitialized_account_class_hash
         )
     };
     let read_only = false;

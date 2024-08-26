@@ -315,11 +315,12 @@ mod tests {
             let mut state: State = Default::default();
             // Transfer native tokens to sender
             let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+            let class_registry = contract_utils::class_registry();
+            let uninitialized_account_class_hash = class_registry
+                .get_class_hash("UninitializedAccount");
             let evm_address: EthAddress = test_utils::evm_address();
             let starknet_address = compute_starknet_address(
-                kakarot_core.contract_address.into(),
-                evm_address,
-                UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
+                kakarot_core.contract_address.into(), evm_address, uninitialized_account_class_hash
             );
             let expected_account = Account {
                 address: Address { evm: evm_address, starknet: starknet_address },
@@ -344,10 +345,11 @@ mod tests {
             set_contract_address(deployer);
 
             let evm_address: EthAddress = test_utils::evm_address();
+            let class_registry = contract_utils::class_registry();
+            let uninitialized_account_class_hash = class_registry
+                .get_class_hash("UninitializedAccount");
             let starknet_address = compute_starknet_address(
-                deployer.into(),
-                evm_address,
-                UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
+                deployer.into(), evm_address, uninitialized_account_class_hash
             );
             let expected_account = Account {
                 address: Address { evm: evm_address, starknet: starknet_address }, code: [

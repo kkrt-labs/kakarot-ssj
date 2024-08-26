@@ -7,4 +7,8 @@ version = "0.1.0"
 [dependencies]
 
 [dev-dependencies]
-cairo_test = "2.7.1"
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.28.0" }
+
+[scripts]
+test = "snforge test --max-n-steps 4294967295"
+test-profiling = "snforge test --max-n-steps 4294967295 --build-profile"

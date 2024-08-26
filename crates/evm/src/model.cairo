@@ -166,8 +166,8 @@ mod tests {
         setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
     };
     use core::starknet::EthAddress;
-    use core::starknet::testing::set_contract_address;
     use evm::backend::starknet_backend;
+    use snforge_std::{start_cheat_contract_address, stop_cheat_contract_address};
     use evm::model::account::AccountTrait;
 
     use evm::model::{Address, Account, AddressTrait};
@@ -183,7 +183,7 @@ mod tests {
         starknet_backend::deploy(evm_address()).expect('failed deploy eoa account',);
 
         // When
-        set_contract_address(kakarot_core.contract_address);
+        start_cheat_caller_address(kakarot_core.contract_address, evm_address());
         let is_deployed = evm_address().is_deployed();
 
         // Then

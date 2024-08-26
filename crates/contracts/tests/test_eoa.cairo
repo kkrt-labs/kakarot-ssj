@@ -9,7 +9,7 @@ use contracts::test_utils::{
     setup_contracts_for_testing, deploy_eoa, deploy_contract_account, pop_log, pop_log_debug,
     fund_account_with_native_token, call_transaction
 };
-use contracts_tests::test_upgradeable::{
+use contracts::test_utils::test_upgradeable::{
     IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
     MockContractUpgradeableV1
 };
@@ -17,8 +17,10 @@ use core::array::SpanTrait;
 use core::box::BoxTrait;
 use core::starknet::account::{Call};
 use core::starknet::class_hash::Felt252TryIntoClassHash;
-use core::starknet::testing::{
-    set_caller_address, set_contract_address, set_signature, set_chain_id
+use snforge_std::{
+    start_cheat_caller_address, stop_cheat_caller_address, start_cheat_signature,
+    stop_cheat_signature, start_cheat_chain_id, stop_cheat_chain_id, start_cheat_transaction_hash,
+    stop_cheat_transaction_hash
 };
 use core::starknet::{
     deploy_syscall, ContractAddress, ClassHash, VALIDATED, get_contract_address,
@@ -64,7 +66,7 @@ fn test___execute__a() {
 
     deploy_contract_account(other_evm_address(), counter_evm_bytecode());
 
-    set_contract_address(eoa);
+    start_cheat_caller_address(kakarot_address, eoa);
     let eoa_contract = IAccountDispatcher { contract_address: eoa };
 
     // Then
@@ -88,8 +90,8 @@ fn test___execute__a() {
         calldata: serialize_bytes(encoded_tx).span()
     };
 
-    starknet::testing::set_transaction_hash(selector!("transaction_hash"));
-    set_contract_address(contract_address_const::<0>());
+    start_cheat_transaction_hash(eoa, selector!("transaction_hash"));
+    start_cheat_caller_address(eoa, contract_address_const::<0>());
     let result = eoa_contract.__execute__(array![call]);
     assert_eq!(result.len(), 1);
 
@@ -114,7 +116,7 @@ fn test___execute___should_fail_with_zero_calls() {
     let eoa_contract = deploy_eoa(eoa_address());
     let eoa_contract = IAccountDispatcher { contract_address: eoa_contract.contract_address };
 
-    set_contract_address(contract_address_const::<0>());
+    start_cheat_caller_address(eoa_contract.contract_address, contract_address_const::<0>());
     eoa_contract.__execute__(array![]);
 }
 
@@ -127,7 +129,7 @@ fn test___validate__fail__caller_not_0() {
     fund_account_with_native_token(eoa, native_token, 0xfffffffffffffffffffffffffff);
     let eoa_contract = IAccountDispatcher { contract_address: eoa };
 
-    set_contract_address(other_starknet_address());
+    start_cheat_caller_address(eoa_contract.contract_address, other_starknet_address());
 
     let calls = array![];
     eoa_contract.__validate__(calls);
@@ -142,7 +144,7 @@ fn test___validate__fail__call_data_len_not_1() {
     fund_account_with_native_token(eoa, native_token, 0xfffffffffffffffffffffffffff);
     let eoa_contract = IAccountDispatcher { contract_address: eoa };
 
-    set_contract_address(contract_address_const::<0>());
+    start_cheat_caller_address(eoa_contract.contract_address, contract_address_const::<0>());
 
     let calls = array![];
     eoa_contract.__validate__(calls);
@@ -165,8 +167,12 @@ fn test___validate__fail__to_address_not_kakarot_core() {
         s: 0x2f3d9634f8cb9b9a43b048ee3310be91c2d3dc3b51a3313b473ef2260bbf6bc7,
         y_parity: true
     };
-    set_signature(serialize_transaction_signature(signature, TransactionType::Legacy, 1).span());
-    set_contract_address(contract_address_const::<0>());
+    start_cheat_signature(
+        eoa_contract.contract_address,
+        serialize_transaction_signature(signature, TransactionType::Legacy, 1).span()
+    );
+
+    start_cheat_caller_address(eoa_contract.contract_address, contract_address_const::<0>());
 
     let call = Call {
         to: other_starknet_address(),
@@ -186,10 +192,10 @@ fn test___validate__fail__selector_not_eth_send_transaction() {
     fund_account_with_native_token(eoa, native_token, 0xfffffffffffffffffffffffffff);
     let eoa_contract = IAccountDispatcher { contract_address: eoa };
 
-    set_chain_id(chain_id().into());
+    start_cheat_chain_id(eoa_contract.contract_address, chain_id().into());
     let mut vm = VMBuilderTrait::new_with_presets().build();
     let chain_id = vm.env.chain_id;
-    set_contract_address(contract_address_const::<0>());
+    start_cheat_caller_address(eoa_contract.contract_address, contract_address_const::<0>());
 
     // to reproduce locally:
     // run: cp .env.example .env
@@ -199,7 +205,8 @@ fn test___validate__fail__selector_not_eth_send_transaction() {
         s: 0x2f3d9634f8cb9b9a43b048ee3310be91c2d3dc3b51a3313b473ef2260bbf6bc7,
         y_parity: true
     };
-    set_signature(
+    start_cheat_signature(
+        eoa_contract.contract_address,
         serialize_transaction_signature(signature, TransactionType::Legacy, chain_id).span()
     );
 
@@ -219,7 +226,7 @@ fn test___validate__legacy_transaction() {
 
     let eoa_contract = IAccountDispatcher { contract_address: eoa };
 
-    set_chain_id(chain_id().into());
+    start_cheat_chain_id(eoa_contract.contract_address, chain_id().into());
     let mut vm = VMBuilderTrait::new_with_presets().build();
     let chain_id = vm.env.chain_id;
 
@@ -231,11 +238,12 @@ fn test___validate__legacy_transaction() {
         s: 0x66da52d0b666fc2a35895e0c91bc47385fe3aa347c7c2a129ae2b7b06cb5498b,
         y_parity: false
     };
-    set_signature(
+    start_cheat_signature(
+        eoa_contract.contract_address,
         serialize_transaction_signature(signature, TransactionType::Legacy, chain_id).span()
     );
 
-    set_contract_address(contract_address_const::<0>());
+    start_cheat_caller_address(eoa_contract.contract_address, contract_address_const::<0>());
 
     let call = Call {
         to: kakarot_core.contract_address,
@@ -256,7 +264,7 @@ fn test___validate__eip_2930_transaction() {
 
     let eoa_contract = IAccountDispatcher { contract_address: eoa };
 
-    set_chain_id(chain_id().into());
+    start_cheat_chain_id(eoa_contract.contract_address, chain_id().into());
     let mut vm = VMBuilderTrait::new_with_presets().build();
     let chain_id = vm.env.chain_id;
 
@@ -269,11 +277,12 @@ fn test___validate__eip_2930_transaction() {
         y_parity: true
     };
 
-    set_signature(
+    start_cheat_signature(
+        eoa_contract.contract_address,
         serialize_transaction_signature(signature, TransactionType::EIP2930, chain_id).span()
     );
 
-    set_contract_address(contract_address_const::<0>());
+    start_cheat_caller_address(eoa_contract.contract_address, contract_address_const::<0>());
 
     let call = Call {
         to: kakarot_core.contract_address,
@@ -294,7 +303,7 @@ fn test___validate__eip_1559_transaction() {
 
     let eoa_contract = IAccountDispatcher { contract_address: eoa };
 
-    set_chain_id(chain_id().into());
+    start_cheat_chain_id(eoa_contract.contract_address, chain_id().into());
     let mut vm = VMBuilderTrait::new_with_presets().build();
     let chain_id = vm.env.chain_id;
 
@@ -307,11 +316,12 @@ fn test___validate__eip_1559_transaction() {
         y_parity: true
     };
 
-    set_signature(
+    start_cheat_signature(
+        eoa_contract.contract_address,
         serialize_transaction_signature(signature, TransactionType::EIP1559, chain_id).span()
     );
 
-    set_contract_address(contract_address_const::<0>());
+    start_cheat_caller_address(eoa_contract.contract_address, contract_address_const::<0>());
 
     let call = Call {
         to: kakarot_core.contract_address,

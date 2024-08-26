@@ -11,9 +11,11 @@ utils = { path = "../utils" }
 contracts = { path = "../contracts" }
 openzeppelin = { path = "../openzeppelin" }
 garaga = { git = "https://github.com/keep-starknet-strange/garaga.git" }
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.28.0" }
 
 [tool]
 fmt.workspace = true
 
-[dev-dependencies]
-cairo_test = "2.7.1"
+[scripts]
+test = "snforge test --max-n-steps 4294967295"
+test-profiling = "snforge test --max-n-steps 4294967295 --build-profile"

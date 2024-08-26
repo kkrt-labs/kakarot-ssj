@@ -67,23 +67,40 @@ mod MockContractUpgradeableV1 {
     }
 }
 
-#[test]
-fn test_upgradeable_update_contract() {
-    let (contract_address, _) = deploy_syscall(
-        MockContractUpgradeableV0::TEST_CLASS_HASH.try_into().unwrap(), 0, [].span(), false
-    )
-        .unwrap();
+#[cfg(test)]
+mod tests {
+    use snforge_std::declare;
+    use super::{
+        IMockContractUpgradeableDispatcher, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
+        IMockContractUpgradeableDispatcherTrait
+    };
+    use starknet::{deploy_syscall, ClassHash};
 
-    let version = IMockContractUpgradeableDispatcher { contract_address: contract_address }
-        .version();
+    #[test]
+    fn test_upgradeable_update_contract() {
+        let mock_contract_upgradeable_v0_class_hash = declare("MockContractUpgradeableV0")
+            .unwrap()
+            .class_hash;
+        let (contract_address, _) = deploy_syscall(
+            mock_contract_upgradeable_v0_class_hash, 0, [].span(), false
+        )
+            .unwrap();
 
-    assert(version == 0, 'version is not 0');
+        let version = IMockContractUpgradeableDispatcher { contract_address: contract_address }
+            .version();
 
-    let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
+        assert(version == 0, 'version is not 0');
 
-    IUpgradeableDispatcher { contract_address: contract_address }.upgrade_contract(new_class_hash);
+        let mock_contract_upgradeable_v1_class_hash = declare("MockContractUpgradeableV1")
+            .unwrap()
+            .class_hash;
+        let new_class_hash: ClassHash = mock_contract_upgradeable_v1_class_hash;
 
-    let version = IMockContractUpgradeableDispatcher { contract_address: contract_address }
-        .version();
-    assert(version == 1, 'version is not 1');
+        IUpgradeableDispatcher { contract_address: contract_address }
+            .upgrade_contract(new_class_hash);
+
+        let version = IMockContractUpgradeableDispatcher { contract_address: contract_address }
+            .version();
+        assert(version == 1, 'version is not 1');
+    }
 }

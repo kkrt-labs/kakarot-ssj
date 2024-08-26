@@ -1,6 +1,4 @@
-use contracts::account_contract::{
-    IAccountDispatcher, IAccountDispatcherTrait, AccountContract::TEST_CLASS_HASH
-};
+use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::interface::{
     IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
@@ -8,9 +6,12 @@ use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
 };
 use contracts::test_data::{deploy_counter_calldata, counter_evm_bytecode};
-use contracts::test_utils as contract_utils;
+use contracts::{
+    test_utils as contract_utils, test_utils::ITestClassRegistryDispatcher,
+    test_utils::ITestClassRegistryDispatcherTrait
+};
 use contracts::uninitialized_account::UninitializedAccount;
-use contracts_tests::test_upgradeable::{
+use contracts::test_utils::test_upgradeable::{
     MockContractUpgradeableV1, IMockContractUpgradeableDispatcher,
     IMockContractUpgradeableDispatcherTrait
 };
@@ -25,6 +26,11 @@ use evm::test_utils::{sequencer_evm_address, chain_id};
 use evm::test_utils;
 use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, LegacyTransaction};
 use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
+use snforge_std::{
+    declare, start_cheat_caller_address, stop_cheat_caller_address, start_cheat_signature,
+    stop_cheat_signature, start_cheat_chain_id, stop_cheat_chain_id, start_cheat_transaction_hash,
+    stop_cheat_transaction_hash
+};
 
 #[test]
 fn test_kakarot_core_owner() {
@@ -38,7 +44,7 @@ fn test_kakarot_core_transfer_ownership() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     assert(kakarot_core.owner() == test_utils::other_starknet_address(), 'wrong owner');
-    testing::set_contract_address(test_utils::other_starknet_address());
+    start_cheat_caller_address(kakarot_core.contract_address, test_utils::other_starknet_address());
     kakarot_core.transfer_ownership(test_utils::starknet_address());
     assert(kakarot_core.owner() == test_utils::starknet_address(), 'wrong owner')
 }
@@ -48,7 +54,7 @@ fn test_kakarot_core_renounce_ownership() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
     assert(kakarot_core.owner() == test_utils::other_starknet_address(), 'wrong owner');
-    testing::set_contract_address(test_utils::other_starknet_address());
+    start_cheat_caller_address(kakarot_core.contract_address, test_utils::other_starknet_address());
     kakarot_core.renounce_ownership();
     assert(kakarot_core.owner() == contract_address_const::<0x00>(), 'wrong owner')
 }
@@ -66,7 +72,7 @@ fn test_kakarot_core_set_native_token() {
 
     assert(kakarot_core.get_native_token() == native_token.contract_address, 'wrong native_token');
 
-    testing::set_contract_address(test_utils::other_starknet_address());
+    start_cheat_caller_address(kakarot_core.contract_address, test_utils::other_starknet_address());
     kakarot_core.set_native_token(contract_address_const::<0xdead>());
     assert(
         kakarot_core.get_native_token() == contract_address_const::<0xdead>(),
@@ -128,9 +134,9 @@ fn test_kakarot_core_compute_starknet_address() {
 fn test_kakarot_core_upgrade_contract() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
-    let class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
+    let class_hash: ClassHash = declare("MockContractUpgradeableV1").unwrap().class_hash;
 
-    testing::set_contract_address(test_utils::other_starknet_address());
+    start_cheat_caller_address(kakarot_core.contract_address, test_utils::other_starknet_address());
     kakarot_core.upgrade(class_hash);
 
     let version = IMockContractUpgradeableDispatcher {
@@ -176,7 +182,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
     let data_increment_counter = [0x37, 0x13, 0x03, 0xc0].span();
 
     // When
-    testing::set_contract_address(eoa);
+    start_cheat_caller_address(kakarot_core.contract_address, eoa);
 
     let tx = LegacyTransaction {
         chain_id: chain_id(),
@@ -305,7 +311,7 @@ fn test_eth_send_transaction_deploy_tx() {
         gas_limit,
         calldata: deploy_counter_calldata()
     };
-    testing::set_contract_address(eoa);
+    start_cheat_caller_address(kakarot_core.contract_address, eoa);
     let (_, deploy_result) = kakarot_core
         .eth_send_transaction(EthereumTransaction::LegacyTransaction(tx));
 
@@ -346,15 +352,15 @@ fn test_eth_send_transaction_deploy_tx() {
 #[test]
 fn test_account_class_hash() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let class_registry = contract_utils::class_registry();
+    let uninitialized_account_class_hash = class_registry.get_class_hash("UninitializedAccount");
 
     let class_hash = kakarot_core.uninitialized_account_class_hash();
 
-    assert(
-        class_hash == UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap(), 'wrong class hash'
-    );
+    assert(class_hash == uninitialized_account_class_hash, 'wrong class hash');
 
-    let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
-    testing::set_contract_address(test_utils::other_starknet_address());
+    let new_class_hash: ClassHash = declare("MockContractUpgradeableV1").unwrap().class_hash;
+    start_cheat_caller_address(kakarot_core.contract_address, test_utils::other_starknet_address());
     kakarot_core.set_account_class_hash(new_class_hash);
 
     assert(kakarot_core.uninitialized_account_class_hash() == new_class_hash, 'wrong class hash');
@@ -372,12 +378,14 @@ fn test_account_class_hash() {
 fn test_account_contract_class_hash() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
+    let class_registry = contract_utils::class_registry();
+    let account_contract_class_hash = class_registry.get_class_hash("AccountContract");
     let class_hash = kakarot_core.get_account_contract_class_hash();
 
-    assert(class_hash == TEST_CLASS_HASH.try_into().unwrap(), 'wrong class hash');
+    assert(class_hash == account_contract_class_hash, 'wrong class hash');
 
-    let new_class_hash: ClassHash = MockContractUpgradeableV1::TEST_CLASS_HASH.try_into().unwrap();
-    testing::set_contract_address(test_utils::other_starknet_address());
+    let new_class_hash: ClassHash = declare("MockContractUpgradeableV1").unwrap().class_hash;
+    start_cheat_caller_address(kakarot_core.contract_address, test_utils::other_starknet_address());
     kakarot_core.set_account_contract_class_hash(new_class_hash);
 
     assert(kakarot_core.get_account_contract_class_hash() == new_class_hash, 'wrong class hash');

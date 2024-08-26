@@ -9,10 +9,10 @@ mod kakarot_core;
 
 mod storage;
 
-#[cfg(target: 'test')]
+// #[cfg(target: 'test')]
 mod test_data;
 
-#[cfg(target: 'test')]
+// #[cfg(target: 'test')]
 mod test_utils;
 
 // Account transparent proxy
