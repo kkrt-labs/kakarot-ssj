@@ -113,6 +113,10 @@ struct State {
     events: Array<Event>,
     /// Pending transfers
     transfers: Array<Transfer>,
+    /// Account transient storage states. `EthAddress` indicates the target contract,
+    /// `u256` indicates the storage key.
+    /// `u256` indicates the value stored.
+    transient_account_storage: StateChangeLog<(EthAddress, u256, u256)>,
 }
 
 #[generate_trait]
@@ -184,12 +188,29 @@ impl StateImpl of StateTrait {
         Result::Ok(())
     }
 
+    #[inline(always)]
+    fn read_transient_storage(ref self: State, evm_address: EthAddress, key: u256) -> u256 {
+        let internal_key = compute_state_key(evm_address, key);
+        let maybe_entry = self.transient_account_storage.read(internal_key);
+        match maybe_entry {
+            Option::Some((_, _, value)) => { return value; },
+            Option::None => { return 0; }
+        }
+    }
+
+    #[inline(always)]
+    fn write_transient_storage(ref self: State, evm_address: EthAddress, key: u256, value: u256) {
+        let internal_key = compute_state_key(evm_address, key);
+        self.transient_account_storage.write(internal_key.into(), (evm_address, key, value));
+    }
+
     fn clone(ref self: State) -> State {
         State {
             accounts: self.accounts.clone(),
             accounts_storage: self.accounts_storage.clone(),
             events: self.events.clone(),
             transfers: self.transfers.clone(),
+            transient_account_storage: self.transient_account_storage.clone(),
         }
     }
 
@@ -574,7 +595,6 @@ mod tests {
             assert(balance == read_balance, 'Balance mismatch');
         }
 
-
         #[test]
         fn test_read_balance_from_storage() {
             // Transfer native tokens to sender
@@ -591,6 +611,19 @@ mod tests {
             let read_balance = state.get_account(evm_address).balance();
 
             assert(read_balance == 10000, 'Balance mismatch');
+        }
+
+        #[test]
+        fn test_write_read_transient_storage() {
+            let mut state: State = Default::default();
+            let evm_address: EthAddress = test_utils::evm_address();
+            let key = 10;
+            let value = 100;
+
+            state.write_transient_storage(evm_address, key, value);
+            let read_value = state.read_transient_storage(evm_address, key);
+
+            assert(value == read_value, 'Transient storage mismatch');
         }
     }
 }
