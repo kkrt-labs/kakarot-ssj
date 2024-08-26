@@ -5,18 +5,18 @@ use contracts::kakarot_core::interface::{
 use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore, KakarotCore::{KakarotCoreInternal},
 };
-use contracts::test_data::{deploy_counter_calldata, counter_evm_bytecode};
-use contracts::{
-    test_utils as contract_utils, test_utils::ITestClassRegistryDispatcher,
-    test_utils::ITestClassRegistryDispatcherTrait
-};
-use contracts::uninitialized_account::UninitializedAccount;
-use contracts::test_utils::test_upgradeable::{
+use contracts::test_contracts::test_upgradeable::{
     MockContractUpgradeableV1, IMockContractUpgradeableDispatcher,
     IMockContractUpgradeableDispatcherTrait
 };
+use contracts::test_data::{deploy_counter_calldata, counter_evm_bytecode};
+use contracts::uninitialized_account::UninitializedAccount;
+use contracts::{test_utils as contract_utils,};
+use core::fmt::{Debug, Formatter, Error};
 use core::num::traits::Zero;
+use core::ops::SnapshotDeref;
 use core::option::OptionTrait;
+use core::starknet::storage::StoragePathEntry;
 use core::starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};
 
 
@@ -24,13 +24,16 @@ use core::traits::TryInto;
 use evm::model::{Address};
 use evm::test_utils::{sequencer_evm_address, chain_id};
 use evm::test_utils;
+use snforge_std::{
+    declare, DeclareResultTrait, start_cheat_caller_address, stop_cheat_caller_address,
+    start_cheat_signature, stop_cheat_signature, start_cheat_chain_id, stop_cheat_chain_id,
+    start_cheat_transaction_hash, stop_cheat_transaction_hash, spy_events, Event, EventSpyTrait,
+    test_address, cheat_caller_address, CheatSpan, store, load, EventSpyAssertionsTrait
+};
+use snforge_utils::{EventsFilterBuilderTrait, ContractEvents, ContractEventsTrait};
+use starknet::storage::StorageTrait;
 use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, LegacyTransaction};
 use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
-use snforge_std::{
-    declare, start_cheat_caller_address, stop_cheat_caller_address, start_cheat_signature,
-    stop_cheat_signature, start_cheat_chain_id, stop_cheat_chain_id, start_cheat_transaction_hash,
-    stop_cheat_transaction_hash
-};
 
 #[test]
 fn test_kakarot_core_owner() {
@@ -83,14 +86,19 @@ fn test_kakarot_core_set_native_token() {
 #[test]
 fn test_kakarot_core_deploy_eoa() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let mut spy = spy_events();
     let eoa_starknet_address = kakarot_core
         .deploy_externally_owned_account(test_utils::evm_address());
 
-    let event = contract_utils::pop_log::<
-        KakarotCore::AccountDeployed
-    >(kakarot_core.contract_address)
-        .unwrap();
-    assert_eq!(event.starknet_address, eoa_starknet_address);
+    let expected = KakarotCore::Event::AccountDeployed(
+        KakarotCore::AccountDeployed {
+            evm_address: test_utils::evm_address(), starknet_address: eoa_starknet_address
+        }
+    );
+    let contract_events = EventsFilterBuilderTrait::from_events(@spy.get_events())
+        .with_contract_address(kakarot_core.contract_address)
+        .build();
+    contract_events.assert_emitted(@expected);
 }
 
 #[test]
@@ -113,8 +121,18 @@ fn test_kakarot_core_eoa_mapping() {
 
     let another_sn_address: ContractAddress = 0xbeef.try_into().unwrap();
 
+    // Set the address registry to the another_sn_address
     let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
-    kakarot_state.set_address_registry(test_utils::evm_address(), another_sn_address);
+    let map_entry_address = kakarot_state
+        .snapshot_deref()
+        .storage()
+        .Kakarot_evm_to_starknet_address
+        .entry(test_utils::evm_address())
+        .deref()
+        .__storage_pointer_address__;
+    store(
+        kakarot_core.contract_address, map_entry_address.into(), [another_sn_address.into()].span()
+    );
 
     let address = kakarot_core.address_registry(test_utils::evm_address());
     assert_eq!(address, another_sn_address)
@@ -134,7 +152,10 @@ fn test_kakarot_core_compute_starknet_address() {
 fn test_kakarot_core_upgrade_contract() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
-    let class_hash: ClassHash = declare("MockContractUpgradeableV1").unwrap().class_hash;
+    let class_hash: ClassHash = (*declare("MockContractUpgradeableV1")
+        .unwrap()
+        .contract_class()
+        .class_hash);
 
     start_cheat_caller_address(kakarot_core.contract_address, test_utils::other_starknet_address());
     kakarot_core.upgrade(class_hash);
@@ -159,7 +180,7 @@ fn test_eth_send_transaction_non_deploy_tx() {
     );
 
     let counter_address = 'counter_contract'.try_into().unwrap();
-    contract_utils::deploy_contract_account(counter_address, counter_evm_bytecode());
+    contract_utils::deploy_contract_account(kakarot_core, counter_address, counter_evm_bytecode());
 
     let gas_limit = test_utils::tx_gas_limit();
     let gas_price = test_utils::gas_price();
@@ -224,9 +245,12 @@ fn test_eth_call() {
     kakarot_core.deploy_externally_owned_account(evm_address);
 
     let account = contract_utils::deploy_contract_account(
-        test_utils::other_evm_address(), counter_evm_bytecode()
+        kakarot_core, test_utils::other_evm_address(), counter_evm_bytecode()
     );
     let counter = IAccountDispatcher { contract_address: account.starknet };
+    cheat_caller_address(
+        counter.contract_address, kakarot_core.contract_address, CheatSpan::TargetCalls(1)
+    );
     counter.write_storage(0, 1);
 
     let to = Option::Some(test_utils::other_evm_address());
@@ -256,7 +280,7 @@ fn test_process_transaction() {
     let chain_id = chain_id();
 
     let _account = contract_utils::deploy_contract_account(
-        test_utils::other_evm_address(), counter_evm_bytecode()
+        kakarot_core, test_utils::other_evm_address(), counter_evm_bytecode()
     );
 
     let nonce = 0;
@@ -274,6 +298,10 @@ fn test_process_transaction() {
     );
 
     // When
+    let test_address: ContractAddress = test_address();
+    start_cheat_caller_address(test_address, eoa);
+    //TODO(sn-foundry): fix this that fails because the local state doesnt have the correct
+    //addresses/classes
     let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
     let result = kakarot_core
         .process_transaction(origin: Address { evm: evm_address, starknet: eoa }, :tx);
@@ -352,49 +380,63 @@ fn test_eth_send_transaction_deploy_tx() {
 #[test]
 fn test_account_class_hash() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    let class_registry = contract_utils::class_registry();
-    let uninitialized_account_class_hash = class_registry.get_class_hash("UninitializedAccount");
+    let uninitialized_account_class_hash = declare("UninitializedAccount")
+        .unwrap()
+        .contract_class()
+        .class_hash;
 
     let class_hash = kakarot_core.uninitialized_account_class_hash();
 
-    assert(class_hash == uninitialized_account_class_hash, 'wrong class hash');
+    assert(class_hash == *uninitialized_account_class_hash, 'wrong class hash');
 
-    let new_class_hash: ClassHash = declare("MockContractUpgradeableV1").unwrap().class_hash;
+    let new_class_hash: ClassHash = (*declare("MockContractUpgradeableV1")
+        .unwrap()
+        .contract_class()
+        .class_hash);
     start_cheat_caller_address(kakarot_core.contract_address, test_utils::other_starknet_address());
+    let mut spy = spy_events();
     kakarot_core.set_account_class_hash(new_class_hash);
 
     assert(kakarot_core.uninitialized_account_class_hash() == new_class_hash, 'wrong class hash');
-    let event = contract_utils::pop_log::<
-        KakarotCore::AccountClassHashChange
-    >(kakarot_core.contract_address)
-        .unwrap();
-    assert(event.old_class_hash == class_hash, 'wrong old hash');
-    assert(
-        event.new_class_hash == kakarot_core.uninitialized_account_class_hash(), 'wrong new hash'
+    let expected = KakarotCore::Event::AccountClassHashChange(
+        KakarotCore::AccountClassHashChange {
+            old_class_hash: class_hash, new_class_hash: new_class_hash
+        }
     );
+    let contract_events = EventsFilterBuilderTrait::from_events(@spy.get_events())
+        .with_contract_address(kakarot_core.contract_address)
+        .build();
+    contract_events.assert_emitted(@expected);
 }
 
 #[test]
 fn test_account_contract_class_hash() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
-    let class_registry = contract_utils::class_registry();
-    let account_contract_class_hash = class_registry.get_class_hash("AccountContract");
+    let account_contract_class_hash = (*declare("AccountContract")
+        .unwrap()
+        .contract_class()
+        .class_hash);
     let class_hash = kakarot_core.get_account_contract_class_hash();
 
     assert(class_hash == account_contract_class_hash, 'wrong class hash');
 
-    let new_class_hash: ClassHash = declare("MockContractUpgradeableV1").unwrap().class_hash;
+    let new_class_hash: ClassHash = (*declare("MockContractUpgradeableV1")
+        .unwrap()
+        .contract_class()
+        .class_hash);
     start_cheat_caller_address(kakarot_core.contract_address, test_utils::other_starknet_address());
+    let mut spy = spy_events();
     kakarot_core.set_account_contract_class_hash(new_class_hash);
-
     assert(kakarot_core.get_account_contract_class_hash() == new_class_hash, 'wrong class hash');
-    let event = contract_utils::pop_log::<
-        KakarotCore::EOAClassHashChange
-    >(kakarot_core.contract_address)
-        .unwrap();
-    assert(event.old_class_hash == class_hash, 'wrong old hash');
-    assert(
-        event.new_class_hash == kakarot_core.get_account_contract_class_hash(), 'wrong new hash'
+
+    let expected = KakarotCore::Event::EOAClassHashChange(
+        KakarotCore::EOAClassHashChange {
+            old_class_hash: class_hash, new_class_hash: new_class_hash
+        }
     );
+    let contract_events = EventsFilterBuilderTrait::from_events(@spy.get_events())
+        .with_contract_address(kakarot_core.contract_address)
+        .build();
+    contract_events.assert_emitted(@expected);
 }

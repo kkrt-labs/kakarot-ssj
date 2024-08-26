@@ -78,7 +78,7 @@ pub mod KakarotCore {
         EOAClassHashChange: EOAClassHashChange,
     }
 
-    #[derive(Drop, starknet::Event)]
+    #[derive(Copy, Drop, starknet::Event)]
     struct AccountDeployed {
         #[key]
         evm_address: EthAddress,
@@ -86,14 +86,14 @@ pub mod KakarotCore {
         starknet_address: ContractAddress,
     }
 
-    #[derive(Drop, starknet::Event)]
+    #[derive(Copy, Drop, starknet::Event)]
     struct AccountClassHashChange {
         old_class_hash: ClassHash,
         new_class_hash: ClassHash,
     }
 
 
-    #[derive(Drop, starknet::Event)]
+    #[derive(Copy, Drop, starknet::Event)]
     struct EOAClassHashChange {
         old_class_hash: ClassHash,
         new_class_hash: ClassHash,

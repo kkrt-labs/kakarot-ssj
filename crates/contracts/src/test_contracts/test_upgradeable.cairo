@@ -1,7 +1,6 @@
 use MockContractUpgradeableV0::HasComponentImpl_upgradeable_component;
 use contracts::components::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use contracts::components::upgradeable::{upgradeable_component};
-use contracts::test_utils;
 use core::serde::Serde;
 use core::starknet::{deploy_syscall, ClassHash, ContractAddress, testing};
 
@@ -69,18 +68,19 @@ mod MockContractUpgradeableV1 {
 
 #[cfg(test)]
 mod tests {
-    use snforge_std::declare;
+    use snforge_std::{declare, DeclareResultTrait};
+    use starknet::{deploy_syscall, ClassHash};
     use super::{
         IMockContractUpgradeableDispatcher, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
         IMockContractUpgradeableDispatcherTrait
     };
-    use starknet::{deploy_syscall, ClassHash};
 
     #[test]
     fn test_upgradeable_update_contract() {
-        let mock_contract_upgradeable_v0_class_hash = declare("MockContractUpgradeableV0")
+        let mock_contract_upgradeable_v0_class_hash = (*declare("MockContractUpgradeableV0")
             .unwrap()
-            .class_hash;
+            .contract_class()
+            .class_hash);
         let (contract_address, _) = deploy_syscall(
             mock_contract_upgradeable_v0_class_hash, 0, [].span(), false
         )
@@ -91,9 +91,10 @@ mod tests {
 
         assert(version == 0, 'version is not 0');
 
-        let mock_contract_upgradeable_v1_class_hash = declare("MockContractUpgradeableV1")
+        let mock_contract_upgradeable_v1_class_hash = (*declare("MockContractUpgradeableV1")
             .unwrap()
-            .class_hash;
+            .contract_class()
+            .class_hash);
         let new_class_hash: ClassHash = mock_contract_upgradeable_v1_class_hash;
 
         IUpgradeableDispatcher { contract_address: contract_address }

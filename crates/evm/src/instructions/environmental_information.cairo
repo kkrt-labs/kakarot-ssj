@@ -324,7 +324,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 mod tests {
     use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore};
     use contracts::test_data::counter_evm_bytecode;
-    use contracts::test_utils::{
+    use contracts_tests::test_utils::{
         setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
     };
     use core::num::traits::CheckedAdd;
@@ -417,7 +417,7 @@ mod tests {
     fn test_exec_balance_contract_account() {
         // Given
         let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let mut ca_address = deploy_contract_account(evm_address(), [].span());
+        let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
 
         fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
 
@@ -1235,10 +1235,10 @@ mod tests {
     //     let evm_address = evm_address();
     //     let mut vm = VMBuilderTrait::new_with_presets().build();
 
-    //     setup_contracts_for_testing();
+    //     let (_, kakarot_core) = setup_contracts_for_testing();
 
     //     // The bytecode remains empty, and we expect the empty hash in return
-    //     let mut ca_address = deploy_contract_account(evm_address, [].span());
+    //     let mut ca_address = deploy_contract_account(kakarot_core,evm_address, [].span());
     //     let account = Account {
     //
     //         address: ca_address,

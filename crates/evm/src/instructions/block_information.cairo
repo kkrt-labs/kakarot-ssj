@@ -134,7 +134,7 @@ mod tests {
         IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
     };
 
-    use contracts::test_utils::{
+    use contracts_tests::test_utils::{
         setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account,
     };
     use core::result::ResultTrait;
@@ -293,7 +293,7 @@ mod tests {
     fn test_exec_selfbalance_contract_account() {
         // Given
         let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let mut ca_address = deploy_contract_account(evm_address(), [].span());
+        let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
 
         fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
         let mut vm = VMBuilderTrait::new_with_presets().build();

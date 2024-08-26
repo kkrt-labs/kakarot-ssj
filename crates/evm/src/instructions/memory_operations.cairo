@@ -276,7 +276,7 @@ impl MemoryOperation of MemoryOperationTrait {
 #[cfg(test)]
 mod tests {
     use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-    use contracts::test_utils::{setup_contracts_for_testing, deploy_contract_account};
+    use contracts_tests::test_utils::{setup_contracts_for_testing, deploy_contract_account};
     use core::cmp::max;
     use core::num::traits::Bounded;
     use core::result::ResultTrait;
@@ -790,9 +790,11 @@ mod tests {
     #[test]
     fn test_exec_sload_from_storage() {
         // Given
-        setup_contracts_for_testing();
+        let (_, kakarot_core) = setup_contracts_for_testing();
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        let mut ca_address = deploy_contract_account(vm.message().target.evm, [].span());
+        let mut ca_address = deploy_contract_account(
+            kakarot_core, vm.message().target.evm, [].span()
+        );
         let account = Account {
             address: ca_address, code: [
                 0xab, 0xcd, 0xef
@@ -817,9 +819,11 @@ mod tests {
     #[test]
     fn test_exec_sstore_from_state() {
         // Given
-        setup_contracts_for_testing();
+        let (_, kakarot_core) = setup_contracts_for_testing();
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        deploy_contract_account(vm.message().target.evm, [].span());
+        let mut ca_address = deploy_contract_account(
+            kakarot_core, vm.message().target.evm, [].span()
+        );
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
         vm.stack.push(value).expect('push failed');

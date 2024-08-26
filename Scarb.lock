@@ -15,6 +15,7 @@ dependencies = [
  "evm",
  "openzeppelin",
  "snforge_std",
+ "snforge_utils",
  "utils",
 ]
 
@@ -52,6 +53,13 @@ version = "0.28.0"
 source = "git+https://github.com/foundry-rs/starknet-foundry.git?tag=v0.28.0#4dfe39d96690ed6b3d56971512700de3f58288ea"
 dependencies = [
  "snforge_scarb_plugin",
+]
+
+[[package]]
+name = "snforge_utils"
+version = "0.1.0"
+dependencies = [
+ "snforge_std",
 ]
 
 [[package]]

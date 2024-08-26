@@ -23,7 +23,7 @@ impl Identity of Precompile {
 
 #[cfg(test)]
 mod tests {
-    use contracts::test_utils::{setup_contracts_for_testing};
+    use contracts_tests::test_utils::{setup_contracts_for_testing};
     use core::clone::Clone;
     use core::result::ResultTrait;
     use core::starknet::testing::set_contract_address;

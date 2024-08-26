@@ -4,27 +4,22 @@ use contracts::kakarot_core::{
     IKakarotCore, KakarotCore, KakarotCore::KakarotCoreInternal,
     interface::IExtendedKakarotCoreDispatcherTrait
 };
-use contracts::test_data::{counter_evm_bytecode, eip_2930_rlp_encoded_counter_inc_tx,};
-use contracts::test_utils::{
-    setup_contracts_for_testing, deploy_eoa, deploy_contract_account, pop_log, pop_log_debug,
-    fund_account_with_native_token, call_transaction
-};
-use contracts::test_utils::test_upgradeable::{
+use contracts::test_contracts::test_upgradeable::{
     IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait,
     MockContractUpgradeableV1
+};
+use contracts::test_data::{counter_evm_bytecode, eip_2930_rlp_encoded_counter_inc_tx,};
+use contracts_tests::test_utils::{
+    setup_contracts_for_testing, deploy_eoa, deploy_contract_account,
+    fund_account_with_native_token, call_transaction
 };
 use core::array::SpanTrait;
 use core::box::BoxTrait;
 use core::starknet::account::{Call};
 use core::starknet::class_hash::Felt252TryIntoClassHash;
-use snforge_std::{
-    start_cheat_caller_address, stop_cheat_caller_address, start_cheat_signature,
-    stop_cheat_signature, start_cheat_chain_id, stop_cheat_chain_id, start_cheat_transaction_hash,
-    stop_cheat_transaction_hash
-};
 use core::starknet::{
     deploy_syscall, ContractAddress, ClassHash, VALIDATED, get_contract_address,
-    contract_address_const, EthAddress, eth_signature::{Signature}, get_tx_info
+    contract_address_const, EthAddress, eth_signature::{Signature}, get_tx_info, Event
 };
 
 use evm::model::{Address, AddressTrait};
@@ -33,6 +28,13 @@ use evm::test_utils::{
     tx_gas_limit, gas_price, VMBuilderTrait
 };
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
+use snforge_std::{
+    start_cheat_caller_address, stop_cheat_caller_address, start_cheat_signature,
+    stop_cheat_signature, start_cheat_chain_id, stop_cheat_chain_id, start_cheat_transaction_hash,
+    stop_cheat_transaction_hash, spy_events, EventSpyTrait, EventsFilterTrait, CheatSpan,
+    cheat_caller_address
+};
+use snforge_utils::{ContractEvents, ContractEventsTrait, EventsFilterBuilderTrait};
 use utils::eth_transaction::{
     TransactionType, EthereumTransaction, EthereumTransactionTrait, LegacyTransaction
 };
@@ -44,9 +46,9 @@ use utils::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_enco
 #[test]
 fn test_get_evm_address() {
     let expected_address: EthAddress = eoa_address();
-    setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
 
-    let eoa_contract = deploy_eoa(eoa_address());
+    let eoa_contract = deploy_eoa(kakarot_core, eoa_address());
 
     assert(eoa_contract.get_evm_address() == expected_address, 'wrong evm_address');
 }
@@ -58,13 +60,11 @@ fn test___execute__a() {
 
     let evm_address = evm_address();
     let eoa = kakarot_core.deploy_externally_owned_account(evm_address);
-    // pop ownership transfer event
-    core::starknet::testing::pop_log_raw(eoa).unwrap();
     fund_account_with_native_token(eoa, native_token, 0xfffffffffffffffffffffffffff);
 
     let kakarot_address = kakarot_core.contract_address;
 
-    deploy_contract_account(other_evm_address(), counter_evm_bytecode());
+    deploy_contract_account(kakarot_core, other_evm_address(), counter_evm_bytecode());
 
     start_cheat_caller_address(kakarot_address, eoa);
     let eoa_contract = IAccountDispatcher { contract_address: eoa };
@@ -91,16 +91,41 @@ fn test___execute__a() {
     };
 
     start_cheat_transaction_hash(eoa, selector!("transaction_hash"));
-    start_cheat_caller_address(eoa, contract_address_const::<0>());
+    cheat_caller_address(eoa, contract_address_const::<0>(), CheatSpan::TargetCalls(1));
+    let mut spy = spy_events();
     let result = eoa_contract.__execute__(array![call]);
     assert_eq!(result.len(), 1);
 
-    let event = pop_log_debug::<TransactionExecuted>(eoa).unwrap();
+    let expected_event = AccountContract::Event::transaction_executed(
+        AccountContract::TransactionExecuted {
+            response: *result.span()[0], success: true, gas_used: 0
+        }
+    );
+    let mut keys = array![];
+    let mut data = array![];
+    expected_event.append_keys_and_data(ref keys, ref data);
+    let mut contract_events = EventsFilterBuilderTrait::from_events(@spy.get_events())
+        .with_contract_address(eoa)
+        .with_keys(keys.span())
+        .build();
 
-    assert_eq!(event.response, *result.span()[0]);
-    assert_eq!(event.success, true);
-    assert_ne!(event.gas_used, 0);
-
+    let mut received_keys = contract_events.events[0].keys.span();
+    let mut received_data = contract_events.events[0].data.span();
+    let deserialized_received: AccountContract::Event = Event::deserialize(
+        ref received_keys, ref received_data
+    )
+        .unwrap();
+    if let AccountContract::Event::transaction_executed(transaction_executed) =
+        deserialized_received {
+        let expected_response = *result.span()[0];
+        let expected_success = true;
+        let not_expected_gas_used = 0;
+        assert_eq!(transaction_executed.response, expected_response);
+        assert_eq!(transaction_executed.success, expected_success);
+        assert_eq!(transaction_executed.gas_used, not_expected_gas_used);
+    } else {
+        panic!("Expected transaction_executed event");
+    }
     // check counter value has increased
     let tx = call_transaction(chain_id(), Option::Some(other_evm_address()), data_get_tx);
     let (_, return_data) = kakarot_core
@@ -109,19 +134,21 @@ fn test___execute__a() {
 }
 
 #[test]
-#[should_panic(expected: ('EOA: multicall not supported', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'EOA: multicall not supported')]
 fn test___execute___should_fail_with_zero_calls() {
-    setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
 
-    let eoa_contract = deploy_eoa(eoa_address());
+    let eoa_contract = deploy_eoa(kakarot_core, eoa_address());
     let eoa_contract = IAccountDispatcher { contract_address: eoa_contract.contract_address };
 
-    start_cheat_caller_address(eoa_contract.contract_address, contract_address_const::<0>());
+    cheat_caller_address(
+        eoa_contract.contract_address, contract_address_const::<0>(), CheatSpan::TargetCalls(1)
+    );
     eoa_contract.__execute__(array![]);
 }
 
 #[test]
-#[should_panic(expected: ('EOA: reentrant call', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'EOA: reentrant call')]
 fn test___validate__fail__caller_not_0() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let evm_address = evm_address();
@@ -131,12 +158,21 @@ fn test___validate__fail__caller_not_0() {
 
     start_cheat_caller_address(eoa_contract.contract_address, other_starknet_address());
 
-    let calls = array![];
+    let calls = array![
+        Call {
+            to: kakarot_core.contract_address,
+            selector: selector!("eth_send_transaction"),
+            calldata: [].span()
+        }
+    ];
+    cheat_caller_address(
+        eoa_contract.contract_address, contract_address_const::<1>(), CheatSpan::TargetCalls(1)
+    );
     eoa_contract.__validate__(calls);
 }
 
 #[test]
-#[should_panic(expected: ('EOA: multicall not supported', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'EOA: multicall not supported')]
 fn test___validate__fail__call_data_len_not_1() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let evm_address = evm_address();
@@ -144,14 +180,15 @@ fn test___validate__fail__call_data_len_not_1() {
     fund_account_with_native_token(eoa, native_token, 0xfffffffffffffffffffffffffff);
     let eoa_contract = IAccountDispatcher { contract_address: eoa };
 
-    start_cheat_caller_address(eoa_contract.contract_address, contract_address_const::<0>());
-
     let calls = array![];
+    cheat_caller_address(
+        eoa_contract.contract_address, contract_address_const::<0>(), CheatSpan::TargetCalls(1)
+    );
     eoa_contract.__validate__(calls);
 }
 
 #[test]
-#[should_panic(expected: ('to is not kakarot core', 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: 'to is not kakarot core')]
 fn test___validate__fail__to_address_not_kakarot_core() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let evm_address = evm_address();
@@ -172,19 +209,20 @@ fn test___validate__fail__to_address_not_kakarot_core() {
         serialize_transaction_signature(signature, TransactionType::Legacy, 1).span()
     );
 
-    start_cheat_caller_address(eoa_contract.contract_address, contract_address_const::<0>());
-
     let call = Call {
         to: other_starknet_address(),
         selector: selector!("eth_send_transaction"),
         calldata: [].span()
     };
 
+    cheat_caller_address(
+        eoa_contract.contract_address, contract_address_const::<0>(), CheatSpan::TargetCalls(1)
+    );
     eoa_contract.__validate__(array![call]);
 }
 
 #[test]
-#[should_panic(expected: ("Validate: selector must be eth_send_transaction", 'ENTRYPOINT_FAILED'))]
+#[should_panic(expected: "Validate: selector must be eth_send_transaction")]
 fn test___validate__fail__selector_not_eth_send_transaction() {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
     let evm_address = evm_address();
@@ -214,6 +252,9 @@ fn test___validate__fail__selector_not_eth_send_transaction() {
         to: kakarot_core.contract_address, selector: selector!("eth_call"), calldata: [].span()
     };
 
+    cheat_caller_address(
+        eoa_contract.contract_address, contract_address_const::<0>(), CheatSpan::TargetCalls(1)
+    );
     eoa_contract.__validate__(array![call]);
 }
 
@@ -243,14 +284,15 @@ fn test___validate__legacy_transaction() {
         serialize_transaction_signature(signature, TransactionType::Legacy, chain_id).span()
     );
 
-    start_cheat_caller_address(eoa_contract.contract_address, contract_address_const::<0>());
-
     let call = Call {
         to: kakarot_core.contract_address,
         selector: selector!("eth_send_transaction"),
         calldata: serialize_bytes(legacy_rlp_encoded_tx()).span()
     };
 
+    cheat_caller_address(
+        eoa_contract.contract_address, contract_address_const::<0>(), CheatSpan::TargetCalls(1)
+    );
     let result = eoa_contract.__validate__(array![call]);
     assert(result == VALIDATED, 'validation failed');
 }
@@ -282,14 +324,15 @@ fn test___validate__eip_2930_transaction() {
         serialize_transaction_signature(signature, TransactionType::EIP2930, chain_id).span()
     );
 
-    start_cheat_caller_address(eoa_contract.contract_address, contract_address_const::<0>());
-
     let call = Call {
         to: kakarot_core.contract_address,
         selector: selector!("eth_send_transaction"),
         calldata: serialize_bytes(eip_2930_encoded_tx()).span()
     };
 
+    cheat_caller_address(
+        eoa_contract.contract_address, contract_address_const::<0>(), CheatSpan::TargetCalls(1)
+    );
     let result = eoa_contract.__validate__(array![call]);
     assert(result == VALIDATED, 'validation failed');
 }
@@ -316,19 +359,19 @@ fn test___validate__eip_1559_transaction() {
         y_parity: true
     };
 
-    start_cheat_signature(
-        eoa_contract.contract_address,
-        serialize_transaction_signature(signature, TransactionType::EIP1559, chain_id).span()
-    );
-
-    start_cheat_caller_address(eoa_contract.contract_address, contract_address_const::<0>());
-
     let call = Call {
         to: kakarot_core.contract_address,
         selector: selector!("eth_send_transaction"),
         calldata: serialize_bytes(eip_1559_encoded_tx()).span()
     };
 
+    start_cheat_signature(
+        eoa_contract.contract_address,
+        serialize_transaction_signature(signature, TransactionType::EIP1559, chain_id).span()
+    );
+    cheat_caller_address(
+        eoa_contract.contract_address, contract_address_const::<0>(), CheatSpan::TargetCalls(1)
+    );
     let result = eoa_contract.__validate__(array![call]);
     assert(result == VALIDATED, 'validation failed');
 }

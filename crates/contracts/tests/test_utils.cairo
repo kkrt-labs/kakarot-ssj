@@ -26,6 +26,7 @@ use snforge_std::{
 use utils::constants::BLOCK_GAS_LIMIT;
 use utils::eth_transaction::LegacyTransaction;
 
+
 mod constants {
     use core::starknet::{EthAddress, testing, contract_address_const, ContractAddress};
     fn ZERO() -> ContractAddress {
@@ -64,27 +65,29 @@ fn deploy_native_token() -> IERC20CamelDispatcher {
 fn deploy_kakarot_core(
     native_token: ContractAddress, mut eoas: Span<EthAddress>
 ) -> IExtendedKakarotCoreDispatcher {
-    let account_contract_class_hash = *(declare("AccountContract")
+    let account_contract_class_hash = declare("AccountContract")
         .unwrap()
         .contract_class()
-        .class_hash);
-    let uninitialized_account_class_hash = *(declare("UninitializedAccount")
+        .class_hash;
+    let uninitialized_account_class_hash = declare("UninitializedAccount")
         .unwrap()
         .contract_class()
-        .class_hash);
+        .class_hash;
     let kakarot_core_class_hash = declare("KakarotCore").unwrap().contract_class().class_hash;
     let mut calldata: Array<felt252> = array![
         other_starknet_address().into(),
         native_token.into(),
-        account_contract_class_hash.into(),
-        uninitialized_account_class_hash.into(),
+        (*account_contract_class_hash).into(),
+        (*uninitialized_account_class_hash).into(),
         'coinbase',
         BLOCK_GAS_LIMIT.into(),
     ];
 
     Serde::serialize(@eoas, ref calldata);
 
-    let maybe_address = deploy_syscall((*kakarot_core_class_hash), 0, calldata.span(), false);
+    let maybe_address = deploy_syscall(
+        (*kakarot_core_class_hash).into(), 0, calldata.span(), false
+    );
 
     match maybe_address {
         Result::Ok((
@@ -112,6 +115,7 @@ fn deploy_eoa(
     let starknet_address = kakarot_core.deploy_externally_owned_account(evm_address);
     IAccountDispatcher { contract_address: starknet_address }
 }
+
 fn call_transaction(
     chain_id: u128, destination: Option<EthAddress>, calldata: Span<u8>
 ) -> LegacyTransaction {

@@ -68,7 +68,7 @@ impl P256Verify of Precompile {
 
 #[cfg(test)]
 mod tests {
-    use contracts::test_utils::setup_contracts_for_testing;
+    use contracts_tests::test_utils::setup_contracts_for_testing;
     use core::array::ArrayTrait;
     use evm::instructions::system_operations::SystemOperationsTrait;
     use evm::memory::InternalMemoryTrait;

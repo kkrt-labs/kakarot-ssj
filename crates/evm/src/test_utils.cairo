@@ -1,8 +1,8 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-use contracts::test_utils::{
-    deploy_contract_account, class_registry, ITestClassRegistryDispatcher,
-    ITestClassRegistryDispatcherTrait
+use contracts::kakarot_core::interface::{
+    IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
+use contracts::test_utils::{deploy_contract_account};
 use contracts::uninitialized_account::UninitializedAccount;
 use core::nullable::{match_nullable, FromNullableResult};
 use core::starknet::{
@@ -16,6 +16,7 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{Message, Environment, Address, Account, AccountTrait};
 use evm::state::State;
 use evm::{stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}};
+use snforge_std::{declare, DeclareResultTrait};
 use utils::constants;
 
 #[derive(Destruct)]
@@ -179,12 +180,14 @@ fn preset_message() -> Message {
     let code: Span<u8> = [0x00].span();
     let data: Span<u8> = [4, 5, 6].span();
     let value: u256 = callvalue();
-    let class_registry = class_registry();
-    let uninitialized_account_class_hash = class_registry.get_class_hash("UninitializedAccount");
+    let uninitialized_account_class_hash = declare("UninitializedAccount")
+        .unwrap()
+        .contract_class()
+        .class_hash;
     let caller = Address {
         evm: origin(),
         starknet: utils::helpers::compute_starknet_address(
-            get_contract_address(), origin(), uninitialized_account_class_hash
+            get_contract_address(), origin(), *uninitialized_account_class_hash
         )
     };
     let read_only = false;
@@ -247,9 +250,12 @@ fn preset_vm() -> VM {
 /// Initializes the contract account by setting the bytecode, the storage
 /// and incrementing the nonce to 1.
 fn initialize_contract_account(
-    eth_address: EthAddress, bytecode: Span<u8>, storage: Span<(u256, u256)>
+    kakarot_core: IExtendedKakarotCoreDispatcher,
+    eth_address: EthAddress,
+    bytecode: Span<u8>,
+    storage: Span<(u256, u256)>
 ) -> Result<Address, EVMError> {
-    let mut ca_address = deploy_contract_account(eth_address, bytecode);
+    let mut ca_address = deploy_contract_account(kakarot_core, eth_address, bytecode);
     // Set the storage of the contract account
     let account = Account {
         address: ca_address, code: [

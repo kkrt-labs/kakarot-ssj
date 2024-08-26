@@ -162,12 +162,11 @@ struct Transfer {
 mod tests {
     use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
-    use contracts::test_utils::{
+    use contracts_tests::test_utils::{
         setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
     };
     use core::starknet::EthAddress;
     use evm::backend::starknet_backend;
-    use snforge_std::{start_cheat_contract_address, stop_cheat_contract_address};
     use evm::model::account::AccountTrait;
 
     use evm::model::{Address, Account, AddressTrait};
@@ -175,6 +174,7 @@ mod tests {
     use evm::state::{State, StateChangeLog, StateChangeLogTrait};
     use evm::test_utils::{evm_address};
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
+    use snforge_std::{start_cheat_contract_address, stop_cheat_contract_address};
 
     #[test]
     fn test_is_deployed_eoa_exists() {
@@ -313,8 +313,8 @@ mod tests {
     #[test]
     fn test_account_balance_contract_account() {
         // Given
-        let (native_token, _) = setup_contracts_for_testing();
-        let mut ca_address = deploy_contract_account(evm_address(), [].span());
+        let (native_token, kakarot_core) = setup_contracts_for_testing();
+        let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
 
         fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
 
@@ -328,8 +328,8 @@ mod tests {
 
     #[test]
     fn test_account_commit_already_deployed_should_not_change_code() {
-        setup_contracts_for_testing();
-        let mut ca_address = deploy_contract_account(evm_address(), [].span());
+        let (_, kakarot_core) = setup_contracts_for_testing();
+        let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
 
         let mut state: State = Default::default();
 
@@ -350,8 +350,8 @@ mod tests {
 
     #[test]
     fn test_account_commit_created_but_already_deployed() {
-        setup_contracts_for_testing();
-        let mut ca_address = deploy_contract_account(evm_address(), [].span());
+        let (_, kakarot_core) = setup_contracts_for_testing();
+        let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
 
         // When created in this same tx, the account should have a new code.
 
@@ -398,8 +398,8 @@ mod tests {
     #[test]
     fn test_address_balance_contract_account() {
         // Given
-        let (native_token, _) = setup_contracts_for_testing();
-        let mut ca_address = deploy_contract_account(evm_address(), [].span());
+        let (native_token, kakarot_core) = setup_contracts_for_testing();
+        let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
 
         fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
 

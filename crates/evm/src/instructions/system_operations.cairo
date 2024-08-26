@@ -406,7 +406,7 @@ impl SystemOperations of SystemOperationsTrait {
 mod tests {
     use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
     use contracts::test_data::{storage_evm_bytecode, storage_evm_initcode};
-    use contracts::test_utils::{
+    use contracts_tests::test_utils::{
         fund_account_with_native_token, setup_contracts_for_testing, deploy_contract_account,
         deploy_eoa
     };
@@ -536,7 +536,7 @@ mod tests {
             0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
         ].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, [].span())
+        initialize_contract_account(kakarot_core, eth_address, deployed_bytecode, [].span())
             .expect('set code failed');
 
         // When
@@ -590,7 +590,7 @@ mod tests {
         // (+ 0x1 0x1)
         let deployed_bytecode = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, [].span())
+        initialize_contract_account(kakarot_core, eth_address, deployed_bytecode, [].span())
             .expect('set code failed');
 
         // When
@@ -643,7 +643,7 @@ mod tests {
             0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
         ].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, [].span())
+        initialize_contract_account(kakarot_core, eth_address, deployed_bytecode, [].span())
             .expect('set code failed');
 
         // When
@@ -697,7 +697,7 @@ mod tests {
         // (+ 0x1 0x1)
         let deployed_bytecode = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, [].span())
+        initialize_contract_account(kakarot_core, eth_address, deployed_bytecode, [].span())
             .expect('set code failed');
 
         // When
@@ -767,7 +767,7 @@ mod tests {
             0xf3
         ].span();
         let eth_address: EthAddress = 0x100_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, [].span())
+        initialize_contract_account(kakarot_core, eth_address, deployed_bytecode, [].span())
             .expect('set code failed');
 
         // When
@@ -841,7 +841,7 @@ mod tests {
             0xf3
         ].span();
         let eth_address: EthAddress = 0x100_u256.into();
-        initialize_contract_account(eth_address, deployed_bytecode, [].span())
+        initialize_contract_account(kakarot_core, eth_address, deployed_bytecode, [].span())
             .expect('set code failed');
 
         // When
@@ -1016,7 +1016,7 @@ mod tests {
             evm: evm_address, starknet: kakarot_core.compute_starknet_address(evm_address)
         };
         let recipient_address: EthAddress = 'recipient_address'.try_into().unwrap();
-        deploy_eoa(recipient_address);
+        deploy_eoa(kakarot_core, recipient_address);
         let ca_balance = 1000;
         fund_account_with_native_token(ca_address.starknet, native_token, ca_balance);
         let mut vm = VMBuilderTrait::new_with_presets().with_target(ca_address).build();

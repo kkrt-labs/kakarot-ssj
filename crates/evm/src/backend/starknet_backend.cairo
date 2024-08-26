@@ -264,29 +264,35 @@ mod internals {
 mod tests {
     use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::kakarot_core::KakarotCore;
-    use contracts::test_utils as contract_utils;
-    use contracts::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
+    use contracts_tests::test_utils as contract_utils;
+    use contracts_tests::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
     use core::starknet::testing::{set_contract_address, set_chain_id};
     use evm::backend::starknet_backend;
     use evm::errors::EVMErrorTrait;
     use evm::test_utils::{chain_id, evm_address, VMBuilderTrait};
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
+    use snforge_std::{spy_events, EventsSpyTrait};
+    use snforge_utils::{ContractEvents, ContractEventsTrait, EventsFilterBuilderTrait};
 
 
     #[test]
     fn test_account_deploy() {
         let (_, kakarot_core) = setup_contracts_for_testing();
 
+        let mut spy = spy_events();
         let eoa_address = starknet_backend::deploy(evm_address())
             .expect('deployment of EOA failed');
 
-        let event = contract_utils::pop_log::<
-            KakarotCore::AccountDeployed
-        >(kakarot_core.contract_address)
-            .unwrap();
+        let expected = KakarotCore::Event::AccountDeployed(
+            KakarotCore::AccountDeployed {
+                evm_address: evm_address(), starknet_address: eoa_address.starknet
+            }
+        );
 
-        assert(event.evm_address == evm_address(), 'wrong evm address');
-        assert(event.starknet_address.into() == eoa_address.starknet, 'wrong starknet address');
+        let contract_events = EventsFilterBuilderTrait::from_events(spy.events())
+            .with_contract_address(kakarot_core.contract_address)
+            .build();
+        contract_events.assert_emitted(expected);
 
         set_chain_id(chain_id().into());
 

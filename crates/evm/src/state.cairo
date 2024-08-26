@@ -223,7 +223,7 @@ fn compute_storage_address(key: u256) -> StorageBaseAddress {
 
 #[cfg(test)]
 mod tests {
-    use contracts::test_utils::{deploy_contract_account, deploy_eoa};
+    use contracts_tests::test_utils::{deploy_contract_account, deploy_eoa};
 
     use evm::state::compute_state_key;
     use evm::test_utils;
@@ -294,8 +294,8 @@ mod tests {
     mod test_state {
         use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
         use contracts::kakarot_core::interface::{IExtendedKakarotCoreDispatcherTrait};
-        use contracts::test_utils as contract_utils;
         use contracts::uninitialized_account::UninitializedAccount;
+        use contracts_tests::test_utils as contract_utils;
         use core::starknet::EthAddress;
         use core::starknet::testing::set_contract_address;
         use evm::backend::starknet_backend;
@@ -315,12 +315,13 @@ mod tests {
             let mut state: State = Default::default();
             // Transfer native tokens to sender
             let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
-            let class_registry = contract_utils::class_registry();
-            let uninitialized_account_class_hash = class_registry
-                .get_class_hash("UninitializedAccount");
+            let uninitialized_account_class_hash = declare("UninitializedAccount")
+                .unwrap()
+                .contract_class()
+                .class_hash;
             let evm_address: EthAddress = test_utils::evm_address();
             let starknet_address = compute_starknet_address(
-                kakarot_core.contract_address.into(), evm_address, uninitialized_account_class_hash
+                kakarot_core.contract_address.into(), evm_address, *uninitialized_account_class_hash
             );
             let expected_account = Account {
                 address: Address { evm: evm_address, starknet: starknet_address },
@@ -345,11 +346,12 @@ mod tests {
             set_contract_address(deployer);
 
             let evm_address: EthAddress = test_utils::evm_address();
-            let class_registry = contract_utils::class_registry();
-            let uninitialized_account_class_hash = class_registry
-                .get_class_hash("UninitializedAccount");
+            let uninitialized_account_class_hash = declare("UninitializedAccount")
+                .unwrap()
+                .contract_class()
+                .class_hash;
             let starknet_address = compute_starknet_address(
-                deployer.into(), evm_address, uninitialized_account_class_hash
+                deployer.into(), evm_address, *uninitialized_account_class_hash
             );
             let expected_account = Account {
                 address: Address { evm: evm_address, starknet: starknet_address }, code: [
@@ -440,16 +442,20 @@ mod tests {
         fn test_add_transfer() {
             //Given
             let mut state: State = Default::default();
-            contract_utils::setup_contracts_for_testing();
+            let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
             let sender_evm_address = test_utils::evm_address();
-            let sender_starknet_address = contract_utils::deploy_eoa(sender_evm_address)
+            let sender_starknet_address = contract_utils::deploy_eoa(
+                kakarot_core, sender_evm_address
+            )
                 .contract_address;
             let sender_address = Address {
                 evm: sender_evm_address, starknet: sender_starknet_address
             };
             let recipient_evm_address = test_utils::other_evm_address();
-            let recipient_starknet_address = contract_utils::deploy_eoa(recipient_evm_address)
+            let recipient_starknet_address = contract_utils::deploy_eoa(
+                kakarot_core, recipient_evm_address
+            )
                 .contract_address;
             let recipient_address = Address {
                 evm: recipient_evm_address, starknet: recipient_starknet_address
@@ -482,10 +488,12 @@ mod tests {
         fn test_add_transfer_with_same_sender_and_recipient() {
             //Given
             let mut state: State = Default::default();
-            contract_utils::setup_contracts_for_testing();
+            let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
             let sender_evm_address = test_utils::evm_address();
-            let sender_starknet_address = contract_utils::deploy_eoa(sender_evm_address)
+            let sender_starknet_address = contract_utils::deploy_eoa(
+                kakarot_core, sender_evm_address
+            )
                 .contract_address;
             let sender_address = Address {
                 evm: sender_evm_address, starknet: sender_starknet_address
@@ -516,16 +524,20 @@ mod tests {
         fn test_add_transfer_when_amount_is_zero() {
             //Given
             let mut state: State = Default::default();
-            contract_utils::setup_contracts_for_testing();
+            let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
             let sender_evm_address = test_utils::evm_address();
-            let sender_starknet_address = contract_utils::deploy_eoa(sender_evm_address)
+            let sender_starknet_address = contract_utils::deploy_eoa(
+                kakarot_core, sender_evm_address
+            )
                 .contract_address;
             let sender_address = Address {
                 evm: sender_evm_address, starknet: sender_starknet_address
             };
             let recipient_evm_address = test_utils::other_evm_address();
-            let recipient_starknet_address = contract_utils::deploy_eoa(recipient_evm_address)
+            let recipient_starknet_address = contract_utils::deploy_eoa(
+                kakarot_core, recipient_evm_address
+            )
                 .contract_address;
             let recipient_address = Address {
                 evm: recipient_evm_address, starknet: recipient_starknet_address
@@ -560,10 +572,11 @@ mod tests {
         #[test]
         fn test_read_balance_cached() {
             let mut state: State = Default::default();
-            contract_utils::setup_contracts_for_testing();
+            let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
             let evm_address = test_utils::evm_address();
-            let starknet_address = contract_utils::deploy_eoa(evm_address).contract_address;
+            let starknet_address = contract_utils::deploy_eoa(kakarot_core, evm_address)
+                .contract_address;
             let address = Address { evm: evm_address, starknet: starknet_address };
 
             let balance = 100;
