@@ -273,10 +273,10 @@ pub mod AccountContract {
             self.Account_nonce.write(nonce);
         }
 
-        // @notice Used to preserve caller in Cairo Precompiles
-        // @dev Reentrency check is done for Kakarot contract, only get_starknet_address is allowed
-        //      for Solidity contracts to be able to get the corresponding Starknet address in their
-        //      calldata.
+        /// Used to preserve caller in Cairo Precompiles
+        /// Reentrency check is done for Kakarot contract, only get_starknet_address is allowed
+        /// for Solidity contracts to be able to get the corresponding Starknet address in their
+        /// calldata.
         fn execute_starknet_call(ref self: ContractState, call: Call) -> (bool, Span<felt252>) {
             self.ownable.assert_only_owner();
             let kakarot_address = self.ownable.owner();
