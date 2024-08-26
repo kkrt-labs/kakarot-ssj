@@ -250,6 +250,33 @@ impl MemoryOperation of MemoryOperationTrait {
         Result::Ok(())
     }
 
+    /// 0x5c - TLOAD operation.
+    /// Load a word from the transient storage.
+    /// # Specification: https://www.evm.codes/#5c?fork=cancun
+    fn exec_tload(ref self: VM) -> Result<(), EVMError> {
+        let key = self.stack.pop()?;
+        let evm_address = self.message().target.evm;
+
+        self.charge_gas(gas::WARM_ACCESS_COST)?;
+
+        let value = self.env.state.read_transient_storage(evm_address, key);
+        self.stack.push(value)
+    }
+
+    /// 0x5d - TSTORE operation.
+    /// Save a word to the transient storage.
+    /// # Specification: https://www.evm.codes/#5d?fork=cancun
+    fn exec_tstore(ref self: VM) -> Result<(), EVMError> {
+        ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
+        let key = self.stack.pop()?;
+        let value = self.stack.pop()?;
+
+        self.charge_gas(gas::WARM_ACCESS_COST)?;
+        self.env.state.write_transient_storage(self.message().target.evm, key, value);
+
+        return Result::Ok(());
+    }
+
     /// 0x5e - MCOPY operation.
     /// Copy memory from one location to another.
     /// # Specification: https://www.evm.codes/#5e?fork=cancun
@@ -954,6 +981,65 @@ mod tests {
         // Then
         let result = vm.stack.peek().unwrap();
         assert(result == vm.gas_left().into(), 'stack top should be gas_limit');
+    }
+
+    #[test]
+    fn test_tload_should_load_a_value_from_transient_storage() {
+        // Given
+        let mut vm = VMBuilderTrait::new_with_presets().build();
+        let key: u256 = 0x100000000000000000000000000000001;
+        let value: u256 = 0xABDE1E11A5;
+        vm.env.state.write_transient_storage(vm.message().target.evm, key, value);
+        vm.stack.push(key.into()).expect('push failed');
+
+        // When
+        let gas_before = vm.gas_left();
+        vm.exec_tload().expect('exec_tload failed');
+        let gas_after = vm.gas_left();
+
+        // Then
+        assert(vm.stack.len() == 1, 'stack should have one element');
+        assert(vm.stack.pop().unwrap() == value, 'tload failed');
+        assert(gas_before - gas_after == gas::WARM_ACCESS_COST, 'gas charged error');
+    }
+
+    #[test]
+    fn test_tstore_should_fail_staticcall() {
+        // Given
+        let mut vm = VMBuilderTrait::new_with_presets().with_read_only().build();
+        let key: u256 = 0x100000000000000000000000000000001;
+        let value: u256 = 0xABDE1E11A5;
+        vm.stack.push(value).expect('push failed');
+        vm.stack.push(key.into()).expect('push failed');
+
+        // When
+        let result = vm.exec_tstore();
+
+        // Then
+        assert(result.is_err(), 'should have errored');
+        assert(result.unwrap_err() == EVMError::WriteInStaticContext, 'wrong error returned');
+    }
+
+    #[test]
+    fn test_tstore_should_store_a_value_to_transient_storage() {
+        // Given
+        let mut vm = VMBuilderTrait::new_with_presets().build();
+        let key: u256 = 0x100000000000000000000000000000001;
+        let value: u256 = 0xABDE1E11A5;
+        vm.stack.push(value).expect('push failed');
+        vm.stack.push(key.into()).expect('push failed');
+
+        // When
+        let gas_before = vm.gas_left();
+        vm.exec_tstore().expect('exec_tstore failed');
+        let gas_after = vm.gas_left();
+
+        // Then
+        assert(
+            vm.env.state.read_transient_storage(vm.message().target.evm, key) == value,
+            'tstore failed'
+        );
+        assert(gas_before - gas_after == gas::WARM_ACCESS_COST, 'gas charged error');
     }
 
     #[test]
