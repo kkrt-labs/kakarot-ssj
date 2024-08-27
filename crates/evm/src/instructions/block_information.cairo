@@ -125,6 +125,16 @@ impl BlockInformation of BlockInformationTrait {
         //  doesn't really exists there so we just use the gas price)
         self.stack.push(self.env.gas_price.into())
     }
+
+    /// 0x4A - BLOBBASEFEE
+    /// Returns the value of the blob base-fee of the current block
+    /// Always returns Zero in the context of Kakarot
+    /// # Specification: https://www.evm.codes/#4a?fork=cancun
+    fn exec_blobbasefee(ref self: VM) -> Result<(), EVMError> {
+        self.charge_gas(gas::BASE)?;
+
+        self.stack.push(0)
+    }
 }
 
 
@@ -345,6 +355,19 @@ mod tests {
         // Then
         let result = vm.stack.peek().unwrap();
         assert(result == 0x00, 'stack top should be zero');
+    }
+
+    #[test]
+    fn test_blobbasefee_should_return_zero() {
+        // Given
+        let mut vm = VMBuilderTrait::new_with_presets().build();
+
+        // When
+        vm.exec_blobbasefee().unwrap();
+
+        // Then
+        assert(vm.stack.len() == 1, 'stack should have one element');
+        assert(vm.stack.peek().unwrap() == 0, 'stack top should be 0');
     }
 
     // *************************************************************************
