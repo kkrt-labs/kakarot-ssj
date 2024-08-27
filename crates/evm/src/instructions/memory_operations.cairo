@@ -267,11 +267,12 @@ impl MemoryOperation of MemoryOperationTrait {
     /// Save a word to the transient storage.
     /// # Specification: https://www.evm.codes/#5d?fork=cancun
     fn exec_tstore(ref self: VM) -> Result<(), EVMError> {
-        ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
         let key = self.stack.pop()?;
         let value = self.stack.pop()?;
 
         self.charge_gas(gas::WARM_ACCESS_COST)?;
+
+        ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
         self.env.state.write_transient_storage(self.message().target.evm, key, value);
 
         return Result::Ok(());
@@ -1013,11 +1014,14 @@ mod tests {
         vm.stack.push(key.into()).expect('push failed');
 
         // When
+        let gas_before = vm.gas_left();
         let result = vm.exec_tstore();
+        let gas_after = vm.gas_left();
 
         // Then
         assert(result.is_err(), 'should have errored');
         assert(result.unwrap_err() == EVMError::WriteInStaticContext, 'wrong error returned');
+        assert(gas_before - gas_after == gas::WARM_ACCESS_COST, 'gas charged error');
     }
 
     #[test]
