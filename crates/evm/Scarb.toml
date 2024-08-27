@@ -11,11 +11,25 @@ utils = { path = "../utils" }
 contracts = { path = "../contracts" }
 openzeppelin = { path = "../openzeppelin" }
 garaga = { git = "https://github.com/keep-starknet-strange/garaga.git" }
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.28.0" }
 
 [dev-dependencies]
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.28.0" }
+snforge_utils = { path = "../snforge_utils" }
 assert_macros = "0.1.0"
 
+[[target.starknet-contract]]
+casm = true
+casm-add-pythonic-hints = true
+build-external-contracts = [
+  "openzeppelin::token::erc20::erc20::ERC20",
+  "contracts::uninitialized_account::UninitializedAccount",
+  "contracts::account_contract::AccountContract",
+  "contracts::kakarot_core::kakarot::KakarotCore",
+]
+
+
+[lib]
+name = "evm"
 [tool]
 fmt.workspace = true
 

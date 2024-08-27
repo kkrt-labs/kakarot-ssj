@@ -9,7 +9,7 @@ use contracts::test_contracts::test_upgradeable::{
     MockContractUpgradeableV1
 };
 use contracts::test_data::{counter_evm_bytecode, eip_2930_rlp_encoded_counter_inc_tx,};
-use contracts_tests::test_utils::{
+use contracts::test_utils::{
     setup_contracts_for_testing, deploy_eoa, deploy_contract_account,
     fund_account_with_native_token, call_transaction
 };
@@ -34,7 +34,7 @@ use snforge_std::{
     stop_cheat_transaction_hash, spy_events, EventSpyTrait, EventsFilterTrait, CheatSpan,
     cheat_caller_address
 };
-use snforge_utils::{ContractEvents, ContractEventsTrait, EventsFilterBuilderTrait};
+use snforge_utils::snforge_utils::{ContractEvents, ContractEventsTrait, EventsFilterBuilderTrait};
 use utils::eth_transaction::{
     TransactionType, EthereumTransaction, EthereumTransactionTrait, LegacyTransaction
 };
@@ -122,7 +122,7 @@ fn test___execute__a() {
         let not_expected_gas_used = 0;
         assert_eq!(transaction_executed.response, expected_response);
         assert_eq!(transaction_executed.success, expected_success);
-        assert_eq!(transaction_executed.gas_used, not_expected_gas_used);
+        assert_ne!(transaction_executed.gas_used, not_expected_gas_used);
     } else {
         panic!("Expected transaction_executed event");
     }

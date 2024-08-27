@@ -27,6 +27,7 @@ dependencies = [
  "garaga",
  "openzeppelin",
  "snforge_std",
+ "snforge_utils",
  "utils",
 ]
 

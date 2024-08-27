@@ -154,7 +154,7 @@ fn calculate_iteration_count(exp_length: u64, exp_highp: u256) -> u64 {
 
 #[cfg(tests)]
 mod tests {
-    use contracts_tests::test_utils::{setup_contracts_for_testing};
+    use contracts::test_utils::{setup_contracts_for_testing};
     use core::result::ResultTrait;
     use core::starknet::EthAddress;
     use core::starknet::testing::set_contract_address;

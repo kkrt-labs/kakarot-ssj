@@ -1,10 +1,13 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
+use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::{
     IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
-use contracts::test_utils::{deploy_contract_account};
+use contracts::test_utils::{deploy_contract_account, deploy_native_token};
 use contracts::uninitialized_account::UninitializedAccount;
 use core::nullable::{match_nullable, FromNullableResult};
+use core::ops::DerefMut;
+use core::ops::SnapshotDeref;
 use core::starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
@@ -16,8 +19,30 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{Message, Environment, Address, Account, AccountTrait};
 use evm::state::State;
 use evm::{stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}};
-use snforge_std::{declare, DeclareResultTrait};
+use snforge_std::{declare, DeclareResultTrait, ContractClassTrait};
+use starknet::storage::StorageTraitMut;
 use utils::constants;
+
+fn declare_and_store_classes() {
+    // Declare the contract classes
+    let native_token = deploy_native_token();
+    let uninitialized_account = declare("UninitializedAccount")
+        .unwrap()
+        .contract_class()
+        .class_hash;
+    let account_contract = declare("AccountContract").unwrap().contract_class().class_hash;
+    let kakarot_core = declare("KakarotCore").unwrap().contract_class().class_hash;
+
+    // Get the test address, which is the one that will be used when testing internals
+    let test_address = get_contract_address();
+
+    // Store the contract classes in the same storage slots as Kakarot
+    let mut kakarot_state = KakarotCore::contract_state_for_testing();
+    let mut kakarot_storage = kakarot_state.deref_mut().storage_mut();
+    kakarot_storage.Kakarot_account_contract_class_hash.write(*account_contract);
+    kakarot_storage.Kakarot_uninitialized_account_class_hash.write(*uninitialized_account);
+    kakarot_storage.Kakarot_native_token_address.write(native_token.contract_address);
+}
 
 #[derive(Destruct)]
 struct VMBuilder {
