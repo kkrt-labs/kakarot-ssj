@@ -144,7 +144,7 @@ mod tests {
         let expected_result = 0x3b745a1c00d035c334f358d007a430e4cf0ae63aa0556fb05529706de546464d;
 
         assert_eq!(result, expected_result);
-        assert_eq!(gas, 72);
+        assert_eq!(gas, 84); // BASE + 2 WORDS
     }
 
 
