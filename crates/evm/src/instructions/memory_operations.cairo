@@ -893,11 +893,9 @@ mod tests {
 
 
     #[test]
-    fn test_exec_sstore_static_call() {
+    fn test_exec_sstore_should_fail_static_call() {
         // Given
-        let (_, kakarot_core) = setup_contracts_for_testing();
         let mut vm = VMBuilderTrait::new_with_presets().with_read_only().build();
-        deploy_contract_account(kakarot_core, vm.message().target.evm, [].span());
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
         vm.stack.push(value).expect('push failed');
@@ -908,7 +906,24 @@ mod tests {
 
         // Then
         assert(result.is_err(), 'should have errored');
-        assert(result.unwrap_err() == EVMError::WriteInStaticContext, 'wrong error variant');
+        assert(result.unwrap_err() == EVMError::WriteInStaticContext, 'wrong error returned');
+    }
+
+    #[test]
+    fn test_exec_sstore_should_fail_gas_left_inf_call_stipend_eip_1706() {
+        // Given
+        let mut vm = VMBuilderTrait::new_with_presets().with_gas_left(gas::CALL_STIPEND).build();
+        let key: u256 = 0x100000000000000000000000000000001;
+        let value: u256 = 0xABDE1E11A5;
+        vm.stack.push(value).expect('push failed');
+        vm.stack.push(key).expect('push failed');
+
+        // When
+        let result = vm.exec_sstore();
+
+        // Then
+        assert(result.is_err(), 'should have errored');
+        assert(result.unwrap_err() == EVMError::OutOfGas, 'wrong error returned');
     }
 
     #[test]
