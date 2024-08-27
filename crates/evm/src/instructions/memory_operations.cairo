@@ -11,7 +11,7 @@ use evm::model::account::AccountTrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{AddressTrait};
 use evm::stack::StackTrait;
-use evm::state::{StateTrait, compute_state_key};
+use evm::state::{StateTrait, compute_storage_key};
 use utils::helpers::U256Trait;
 use utils::set::SetTrait;
 
