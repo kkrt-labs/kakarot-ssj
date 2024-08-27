@@ -302,7 +302,7 @@ fn test_process_transaction() {
     // When
     let test_address: ContractAddress = test_address();
     start_cheat_caller_address(test_address, eoa);
-    //TODO(sn-foundry): fix this that fails because the local state doesnt have the correct
+    //TODO(sn-foundry): fix this that fails because the local state doesn't have the correct
     //addresses/classes
     let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
     let result = kakarot_core

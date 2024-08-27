@@ -552,7 +552,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesnt use kakarot's contract state
+    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
     fn test_exec_call_no_return() {
         // Given
         let (_, kakarot_core) = setup_contracts_for_testing();
@@ -608,7 +608,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesnt use kakarot's contract state
+    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
     fn test_exec_staticcall() {
         // Given
         let (_, kakarot_core) = setup_contracts_for_testing();
@@ -662,7 +662,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesnt use kakarot's contract state
+    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
     fn test_exec_staticcall_no_return() {
         // Given
 

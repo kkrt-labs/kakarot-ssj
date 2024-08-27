@@ -225,7 +225,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesnt use kakarot's contract state
+    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
     fn test_account_balance_eoa() {
         // Given
         let (native_token, kakarot_core) = setup_contracts_for_testing();
@@ -244,7 +244,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesnt use kakarot's contract state
+    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
     fn test_address_balance_eoa() {
         // Given
         let (native_token, kakarot_core) = setup_contracts_for_testing();
@@ -283,7 +283,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesnt use kakarot's contract state
+    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
     fn test_account_has_code_or_nonce_contract_account() {
         // Given
         let (_, kakarot_core) = setup_contracts_for_testing();
@@ -331,7 +331,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesnt use kakarot's contract state
+    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
     fn test_account_balance_contract_account() {
         // Given
         let (native_token, kakarot_core) = setup_contracts_for_testing();
@@ -349,7 +349,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesnt use kakarot's contract state
+    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
     fn test_account_commit_already_deployed_should_not_change_code() {
         let (_, kakarot_core) = setup_contracts_for_testing();
         let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
@@ -373,7 +373,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesnt use kakarot's contract state
+    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
     fn test_account_commit_created_but_already_deployed() {
         let (_, kakarot_core) = setup_contracts_for_testing();
         let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
@@ -427,7 +427,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesnt use kakarot's contract state
+    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
     fn test_address_balance_contract_account() {
         // Given
         let (native_token, kakarot_core) = setup_contracts_for_testing();
