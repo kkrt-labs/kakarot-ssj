@@ -44,7 +44,7 @@ impl Sha256 of Precompile {
         let mut result_bytes = array![];
         for word in result_words_32
             .span() {
-                let word_bytes = (*word).to_be_bytes();
+                let word_bytes = (*word).to_be_bytes_padded();
                 result_bytes.append_span(word_bytes);
             };
 
@@ -91,6 +91,57 @@ mod tests {
 
         let result: u256 = result.from_be_bytes().unwrap();
         let expected_result = 0xc0b057f584795eff8b06d5e420e71d747587d20de836f501921fd1b5741f1283;
+
+        assert_eq!(result, expected_result);
+        assert_eq!(gas, 72);
+    }
+
+    #[test]
+    fn test_sha256_more_than_32_bytes() {
+        let calldata = [
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0xf3,
+            0x45,
+            0x78,
+            0x90,
+            0x7f,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00
+        ];
+
+        let (gas, result) = Sha256::exec(calldata.span()).unwrap();
+
+        let result: u256 = result.from_be_bytes().unwrap();
+        let expected_result = 0x3b745a1c00d035c334f358d007a430e4cf0ae63aa0556fb05529706de546464d;
 
         assert_eq!(result, expected_result);
         assert_eq!(gas, 72);
