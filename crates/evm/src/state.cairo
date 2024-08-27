@@ -142,7 +142,7 @@ impl StateImpl of StateTrait {
 
     #[inline(always)]
     fn read_state(ref self: State, evm_address: EthAddress, key: u256) -> u256 {
-        let internal_key = compute_state_key(evm_address, key);
+        let internal_key = compute_storage_key(evm_address, key);
         let maybe_entry = self.accounts_storage.read(internal_key);
         match maybe_entry {
             Option::Some((_, _, value)) => { return value; },
@@ -155,7 +155,7 @@ impl StateImpl of StateTrait {
 
     #[inline(always)]
     fn write_state(ref self: State, evm_address: EthAddress, key: u256, value: u256) {
-        let internal_key = compute_state_key(evm_address, key);
+        let internal_key = compute_storage_key(evm_address, key);
         self.accounts_storage.write(internal_key.into(), (evm_address, key, value));
     }
 
@@ -190,7 +190,7 @@ impl StateImpl of StateTrait {
 
     #[inline(always)]
     fn read_transient_storage(ref self: State, evm_address: EthAddress, key: u256) -> u256 {
-        let internal_key = compute_state_key(evm_address, key);
+        let internal_key = compute_storage_key(evm_address, key);
         let maybe_entry = self.transient_account_storage.read(internal_key);
         match maybe_entry {
             Option::Some((_, _, value)) => { return value; },
@@ -200,7 +200,7 @@ impl StateImpl of StateTrait {
 
     #[inline(always)]
     fn write_transient_storage(ref self: State, evm_address: EthAddress, key: u256, value: u256) {
-        let internal_key = compute_state_key(evm_address, key);
+        let internal_key = compute_storage_key(evm_address, key);
         self.transient_account_storage.write(internal_key.into(), (evm_address, key, value));
     }
 
@@ -225,7 +225,7 @@ impl StateImpl of StateTrait {
 /// The key is computed as follows:
 /// 1. Compute the hash of the EVM address and the key(low, high) using Poseidon.
 /// 2. Return the hash
-fn compute_state_key(evm_address: EthAddress, key: u256) -> felt252 {
+fn compute_storage_key(evm_address: EthAddress, key: u256) -> felt252 {
     let hash = PoseidonTrait::new().update_with(evm_address).update_with(key).finalize();
     hash
 }
@@ -245,11 +245,11 @@ fn compute_storage_address(key: u256) -> StorageBaseAddress {
 mod tests {
     use contracts::test_utils::{deploy_contract_account, deploy_eoa};
 
-    use evm::state::compute_state_key;
+    use evm::state::compute_storage_key;
     use evm::test_utils;
 
     #[test]
-    fn test_compute_state_key() {
+    fn test_compute_storage_key() {
         let key = 100;
         let evm_address = test_utils::evm_address();
 
@@ -270,7 +270,7 @@ mod tests {
         //
         // }
         //
-        let address = compute_state_key(evm_address, key);
+        let address = compute_storage_key(evm_address, key);
         assert(
             address == 0x1b0f25b79b18f8734761533714f234825f965d6215cebdc391ceb3b964dd36,
             'hash not expected value'
