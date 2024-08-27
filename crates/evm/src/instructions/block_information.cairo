@@ -128,6 +128,7 @@ impl BlockInformation of BlockInformationTrait {
 
     /// 0x4A - BLOBBASEFEE
     /// Returns the value of the blob base-fee of the current block
+    /// Always returns Zero in the context of Kakarot
     /// # Specification: https://www.evm.codes/#4a?fork=cancun
     fn exec_blobbasefee(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
@@ -357,7 +358,7 @@ mod tests {
     }
 
     #[test]
-    fn test_blobbasefee() {
+    fn test_blobbasefee_should_return_zero() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
