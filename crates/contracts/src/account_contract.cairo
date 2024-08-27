@@ -287,7 +287,7 @@ pub mod AccountContract {
             if response.is_ok() {
                 return (true, response.unwrap().into());
             }
-            return (true, response.unwrap_err().into());
+            return (false, response.unwrap_err().into());
         }
     }
 
