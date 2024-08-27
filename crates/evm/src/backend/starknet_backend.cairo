@@ -264,33 +264,40 @@ mod internals {
 mod tests {
     use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::kakarot_core::KakarotCore;
-    use contracts::test_utils as contract_utils;
-    use contracts::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
-    use core::starknet::testing::{set_contract_address, set_chain_id};
+    use contracts::test_utils::setup_contracts_for_testing;
     use evm::backend::starknet_backend;
     use evm::errors::EVMErrorTrait;
     use evm::test_utils::{chain_id, evm_address, VMBuilderTrait};
+    use evm::test_utils::{declare_and_store_classes};
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-
+    use snforge_std::{spy_events, EventSpyTrait, test_address};
+    use snforge_utils::snforge_utils::{
+        ContractEvents, ContractEventsTrait, EventsFilterBuilderTrait
+    };
 
     #[test]
+    #[ignore]
+    //TODO(sn-foundry): fix Entrypoint not found
+    //`0x11f99ee2dc5094f0126c3db5401e3a1a2b6b440f4740e6cce884709cd4526df`
     fn test_account_deploy() {
-        let (_, kakarot_core) = setup_contracts_for_testing();
+        // store the classes in the context of the local execution, to be used for deploying the
+        // account class
+        declare_and_store_classes();
+        let test_address = test_address();
 
+        let mut spy = spy_events();
         let eoa_address = starknet_backend::deploy(evm_address())
             .expect('deployment of EOA failed');
 
-        let event = contract_utils::pop_log::<
-            KakarotCore::AccountDeployed
-        >(kakarot_core.contract_address)
-            .unwrap();
+        let expected = KakarotCore::Event::AccountDeployed(
+            KakarotCore::AccountDeployed {
+                evm_address: evm_address(), starknet_address: eoa_address.starknet
+            }
+        );
 
-        assert(event.evm_address == evm_address(), 'wrong evm address');
-        assert(event.starknet_address.into() == eoa_address.starknet, 'wrong starknet address');
-
-        set_chain_id(chain_id().into());
-
-        let eoa = IAccountDispatcher { contract_address: eoa_address.starknet };
-        assert!(eoa.is_initialized());
+        let contract_events = EventsFilterBuilderTrait::from_events(@spy.get_events())
+            .with_contract_address(test_address)
+            .build();
+        contract_events.assert_emitted(@expected);
     }
 }

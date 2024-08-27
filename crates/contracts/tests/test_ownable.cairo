@@ -7,6 +7,10 @@ use core::starknet::testing;
 
 
 use ownable_component::{InternalImpl, OwnableImpl};
+use snforge_std::{
+    start_cheat_caller_address, stop_cheat_caller_address, spy_events, test_address, EventSpyTrait
+};
+use snforge_utils::snforge_utils::{EventsFilterBuilderTrait, ContractEvents, ContractEventsTrait};
 
 
 #[starknet::contract]
@@ -46,7 +50,6 @@ impl TestingStateImpl of TestingStateTrait {
     fn new_with(owner: ContractAddress) -> TestingState {
         let mut ownable: TestingState = Default::default();
         ownable.initializer(owner);
-        test_utils::drop_event(ZERO());
         ownable
     }
 }
@@ -54,18 +57,28 @@ impl TestingStateImpl of TestingStateTrait {
 #[test]
 fn test_ownable_initializer() {
     let mut ownable: TestingState = Default::default();
+    let test_address: ContractAddress = test_address();
     assert(ownable.owner().is_zero(), 'owner should be zero');
 
+    let mut spy = spy_events();
     ownable.initializer(OWNER());
-
-    assert_event_ownership_transferred(ZERO(), OWNER());
+    let expected = MockContract::Event::OwnableEvent(
+        ownable_component::Event::OwnershipTransferred(
+            ownable_component::OwnershipTransferred { previous_owner: ZERO(), new_owner: OWNER() }
+        )
+    );
+    let contract_events = EventsFilterBuilderTrait::from_events(@spy.get_events())
+        .with_contract_address(test_address)
+        .build();
+    contract_events.assert_emitted(@expected);
     assert(ownable.owner() == OWNER(), 'Owner should be set');
 }
 
 #[test]
 fn test_assert_only_owner() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
-    testing::set_caller_address(OWNER());
+    let test_address: ContractAddress = test_address();
+    start_cheat_caller_address(test_address, OWNER());
 
     ownable.assert_only_owner();
 }
@@ -74,7 +87,8 @@ fn test_assert_only_owner() {
 #[should_panic(expected: ('Caller is not the owner',))]
 fn test_assert_only_owner_not_owner() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
-    testing::set_caller_address(OTHER());
+    let test_address: ContractAddress = test_address();
+    start_cheat_caller_address(test_address, OTHER());
 
     ownable.assert_only_owner();
 }
@@ -83,18 +97,28 @@ fn test_assert_only_owner_not_owner() {
 #[should_panic(expected: ('Caller is the zero address',))]
 fn test_assert_only_owner_zero() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
-    testing::set_caller_address(ZERO());
-
+    let test_address: ContractAddress = test_address();
+    start_cheat_caller_address(test_address, ZERO());
     ownable.assert_only_owner();
 }
 
 #[test]
 fn test__transfer_ownership() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
+    let test_address: ContractAddress = test_address();
 
+    let mut spy = spy_events();
+    let expected = MockContract::Event::OwnableEvent(
+        ownable_component::Event::OwnershipTransferred(
+            ownable_component::OwnershipTransferred { previous_owner: OWNER(), new_owner: OTHER() }
+        )
+    );
     ownable._transfer_ownership(OTHER());
 
-    assert_event_ownership_transferred(OWNER(), OTHER());
+    let contract_events = EventsFilterBuilderTrait::from_events(@spy.get_events())
+        .with_contract_address(test_address)
+        .build();
+    contract_events.assert_emitted(@expected);
     assert(ownable.owner() == OTHER(), 'Owner should be OTHER');
 }
 
@@ -102,11 +126,21 @@ fn test__transfer_ownership() {
 #[test]
 fn test_transfer_ownership() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
-    testing::set_caller_address(OWNER());
+    let test_address: ContractAddress = test_address();
+    start_cheat_caller_address(test_address, OWNER());
 
+    let mut spy = spy_events();
     ownable.transfer_ownership(OTHER());
+    let expected = MockContract::Event::OwnableEvent(
+        ownable_component::Event::OwnershipTransferred(
+            ownable_component::OwnershipTransferred { previous_owner: OWNER(), new_owner: OTHER() }
+        )
+    );
+    let contract_events = EventsFilterBuilderTrait::from_events(@spy.get_events())
+        .with_contract_address(test_address)
+        .build();
+    contract_events.assert_emitted(@expected);
 
-    assert_event_ownership_transferred(OWNER(), OTHER());
     assert(ownable.owner() == OTHER(), 'Should transfer ownership');
 }
 
@@ -114,7 +148,8 @@ fn test_transfer_ownership() {
 #[should_panic(expected: ('New owner is the zero address',))]
 fn test_transfer_ownership_to_zero() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
-    testing::set_caller_address(OWNER());
+    let test_address: ContractAddress = test_address();
+    start_cheat_caller_address(test_address, OWNER());
 
     ownable.transfer_ownership(ZERO());
 }
@@ -133,7 +168,8 @@ fn test_transfer_ownership_from_zero() {
 #[should_panic(expected: ('Caller is not the owner',))]
 fn test_transfer_ownership_from_nonowner() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
-    testing::set_caller_address(OTHER());
+    let test_address: ContractAddress = test_address();
+    start_cheat_caller_address(test_address, OTHER());
 
     ownable.transfer_ownership(OTHER());
 }
@@ -142,11 +178,20 @@ fn test_transfer_ownership_from_nonowner() {
 #[test]
 fn test_renounce_ownership() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
-    testing::set_caller_address(OWNER());
+    let test_address: ContractAddress = test_address();
 
+    start_cheat_caller_address(test_address, OWNER());
+    let mut spy = spy_events();
     ownable.renounce_ownership();
-
-    assert_event_ownership_transferred(OWNER(), ZERO());
+    let expected = MockContract::Event::OwnableEvent(
+        ownable_component::Event::OwnershipTransferred(
+            ownable_component::OwnershipTransferred { previous_owner: OWNER(), new_owner: ZERO() }
+        )
+    );
+    let contract_events = EventsFilterBuilderTrait::from_events(@spy.get_events())
+        .with_contract_address(test_address)
+        .build();
+    contract_events.assert_emitted(@expected);
 
     assert(ownable.owner().is_zero(), 'ownership not renounced');
 }
@@ -162,15 +207,8 @@ fn test_renounce_ownership_from_zero_address() {
 #[should_panic(expected: ('Caller is not the owner',))]
 fn test_renounce_ownership_from_nonowner() {
     let mut ownable: TestingState = TestingStateTrait::new_with(OWNER());
-    testing::set_caller_address(OTHER());
+    let test_address: ContractAddress = test_address();
+    start_cheat_caller_address(test_address, OTHER());
 
     ownable.renounce_ownership();
-}
-
-
-fn assert_event_ownership_transferred(previous_owner: ContractAddress, new_owner: ContractAddress) {
-    let event = test_utils::pop_log::<ownable_component::OwnershipTransferred>(ZERO()).unwrap();
-    assert(event.previous_owner == previous_owner, 'Invalid `previous_owner`');
-    assert(event.new_owner == new_owner, 'Invalid `new_owner`');
-    test_utils::assert_no_events_left(ZERO());
 }

@@ -8,4 +8,4 @@ mod test_kakarot_core;
 
 mod test_ownable;
 
-mod test_upgradeable;
+mod test_utils;

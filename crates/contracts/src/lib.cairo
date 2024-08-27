@@ -18,6 +18,11 @@ mod test_utils;
 // Account transparent proxy
 mod uninitialized_account;
 
+//TODO: hide this behind a feature flag
+mod test_contracts {
+    mod test_upgradeable;
+}
+
 mod mocks {
     mod cairo1_helpers_fixture;
 }

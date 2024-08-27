@@ -2,11 +2,12 @@ use contracts::account_contract::{AccountContract, IAccountDispatcher, IAccountD
 use contracts::test_data::counter_evm_bytecode;
 use contracts::test_utils::{setup_contracts_for_testing, deploy_contract_account};
 use evm::test_utils::{ca_address, native_token};
+use snforge_std::{start_cheat_caller_address, stop_cheat_caller_address};
 
 #[test]
 fn test_ca_deploy() {
-    setup_contracts_for_testing();
-    let ca_address = deploy_contract_account(ca_address(), [].span());
+    let (_, kakarot_core) = setup_contracts_for_testing();
+    let ca_address = deploy_contract_account(kakarot_core, ca_address(), [].span());
     let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
 
     let initial_bytecode = contract_account.bytecode();
@@ -17,9 +18,9 @@ fn test_ca_deploy() {
 
 #[test]
 fn test_ca_bytecode() {
-    setup_contracts_for_testing();
+    let (_, kakarot_core) = setup_contracts_for_testing();
     let bytecode = counter_evm_bytecode();
-    let ca_address = deploy_contract_account(ca_address(), bytecode);
+    let ca_address = deploy_contract_account(kakarot_core, ca_address(), bytecode);
     let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
 
     let contract_bytecode = contract_account.bytecode();
@@ -29,15 +30,17 @@ fn test_ca_bytecode() {
 
 #[test]
 fn test_ca_get_nonce() {
-    setup_contracts_for_testing();
-    let ca_address = deploy_contract_account(ca_address(), [].span());
+    let (_, kakarot_core) = setup_contracts_for_testing();
+    let ca_address = deploy_contract_account(kakarot_core, ca_address(), [].span());
     let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
 
     let initial_nonce = contract_account.get_nonce();
     assert(initial_nonce == 1, 'nonce should be 1');
 
     let expected_nonce = 100;
+    start_cheat_caller_address(ca_address.starknet, kakarot_core.contract_address);
     contract_account.set_nonce(expected_nonce);
+    stop_cheat_caller_address(ca_address.starknet);
 
     let nonce = contract_account.get_nonce();
 
@@ -47,8 +50,8 @@ fn test_ca_get_nonce() {
 
 #[test]
 fn test_ca_storage() {
-    setup_contracts_for_testing();
-    let ca_address = deploy_contract_account(ca_address(), [].span());
+    let (_, kakarot_core) = setup_contracts_for_testing();
+    let ca_address = deploy_contract_account(kakarot_core, ca_address(), [].span());
     let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
 
     let storage_slot = 0x555;
@@ -57,7 +60,9 @@ fn test_ca_storage() {
     assert(initial_storage == 0, 'value should be 0');
 
     let expected_storage = 0x444;
+    start_cheat_caller_address(ca_address.starknet, kakarot_core.contract_address);
     contract_account.write_storage(storage_slot, expected_storage);
+    stop_cheat_caller_address(ca_address.starknet);
 
     let storage = contract_account.storage(storage_slot);
 

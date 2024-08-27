@@ -1,7 +1,13 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-use contracts::test_utils::{deploy_contract_account};
+use contracts::kakarot_core::KakarotCore;
+use contracts::kakarot_core::interface::{
+    IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
+};
+use contracts::test_utils::{deploy_contract_account, deploy_native_token};
 use contracts::uninitialized_account::UninitializedAccount;
 use core::nullable::{match_nullable, FromNullableResult};
+use core::ops::DerefMut;
+use core::ops::SnapshotDeref;
 use core::starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
@@ -13,7 +19,30 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{Message, Environment, Address, Account, AccountTrait};
 use evm::state::State;
 use evm::{stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}};
+use snforge_std::{declare, DeclareResultTrait, ContractClassTrait};
+use starknet::storage::StorageTraitMut;
 use utils::constants;
+
+fn declare_and_store_classes() {
+    // Declare the contract classes
+    let native_token = deploy_native_token();
+    let uninitialized_account = declare("UninitializedAccount")
+        .unwrap()
+        .contract_class()
+        .class_hash;
+    let account_contract = declare("AccountContract").unwrap().contract_class().class_hash;
+    let kakarot_core = declare("KakarotCore").unwrap().contract_class().class_hash;
+
+    // Get the test address, which is the one that will be used when testing internals
+    let test_address = get_contract_address();
+
+    // Store the contract classes in the same storage slots as Kakarot
+    let mut kakarot_state = KakarotCore::contract_state_for_testing();
+    let mut kakarot_storage = kakarot_state.deref_mut().storage_mut();
+    kakarot_storage.Kakarot_account_contract_class_hash.write(*account_contract);
+    kakarot_storage.Kakarot_uninitialized_account_class_hash.write(*uninitialized_account);
+    kakarot_storage.Kakarot_native_token_address.write(native_token.contract_address);
+}
 
 #[derive(Destruct)]
 struct VMBuilder {
@@ -176,12 +205,14 @@ fn preset_message() -> Message {
     let code: Span<u8> = [0x00].span();
     let data: Span<u8> = [4, 5, 6].span();
     let value: u256 = callvalue();
+    let uninitialized_account_class_hash = declare("UninitializedAccount")
+        .unwrap()
+        .contract_class()
+        .class_hash;
     let caller = Address {
         evm: origin(),
         starknet: utils::helpers::compute_starknet_address(
-            get_contract_address(),
-            origin(),
-            UninitializedAccount::TEST_CLASS_HASH.try_into().unwrap()
+            get_contract_address(), origin(), *uninitialized_account_class_hash
         )
     };
     let read_only = false;
@@ -244,9 +275,12 @@ fn preset_vm() -> VM {
 /// Initializes the contract account by setting the bytecode, the storage
 /// and incrementing the nonce to 1.
 fn initialize_contract_account(
-    eth_address: EthAddress, bytecode: Span<u8>, storage: Span<(u256, u256)>
+    kakarot_core: IExtendedKakarotCoreDispatcher,
+    eth_address: EthAddress,
+    bytecode: Span<u8>,
+    storage: Span<(u256, u256)>
 ) -> Result<Address, EVMError> {
-    let mut ca_address = deploy_contract_account(eth_address, bytecode);
+    let mut ca_address = deploy_contract_account(kakarot_core, eth_address, bytecode);
     // Set the storage of the contract account
     let account = Account {
         address: ca_address, code: [

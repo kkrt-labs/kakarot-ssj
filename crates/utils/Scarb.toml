@@ -13,7 +13,7 @@ alexandria_data_structures = { path = "../alexandria_data_structures" }
 fmt.workspace = true
 
 [dev-dependencies]
-cairo_test.workspace = true
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.28.0" }
 
 [scripts]
 test = "snforge test --max-n-steps 4294967295"
