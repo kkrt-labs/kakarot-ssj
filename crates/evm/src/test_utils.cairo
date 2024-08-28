@@ -113,6 +113,11 @@ impl VMBuilderImpl of VMBuilderTrait {
         self.vm.valid_jumpdests = AccountTrait::get_jumpdests(self.vm.message.code);
         return self.vm;
     }
+
+    fn with_gas_left(mut self: VMBuilder, gas_left: u128) -> VMBuilder {
+        self.vm.gas_left = gas_left;
+        self
+    }
 }
 
 fn origin() -> EthAddress {
