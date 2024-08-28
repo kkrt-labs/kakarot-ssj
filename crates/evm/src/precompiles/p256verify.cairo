@@ -72,13 +72,13 @@ mod tests {
     use evm::instructions::system_operations::SystemOperationsTrait;
     use evm::memory::InternalMemoryTrait;
     use evm::memory::MemoryTrait;
-    use evm::test_utils::{declare_and_store_classes, native_token};
 
     use evm::precompiles::p256verify::P256Verify;
     use evm::stack::StackTrait;
     use evm::test_utils::{VMBuilderTrait};
-    use utils::helpers::{U256Trait, ToBytes, FromBytes};
+    use evm::test_utils::{declare_and_store_classes, native_token};
     use snforge_std::{start_mock_call, test_address};
+    use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 
     // source:

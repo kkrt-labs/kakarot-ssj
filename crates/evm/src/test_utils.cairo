@@ -51,21 +51,13 @@ fn register_account(evm_address: EthAddress, starknet_address: ContractAddress) 
 fn declare_and_store_classes() {
     // Declare the contract classes
     let native_token = deploy_native_token();
-    let uninitialized_account = declare("UninitializedAccount")
-        .unwrap()
-        .contract_class()
-        .class_hash;
-    let account_contract = declare("AccountContract").unwrap().contract_class().class_hash;
-    let kakarot_core = declare("KakarotCore").unwrap().contract_class().class_hash;
-
-    // Get the test address, which is the one that will be used when testing internals
-    let test_address = get_contract_address();
+    let _kakarot_core = declare("KakarotCore").unwrap().contract_class().class_hash;
 
     // Store the contract classes in the same storage slots as Kakarot
     let mut kakarot_state = KakarotCore::contract_state_for_testing();
     let mut kakarot_storage = kakarot_state.deref_mut().storage_mut();
-    kakarot_storage.Kakarot_account_contract_class_hash.write(*account_contract);
-    kakarot_storage.Kakarot_uninitialized_account_class_hash.write(*uninitialized_account);
+    kakarot_storage.Kakarot_account_contract_class_hash.write(account_contract());
+    kakarot_storage.Kakarot_uninitialized_account_class_hash.write(uninitialized_account());
     kakarot_storage.Kakarot_native_token_address.write(native_token.contract_address);
 }
 

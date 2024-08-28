@@ -64,9 +64,9 @@ mod tests {
     use evm::test_utils::{
         VMBuilderTrait, native_token, other_starknet_address, declare_and_store_classes
     };
+    use snforge_std::{start_mock_call};
     use utils::helpers::ToBytes;
     use utils::helpers::{FromBytes};
-    use snforge_std::{start_mock_call};
 
     //source:
     //<https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='wFirsWplaceqparameters%20in%20memorybFFjdata~0vMSTOREvvwDoqcallZSizeZ_1XSizeb1FX_2jaddressY4%200xFFFFFFFFjgasvSTATICCALLvvwPutqresulWalonVonqstackvPOPb20vMLOAD'~Y1j//%20v%5Cnq%20thVj%20wb~0x_Offset~Zb20jretYvPUSHXjargsWt%20Ve%20%01VWXYZ_bjqvw~_>

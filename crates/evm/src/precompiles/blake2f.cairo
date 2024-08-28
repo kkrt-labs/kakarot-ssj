@@ -102,8 +102,8 @@ mod tests {
     use evm::test_utils::{
         VMBuilderTrait, native_token, other_starknet_address, declare_and_store_classes
     };
-    use utils::helpers::FromBytes;
     use snforge_std::{start_mock_call, test_address};
+    use utils::helpers::FromBytes;
 
     #[test]
     fn test_blake2_precompile_fail_empty_input() {

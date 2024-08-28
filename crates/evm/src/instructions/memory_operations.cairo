@@ -312,22 +312,22 @@ mod tests {
     use core::starknet::get_contract_address;
     use evm::backend::starknet_backend::fetch_original_storage;
     use evm::backend::starknet_backend;
-    use evm::model::Address;
     use evm::errors::{EVMError, INVALID_DESTINATION};
     use evm::gas;
     use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
     use evm::memory::{InternalMemoryTrait, MemoryTrait};
+    use evm::model::Address;
     use evm::model::vm::{VM, VMTrait};
     use evm::model::{Account, AccountTrait};
     use evm::stack::StackTrait;
     use evm::state::{StateTrait, compute_storage_address};
-    use utils::helpers::compute_starknet_address;
     use evm::test_utils::{
         evm_address, VMBuilderTrait, declare_and_store_classes, register_account,
         uninitialized_account, native_token
     };
     use snforge_std::{test_address, start_mock_call, store};
     use snforge_utils::snforge_utils::store_evm;
+    use utils::helpers::compute_starknet_address;
 
     #[test]
     fn test_pc_basic() {
