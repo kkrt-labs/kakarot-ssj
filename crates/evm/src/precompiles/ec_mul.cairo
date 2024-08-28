@@ -22,7 +22,7 @@ use utils::helpers::{load_word, u256_to_bytes_array, U256Trait, ToBytes, FromByt
 
 // const BN254_ORDER: u256 = 0x30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001;
 
-const BASE_COST: u128 = 150;
+const BASE_COST: u128 = 6000;
 const U256_BYTES_LEN: usize = 32;
 
 impl EcMul of Precompile {
