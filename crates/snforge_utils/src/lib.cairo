@@ -1,3 +1,5 @@
+mod contracts;
+
 #[cfg(target: 'test')]
 pub mod snforge_utils {
     use core::array::ArrayTrait;
@@ -8,6 +10,181 @@ pub mod snforge_utils {
     use snforge_std::{Event, spy_events, EventSpy, EventSpyAssertionsTrait, EventSpyTrait};
     use snforge_std::cheatcodes::events::{Events};
     use array_utils::ArrayExtTrait;
+
+    use snforge_std::trace::{
+        get_call_trace, CallTrace, CallEntryPoint, CallResult, EntryPointType, CallType, CallFailure
+    };
+
+    impl CloneEntryPointType of Clone<EntryPointType> {
+        fn clone(self: @EntryPointType) -> EntryPointType {
+            match self {
+                EntryPointType::Constructor => EntryPointType::Constructor,
+                EntryPointType::External => EntryPointType::External,
+                EntryPointType::L1Handler => EntryPointType::L1Handler,
+            }
+        }
+    }
+
+    impl CloneCallEntryPoint of Clone<CallEntryPoint> {
+        fn clone(self: @CallEntryPoint) -> CallEntryPoint {
+            CallEntryPoint {
+                entry_point_type: self.entry_point_type.clone(),
+                entry_point_selector: self.entry_point_selector.clone(),
+                calldata: self.calldata.clone(),
+                contract_address: self.contract_address.clone(),
+                caller_address: self.caller_address.clone(),
+                call_type: self.call_type.clone(),
+            }
+        }
+    }
+
+    impl CloneCallType of Clone<CallType> {
+        fn clone(self: @CallType) -> CallType {
+            match self {
+                CallType::Call => CallType::Call,
+                CallType::Delegate => CallType::Delegate,
+            }
+        }
+    }
+
+    impl CloneCallResult of Clone<CallResult> {
+        fn clone(self: @CallResult) -> CallResult {
+            match self {
+                CallResult::Success(val) => CallResult::Success(val.clone()),
+                CallResult::Failure(val) => CallResult::Failure(val.clone()),
+            }
+        }
+    }
+
+    impl CloneCallFailure of Clone<CallFailure> {
+        fn clone(self: @CallFailure) -> CallFailure {
+            match self {
+                CallFailure::Panic(val) => CallFailure::Panic(val.clone()),
+                CallFailure::Error(val) => CallFailure::Error(val.clone()),
+            }
+        }
+    }
+
+
+    impl CloneCallTrace of Clone<CallTrace> {
+        fn clone(self: @CallTrace) -> CallTrace {
+            CallTrace {
+                entry_point: self.entry_point.clone(),
+                nested_calls: self.nested_calls.clone(),
+                result: self.result.clone(),
+            }
+        }
+    }
+
+    pub fn is_called(contract_address: ContractAddress, selector: felt252) -> bool {
+        let call_trace = get_call_trace();
+
+        // Check if the top-level call matches
+        if check_call_match(call_trace.entry_point, contract_address, selector) {
+            return true;
+        }
+
+        // Check nested calls recursively
+        if check_nested_calls(call_trace.nested_calls, contract_address, selector) {
+            return true;
+        }
+
+        false
+    }
+
+    pub fn assert_called(contract_address: ContractAddress, selector: felt252) {
+        assert!(is_called(contract_address, selector), "Expected call not found in trace");
+    }
+
+    pub fn assert_not_called(contract_address: ContractAddress, selector: felt252) {
+        assert!(!is_called(contract_address, selector), "Unexpected call found in trace");
+    }
+
+    fn check_call_match(
+        entry_point: CallEntryPoint, contract_address: ContractAddress, selector: felt252
+    ) -> bool {
+        entry_point.contract_address == contract_address
+            && entry_point.entry_point_selector == selector
+    }
+
+    fn check_nested_calls(
+        calls: Array<CallTrace>, contract_address: ContractAddress, selector: felt252
+    ) -> bool {
+        let mut i = 0;
+        loop {
+            if i == calls.len() {
+                break false;
+            }
+            let call = calls.at(i).clone();
+            if check_call_match(call.entry_point, contract_address, selector) {
+                break true;
+            }
+            if check_nested_calls(call.nested_calls, contract_address, selector) {
+                break true;
+            }
+            i += 1;
+        }
+    }
+
+    pub fn assert_called_with(
+        contract_address: ContractAddress, selector: felt252, calldata: Span<felt252>
+    ) {
+        assert!(
+            is_called_with(contract_address, selector, calldata),
+            "Expected call with specific data not found in trace"
+        );
+    }
+
+
+    pub fn is_called_with(
+        contract_address: ContractAddress, selector: felt252, calldata: Span<felt252>
+    ) -> bool {
+        let call_trace = get_call_trace();
+
+        if check_call_match_with_data(
+            call_trace.entry_point, contract_address, selector, calldata
+        ) {
+            return true;
+        }
+
+        check_nested_calls_with_data(call_trace.nested_calls, contract_address, selector, calldata)
+    }
+
+
+    fn check_call_match_with_data(
+        call: CallEntryPoint,
+        contract_address: ContractAddress,
+        selector: felt252,
+        calldata: Span<felt252>
+    ) -> bool {
+        call.contract_address == contract_address
+            && call.entry_point_selector == selector
+            && call.calldata.span() == calldata
+    }
+
+    fn check_nested_calls_with_data(
+        calls: Array<CallTrace>,
+        contract_address: ContractAddress,
+        selector: felt252,
+        calldata: Span<felt252>
+    ) -> bool {
+        let mut i = 0;
+        loop {
+            if i == calls.len() {
+                break false;
+            }
+            let call = calls.at(i).clone();
+            if check_call_match_with_data(call.entry_point, contract_address, selector, calldata) {
+                break true;
+            }
+            if check_nested_calls_with_data(
+                call.nested_calls, contract_address, selector, calldata
+            ) {
+                break true;
+            }
+            i += 1;
+        }
+    }
 
     mod array_utils {
         #[generate_trait]
