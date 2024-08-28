@@ -7,6 +7,7 @@ edition = "2023_11"
 
 [dependencies]
 starknet = "2.7.1"
+evm = { path = "../evm" }
 
 [dev-dependencies]
 snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.28.0" }

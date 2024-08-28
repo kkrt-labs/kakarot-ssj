@@ -5,8 +5,11 @@ pub mod snforge_utils {
     use core::array::ArrayTrait;
     use core::option::OptionTrait;
     use starknet::testing::cheatcode;
+    use evm::state::compute_storage_key;
     use starknet::ContractAddress;
+    use evm::model::Address;
     use snforge_std::cheatcodes::handle_cheatcode;
+    use snforge_std::cheatcodes::storage::store_felt252;
     use snforge_std::{Event, spy_events, EventSpy, EventSpyAssertionsTrait, EventSpyTrait};
     use snforge_std::cheatcodes::events::{Events};
     use array_utils::ArrayExtTrait;
@@ -358,6 +361,19 @@ pub mod snforge_utils {
                 );
                 i += 1;
             }
+        }
+    }
+
+    /// Stores a value in the EVM storage of a given Starknet contract.
+    pub fn store_evm(target: Address, evm_key: u256, evm_value: u256) {
+        let storage_address = compute_storage_key(target.evm, evm_key);
+        let serialized_value = [evm_value.low.into(), evm_value.high.into()].span();
+        let mut offset: usize = 0;
+        while offset != serialized_value.len() {
+            store_felt252(
+                target.starknet, storage_address + offset.into(), *serialized_value.at(offset)
+            );
+            offset += 1;
         }
     }
 }
