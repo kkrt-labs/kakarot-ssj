@@ -83,7 +83,6 @@ impl Blake2f of Precompile {
 
 #[cfg(test)]
 mod tests {
-    use contracts::test_utils::{setup_contracts_for_testing};
     use core::array::SpanTrait;
     use core::starknet::testing::set_contract_address;
     use evm::errors::EVMError;
@@ -100,8 +99,11 @@ mod tests {
         blake2_precompile_fail_wrong_length_input_3_test_case, blake2_precompile_pass_1_test_case,
         blake2_precompile_pass_0_test_case, blake2_precompile_pass_2_test_case
     };
-    use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
+    use evm::test_utils::{
+        VMBuilderTrait, native_token, other_starknet_address, declare_and_store_classes
+    };
     use utils::helpers::FromBytes;
+    use snforge_std::{start_mock_call, test_address};
 
     #[test]
     fn test_blake2_precompile_fail_empty_input() {
@@ -170,10 +172,8 @@ mod tests {
     // source:
     // <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='yExecuteBest%20vector%205%20from%20https:Keips.Ghereum.org/EIPS/eip-152XroundJ12~3DhZ48c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5~4jZd182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b~36jXmZ616263))))*~68jXt~3~196Df~1~212DCallW(rGS!rGOVQargsSize~0_argsOV~9_addresJ0xFFFFFFFF_gaswSTATICCALLXRGurnBhe%20result%20ofWwPOP(s!oVwRETURN'~Y1_K%20w%5Cnq***0jwMSTORE_%20yZY32%200xYwPUSHXwwyW%20blake2fVffsGQ~213_K//JsY4%20GetDj8XB%20t*00)qq(~64_!izeQ%01!()*BDGJKQVWXYZ_jqwy~_>
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix or delete
     fn test_blake2_precompile_static_call() {
-        let (_, _) = setup_contracts_for_testing();
+        declare_and_store_classes();
 
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -212,6 +212,7 @@ mod tests {
         vm.stack.push(9).unwrap(); // address
         vm.stack.push(0xFFFFFFFF).unwrap(); // gas
 
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         vm.exec_staticcall().unwrap();
 
         let mut result: Array<u8> = Default::default();

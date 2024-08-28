@@ -68,16 +68,17 @@ impl P256Verify of Precompile {
 
 #[cfg(test)]
 mod tests {
-    use contracts::test_utils::setup_contracts_for_testing;
     use core::array::ArrayTrait;
     use evm::instructions::system_operations::SystemOperationsTrait;
     use evm::memory::InternalMemoryTrait;
     use evm::memory::MemoryTrait;
+    use evm::test_utils::{declare_and_store_classes, native_token};
 
     use evm::precompiles::p256verify::P256Verify;
     use evm::stack::StackTrait;
     use evm::test_utils::{VMBuilderTrait};
     use utils::helpers::{U256Trait, ToBytes, FromBytes};
+    use snforge_std::{start_mock_call, test_address};
 
 
     // source:
@@ -115,7 +116,7 @@ mod tests {
     #[ignore]
     //TODO(sn-foundry): fix or delete
     fn test_p256verify_precompile_static_call() {
-        let (_, _) = setup_contracts_for_testing();
+        declare_and_store_classes();
 
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -144,6 +145,7 @@ mod tests {
         vm.stack.push(0x100).unwrap(); // address
         vm.stack.push(0xFFFFFFFF).unwrap(); // gas
 
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         vm.exec_staticcall().unwrap();
 
         let mut result = Default::default();
@@ -177,9 +179,8 @@ mod tests {
 
     //TODO(sn-foundry): fix or delete
     #[test]
-    #[ignore]
     fn test_p256verify_precompile_input_too_short_static_call() {
-        let (_, _) = setup_contracts_for_testing();
+        declare_and_store_classes();
 
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -205,6 +206,7 @@ mod tests {
         vm.stack.push(0x100).unwrap(); // address
         vm.stack.push(0xFFFFFFFF).unwrap(); // gas
 
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         vm.exec_staticcall().unwrap();
 
         let mut result = Default::default();

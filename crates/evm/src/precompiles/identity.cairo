@@ -23,11 +23,11 @@ impl Identity of Precompile {
 
 #[cfg(test)]
 mod tests {
-    use contracts::test_utils::{setup_contracts_for_testing};
     use core::clone::Clone;
     use core::result::ResultTrait;
     use core::starknet::testing::set_contract_address;
     use evm::instructions::system_operations::SystemOperationsTrait;
+    use snforge_std::{start_mock_call, test_address};
 
     use evm::memory::MemoryTrait;
     use evm::precompiles::identity::Identity;
@@ -53,8 +53,6 @@ mod tests {
     #[test]
     #[ignore]
     fn test_identity_precompile_static_call() {
-        let (_, _) = setup_contracts_for_testing();
-
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
         vm.stack.push(0x20).unwrap(); // retSize
@@ -66,6 +64,7 @@ mod tests {
 
         vm.memory.store(0x2A, 0x1F);
 
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         vm.exec_staticcall().unwrap();
 
         let result = vm.memory.load(0x3F);

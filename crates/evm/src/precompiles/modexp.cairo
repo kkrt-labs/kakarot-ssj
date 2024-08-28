@@ -154,7 +154,6 @@ fn calculate_iteration_count(exp_length: u64, exp_highp: u256) -> u64 {
 
 #[cfg(tests)]
 mod tests {
-    use contracts::test_utils::{setup_contracts_for_testing};
     use core::result::ResultTrait;
     use core::starknet::EthAddress;
     use core::starknet::testing::set_contract_address;
@@ -165,7 +164,7 @@ mod tests {
     use evm::precompiles::Precompiles;
     use evm::stack::StackTrait;
     use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
-
+    use snforge_std::{start_mock_call, test_address};
     use evm_tests::test_precompiles::test_data::test_data_modexp::{
         test_modexp_modsize0_returndatasizeFiller_data,
         test_modexp_create2callPrecompiles_test0_berlin_data, test_modexp_eip198_example_1_data,

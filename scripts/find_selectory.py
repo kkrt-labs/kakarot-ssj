@@ -10,9 +10,7 @@ def find_cairo_functions(directory):
         for root, _, files in os.walk(directory)
         for file in files
         if file.endswith(".cairo")
-        for match in re.findall(
-            r"fn\s+(\w+)\(", open(os.path.join(root, file)).read()
-        )
+        for match in re.findall(r"fn\s+(\w+)\(", open(os.path.join(root, file)).read())
     ]
 
 
