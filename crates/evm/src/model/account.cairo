@@ -67,7 +67,7 @@ impl AccountBuilderImpl of AccountBuilderTrait {
     }
 }
 
-#[derive(Copy, Drop, PartialEq)]
+#[derive(Copy, Drop, PartialEq, Debug)]
 struct Account {
     address: Address,
     code: Span<u8>,
@@ -95,8 +95,8 @@ impl AccountImpl of AccountTrait {
                 let kakarot_state = KakarotCore::unsafe_new_contract_state();
                 let starknet_address = kakarot_state.compute_starknet_address(evm_address);
                 // If no account exists at `address`, then we are trying to
-                // access an undeployed account (CA or EOA). We create an
-                // empty account with the correct address and return it.
+                // access an undeployed account. We create an
+                // empty account with the correct address, fetch the balance, and return it.
                 AccountBuilderTrait::new(Address { starknet: starknet_address, evm: evm_address })
                     .fetch_balance()
                     .build()
@@ -253,5 +253,62 @@ impl AccountInternals of AccountInternalTrait {
     #[inline(always)]
     fn set_balance(ref self: Account, value: u256) {
         self.balance = value;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    mod test_has_code_or_nonce {
+        use evm::model::account::{Account, AccountTrait};
+
+        #[test]
+        fn test_should_return_false_when_empty() {
+            let account = Account {
+                address: Address {
+                    evm: EthAddress::from_low_u64_be(1),
+                    starknet: ContractAddress::from_low_u64_be(1),
+                },
+                nonce: 0,
+                code: [].span(),
+                balance: 0,
+                selfdestruct: false,
+                is_created: false,
+            };
+
+            assert!(!account.has_code_or_nonce());
+        }
+
+        #[test]
+        fn test_should_return_true_when_code() {
+            let account = Account {
+                address: Address {
+                    evm: EthAddress::from_low_u64_be(1),
+                    starknet: ContractAddress::from_low_u64_be(1),
+                },
+                nonce: 1,
+                code: [
+                    0x5b
+                ].span(), balance: 0, selfdestruct: false, is_created: false,
+            };
+
+            assert!(!account.has_code_or_nonce());
+        }
+
+        #[test]
+        fn test_should_return_true_when_nonce() {
+            let account = Account {
+                address: Address {
+                    evm: EthAddress::from_low_u64_be(1),
+                    starknet: ContractAddress::from_low_u64_be(1),
+                },
+                nonce: 1,
+                code: [].span(),
+                balance: 0,
+                selfdestruct: false,
+                is_created: false,
+            };
+
+            assert!(account.has_code_or_nonce());
+        }
     }
 }

@@ -264,7 +264,6 @@ mod internals {
 mod tests {
     use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::kakarot_core::KakarotCore;
-    use contracts::test_utils::setup_contracts_for_testing;
     use evm::backend::starknet_backend;
     use evm::errors::EVMErrorTrait;
     use evm::test_utils::{chain_id, evm_address, VMBuilderTrait};

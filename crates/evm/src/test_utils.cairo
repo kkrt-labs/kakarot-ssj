@@ -10,8 +10,10 @@ use core::ops::DerefMut;
 use core::ops::SnapshotDeref;
 use core::starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
-    ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const
+    ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const,
+    ClassHash, class_hash_const
 };
+use core::starknet::storage::{StorageMapWriteAccess, StoragePathEntry};
 use core::traits::TryInto;
 use evm::errors::{EVMError};
 
@@ -19,9 +21,32 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{Message, Environment, Address, Account, AccountTrait};
 use evm::state::State;
 use evm::{stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}};
-use snforge_std::{declare, DeclareResultTrait, ContractClassTrait};
+use snforge_std::{declare, DeclareResultTrait, ContractClassTrait, store};
 use starknet::storage::StorageTraitMut;
 use utils::constants;
+
+fn uninitialized_account() -> ClassHash {
+    class_hash_const::<'uninitialized_account'>()
+}
+
+fn account_contract() -> ClassHash {
+    class_hash_const::<'account_contract'>()
+}
+
+
+fn setup_test_storages() {
+    let mut kakarot_core = KakarotCore::contract_state_for_testing();
+    let mut kakarot_storage = kakarot_core.deref_mut().storage_mut();
+    kakarot_storage.Kakarot_account_contract_class_hash.write(account_contract());
+    kakarot_storage.Kakarot_uninitialized_account_class_hash.write(uninitialized_account());
+    kakarot_storage.Kakarot_native_token_address.write(native_token());
+}
+
+fn register_account(evm_address: EthAddress, starknet_address: ContractAddress) {
+    let mut kakarot_core = KakarotCore::contract_state_for_testing();
+    let mut kakarot_storage = kakarot_core.deref_mut().storage_mut();
+    kakarot_storage.Kakarot_evm_to_starknet_address.entry(evm_address).write(starknet_address);
+}
 
 fn declare_and_store_classes() {
     // Declare the contract classes
