@@ -492,6 +492,14 @@ impl EVMImpl of EVMTrait {
             // JUMPDEST
             return self.exec_jumpdest();
         }
+        if opcode == 92 {
+            // TLOAD
+            return self.exec_tload();
+        }
+        if opcode == 93 {
+            // TSTORE
+            return self.exec_tstore();
+        }
         if opcode == 95 {
             // PUSH0
             return self.exec_push0();
