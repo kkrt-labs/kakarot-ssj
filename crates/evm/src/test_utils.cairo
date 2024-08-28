@@ -8,12 +8,12 @@ use contracts::uninitialized_account::UninitializedAccount;
 use core::nullable::{match_nullable, FromNullableResult};
 use core::ops::DerefMut;
 use core::ops::SnapshotDeref;
+use core::starknet::storage::{StorageMapWriteAccess, StoragePathEntry};
 use core::starknet::{
     StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
     ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const,
     ClassHash, class_hash_const
 };
-use core::starknet::storage::{StorageMapWriteAccess, StoragePathEntry};
 use core::traits::TryInto;
 use evm::errors::{EVMError};
 

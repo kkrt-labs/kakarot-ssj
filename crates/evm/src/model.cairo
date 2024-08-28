@@ -151,7 +151,7 @@ impl AddressImpl of AddressTrait {
 
 /// A struct to save native token transfers to be made when finalizing
 /// a tx
-#[derive(Copy, Drop, PartialEq)]
+#[derive(Copy, Drop, PartialEq, Debug)]
 struct Transfer {
     sender: Address,
     recipient: Address,
@@ -162,322 +162,91 @@ struct Transfer {
 mod tests {
     use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
-    use contracts::test_utils::{
-        setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account,
-        deploy_eoa
-    };
     use core::starknet::EthAddress;
     use evm::backend::starknet_backend;
     use evm::model::account::AccountTrait;
 
-    use evm::model::{Address, Account, AddressTrait};
     use evm::state::StateTrait;
     use evm::state::{State, StateChangeLog, StateChangeLogTrait};
     use evm::test_utils::{declare_and_store_classes};
-    use evm::test_utils::{evm_address};
+    use evm::test_utils;
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-    use snforge_std::{start_cheat_caller_address, stop_cheat_caller_address, test_address};
 
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix Class with hash
-    //0x0000000000000000000000000000000000000000000000000000000000000000 is not declared.
-    fn test_is_deployed_eoa_exists() {
-        // Given
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        starknet_backend::deploy(evm_address()).expect('failed deploy eoa account',);
+    mod test_is_deployed {
+        use evm::model::{Address, Account, AddressTrait};
+        use evm::test_utils::{declare_and_store_classes};
+        use evm::test_utils;
+        use snforge_std::{test_address, start_mock_call};
+        use utils::helpers::compute_starknet_address;
 
-        // When
-        // start_cheat_caller_address(kakarot_core.contract_address, evm_address());
-        let is_deployed = evm_address().is_deployed();
 
-        // Then
-        assert(is_deployed, 'account should be deployed');
+        #[test]
+        fn test_is_deployed_returns_true_if_in_registry() {
+            // Given
+            test_utils::setup_test_storages();
+            let starknet_address = compute_starknet_address(
+                test_address(), test_utils::evm_address(), test_utils::uninitialized_account()
+            );
+            test_utils::register_account(test_utils::evm_address(), starknet_address);
+
+            // When
+            let is_deployed = test_utils::evm_address().is_deployed();
+
+            // Then
+            assert!(is_deployed);
+        }
+
+        #[test]
+        fn test_is_deployed_undeployed() {
+            // Given
+            test_utils::setup_test_storages();
+
+            // When
+            let is_deployed = test_utils::evm_address().is_deployed();
+
+            // Then
+            assert!(!is_deployed);
+        }
     }
+    mod test_is_precompile {
+        use core::starknet::EthAddress;
+        use evm::model::{AddressTrait};
+        #[test]
+        fn test_is_precompile() {
+            // Given
+            let valid_precompiles = array![0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x100];
 
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix because internal function context is not deployed kakarot context
-    fn test_is_deployed_returns_true_if_in_registry() {
-        // Given
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        deploy_contract_account(kakarot_core, evm_address(), [].span());
+            //When
+            for el in valid_precompiles {
+                let evm_address: EthAddress = (el).try_into().unwrap();
+                //Then
+                assert_eq!(true, evm_address.is_precompile());
+            };
+        }
 
-        // When
-        let is_deployed = evm_address().is_deployed();
+        #[test]
+        fn test_is_precompile_zero() {
+            // Given
+            let evm_address: EthAddress = 0x0.try_into().unwrap();
 
-        // Then
-        assert(is_deployed, 'account should be deployed');
-    }
+            // When
+            let is_precompile = evm_address.is_precompile();
 
-    #[test]
-    fn test_is_deployed_undeployed() {
-        // Given
-        let (_, kakarot_core) = setup_contracts_for_testing();
+            // Then
+            assert_eq!(false, is_precompile);
+        }
 
-        // When
-        // set_contract_address(kakarot_core.contract_address);
-        let is_deployed = evm_address().is_deployed();
+        #[test]
+        fn test_is_not_precompile() {
+            // Given
+            let not_valid_precompiles = array![0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0x99];
 
-        // Then
-        assert(!is_deployed, 'account shouldnt be deployed');
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
-    fn test_account_balance_eoa() {
-        // Given
-        let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let eoa_address = deploy_eoa(kakarot_core, evm_address());
-
-        fund_account_with_native_token(eoa_address.contract_address, native_token, 0x1);
-
-        // When
-        // set_contract_address(kakarot_core.contract_address);
-        let account = AccountTrait::fetch(evm_address()).unwrap();
-        let balance = account.balance();
-
-        // Then
-        assert(balance == native_token.balanceOf(eoa_address.contract_address), 'wrong balance');
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
-    fn test_address_balance_eoa() {
-        // Given
-        let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let eoa_address = starknet_backend::deploy(evm_address())
-            .expect('failed deploy eoa account',);
-
-        fund_account_with_native_token(eoa_address.starknet, native_token, 0x1);
-
-        // When
-        // set_contract_address(kakarot_core.contract_address);
-        let account = AccountTrait::fetch(evm_address()).unwrap();
-        let balance = account.balance();
-
-        // Then
-        assert(balance == native_token.balanceOf(eoa_address.starknet), 'wrong balance');
-    }
-
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix Entry point
-    //EntryPointSelector(0x11f99ee2dc5094f0126c3db5401e3a1a2b6b440f4740e6cce884709cd4526df) not
-    //found in contract. Probably due to how snfoundry handles deployments.
-    fn test_account_has_code_or_nonce_empty() {
-        // Given
-        declare_and_store_classes();
-        let mut _eoa_address = starknet_backend::deploy(evm_address()).expect('failed deploy eoa',);
-
-        // When
-        let account = AccountTrait::fetch(evm_address()).unwrap();
-
-        // Then
-        assert_eq!(account.has_code_or_nonce(), false);
-    }
-
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
-    fn test_account_has_code_or_nonce_contract_account() {
-        // Given
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        let mut _ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
-
-        // When
-        let account = AccountTrait::fetch(evm_address()).unwrap();
-
-        // Then
-        assert(account.has_code_or_nonce() == true, 'account shouldhave codeornonce');
-    }
-
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): Contract not deployed at address: 0x0
-    fn test_account_has_code_or_nonce_undeployed() {
-        // Given
-        setup_contracts_for_testing();
-
-        // When
-        let account = AccountTrait::fetch_or_create(evm_address());
-
-        // Then
-        assert(account.has_code_or_nonce() == false, 'account has codeornonce');
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix Contract not deployed at address: 0x0
-    fn test_account_has_code_or_nonce_account_to_deploy() {
-        // Given
-        setup_contracts_for_testing();
-
-        // When
-        let mut account = AccountTrait::fetch_or_create(evm_address());
-        // Mock account as an existing contract account in the cached state.
-        account.nonce = 1;
-        account.code = [0x1].span();
-
-        // Then
-        assert(account.has_code_or_nonce() == true, 'account should exist');
-    }
-
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
-    fn test_account_balance_contract_account() {
-        // Given
-        let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
-
-        fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
-
-        // When
-        let account = AccountTrait::fetch(evm_address()).unwrap();
-        let balance = account.balance();
-
-        // Then
-        assert(balance == native_token.balanceOf(ca_address.starknet), 'wrong balance');
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
-    fn test_account_commit_already_deployed_should_not_change_code() {
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
-
-        let mut state: State = Default::default();
-
-        // When
-        let mut account = AccountTrait::fetch(evm_address()).unwrap();
-        account.nonce = 420;
-        account.code = [0x1].span();
-        state.set_account(account);
-        starknet_backend::commit(ref state).expect('commitment failed');
-
-        // Then
-        let account_dispatcher = IAccountDispatcher { contract_address: ca_address.starknet };
-        let nonce = account_dispatcher.get_nonce();
-        let code = account_dispatcher.bytecode();
-        assert(nonce == 420, 'account should be committed');
-        assert!(code != [0x1].span(), "code should not be mofidied unless account is created")
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
-    fn test_account_commit_created_but_already_deployed() {
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
-
-        // When created in this same tx, the account should have a new code.
-
-        let mut state: State = Default::default();
-        let mut account = AccountTrait::fetch(evm_address()).unwrap();
-        account.set_created(true);
-        account.nonce = 420;
-        account.code = [0x1].span();
-        state.set_account(account);
-        starknet_backend::commit(ref state).expect('commitment failed');
-
-        // Then
-        let account_dispatcher = IAccountDispatcher { contract_address: ca_address.starknet };
-        let nonce = account_dispatcher.get_nonce();
-        let code = account_dispatcher.bytecode();
-        assert(nonce == 420, 'nonce should be modified');
-        assert(code == [0x1].span(), 'code should be modified');
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix Requested
-    // ContractAddress(PatriciaKey(0x4ece8ed414f739b8be684d13c9094571064726869b0f34b9468e2fd73c01f4b))
-    //is unavailable for deployment.
-    fn test_account_commit_undeployed() {
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        declare_and_store_classes();
-
-        let evm = evm_address();
-        let starknet = kakarot_core.compute_starknet_address(evm);
-        let mut state: State = Default::default();
-        // When
-        let mut account = Account {
-            address: Address { evm, starknet }, nonce: 420, code: [
-                0x69
-            ].span(), balance: 0, selfdestruct: false, is_created: true,
-        };
-        state.set_account(account);
-        starknet_backend::commit(ref state).expect('commitment failed');
-
-        // Then
-        let account_dispatcher = IAccountDispatcher { contract_address: starknet };
-        let nonce = account_dispatcher.get_nonce();
-        let code = account_dispatcher.bytecode();
-        assert(nonce == 420, 'nonce should be committed');
-        assert(code == [0x69].span(), 'code should be committed');
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
-    fn test_address_balance_contract_account() {
-        // Given
-        let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
-
-        fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
-
-        // When
-        let account = AccountTrait::fetch(evm_address()).unwrap();
-        let balance = account.balance();
-
-        // Then
-        assert(balance == native_token.balanceOf(ca_address.starknet), 'wrong balance');
-    }
-
-    #[test]
-    fn test_is_precompile() {
-        // Given
-        let valid_precompiles = array![0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x100];
-
-        //When
-        for el in valid_precompiles {
-            let evm_address: EthAddress = (el).try_into().unwrap();
-            //Then
-            assert_eq!(true, evm_address.is_precompile());
-        };
-    }
-
-    #[test]
-    fn test_is_precompile_zero() {
-        // Given
-        let evm_address: EthAddress = 0x0.try_into().unwrap();
-
-        // When
-        let is_precompile = evm_address.is_precompile();
-
-        // Then
-        assert_eq!(false, is_precompile);
-    }
-
-    #[test]
-    fn test_is_not_precompile() {
-        // Given
-        let not_valid_precompiles = array![0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0x99];
-
-        //When
-        for el in not_valid_precompiles {
-            let evm_address: EthAddress = (el).try_into().unwrap();
-            //Then
-            assert_eq!(false, evm_address.is_precompile());
-        };
+            //When
+            for el in not_valid_precompiles {
+                let evm_address: EthAddress = (el).try_into().unwrap();
+                //Then
+                assert_eq!(false, evm_address.is_precompile());
+            };
+        }
     }
 }
