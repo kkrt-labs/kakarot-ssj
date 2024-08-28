@@ -427,7 +427,7 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::state::{StateTrait, State};
     use evm::test_utils::{
-        VMBuilderTrait, initialize_contract_account, native_token, evm_address, test_address,
+        VMBuilderTrait, initialize_contract_account, native_token, evm_address, test_dual_address,
         other_evm_address,
     };
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
@@ -1007,7 +1007,7 @@ mod tests {
     fn test_exec_selfdestruct_existing_ca() {
         // Given
         let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let destroyed_address = test_address().evm; // address in vm call context
+        let destroyed_address = test_dual_address().evm; // address in vm call context
         let ca_address = deploy_contract_account(
             kakarot_core, destroyed_address, [0x1, 0x2, 0x3].span()
         );

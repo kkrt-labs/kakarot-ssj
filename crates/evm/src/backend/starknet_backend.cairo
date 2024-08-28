@@ -366,4 +366,37 @@ mod tests {
         assert_called(starknet_address, selector!("write_bytecode"));
         assert_called(starknet_address, selector!("set_nonce"));
     }
+
+    #[test]
+    #[ignore]
+    //TODO(starknet-foundry): it's impossible to deploy an un-declared class, nor is it possible to
+    //mock_deploy.
+    fn test_exec_sstore_finalized() {// // Given
+    // declare_and_store_classes();
+    // let mut vm = VMBuilderTrait::new_with_presets().build();
+    // let evm_address = vm.message().target.evm;
+    // let starknet_address = compute_starknet_address(
+    //     test_address(), evm_address, uninitialized_account()
+    // );
+    // let account = Account {
+    //     address: Address { evm: evm_address, starknet: starknet_address },
+    //     code: [].span(),
+    //     nonce: 1,
+    //     balance: 0,
+    //     selfdestruct: false,
+    //     is_created: false,
+    // };
+    // let key: u256 = 0x100000000000000000000000000000001;
+    // let value: u256 = 0xABDE1E11A5;
+    // vm.stack.push(value).expect('push failed');
+    // vm.stack.push(key).expect('push failed');
+
+    // // When
+
+    // vm.exec_sstore().expect('exec_sstore failed');
+    // starknet_backend::commit(ref vm.env.state).expect('commit storage failed');
+
+    // // Then
+    // assert(fetch_original_storage(@account, key) == value, 'wrong committed value')
+    }
 }

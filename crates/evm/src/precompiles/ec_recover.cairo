@@ -81,6 +81,7 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
     use snforge_std::{start_mock_call, test_address};
+    use evm::test_utils::declare_and_store_classes;
     use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 

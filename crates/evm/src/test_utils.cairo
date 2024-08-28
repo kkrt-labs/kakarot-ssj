@@ -21,7 +21,7 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{Message, Environment, Address, Account, AccountTrait};
 use evm::state::State;
 use evm::{stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}};
-use snforge_std::{declare, DeclareResultTrait, ContractClassTrait, store};
+use snforge_std::{declare, DeclareResultTrait, ContractClassTrait, store, test_address};
 use starknet::storage::StorageTraitMut;
 use utils::constants;
 
@@ -165,7 +165,7 @@ fn evm_address() -> EthAddress {
     'evm_address'.try_into().unwrap()
 }
 
-fn test_address() -> Address {
+fn test_dual_address() -> Address {
     Address { evm: evm_address(), starknet: starknet_address() }
 }
 
@@ -235,19 +235,21 @@ fn preset_message() -> Message {
     let code: Span<u8> = [0x00].span();
     let data: Span<u8> = [4, 5, 6].span();
     let value: u256 = callvalue();
-    let uninitialized_account_class_hash = declare("UninitializedAccount")
-        .unwrap()
-        .contract_class()
-        .class_hash;
     let caller = Address {
         evm: origin(),
         starknet: utils::helpers::compute_starknet_address(
-            get_contract_address(), origin(), *uninitialized_account_class_hash
+            test_address(), origin(), uninitialized_account()
+        )
+    };
+    let target = Address {
+        evm: evm_address(),
+        starknet: utils::helpers::compute_starknet_address(
+            test_address(), evm_address(), uninitialized_account()
         )
     };
     let read_only = false;
     let tx_gas_limit = tx_gas_limit();
-    let target = test_address();
+    let target = test_dual_address();
 
     Message {
         target,
