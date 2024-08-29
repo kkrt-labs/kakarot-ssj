@@ -364,14 +364,6 @@ mod tests {
         assert_eq!(vm.stack.pop_eth_address().unwrap(), vm.message().target.evm.into());
     }
 
-    #[test]
-    #[ignore]
-    fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls)-> C (smart contract)
-    // TODO: Once we have ability to do nested smart contract calls, check that in `C`s context
-    // `ADDRESS` should return address `B`
-    // ref: https://github.com/kkrt-labs/kakarot-ssj/issues/183
-    }
-
     // *************************************************************************
     // 0x31: BALANCE
     // *************************************************************************
