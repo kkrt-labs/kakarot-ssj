@@ -144,7 +144,7 @@ impl AddressImpl of AddressTrait {
     fn is_precompile(self: EthAddress) -> bool {
         let self: felt252 = self.into();
         return self != ZERO
-            && (self.into() < LAST_ETHEREUM_PRECOMPILE_ADDRESS
+            && (self.into() <= LAST_ETHEREUM_PRECOMPILE_ADDRESS
                 || self.into() == FIRST_ROLLUP_PRECOMPILE_ADDRESS);
     }
 }
@@ -214,7 +214,9 @@ mod tests {
         #[test]
         fn test_is_precompile() {
             // Given
-            let valid_precompiles = array![0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x100];
+            let valid_precompiles = array![
+                0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x0a, 0x100
+            ];
 
             //When
             for el in valid_precompiles {
@@ -239,7 +241,7 @@ mod tests {
         #[test]
         fn test_is_not_precompile() {
             // Given
-            let not_valid_precompiles = array![0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0x99];
+            let not_valid_precompiles = array![0xb, 0xc, 0xd, 0xe, 0xf, 0x99];
 
             //When
             for el in not_valid_precompiles {
