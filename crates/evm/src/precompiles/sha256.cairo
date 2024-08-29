@@ -54,7 +54,6 @@ impl Sha256 of Precompile {
 
 #[cfg(test)]
 mod tests {
-    use contracts::test_utils::{setup_contracts_for_testing};
     use core::result::ResultTrait;
     use core::starknet::testing::set_contract_address;
     use evm::instructions::system_operations::SystemOperationsTrait;
@@ -62,7 +61,10 @@ mod tests {
     use evm::memory::MemoryTrait;
     use evm::precompiles::sha256::Sha256;
     use evm::stack::StackTrait;
-    use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
+    use evm::test_utils::{
+        VMBuilderTrait, native_token, other_starknet_address, setup_test_storages
+    };
+    use snforge_std::{start_mock_call};
     use utils::helpers::ToBytes;
     use utils::helpers::{FromBytes};
 
@@ -151,10 +153,8 @@ mod tests {
     // source:
     // <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='wFirsWplaceqparameters%20in%20memorybFFjdata~0vMSTOREvvwDoqcallZSizeZ_1XSizeb1FX_2jaddressY4%200xFFFFFFFFjgasvSTATICCALLvvwPutqresulWalonVonqstackvPOPb20vMLOAD'~Y1j//%20v%5Cnq%20thVj%20wb~0x_Offset~Zb20jretYvPUSHXjargsWt%20Ve%20%01VWXYZ_bjqvw~_>
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix or delete
     fn test_sha_256_precompile_static_call() {
-        let (_, _) = setup_contracts_for_testing();
+        setup_test_storages();
 
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -167,6 +167,7 @@ mod tests {
 
         vm.memory.store(0xFF, 0x0);
 
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         vm.exec_staticcall().unwrap();
 
         let result = vm.memory.load(0x20);

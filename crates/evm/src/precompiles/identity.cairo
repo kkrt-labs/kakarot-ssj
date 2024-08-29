@@ -23,7 +23,6 @@ impl Identity of Precompile {
 
 #[cfg(test)]
 mod tests {
-    use contracts::test_utils::{setup_contracts_for_testing};
     use core::clone::Clone;
     use core::result::ResultTrait;
     use core::starknet::testing::set_contract_address;
@@ -32,7 +31,10 @@ mod tests {
     use evm::memory::MemoryTrait;
     use evm::precompiles::identity::Identity;
     use evm::stack::StackTrait;
-    use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
+    use evm::test_utils::{
+        VMBuilderTrait, native_token, other_starknet_address, setup_test_storages
+    };
+    use snforge_std::{start_mock_call, test_address};
 
     // source:
     // <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='wFirsWplaceqparameters%20in%20memorybFFjdata~0vMSTOREvvwDoqcall~1QX3FQ_1YX1FY_4jaddressZ4%200xFFFFFFFFjgasvSTATICCALLvvwPutqresulWalonVonqstackvPOPb20vMLOAD'~Z1j//%20v%5Cnq%20thVj%20wb~0x_Offset~ZvPUSHYjargsXSizebWt%20Ve%20Qjret%01QVWXYZ_bjqvw~_>
@@ -51,10 +53,8 @@ mod tests {
     // <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='wFirsWplaceqparameters%20in%20memorybFFjdata~0vMSTOREvvwDoqcall~1QX3FQ_1YX1FY_4jaddressZ4%200xFFFFFFFFjgasvSTATICCALLvvwPutqresulWalonVonqstackvPOPb20vMLOAD'~Z1j//%20v%5Cnq%20thVj%20wb~0x_Offset~ZvPUSHYjargsXSizebWt%20Ve%20Qjret%01QVWXYZ_bjqvw~_>
     //TODO(sn-foundry): fix or delete
     #[test]
-    #[ignore]
     fn test_identity_precompile_static_call() {
-        let (_, _) = setup_contracts_for_testing();
-
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
         vm.stack.push(0x20).unwrap(); // retSize
@@ -66,6 +66,7 @@ mod tests {
 
         vm.memory.store(0x2A, 0x1F);
 
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         vm.exec_staticcall().unwrap();
 
         let result = vm.memory.load(0x3F);

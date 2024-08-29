@@ -406,10 +406,6 @@ impl SystemOperations of SystemOperationsTrait {
 mod tests {
     use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
     use contracts::test_data::{storage_evm_bytecode, storage_evm_initcode};
-    use contracts::test_utils::{
-        fund_account_with_native_token, setup_contracts_for_testing, deploy_contract_account,
-        deploy_eoa
-    };
     use core::result::ResultTrait;
     use core::starknet::EthAddress;
     use core::starknet::testing::set_contract_address;
@@ -427,10 +423,12 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::state::{StateTrait, State};
     use evm::test_utils::{
-        VMBuilderTrait, initialize_contract_account, native_token, evm_address, test_address,
-        other_evm_address,
+        VMBuilderTrait, native_token, evm_address, test_dual_address, other_evm_address,
+        setup_test_storages, register_account, origin, uninitialized_account
     };
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+    use snforge_std::{test_address, start_mock_call};
+    use utils::helpers::compute_starknet_address;
     use utils::helpers::load_word;
     use utils::traits::{EthAddressIntoU256};
 
@@ -493,15 +491,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
     fn test_exec_call() {
         // Given
-        let (_, kakarot_core) = setup_contracts_for_testing();
-
-        let evm_address = evm_address();
-        kakarot_core.deploy_externally_owned_account(evm_address);
-
         // Set vm bytecode
         // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
         let bytecode = [
@@ -529,8 +520,16 @@ mod tests {
             0xf1,
             0x00
         ].span();
-
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
+        let eoa_account = Account {
+            address: vm.message().target,
+            balance: 0,
+            code: [].span(),
+            nonce: 0,
+            is_created: false,
+            selfdestruct: false,
+        };
+        vm.env.state.set_account(eoa_account);
 
         // Deploy bytecode at 0xabfa740ccd
         // ret (+ 0x1 0x1)
@@ -538,8 +537,18 @@ mod tests {
             0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
         ].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(kakarot_core, eth_address, deployed_bytecode, [].span())
-            .expect('set code failed');
+        let starknet_address = compute_starknet_address(
+            test_address(), eth_address, 0.try_into().unwrap()
+        );
+        let contract_account = Account {
+            address: Address { evm: eth_address, starknet: starknet_address, },
+            balance: 0,
+            code: deployed_bytecode,
+            nonce: 1,
+            is_created: false,
+            selfdestruct: false,
+        };
+        vm.env.state.set_account(contract_account);
 
         // When
         EVMTrait::execute_code(ref vm);
@@ -551,14 +560,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
     fn test_exec_call_no_return() {
         // Given
-        let (_, kakarot_core) = setup_contracts_for_testing();
-
-        let evm_address = evm_address();
-        kakarot_core.deploy_externally_owned_account(evm_address);
 
         // Set vm bytecode
         // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
@@ -587,15 +590,167 @@ mod tests {
             0xf1,
             0x00
         ].span();
-
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
+        let caller_account = Account {
+            address: vm.message().target,
+            balance: 0,
+            code: bytecode,
+            nonce: 0,
+            is_created: false,
+            selfdestruct: false,
+        };
+        vm.env.state.set_account(caller_account);
 
         // Deploy bytecode at 0xabfa740ccd
         // (+ 0x1 0x1)
         let deployed_bytecode = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(kakarot_core, eth_address, deployed_bytecode, [].span())
-            .expect('set code failed');
+        let starknet_address = compute_starknet_address(
+            test_address(), eth_address, 0.try_into().unwrap()
+        );
+        let contract_account = Account {
+            address: Address { evm: eth_address, starknet: starknet_address, },
+            balance: 0,
+            code: deployed_bytecode,
+            nonce: 1,
+            is_created: false,
+            selfdestruct: false,
+        };
+        vm.env.state.set_account(contract_account);
+
+        // When
+        EVMTrait::execute_code(ref vm);
+
+        // Then
+        assert(!vm.is_running(), 'run should be success');
+        assert(vm.return_data().is_empty(), 'Wrong return_data len');
+        assert(!vm.is_running(), 'vm should be stopped');
+    }
+
+    #[test]
+    fn test_exec_staticcall() {
+        // Given
+        // Set vm bytecode
+        // (staticcall 0xffffff 0xabfa740ccd 0 0 0 0 1)
+        let bytecode = [
+            0x60,
+            0x01,
+            0x60,
+            0x00,
+            0x60,
+            0x00,
+            0x60,
+            0x00,
+            0x64,
+            0xab,
+            0xfa,
+            0x74,
+            0x0c,
+            0xcd,
+            0x62,
+            0xff,
+            0xff,
+            0xff,
+            // STATICCALL
+            0xfa,
+            0x00
+        ].span();
+
+        let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
+        let caller_account = Account {
+            address: vm.message().target,
+            balance: 0,
+            code: bytecode,
+            nonce: 1,
+            is_created: false,
+            selfdestruct: false,
+        };
+        vm.env.state.set_account(caller_account);
+        // Deploy bytecode at 0xabfa740ccd
+        // ret (+ 0x1 0x1)
+        let deployed_bytecode = [
+            0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
+        ].span();
+        let eth_address: EthAddress = 0xabfa740ccd_u256.into();
+        let starknet_address = compute_starknet_address(
+            test_address(), eth_address, 0.try_into().unwrap()
+        );
+        let contract_account = Account {
+            address: Address { evm: eth_address, starknet: starknet_address, },
+            balance: 0,
+            code: deployed_bytecode,
+            nonce: 1,
+            is_created: false,
+            selfdestruct: false,
+        };
+        vm.env.state.set_account(contract_account);
+
+        // When
+        EVMTrait::execute_code(ref vm);
+
+        // Then
+        assert_eq!(2, load_word(1, vm.return_data()));
+        assert(!vm.is_running(), 'vm should be stopped');
+    }
+
+    #[test]
+    fn test_exec_staticcall_no_return() {
+        // Given
+        // Set vm bytecode
+        // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
+        let bytecode = [
+            0x60,
+            0x01,
+            0x60,
+            0x00,
+            0x60,
+            0x00,
+            0x60,
+            0x00,
+            0x60,
+            0x00,
+            0x64,
+            0xab,
+            0xfa,
+            0x74,
+            0x0c,
+            0xcd,
+            0x62,
+            0xff,
+            0xff,
+            0xff,
+            // STATICCALL
+            0xfa,
+            0x00
+        ].span();
+
+        let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
+        let caller_account = Account {
+            address: vm.message().target,
+            balance: 0,
+            code: bytecode,
+            nonce: 1,
+            is_created: false,
+            selfdestruct: false,
+        };
+        vm.env.state.set_account(caller_account);
+
+        // Deploy bytecode at 0xabfa740ccd
+        // (+ 0x1 0x1)
+        let deployed_bytecode = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
+        let eth_address: EthAddress = 0xabfa740ccd_u256.into();
+        let starknet_address = compute_starknet_address(
+            test_address(), eth_address, 0.try_into().unwrap()
+        );
+        let contract_account = Account {
+            address: Address { evm: eth_address, starknet: starknet_address, },
+            balance: 0,
+            code: deployed_bytecode,
+            nonce: 1,
+            is_created: false,
+            selfdestruct: false,
+        };
+        vm.env.state.set_account(contract_account);
 
         // When
         EVMTrait::execute_code(ref vm);
@@ -607,126 +762,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
-    fn test_exec_staticcall() {
-        // Given
-        let (_, kakarot_core) = setup_contracts_for_testing();
-
-        let evm_address = evm_address();
-        kakarot_core.deploy_externally_owned_account(evm_address);
-
-        // Set vm bytecode
-        // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
-        let bytecode = [
-            0x60,
-            0x01,
-            0x60,
-            0x00,
-            0x60,
-            0x00,
-            0x60,
-            0x00,
-            0x64,
-            0xab,
-            0xfa,
-            0x74,
-            0x0c,
-            0xcd,
-            0x62,
-            0xff,
-            0xff,
-            0xff,
-            // STATICCALL
-            0xfa,
-            0x00
-        ].span();
-
-        let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
-        // Deploy bytecode at 0xabfa740ccd
-        // ret (+ 0x1 0x1)
-        let deployed_bytecode = [
-            0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
-        ].span();
-        let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(kakarot_core, eth_address, deployed_bytecode, [].span())
-            .expect('set code failed');
-
-        // When
-        EVMTrait::execute_code(ref vm);
-
-        // Then
-        assert(2 == load_word(1, vm.return_data()), 'Wrong return_data');
-        assert(!vm.is_running(), 'vm should be stopped')
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix because internal function fetch doesn't use kakarot's contract state
-    fn test_exec_staticcall_no_return() {
-        // Given
-
-        let (_, kakarot_core) = setup_contracts_for_testing();
-
-        let evm_address = evm_address();
-        kakarot_core.deploy_externally_owned_account(evm_address);
-
-        // Set vm bytecode
-        // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
-        let bytecode = [
-            0x60,
-            0x01,
-            0x60,
-            0x00,
-            0x60,
-            0x00,
-            0x60,
-            0x00,
-            0x60,
-            0x00,
-            0x64,
-            0xab,
-            0xfa,
-            0x74,
-            0x0c,
-            0xcd,
-            0x62,
-            0xff,
-            0xff,
-            0xff,
-            // STATICCALL
-            0xfa,
-            0x00
-        ].span();
-
-        let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
-
-        // Deploy bytecode at 0xabfa740ccd
-        // (+ 0x1 0x1)
-        let deployed_bytecode = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
-        let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        initialize_contract_account(kakarot_core, eth_address, deployed_bytecode, [].span())
-            .expect('set code failed');
-
-        // When
-        EVMTrait::execute_code(ref vm);
-
-        // Then
-        assert(vm.return_data().is_empty(), 'Wrong return_data len');
-        assert(!vm.is_running(), 'vm should be stopped')
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
     fn test_exec_call_code() {
         // Given
-
-        let (_, kakarot_core) = setup_contracts_for_testing();
-
-        let evm_address = evm_address();
-        deploy_contract_account(kakarot_core, evm_address, [].span());
-
         // Set vm bytecode
         // (call 0xffffff 0x100 0 0 0 0 1)
         let bytecode = [
@@ -754,6 +791,16 @@ mod tests {
             0x00
         ].span();
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
+        let eoa_account = Account {
+            address: vm.message().target,
+            balance: 0,
+            code: [].span(),
+            nonce: 0,
+            is_created: false,
+            selfdestruct: false,
+        };
+        vm.env.state.set_account(eoa_account);
+
         // Deploy bytecode at 0x100
         // ret (+ 0x1 0x1)
         let deployed_bytecode = [
@@ -776,9 +823,19 @@ mod tests {
             0x00,
             0xf3
         ].span();
-        let eth_address: EthAddress = 0x100_u256.into();
-        initialize_contract_account(kakarot_core, eth_address, deployed_bytecode, [].span())
-            .expect('set code failed');
+        let eth_address: EthAddress = 0x100.try_into().unwrap();
+        let starknet_address = compute_starknet_address(
+            test_address(), eth_address, 0.try_into().unwrap()
+        );
+        let contract_account = Account {
+            address: Address { evm: eth_address, starknet: starknet_address, },
+            balance: 0,
+            code: deployed_bytecode,
+            nonce: 1,
+            is_created: false,
+            selfdestruct: false,
+        };
+        vm.env.state.set_account(contract_account);
 
         // When
         EVMTrait::execute_code(ref vm);
@@ -788,21 +845,14 @@ mod tests {
         assert(2 == load_word(1, vm.return_data()), 'Wrong return_data');
         assert(!vm.is_running(), 'vm should be stopped');
 
-        let storage_val = vm.env.state.read_state(evm_address, 0x42);
+        let storage_val = vm.env.state.read_state(vm.message.target.evm, 0x42);
 
         assert(storage_val == 0x42, 'storage value is not 0x42');
     }
 
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix Contract not deployed at address: 0x0
     fn test_exec_delegatecall() {
         // Given
-
-        let (_, kakarot_core) = setup_contracts_for_testing();
-
-        let evm_address = evm_address();
-        deploy_contract_account(kakarot_core, evm_address, [].span());
 
         // Set vm bytecode
         // (call 0xffffff 0x100 0 0 0 0 1)
@@ -828,9 +878,18 @@ mod tests {
             0xf4,
             0x00
         ].span();
-
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
+        let eoa_account = Account {
+            address: vm.message().target,
+            balance: 0,
+            code: [].span(),
+            nonce: 0,
+            is_created: false,
+            selfdestruct: false,
+        };
+        vm.env.state.set_account(eoa_account);
 
+        // Deploy bytecode at 0x100
         // ret (+ 0x1 0x1)
         let deployed_bytecode = [
             0x60,
@@ -852,9 +911,19 @@ mod tests {
             0x00,
             0xf3
         ].span();
-        let eth_address: EthAddress = 0x100_u256.into();
-        initialize_contract_account(kakarot_core, eth_address, deployed_bytecode, [].span())
-            .expect('set code failed');
+        let eth_address: EthAddress = 0x100.try_into().unwrap();
+        let starknet_address = compute_starknet_address(
+            test_address(), eth_address, 0.try_into().unwrap()
+        );
+        let contract_account = Account {
+            address: Address { evm: eth_address, starknet: starknet_address, },
+            balance: 0,
+            code: deployed_bytecode,
+            nonce: 1,
+            is_created: false,
+            selfdestruct: false,
+        };
+        vm.env.state.set_account(contract_account);
 
         // When
         EVMTrait::execute_code(ref vm);
@@ -864,26 +933,51 @@ mod tests {
         assert(2 == load_word(1, vm.return_data()), 'Wrong return_data');
         assert(!vm.is_running(), 'vm should be stopped');
 
-        let storage_val = vm.env.state.read_state(evm_address, 0x42);
+        let storage_val = vm.env.state.read_state(vm.message.target.evm, 0x42);
 
         assert(storage_val == 0x42, 'storage value is not 0x42');
     }
 
+    //! In the exec_create tests, we query the balance of the contract being created by doing a
+    //! starknet_call to the native token.
+    //! Thus, we must store the native token address in the Kakarot storage preemptively.
+    //! As such, the address computation uses the uninitialized account class.
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
     fn test_exec_create_no_value_transfer() {
         // Given
-        let (native_token, kakarot_core) = setup_contracts_for_testing();
+        setup_test_storages();
+
         let deployed_bytecode = [0xff].span();
         let eth_address: EthAddress = evm_address();
-        let contract_address = deploy_contract_account(
-            kakarot_core, eth_address, deployed_bytecode
+        let starknet_address = compute_starknet_address(
+            test_address(), eth_address, uninitialized_account()
         );
-
-        let mut vm = VMBuilderTrait::new_with_presets().with_target(contract_address).build();
-
-        fund_account_with_native_token(contract_address.starknet, native_token, 2);
+        let origin_account = Account {
+            address: Address {
+                evm: origin(),
+                starknet: compute_starknet_address(
+                    test_address(), origin(), uninitialized_account()
+                )
+            },
+            balance: 2,
+            code: [].span(),
+            nonce: 0,
+            is_created: false,
+            selfdestruct: false,
+        };
+        let contract_account = Account {
+            address: Address { evm: eth_address, starknet: starknet_address, },
+            balance: 2,
+            code: deployed_bytecode,
+            nonce: 1,
+            is_created: false,
+            selfdestruct: false,
+        };
+        let mut vm = VMBuilderTrait::new_with_presets()
+            .with_target(contract_account.address)
+            .build();
+        vm.env.state.set_account(contract_account);
+        vm.env.state.set_account(origin_account);
 
         // Load into memory the bytecode of Storage.sol
         let storage_initcode = storage_evm_initcode();
@@ -894,40 +988,62 @@ mod tests {
         vm.stack.push(0).expect('push failed');
 
         // When
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         vm.exec_create().unwrap();
         EVMTrait::execute_code(ref vm);
 
         // computed using `compute_create_address` script
-        // run `bun run compute_create_address` -> CREATE -> EthAddress = evm_address() -> nonce = 1
+        // run `bun run compute_create_address` -> CREATE -> EthAddress = evm_address() ->
+        //nonce = 1
         let account = vm
             .env
             .state
             .get_account(0x930b3d8D35621F2e27Db700cA5D16Df771642fdD.try_into().unwrap());
 
         assert_eq!(account.nonce(), 1);
-        assert(account.code == storage_evm_bytecode(), 'wrong bytecode');
+        assert_eq!(account.code, storage_evm_bytecode());
         assert_eq!(account.balance(), 0);
 
         let deployer = vm.env.state.get_account(eth_address);
         assert_eq!(deployer.nonce(), 2);
         assert_eq!(deployer.balance(), 2);
     }
-
     //TODO add test with value transfer
 
     #[test]
-    #[ignore]
     fn test_exec_create_failure() {
         // Given
-        let (native_token, kakarot_core) = setup_contracts_for_testing();
+        setup_test_storages();
 
         let deployed_bytecode = [0xFF].span();
         let eth_address: EthAddress = evm_address();
-        let contract_address = deploy_contract_account(
-            kakarot_core, eth_address, deployed_bytecode
+        let starknet_address = compute_starknet_address(
+            test_address(), eth_address, 0.try_into().unwrap()
         );
-        fund_account_with_native_token(contract_address.starknet, native_token, 2);
-        let mut vm = VMBuilderTrait::new_with_presets().with_target(contract_address).build();
+        let origin_account = Account {
+            address: Address {
+                evm: origin(),
+                starknet: compute_starknet_address(
+                    test_address(), origin(), uninitialized_account()
+                ),
+            },
+            balance: 2,
+            code: [].span(),
+            nonce: 0,
+            is_created: false,
+            selfdestruct: false,
+        };
+        let deployer = Account {
+            address: Address { evm: eth_address, starknet: starknet_address, },
+            balance: 2,
+            code: deployed_bytecode,
+            nonce: 1,
+            is_created: false,
+            selfdestruct: false,
+        };
+        let mut vm = VMBuilderTrait::new_with_presets().with_target(deployer.address).build();
+        vm.env.state.set_account(deployer);
+        vm.env.state.set_account(origin_account);
 
         // Load into memory the bytecode to init, which is the revert opcode
         let revert_initcode = [0xFD].span();
@@ -938,6 +1054,7 @@ mod tests {
         vm.stack.push(1).expect('push failed');
 
         // When
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         vm.exec_create().expect('exec_create failed');
         EVMTrait::execute_code(ref vm);
 
@@ -950,23 +1067,47 @@ mod tests {
         assert_eq!(account.balance(), 0);
 
         let deployer = vm.env.state.get_account(eth_address);
-        assert_eq!(deployer.nonce(), 1);
+        assert_eq!(deployer.nonce(), 2);
         assert_eq!(deployer.balance(), 2);
     }
 
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
     fn test_exec_create2() {
         // Given
-        let (_, kakarot_core) = setup_contracts_for_testing();
+        setup_test_storages();
 
         let deployed_bytecode = [0xff].span();
         let eth_address: EthAddress = evm_address();
-        let contract_address = deploy_contract_account(
-            kakarot_core, eth_address, deployed_bytecode
+        let starknet_address = compute_starknet_address(
+            test_address(), eth_address, 0.try_into().unwrap()
         );
-        let mut vm = VMBuilderTrait::new_with_presets().with_caller(contract_address).build();
+        let origin_account = Account {
+            address: Address {
+                evm: origin(),
+                starknet: compute_starknet_address(
+                    test_address(), origin(), uninitialized_account()
+                ),
+            },
+            balance: 2,
+            code: [].span(),
+            nonce: 0,
+            is_created: false,
+            selfdestruct: false,
+        };
+        let contract_account = Account {
+            address: Address { evm: eth_address, starknet: starknet_address, },
+            balance: 2,
+            code: deployed_bytecode,
+            nonce: 1,
+            is_created: false,
+            selfdestruct: false,
+        };
+        let mut vm = VMBuilderTrait::new_with_presets()
+            .with_caller(contract_account.address)
+            .build();
+
+        vm.env.state.set_account(origin_account);
+        vm.env.state.set_account(contract_account);
 
         // Load into memory the bytecode of Storage.sol
         let storage_initcode = storage_evm_initcode();
@@ -978,6 +1119,7 @@ mod tests {
         vm.stack.push(0).expect('push failed');
 
         // When
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         vm.exec_create2().unwrap();
         EVMTrait::execute_code(ref vm);
 
@@ -988,9 +1130,10 @@ mod tests {
 
         // const address = getContractAddress({
         //   bytecode:
-        //   '0x608060405234801561000f575f80fd5b506101438061001d5f395ff3fe608060405234801561000f575f80fd5b5060043610610034575f3560e01c80632e64cec1146100385780636057361d14610056575b5f80fd5b610040610072565b60405161004d919061009b565b60405180910390f35b610070600480360381019061006b91906100e2565b61007a565b005b5f8054905090565b805f8190555050565b5f819050919050565b61009581610083565b82525050565b5f6020820190506100ae5f83018461008c565b92915050565b5f80fd5b6100c181610083565b81146100cb575f80fd5b50565b5f813590506100dc816100b8565b92915050565b5f602082840312156100f7576100f66100b4565b5b5f610104848285016100ce565b9150509291505056fea2646970667358221220b5c3075f2f2034d039a227fac6dd314b052ffb2b3da52c7b6f5bc374d528ed3664736f6c63430008140033',
+        //
+        // '0x608060405234801561000f575f80fd5b506101438061001d5f395ff3fe608060405234801561000f575f80fd5b5060043610610034575f3560e01c80632e64cec1146100385780636057361d14610056575b5f80fd5b610040610072565b60405161004d919061009b565b60405180910390f35b610070600480360381019061006b91906100e2565b61007a565b005b5f8054905090565b805f8190555050565b5f819050919050565b61009581610083565b82525050565b5f6020820190506100ae5f83018461008c565b92915050565b5f80fd5b6100c181610083565b81146100cb575f80fd5b50565b5f813590506100dc816100b8565b92915050565b5f602082840312156100f7576100f66100b4565b5b5f610104848285016100ce565b9150509291505056fea2646970667358221220b5c3075f2f2034d039a227fac6dd314b052ffb2b3da52c7b6f5bc374d528ed3664736f6c63430008140033',
         //   from: '0x00000000000000000065766d5f61646472657373', opcode: 'CREATE2',
-        //   salt: '0x00',
+        //salt: '0x00',
         // });
         // console.log(address)
         let account = vm
@@ -1003,107 +1146,128 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
-    fn test_exec_selfdestruct_existing_ca() {
+    fn test_exec_selfdestruct_should_fail_if_readonly() {
         // Given
-        let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let destroyed_address = test_address().evm; // address in vm call context
-        let ca_address = deploy_contract_account(
-            kakarot_core, destroyed_address, [0x1, 0x2, 0x3].span()
+        let deployed_bytecode = [0xff].span();
+        let eth_address: EthAddress = evm_address();
+        let starknet_address = compute_starknet_address(
+            test_address(), eth_address, 0.try_into().unwrap()
         );
-        fund_account_with_native_token(ca_address.starknet, native_token, 1000);
-        let recipient = starknet_backend::deploy(other_evm_address())
-            .expect('failed deploying eoa');
-        let mut vm = VMBuilderTrait::new_with_presets().with_target(ca_address).build();
-        // When
-        vm.stack.push(recipient.evm.into()).unwrap();
-        vm.exec_selfdestruct().expect('selfdestruct failed');
-        starknet_backend::commit(ref vm.env.state).expect('commit state failed');
-        vm.env.state = Default::default(); //empty state to force re-fetch from SN
-        // Then
-        let destructed = vm.env.state.get_account(ca_address.evm);
-
-        assert(destructed.nonce() == 0, 'destructed nonce should be 0');
-        assert(destructed.balance() == 0, 'destructed balance should be 0');
-        assert(destructed.bytecode().len() == 0, 'bytecode should be empty');
-
-        let recipient = vm.env.state.get_account(recipient.evm);
-        assert_eq!(recipient.balance(), 1000);
-    }
-
-    #[test]
-    #[ignore]
-    fn test_selfdestruct_undeployed_ca() {
-        let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let evm_address: EthAddress = 'ca_address'.try_into().unwrap();
-        let ca_address: Address = Address {
-            evm: evm_address, starknet: kakarot_core.compute_starknet_address(evm_address)
+        let contract_account = Account {
+            address: Address { evm: eth_address, starknet: starknet_address, },
+            balance: 2,
+            code: deployed_bytecode,
+            nonce: 1,
+            is_created: false,
+            selfdestruct: false,
         };
-        let recipient_address: EthAddress = 'recipient_address'.try_into().unwrap();
-        deploy_eoa(kakarot_core, recipient_address);
-        let ca_balance = 1000;
-        fund_account_with_native_token(ca_address.starknet, native_token, ca_balance);
-        let mut vm = VMBuilderTrait::new_with_presets().with_target(ca_address).build();
-        // - call `get_account` on an undeployed account, set its type to CA, its nonce to 1, its
-        // code to something to mock a cached CA that has not been committed yet.
-        let mut ca_account = vm.env.state.get_account(ca_address.evm);
-        ca_account.set_code([0x1, 0x2, 0x3].span());
-        ca_account.set_nonce(1);
-        vm.env.state.set_account(ca_account);
-        // - call selfdestruct and commit the state
-        vm.stack.push(recipient_address.into()).expect('push failed');
-        vm.exec_selfdestruct().expect('selfdestruct failed');
-        starknet_backend::commit(ref vm.env.state).expect('commit state failed');
-        vm.env.state = Default::default(); //empty state to force re-fetch from SN
+        let mut vm = VMBuilderTrait::new_with_presets()
+            .with_target(contract_account.address)
+            .with_read_only()
+            .build();
+        vm.env.state.set_account(contract_account);
 
+        // When
+        vm.stack.push(contract_account.address.evm.into()).unwrap();
+        let res = vm.exec_selfdestruct();
         // Then
-        let destructed = vm.env.state.get_account(ca_address.evm);
-        assert(destructed.nonce() == 0, 'destructed nonce should be 0');
-        assert(destructed.balance() == 0, 'destructed balance should be 0');
-        assert(destructed.bytecode().len() == 0, 'bytecode should be empty');
-        let recipient = vm.env.state.get_account(recipient_address);
-        assert(recipient.balance() == ca_balance, 'wrong recipient balance');
+        assert!(res.is_err())
     }
 
     #[test]
-    #[ignore]
-    fn test_exec_selfdestruct_add_transfer_post_selfdestruct() {
+    fn test_exec_selfdestruct_should_burn_tokens_if_created_same_tx_and_recipient_self() {
         // Given
-        let (native_token, kakarot_core) = setup_contracts_for_testing();
-
-        // Deploy sender and recipiens EOAs, and CA that will be selfdestructed and funded with 100
-        // tokens
-        let sender = starknet_backend::deploy('sender'.try_into().unwrap())
-            .expect('failed deploy EOA',);
-        let recipient = starknet_backend::deploy('recipient'.try_into().unwrap())
-            .expect('failed deploy EOA',);
-        let ca_address = deploy_contract_account(
-            kakarot_core, 'contract'.try_into().unwrap(), [].span()
+        let deployed_bytecode = [0xff].span();
+        let eth_address: EthAddress = evm_address();
+        let starknet_address = compute_starknet_address(
+            test_address(), eth_address, 0.try_into().unwrap()
         );
-        fund_account_with_native_token(sender.starknet, native_token, 150);
-        fund_account_with_native_token(ca_address.starknet, native_token, 100);
-        let mut vm = VMBuilderTrait::new_with_presets().with_target(ca_address).build();
-
-        // Cache the CA into state
-        vm.env.state.get_account('contract'.try_into().unwrap());
+        let contract_account = Account {
+            address: Address { evm: eth_address, starknet: starknet_address, },
+            balance: 2,
+            code: deployed_bytecode,
+            nonce: 1,
+            is_created: true,
+            selfdestruct: false,
+        };
+        let burn_account = Account {
+            address: Address {
+                evm: 0.try_into().unwrap(),
+                starknet: compute_starknet_address(
+                    test_address(), 0.try_into().unwrap(), 0.try_into().unwrap()
+                ),
+            },
+            balance: 0,
+            code: [].span(),
+            nonce: 0,
+            is_created: false,
+            selfdestruct: false,
+        };
+        let mut vm = VMBuilderTrait::new_with_presets()
+            .with_target(contract_account.address)
+            .build();
+        vm.env.state.set_account(burn_account);
+        vm.env.state.set_account(contract_account);
 
         // When
-        vm.stack.push(recipient.evm.into()).unwrap();
+        vm.stack.push(contract_account.address.evm.into()).unwrap();
         vm.exec_selfdestruct().expect('selfdestruct failed');
-        // Add a transfer from sender to CA - after it was selfdestructed in local state. This
-        // transfer should go through.
-        let transfer = Transfer { sender, recipient: ca_address, amount: 150 };
-        vm.env.state.add_transfer(transfer).unwrap();
-        starknet_backend::commit(ref vm.env.state).expect('commit state failed');
-        vm.env.state = Default::default(); //empty state to force re-fetch from SN
 
         // Then
-        let recipient_balance = native_token.balanceOf(recipient.starknet);
-        let sender_balance = native_token.balanceOf(sender.starknet);
-        let ca_balance = native_token.balanceOf(ca_address.starknet);
+        let contract_account = vm.env.state.get_account(contract_account.address.evm);
+        assert!(contract_account.is_selfdestruct());
+        assert_eq!(contract_account.balance(), 0);
 
-        assert(recipient_balance == 100, 'recipient wrong balance');
-        assert(sender_balance == 0, 'sender wrong balance');
-        assert(ca_balance == 150, 'ca wrong balance');
+        let burn_account = vm.env.state.get_account(burn_account.address.evm);
+        assert_eq!(burn_account.balance(), 2);
+    }
+
+    #[test]
+    fn test_exec_selfdestruct_should_transfer_balance_to_recipient() {
+        // Given
+        let deployed_bytecode = [0xff].span();
+        let eth_address: EthAddress = evm_address();
+        let starknet_address = compute_starknet_address(
+            test_address(), eth_address, 0.try_into().unwrap()
+        );
+        let contract_account = Account {
+            address: Address { evm: eth_address, starknet: starknet_address, },
+            balance: 2,
+            code: deployed_bytecode,
+            nonce: 1,
+            is_created: false,
+            selfdestruct: false,
+        };
+        let recipient = Account {
+            address: Address {
+                evm: 'recipient'.try_into().unwrap(),
+                starknet: compute_starknet_address(
+                    test_address(), 'recipient'.try_into().unwrap(), 0.try_into().unwrap()
+                ),
+            },
+            balance: 0,
+            code: [].span(),
+            nonce: 0,
+            is_created: false,
+            selfdestruct: false,
+        };
+
+        let mut vm = VMBuilderTrait::new_with_presets()
+            .with_target(contract_account.address)
+            .build();
+        vm.env.state.set_account(contract_account);
+        vm.env.state.set_account(recipient);
+
+        // When
+        vm.stack.push(recipient.address.evm.into()).unwrap();
+        vm.exec_selfdestruct().expect('selfdestruct failed');
+
+        // Then
+        let contract_account = vm.env.state.get_account(contract_account.address.evm);
+        assert!(contract_account.is_selfdestruct());
+        assert_eq!(contract_account.balance(), 0);
+
+        let recipient = vm.env.state.get_account(recipient.address.evm);
+        assert_eq!(recipient.balance(), 2);
     }
 }

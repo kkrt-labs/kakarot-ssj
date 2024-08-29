@@ -324,10 +324,8 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 mod tests {
     use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore};
     use contracts::test_data::counter_evm_bytecode;
-    use contracts::test_utils::{
-        setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account
-    };
     use core::num::traits::CheckedAdd;
+    use core::starknet::EthAddress;
 
     use core::starknet::testing::set_contract_address;
     use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
@@ -335,17 +333,19 @@ mod tests {
     use evm::memory::{InternalMemoryTrait, MemoryTrait};
 
     use evm::model::vm::{VM, VMTrait};
-    use evm::model::{Account};
+    use evm::model::{Account, Address};
     use evm::stack::StackTrait;
     use evm::state::StateTrait;
     use evm::test_utils::{
         VMBuilderTrait, evm_address, origin, callvalue, native_token, other_address, gas_price,
-        tx_gas_limit
+        tx_gas_limit, register_account
     };
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-    use snforge_std::{test_address, start_cheat_caller_address};
-    use utils::helpers::{u256_to_bytes_array, ArrayExtTrait};
+    use snforge_std::{test_address, start_mock_call};
+    use utils::helpers::{u256_to_bytes_array, ArrayExtTrait, compute_starknet_address};
     use utils::traits::{EthAddressIntoU256};
+
+    const EMPTY_KECCAK: u256 = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
 
     // *************************************************************************
     // 0x30: ADDRESS
@@ -360,87 +360,34 @@ mod tests {
         vm.exec_address().expect('exec_address failed');
 
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.pop_eth_address().unwrap() == evm_address(), 'should be `evm_address`');
-    }
-
-    #[test]
-    #[ignore]
-    fn test_address_nested_call() { // A (EOA) -(calls)-> B (smart contract) -(calls)-> C (smart contract)
-    // TODO: Once we have ability to do nested smart contract calls, check that in `C`s context
-    // `ADDRESS` should return address `B`
-    // ref: https://github.com/kkrt-labs/kakarot-ssj/issues/183
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.pop_eth_address().unwrap(), vm.message().target.evm.into());
     }
 
     // *************************************************************************
     // 0x31: BALANCE
     // *************************************************************************
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
     fn test_exec_balance_eoa() {
         // Given
-        let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let eoa = kakarot_core.deploy_externally_owned_account(evm_address());
-
-        fund_account_with_native_token(eoa, native_token, 0x1);
-
-        // And
         let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        vm.stack.push(evm_address().into()).unwrap();
+        let account = Account {
+            address: vm.message().target,
+            balance: 400,
+            nonce: 0,
+            code: [].span(),
+            selfdestruct: false,
+            is_created: true,
+        };
+        vm.env.state.set_account(account);
+        vm.stack.push(vm.message.target.evm.into()).unwrap();
 
         // When
-        start_cheat_caller_address(test_address(), kakarot_core.contract_address);
         vm.exec_balance().expect('exec_balance failed');
 
         // Then
-        assert(vm.stack.peek().unwrap() == native_token.balanceOf(eoa), 'wrong balance');
+        assert_eq!(vm.stack.peek().unwrap(), 400);
     }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_balance_zero() {
-        // Given
-        let (_, kakarot_core) = setup_contracts_for_testing();
-
-        // And
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        vm.stack.push(evm_address().into()).unwrap();
-
-        // When
-        start_cheat_caller_address(test_address(), kakarot_core.contract_address);
-        vm.exec_balance().expect('exec_balance failed');
-
-        // Then
-        assert(vm.stack.peek().unwrap() == 0x00, 'wrong balance');
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_balance_contract_account() {
-        // Given
-        let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
-
-        fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
-
-        // And
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        vm.stack.push(evm_address().into()).unwrap();
-
-        // When
-        start_cheat_caller_address(test_address(), kakarot_core.contract_address);
-        vm.exec_balance().expect('exec_balance failed');
-
-        // Then
-        assert(vm.stack.peek().unwrap() == 0x1, 'wrong balance');
-    }
-
 
     // *************************************************************************
     // 0x33: CALLER
@@ -454,8 +401,8 @@ mod tests {
         vm.exec_caller().expect('exec_caller failed');
 
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == origin().into(), 'should be evm_address');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), origin().into());
     }
 
 
@@ -471,15 +418,14 @@ mod tests {
         vm.exec_origin().expect('exec_origin failed');
 
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == origin().into(), 'should be `evm_address`');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), origin().into());
     }
 
 
     // *************************************************************************
     // 0x34: CALLVALUE
     // *************************************************************************
-
     #[test]
     fn test_exec_callvalue() {
         // Given
@@ -489,8 +435,8 @@ mod tests {
         vm.exec_callvalue().expect('exec_callvalue failed');
 
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.pop().unwrap() == callvalue(), 'should be `123456789');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.pop().unwrap(), callvalue());
     }
 
     // *************************************************************************
@@ -513,10 +459,7 @@ mod tests {
 
         // Then
         let result: u256 = vm.stack.pop().unwrap();
-        assert(
-            result == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'wrong data value'
-        );
+        assert_eq!(result, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -537,10 +480,7 @@ mod tests {
         // Then
         let result: u256 = vm.stack.pop().unwrap();
 
-        assert(
-            result == 0xFF00000000000000000000000000000000000000000000000000000000000000,
-            'wrong results'
-        );
+        assert_eq!(result, 0xFF00000000000000000000000000000000000000000000000000000000000000);
     }
 
     #[test]
@@ -559,7 +499,7 @@ mod tests {
 
         // Then
         let result: u256 = vm.stack.pop().unwrap();
-        assert(result == 0, 'result should be 0');
+        assert_eq!(result, 0);
     }
 
     #[test]
@@ -576,10 +516,7 @@ mod tests {
 
         // Then
         let result: u256 = vm.stack.pop().unwrap();
-        assert(
-            result == 0x6d4ce63c00000000000000000000000000000000000000000000000000000000,
-            'wrong result'
-        );
+        assert_eq!(result, 0x6d4ce63c00000000000000000000000000000000000000000000000000000000);
     }
 
 
@@ -597,11 +534,8 @@ mod tests {
         let result = vm.exec_calldataload();
 
         // Then
-        assert(result.is_err(), 'should return error');
-        assert(
-            result.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
-            'should return ConversionError'
-        );
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), EVMError::TypeConversionError(TYPE_CONVERSION_ERROR));
     }
 
     // *************************************************************************
@@ -619,8 +553,8 @@ mod tests {
         vm.exec_calldatasize().expect('exec_calldatasize failed');
 
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == calldata.len().into(), 'stack top is not calldatasize');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), calldata.len().into());
     }
 
     // *************************************************************************
@@ -649,11 +583,8 @@ mod tests {
         let res = vm.exec_calldatacopy();
 
         // Then
-        assert(res.is_err(), 'should return error');
-        assert(
-            res.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
-            'should return ConversionError'
-        );
+        assert!(res.is_err());
+        assert_eq!(res.unwrap_err(), EVMError::TypeConversionError(TYPE_CONVERSION_ERROR));
     }
 
     #[test]
@@ -708,10 +639,7 @@ mod tests {
 
             let initial: u256 = vm.memory.load_internal(dest_offset + (i * 32)).into();
 
-            assert(
-                initial == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-                'memory has not been initialized'
-            );
+            assert_eq!(initial, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
 
             i += 1;
         };
@@ -720,12 +648,12 @@ mod tests {
         vm.exec_calldatacopy().expect('exec_calldatacopy failed');
 
         // Then
-        assert(vm.stack.is_empty(), 'stack should be empty');
+        assert!(vm.stack.is_empty());
 
         let mut results: Array<u8> = ArrayTrait::new();
         vm.memory.load_n_internal(size, ref results, dest_offset);
 
-        assert(results.span() == expected, 'wrong data value');
+        assert_eq!(results.span(), expected);
     }
 
     // *************************************************************************
@@ -743,8 +671,8 @@ mod tests {
         vm.exec_codesize().expect('exec_codesize failed');
 
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.pop().unwrap() == bytecode.len().into(), 'wrong codesize');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.pop().unwrap(), bytecode.len().into());
     }
 
     // *************************************************************************
@@ -775,11 +703,8 @@ mod tests {
         let res = vm.exec_codecopy();
 
         // Then
-        assert(res.is_err(), 'should return error');
-        assert(
-            res.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
-            'should return ConversionError'
-        );
+        assert!(res.is_err());
+        assert_eq!(res.unwrap_err(), EVMError::TypeConversionError(TYPE_CONVERSION_ERROR));
     }
 
     #[test]
@@ -820,16 +745,13 @@ mod tests {
             .memory
             .store(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, dest_offset);
         let initial: u256 = vm.memory.load_internal(dest_offset).into();
-        assert(
-            initial == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'memory has not been initialized'
-        );
+        assert_eq!(initial, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
 
         // When
         vm.exec_codecopy().expect('exec_codecopy failed');
 
         // Then
-        assert(vm.stack.is_empty(), 'stack should be empty');
+        assert!(vm.stack.is_empty());
 
         let result: u256 = vm.memory.load_internal(dest_offset).into();
         let mut results: Array<u8> = u256_to_bytes_array(result);
@@ -838,9 +760,9 @@ mod tests {
         while i != size {
             // For out of bound bytes, 0s will be copied.
             if (i + offset >= bytecode.len()) {
-                assert(*results[i] == 0, 'wrong data value');
+                assert_eq!(*results[i], 0);
             } else {
-                assert(*results[i] == *bytecode[i + offset], 'wrong data value');
+                assert_eq!(*results[i], *bytecode[i + offset]);
             }
 
             i += 1;
@@ -860,103 +782,76 @@ mod tests {
         vm.exec_gasprice().expect('exec_gasprice failed');
 
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == gas_price().into(), 'stack top should be gas_price');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), gas_price().into());
     }
 
     // *************************************************************************
     // 0x3B - EXTCODESIZE
     // *************************************************************************
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_extcodesize_eoa() {
+    fn test_exec_extcodesize_should_push_bytecode_len_0() {
         // Given
-        let evm_address = evm_address();
         let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        let _expected_eoa_starknet_address = kakarot_core
-            .deploy_externally_owned_account(evm_address);
-        vm.stack.push(evm_address.into()).expect('push failed');
+        let account = Account {
+            address: vm.message().target,
+            balance: 1,
+            nonce: 1,
+            code: [].span(),
+            selfdestruct: false,
+            is_created: true,
+        };
+        vm.env.state.set_account(account);
+        vm.stack.push(account.address.evm.into()).expect('push failed');
 
         // When
         vm.exec_extcodesize().unwrap();
 
         // Then
-        assert(vm.stack.peek().unwrap() == 0, 'expected code size 0');
+        assert_eq!(vm.stack.peek().unwrap(), 0);
     }
 
-
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_extcodesize_ca_empty() {
+    fn test_exec_extcodesize_should_push_bytecode_len() {
         // Given
-        let evm_address = evm_address();
         let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        let (_, kakarot_core) = setup_contracts_for_testing();
-
-        // The bytecode remains empty, and we expect the empty hash in return
-        deploy_contract_account(kakarot_core, evm_address, [].span());
-
-        vm.stack.push(evm_address.into()).expect('push failed');
+        let account = Account {
+            address: vm.message().target, balance: 1, nonce: 1, code: [
+                0xff
+            ; 350].span(), selfdestruct: false, is_created: true,
+        };
+        vm.env.state.set_account(account);
+        vm.stack.push(account.address.evm.into()).expect('push failed');
 
         // When
         vm.exec_extcodesize().unwrap();
 
         // Then
-        assert(vm.stack.peek().unwrap() == 0, 'expected code size 0');
+        assert_eq!(vm.stack.peek().unwrap(), 350);
     }
 
-
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_extcodesize_ca_with_bytecode() {
+    fn test_exec_extcodecopy_should_copy_bytecode_slice() {
         // Given
-        let evm_address = evm_address();
         let mut vm = VMBuilderTrait::new_with_presets().build();
+        let account = Account {
+            address: vm.message().target,
+            balance: 1,
+            nonce: 1,
+            code: counter_evm_bytecode(),
+            selfdestruct: false,
+            is_created: true,
+        };
+        vm.env.state.set_account(account);
 
-        let (_, kakarot_core) = setup_contracts_for_testing();
-
-        // The bytecode stored is the bytecode of a Counter.sol smart contract
-        deploy_contract_account(kakarot_core, evm_address, counter_evm_bytecode());
-
-        vm.stack.push(evm_address.into()).expect('push failed');
-        // When
-        vm.exec_extcodesize().unwrap();
-
-        // Then
-        assert(
-            vm.stack.peek() // extcodesize(Counter.sol) := 275 (source: remix)
-            .unwrap() == 473,
-            'expected counter SC code size'
-        );
-    }
-
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_extcodecopy_ca() {
-        // Given
-        let evm_address = evm_address();
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        let (_, kakarot_core) = setup_contracts_for_testing();
-
-        // The bytecode stored is the bytecode of a Counter.sol smart contract
-        deploy_contract_account(kakarot_core, evm_address, counter_evm_bytecode());
-
+        vm.stack.push(account.address.evm.into()).expect('push failed');
         // size
         vm.stack.push(50).expect('push failed');
         // offset
         vm.stack.push(200).expect('push failed');
         // destOffset (memory offset)
         vm.stack.push(20).expect('push failed');
-        vm.stack.push(evm_address.into()).unwrap();
+        vm.stack.push(account.address.evm.into()).unwrap();
 
         // When
         vm.exec_extcodecopy().unwrap();
@@ -964,24 +859,26 @@ mod tests {
         // Then
         let mut bytecode_slice = array![];
         vm.memory.load_n(50, ref bytecode_slice, 20);
-        assert(bytecode_slice.span() == counter_evm_bytecode().slice(200, 50), 'wrong bytecode');
+        assert_eq!(bytecode_slice.span(), counter_evm_bytecode().slice(200, 50));
     }
 
     // *************************************************************************
     // 0x3C - EXTCODECOPY
     // *************************************************************************
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_extcodecopy_ca_offset_out_of_bounds() {
+    fn test_exec_extcodecopy_ca_offset_out_of_bounds_should_return_zeroes() {
         // Given
-        let evm_address = evm_address();
         let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        let (_, kakarot_core) = setup_contracts_for_testing();
-
-        // The bytecode stored is the bytecode of a Counter.sol smart contract
-        deploy_contract_account(kakarot_core, evm_address, counter_evm_bytecode());
+        let account = Account {
+            address: vm.message().target,
+            balance: 1,
+            nonce: 1,
+            code: counter_evm_bytecode(),
+            selfdestruct: false,
+            is_created: true,
+        };
+        vm.env.state.set_account(account);
+        vm.stack.push(account.address.evm.into()).expect('push failed');
 
         // size
         vm.stack.push(5).expect('push failed');
@@ -989,31 +886,7 @@ mod tests {
         vm.stack.push(5000).expect('push failed');
         // destOffset
         vm.stack.push(20).expect('push failed');
-        vm.stack.push(evm_address.into()).expect('push failed');
-
-        // When
-        vm.exec_extcodecopy().unwrap();
-        // Then
-        let mut bytecode_slice = array![];
-        vm.memory.load_n(5, ref bytecode_slice, 20);
-        assert(bytecode_slice.span() == [0, 0, 0, 0, 0].span(), 'wrong bytecode');
-    }
-
-    fn test_exec_extcodecopy_eoa() {
-        // Given
-        let evm_address = evm_address();
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        kakarot_core.deploy_externally_owned_account(evm_address);
-
-        // size
-        vm.stack.push(5).expect('push failed');
-        // offset
-        vm.stack.push(5000).expect('push failed');
-        // destOffset
-        vm.stack.push(20).expect('push failed');
-        vm.stack.push(evm_address.into()).expect('push failed');
+        vm.stack.push(account.address.evm.into()).expect('push failed');
 
         // When
         vm.exec_extcodecopy().unwrap();
@@ -1021,34 +894,8 @@ mod tests {
         // Then
         let mut bytecode_slice = array![];
         vm.memory.load_n(5, ref bytecode_slice, 20);
-        assert(bytecode_slice.span() == [0, 0, 0, 0, 0].span(), 'wrong bytecode');
+        assert_eq!(bytecode_slice.span(), [0, 0, 0, 0, 0].span());
     }
-
-
-    fn test_exec_extcodecopy_account_none() {
-        // Given
-        let evm_address = evm_address();
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        setup_contracts_for_testing();
-
-        // size
-        vm.stack.push(5).expect('push failed');
-        // offset
-        vm.stack.push(5000).expect('push failed');
-        // destOffset
-        vm.stack.push(20).expect('push failed');
-        vm.stack.push(evm_address.into()).expect('push failed');
-
-        // When
-        vm.exec_extcodecopy().unwrap();
-
-        // Then
-        let mut bytecode_slice = array![];
-        vm.memory.load_n(5, ref bytecode_slice, 20);
-        assert(bytecode_slice.span() == [0, 0, 0, 0, 0].span(), 'wrong bytecode');
-    }
-
 
     #[test]
     fn test_exec_returndatasize() {
@@ -1063,8 +910,8 @@ mod tests {
         vm.exec_returndatasize().expect('exec_returndatasize failed');
 
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.pop().unwrap() == size.into(), 'wrong returndatasize');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.pop().unwrap(), size.into());
     }
 
     // *************************************************************************
@@ -1096,10 +943,7 @@ mod tests {
         let res = vm.exec_returndatacopy();
 
         // Then
-        assert(
-            res.unwrap_err() == EVMError::TypeConversionError(TYPE_CONVERSION_ERROR),
-            'should return ConversionError'
-        );
+        assert_eq!(res.unwrap_err(), EVMError::TypeConversionError(TYPE_CONVERSION_ERROR));
     }
 
     #[test]
@@ -1184,23 +1028,17 @@ mod tests {
         let res = vm.exec_returndatacopy();
 
         // Then
-        assert(vm.stack.is_empty(), 'stack should be empty');
+        assert!(vm.stack.is_empty());
 
         match offset.checked_add(size) {
             Option::Some(x) => {
                 if (x > return_data.len()) {
-                    assert(
-                        res.unwrap_err() == EVMError::ReturnDataOutOfBounds,
-                        'should return out of bounds'
-                    );
+                    assert_eq!(res.unwrap_err(), EVMError::ReturnDataOutOfBounds);
                     return;
                 }
             },
             Option::None => {
-                assert(
-                    res.unwrap_err() == EVMError::ReturnDataOutOfBounds,
-                    'should return out of bounds'
-                );
+                assert_eq!(res.unwrap_err(), EVMError::ReturnDataOutOfBounds);
                 return;
             }
         }
@@ -1221,80 +1059,34 @@ mod tests {
 
             i += 1;
         };
-        assert(results.span() == return_data.span().slice(offset, size), 'wrong data value');
+        assert_eq!(results.span(), return_data.span().slice(offset, size));
     }
 
     // *************************************************************************
     // 0x3F: EXTCODEHASH
     // *************************************************************************
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
     fn test_exec_extcodehash_precompile() {
         // Given
-        let evm_address = 0x05.try_into().unwrap();
         let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        kakarot_core.deploy_externally_owned_account(evm_address);
-        vm.stack.push(evm_address.into()).expect('push failed');
-        start_cheat_caller_address(test_address(), kakarot_core.contract_address);
-
-        // When
-        vm.exec_extcodehash().unwrap();
-
-        // Then
-        assert(vm.stack.peek().unwrap() == 0, 'expected 0');
-    }
-
-    //TODO: restore after selfdestruct
-    // #[test]
-    // fn test_exec_extcodehash_selfdestructed() {
-    //     // Given
-    //     let evm_address = evm_address();
-    //     let mut vm = VMBuilderTrait::new_with_presets().build();
-
-    //     let (_, kakarot_core) = setup_contracts_for_testing();
-
-    //     // The bytecode remains empty, and we expect the empty hash in return
-    //     let mut ca_address = deploy_contract_account(kakarot_core,evm_address, [].span());
-    //     let account = Account {
-    //
-    //         address: ca_address,
-    //         code: [].span(),
-    //         nonce: 1,
-    //         balance: 1,
-    //         selfdestruct: false
-    //     };
-    //     account.selfdestruct();
-
-    //     vm.stack.push(evm_address.into()).expect('push failed');
-
-    //     // When
-    //     vm.exec_extcodehash().unwrap();
-
-    //     // Then
-    //     assert(
-    //         vm
-    //             .stack
-    //             .peek()
-    //             .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
-    //         'expected empty hash'
-    //     );
-    // }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_extcodehash_eoa_empty_eoa() {
-        // Given
-        let evm_address = evm_address();
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        kakarot_core.deploy_externally_owned_account(evm_address);
-
-        vm.stack.push(evm_address.into()).expect('push failed');
+        let precompile_evm_address: EthAddress = evm::model::LAST_ETHEREUM_PRECOMPILE_ADDRESS
+            .try_into()
+            .unwrap();
+        let precompile_starknet_address = compute_starknet_address(
+            test_address(), precompile_evm_address, 0.try_into().unwrap()
+        );
+        let account = Account {
+            address: Address {
+                evm: precompile_evm_address, starknet: precompile_starknet_address,
+            },
+            balance: 1,
+            nonce: 0,
+            code: [].span(),
+            selfdestruct: false,
+            is_created: true,
+        };
+        vm.env.state.set_account(account);
+        vm.stack.push(precompile_evm_address.into()).expect('push failed');
 
         // When
         vm.exec_extcodehash().unwrap();
@@ -1303,100 +1095,76 @@ mod tests {
         assert_eq!(vm.stack.peek().unwrap(), 0);
     }
 
-
     #[test]
-    #[ignore]
-    fn test_exec_extcodehash_ca_empty() {
-        // Given
-        let evm_address = evm_address();
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        // The bytecode remains empty, and we expect the empty hash in return
-        deploy_contract_account(kakarot_core, evm_address, [].span());
-
-        vm.stack.push(evm_address.into()).expect('push failed');
-
-        // When
-        vm.exec_extcodehash().unwrap();
-
-        // Then
-        assert(
-            vm
-                .stack
-                .peek()
-                .unwrap() == 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470,
-            'expected empty hash'
-        );
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_extcodehash_unknown_account() {
-        // Given
-        let evm_address = evm_address();
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        setup_contracts_for_testing();
-
-        vm.stack.push(evm_address.into()).expect('push failed');
-
-        // When
-        vm.exec_extcodehash().unwrap();
-
-        // Then
-        assert(vm.stack.peek().unwrap() == 0, 'expected stack top to be 0');
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_extcodehash_ca_with_bytecode() {
-        // Given
-        let evm_address = evm_address();
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        let (_, kakarot_core) = setup_contracts_for_testing();
-
-        // The bytecode stored is the bytecode of a Counter.sol smart contract
-        deploy_contract_account(kakarot_core, evm_address, counter_evm_bytecode());
-
-        vm.stack.push(evm_address.into()).expect('push failed');
-        // When
-        vm.exec_extcodehash().unwrap();
-
-        // Then
-        assert(
-            vm
-                .stack
-                .peek()
-                // extcodehash(Counter.sol) :=
-                // 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275 (source:
-                // remix)
-                // <https://emn178.github.io/online-tools/keccak_256.html?input=608060405234801561000f575f80fd5b506004361061004a575f3560e01c806306661abd1461004e578063371303c01461006c5780636d4ce63c14610076578063b3bcfa8214610094575b5f80fd5b61005661009e565b60405161006391906100f7565b60405180910390f35b6100746100a3565b005b61007e6100bd565b60405161008b91906100f7565b60405180910390f35b61009c6100c5565b005b5f5481565b60015f808282546100b4919061013d565b92505081905550565b5f8054905090565b60015f808282546100d69190610170565b92505081905550565b5f819050919050565b6100f1816100df565b82525050565b5f60208201905061010a5f8301846100e8565b92915050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52601160045260245ffd5b5f610147826100df565b9150610152836100df565b925082820190508082111561016a57610169610110565b5b92915050565b5f61017a826100df565b9150610185836100df565b925082820390508181111561019d5761019c610110565b5b9291505056fea26469706673582212207e792fcff28a4bf0bad8675c5bc2288b07835aebaa90b8dc5e0df19183fb72cf64736f6c63430008160033&input_type=hex>
-                .unwrap() == 0xec976f44607e73ea88910411e3da156757b63bea5547b169e1e0d733443f73b0,
-            'expected counter SC code hash'
-        );
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_extcodehash_precompiles() {
+    fn test_exec_extcodehash_empty_account() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        setup_contracts_for_testing();
-
-        let mut i = 0;
-        while i != 0x10 {
-            vm.stack.push(i.into()).expect('push failed');
-            // When
-            vm.exec_extcodehash().unwrap();
-
-            // Then
-            assert(vm.stack.pop().unwrap() == 0, 'expected 0 for precompiles');
-            i += 1;
+        let account = Account {
+            address: vm.message().target,
+            balance: 0,
+            nonce: 0,
+            code: [].span(),
+            selfdestruct: false,
+            is_created: true,
         };
+        vm.env.state.set_account(account);
+        vm.stack.push(account.address.evm.into()).expect('push failed');
+
+        // When
+        vm.exec_extcodehash().unwrap();
+
+        // Then
+        assert_eq!(vm.stack.peek().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_exec_extcodehash_no_bytecode() {
+        // Given
+        let mut vm = VMBuilderTrait::new_with_presets().build();
+        let account = Account {
+            address: vm.message().target,
+            balance: 1,
+            nonce: 1,
+            code: [].span(),
+            selfdestruct: false,
+            is_created: true,
+        };
+        vm.env.state.set_account(account);
+        vm.stack.push(account.address.evm.into()).expect('push failed');
+
+        // When
+        vm.exec_extcodehash().unwrap();
+
+        // Then
+        assert_eq!(vm.stack.peek().unwrap(), EMPTY_KECCAK);
+    }
+
+    #[test]
+    fn test_exec_extcodehash_with_bytecode() {
+        // Given
+        let mut vm = VMBuilderTrait::new_with_presets().build();
+        let account = Account {
+            address: vm.message().target,
+            balance: 1,
+            nonce: 1,
+            code: counter_evm_bytecode(),
+            selfdestruct: false,
+            is_created: true,
+        };
+        vm.env.state.set_account(account);
+        vm.stack.push(account.address.evm.into()).expect('push failed');
+
+        // When
+        vm.exec_extcodehash().unwrap();
+
+        // Then
+        assert_eq!(
+            vm.stack.peek() // extcodehash(Counter.sol) :=
+            // 0x82abf19c13d2262cc530f54956af7e4ec1f45f637238ed35ed7400a3409fd275 (source:
+            // remix)
+            // <https://emn178.github.io/online-tools/keccak_256.html?input=608060405234801561000f575f80fd5b506004361061004a575f3560e01c806306661abd1461004e578063371303c01461006c5780636d4ce63c14610076578063b3bcfa8214610094575b5f80fd5b61005661009e565b60405161006391906100f7565b60405180910390f35b6100746100a3565b005b61007e6100bd565b60405161008b91906100f7565b60405180910390f35b61009c6100c5565b005b5f5481565b60015f808282546100b4919061013d565b92505081905550565b5f8054905090565b60015f808282546100d69190610170565b92505081905550565b5f819050919050565b6100f1816100df565b82525050565b5f60208201905061010a5f8301846100e8565b92915050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52601160045260245ffd5b5f610147826100df565b9150610152836100df565b925082820190508082111561016a57610169610110565b5b92915050565b5f61017a826100df565b9150610185836100df565b925082820390508181111561019d5761019c610110565b5b9291505056fea26469706673582212207e792fcff28a4bf0bad8675c5bc2288b07835aebaa90b8dc5e0df19183fb72cf64736f6c63430008160033&input_type=hex>
+            .unwrap(),
+            0xec976f44607e73ea88910411e3da156757b63bea5547b169e1e0d733443f73b0,
+        );
     }
 }

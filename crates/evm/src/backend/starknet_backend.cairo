@@ -264,40 +264,139 @@ mod internals {
 mod tests {
     use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
     use contracts::kakarot_core::KakarotCore;
-    use contracts::test_utils::setup_contracts_for_testing;
+    use core::starknet::ClassHash;
     use evm::backend::starknet_backend;
     use evm::errors::EVMErrorTrait;
-    use evm::test_utils::{chain_id, evm_address, VMBuilderTrait};
-    use evm::test_utils::{declare_and_store_classes};
-    use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-    use snforge_std::{spy_events, EventSpyTrait, test_address};
-    use snforge_utils::snforge_utils::{
-        ContractEvents, ContractEventsTrait, EventsFilterBuilderTrait
+    use evm::model::Address;
+    use evm::model::account::{Account, AccountTrait};
+    use evm::state::{State, StateTrait};
+    use evm::test_utils::{
+        setup_test_storages, uninitialized_account, account_contract, register_account
     };
+    use evm::test_utils::{chain_id, evm_address, VMBuilderTrait};
+    use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
+    use snforge_std::{spy_events, EventSpyTrait, test_address, start_mock_call, get_class_hash};
+    use snforge_utils::snforge_utils::{
+        ContractEvents, ContractEventsTrait, EventsFilterBuilderTrait, assert_not_called,
+        assert_called, assert_called_with
+    };
+    use utils::helpers::compute_starknet_address;
 
     #[test]
     #[ignore]
-    //TODO(sn-foundry): fix Entrypoint not found
-    //`0x11f99ee2dc5094f0126c3db5401e3a1a2b6b440f4740e6cce884709cd4526df`
-    fn test_account_deploy() {
+    //TODO(starknet-fonudry): it's impossible to deploy an un-declared class, nor is it possible to
+    //mock_deploy.
+    fn test_deploy() {
         // store the classes in the context of the local execution, to be used for deploying the
         // account class
-        declare_and_store_classes();
+        setup_test_storages();
         let test_address = test_address();
 
-        let mut spy = spy_events();
+        start_mock_call::<
+            ClassHash
+        >(test_address, selector!("get_account_contract_class_hash"), account_contract());
+        start_mock_call::<()>(test_address, selector!("initialize"), ());
         let eoa_address = starknet_backend::deploy(evm_address())
             .expect('deployment of EOA failed');
 
-        let expected = KakarotCore::Event::AccountDeployed(
-            KakarotCore::AccountDeployed {
-                evm_address: evm_address(), starknet_address: eoa_address.starknet
-            }
+        let class_hash = get_class_hash(eoa_address.starknet);
+        assert_eq!(class_hash, account_contract());
+    }
+
+    #[test]
+    #[ignore]
+    //TODO(starknet-foundry): it's impossible to deploy an un-declared class, nor is it possible to
+    //mock_deploy.
+    fn test_account_commit_undeployed_create_should_change_set_all() {
+        setup_test_storages();
+        let test_address = test_address();
+        let evm_address = evm_address();
+        let starknet_address = compute_starknet_address(
+            test_address, evm_address, uninitialized_account()
         );
 
-        let contract_events = EventsFilterBuilderTrait::from_events(@spy.get_events())
-            .with_contract_address(test_address)
-            .build();
-        contract_events.assert_emitted(@expected);
+        let mut state: State = Default::default();
+
+        // When
+        let mut account = Account {
+            address: Address { evm: evm_address, starknet: starknet_address }, nonce: 420, code: [
+                0x1
+            ].span(), balance: 0, selfdestruct: false, is_created: true,
+        };
+        state.set_account(account);
+
+        start_mock_call::<()>(starknet_address, selector!("set_nonce"), ());
+        start_mock_call::<
+            ClassHash
+        >(test_address, selector!("get_account_contract_class_hash"), account_contract());
+        starknet_backend::commit(ref state).expect('commitment failed');
+
+        // Then
+        //TODO(starknet-foundry): we should be able to assert this has been called with specific
+        //data, to pass in mock_call
+        assert_called(starknet_address, selector!("set_nonce"));
+        assert_not_called(starknet_address, selector!("write_bytecode"));
+    }
+
+    #[test]
+    fn test_account_commit_deployed_and_created_should_write_code() {
+        setup_test_storages();
+        let test_address = test_address();
+        let evm_address = evm_address();
+        let starknet_address = compute_starknet_address(
+            test_address, evm_address, uninitialized_account()
+        );
+        register_account(evm_address, starknet_address);
+
+        let mut state: State = Default::default();
+        let mut account = Account {
+            address: Address { evm: evm_address, starknet: starknet_address }, nonce: 420, code: [
+                0x1
+            ].span(), balance: 0, selfdestruct: false, is_created: true,
+        };
+        state.set_account(account);
+
+        start_mock_call::<()>(starknet_address, selector!("write_bytecode"), ());
+        start_mock_call::<()>(starknet_address, selector!("set_nonce"), ());
+        starknet_backend::commit(ref state).expect('commitment failed');
+
+        // Then the account should have a new code.
+        //TODO(starknet-foundry): we should be able to assert this has been called with specific
+        //data, to pass in mock_call
+        assert_called(starknet_address, selector!("write_bytecode"));
+        assert_called(starknet_address, selector!("set_nonce"));
+    }
+
+    #[test]
+    #[ignore]
+    //TODO(starknet-foundry): it's impossible to deploy an un-declared class, nor is it possible to
+    //mock_deploy.
+    fn test_exec_sstore_finalized() { // // Given
+    // setup_test_storages();
+    // let mut vm = VMBuilderTrait::new_with_presets().build();
+    // let evm_address = vm.message().target.evm;
+    // let starknet_address = compute_starknet_address(
+    //     test_address(), evm_address, uninitialized_account()
+    // );
+    // let account = Account {
+    //     address: Address { evm: evm_address, starknet: starknet_address },
+    //     code: [].span(),
+    //     nonce: 1,
+    //     balance: 0,
+    //     selfdestruct: false,
+    //     is_created: false,
+    // };
+    // let key: u256 = 0x100000000000000000000000000000001;
+    // let value: u256 = 0xABDE1E11A5;
+    // vm.stack.push(value).expect('push failed');
+    // vm.stack.push(key).expect('push failed');
+
+    // // When
+
+    // vm.exec_sstore().expect('exec_sstore failed');
+    // starknet_backend::commit(ref vm.env.state).expect('commit storage failed');
+
+    // // Then
+    // assert(fetch_original_storage(@account, key) == value, 'wrong committed value')
     }
 }

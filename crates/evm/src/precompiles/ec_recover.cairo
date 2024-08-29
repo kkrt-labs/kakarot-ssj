@@ -72,7 +72,6 @@ impl EcRecover of Precompile {
 
 #[cfg(test)]
 mod tests {
-    use contracts::test_utils::setup_contracts_for_testing;
     use core::array::ArrayTrait;
     use evm::instructions::system_operations::SystemOperationsTrait;
     use evm::memory::InternalMemoryTrait;
@@ -80,7 +79,9 @@ mod tests {
 
     use evm::precompiles::ec_recover::EcRecover;
     use evm::stack::StackTrait;
+    use evm::test_utils::setup_test_storages;
     use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
+    use snforge_std::{start_mock_call, test_address};
     use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 
@@ -88,8 +89,6 @@ mod tests {
     // <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='jFirsNplace_parameters%20in%20memoryZ456e9aea5e197a1f1af7a3e85a3212fa4049a3ba34c2289b4c860fc0b0c64ef3whash~Y~28wvX2YZ9242685bf161793cc25603c231bc2f568eb630ea16aa137d2664ac8038825608wrX4YZ4f8ae3bd7535248d0bd448298cc2e2071e56992d0774dc340c368ae950852adawsX6YqqjDo_call~32JSizeX80JOffsetX8VSize~VOffset~1waddressW4QFFFFFFFFwgasqSTATICCALLqqjPut_resulNalonKon_stackqPOPX80qMLOAD'~W1%20w%20jq%5Cnj//%20_%20thKZW32QY0qMSTOREX~0xWqPUSHV0wargsQ%200xNt%20Ke%20Jwret%01JKNQVWXYZ_jqw~_>
     #[test]
     fn test_ec_recover_precompile() {
-        let (_, _) = setup_contracts_for_testing();
-
         let msg_hash = 0x456e9aea5e197a1f1af7a3e85a3212fa4049a3ba34c2289b4c860fc0b0c64ef3_u256
             .to_be_bytes_padded();
         let v = 28_u256.to_be_bytes_padded();
@@ -114,11 +113,8 @@ mod tests {
     // source:
     // <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='jFirsNplace_parameters%20in%20memoryZ456e9aea5e197a1f1af7a3e85a3212fa4049a3ba34c2289b4c860fc0b0c64ef3whash~Y~28wvX2YZ9242685bf161793cc25603c231bc2f568eb630ea16aa137d2664ac8038825608wrX4YZ4f8ae3bd7535248d0bd448298cc2e2071e56992d0774dc340c368ae950852adawsX6YqqjDo_call~32JSizeX80JOffsetX8VSize~VOffset~1waddressW4QFFFFFFFFwgasqSTATICCALLqqjPut_resulNalonKon_stackqPOPX80qMLOAD'~W1%20w%20jq%5Cnj//%20_%20thKZW32QY0qMSTOREX~0xWqPUSHV0wargsQ%200xNt%20Ke%20Jwret%01JKNQVWXYZ_jqw~_>
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix Contract not deployed at address: 0x0
     fn test_ec_precompile_static_call() {
-        let (_, _) = setup_contracts_for_testing();
-
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
         vm
@@ -141,6 +137,7 @@ mod tests {
         vm.stack.push(0x1).unwrap(); // address
         vm.stack.push(0xFFFFFFFF).unwrap(); // gas
 
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         vm.exec_staticcall().unwrap();
 
         let result = vm.memory.load(0x80);

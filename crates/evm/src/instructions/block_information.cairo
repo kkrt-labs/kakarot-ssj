@@ -144,18 +144,21 @@ mod tests {
         IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
     };
 
-    use contracts::test_utils::{
-        setup_contracts_for_testing, fund_account_with_native_token, deploy_contract_account,
-    };
     use core::result::ResultTrait;
     use core::starknet::testing::{set_contract_address, ContractAddress};
     use evm::instructions::BlockInformationTrait;
+    use evm::model::account::{Account, AccountTrait};
+    use evm::model::vm::VMTrait;
     use evm::stack::StackTrait;
-    use evm::test_utils::{evm_address, VMBuilderTrait, tx_gas_limit, gas_price};
+    use evm::state::StateTrait;
+    use evm::test_utils::{
+        evm_address, VMBuilderTrait, tx_gas_limit, gas_price, native_token, setup_test_storages,
+        register_account
+    };
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
     use snforge_std::{
         start_cheat_block_number_global, start_cheat_block_timestamp_global,
-        start_cheat_caller_address, test_address
+        start_cheat_caller_address, test_address, start_mock_call
     };
     use utils::constants;
     use utils::traits::{EthAddressIntoU256};
@@ -268,62 +271,25 @@ mod tests {
     // 0x47: SELFBALANCE
     // *************************************************************************
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_selfbalance_eoa() {
+    fn test_exec_selfbalance_should_push_balance() {
         // Given
-        let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let eoa = kakarot_core.deploy_externally_owned_account(evm_address());
-
-        fund_account_with_native_token(eoa, native_token, 0x1);
-
-        // And
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().build();
+        let account = Account {
+            address: vm.message().target,
+            balance: 400,
+            nonce: 0,
+            code: [].span(),
+            selfdestruct: false,
+            is_created: true,
+        };
+        vm.env.state.set_account(account);
 
         // When
-        start_cheat_caller_address(test_address(), kakarot_core.contract_address);
         vm.exec_selfbalance().unwrap();
 
         // Then
-        assert(vm.stack.peek().unwrap() == native_token.balanceOf(eoa), 'wrong balance');
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`. Needs to deploy an EOA to get
-    //the selfbalance.
-    fn test_exec_selfbalance_zero() {
-        // Given
-        let (_, kakarot_core) = setup_contracts_for_testing();
-
-        // And
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        // When
-        // start_cheat_caller_address(kakarot_core.contract_address, evm_address());
-        vm.exec_selfbalance().unwrap();
-
-        // Then
-        assert(vm.stack.peek().unwrap() == 0x00, 'wrong balance');
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_selfbalance_contract_account() {
-        // Given
-        let (native_token, kakarot_core) = setup_contracts_for_testing();
-        let mut ca_address = deploy_contract_account(kakarot_core, evm_address(), [].span());
-
-        fund_account_with_native_token(ca_address.starknet, native_token, 0x1);
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-
-        // When
-        // start_cheat_caller_address(kakarot_core.contract_address, evm_address());
-        vm.exec_selfbalance().unwrap();
-
-        // Then
-        assert(vm.stack.peek().unwrap() == 0x1, 'wrong balance');
+        assert_eq!(vm.stack.peek().unwrap(), 400);
     }
 
 

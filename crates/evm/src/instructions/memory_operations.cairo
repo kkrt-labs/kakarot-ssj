@@ -305,8 +305,7 @@ impl MemoryOperation of MemoryOperationTrait {
 
 #[cfg(test)]
 mod tests {
-    use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-    use contracts::test_utils::{setup_contracts_for_testing, deploy_contract_account};
+    use contracts::account_contract::{AccountContract};
     use core::cmp::max;
     use core::num::traits::Bounded;
     use core::result::ResultTrait;
@@ -317,12 +316,18 @@ mod tests {
     use evm::gas;
     use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
     use evm::memory::{InternalMemoryTrait, MemoryTrait};
+    use evm::model::Address;
     use evm::model::vm::{VM, VMTrait};
     use evm::model::{Account, AccountTrait};
     use evm::stack::StackTrait;
     use evm::state::{StateTrait, compute_storage_address};
-    use evm::test_utils::{evm_address, VMBuilderTrait};
-    use snforge_std::{start_cheat_caller_address, stop_cheat_caller_address};
+    use evm::test_utils::{
+        evm_address, VMBuilderTrait, setup_test_storages, register_account, uninitialized_account,
+        native_token
+    };
+    use snforge_std::{test_address, start_mock_call, store};
+    use snforge_utils::snforge_utils::store_evm;
+    use utils::helpers::compute_starknet_address;
 
     #[test]
     fn test_pc_basic() {
@@ -773,10 +778,6 @@ mod tests {
         assert(pc == old_pc, 'PC should be same');
     }
 
-    // TODO: This is third edge case in which `0x5B` is part of PUSHN instruction and hence
-    // not a valid opcode to jump to
-    //
-    // Remove ignore once its handled
     #[test]
     #[should_panic(expected: ('exec_jump should throw error',))]
     fn test_exec_jumpi_inside_pushn() {
@@ -799,14 +800,15 @@ mod tests {
     }
 
     #[test]
-    fn test_exec_sload_from_state() {
+    fn test_exec_sload_should_push_value_on_stack() {
         // Given
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        let key: u256 = 0x100000000000000000000000000000001;
-        let value = 0x02;
-        // `evm_address` must match the one used to instantiate the vm
-        vm.env.state.write_state(vm.message().target.evm, key, value);
+        let evm_address = vm.message().target.evm;
 
+        let key: u256 = 0x100000000000000000000000000000001;
+        let value: u256 = 0x02;
+        vm.env.state.write_state(evm_address, key, value);
         vm.stack.push(key.into()).expect('push failed');
 
         // When
@@ -819,114 +821,95 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`. Needs to deploy an EOA to get
-    //the selfbalance.
-    fn test_exec_sload_from_storage() {
+    fn test_exec_sstore_on_account_in_st() {
         // Given
-        let (_, kakarot_core) = setup_contracts_for_testing();
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        let mut ca_address = deploy_contract_account(
-            kakarot_core, vm.message().target.evm, [].span()
+        let test_address = test_address();
+        let evm_address = vm.message().target.evm;
+        let starknet_address = compute_starknet_address(
+            test_address, evm_address, uninitialized_account()
         );
         let account = Account {
-            address: ca_address, code: [
+            address: Address { evm: evm_address, starknet: starknet_address }, code: [
                 0xab, 0xcd, 0xef
             ].span(), nonce: 1, balance: 0, selfdestruct: false, is_created: false,
         };
+        vm.env.state.set_account(account);
+
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
-        start_cheat_caller_address(ca_address.starknet, kakarot_core.contract_address);
-        IAccountDispatcher { contract_address: account.starknet_address() }
-            .write_storage(key, value);
-        stop_cheat_caller_address(ca_address.starknet);
 
-        vm.stack.push(key.into()).expect('push failed');
-
-        // When
-        let result = vm.exec_sload();
-
-        // Then
-        assert(result.is_ok(), 'should have succeeded');
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.pop().unwrap() == value, 'sload failed');
-    }
-
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_sstore_from_state() {
-        // Given
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-        let mut ca_address = deploy_contract_account(
-            kakarot_core, vm.message().target.evm, [].span()
-        );
-        let key: u256 = 0x100000000000000000000000000000001;
-        let value: u256 = 0xABDE1E11A5;
         vm.stack.push(value).expect('push failed');
         vm.stack.push(key).expect('push failed');
 
         // When
-        vm.exec_sstore().expect('exec sstore failed');
+        start_mock_call::<u256>(starknet_address, selector!("storage"), 0);
+        let result = vm.exec_sstore();
 
         // Then
-        assert(vm.env.state.read_state(evm_address(), key) == value, 'wrong value in state')
+        assert(result.is_ok(), 'exec sstore failed');
+        assert(vm.env.state.read_state(evm_address, key) == value, 'wrong value in state');
     }
 
-
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
     fn test_exec_sstore_on_account_undeployed() {
         // Given
-        setup_contracts_for_testing();
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().build();
+        let evm_address = vm.message().target.evm;
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
+
         vm.stack.push(value).expect('push failed');
         vm.stack.push(key).expect('push failed');
 
         // When
-        vm.exec_sstore().expect('exec sstore failed');
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
+        let result = vm.exec_sstore();
 
         // Then
-        assert(vm.env.state.read_state(evm_address(), key) == value, 'wrong value in state')
+        assert(result.is_ok(), 'exec sstore failed');
+        assert(vm.env.state.read_state(evm_address, key) == value, 'wrong value in state');
     }
 
     #[test]
     fn test_exec_sstore_on_contract_account_alive() {
         // Given
-        setup_contracts_for_testing();
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().build();
+        let test_address = test_address();
+        let evm_address = vm.message().target.evm;
+        let starknet_address = compute_starknet_address(
+            test_address, evm_address, uninitialized_account()
+        );
+        let account = Account {
+            address: Address { evm: evm_address, starknet: starknet_address }, code: [
+                0xab, 0xcd, 0xef
+            ].span(), nonce: 1, balance: 0, selfdestruct: false, is_created: false,
+        };
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
+
         vm.stack.push(value).expect('push failed');
         vm.stack.push(key).expect('push failed');
 
-        // When
-        let account = Account {
-            address: vm.message().target,
-            code: [].span(),
-            nonce: 1,
-            balance: 0,
-            selfdestruct: false,
-            is_created: false,
-        };
         vm.env.state.set_account(account);
         assert!(vm.env.state.is_account_alive(account.address.evm));
-        vm.exec_sstore().expect('exec sstore failed');
+
+        // When
+        start_mock_call::<u256>(account.starknet_address(), selector!("storage"), 0);
+        let result = vm.exec_sstore();
 
         // Then
-        assert(vm.env.state.read_state(evm_address(), key) == value, 'wrong value in state')
+        assert(result.is_ok(), 'exec sstore failed');
+        assert(vm.env.state.read_state(evm_address, key) == value, 'wrong value in state');
     }
 
-
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
     fn test_exec_sstore_should_fail_static_call() {
         // Given
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().with_read_only().build();
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
@@ -934,6 +917,8 @@ mod tests {
         vm.stack.push(key).expect('push failed');
 
         // When
+        start_mock_call::<u256>(vm.message().target.starknet, selector!("storage"), 0);
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         let result = vm.exec_sstore();
 
         // Then
@@ -942,17 +927,23 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
     fn test_exec_sstore_should_fail_gas_left_inf_call_stipend_eip_1706() {
         // Given
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().with_gas_left(gas::CALL_STIPEND).build();
+        let test_address = test_address();
+        let evm_address = vm.message().target.evm;
+        let starknet_address = compute_starknet_address(
+            test_address, evm_address, uninitialized_account()
+        );
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
         vm.stack.push(value).expect('push failed');
         vm.stack.push(key).expect('push failed');
 
         // When
+        start_mock_call::<u256>(starknet_address, selector!("storage"), 0);
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         let result = vm.exec_sstore();
 
         // Then
@@ -960,37 +951,6 @@ mod tests {
         assert(result.unwrap_err() == EVMError::OutOfGas, 'wrong error returned');
     }
 
-    #[test]
-    #[ignore]
-    //TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
-    fn test_exec_sstore_finalized() {
-        // Given
-        // Setting the contract address is required so that `get_contract_address` in
-        // `CA::deploy` returns the kakarot address
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-        // Deploys the contract account to be able to commit storage changes.
-        let ca_address = deploy_contract_account(kakarot_core, vm.message().target.evm, [].span());
-        let account = Account {
-            address: ca_address,
-            code: [].span(),
-            nonce: 1,
-            balance: 0,
-            selfdestruct: false,
-            is_created: false,
-        };
-        let key: u256 = 0x100000000000000000000000000000001;
-        let value: u256 = 0xABDE1E11A5;
-        vm.stack.push(value).expect('push failed');
-        vm.stack.push(key).expect('push failed');
-
-        // When
-        vm.exec_sstore().expect('exec_sstore failed');
-        starknet_backend::commit(ref vm.env.state).expect('commit storage failed');
-
-        // Then
-        assert(fetch_original_storage(@account, key) == value, 'wrong committed value')
-    }
 
     #[test]
     fn test_gas_should_push_gas_left_to_stack() {

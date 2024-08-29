@@ -67,7 +67,7 @@ impl AccountBuilderImpl of AccountBuilderTrait {
     }
 }
 
-#[derive(Copy, Drop, PartialEq)]
+#[derive(Copy, Drop, PartialEq, Debug)]
 struct Account {
     address: Address,
     code: Span<u8>,
@@ -95,8 +95,8 @@ impl AccountImpl of AccountTrait {
                 let kakarot_state = KakarotCore::unsafe_new_contract_state();
                 let starknet_address = kakarot_state.compute_starknet_address(evm_address);
                 // If no account exists at `address`, then we are trying to
-                // access an undeployed account (CA or EOA). We create an
-                // empty account with the correct address and return it.
+                // access an undeployed account. We create an
+                // empty account with the correct address, fetch the balance, and return it.
                 AccountBuilderTrait::new(Address { starknet: starknet_address, evm: evm_address })
                     .fetch_balance()
                     .build()
@@ -254,4 +254,179 @@ impl AccountInternals of AccountInternalTrait {
     fn set_balance(ref self: Account, value: u256) {
         self.balance = value;
     }
+}
+
+#[cfg(test)]
+mod tests {
+    mod test_has_code_or_nonce {
+        use core::starknet::{ContractAddress, EthAddress};
+        use evm::model::account::{Account, AccountTrait, Address};
+
+        #[test]
+        fn test_should_return_false_when_empty() {
+            let account = Account {
+                address: Address { evm: 1.try_into().unwrap(), starknet: 1.try_into().unwrap() },
+                nonce: 0,
+                code: [].span(),
+                balance: 0,
+                selfdestruct: false,
+                is_created: false,
+            };
+
+            assert!(!account.has_code_or_nonce());
+        }
+
+        #[test]
+        fn test_should_return_true_when_code() {
+            let account = Account {
+                address: Address { evm: 1.try_into().unwrap(), starknet: 1.try_into().unwrap() },
+                nonce: 1,
+                code: [
+                    0x5b
+                ].span(), balance: 0, selfdestruct: false, is_created: false,
+            };
+
+            assert!(account.has_code_or_nonce());
+        }
+
+        #[test]
+        fn test_should_return_true_when_nonce() {
+            let account = Account {
+                address: Address { evm: 1.try_into().unwrap(), starknet: 1.try_into().unwrap() },
+                nonce: 1,
+                code: [].span(),
+                balance: 0,
+                selfdestruct: false,
+                is_created: false,
+            };
+
+            assert!(account.has_code_or_nonce());
+        }
+    }
+
+    mod test_fetch {
+        use evm::model::account::{Account, AccountTrait, Address};
+        use evm::test_utils::{
+            register_account, setup_test_storages, uninitialized_account, evm_address, native_token,
+        };
+        use snforge_std::{test_address, start_mock_call};
+        use snforge_utils::snforge_utils::{assert_called, assert_called_with};
+        use utils::helpers::compute_starknet_address;
+
+        #[test]
+        fn test_should_fetch_data_from_storage_if_registered() {
+            // Given
+            setup_test_storages();
+            let starknet_address = compute_starknet_address(
+                test_address(), evm_address(), uninitialized_account()
+            );
+            register_account(evm_address(), starknet_address);
+
+            let expected = Account {
+                address: Address { evm: evm_address(), starknet: starknet_address },
+                nonce: 1,
+                code: [].span(),
+                balance: 100,
+                selfdestruct: false,
+                is_created: false,
+            };
+
+            // When
+            start_mock_call::<u256>(native_token(), selector!("balanceOf"), 100);
+            start_mock_call::<u64>(starknet_address, selector!("get_nonce"), 1);
+            start_mock_call::<Span<u8>>(starknet_address, selector!("bytecode"), [].span());
+            let account = AccountTrait::fetch(evm_address()).expect('Account should exist');
+
+            // Then
+            assert_eq!(account, expected);
+            assert_called(starknet_address, selector!("get_nonce"));
+            assert_called(starknet_address, selector!("bytecode"));
+            //TODO(starknet-foundry): we mocked the balanceOf call, but we should also check if it
+            //was called with the right data
+            assert_called(native_token(), selector!("balanceOf"));
+        }
+
+        #[test]
+        fn test_should_return_none_if_not_registered() {
+            // Given
+            setup_test_storages();
+            let starknet_address = compute_starknet_address(
+                test_address(), evm_address(), uninitialized_account()
+            );
+
+            assert!(AccountTrait::fetch(evm_address()).is_none());
+        }
+    }
+
+    mod test_fetch_or_create {
+        use evm::model::account::{Account, AccountTrait, Address};
+        use evm::test_utils::{
+            register_account, setup_test_storages, uninitialized_account, evm_address, native_token,
+        };
+        use snforge_std::{test_address, start_mock_call};
+        use snforge_utils::snforge_utils::{assert_called, assert_called_with};
+        use utils::helpers::compute_starknet_address;
+
+        #[test]
+        fn test_should_fetch_data_from_storage_if_registered() {
+            // Given
+            setup_test_storages();
+            let starknet_address = compute_starknet_address(
+                test_address(), evm_address(), uninitialized_account()
+            );
+            register_account(evm_address(), starknet_address);
+
+            let expected = Account {
+                address: Address { evm: evm_address(), starknet: starknet_address },
+                nonce: 1,
+                code: [].span(),
+                balance: 100,
+                selfdestruct: false,
+                is_created: false,
+            };
+
+            // When
+            start_mock_call::<u256>(native_token(), selector!("balanceOf"), 100);
+            start_mock_call::<u64>(starknet_address, selector!("get_nonce"), 1);
+            start_mock_call::<Span<u8>>(starknet_address, selector!("bytecode"), [].span());
+            let account = AccountTrait::fetch_or_create(evm_address());
+
+            // Then
+            assert_eq!(account, expected);
+            assert_called(starknet_address, selector!("get_nonce"));
+            assert_called(starknet_address, selector!("bytecode"));
+            //TODO(starknet-foundry): we mocked the balanceOf call, but we should also check if it
+            //was called with the right data
+            assert_called(native_token(), selector!("balanceOf"));
+        }
+
+        #[test]
+        fn test_should_create_new_account_with_starknet_balance_if_not_registered() {
+            // Given
+            setup_test_storages();
+            let starknet_address = compute_starknet_address(
+                test_address(), evm_address(), uninitialized_account()
+            );
+
+            let expected = Account {
+                address: Address { evm: evm_address(), starknet: starknet_address },
+                nonce: 0,
+                code: [].span(),
+                balance: 50,
+                selfdestruct: false,
+                is_created: false,
+            };
+
+            // When
+            start_mock_call::<u256>(native_token(), selector!("balanceOf"), 50);
+            let account = AccountTrait::fetch_or_create(evm_address());
+
+            // Then
+            assert_eq!(account, expected);
+            //TODO(starknet-foundry): we mocked the balanceOf call, but we should also check if it
+            //was called with the right data
+            assert_called(native_token(), selector!("balanceOf"));
+        }
+    }
+    //TODO(starknet-foundry): add a test for get_jumpdests
 }
