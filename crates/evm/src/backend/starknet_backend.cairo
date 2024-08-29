@@ -271,7 +271,7 @@ mod tests {
     use evm::model::account::{Account, AccountTrait};
     use evm::state::{State, StateTrait};
     use evm::test_utils::{
-        declare_and_store_classes, uninitialized_account, account_contract, register_account
+        setup_test_storages, uninitialized_account, account_contract, register_account
     };
     use evm::test_utils::{chain_id, evm_address, VMBuilderTrait};
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
@@ -289,7 +289,7 @@ mod tests {
     fn test_deploy() {
         // store the classes in the context of the local execution, to be used for deploying the
         // account class
-        declare_and_store_classes();
+        setup_test_storages();
         let test_address = test_address();
 
         start_mock_call::<
@@ -308,7 +308,7 @@ mod tests {
     //TODO(starknet-foundry): it's impossible to deploy an un-declared class, nor is it possible to
     //mock_deploy.
     fn test_account_commit_undeployed_create_should_change_set_all() {
-        declare_and_store_classes();
+        setup_test_storages();
         let test_address = test_address();
         let evm_address = evm_address();
         let starknet_address = compute_starknet_address(
@@ -340,7 +340,7 @@ mod tests {
 
     #[test]
     fn test_account_commit_deployed_and_created_should_write_code() {
-        declare_and_store_classes();
+        setup_test_storages();
         let test_address = test_address();
         let evm_address = evm_address();
         let starknet_address = compute_starknet_address(
@@ -372,7 +372,7 @@ mod tests {
     //TODO(starknet-foundry): it's impossible to deploy an un-declared class, nor is it possible to
     //mock_deploy.
     fn test_exec_sstore_finalized() { // // Given
-    // declare_and_store_classes();
+    // setup_test_storages();
     // let mut vm = VMBuilderTrait::new_with_presets().build();
     // let evm_address = vm.message().target.evm;
     // let starknet_address = compute_starknet_address(

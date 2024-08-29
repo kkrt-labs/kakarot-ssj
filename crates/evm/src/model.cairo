@@ -168,13 +168,13 @@ mod tests {
 
     use evm::state::StateTrait;
     use evm::state::{State, StateChangeLog, StateChangeLogTrait};
-    use evm::test_utils::{declare_and_store_classes};
+    use evm::test_utils::{setup_test_storages};
     use evm::test_utils;
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 
     mod test_is_deployed {
         use evm::model::{Address, Account, AddressTrait};
-        use evm::test_utils::{declare_and_store_classes};
+        use evm::test_utils::{setup_test_storages};
         use evm::test_utils;
         use snforge_std::{test_address, start_mock_call};
         use utils::helpers::compute_starknet_address;

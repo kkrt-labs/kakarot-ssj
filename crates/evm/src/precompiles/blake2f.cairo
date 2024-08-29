@@ -100,7 +100,7 @@ mod tests {
         blake2_precompile_pass_0_test_case, blake2_precompile_pass_2_test_case
     };
     use evm::test_utils::{
-        VMBuilderTrait, native_token, other_starknet_address, declare_and_store_classes
+        VMBuilderTrait, native_token, other_starknet_address, setup_test_storages
     };
     use snforge_std::{start_mock_call, test_address};
     use utils::helpers::FromBytes;
@@ -173,7 +173,7 @@ mod tests {
     // <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='yExecuteBest%20vector%205%20from%20https:Keips.Ghereum.org/EIPS/eip-152XroundJ12~3DhZ48c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5~4jZd182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b~36jXmZ616263))))*~68jXt~3~196Df~1~212DCallW(rGS!rGOVQargsSize~0_argsOV~9_addresJ0xFFFFFFFF_gaswSTATICCALLXRGurnBhe%20result%20ofWwPOP(s!oVwRETURN'~Y1_K%20w%5Cnq***0jwMSTORE_%20yZY32%200xYwPUSHXwwyW%20blake2fVffsGQ~213_K//JsY4%20GetDj8XB%20t*00)qq(~64_!izeQ%01!()*BDGJKQVWXYZ_jqwy~_>
     #[test]
     fn test_blake2_precompile_static_call() {
-        declare_and_store_classes();
+        setup_test_storages();
 
         let mut vm = VMBuilderTrait::new_with_presets().build();
 

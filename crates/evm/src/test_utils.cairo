@@ -48,18 +48,6 @@ fn register_account(evm_address: EthAddress, starknet_address: ContractAddress) 
     kakarot_storage.Kakarot_evm_to_starknet_address.entry(evm_address).write(starknet_address);
 }
 
-fn declare_and_store_classes() {
-    // Declare the contract classes
-    let native_token = deploy_native_token();
-    let _kakarot_core = declare("KakarotCore").unwrap().contract_class().class_hash;
-
-    // Store the contract classes in the same storage slots as Kakarot
-    let mut kakarot_state = KakarotCore::contract_state_for_testing();
-    let mut kakarot_storage = kakarot_state.deref_mut().storage_mut();
-    kakarot_storage.Kakarot_account_contract_class_hash.write(account_contract());
-    kakarot_storage.Kakarot_uninitialized_account_class_hash.write(uninitialized_account());
-    kakarot_storage.Kakarot_native_token_address.write(native_token.contract_address);
-}
 
 #[derive(Destruct)]
 struct VMBuilder {
@@ -293,32 +281,4 @@ fn preset_vm() -> VM {
         accessed_storage_keys: Default::default(),
         gas_refund: 0,
     }
-}
-
-
-/// Initializes the contract account by setting the bytecode, the storage
-/// and incrementing the nonce to 1.
-fn initialize_contract_account(
-    kakarot_core: IExtendedKakarotCoreDispatcher,
-    eth_address: EthAddress,
-    bytecode: Span<u8>,
-    storage: Span<(u256, u256)>
-) -> Result<Address, EVMError> {
-    let mut ca_address = deploy_contract_account(kakarot_core, eth_address, bytecode);
-    // Set the storage of the contract account
-    let account = Account {
-        address: ca_address, code: [
-            0xab, 0xcd, 0xef
-        ].span(), nonce: 1, balance: 0, selfdestruct: false, is_created: false,
-    };
-
-    let mut i = 0;
-    while i != storage.len() {
-        let (key, value) = storage.get(i).unwrap().unbox();
-        IAccountDispatcher { contract_address: account.starknet_address() }
-            .write_storage(*key, *value);
-        i += 1;
-    };
-
-    Result::Ok(ca_address)
 }

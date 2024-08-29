@@ -152,8 +152,8 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::state::StateTrait;
     use evm::test_utils::{
-        evm_address, VMBuilderTrait, tx_gas_limit, gas_price, native_token,
-        declare_and_store_classes, register_account
+        evm_address, VMBuilderTrait, tx_gas_limit, gas_price, native_token, setup_test_storages,
+        register_account
     };
     use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
     use snforge_std::{
@@ -273,7 +273,7 @@ mod tests {
     #[test]
     fn test_exec_selfbalance_should_push_balance() {
         // Given
-        declare_and_store_classes();
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let account = Account {
             address: vm.message().target,

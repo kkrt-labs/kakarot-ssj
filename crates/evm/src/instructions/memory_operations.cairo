@@ -322,8 +322,8 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::state::{StateTrait, compute_storage_address};
     use evm::test_utils::{
-        evm_address, VMBuilderTrait, declare_and_store_classes, register_account,
-        uninitialized_account, native_token
+        evm_address, VMBuilderTrait, setup_test_storages, register_account, uninitialized_account,
+        native_token
     };
     use snforge_std::{test_address, start_mock_call, store};
     use snforge_utils::snforge_utils::store_evm;
@@ -802,7 +802,7 @@ mod tests {
     #[test]
     fn test_exec_sload_should_push_value_on_stack() {
         // Given
-        declare_and_store_classes();
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let evm_address = vm.message().target.evm;
 
@@ -821,15 +821,22 @@ mod tests {
     }
 
     #[test]
-    fn test_exec_sstore_from_state() {
+    fn test_exec_sstore_on_account_in_st() {
         // Given
-        declare_and_store_classes();
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let test_address = test_address();
         let evm_address = vm.message().target.evm;
         let starknet_address = compute_starknet_address(
             test_address, evm_address, uninitialized_account()
         );
+        let account = Account {
+            address: Address { evm: evm_address, starknet: starknet_address }, code: [
+                0xab, 0xcd, 0xef
+            ].span(), nonce: 1, balance: 0, selfdestruct: false, is_created: false,
+        };
+        vm.env.state.set_account(account);
+
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
 
@@ -848,7 +855,7 @@ mod tests {
     #[test]
     fn test_exec_sstore_on_account_undeployed() {
         // Given
-        declare_and_store_classes();
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let evm_address = vm.message().target.evm;
         let key: u256 = 0x100000000000000000000000000000001;
@@ -858,6 +865,7 @@ mod tests {
         vm.stack.push(key).expect('push failed');
 
         // When
+        start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         let result = vm.exec_sstore();
 
         // Then
@@ -868,7 +876,7 @@ mod tests {
     #[test]
     fn test_exec_sstore_on_contract_account_alive() {
         // Given
-        declare_and_store_classes();
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let test_address = test_address();
         let evm_address = vm.message().target.evm;
@@ -901,7 +909,7 @@ mod tests {
     #[test]
     fn test_exec_sstore_should_fail_static_call() {
         // Given
-        declare_and_store_classes();
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().with_read_only().build();
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
@@ -921,7 +929,7 @@ mod tests {
     #[test]
     fn test_exec_sstore_should_fail_gas_left_inf_call_stipend_eip_1706() {
         // Given
-        declare_and_store_classes();
+        setup_test_storages();
         let mut vm = VMBuilderTrait::new_with_presets().with_gas_left(gas::CALL_STIPEND).build();
         let test_address = test_address();
         let evm_address = vm.message().target.evm;

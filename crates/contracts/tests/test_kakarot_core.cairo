@@ -303,7 +303,7 @@ fn test_process_transaction() {
     let test_address: ContractAddress = test_address();
     start_cheat_caller_address(test_address, eoa);
     //TODO(sn-foundry): fix this that fails because the local state doesn't have the correct
-    //addresses/classes
+    //addresses/classes. As it's an internal function there should be no setup of contracts.
     let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
     let result = kakarot_core
         .process_transaction(origin: Address { evm: evm_address, starknet: eoa }, :tx);

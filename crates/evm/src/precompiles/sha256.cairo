@@ -62,7 +62,7 @@ mod tests {
     use evm::precompiles::sha256::Sha256;
     use evm::stack::StackTrait;
     use evm::test_utils::{
-        VMBuilderTrait, native_token, other_starknet_address, declare_and_store_classes
+        VMBuilderTrait, native_token, other_starknet_address, setup_test_storages
     };
     use snforge_std::{start_mock_call};
     use utils::helpers::ToBytes;
@@ -154,7 +154,7 @@ mod tests {
     // <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='wFirsWplaceqparameters%20in%20memorybFFjdata~0vMSTOREvvwDoqcallZSizeZ_1XSizeb1FX_2jaddressY4%200xFFFFFFFFjgasvSTATICCALLvvwPutqresulWalonVonqstackvPOPb20vMLOAD'~Y1j//%20v%5Cnq%20thVj%20wb~0x_Offset~Zb20jretYvPUSHXjargsWt%20Ve%20%01VWXYZ_bjqvw~_>
     #[test]
     fn test_sha_256_precompile_static_call() {
-        declare_and_store_classes();
+        setup_test_storages();
 
         let mut vm = VMBuilderTrait::new_with_presets().build();
 

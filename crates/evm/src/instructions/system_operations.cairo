@@ -423,9 +423,8 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::state::{StateTrait, State};
     use evm::test_utils::{
-        VMBuilderTrait, native_token, evm_address, test_dual_address,
-        other_evm_address, declare_and_store_classes, register_account, origin,
-        uninitialized_account
+        VMBuilderTrait, native_token, evm_address, test_dual_address, other_evm_address,
+        setup_test_storages, register_account, origin, uninitialized_account
     };
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use snforge_std::{test_address, start_mock_call};
@@ -946,7 +945,7 @@ mod tests {
     #[test]
     fn test_exec_create_no_value_transfer() {
         // Given
-        declare_and_store_classes();
+        setup_test_storages();
 
         let deployed_bytecode = [0xff].span();
         let eth_address: EthAddress = evm_address();
@@ -1014,7 +1013,7 @@ mod tests {
     #[test]
     fn test_exec_create_failure() {
         // Given
-        declare_and_store_classes();
+        setup_test_storages();
 
         let deployed_bytecode = [0xFF].span();
         let eth_address: EthAddress = evm_address();
@@ -1075,7 +1074,7 @@ mod tests {
     #[test]
     fn test_exec_create2() {
         // Given
-        declare_and_store_classes();
+        setup_test_storages();
 
         let deployed_bytecode = [0xff].span();
         let eth_address: EthAddress = evm_address();
