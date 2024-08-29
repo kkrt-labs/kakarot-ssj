@@ -28,9 +28,12 @@ use snforge_std::{
     declare, DeclareResultTrait, start_cheat_caller_address, stop_cheat_caller_address,
     start_cheat_signature, stop_cheat_signature, start_cheat_chain_id, stop_cheat_chain_id,
     start_cheat_transaction_hash, stop_cheat_transaction_hash, spy_events, Event, EventSpyTrait,
-    test_address, cheat_caller_address, CheatSpan, store, load, EventSpyAssertionsTrait
+    test_address, cheat_caller_address, CheatSpan, store, load, EventSpyAssertionsTrait,
+    start_mock_call, stop_mock_call
 };
-use snforge_utils::snforge_utils::{EventsFilterBuilderTrait, ContractEvents, ContractEventsTrait};
+use snforge_utils::snforge_utils::{
+    EventsFilterBuilderTrait, ContractEvents, ContractEventsTrait, store_evm
+};
 use starknet::storage::StorageTrait;
 use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, LegacyTransaction};
 use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
@@ -268,25 +271,33 @@ fn test_eth_call() {
 }
 
 #[test]
-#[ignore]
-//TODO(sn-foundry): fix `Contract not deployed at address: 0x0`
 fn test_process_transaction() {
-    // Given
-    let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
-
-    let evm_address = test_utils::evm_address();
-    let eoa = kakarot_core.deploy_externally_owned_account(evm_address);
-    contract_utils::fund_account_with_native_token(
-        eoa, native_token, 0xfffffffffffffffffffffffffff
-    );
+    // Pre
+    test_utils::setup_test_storages();
     let chain_id = chain_id();
 
-    let _account = contract_utils::deploy_contract_account(
-        kakarot_core, test_utils::other_evm_address(), counter_evm_bytecode()
+    // Given
+    let eoa_evm_address = test_utils::evm_address();
+    let eoa_starknet_address = utils::helpers::compute_starknet_address(
+        test_address(), eoa_evm_address, test_utils::uninitialized_account()
     );
+    test_utils::register_account(eoa_evm_address, eoa_starknet_address);
+    start_mock_call::<u256>(eoa_starknet_address, selector!("get_nonce"), 0);
+    start_mock_call::<Span<u8>>(eoa_starknet_address, selector!("bytecode"), [].span());
+
+    let contract_evm_address = test_utils::other_evm_address();
+    let contract_starknet_address = utils::helpers::compute_starknet_address(
+        test_address(), contract_evm_address, test_utils::uninitialized_account()
+    );
+    test_utils::register_account(contract_evm_address, contract_starknet_address);
+    start_mock_call::<u256>(contract_starknet_address, selector!("get_nonce"), 1);
+    start_mock_call::<
+        Span<u8>
+    >(contract_starknet_address, selector!("bytecode"), counter_evm_bytecode());
+    start_mock_call::<u256>(contract_starknet_address, selector!("storage"), 0);
 
     let nonce = 0;
-    let to = Option::Some(test_utils::other_evm_address());
+    let to = Option::Some(contract_evm_address);
     let gas_limit = test_utils::tx_gas_limit();
     let gas_price = test_utils::gas_price();
     let value = 0;
@@ -300,18 +311,19 @@ fn test_process_transaction() {
     );
 
     // When
-    let test_address: ContractAddress = test_address();
-    start_cheat_caller_address(test_address, eoa);
-    //TODO(sn-foundry): fix this that fails because the local state doesn't have the correct
-    //addresses/classes. As it's an internal function there should be no setup of contracts.
     let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
+    start_mock_call::<
+        u256
+    >(test_utils::native_token(), selector!("balanceOf"), 0xfffffffffffffffffffffffffff);
     let result = kakarot_core
-        .process_transaction(origin: Address { evm: evm_address, starknet: eoa }, :tx);
+        .process_transaction(
+            origin: Address { evm: eoa_evm_address, starknet: eoa_starknet_address }, :tx
+        );
     let return_data = result.return_data;
 
     // Then
     assert!(result.success);
-    assert(return_data == u256_to_bytes_array(0).span(), 'wrong result');
+    assert_eq!(return_data, u256_to_bytes_array(0).span());
 }
 
 #[test]

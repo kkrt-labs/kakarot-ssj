@@ -941,7 +941,7 @@ mod tests {
     //! In the exec_create tests, we query the balance of the contract being created by doing a
     //! starknet_call to the native token.
     //! Thus, we must store the native token address in the Kakarot storage preemptively.
-    //! As such, the addres computation uses the uninitialized account class.
+    //! As such, the address computation uses the uninitialized account class.
     #[test]
     fn test_exec_create_no_value_transfer() {
         // Given

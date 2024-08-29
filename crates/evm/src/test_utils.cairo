@@ -229,7 +229,6 @@ fn preset_message() -> Message {
     };
     let read_only = false;
     let tx_gas_limit = tx_gas_limit();
-    let target = test_dual_address();
 
     Message {
         target,
