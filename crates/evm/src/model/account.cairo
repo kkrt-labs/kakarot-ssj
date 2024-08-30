@@ -1,19 +1,10 @@
-use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait, IAccount};
-use contracts::kakarot_core::kakarot::KakarotCore::KakarotCoreInternal;
+use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
+use core::dict::{Felt252Dict, Felt252DictTrait};
 use core::num::traits::Zero;
-use core::starknet::{
-    ContractAddress, EthAddress, get_contract_address, deploy_syscall, get_tx_info,
-    SyscallResultTrait
-};
-use core::traits::TryInto;
+use core::starknet::{ContractAddress, EthAddress};
 use evm::backend::starknet_backend::fetch_balance;
-use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
-use evm::model::{Address, AddressTrait, Transfer};
-use evm::state::State;
-use evm::state::StateTrait;
-use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use utils::helpers::{ResultExTrait, ByteArrayExTrait, compute_starknet_address};
+use evm::model::Address;
 
 #[derive(Drop)]
 struct AccountBuilder {
@@ -68,17 +59,17 @@ impl AccountBuilderImpl of AccountBuilderTrait {
 }
 
 #[derive(Copy, Drop, PartialEq, Debug)]
-struct Account {
-    address: Address,
-    code: Span<u8>,
-    nonce: u64,
-    balance: u256,
-    selfdestruct: bool,
-    is_created: bool,
+pub struct Account {
+    pub address: Address,
+    pub code: Span<u8>,
+    pub nonce: u64,
+    pub balance: u256,
+    pub selfdestruct: bool,
+    pub is_created: bool,
 }
 
 #[generate_trait]
-impl AccountImpl of AccountTrait {
+pub impl AccountImpl of AccountTrait {
     /// Fetches an account from Starknet
     /// An non-deployed account is just an empty account.
     /// # Arguments
@@ -249,7 +240,7 @@ impl AccountImpl of AccountTrait {
 }
 
 #[generate_trait]
-impl AccountInternals of AccountInternalTrait {
+pub(crate) impl AccountInternals of AccountInternalTrait {
     #[inline(always)]
     fn set_balance(ref self: Account, value: u256) {
         self.balance = value;
@@ -259,7 +250,6 @@ impl AccountInternals of AccountInternalTrait {
 #[cfg(test)]
 mod tests {
     mod test_has_code_or_nonce {
-        use core::starknet::{ContractAddress, EthAddress};
         use evm::model::account::{Account, AccountTrait, Address};
 
         #[test]
@@ -310,7 +300,7 @@ mod tests {
             register_account, setup_test_storages, uninitialized_account, evm_address, native_token,
         };
         use snforge_std::{test_address, start_mock_call};
-        use snforge_utils::snforge_utils::{assert_called, assert_called_with};
+        use snforge_utils::snforge_utils::assert_called;
         use utils::helpers::compute_starknet_address;
 
         #[test]
@@ -350,7 +340,7 @@ mod tests {
         fn test_should_return_none_if_not_registered() {
             // Given
             setup_test_storages();
-            let starknet_address = compute_starknet_address(
+            let _starknet_address = compute_starknet_address(
                 test_address(), evm_address(), uninitialized_account()
             );
 
@@ -364,7 +354,7 @@ mod tests {
             register_account, setup_test_storages, uninitialized_account, evm_address, native_token,
         };
         use snforge_std::{test_address, start_mock_call};
-        use snforge_utils::snforge_utils::{assert_called, assert_called_with};
+        use snforge_utils::snforge_utils::assert_called;
         use utils::helpers::compute_starknet_address;
 
         #[test]

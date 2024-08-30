@@ -1,2 +1,2 @@
-mod blake2_compress;
-mod modexp;
+pub mod blake2_compress;
+pub mod modexp;

@@ -2,22 +2,17 @@
 // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/tree/develop/engine-modexp)
 use alexandria_data_structures::vec::VecTrait;
 use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
-use core::array::ArrayTrait;
 use core::array::SpanTrait;
-use core::dict::Felt252DictTrait;
-use core::num::traits::BitSize;
-use core::num::traits::{CheckedAdd, CheckedSub, CheckedMul};
+use core::num::traits::CheckedMul;
 use core::option::OptionTrait;
 use core::result::ResultTrait;
-use core::traits::Destruct;
-use core::traits::TryInto;
 
 use super::arith::{
     big_wrapping_pow, mod_inv, compute_r_mod_n, join_as_double, in_place_shl, in_place_shr,
     in_place_add, in_place_mul_sub, big_wrapping_mul, monsq, monpro, borrowing_sub, carrying_add
 };
 use utils::helpers::{FromBytes, U64Trait, Felt252VecTrait, U128Trait, BitsUsed, ByteSize};
-use utils::math::{Bitshift, WrappingBitshift};
+use utils::math::Bitshift;
 
 pub type Word = u64;
 pub type DoubleWord = u128;
@@ -686,18 +681,9 @@ pub impl MPNatTraitImpl of MPNatTrait {
 
 #[cfg(test)]
 mod tests {
+    use alexandria_data_structures::vec::Felt252VecImpl;
     use alexandria_data_structures::vec::VecTrait;
-    use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
-    use core::result::ResultTrait;
-    use core::traits::Into;
-
-    use utils::crypto::modexp::arith::{
-        mod_inv, monsq, monpro, compute_r_mod_n, in_place_shl, in_place_shr, big_wrapping_pow,
-        big_wrapping_mul, big_sq, borrowing_sub, shifted_carrying_mul
-    };
-    use utils::crypto::modexp::mpnat::{
-        MPNat, MPNatTrait, WORD_MAX, DOUBLE_WORD_MAX, Word, DoubleWord, WORD_BYTES
-    };
+    use utils::crypto::modexp::mpnat::{MPNat, MPNatTrait};
     use utils::helpers::{Felt252VecTrait, ToBytes, FromBytes};
     use utils::math::{Bitshift, WrappingBitshift};
 

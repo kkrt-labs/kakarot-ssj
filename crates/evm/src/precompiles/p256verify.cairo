@@ -1,11 +1,9 @@
 use core::starknet::SyscallResultTrait;
-use core::starknet::{
-    EthAddress, eth_signature::{recover_public_key, public_key_point_to_eth_address, Signature},
-    secp256r1::{Secp256r1Point, secp256r1_new_syscall}, secp256_trait::is_valid_signature
-};
+use core::starknet::secp256_trait::{Secp256Trait};
+use core::starknet::{EthAddress, secp256r1::{Secp256r1Point}, secp256_trait::is_valid_signature};
 use evm::errors::{EVMError};
 use evm::precompiles::Precompile;
-use utils::helpers::{U256Trait, ToBytes, FromBytes};
+use utils::helpers::FromBytes;
 
 const P256VERIFY_PRECOMPILE_GAS_COST: u128 = 3450;
 
@@ -46,10 +44,10 @@ const ONE_32_BYTES: [
     0x01
 ];
 
-impl P256Verify of Precompile {
+pub impl P256Verify of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
-        EthAddress { address: 0x100 }
+        0x100.try_into().unwrap()
     }
 
     fn exec(input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
@@ -89,7 +87,8 @@ impl P256Verify of Precompile {
             Option::None => { return Result::Ok((gas, [].span())); }
         };
 
-        let public_key: Option<Secp256r1Point> = secp256r1_new_syscall(x, y).unwrap_syscall();
+        let public_key: Option<Secp256r1Point> = Secp256Trait::secp256_ec_new_syscall(x, y)
+            .unwrap_syscall();
         let public_key = match public_key {
             Option::Some(public_key) => public_key,
             Option::None => { return Result::Ok((gas, [].span())); }
@@ -107,15 +106,14 @@ impl P256Verify of Precompile {
 mod tests {
     use core::array::ArrayTrait;
     use evm::instructions::system_operations::SystemOperationsTrait;
-    use evm::memory::InternalMemoryTrait;
     use evm::memory::MemoryTrait;
 
     use evm::precompiles::p256verify::P256Verify;
     use evm::stack::StackTrait;
     use evm::test_utils::{VMBuilderTrait};
     use evm::test_utils::{setup_test_storages, native_token};
-    use snforge_std::{start_mock_call, test_address};
-    use utils::helpers::{U256Trait, ToBytes, FromBytes};
+    use snforge_std::start_mock_call;
+    use utils::helpers::{ ToBytes, FromBytes };
 
 
     // source:

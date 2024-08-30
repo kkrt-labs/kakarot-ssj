@@ -69,7 +69,7 @@ fn test_kakarot_core_renounce_ownership() {
 fn test_kakarot_core_chain_id() {
     contract_utils::setup_contracts_for_testing();
 
-    assert(chain_id() == contract_utils::chain_id(), 'wrong chain id');
+    assert(chain_id() == test_utils::chain_id(), 'wrong chain id');
 }
 
 #[test]

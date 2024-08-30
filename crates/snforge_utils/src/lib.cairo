@@ -4,13 +4,11 @@ mod contracts;
 pub mod snforge_utils {
     use core::array::ArrayTrait;
     use core::option::OptionTrait;
-    use starknet::testing::cheatcode;
     use evm::state::compute_storage_key;
     use starknet::ContractAddress;
     use evm::model::Address;
-    use snforge_std::cheatcodes::handle_cheatcode;
     use snforge_std::cheatcodes::storage::store_felt252;
-    use snforge_std::{Event, spy_events, EventSpy, EventSpyAssertionsTrait, EventSpyTrait};
+    use snforge_std::Event;
     use snforge_std::cheatcodes::events::{Events};
     use array_utils::ArrayExtTrait;
 

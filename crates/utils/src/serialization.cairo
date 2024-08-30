@@ -1,7 +1,5 @@
 use core::starknet::secp256_trait::{Signature};
-use utils::eth_transaction::{
-    TransactionType, EthereumTransaction, EthereumTransactionTrait, LegacyTransaction
-};
+use utils::eth_transaction::TransactionType;
 use utils::traits::BoolIntoNumeric;
 
 pub fn deserialize_signature(signature: Span<felt252>, chain_id: u128) -> Option<Signature> {
@@ -52,7 +50,7 @@ fn serialize_transaction_signature(
     res
 }
 
-fn deserialize_bytes(self: Span<felt252>) -> Option<Array<u8>> {
+pub fn deserialize_bytes(self: Span<felt252>) -> Option<Array<u8>> {
     let mut i = 0;
     let mut bytes: Array<u8> = Default::default();
 
@@ -75,7 +73,7 @@ fn deserialize_bytes(self: Span<felt252>) -> Option<Array<u8>> {
     }
 }
 
-fn serialize_bytes(self: Span<u8>) -> Array<felt252> {
+pub fn serialize_bytes(self: Span<u8>) -> Array<felt252> {
     let mut array: Array<felt252> = Default::default();
 
     let mut i = 0;

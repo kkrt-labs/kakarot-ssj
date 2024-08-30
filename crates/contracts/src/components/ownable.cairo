@@ -18,13 +18,13 @@ pub trait IOwnable<TContractState> {
 #[starknet::component]
 pub mod ownable_component {
     use core::num::traits::Zero;
-    use core::starknet::ContractAddress;
-    use core::starknet::get_caller_address;
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use core::starknet::{get_caller_address, ContractAddress};
     use super::Errors;
 
     #[storage]
-    struct Storage {
-        Ownable_owner: ContractAddress
+    pub(crate) struct Storage {
+        pub(crate) Ownable_owner: ContractAddress
     }
 
     #[event]
@@ -34,9 +34,9 @@ pub mod ownable_component {
     }
 
     #[derive(Drop, starknet::Event)]
-    struct OwnershipTransferred {
-        previous_owner: ContractAddress,
-        new_owner: ContractAddress,
+    pub struct OwnershipTransferred {
+        pub previous_owner: ContractAddress,
+        pub new_owner: ContractAddress,
     }
 
 

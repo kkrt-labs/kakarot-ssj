@@ -1,27 +1,13 @@
-use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::KakarotCore;
-use contracts::kakarot_core::interface::{
-    IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
-};
-use contracts::test_utils::{deploy_contract_account, deploy_native_token};
-use contracts::uninitialized_account::UninitializedAccount;
-use core::nullable::{match_nullable, FromNullableResult};
 use core::ops::DerefMut;
-use core::ops::SnapshotDeref;
-use core::starknet::storage::{StorageMapWriteAccess, StoragePathEntry};
-use core::starknet::{
-    StorageBaseAddress, storage_base_address_from_felt252, contract_address_try_from_felt252,
-    ContractAddress, EthAddress, deploy_syscall, get_contract_address, contract_address_const,
-    ClassHash, class_hash_const
-};
+use core::starknet::storage::{ StoragePointerWriteAccess, StoragePathEntry };
+use core::starknet::storage_access::{StorageBaseAddress, storage_base_address_from_felt252};
+use core::starknet::{ ContractAddress, EthAddress, contract_address_const, ClassHash, class_hash_const };
 use core::traits::TryInto;
-use evm::errors::{EVMError};
 
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{Message, Environment, Address, Account, AccountTrait};
-use evm::state::State;
-use evm::{stack::{Stack, StackTrait}, memory::{Memory, MemoryTrait}};
-use snforge_std::{declare, DeclareResultTrait, ContractClassTrait, store, test_address};
+use evm::model::{ Message, Environment, Address, AccountTrait };
+use snforge_std::test_address;
 use starknet::storage::StorageTraitMut;
 use utils::constants;
 

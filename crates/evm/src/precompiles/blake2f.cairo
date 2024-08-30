@@ -3,7 +3,6 @@ use core::option::OptionTrait;
 use core::starknet::EthAddress;
 
 use evm::errors::{EVMError, ensure};
-use evm::model::vm::{VM, VMTrait};
 use evm::precompiles::Precompile;
 use utils::crypto::blake2_compress::compress;
 use utils::helpers::{FromBytes, ToBytes};
@@ -11,10 +10,10 @@ use utils::helpers::{FromBytes, ToBytes};
 const GF_ROUND: u64 = 1;
 const INPUT_LENGTH: usize = 213;
 
-impl Blake2f of Precompile {
+pub impl Blake2f of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
-        EthAddress { address: 0x9 }
+        0x9.try_into().unwrap()
     }
 
     fn exec(input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
@@ -84,12 +83,9 @@ impl Blake2f of Precompile {
 #[cfg(test)]
 mod tests {
     use core::array::SpanTrait;
-    use core::starknet::testing::set_contract_address;
     use evm::errors::EVMError;
     use evm::instructions::memory_operations::MemoryOperationTrait;
     use evm::instructions::system_operations::SystemOperationsTrait;
-    use evm::interpreter::EVMTrait;
-    use evm::memory::InternalMemoryTrait;
     use evm::memory::MemoryTrait;
     use evm::precompiles::blake2f::Blake2f;
     use evm::stack::StackTrait;
@@ -99,10 +95,8 @@ mod tests {
         blake2_precompile_fail_wrong_length_input_3_test_case, blake2_precompile_pass_1_test_case,
         blake2_precompile_pass_0_test_case, blake2_precompile_pass_2_test_case
     };
-    use evm::test_utils::{
-        VMBuilderTrait, native_token, other_starknet_address, setup_test_storages
-    };
-    use snforge_std::{start_mock_call, test_address};
+    use evm::test_utils::{ VMBuilderTrait, native_token, setup_test_storages };
+    use snforge_std::start_mock_call;
     use utils::helpers::FromBytes;
 
     #[test]

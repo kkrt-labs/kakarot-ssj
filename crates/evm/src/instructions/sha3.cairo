@@ -1,16 +1,17 @@
-use core::keccak::{cairo_keccak};
+use core::cmp::min;
 //! SHA3.
+use core::keccak::{cairo_keccak};
 
+// Internal imports
 use evm::errors::EVMError;
 use evm::gas;
-// Internal imports
 use evm::memory::MemoryTrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
-use utils::helpers::{ArrayExtTrait, U256Trait, ceil32, u128_split};
+use utils::helpers::{ArrayExtTrait, U256Trait, ceil32};
 
 #[generate_trait]
-impl Sha3Impl of Sha3Trait {
+pub impl Sha3Impl of Sha3Trait {
     /// SHA3 operation : Hashes n bytes in memory at a given offset in memory
     /// and push the hash result to the stack.
     ///
@@ -31,10 +32,8 @@ impl Sha3Impl of Sha3Trait {
 
         let mut to_hash: Array<u64> = Default::default();
 
-        let (nb_words, nb_zeroes) = internal::compute_memory_words_amount(
-            size, offset, self.memory.size()
-        );
-        let mut last_input_offset = internal::fill_array_with_memory_words(
+        let (nb_words, nb_zeroes) = compute_memory_words_amount(size, offset, self.memory.size());
+        let mut last_input_offset = fill_array_with_memory_words(
             ref self, ref to_hash, offset, nb_words
         );
         // Fill array to hash with zeroes for bytes out of memory bound
@@ -46,7 +45,7 @@ impl Sha3Impl of Sha3Trait {
         // it to to_hash.
         let last_input: u64 = if (size % 32 != 0) {
             let loaded = self.memory.load(last_input_offset);
-            internal::prepare_last_input(ref to_hash, loaded, size % 32)
+            prepare_last_input(ref to_hash, loaded, size % 32)
         } else {
             0
         };
@@ -58,106 +57,97 @@ impl Sha3Impl of Sha3Trait {
 }
 
 
-mod internal {
-    use core::cmp::min;
-    use evm::memory::MemoryTrait;
-    use evm::model::vm::{VM, VMTrait};
-    use evm::stack::StackTrait;
-    use utils::helpers::U256Trait;
-
-    /// Computes how many words are read from the memory
-    /// and how many words must be filled with zeroes
-    /// given a target size, a memory offset and the length of the memory.
-    ///
-    /// # Arguments
-    ///
-    /// * `size` - The amount of bytes to hash
-    /// * `offset` - Offset in memory
-    /// * `mem_len` - Size of the memory
-    /// Returns : (nb_words, nb_zeroes)
-    fn compute_memory_words_amount(size: u32, offset: u32, mem_len: u32) -> (u32, u32) {
-        // Bytes to hash are less than a word size
-        if size < 32 {
-            return (0, 0);
-        }
-        // Bytes out of memory bound are zeroes
-        if offset > mem_len {
-            return (0, size / 32);
-        }
-        // The only word to read from memory is less than 32 bytes
-        if mem_len - offset < 32 {
-            return (1, (size / 32) - 1);
-        }
-
-        let bytes_to_read = min(mem_len - offset, size);
-        let nb_words = bytes_to_read / 32;
-        (nb_words, (size / 32) - nb_words)
+/// Computes how many words are read from the memory
+/// and how many words must be filled with zeroes
+/// given a target size, a memory offset and the length of the memory.
+///
+/// # Arguments
+///
+/// * `size` - The amount of bytes to hash
+/// * `offset` - Offset in memory
+/// * `mem_len` - Size of the memory
+/// Returns : (nb_words, nb_zeroes)
+fn compute_memory_words_amount(size: u32, offset: u32, mem_len: u32) -> (u32, u32) {
+    // Bytes to hash are less than a word size
+    if size < 32 {
+        return (0, 0);
+    }
+    // Bytes out of memory bound are zeroes
+    if offset > mem_len {
+        return (0, size / 32);
+    }
+    // The only word to read from memory is less than 32 bytes
+    if mem_len - offset < 32 {
+        return (1, (size / 32) - 1);
     }
 
-    /// Fills the `to_hash` array with little endian u64s
-    /// by splitting words read from the memory and
-    /// returns the next offset to read from.
-    ///
-    /// # Arguments
-    ///
-    /// * `self` - The context in which the memory is read
-    /// * `to_hash` - A reference to the array to fill
-    /// * `offset` - Offset in memory to start reading from
-    /// * `amount` - The amount of words to read from memory
-    /// Return the new offset
-    fn fill_array_with_memory_words(
-        ref self: VM, ref to_hash: Array<u64>, mut offset: u32, mut amount: u32
-    ) -> u32 {
-        while amount != 0 {
-            let loaded = self.memory.load(offset);
-            let ((high_h, low_h), (high_l, low_l)) = loaded.split_into_u64_le();
-            to_hash.append(low_h);
-            to_hash.append(high_h);
-            to_hash.append(low_l);
-            to_hash.append(high_l);
+    let bytes_to_read = min(mem_len - offset, size);
+    let nb_words = bytes_to_read / 32;
+    (nb_words, (size / 32) - nb_words)
+}
 
-            offset += 32;
-            amount -= 1;
-        };
-        offset
-    }
+/// Fills the `to_hash` array with little endian u64s
+/// by splitting words read from the memory and
+/// returns the next offset to read from.
+///
+/// # Arguments
+///
+/// * `self` - The context in which the memory is read
+/// * `to_hash` - A reference to the array to fill
+/// * `offset` - Offset in memory to start reading from
+/// * `amount` - The amount of words to read from memory
+/// Return the new offset
+fn fill_array_with_memory_words(
+    ref self: VM, ref to_hash: Array<u64>, mut offset: u32, mut amount: u32
+) -> u32 {
+    while amount != 0 {
+        let loaded = self.memory.load(offset);
+        let ((high_h, low_h), (high_l, low_l)) = loaded.split_into_u64_le();
+        to_hash.append(low_h);
+        to_hash.append(high_h);
+        to_hash.append(low_l);
+        to_hash.append(high_l);
 
-    /// Fills the `to_hash` array with the n-1 remaining little endian u64
-    /// depending on size from a word and returns
-    /// the u64 containing the last 8 bytes word to hash.
-    ///
-    /// # Arguments
-    ///
-    /// * `to_hash` - A reference to the array to fill
-    /// * `value` - The word to split in u64 words
-    /// * `size` - The amount of bytes still required to hash
-    /// Returns the last u64 word that isn't 8 Bytes long.
-    fn prepare_last_input(ref to_hash: Array<u64>, value: u256, size: u32) -> u64 {
-        let ((high_h, low_h), (high_l, low_l)) = value.split_into_u64_le();
-        if size < 8 {
-            return low_h;
-        } else if size < 16 {
-            to_hash.append(low_h);
-            return high_h;
-        } else if size < 24 {
-            to_hash.append(low_h);
-            to_hash.append(high_h);
-            return low_l;
-        } else {
-            to_hash.append(low_h);
-            to_hash.append(high_h);
-            to_hash.append(low_l);
-            return high_l;
-        }
+        offset += 32;
+        amount -= 1;
+    };
+    offset
+}
+
+/// Fills the `to_hash` array with the n-1 remaining little endian u64
+/// depending on size from a word and returns
+/// the u64 containing the last 8 bytes word to hash.
+///
+/// # Arguments
+///
+/// * `to_hash` - A reference to the array to fill
+/// * `value` - The word to split in u64 words
+/// * `size` - The amount of bytes still required to hash
+/// Returns the last u64 word that isn't 8 Bytes long.
+fn prepare_last_input(ref to_hash: Array<u64>, value: u256, size: u32) -> u64 {
+    let ((high_h, low_h), (high_l, low_l)) = value.split_into_u64_le();
+    if size < 8 {
+        return low_h;
+    } else if size < 16 {
+        to_hash.append(low_h);
+        return high_h;
+    } else if size < 24 {
+        to_hash.append(low_h);
+        to_hash.append(high_h);
+        return low_l;
+    } else {
+        to_hash.append(low_h);
+        to_hash.append(high_h);
+        to_hash.append(low_l);
+        return high_l;
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
     use evm::instructions::Sha3Trait;
-    use evm::instructions::sha3::internal;
-    use evm::memory::{InternalMemoryTrait, MemoryTrait};
+    use evm::instructions::sha3;
+    use evm::memory::MemoryTrait;
     use evm::stack::StackTrait;
     use evm::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait};
 
@@ -519,10 +509,8 @@ mod tests {
         let mut offset = 0;
 
         // When
-        let (words_from_mem, _) = internal::compute_memory_words_amount(
-            size, offset, vm.memory.size()
-        );
-        internal::fill_array_with_memory_words(ref vm, ref to_hash, offset, words_from_mem);
+        let (words_from_mem, _) = sha3::compute_memory_words_amount(size, offset, vm.memory.size());
+        sha3::fill_array_with_memory_words(ref vm, ref to_hash, offset, words_from_mem);
 
         // Then
         assert(to_hash.len() == 4, 'wrong array length');
@@ -547,10 +535,8 @@ mod tests {
         let mut offset = 0;
 
         // When
-        let (words_from_mem, _) = internal::compute_memory_words_amount(
-            size, offset, vm.memory.size()
-        );
-        internal::fill_array_with_memory_words(ref vm, ref to_hash, offset, words_from_mem);
+        let (words_from_mem, _) = sha3::compute_memory_words_amount(size, offset, vm.memory.size());
+        sha3::fill_array_with_memory_words(ref vm, ref to_hash, offset, words_from_mem);
 
         // Then
         assert(to_hash.len() == 4, 'wrong array length');
@@ -568,7 +554,7 @@ mod tests {
         let size = 5;
 
         // When
-        let result = internal::prepare_last_input(ref to_hash, value, size);
+        let result = sha3::prepare_last_input(ref to_hash, value, size);
 
         // Then
         assert(result == 0xE5000000FFFFFFFA, 'wrong result');
@@ -583,7 +569,7 @@ mod tests {
         let size = 20;
 
         // When
-        let result = internal::prepare_last_input(ref to_hash, value, size);
+        let result = sha3::prepare_last_input(ref to_hash, value, size);
 
         // Then
         assert(result == 0x00200400000000AD, 'wrong result');
@@ -600,7 +586,7 @@ mod tests {
         let size = 50;
 
         // When
-        let result = internal::prepare_last_input(ref to_hash, value, size);
+        let result = sha3::prepare_last_input(ref to_hash, value, size);
 
         // Then
         assert(result == 0x0000450000DEFA00, 'wrong result');

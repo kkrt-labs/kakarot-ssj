@@ -1,20 +1,18 @@
-mod account;
-mod vm;
+pub mod account;
+pub mod vm;
+pub use account::{Account, AccountTrait};
+pub use vm::{VM, VMTrait};
 use contracts::kakarot_core::{KakarotCore, IKakarotCore};
-
-use core::num::traits::Zero;
-use core::num::traits::{CheckedAdd, CheckedSub, CheckedMul};
-use core::starknet::{EthAddress, get_contract_address, ContractAddress};
-use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
-use evm::model::account::{Account, AccountTrait};
+use core::num::traits::{CheckedSub, Zero};
+use core::starknet::{EthAddress, ContractAddress};
+use evm::errors::EVMError;
 use evm::precompiles::{
     FIRST_ROLLUP_PRECOMPILE_ADDRESS, FIRST_ETHEREUM_PRECOMPILE_ADDRESS,
     LAST_ETHEREUM_PRECOMPILE_ADDRESS
 };
 use evm::state::State;
 use utils::fmt::{TSpanSetDebug};
-use utils::helpers::{ResultExTrait};
-use utils::set::{Set, SpanSet};
+use utils::set::SpanSet;
 use utils::traits::{EthAddressDefault, ContractAddressDefault, SpanDefault};
 
 #[derive(Destruct, Default)]
@@ -64,7 +62,7 @@ enum ExecutionResultStatus {
 }
 
 #[generate_trait]
-impl ExecutionResultImpl of ExecutionResultTrait {
+pub impl ExecutionResultImpl of ExecutionResultTrait {
     fn exceptional_failure(
         error: Span<u8>,
         accessed_addresses: SpanSet<EthAddress>,
@@ -102,16 +100,16 @@ impl ExecutionResultImpl of ExecutionResultTrait {
 }
 
 #[derive(Destruct)]
-struct ExecutionSummary {
-    status: ExecutionResultStatus,
-    return_data: Span<u8>,
-    gas_left: u128,
-    state: State,
-    gas_refund: u128
+pub struct ExecutionSummary {
+    pub status: ExecutionResultStatus,
+    pub return_data: Span<u8>,
+    pub gas_left: u128,
+    pub state: State,
+    pub gas_refund: u128
 }
 
 #[generate_trait]
-impl ExecutionSummaryImpl of ExecutionSummaryTrait {
+pub impl ExecutionSummaryImpl of ExecutionSummaryTrait {
     fn exceptional_failure(error: Span<u8>) -> ExecutionSummary {
         ExecutionSummary {
             status: ExecutionResultStatus::Exception,
@@ -135,15 +133,15 @@ impl ExecutionSummaryImpl of ExecutionSummaryTrait {
     }
 }
 
-struct TransactionResult {
-    success: bool,
-    return_data: Span<u8>,
-    gas_used: u128,
-    state: State
+pub struct TransactionResult {
+    pub success: bool,
+    pub return_data: Span<u8>,
+    pub gas_used: u128,
+    pub state: State
 }
 
 #[generate_trait]
-impl TransactionResultImpl of TransactionResultTrait {
+pub impl TransactionResultImpl of TransactionResultTrait {
     fn exceptional_failure(error: Span<u8>, gas_used: u128) -> TransactionResult {
         TransactionResult {
             success: false, return_data: error, gas_used, state: Default::default()
@@ -153,16 +151,17 @@ impl TransactionResultImpl of TransactionResultTrait {
 
 /// The struct representing an EVM event.
 #[derive(Drop, Clone, Default, PartialEq)]
-struct Event {
-    keys: Array<u256>,
-    data: Array<u8>,
+pub struct Event {
+    pub keys: Array<u256>,
+    pub data: Array<u8>,
 }
 
 #[derive(Copy, Drop, PartialEq, Default, Debug)]
-struct Address {
-    evm: EthAddress,
-    starknet: ContractAddress,
+pub struct Address {
+    pub evm: EthAddress,
+    pub starknet: ContractAddress,
 }
+
 
 impl ZeroAddress of core::num::traits::Zero<Address> {
     fn zero() -> Address {
@@ -177,7 +176,7 @@ impl ZeroAddress of core::num::traits::Zero<Address> {
 }
 
 #[generate_trait]
-impl AddressImpl of AddressTrait {
+pub impl AddressImpl of AddressTrait {
     fn is_deployed(self: @EthAddress) -> bool {
         let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
         let address = kakarot_state.address_registry(*self);
@@ -197,29 +196,19 @@ impl AddressImpl of AddressTrait {
 /// A struct to save native token transfers to be made when finalizing
 /// a tx
 #[derive(Copy, Drop, PartialEq, Debug)]
-struct Transfer {
-    sender: Address,
-    recipient: Address,
-    amount: u256
+pub struct Transfer {
+    pub sender: Address,
+    pub recipient: Address,
+    pub amount: u256
 }
 
 #[cfg(test)]
 mod tests {
-    use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-    use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
-    use core::starknet::EthAddress;
-    use evm::backend::starknet_backend;
-    use evm::model::account::AccountTrait;
-
-    use evm::state::StateTrait;
-    use evm::state::{State, StateChangeLog, StateChangeLogTrait};
-    use evm::test_utils;
-    use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 
     mod test_is_deployed {
-        use evm::model::{Address, Account, AddressTrait};
+        use evm::model::AddressTrait;
         use evm::test_utils;
-        use snforge_std::{test_address, start_mock_call};
+        use snforge_std::test_address;
         use utils::helpers::compute_starknet_address;
 
 

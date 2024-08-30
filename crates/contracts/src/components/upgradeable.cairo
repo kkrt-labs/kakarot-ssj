@@ -8,12 +8,12 @@ pub trait IUpgradeable<TContractState> {
 
 #[starknet::component]
 pub mod upgradeable_component {
+    use core::starknet::ClassHash;
     use core::starknet::syscalls::{replace_class_syscall};
-    use core::starknet::{get_caller_address, ClassHash};
 
 
     #[storage]
-    struct Storage {}
+    pub struct Storage {}
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -27,7 +27,7 @@ pub mod upgradeable_component {
     }
 
     #[embeddable_as(Upgradeable)]
-    impl UpgradeableImpl<
+    pub impl UpgradeableImpl<
         TContractState, +HasComponent<TContractState>
     > of super::IUpgradeable<ComponentState<TContractState>> {
         fn upgrade_contract(

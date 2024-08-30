@@ -1,13 +1,9 @@
 use core::array::ArrayTrait;
 use core::array::SpanTrait;
-use core::byte_array::ByteArrayTrait;
 use core::option::OptionTrait;
 use core::panic_with_felt252;
-use core::result::ResultTrait;
 use core::starknet::EthAddress;
-
-use utils::errors::RLPHelpersErrorTrait;
-use utils::errors::{RLPError, RLPHelpersError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
+use utils::errors::{RLPError, RLPHelpersError};
 use utils::eth_transaction::AccessListItem;
 use utils::helpers::{EthAddressExTrait, ArrayExtension, ToBytes, FromBytes};
 
@@ -341,10 +337,7 @@ mod tests {
     use core::option::OptionTrait;
 
     use core::result::ResultTrait;
-
-    use core::starknet::eth_address::EthAddress;
-    use core::traits::Into;
-    use utils::errors::{RLPError, RLP_EMPTY_INPUT, RLP_INPUT_TOO_SHORT};
+    use utils::errors::RLPError;
     use utils::eth_transaction::AccessListItem;
     use utils::rlp::{RLPType, RLPTrait, RLPItem, RLPHelpersTrait};
 
@@ -713,7 +706,7 @@ mod tests {
         let mut i = 0;
         loop {
             if i == 0x80 {
-                break ();
+                break;
             }
             let mut arr = ArrayTrait::new();
             arr.append(i);

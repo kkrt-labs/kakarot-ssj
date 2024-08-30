@@ -1,16 +1,5 @@
-use core::circuit::CircuitElement as CE;
-use core::circuit::CircuitInput as CI;
-
-use core::circuit::{
-    RangeCheck96, AddMod, MulMod, u384, u96, CircuitElement, CircuitInput, circuit_add, circuit_sub,
-    circuit_mul, circuit_inverse, EvalCircuitResult, EvalCircuitTrait, CircuitOutputsTrait,
-    CircuitModulus, AddInputResultTrait, CircuitInputs, CircuitInputAccumulator
-};
+use core::circuit::u384;
 use core::option::Option;
-use core::starknet::SyscallResultTrait;
-use core::starknet::{EthAddress};
-use evm::errors::{EVMError};
-use evm::precompiles::Precompile;
 
 use evm::precompiles::ec_add::{
     is_on_curve, eq_mod_p, eq_neg_mod_p, double_ec_point_unchecked, add_ec_point_unchecked,

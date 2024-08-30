@@ -4,7 +4,6 @@ use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
 
 use core::num::traits::{WideMul, OverflowingAdd, OverflowingSub, WrappingMul};
 use core::option::OptionTrait;
-use core::traits::TryInto;
 use super::mpnat::{MPNat, Word, DoubleWord, WORD_BITS, BASE, DOUBLE_WORD_MAX, WORD_MAX};
 use utils::helpers::{u128_split, Felt252VecTrait, U128Trait};
 use utils::math::WrappingBitshift;
@@ -457,7 +456,7 @@ fn big_sq(ref x: MPNat, ref out: Felt252Vec<Word>) {
             }
 
             out.set(i + j, res.as_u64());
-            c = new_c + ((res.shr(WORD_BITS.into())));
+            c = new_c + res.shr(WORD_BITS.into());
 
             j += 1;
         };
@@ -601,10 +600,9 @@ mod tests {
     };
     use utils::crypto::modexp::mpnat::tests::{mp_nat_to_u128};
     use utils::crypto::modexp::mpnat::{
-        MPNat, MPNatTrait, WORD_MAX, DOUBLE_WORD_MAX, BASE, Word, DoubleWord, WORD_BYTES
+        MPNat, MPNatTrait, WORD_MAX, DOUBLE_WORD_MAX, BASE, Word, WORD_BYTES
     };
     use utils::helpers::{Felt252VecTrait, ToBytes};
-    use utils::helpers::{U128Trait};
     use utils::math::{WrappingBitshift, WrappingExponentiation};
 
     // the tests are taken from

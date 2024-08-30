@@ -1,6 +1,4 @@
 use core::array::SpanTrait;
-
-use core::keccak::cairo_keccak;
 use core::option::OptionTrait;
 use core::starknet::{EthAddress, secp256_trait::Signature, eth_signature::{verify_eth_signature}};
 use core::traits::TryInto;
@@ -8,7 +6,7 @@ use utils::errors::RLPErrorTrait;
 
 use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl, RLPHelpersErrorTrait};
 
-use utils::helpers::{U256Trait, U256Impl, ByteArrayExt, U8SpanExTrait};
+use utils::helpers::{U256Impl, ByteArrayExt, U8SpanExTrait};
 
 use utils::rlp::RLPItem;
 use utils::rlp::{RLPTrait, RLPHelpersTrait};
@@ -486,7 +484,7 @@ pub impl EthTransactionImpl of EthTransactionTrait {
 
 #[cfg(test)]
 mod tests {
-    use contracts::test_utils::chain_id;
+    use evm::test_utils::chain_id;
     use core::option::OptionTrait;
     use core::starknet::eth_signature::{EthAddress, Signature};
 
@@ -495,8 +493,7 @@ mod tests {
         EncodedTransaction, TransactionMetadata, EthTransactionError, EthereumTransaction,
         EthereumTransactionTrait, AccessListItem
     };
-    use utils::helpers::{U256Trait, ToBytes};
-    use utils::rlp::{RLPTrait, RLPItem, RLPHelpersTrait};
+    use utils::helpers::ToBytes;
     use utils::test_data::{
         legacy_rlp_encoded_tx, legacy_rlp_encoded_deploy_tx, eip_2930_encoded_tx,
         eip_1559_encoded_tx
@@ -598,9 +595,7 @@ mod tests {
 
         let expected_access_list = [
             AccessListItem {
-                ethereum_address: EthAddress {
-                    address: 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984
-                },
+                ethereum_address: 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.try_into().unwrap(),
                 storage_keys: [
                     0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65,
                     0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94
@@ -647,9 +642,7 @@ mod tests {
 
         let expected_access_list = [
             AccessListItem {
-                ethereum_address: EthAddress {
-                    address: 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984
-                },
+                ethereum_address: 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.try_into().unwrap(),
                 storage_keys: [
                     0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65,
                     0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94
@@ -668,7 +661,7 @@ mod tests {
         let encoded_tx_data = legacy_rlp_encoded_tx();
         let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
 
-        assert(result == true, 'is_legacy_tx expected true');
+        assert(result, 'is_legacy_tx expected true');
     }
 
     #[test]
@@ -676,7 +669,7 @@ mod tests {
         let encoded_tx_data = eip_1559_encoded_tx();
         let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
 
-        assert(result == false, 'is_legacy_tx expected false');
+        assert(!result, 'is_legacy_tx expected false');
     }
 
     #[test]
@@ -684,7 +677,7 @@ mod tests {
         let encoded_tx_data = eip_2930_encoded_tx();
         let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
 
-        assert(result == false, 'is_legacy_tx expected false');
+        assert(!result, 'is_legacy_tx expected false');
     }
 
 
@@ -708,7 +701,7 @@ mod tests {
 
         let result = EthTransactionTrait::validate_eth_tx(validate_tx_param, encoded_tx_data)
             .expect('signature verification failed');
-        assert(result == true, 'result is not true');
+        assert(result, 'result is not true');
     }
 
 
@@ -732,7 +725,7 @@ mod tests {
 
         let result = EthTransactionTrait::validate_eth_tx(validate_tx_param, encoded_tx_data)
             .expect('signature verification failed');
-        assert(result == true, 'result is not true');
+        assert(result, 'result is not true');
     }
 
 
@@ -756,7 +749,7 @@ mod tests {
 
         let result = EthTransactionTrait::validate_eth_tx(validate_tx_param, encoded_tx_data)
             .expect('signature verification failed');
-        assert(result == true, 'result is not true');
+        assert(result, 'result is not true');
     }
 
     #[test]

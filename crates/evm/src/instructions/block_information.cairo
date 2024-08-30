@@ -1,28 +1,18 @@
 //! Block Information.
 
-use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use core::starknet::SyscallResultTrait;
+use core::starknet::syscalls::get_block_hash_syscall;
 
-// Corelib imports
-use core::starknet::info::get_block_number;
-use core::starknet::{get_block_hash_syscall, EthAddress};
-
-use evm::errors::{
-    EVMError, BLOCK_HASH_SYSCALL_FAILED, EXECUTION_INFO_SYSCALL_FAILED, TYPE_CONVERSION_ERROR
-};
+use evm::errors::EVMError;
 
 use evm::gas;
-use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{Account};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-
-use utils::helpers::ResultExTrait;
 use utils::traits::{EthAddressTryIntoResultContractAddress, EthAddressIntoU256};
 
 #[generate_trait]
-impl BlockInformation of BlockInformationTrait {
+pub impl BlockInformation of BlockInformationTrait {
     /// 0x40 - BLOCKHASH
     /// Get the hash of one of the 256 most recent complete blocks.
     /// # Specification: https://www.evm.codes/#40?fork=shanghai
@@ -150,26 +140,15 @@ impl BlockInformation of BlockInformationTrait {
 
 #[cfg(test)]
 mod tests {
-    use contracts::kakarot_core::interface::{
-        IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
-    };
 
     use core::result::ResultTrait;
-    use core::starknet::testing::{set_contract_address, ContractAddress};
     use evm::instructions::BlockInformationTrait;
-    use evm::model::account::{Account, AccountTrait};
+    use evm::model::account::Account;
     use evm::model::vm::VMTrait;
     use evm::stack::StackTrait;
     use evm::state::StateTrait;
-    use evm::test_utils::{
-        evm_address, VMBuilderTrait, tx_gas_limit, gas_price, native_token, setup_test_storages,
-        register_account
-    };
-    use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-    use snforge_std::{
-        start_cheat_block_number_global, start_cheat_block_timestamp_global,
-        start_cheat_caller_address, test_address, start_mock_call
-    };
+    use evm::test_utils::{ VMBuilderTrait, gas_price, setup_test_storages };
+    use snforge_std::{ start_cheat_block_number_global, start_cheat_block_timestamp_global };
     use utils::constants;
     use utils::traits::{EthAddressIntoU256};
 

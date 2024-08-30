@@ -19,14 +19,12 @@ trait IAccount<TContractState> {
 
 #[starknet::contract]
 pub mod UninitializedAccount {
-    use contracts::components::ownable::IOwnable;
     use contracts::components::ownable::ownable_component::InternalTrait;
     use contracts::components::ownable::ownable_component;
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use core::starknet::SyscallResultTrait;
     use core::starknet::syscalls::{library_call_syscall, replace_class_syscall};
-    use core::starknet::{ContractAddress, EthAddress, ClassHash, get_caller_address};
-    use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait};
+    use core::starknet::{ContractAddress, get_caller_address};
 
     // Add ownable component
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);

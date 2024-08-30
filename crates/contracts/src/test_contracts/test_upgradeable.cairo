@@ -1,8 +1,4 @@
-use MockContractUpgradeableV0::HasComponentImpl_upgradeable_component;
-use contracts::components::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use contracts::components::upgradeable::{upgradeable_component};
-use core::serde::Serde;
-use core::starknet::{deploy_syscall, ClassHash, ContractAddress, testing};
 
 use upgradeable_component::{UpgradeableImpl};
 
@@ -68,12 +64,11 @@ mod MockContractUpgradeableV1 {
 
 #[cfg(test)]
 mod tests {
+    use contracts::components::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
+    use core::starknet::syscalls::{deploy_syscall};
     use snforge_std::{declare, DeclareResultTrait};
-    use starknet::{deploy_syscall, ClassHash};
-    use super::{
-        IMockContractUpgradeableDispatcher, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
-        IMockContractUpgradeableDispatcherTrait
-    };
+    use starknet::{ClassHash};
+    use super::{IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait};
 
     #[test]
     fn test_upgradeable_update_contract() {

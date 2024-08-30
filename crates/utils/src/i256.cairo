@@ -1,6 +1,5 @@
 use core::num::traits::Bounded;
 use utils::constants::POW_2_127;
-use utils::math::{Bitshift, Exponentiation};
 
 #[derive(Copy, Drop, PartialEq)]
 pub struct i256 {
@@ -140,7 +139,6 @@ fn i256_neg(a: i256) -> i256 {
 mod tests {
     use core::num::traits::Bounded;
     use utils::i256::{i256, i256_neg, i256_signed_div_rem};
-    use utils::math::Bitshift;
 
     const MAX_SIGNED_VALUE: u256 =
         0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
@@ -180,7 +178,7 @@ mod tests {
         let lhs: i256 = 1_u256.into();
         let rhs: i256 = 2_u256.into();
 
-        assert(lhs < rhs == true, 'lhs should be lt rhs');
+        assert(lhs < rhs, 'lhs should be lt rhs');
     }
 
     #[test]
@@ -188,7 +186,7 @@ mod tests {
         let lhs: i256 = (Bounded::<u256>::MAX - 1).into(); // -2
         let rhs: i256 = Bounded::<u256>::MAX.into(); // -1
 
-        assert(lhs < rhs == true, 'lhs should be lt rhs');
+        assert(lhs < rhs, 'lhs should be lt rhs');
     }
 
     #[test]
@@ -196,7 +194,7 @@ mod tests {
         let lhs: i256 = Bounded::<u256>::MAX.into(); // -1
         let rhs: i256 = 1_u256.into();
 
-        assert(lhs < rhs == true, 'lhs should be lt rhs');
+        assert(lhs < rhs, 'lhs should be lt rhs');
     }
 
     #[test]
@@ -204,7 +202,7 @@ mod tests {
         let lhs: i256 = 1_u256.into();
         let rhs: i256 = Bounded::<u256>::MAX.into(); // -1
 
-        assert(lhs < rhs == false, 'lhs should not be lt rhs');
+        assert(!(lhs < rhs), 'lhs should not be lt rhs');
     }
 
     #[test]
@@ -212,7 +210,7 @@ mod tests {
         let lhs: i256 = 1_u256.into();
         let rhs: i256 = 1_u256.into();
 
-        assert(lhs < rhs == false, 'lhs should not be lt rhs');
+        assert(!(lhs < rhs), 'lhs should not be lt rhs');
     }
 
     #[test]
@@ -220,7 +218,7 @@ mod tests {
         let lhs: i256 = 1_u256.into();
         let rhs: i256 = 2_u256.into();
 
-        assert(lhs <= rhs == true, 'lhs should be le rhs');
+        assert(lhs <= rhs, 'lhs should be le rhs');
     }
 
     #[test]
@@ -228,7 +226,7 @@ mod tests {
         let lhs: i256 = (Bounded::<u256>::MAX - 1).into(); // -2
         let rhs: i256 = Bounded::<u256>::MAX.into(); // -1
 
-        assert(lhs <= rhs == true, 'lhs should be le rhs');
+        assert(lhs <= rhs, 'lhs should be le rhs');
     }
 
     #[test]
@@ -236,7 +234,7 @@ mod tests {
         let lhs: i256 = Bounded::<u256>::MAX.into(); // -1
         let rhs: i256 = 1_u256.into();
 
-        assert(lhs <= rhs == true, 'lhs should be le rhs');
+        assert(lhs <= rhs, 'lhs should be le rhs');
     }
 
     #[test]
@@ -244,7 +242,7 @@ mod tests {
         let lhs: i256 = 1_u256.into();
         let rhs: i256 = Bounded::<u256>::MAX.into(); // -1
 
-        assert(lhs <= rhs == false, 'lhs should not be le rhs');
+        assert(!(lhs <= rhs), 'lhs should not be le rhs');
     }
 
     #[test]
@@ -252,7 +250,7 @@ mod tests {
         let lhs: i256 = 1_u256.into();
         let rhs: i256 = 1_u256.into();
 
-        assert(lhs <= rhs == true, 'lhs should be le rhs');
+        assert(lhs <= rhs, 'lhs should be le rhs');
     }
 
     #[test]
@@ -260,7 +258,7 @@ mod tests {
         let lhs: i256 = 2_u256.into();
         let rhs: i256 = 1_u256.into();
 
-        assert(lhs > rhs == true, 'lhs should be gt rhs');
+        assert(lhs > rhs, 'lhs should be gt rhs');
     }
 
     #[test]
@@ -268,7 +266,7 @@ mod tests {
         let lhs: i256 = Bounded::<u256>::MAX.into(); // -1
         let rhs: i256 = (Bounded::<u256>::MAX - 1).into(); // -2
 
-        assert(lhs > rhs == true, 'lhs should be gt rhs');
+        assert(lhs > rhs, 'lhs should be gt rhs');
     }
 
     #[test]
@@ -276,7 +274,7 @@ mod tests {
         let lhs: i256 = Bounded::<u256>::MAX.into(); // -1
         let rhs: i256 = 1_u256.into();
 
-        assert(lhs > rhs == false, 'lhs should not be gt rhs');
+        assert(!(lhs > rhs), 'lhs should not be gt rhs');
     }
 
     #[test]
@@ -284,7 +282,7 @@ mod tests {
         let lhs: i256 = 1_u256.into();
         let rhs: i256 = Bounded::<u256>::MAX.into(); // -1
 
-        assert(lhs > rhs == true, 'lhs should be gt rhs');
+        assert(lhs > rhs, 'lhs should be gt rhs');
     }
 
     #[test]
@@ -292,7 +290,7 @@ mod tests {
         let lhs: i256 = 1_u256.into();
         let rhs: i256 = 1_u256.into();
 
-        assert(lhs > rhs == false, 'lhs should not be gt rhs');
+        assert(!(lhs > rhs), 'lhs should not be gt rhs');
     }
 
     #[test]
@@ -300,7 +298,7 @@ mod tests {
         let lhs: i256 = 2_u256.into();
         let rhs: i256 = 1_u256.into();
 
-        assert(lhs >= rhs == true, 'lhs should be ge rhs');
+        assert(lhs >= rhs, 'lhs should be ge rhs');
     }
 
     #[test]
@@ -308,7 +306,7 @@ mod tests {
         let lhs: i256 = Bounded::<u256>::MAX.into(); // -1
         let rhs: i256 = (Bounded::<u256>::MAX - 1).into(); // -2
 
-        assert(lhs >= rhs == true, 'lhs should be ge rhs');
+        assert(lhs >= rhs, 'lhs should be ge rhs');
     }
 
     #[test]
@@ -316,7 +314,7 @@ mod tests {
         let lhs: i256 = Bounded::<u256>::MAX.into(); // -1
         let rhs: i256 = 1_u256.into();
 
-        assert(lhs >= rhs == false, 'lhs should not be ge rhs');
+        assert(!(lhs >= rhs), 'lhs should not be ge rhs');
     }
 
     #[test]
@@ -324,7 +322,7 @@ mod tests {
         let lhs: i256 = 1_u256.into();
         let rhs: i256 = Bounded::<u256>::MAX.into(); // -1
 
-        assert(lhs >= rhs == true, 'lhs should be ge rhs');
+        assert(lhs >= rhs, 'lhs should be ge rhs');
     }
 
     #[test]
@@ -332,7 +330,7 @@ mod tests {
         let lhs: i256 = 1_u256.into();
         let rhs: i256 = 1_u256.into();
 
-        assert(lhs >= rhs == true, 'lhs should be ge rhs');
+        assert(lhs >= rhs, 'lhs should be ge rhs');
     }
 
     #[test]

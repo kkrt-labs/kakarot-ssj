@@ -10,18 +10,15 @@ use core::num::traits::Bounded;
 use core::num::traits::{SaturatingAdd};
 use core::num::traits::{Zero, One, BitSize};
 use core::panic_with_felt252;
-use core::pedersen::{HashState, PedersenTrait};
-use core::starknet::{
-    EthAddress, ContractAddress, ClassHash, secp256_trait::{Signature as EthSignature}
-};
-use core::traits::{DivRem, BitAnd};
+use core::pedersen::PedersenTrait;
+use core::starknet::{EthAddress, ContractAddress, ClassHash};
 use core::traits::TryInto;
+use core::traits::{DivRem, BitAnd};
 use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 
 use utils::constants::{POW_2, POW_256_1, POW_256_REV};
-use utils::eth_transaction::{TransactionType};
 use utils::math::{Bitshift, WrappingBitshift, Exponentiation};
-use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, TryIntoResult, BoolIntoNumeric};
+use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, BoolIntoNumeric};
 
 
 pub fn u128_split(input: u128) -> (u64, u64) {
@@ -1437,7 +1434,6 @@ pub impl Felt252VecTraitImpl<
 
 #[cfg(test)]
 mod tests {
-    use utils::helpers::{BitsUsed, BytesUsedTrait, ToBytes};
     use utils::helpers;
 
     #[test]
@@ -1626,8 +1622,8 @@ mod tests {
     }
 
     mod u32_test {
-        use utils::helpers::Bitshift;
-        use utils::helpers::{BitsUsed, BytesUsedTrait, ToBytes, FromBytes};
+        use utils::helpers::{BytesUsedTrait, ToBytes, FromBytes};
+        use utils::math::Bitshift;
 
         #[test]
         fn test_u32_from_be_bytes() {
@@ -1854,9 +1850,9 @@ mod tests {
     }
 
     mod u64_test {
-        use utils::helpers::Bitshift;
         use utils::helpers::U64Trait;
         use utils::helpers::{BitsUsed, BytesUsedTrait, ToBytes};
+        use utils::math::Bitshift;
 
 
         #[test]
@@ -1916,9 +1912,8 @@ mod tests {
 
     mod u128_test {
         use core::num::traits::Bounded;
-        use utils::helpers::Bitshift;
-        use utils::helpers::U128Trait;
-        use utils::helpers::{BitsUsed, BytesUsedTrait, ToBytes};
+        use utils::helpers::{BytesUsedTrait, ToBytes};
+        use utils::math::Bitshift;
 
         #[test]
         fn test_u128_bytes_used() {
@@ -1968,9 +1963,9 @@ mod tests {
     }
 
     mod u256_test {
-        use utils::helpers::Bitshift;
         use utils::helpers::U256Trait;
         use utils::helpers::{BitsUsed, BytesUsedTrait};
+        use utils::math::Bitshift;
 
         #[test]
         fn test_reverse_bytes_u256() {
@@ -2267,7 +2262,7 @@ mod tests {
 
 
     mod felt252_vec_u8_test {
-        use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+        use alexandria_data_structures::vec::{VecTrait, Felt252Vec};
         use utils::helpers::{Felt252VecTrait};
 
         #[test]
@@ -2286,7 +2281,7 @@ mod tests {
     }
 
     mod felt252_vec_u64_test {
-        use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+        use alexandria_data_structures::vec::{VecTrait, Felt252Vec};
         use utils::helpers::{Felt252VecTrait};
 
         #[test]
@@ -2352,7 +2347,7 @@ mod tests {
     }
 
     mod felt252_vec_test {
-        use alexandria_data_structures::vec::{VecTrait, Felt252Vec, Felt252VecImpl};
+        use alexandria_data_structures::vec::{VecTrait, Felt252Vec};
         use utils::helpers::{Felt252VecTrait, Felt252VecTraitErrors};
 
         #[test]

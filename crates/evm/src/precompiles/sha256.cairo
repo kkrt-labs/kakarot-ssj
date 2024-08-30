@@ -1,21 +1,17 @@
-use core::circuit::CircuitInputs;
-use core::iter::IntoIterator;
 use core::sha256::compute_sha256_u32_array;
 use core::starknet::EthAddress;
 use evm::errors::EVMError;
-use evm::model::vm::VM;
-use evm::model::vm::VMTrait;
 use evm::precompiles::Precompile;
-use utils::helpers::Bitshift;
 use utils::helpers::{FromBytes, ToBytes};
+use utils::math::Bitshift;
 
 const BASE_COST: u128 = 60;
 const COST_PER_WORD: u128 = 12;
 
-impl Sha256 of Precompile {
+pub impl Sha256 of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
-        EthAddress { address: 0x2 }
+        0x2.try_into().unwrap()
     }
 
     fn exec(mut input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
@@ -55,15 +51,13 @@ impl Sha256 of Precompile {
 #[cfg(test)]
 mod tests {
     use core::result::ResultTrait;
-    use core::starknet::testing::set_contract_address;
     use evm::instructions::system_operations::SystemOperationsTrait;
 
     use evm::memory::MemoryTrait;
     use evm::precompiles::sha256::Sha256;
     use evm::stack::StackTrait;
     use evm::test_utils::{
-        VMBuilderTrait, MemoryTestUtilsTrait, native_token, other_starknet_address,
-        setup_test_storages
+        VMBuilderTrait, MemoryTestUtilsTrait, native_token, setup_test_storages
     };
     use snforge_std::{start_mock_call};
     use utils::helpers::ToBytes;

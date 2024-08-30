@@ -5,12 +5,12 @@ use evm::errors::EVMError;
 use evm::gas;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
-use utils::helpers::{U256Trait, BytesUsedTrait};
+use utils::helpers::BytesUsedTrait;
 use utils::i256::i256;
 use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
 
 #[generate_trait]
-impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
+pub impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// 0x00 - STOP
     /// Halts the execution of the current program.
     /// # Specification: https://www.evm.codes/#00?fork=shanghai
@@ -262,7 +262,7 @@ mod tests {
     use core::num::traits::Bounded;
     use core::result::ResultTrait;
     use evm::instructions::StopAndArithmeticOperationsTrait;
-    use evm::model::vm::{VM, VMTrait};
+    use evm::model::vm::VMTrait;
     use evm::stack::StackTrait;
     use evm::test_utils::VMBuilderTrait;
 

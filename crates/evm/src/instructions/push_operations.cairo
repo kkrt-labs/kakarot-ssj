@@ -4,29 +4,22 @@ use evm::errors::EVMError;
 use evm::gas;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
+use utils::helpers::load_word;
 
-mod internal {
-    use evm::errors::EVMError;
-    use evm::gas;
-    use evm::model::vm::{VM, VMTrait};
-    use evm::stack::StackTrait;
-    use utils::helpers::load_word;
+/// Place i bytes items on stack.
+#[inline(always)]
+fn exec_push_i(ref self: VM, i: u8) -> Result<(), EVMError> {
+    self.charge_gas(gas::VERYLOW)?;
+    let i = i.into();
+    let data = self.read_code(i);
 
-    /// Place i bytes items on stack.
-    #[inline(always)]
-    fn exec_push_i(ref self: VM, i: u8) -> Result<(), EVMError> {
-        self.charge_gas(gas::VERYLOW)?;
-        let i = i.into();
-        let data = self.read_code(i);
+    self.set_pc(self.pc() + i);
 
-        self.set_pc(self.pc() + i);
-
-        self.stack.push(load_word(i, data))
-    }
+    self.stack.push(load_word(i, data))
 }
 
 #[generate_trait]
-impl PushOperations of PushOperationsTrait {
+pub impl PushOperations of PushOperationsTrait {
     /// 5F - PUSH0 operation
     /// # Specification: https://www.evm.codes/#5f?fork=shanghai
     #[inline(always)]
@@ -40,7 +33,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#60?fork=shanghai
     #[inline(always)]
     fn exec_push1(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 1)
+        exec_push_i(ref self, 1)
     }
 
 
@@ -48,7 +41,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#61?fork=shanghai
     #[inline(always)]
     fn exec_push2(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 2)
+        exec_push_i(ref self, 2)
     }
 
 
@@ -56,42 +49,42 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#62?fork=shanghai
     #[inline(always)]
     fn exec_push3(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 3)
+        exec_push_i(ref self, 3)
     }
 
     /// 0x63 - PUSH4 operation
     /// # Specification: https://www.evm.codes/#63?fork=shanghai
     #[inline(always)]
     fn exec_push4(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 4)
+        exec_push_i(ref self, 4)
     }
 
     /// 0x64 - PUSH5 operation
     /// # Specification: https://www.evm.codes/#64?fork=shanghai
     #[inline(always)]
     fn exec_push5(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 5)
+        exec_push_i(ref self, 5)
     }
 
     /// 0x65 - PUSH6 operation
     /// # Specification: https://www.evm.codes/#65?fork=shanghai
     #[inline(always)]
     fn exec_push6(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 6)
+        exec_push_i(ref self, 6)
     }
 
     /// 0x66 - PUSH7 operation
     /// # Specification: https://www.evm.codes/#66?fork=shanghai
     #[inline(always)]
     fn exec_push7(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 7)
+        exec_push_i(ref self, 7)
     }
 
     /// 0x67 - PUSH8 operation
     /// # Specification: https://www.evm.codes/#67?fork=shanghai
     #[inline(always)]
     fn exec_push8(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 8)
+        exec_push_i(ref self, 8)
     }
 
 
@@ -99,28 +92,28 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#68?fork=shanghai
     #[inline(always)]
     fn exec_push9(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 9)
+        exec_push_i(ref self, 9)
     }
 
     /// 0x69 - PUSH10 operation
     /// # Specification: https://www.evm.codes/#69?fork=shanghai
     #[inline(always)]
     fn exec_push10(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 10)
+        exec_push_i(ref self, 10)
     }
 
     /// 0x6A - PUSH11 operation
     /// # Specification: https://www.evm.codes/#6a?fork=shanghai
     #[inline(always)]
     fn exec_push11(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 11)
+        exec_push_i(ref self, 11)
     }
 
     /// 0x6B - PUSH12 operation
     /// # Specification: https://www.evm.codes/#6b?fork=shanghai
     #[inline(always)]
     fn exec_push12(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 12)
+        exec_push_i(ref self, 12)
     }
 
 
@@ -128,14 +121,14 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#6c?fork=shanghai
     #[inline(always)]
     fn exec_push13(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 13)
+        exec_push_i(ref self, 13)
     }
 
     /// 0x6D - PUSH14 operation
     /// # Specification: https://www.evm.codes/#6d?fork=shanghai
     #[inline(always)]
     fn exec_push14(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 14)
+        exec_push_i(ref self, 14)
     }
 
 
@@ -143,28 +136,28 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#6e?fork=shanghai
     #[inline(always)]
     fn exec_push15(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 15)
+        exec_push_i(ref self, 15)
     }
 
     /// 0x6F - PUSH16 operation
     /// # Specification: https://www.evm.codes/#6f?fork=shanghai
     #[inline(always)]
     fn exec_push16(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 16)
+        exec_push_i(ref self, 16)
     }
 
     /// 0x70 - PUSH17 operation
     /// # Specification: https://www.evm.codes/#70?fork=shanghai
     #[inline(always)]
     fn exec_push17(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 17)
+        exec_push_i(ref self, 17)
     }
 
     /// 0x71 - PUSH18 operation
     /// # Specification: https://www.evm.codes/#71?fork=shanghai
     #[inline(always)]
     fn exec_push18(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 18)
+        exec_push_i(ref self, 18)
     }
 
 
@@ -172,14 +165,14 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#72?fork=shanghai
     #[inline(always)]
     fn exec_push19(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 19)
+        exec_push_i(ref self, 19)
     }
 
     /// 0x73 - PUSH20 operation
     /// # Specification: https://www.evm.codes/#73?fork=shanghai
     #[inline(always)]
     fn exec_push20(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 20)
+        exec_push_i(ref self, 20)
     }
 
 
@@ -187,7 +180,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#74?fork=shanghai
     #[inline(always)]
     fn exec_push21(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 21)
+        exec_push_i(ref self, 21)
     }
 
 
@@ -195,7 +188,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#75?fork=shanghai
     #[inline(always)]
     fn exec_push22(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 22)
+        exec_push_i(ref self, 22)
     }
 
 
@@ -203,7 +196,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#76?fork=shanghai
     #[inline(always)]
     fn exec_push23(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 23)
+        exec_push_i(ref self, 23)
     }
 
 
@@ -211,7 +204,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#77?fork=shanghai
     #[inline(always)]
     fn exec_push24(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 24)
+        exec_push_i(ref self, 24)
     }
 
 
@@ -219,7 +212,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#78?fork=shanghai
     #[inline(always)]
     fn exec_push25(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 25)
+        exec_push_i(ref self, 25)
     }
 
 
@@ -227,7 +220,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#79?fork=shanghai
     #[inline(always)]
     fn exec_push26(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 26)
+        exec_push_i(ref self, 26)
     }
 
 
@@ -235,14 +228,14 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#7a?fork=shanghai
     #[inline(always)]
     fn exec_push27(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 27)
+        exec_push_i(ref self, 27)
     }
 
     /// 0x7B - PUSH28 operation
     /// # Specification: https://www.evm.codes/#7b?fork=shanghai
     #[inline(always)]
     fn exec_push28(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 28)
+        exec_push_i(ref self, 28)
     }
 
 
@@ -250,7 +243,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#7c?fork=shanghai
     #[inline(always)]
     fn exec_push29(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 29)
+        exec_push_i(ref self, 29)
     }
 
 
@@ -258,7 +251,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#7d?fork=shanghai
     #[inline(always)]
     fn exec_push30(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 30)
+        exec_push_i(ref self, 30)
     }
 
 
@@ -266,7 +259,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#7e?fork=shanghai
     #[inline(always)]
     fn exec_push31(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 31)
+        exec_push_i(ref self, 31)
     }
 
 
@@ -274,7 +267,7 @@ impl PushOperations of PushOperationsTrait {
     /// # Specification: https://www.evm.codes/#7f?fork=shanghai
     #[inline(always)]
     fn exec_push32(ref self: VM) -> Result<(), EVMError> {
-        internal::exec_push_i(ref self, 32)
+        exec_push_i(ref self, 32)
     }
 }
 

@@ -1,24 +1,20 @@
+use core::starknet::secp256_trait::{recover_public_key, Signature};
 use core::starknet::{
-    EthAddress, eth_signature::{recover_public_key, public_key_point_to_eth_address, Signature},
-    secp256k1::{Secp256k1Point}
+    EthAddress, eth_signature::{public_key_point_to_eth_address}, secp256k1::{Secp256k1Point}
 };
 use core::traits::Into;
-use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
-use evm::model::vm::VM;
-use evm::model::vm::VMTrait;
+use evm::errors::EVMError;
 use evm::precompiles::Precompile;
-use evm::stack::StackTrait;
-use utils::helpers::EthAddressExTrait;
-use utils::helpers::U8SpanExTrait;
-use utils::helpers::{U256Trait, BoolIntoNumeric, ToBytes, FromBytes};
+use utils::helpers::{ToBytes, FromBytes};
+use utils::traits::BoolIntoNumeric;
 use utils::traits::EthAddressIntoU256;
 
 const EC_RECOVER_PRECOMPILE_GAS_COST: u128 = 3000;
 
-impl EcRecover of Precompile {
+pub impl EcRecover of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
-        EthAddress { address: 0x1 }
+        0x1.try_into().unwrap()
     }
 
     fn exec(input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
@@ -74,17 +70,14 @@ impl EcRecover of Precompile {
 mod tests {
     use core::array::ArrayTrait;
     use evm::instructions::system_operations::SystemOperationsTrait;
-    use evm::memory::InternalMemoryTrait;
     use evm::memory::MemoryTrait;
 
     use evm::precompiles::ec_recover::EcRecover;
     use evm::stack::StackTrait;
     use evm::test_utils::setup_test_storages;
-    use evm::test_utils::{
-        VMBuilderTrait, MemoryTestUtilsTrait, native_token, other_starknet_address
-    };
-    use snforge_std::{start_mock_call, test_address};
-    use utils::helpers::{U256Trait, ToBytes, FromBytes};
+    use evm::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait, native_token, other_starknet_address};
+    use snforge_std::start_mock_call;
+    use utils::helpers::{ U256Trait, ToBytes, FromBytes };
 
 
     // source:

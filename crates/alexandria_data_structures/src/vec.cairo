@@ -70,8 +70,8 @@ impl VecIndex<V, T, +VecTrait<V, T>> of Index<V, usize> {
 }
 
 pub struct Felt252Vec<T> {
-    items: Felt252Dict<T>,
-    len: usize,
+    pub items: Felt252Dict<T>,
+    pub len: usize,
 }
 
 impl DefaultFeltVec<T, +Drop<T>, +Copy<T>, +Felt252DictValue<T>> of Default<Felt252Vec<T>> {
