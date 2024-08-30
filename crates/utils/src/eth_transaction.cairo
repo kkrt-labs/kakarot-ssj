@@ -2,7 +2,7 @@ use core::array::SpanTrait;
 
 use core::keccak::cairo_keccak;
 use core::option::OptionTrait;
-use core::starknet::{EthAddress, eth_signature::{Signature, verify_eth_signature}};
+use core::starknet::{EthAddress, secp256_trait::Signature, eth_signature::{verify_eth_signature}};
 use core::traits::TryInto;
 use utils::errors::RLPErrorTrait;
 
@@ -36,46 +36,46 @@ pub impl AccessListItemImpl of AccessListItemTrait {
 
 #[derive(Drop)]
 pub struct TransactionMetadata {
-    address: EthAddress,
-    account_nonce: u128,
-    chain_id: u128,
-    signature: Signature,
+    pub address: EthAddress,
+    pub account_nonce: u128,
+    pub chain_id: u128,
+    pub signature: Signature,
 }
 
 #[derive(Drop, Copy, Clone, Serde, Debug)]
 pub struct LegacyTransaction {
-    chain_id: u128,
-    nonce: u128,
-    gas_price: u128,
-    gas_limit: u128,
-    destination: Option<EthAddress>,
-    amount: u256,
-    calldata: Span<u8>
+    pub chain_id: u128,
+    pub nonce: u128,
+    pub gas_price: u128,
+    pub gas_limit: u128,
+    pub destination: Option<EthAddress>,
+    pub amount: u256,
+    pub calldata: Span<u8>
 }
 
 #[derive(Drop, Copy, Clone, Serde, Debug)]
 pub struct AccessListTransaction {
-    chain_id: u128,
-    nonce: u128,
-    gas_price: u128,
-    gas_limit: u128,
-    destination: Option<EthAddress>,
-    amount: u256,
-    calldata: Span<u8>,
-    access_list: Span<AccessListItem>
+    pub chain_id: u128,
+    pub nonce: u128,
+    pub gas_price: u128,
+    pub gas_limit: u128,
+    pub destination: Option<EthAddress>,
+    pub amount: u256,
+    pub calldata: Span<u8>,
+    pub access_list: Span<AccessListItem>
 }
 
 #[derive(Drop, Copy, Clone, Serde, Debug)]
 pub struct FeeMarketTransaction {
-    chain_id: u128,
-    nonce: u128,
-    max_priority_fee_per_gas: u128,
-    max_fee_per_gas: u128,
-    gas_limit: u128,
-    destination: Option<EthAddress>,
-    amount: u256,
-    calldata: Span<u8>,
-    access_list: Span<AccessListItem>
+    pub chain_id: u128,
+    pub nonce: u128,
+    pub max_priority_fee_per_gas: u128,
+    pub max_fee_per_gas: u128,
+    pub gas_limit: u128,
+    pub destination: Option<EthAddress>,
+    pub amount: u256,
+    pub calldata: Span<u8>,
+    pub access_list: Span<AccessListItem>
 }
 
 #[derive(Drop, Serde, Debug)]

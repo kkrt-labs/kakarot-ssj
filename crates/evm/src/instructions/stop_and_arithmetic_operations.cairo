@@ -1,5 +1,5 @@
 //! Stop and Arithmetic Operations.
-use core::integer::{u512_safe_div_rem_by_u256, u256_try_as_non_zero};
+use core::integer::{u512_safe_div_rem_by_u256};
 use core::num::traits::{OverflowingAdd, OverflowingMul, OverflowingSub};
 use evm::errors::EVMError;
 use evm::gas;
@@ -72,7 +72,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let a: u256 = *popped[0];
         let b: u256 = *popped[1];
 
-        let result: u256 = match u256_try_as_non_zero(b) {
+        let result: u256 = match TryInto::<u256, NonZero<u256>>::try_into(b) {
             Option::Some(_) => {
                 // Won't panic because b is not zero
                 a / b
@@ -112,7 +112,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let a: u256 = *popped[0];
         let b: u256 = *popped[1];
 
-        let result: u256 = match u256_try_as_non_zero(b) {
+        let result: u256 = match TryInto::<u256, NonZero<u256>>::try_into(b) {
             Option::Some(_) => {
                 // Won't panic because b is not zero
                 a % b
@@ -157,7 +157,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let b: u256 = *popped[1];
         let n = *popped[2];
 
-        let result: u256 = match u256_try_as_non_zero(n) {
+        let result: u256 = match TryInto::<u256, NonZero<u256>>::try_into(n) {
             Option::Some(nonzero_n) => {
                 // This is more gas efficient than computing (a mod N) + (b mod N) mod N
                 let sum = u256_wide_add(a, b);
@@ -181,7 +181,7 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let b: u256 = self.stack.pop()?;
         let n = self.stack.pop()?;
 
-        let result: u256 = match u256_try_as_non_zero(n) {
+        let result: u256 = match TryInto::<u256, NonZero<u256>>::try_into(n) {
             Option::Some(_) => {
                 // (x * y) mod N <=> (x mod N) * (y mod N) mod N
                 // It is more gas-efficient than to use u256_wide_mul

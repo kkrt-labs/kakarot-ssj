@@ -1,7 +1,5 @@
 use core::cmp::{max, min};
-use core::integer::{
-    u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_as_non_zero
-};
+use core::integer::{u32_safe_divmod, u128_safe_divmod, u128_as_non_zero, u256_as_non_zero};
 use utils::constants::{
     POW_2_0, POW_2_8, POW_2_16, POW_2_24, POW_2_32, POW_2_40, POW_2_48, POW_2_56, POW_2_64,
     POW_2_72, POW_2_80, POW_2_88, POW_2_96, POW_2_104, POW_2_112, POW_2_120, POW_256_16
@@ -56,8 +54,10 @@ impl MemoryImpl of MemoryTrait {
     /// index = Y + i * MEMORY_SEGMENT_SIZE
     #[inline(always)]
     fn store(ref self: Memory, element: u256, offset: usize) {
+        let nonzero_16: NonZero<u32> = 16_u32.try_into().unwrap();
+
         // Check alignment of offset to bytes16 chunks
-        let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
+        let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, nonzero_16);
 
         if offset_in_chunk == 0 {
             // Offset is aligned. This is the simplest and most efficient case,
@@ -88,12 +88,15 @@ impl MemoryImpl of MemoryTrait {
     /// * `offset` - The offset within memory to store the byte at.
     #[inline(always)]
     fn store_byte(ref self: Memory, value: u8, offset: usize) {
+
+        let nonzero_16: NonZero<u32> = 16_u32.try_into().unwrap();
+
         // Compute actual offset in Memory, given active_segment of Memory (current Execution
         // Context id)
         // And Memory Segment Size
 
         // Get offset's memory word index and left-based offset of byte in word.
-        let (chunk_index, left_offset) = u32_safe_divmod(offset, u32_as_non_zero(16));
+        let (chunk_index, left_offset) = u32_safe_divmod(offset, nonzero_16);
 
         // As the memory words are in big-endian order, we need to convert our left-based offset
         // to a right-based one.a
@@ -130,13 +133,15 @@ impl MemoryImpl of MemoryTrait {
             return;
         }
 
+        let nonzero_16: NonZero<u32> = 16_u32.try_into().unwrap();
+
         // Compute the offset inside the Memory, given its active segment, following the formula:
         // index = offset + self.active_segment * 125000
 
         // Check alignment of offset to bytes16 chunks.
-        let (initial_chunk, offset_in_chunk_i) = u32_safe_divmod(offset, u32_as_non_zero(16));
+        let (initial_chunk, offset_in_chunk_i) = u32_safe_divmod(offset, nonzero_16);
         let (final_chunk, mut offset_in_chunk_f) = u32_safe_divmod(
-            offset + elements.len() - 1, u32_as_non_zero(16)
+            offset + elements.len() - 1, nonzero_16
         );
         offset_in_chunk_f += 1;
         let mask_i: u256 = helpers::pow256_rev(offset_in_chunk_i);
@@ -387,8 +392,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     fn load_internal(ref self: Memory, offset: usize) -> u256 {
         // Compute the offset inside the dict, given its active segment, following the formula:
         // index = offset + self.active_segment * 125000
-
-        let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
+        let nonzero_16: NonZero<u32> = 16_u32.try_into().unwrap();
+        let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, nonzero_16);
 
         if offset_in_chunk == 0 {
             // Offset is aligned. This is the simplest and most efficient case,
@@ -442,13 +447,15 @@ impl InternalMemoryMethods of InternalMemoryTrait {
             return;
         }
 
+        let nonzero_16: NonZero<u32> = 16_u32.try_into().unwrap();
+
         // Compute the offset inside the Memory, given its active segment, following the formula:
         // index = offset + self.active_segment * 125000
 
         // Check alignment of offset to bytes16 chunks.
-        let (initial_chunk, offset_in_chunk_i) = u32_safe_divmod(offset, u32_as_non_zero(16));
+        let (initial_chunk, offset_in_chunk_i) = u32_safe_divmod(offset, nonzero_16);
         let (final_chunk, mut offset_in_chunk_f) = u32_safe_divmod(
-            offset + elements_len - 1, u32_as_non_zero(16)
+            offset + elements_len - 1, nonzero_16
         );
         offset_in_chunk_f += 1;
         let mask_i: u256 = helpers::pow256_rev(offset_in_chunk_i);

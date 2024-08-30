@@ -19,20 +19,20 @@ use super::arith::{
 use utils::helpers::{FromBytes, U64Trait, Felt252VecTrait, U128Trait, BitsUsed, ByteSize};
 use utils::math::{Bitshift, WrappingBitshift};
 
-type Word = u64;
-type DoubleWord = u128;
-const WORD_BYTES: usize = 8;
-const WORD_BITS: usize = 64;
-const WORD_MAX: Word = 18446744073709551615;
+pub type Word = u64;
+pub type DoubleWord = u128;
+pub const WORD_BYTES: usize = 8;
+pub const WORD_BITS: usize = 64;
+pub const WORD_MAX: Word = 18446744073709551615;
 // 2**64
-const BASE: DoubleWord = 18446744073709551616;
-const DOUBLE_WORD_MAX: DoubleWord = 340282366920938463463374607431768211455;
+pub const BASE: DoubleWord = 18446744073709551616;
+pub const DOUBLE_WORD_MAX: DoubleWord = 340282366920938463463374607431768211455;
 /// Multi-precision natural number, represented in base `Word::MAX + 1 = 2^WORD_BITS`.
 /// The digits are stored in little-endian order, i.e. digits[0] is the least
 /// significant digit.
 #[derive(Destruct)]
 pub struct MPNat {
-    digits: Felt252Vec<u64>
+    pub digits: Felt252Vec<u64>
 }
 
 

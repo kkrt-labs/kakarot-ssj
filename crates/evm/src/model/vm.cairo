@@ -5,7 +5,7 @@ use evm::memory::{Memory, MemoryTrait};
 use evm::model::{Message, Environment, ExecutionResult, ExecutionResultStatus, AccountTrait};
 use evm::stack::{Stack, StackTrait};
 use utils::helpers::{SpanExtTrait, ArrayExtTrait};
-use utils::set::{Set, SetTrait, SpanSet};
+use utils::set::{Set, SetTrait, SpanSet, SpanSetTrait};
 use utils::traits::{SpanDefault};
 
 #[derive(Default, Destruct)]
@@ -41,8 +41,8 @@ impl VMImpl of VMTrait {
             gas_left: message.gas_limit,
             running: true,
             error: false,
-            accessed_addresses: message.accessed_addresses.inner.clone(),
-            accessed_storage_keys: message.accessed_storage_keys.inner.clone(),
+            accessed_addresses: message.accessed_addresses.clone_set(),
+            accessed_storage_keys: message.accessed_storage_keys.clone_set(),
             gas_refund: 0
         }
     }

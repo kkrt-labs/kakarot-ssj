@@ -1,4 +1,4 @@
-use core::keccak::{cairo_keccak, u128_split};
+use core::keccak::{cairo_keccak};
 //! SHA3.
 
 use evm::errors::EVMError;
@@ -7,7 +7,7 @@ use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
-use utils::helpers::{ArrayExtTrait, U256Trait, ceil32};
+use utils::helpers::{ArrayExtTrait, U256Trait, ceil32, u128_split};
 
 #[generate_trait]
 impl Sha3Impl of Sha3Trait {

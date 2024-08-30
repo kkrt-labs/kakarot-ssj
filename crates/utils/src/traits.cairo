@@ -1,8 +1,8 @@
 use core::array::SpanTrait;
 use core::num::traits::{Zero, One};
-use core::starknet::{
-    StorageBaseAddress, storage_address_from_base, storage_base_address_from_felt252, EthAddress,
-    ContractAddress, Store, SyscallResult
+use core::starknet::{EthAddress, ContractAddress, Store, SyscallResult};
+use core::starknet::storage_access::{
+    StorageBaseAddress, storage_base_address_from_felt252, storage_address_from_base
 };
 use evm::errors::{EVMError, ensure, TYPE_CONVERSION_ERROR};
 use utils::math::{Bitshift};

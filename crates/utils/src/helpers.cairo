@@ -4,19 +4,17 @@ use core::array::ArrayTrait;
 use core::array::SpanTrait;
 use core::cmp::min;
 use core::hash::{HashStateExTrait, HashStateTrait};
-use core::integer::{u32_as_non_zero, U32TryIntoNonZero};
 use core::integer;
-use core::keccak::{cairo_keccak, u128_split};
+use core::keccak::{cairo_keccak};
 use core::num::traits::Bounded;
 use core::num::traits::{SaturatingAdd};
 use core::num::traits::{Zero, One, BitSize};
 use core::panic_with_felt252;
 use core::pedersen::{HashState, PedersenTrait};
 use core::starknet::{
-    EthAddress, EthAddressIntoFelt252, ContractAddress, ClassHash,
-    eth_signature::{Signature as EthSignature}
+    EthAddress, ContractAddress, ClassHash, secp256_trait::{Signature as EthSignature}
 };
-use core::traits::DivRem;
+use core::traits::{DivRem, BitAnd};
 use core::traits::TryInto;
 use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 
@@ -24,6 +22,16 @@ use utils::constants::{POW_2, POW_256_1, POW_256_REV};
 use utils::eth_transaction::{TransactionType};
 use utils::math::{Bitshift, WrappingBitshift, Exponentiation};
 use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, TryIntoResult, BoolIntoNumeric};
+
+
+pub fn u128_split(input: u128) -> (u64, u64) {
+    let (high, low) = core::integer::u128_safe_divmod(
+        input, 0x10000000000000000_u128.try_into().unwrap()
+    );
+
+    (high.try_into().unwrap(), low.try_into().unwrap())
+}
+
 
 /// Converts a value to the next closest multiple of 32
 ///
@@ -244,9 +252,8 @@ pub impl U8SpanExImpl of U8SpanExTrait {
     /// Transforms a Span<u8> into an Array of u64 full words, a pending u64 word and its length in
     /// bytes
     fn to_u64_words(self: Span<u8>) -> (Array<u64>, u64, usize) {
-        let (full_u64_word_count, last_input_num_bytes) = DivRem::div_rem(
-            self.len(), u32_as_non_zero(8)
-        );
+        let nonzero_8: NonZero<u32> = 8_u32.try_into().unwrap();
+        let (full_u64_word_count, last_input_num_bytes) = DivRem::div_rem(self.len(), nonzero_8);
 
         let mut u64_words: Array<u64> = Default::default();
         let mut byte_counter: u8 = 0;
@@ -692,7 +699,7 @@ pub impl ByteArrayExt of ByteArrayExTrait {
                 word = word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
                 j += 1;
             };
-            arr.data.append(word.try_into().unwrap());
+            arr.append_word(word.try_into().unwrap(), 31);
             i += 1;
         };
 
@@ -707,8 +714,7 @@ pub impl ByteArrayExt of ByteArrayExTrait {
             pending_word = pending_word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
             i += 1;
         };
-        arr.pending_word_len = pending_word_len;
-        arr.pending_word = pending_word;
+        arr.append_word(pending_word.try_into().unwrap(), pending_word_len);
         arr
     }
 
@@ -735,9 +741,8 @@ pub impl ByteArrayExt of ByteArrayExTrait {
         // because `at` takes a snap and if this snap is automatically done by
         // the compiler in the loop, it won't compile
         let self = @self;
-        let (full_u64_word_count, last_input_num_bytes) = DivRem::div_rem(
-            self.len(), u32_as_non_zero(8)
-        );
+        let nonzero_8: NonZero<u32> = 8_u32.try_into().unwrap();
+        let (full_u64_word_count, last_input_num_bytes) = DivRem::div_rem(self.len(), nonzero_8);
 
         let mut u64_words: Array<u64> = Default::default();
         let mut byte_counter: u8 = 0;
@@ -1016,13 +1021,13 @@ pub impl BitsUsedImpl<
     }
 }
 
-mod bits_used_internal {
+pub(crate) mod bits_used_internal {
     /// Returns the number of bits used to represent the value in binary representation
     /// # Arguments
     /// * `self` - The value to compute the number of bits used
     /// # Returns
     /// * The number of bits used to represent the value in binary representation
-    fn bits_used_in_byte(self: u8) -> u8 {
+    pub(crate) fn bits_used_in_byte(self: u8) -> u8 {
         if self < 0b100000 {
             if self < 0b1000 {
                 if self < 0b100 {

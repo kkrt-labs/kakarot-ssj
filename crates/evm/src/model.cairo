@@ -18,17 +18,17 @@ use utils::set::{Set, SpanSet};
 use utils::traits::{EthAddressDefault, ContractAddressDefault, SpanDefault};
 
 #[derive(Destruct, Default)]
-struct Environment {
-    origin: EthAddress,
-    gas_price: u128,
-    chain_id: u128,
-    prevrandao: u256,
-    block_number: u64,
-    block_gas_limit: u128,
-    block_timestamp: u64,
-    coinbase: EthAddress,
-    base_fee: u128,
-    state: State
+pub struct Environment {
+    pub origin: EthAddress,
+    pub gas_price: u128,
+    pub chain_id: u128,
+    pub prevrandao: u256,
+    pub block_number: u64,
+    pub block_gas_limit: u128,
+    pub block_timestamp: u64,
+    pub coinbase: EthAddress,
+    pub base_fee: u128,
+    pub state: State
 }
 #[derive(Copy, Drop, Default, PartialEq, Debug)]
 struct Message {

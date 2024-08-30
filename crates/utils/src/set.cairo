@@ -13,12 +13,15 @@ pub impl SetDefault<T, +Drop<T>> of Default<Set<T>> {
     }
 }
 
-
 #[generate_trait]
 pub impl SetImpl<T, +Drop<T>, +Copy<T>> of SetTrait<T> {
     #[inline]
     fn new() -> Set<T> {
         Set { inner: Default::default() }
+    }
+
+    fn from_array(arr: Array<T>) -> Set<T> {
+        Set { inner: arr }
     }
 
     #[inline]

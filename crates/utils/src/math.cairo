@@ -1,9 +1,10 @@
 use core::integer::{u512};
-use core::keccak::u128_split;
+use utils::helpers::u128_split;
 use core::num::traits::Bounded;
 use core::num::traits::{
-    Zero, One, BitSize, OverflowingAdd, OverflowingMul, WrappingMul, SaturatingAdd
+    Zero, One, BitSize, OverflowingAdd, OverflowingMul, WrappingMul, SaturatingAdd,
 };
+use core::traits::{BitAnd};
 use core::ops;
 use core::panic_with_felt252;
 use core::starknet::secp256_trait::Secp256PointTrait;

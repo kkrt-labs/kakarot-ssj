@@ -1,12 +1,12 @@
-use core::integer::{u256_try_as_non_zero};
 use core::num::traits::Bounded;
 use utils::constants::POW_2_127;
 use utils::math::{Bitshift, Exponentiation};
 
 #[derive(Copy, Drop, PartialEq)]
 pub struct i256 {
-    value: u256,
+    pub value: u256,
 }
+
 
 pub impl U256IntoI256 of Into<u256, i256> {
     #[inline(always)]

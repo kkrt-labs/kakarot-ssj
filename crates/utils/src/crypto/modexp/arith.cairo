@@ -1,15 +1,14 @@
 // CREDITS: The implementation has been take from
 // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/tree/develop/engine-modexp)
 use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
-use core::keccak::u128_split;
 
-use core::num::traits::{WideMul, OverflowingAdd, OverflowingSub};
+use core::num::traits::{WideMul, OverflowingAdd, OverflowingSub, WrappingMul};
 use core::option::OptionTrait;
 use core::traits::TryInto;
 use super::mpnat::{MPNat, Word, DoubleWord, WORD_BITS, BASE, DOUBLE_WORD_MAX, WORD_MAX};
-use utils::helpers::{Felt252VecTrait, U128Trait};
+use utils::helpers::{u128_split, Felt252VecTrait, U128Trait};
 use utils::math::WrappingBitshift;
-use utils::math::{Bitshift, WrappingMul};
+use utils::math::{Bitshift};
 
 use utils::traits::BoolIntoNumeric;
 
@@ -20,7 +19,7 @@ use utils::traits::BoolIntoNumeric;
 // digits needs to represent `n`. `n_prime` has the property that `r(r^(-1)) - nn' = 1`.
 // Note: This algorithm only works if `xy < rn` (generally we will either have both `x < n`, `y < n`
 // or we will have `x < r`, `y < n`).
-fn monpro(ref x: MPNat, ref y: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
+pub fn monpro(ref x: MPNat, ref y: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
     let s = out.len() - 2;
 
     let mut i = 0;
@@ -119,7 +118,7 @@ fn monpro(ref x: MPNat, ref y: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt
 }
 
 // Equivalent to `monpro(x, x, n, n_prime, out)`, but more efficient.
-fn monsq(ref x: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
+pub fn monsq(ref x: MPNat, ref n: MPNat, n_prime: Word, ref out: Felt252Vec<Word>) {
     let s = n.digits.len();
 
     big_sq(ref x, ref out);
@@ -259,7 +258,7 @@ pub fn big_wrapping_pow(
 }
 
 /// Computes `(x * y) mod 2^(WORD_BITS*out.len())`.
-fn big_wrapping_mul(ref x: MPNat, ref y: MPNat, ref out: Felt252Vec<Word>) {
+pub fn big_wrapping_mul(ref x: MPNat, ref y: MPNat, ref out: Felt252Vec<Word>) {
     let s = out.len();
     let mut i = 0;
 
@@ -292,7 +291,7 @@ fn big_wrapping_mul(ref x: MPNat, ref y: MPNat, ref out: Felt252Vec<Word>) {
 
 // Given x odd, computes `x^(-1) mod 2^32`.
 // See `MODULAR-INVERSE` in https://link.springer.com/content/pdf/10.1007/3-540-46877-3_21.pdf
-fn mod_inv(x: Word) -> Word {
+pub fn mod_inv(x: Word) -> Word {
     let mut y = 1;
     let mut i = 2;
 
@@ -325,7 +324,7 @@ fn mod_inv(x: Word) -> Word {
 /// then computes the difference to get the remainder. It is possible that this
 /// quotient is too big by 1; we can catch that case by looking for overflow
 /// in the subtraction.
-fn compute_r_mod_n(ref n: MPNat, ref out: Felt252Vec<Word>) {
+pub fn compute_r_mod_n(ref n: MPNat, ref out: Felt252Vec<Word>) {
     let k = n.digits.len();
 
     if k == 1 {
@@ -376,7 +375,7 @@ fn compute_r_mod_n(ref n: MPNat, ref out: Felt252Vec<Word>) {
 /// the second part of the output. The arithmetic in this function is
 /// guaranteed to never overflow because even when all 4 variables are
 /// equal to `WORD_MAX` the output is smaller than `DOUBLEWORD_MAX`.
-fn shifted_carrying_mul(a: Word, x: Word, y: Word, c: Word) -> (Word, Word) {
+pub fn shifted_carrying_mul(a: Word, x: Word, y: Word, c: Word) -> (Word, Word) {
     let res: DoubleWord = a.into() + x.wide_mul(y) + c.into();
     let (top_word, bottom_word) = u128_split(res);
     (bottom_word, top_word)
@@ -386,14 +385,14 @@ fn shifted_carrying_mul(a: Word, x: Word, y: Word, c: Word) -> (Word, Word) {
 /// the second part of the output. The arithmetic in this function is
 /// guaranteed to never overflow because even when all 3 variables are
 /// equal to `Word::MAX` the output is smaller than `DoubleWord::MAX`.
-fn carrying_mul(x: Word, y: Word, c: Word) -> (Word, Word) {
+pub fn carrying_mul(x: Word, y: Word, c: Word) -> (Word, Word) {
     let wide = x.wide_mul(y) + c.into();
     let (top_word, bottom_word) = u128_split(wide);
     (bottom_word, top_word)
 }
 
 /// computes x + y accounting for any carry from a previous addition
-fn carrying_add(x: Word, y: Word, carry: bool) -> (Word, bool) {
+pub fn carrying_add(x: Word, y: Word, carry: bool) -> (Word, bool) {
     let (a, b) = x.overflowing_add(y);
     let (c, d) = a.overflowing_add(carry.into());
     (c, b | d)
@@ -414,7 +413,7 @@ pub fn borrowing_sub(x: Word, y: Word, borrow: bool) -> (Word, bool) {
 ///
 /// # Returns
 /// The double word obtained by joining `hi` and `lo`
-fn join_as_double(hi: Word, lo: Word) -> DoubleWord {
+pub fn join_as_double(hi: Word, lo: Word) -> DoubleWord {
     let hi: DoubleWord = hi.into();
     (hi.shl(WORD_BITS.into())).into() + lo.into()
 }
@@ -472,7 +471,7 @@ fn big_sq(ref x: MPNat, ref out: Felt252Vec<Word>) {
 }
 
 // Performs `a <<= shift`, returning the overflow
-fn in_place_shl(ref a: Felt252Vec<Word>, shift: u32) -> Word {
+pub fn in_place_shl(ref a: Felt252Vec<Word>, shift: u32) -> Word {
     let mut c: Word = 0;
     let carry_shift = WORD_BITS - shift;
 
@@ -496,7 +495,7 @@ fn in_place_shl(ref a: Felt252Vec<Word>, shift: u32) -> Word {
 }
 
 // Performs `a >>= shift`, returning the overflow
-fn in_place_shr(ref a: Felt252Vec<Word>, shift: u32) -> Word {
+pub fn in_place_shr(ref a: Felt252Vec<Word>, shift: u32) -> Word {
     let mut b: Word = 0;
     let borrow_shift = WORD_BITS - shift;
 
@@ -546,7 +545,7 @@ pub fn in_place_add(ref a: Felt252Vec<Word>, ref b: Felt252Vec<Word>) -> bool {
 }
 
 // Performs `a -= xy`, returning the "borrow".
-fn in_place_mul_sub(ref a: Felt252Vec<Word>, ref x: Felt252Vec<Word>, y: Word) -> Word {
+pub fn in_place_mul_sub(ref a: Felt252Vec<Word>, ref x: Felt252Vec<Word>, y: Word) -> Word {
     // a -= x*0 leaves a unchanged, so return early
     if y == 0 {
         return 0;
@@ -592,7 +591,7 @@ fn in_place_mul_sub(ref a: Felt252Vec<Word>, ref x: Felt252Vec<Word>, y: Word) -
 mod tests {
     use alexandria_data_structures::vec::VecTrait;
     use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
-    use core::num::traits::WrappingSub;
+    use core::num::traits::{WrappingSub, WrappingMul};
     use core::result::ResultTrait;
     use core::traits::Into;
 
@@ -606,7 +605,7 @@ mod tests {
     };
     use utils::helpers::{Felt252VecTrait, ToBytes};
     use utils::helpers::{U128Trait};
-    use utils::math::{WrappingMul, WrappingBitshift, WrappingExponentiation};
+    use utils::math::{WrappingBitshift, WrappingExponentiation};
 
     // the tests are taken from
     // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/arith.rs#L401)
