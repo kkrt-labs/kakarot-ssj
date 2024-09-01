@@ -69,7 +69,7 @@ impl AccountBuilderImpl of AccountBuilderTrait {
     }
 
     #[inline(always)]
-    fn fetch_code_hash(ref self: AccountBuilder) -> u256 {
+    fn fetch_code_hash(mut self: AccountBuilder) -> AccountBuilder {
         let bytecode = self.account.code;
 
         if bytecode.is_empty() {
@@ -80,6 +80,7 @@ impl AccountBuilderImpl of AccountBuilderTrait {
             self.account.code_hash = hash;
             self.account.code_hash
         }
+        self
     }
 }
 
