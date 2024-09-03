@@ -35,43 +35,50 @@ impl PrecompilesImpl of Precompiles {
             P256Verify::exec(input)?
         } else {
             match precompile_address.address {
-                0 => {
+                0x00 => {
                     // we should never reach this branch!
                     panic!("pre-compile address can't be 0")
                 },
-                1 => { EcRecover::exec(input)? },
-                2 => { Sha256::exec(input)? },
-                3 => {
+                0x01 => { EcRecover::exec(input)? },
+                0x02 => { Sha256::exec(input)? },
+                0x03 => {
                     // we should never reach this branch!
                     panic!(
                         "pre-compile at address {} isn't implemented yet",
                         precompile_address.address
                     )
                 },
-                4 => { Identity::exec(input)? },
-                5 => { ModExp::exec(input)? },
-                6 => {
+                0x04 => { Identity::exec(input)? },
+                0x05 => { ModExp::exec(input)? },
+                0x06 => {
                     // we should never reach this branch!
                     panic!(
                         "pre-compile at address {} isn't implemented yet",
                         precompile_address.address
                     )
                 },
-                7 => {
+                0x07 => {
                     // we should never reach this branch!
                     panic!(
                         "pre-compile at address {} isn't implemented yet",
                         precompile_address.address
                     )
                 },
-                8 => {
+                0x08 => {
                     // we should never reach this branch!
                     panic!(
                         "pre-compile at address {} isn't implemented yet",
                         precompile_address.address
                     )
                 },
-                9 => { Blake2f::exec(input)? },
+                0x09 => { Blake2f::exec(input)? },
+                0x0a => {
+                    // Point Evaluation
+                    panic!(
+                        "pre-compile at address {} isn't implemented yet",
+                        precompile_address.address
+                    )
+                },
                 _ => {
                     // we should never reach this branch!
                     panic!("address {} isn't a pre-compile", precompile_address.address)
