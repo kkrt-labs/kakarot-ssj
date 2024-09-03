@@ -106,6 +106,8 @@ impl MemoryOperation of MemoryOperationTrait {
     fn exec_sstore(ref self: VM) -> Result<(), EVMError> {
         let key = self.stack.pop()?;
         let new_value = self.stack.pop()?;
+        ensure(self.gas_left() > gas::CALL_STIPEND, EVMError::OutOfGas)?; // EIP-1706
+
         let evm_address = self.message().target.evm;
         let account = self.env.state.get_account(evm_address);
         let original_value = fetch_original_storage(@account, key);
@@ -154,12 +156,10 @@ impl MemoryOperation of MemoryOperationTrait {
                 }
             }
         }
-        let gas_left_sup_call_stipend = self.gas_left() > gas::CALL_STIPEND;
 
         self.charge_gas(gas_cost)?;
 
         ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
-        ensure(gas_left_sup_call_stipend, EVMError::OutOfGas)?; // EIP-1706
 
         self.env.state.write_state(:evm_address, :key, value: new_value);
         Result::Ok(())
