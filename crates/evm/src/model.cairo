@@ -7,15 +7,15 @@ use core::num::traits::{CheckedAdd, CheckedSub, CheckedMul};
 use core::starknet::{EthAddress, get_contract_address, ContractAddress};
 use evm::errors::{EVMError, CONTRACT_SYSCALL_FAILED};
 use evm::model::account::{Account, AccountTrait};
+use evm::precompiles::{
+    FIRST_ROLLUP_PRECOMPILE_ADDRESS, FIRST_ETHEREUM_PRECOMPILE_ADDRESS,
+    LAST_ETHEREUM_PRECOMPILE_ADDRESS
+};
 use evm::state::State;
 use utils::fmt::{TSpanSetDebug};
 use utils::helpers::{ResultExTrait};
 use utils::set::{Set, SpanSet};
 use utils::traits::{EthAddressDefault, ContractAddressDefault, SpanDefault};
-
-const FIRST_ROLLUP_PRECOMPILE_ADDRESS: u256 = 0x100;
-const LAST_ETHEREUM_PRECOMPILE_ADDRESS: u256 = 0x0a;
-const ZERO: felt252 = 0x0;
 
 #[derive(Destruct, Default)]
 struct Environment {
@@ -143,9 +143,10 @@ impl AddressImpl of AddressTrait {
     /// Check whether an address for a call-family opcode is a precompile.
     fn is_precompile(self: EthAddress) -> bool {
         let self: felt252 = self.into();
-        return self != ZERO
-            && (self.into() <= LAST_ETHEREUM_PRECOMPILE_ADDRESS
-                || self.into() == FIRST_ROLLUP_PRECOMPILE_ADDRESS);
+        return self != 0x00
+            && (FIRST_ETHEREUM_PRECOMPILE_ADDRESS <= self.into()
+                && self.into() <= LAST_ETHEREUM_PRECOMPILE_ADDRESS)
+                || self.into() == FIRST_ROLLUP_PRECOMPILE_ADDRESS;
     }
 }
 
