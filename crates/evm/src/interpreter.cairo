@@ -448,6 +448,10 @@ impl EVMImpl of EVMTrait {
             // BLOBHASH
             return self.exec_blobhash();
         }
+        if opcode == 74 {
+            // BLOBBASEFEE
+            return self.exec_blobbasefee();
+        }
         if opcode == 80 {
             // POP
             return self.exec_pop();
