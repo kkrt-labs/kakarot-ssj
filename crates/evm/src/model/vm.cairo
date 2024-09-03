@@ -150,6 +150,7 @@ impl VMImpl of VMTrait {
             self.accessed_addresses.extend(*child.accessed_addresses);
             self.accessed_storage_keys.extend(*child.accessed_storage_keys);
             self.gas_refund += *child.gas_refund;
+            self.return_data = *child.return_data;
         }
         //TODO(gas) handle error case
 
