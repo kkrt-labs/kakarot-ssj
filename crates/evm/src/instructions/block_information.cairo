@@ -126,6 +126,16 @@ impl BlockInformation of BlockInformationTrait {
         self.stack.push(self.env.gas_price.into())
     }
 
+    /// 0x49 - BLOBHASH
+    /// Returns the value of the blob hash of the current block
+    /// Always returns Zero in the context of Kakarot
+    /// # Specification: https://www.evm.codes/#49?fork=cancun
+    fn exec_blobhash(ref self: VM) -> Result<(), EVMError> {
+        self.charge_gas(gas::BLOB_HASH_COST)?;
+
+        self.stack.push(0)
+    }
+
     /// 0x4A - BLOBBASEFEE
     /// Returns the value of the blob base-fee of the current block
     /// Always returns Zero in the context of Kakarot
@@ -334,6 +344,20 @@ mod tests {
     }
 
     #[test]
+    fn test_blobhash_should_return_zero() {
+        // Given
+        let mut vm = VMBuilderTrait::new_with_presets().build();
+
+        // When
+        vm.exec_blobhash().unwrap();
+
+        // Then
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0);
+    }
+
+
+    #[test]
     fn test_blobbasefee_should_return_zero() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
@@ -345,6 +369,7 @@ mod tests {
         assert(vm.stack.len() == 1, 'stack should have one element');
         assert(vm.stack.peek().unwrap() == 0, 'stack top should be 0');
     }
+
 
     // *************************************************************************
     // 0x41: COINBASE
