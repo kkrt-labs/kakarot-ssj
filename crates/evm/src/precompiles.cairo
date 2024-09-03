@@ -72,6 +72,13 @@ impl PrecompilesImpl of Precompiles {
                     )
                 },
                 9 => { Blake2f::exec(input)? },
+                0x0a => {
+                    // Point Evaluation
+                    panic!(
+                        "pre-compile at address {} isn't implemented yet",
+                        precompile_address.address
+                    )
+                },
                 _ => {
                     // we should never reach this branch!
                     panic!("address {} isn't a pre-compile", precompile_address.address)
