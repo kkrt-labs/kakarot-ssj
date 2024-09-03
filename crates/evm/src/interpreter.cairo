@@ -444,6 +444,10 @@ impl EVMImpl of EVMTrait {
             // BASEFEE
             return self.exec_basefee();
         }
+        if opcode == 73 {
+            // BLOBHASH
+            return self.exec_blobhash();
+        }
         if opcode == 80 {
             // POP
             return self.exec_pop();

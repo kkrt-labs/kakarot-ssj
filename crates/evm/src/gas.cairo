@@ -52,6 +52,9 @@ const INITCODE_WORD_COST: u128 = 2;
 
 const CALL_STIPEND: u128 = 2300;
 
+// EIP-4844
+pub const BLOB_HASH_COST: u128 = 3;
+
 /// Defines the gas cost and stipend for executing call opcodes.
 ///
 /// # Struct fields
