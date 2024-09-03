@@ -99,7 +99,6 @@ impl CallHelpersImpl of CallHelpers {
         let result = EVMTrait::process_message(message, ref self.env);
         self.merge_child(@result);
 
-        self.return_data = result.return_data;
         if result.success {
             self.stack.push(1)?;
         } else {
