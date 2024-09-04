@@ -133,11 +133,10 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
 
         let calldata: Span<u8> = self.message().data;
-
-        let copied: Span<u8> = if (offset + size > calldata.len()) {
-            calldata.slice(offset, calldata.len() - offset)
+        let copied = if offset < calldata.len() {
+            calldata.slice(offset, core::cmp::min(size, calldata.len() - offset))
         } else {
-            calldata.slice(offset, size)
+            [].span()
         };
 
         self.memory.store_padded_segment(dest_offset, size, copied);
@@ -169,12 +168,11 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
         let bytecode: Span<u8> = self.message().code;
 
-        let copied: Span<u8> = if offset > bytecode.len() {
-            [].span()
-        } else if (offset + size > bytecode.len()) {
-            bytecode.slice(offset, bytecode.len() - offset)
+        let bytecode_len = bytecode.len();
+        let copied = if offset < bytecode_len {
+            bytecode.slice(offset, core::cmp::min(size, bytecode_len - offset))
         } else {
-            bytecode.slice(offset, size)
+            [].span()
         };
 
         self.memory.store_padded_segment(dest_offset, size, copied);
@@ -232,7 +230,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let bytecode = self.env.state.get_account(evm_address).code;
         let bytecode_len = bytecode.len();
         let bytecode_slice = if offset < bytecode_len {
-            bytecode.slice(offset, bytecode_len - offset)
+            bytecode.slice(offset, core::cmp::min(size, bytecode_len - offset))
         } else {
             [].span()
         };
