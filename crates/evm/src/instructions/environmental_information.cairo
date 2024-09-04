@@ -297,7 +297,9 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 }
 
 #[inline(always)]
-fn copy_bytes_to_memory(ref self: VM, bytes: Span<u8>, dest_offset: usize, offset: usize, size: usize) {
+fn copy_bytes_to_memory(
+    ref self: VM, bytes: Span<u8>, dest_offset: usize, offset: usize, size: usize
+) {
     let bytes_slice = if offset < bytes.len() {
         bytes.slice(offset, core::cmp::min(size, bytes.len() - offset))
     } else {
@@ -336,17 +338,13 @@ mod tests {
     const EMPTY_KECCAK: u256 = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
 
     mod test_internals {
-        use super::super::copy_bytes_to_memory;
         use evm::memory::MemoryTrait;
         use evm::model::vm::VMTrait;
         use evm::test_utils::VMBuilderTrait;
+        use super::super::copy_bytes_to_memory;
 
         fn test_copy_bytes_to_memory_helper(
-            bytes: Span<u8>,
-            dest_offset: usize,
-            offset: usize,
-            size: usize,
-            expected: Span<u8>
+            bytes: Span<u8>, dest_offset: usize, offset: usize, size: usize, expected: Span<u8>
         ) {
             // Given
             let mut vm = VMBuilderTrait::new_with_presets().build();
@@ -995,9 +993,7 @@ mod tests {
         expected_result: Result<Span<u8>, EVMError>
     ) {
         // Given
-        let mut vm = VMBuilderTrait::new_with_presets()
-            .with_return_data(return_data)
-            .build();
+        let mut vm = VMBuilderTrait::new_with_presets().with_return_data(return_data).build();
 
         vm.stack.push(size.into()).expect('push failed');
         vm.stack.push(offset.into()).expect('push failed');
@@ -1011,7 +1007,9 @@ mod tests {
             Result::Ok(expected) => {
                 assert!(res.is_ok());
                 let mut result = ArrayTrait::new();
-                vm.memory.load_n(size.try_into().unwrap(), ref result, dest_offset.try_into().unwrap());
+                vm
+                    .memory
+                    .load_n(size.try_into().unwrap(), ref result, dest_offset.try_into().unwrap());
                 assert_eq!(result.span(), expected);
             },
             Result::Err(expected_error) => {
@@ -1036,13 +1034,17 @@ mod tests {
     #[test]
     fn test_returndatacopy_out_of_bounds() {
         let return_data = array![1, 2, 3, 4, 5].span();
-        test_returndatacopy_helper(return_data, 0, 3, 3, Result::Err(EVMError::ReturnDataOutOfBounds));
+        test_returndatacopy_helper(
+            return_data, 0, 3, 3, Result::Err(EVMError::ReturnDataOutOfBounds)
+        );
     }
 
     #[test]
     fn test_returndatacopy_overflowing_add() {
         let return_data = array![1, 2, 3, 4, 5].span();
-        test_returndatacopy_helper(return_data, 0, 0xFFFFFFFF, 1, Result::Err(EVMError::ReturnDataOutOfBounds));
+        test_returndatacopy_helper(
+            return_data, 0, 0xFFFFFFFF, 1, Result::Err(EVMError::ReturnDataOutOfBounds)
+        );
     }
 
     // *************************************************************************
