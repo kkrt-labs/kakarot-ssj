@@ -154,6 +154,7 @@ impl VMImpl of VMTrait {
                 self.return_data = *child.return_data;
             },
             ExecutionResultStatus::Revert => { self.gas_left += *child.gas_left; },
+            // If the call has halted exceptionnaly, the gas is not returned.
             ExecutionResultStatus::Exception => {}
         };
     }

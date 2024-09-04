@@ -149,6 +149,7 @@ impl CreateHelpersImpl of CreateHelpers {
                 self.stack.push(0)?;
             },
             ExecutionResultStatus::Exception => {
+                // returndata is emptied in case of exception
                 self.return_data = [].span();
                 self.stack.push(0)?;
             },
