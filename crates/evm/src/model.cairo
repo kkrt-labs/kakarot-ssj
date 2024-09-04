@@ -37,6 +37,7 @@ struct Message {
     gas_limit: u128,
     data: Span<u8>,
     code: Span<u8>,
+    code_address: Address,
     value: u256,
     should_transfer_value: bool,
     depth: usize,
@@ -130,6 +131,18 @@ struct Event {
 struct Address {
     evm: EthAddress,
     starknet: ContractAddress,
+}
+
+impl ZeroAddress of core::num::traits::Zero<Address> {
+    fn zero() -> Address {
+        Address { evm: Zero::zero(), starknet: Zero::zero(), }
+    }
+    fn is_zero(self: @Address) -> bool {
+        self.evm.is_zero() && self.starknet.is_zero()
+    }
+    fn is_non_zero(self: @Address) -> bool {
+        !self.is_zero()
+    }
 }
 
 #[generate_trait]

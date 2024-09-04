@@ -227,6 +227,7 @@ fn preset_message() -> Message {
             test_address(), evm_address(), uninitialized_account()
         )
     };
+    let code_address = target;
     let read_only = false;
     let tx_gas_limit = tx_gas_limit();
 
@@ -238,6 +239,7 @@ fn preset_message() -> Message {
         gas_limit: tx_gas_limit,
         read_only,
         code,
+        code_address,
         should_transfer_value: true,
         depth: 0,
         accessed_addresses: Default::default(),

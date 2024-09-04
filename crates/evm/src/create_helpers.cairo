@@ -4,6 +4,7 @@ use contracts::kakarot_core::interface::IKakarotCore;
 use core::cmp::min;
 use core::keccak::cairo_keccak;
 use core::num::traits::Bounded;
+use core::num::traits::Zero;
 use core::starknet::{EthAddress, get_tx_info};
 use evm::errors::{
     ensure, EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION
@@ -126,6 +127,7 @@ impl CreateHelpersImpl of CreateHelpers {
             gas_limit: create_message_gas,
             data: [].span(),
             code: create_args.bytecode,
+            code_address: Zero::zero(),
             value: create_args.value,
             should_transfer_value: true,
             depth: self.message().depth + 1,

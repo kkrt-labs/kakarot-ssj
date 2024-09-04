@@ -304,12 +304,12 @@ pub mod KakarotCore {
             };
 
             // Handle deploy/non-deploy transaction cases
-            let (to, is_deploy_tx, code, calldata) = match tx.destination() {
+            let (to, is_deploy_tx, code, code_address, calldata) = match tx.destination() {
                 Option::Some(to) => {
                     let target_starknet_address = self.compute_starknet_address(to);
                     let to = Address { evm: to, starknet: target_starknet_address };
                     let code = env.state.get_account(to.evm).code;
-                    (to, false, code, tx.calldata())
+                    (to, false, code, to, tx.calldata())
                 },
                 Option::None => {
                     // Deploy tx case.
@@ -319,7 +319,7 @@ pub mod KakarotCore {
                     let to = Address { evm: to_evm_address, starknet: to_starknet_address };
                     let code = tx.calldata();
                     let calldata = [].span();
-                    (to, true, code, calldata)
+                    (to, true, code, Zero::zero(), calldata)
                 },
             };
 
@@ -346,6 +346,7 @@ pub mod KakarotCore {
                 gas_limit: gas_left,
                 data: calldata,
                 code,
+                code_address: code_address,
                 value: tx.value(),
                 should_transfer_value: true,
                 depth: 0,

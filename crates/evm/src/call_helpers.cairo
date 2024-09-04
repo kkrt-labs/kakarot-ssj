@@ -73,7 +73,7 @@ impl CallHelpersImpl of CallHelpers {
         self.memory.load_n(args_size, ref calldata, args_offset);
 
         // We enter the standard flow
-        let code = self.env.state.get_account(code_address).code;
+        let code_account = self.env.state.get_account(code_address);
         let read_only = is_staticcall || self.message.read_only;
 
         let kakarot_core = KakarotCore::unsafe_new_contract_state();
@@ -87,7 +87,8 @@ impl CallHelpersImpl of CallHelpers {
             target: to,
             gas_limit: gas,
             data: calldata.span(),
-            code,
+            code: code_account.code,
+            code_address: code_account.address,
             value: value,
             should_transfer_value: should_transfer_value,
             depth: self.message().depth + 1,
