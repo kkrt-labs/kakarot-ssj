@@ -10,7 +10,7 @@ use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{Transfer, Address, Message};
+use evm::model::{Transfer, Address, Message, ExecutionResultTrait, ExecutionResultStatus};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use utils::constants;
@@ -100,10 +100,20 @@ impl CallHelpersImpl of CallHelpers {
         let result = EVMTrait::process_message(message, ref self.env);
         self.merge_child(@result);
 
-        if result.success {
-            self.stack.push(1)?;
-        } else {
-            self.stack.push(0)?;
+        match result.status {
+            ExecutionResultStatus::Success => {
+                self.return_data = result.return_data;
+                self.stack.push(1)?;
+            },
+            ExecutionResultStatus::Revert => {
+                self.return_data = result.return_data;
+                self.stack.push(0)?;
+            },
+            ExecutionResultStatus::Exception => {
+                // If the call has halted exceptionnaly, the return_data is emptied.
+                self.return_data = [].span();
+                self.stack.push(0)?;
+            },
         }
 
         // Get the min between len(return_data) and call_ctx.ret_size.

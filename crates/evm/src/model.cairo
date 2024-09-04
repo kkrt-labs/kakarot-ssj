@@ -48,12 +48,19 @@ struct Message {
 
 #[derive(Drop, Debug)]
 struct ExecutionResult {
-    success: bool,
+    status: ExecutionResultStatus,
     return_data: Span<u8>,
     gas_left: u128,
     accessed_addresses: SpanSet<EthAddress>,
     accessed_storage_keys: SpanSet<(EthAddress, u256)>,
     gas_refund: u128,
+}
+
+#[derive(Copy, Drop, PartialEq, Debug)]
+enum ExecutionResultStatus {
+    Success,
+    Revert,
+    Exception,
 }
 
 #[generate_trait]
@@ -64,7 +71,7 @@ impl ExecutionResultImpl of ExecutionResultTrait {
         accessed_storage_keys: SpanSet<(EthAddress, u256)>
     ) -> ExecutionResult {
         ExecutionResult {
-            success: false,
+            status: ExecutionResultStatus::Exception,
             return_data: error,
             gas_left: 0,
             accessed_addresses,
@@ -80,11 +87,23 @@ impl ExecutionResultImpl of ExecutionResultTrait {
         self.gas_left = self.gas_left.checked_sub(value).ok_or(EVMError::OutOfGas)?;
         Result::Ok(())
     }
+
+    fn is_success(self: @ExecutionResult) -> bool {
+        *self.status == ExecutionResultStatus::Success
+    }
+
+    fn is_exception(self: @ExecutionResult) -> bool {
+        *self.status == ExecutionResultStatus::Exception
+    }
+
+    fn is_revert(self: @ExecutionResult) -> bool {
+        *self.status == ExecutionResultStatus::Revert
+    }
 }
 
 #[derive(Destruct)]
 struct ExecutionSummary {
-    success: bool,
+    status: ExecutionResultStatus,
     return_data: Span<u8>,
     gas_left: u128,
     state: State,
@@ -95,12 +114,24 @@ struct ExecutionSummary {
 impl ExecutionSummaryImpl of ExecutionSummaryTrait {
     fn exceptional_failure(error: Span<u8>) -> ExecutionSummary {
         ExecutionSummary {
-            success: false,
+            status: ExecutionResultStatus::Exception,
             return_data: error,
             gas_left: 0,
             state: Default::default(),
             gas_refund: 0
         }
+    }
+
+    fn is_success(self: @ExecutionSummary) -> bool {
+        *self.status == ExecutionResultStatus::Success
+    }
+
+    fn is_exception(self: @ExecutionSummary) -> bool {
+        *self.status == ExecutionResultStatus::Exception
+    }
+
+    fn is_revert(self: @ExecutionSummary) -> bool {
+        *self.status == ExecutionResultStatus::Revert
     }
 }
 

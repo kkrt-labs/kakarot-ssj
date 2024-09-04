@@ -397,7 +397,7 @@ pub mod KakarotCore {
             // };
 
             TransactionResult {
-                success: summary.success,
+                success: summary.is_success(),
                 return_data: summary.return_data,
                 gas_used: total_gas_used,
                 state: summary.state,

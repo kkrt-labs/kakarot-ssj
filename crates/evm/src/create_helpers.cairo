@@ -14,7 +14,9 @@ use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
 use evm::model::account::{Account, AccountTrait};
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{ExecutionResult, ExecutionResultTrait, ExecutionSummary, Environment};
+use evm::model::{
+    ExecutionResult, ExecutionResultTrait, ExecutionResultStatus, ExecutionSummary, Environment
+};
 use evm::model::{Message, Address, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
@@ -139,12 +141,20 @@ impl CreateHelpersImpl of CreateHelpers {
         let result = EVMTrait::process_create_message(child_message, ref self.env);
         self.merge_child(@result);
 
-        if result.success {
-            self.return_data = [].span();
-            self.stack.push(target_address.evm.into())?;
-        } else {
-            self.return_data = result.return_data;
-            self.stack.push(0)?;
+        match result.status {
+            ExecutionResultStatus::Success => {
+                self.return_data = [].span();
+                self.stack.push(target_address.evm.into())?;
+            },
+            ExecutionResultStatus::Revert => {
+                self.return_data = result.return_data;
+                self.stack.push(0)?;
+            },
+            ExecutionResultStatus::Exception => {
+                // returndata is emptied in case of exception
+                self.return_data = [].span();
+                self.stack.push(0)?;
+            },
         }
         Result::Ok(())
     }
