@@ -120,7 +120,18 @@ mod tests {
         let addresses = eth_precompile_addresses();
         assert_eq!(
             addresses.inner.span(),
-            [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a].span()
+            [
+                0x01.try_into().unwrap(),
+                0x02.try_into().unwrap(),
+                0x03.try_into().unwrap(),
+                0x04.try_into().unwrap(),
+                0x05.try_into().unwrap(),
+                0x06.try_into().unwrap(),
+                0x07.try_into().unwrap(),
+                0x08.try_into().unwrap(),
+                0x09.try_into().unwrap(),
+                0x0a.try_into().unwrap()
+            ].span()
         );
     }
 }
