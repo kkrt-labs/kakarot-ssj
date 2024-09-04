@@ -14,7 +14,7 @@ use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{
     Message, Environment, Address, Transfer, ExecutionSummary, ExecutionSummaryTrait,
-    ExecutionResult, ExecutionResultTrait, AddressTrait
+    ExecutionResult, ExecutionResultTrait, ExecutionResultStatus, AddressTrait
 };
 use evm::precompiles::Precompiles;
 use evm::stack::{Stack, StackTrait};
@@ -37,7 +37,7 @@ impl EVMImpl of EVMTrait {
             }
 
             let mut result = Self::process_create_message(message, ref env);
-            if result.success {
+            if result.is_success() {
                 result.return_data = message.target.evm.to_bytes().span();
             }
             result
@@ -47,7 +47,7 @@ impl EVMImpl of EVMTrait {
 
         // No need to take snapshot of state, as the state is still empty at this point.
         ExecutionSummary {
-            success: result.success,
+            status: result.status,
             state: env.state,
             return_data: result.return_data,
             gas_left: result.gas_left,
@@ -76,7 +76,7 @@ impl EVMImpl of EVMTrait {
         }
 
         let mut result = Self::process_message(message, ref env);
-        if result.success {
+        if result.is_success() {
             // Write the return_data of the initcode
             // as the deployed contract's bytecode and charge gas
             let target_account = env.state.get_account(target_evm_address);
@@ -134,7 +134,7 @@ impl EVMImpl of EVMTrait {
         // The state in the environment has been modified by the VM.
         env = vm.env;
 
-        if !result.success {
+        if !result.is_success() {
             // The `process_message` function has mutated the environment state.
             // Revert state changes using the old snapshot as execution failed.
 
@@ -151,8 +151,13 @@ impl EVMImpl of EVMTrait {
 
             match result {
                 Result::Ok(_) => {
+                    let status = if vm.is_error() {
+                        ExecutionResultStatus::Revert
+                    } else {
+                        ExecutionResultStatus::Success
+                    };
                     return ExecutionResult {
-                        success: true,
+                        status,
                         return_data: vm.return_data(),
                         gas_left: vm.gas_left(),
                         accessed_addresses: vm.accessed_addresses(),
@@ -179,7 +184,7 @@ impl EVMImpl of EVMTrait {
             // REVERT opcode case
             if vm.is_error() {
                 return ExecutionResult {
-                    success: false,
+                    status: ExecutionResultStatus::Revert,
                     return_data: vm.return_data(),
                     gas_left: vm.gas_left(),
                     accessed_addresses: vm.accessed_addresses(),
@@ -189,7 +194,7 @@ impl EVMImpl of EVMTrait {
             };
             // Success case
             return ExecutionResult {
-                success: true,
+                status: ExecutionResultStatus::Success,
                 return_data: vm.return_data(),
                 gas_left: vm.gas_left(),
                 accessed_addresses: vm.accessed_addresses(),
@@ -210,7 +215,7 @@ impl EVMImpl of EVMTrait {
                 // REVERT opcode case
                 if vm.is_error() {
                     return ExecutionResult {
-                        success: false,
+                        status: ExecutionResultStatus::Revert,
                         return_data: vm.return_data(),
                         gas_left: vm.gas_left(),
                         accessed_addresses: vm.accessed_addresses(),
@@ -220,7 +225,7 @@ impl EVMImpl of EVMTrait {
                 };
                 // Success case
                 return ExecutionResult {
-                    success: true,
+                    status: ExecutionResultStatus::Success,
                     return_data: vm.return_data(),
                     gas_left: vm.gas_left(),
                     accessed_addresses: vm.accessed_addresses(),

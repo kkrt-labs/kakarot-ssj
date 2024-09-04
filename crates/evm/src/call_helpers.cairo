@@ -10,7 +10,7 @@ use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{Transfer, Address, Message};
+use evm::model::{Transfer, Address, Message, ExecutionResultTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use utils::constants;
@@ -99,7 +99,7 @@ impl CallHelpersImpl of CallHelpers {
         let result = EVMTrait::process_message(message, ref self.env);
         self.merge_child(@result);
 
-        if result.success {
+        if result.is_success() {
             self.stack.push(1)?;
         } else {
             self.stack.push(0)?;

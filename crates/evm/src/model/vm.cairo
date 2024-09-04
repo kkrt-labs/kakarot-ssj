@@ -2,7 +2,7 @@ use core::num::traits::CheckedSub;
 use core::starknet::EthAddress;
 use evm::errors::{EVMError, ensure};
 use evm::memory::{Memory, MemoryTrait};
-use evm::model::{Message, Environment, ExecutionResult, AccountTrait};
+use evm::model::{Message, Environment, ExecutionResult, ExecutionResultStatus, AccountTrait};
 use evm::stack::{Stack, StackTrait};
 use utils::helpers::{SpanExtTrait, ArrayExtTrait};
 use utils::set::{Set, SetTrait, SpanSet};
@@ -145,16 +145,17 @@ impl VMImpl of VMTrait {
 
     #[inline(always)]
     fn merge_child(ref self: VM, child: @ExecutionResult) {
-        if *child.success {
-            //TODO: merge accessed storage
-            self.accessed_addresses.extend(*child.accessed_addresses);
-            self.accessed_storage_keys.extend(*child.accessed_storage_keys);
-            self.gas_refund += *child.gas_refund;
-            self.return_data = *child.return_data;
-        }
-        //TODO(gas) handle error case
-
-        self.gas_left += *child.gas_left;
+        match child.status {
+            ExecutionResultStatus::Success => {
+                self.accessed_addresses.extend(*child.accessed_addresses);
+                self.accessed_storage_keys.extend(*child.accessed_storage_keys);
+                self.gas_refund += *child.gas_refund;
+                self.gas_left += *child.gas_left;
+                self.return_data = *child.return_data;
+            },
+            ExecutionResultStatus::Revert => { self.gas_left += *child.gas_left; },
+            ExecutionResultStatus::Exception => {}
+        };
     }
 }
 

@@ -322,7 +322,7 @@ fn test_process_transaction() {
     let return_data = result.return_data;
 
     // Then
-    assert!(result.success);
+    assert!(result.is_success());
     assert_eq!(return_data, u256_to_bytes_array(0).span());
 }
 
