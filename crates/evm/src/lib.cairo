@@ -24,7 +24,7 @@ mod memory;
 mod model;
 
 // instructions module
-mod precompiles;
+pub mod precompiles;
 
 // Stack module
 mod stack;

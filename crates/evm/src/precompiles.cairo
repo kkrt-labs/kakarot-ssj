@@ -7,7 +7,6 @@ mod modexp;
 mod p256verify;
 mod sha256;
 use core::starknet::EthAddress;
-
 use core::traits::Into;
 use evm::errors::EVMError;
 use evm::model::vm::VM;
@@ -18,6 +17,24 @@ use evm::precompiles::identity::Identity;
 use evm::precompiles::modexp::ModExp;
 use evm::precompiles::p256verify::P256Verify;
 use evm::precompiles::sha256::Sha256;
+
+use utils::set::{Set};
+
+
+pub const FIRST_ETHEREUM_PRECOMPILE_ADDRESS: u256 = 0x01;
+pub const LAST_ETHEREUM_PRECOMPILE_ADDRESS: u256 = 0x0a;
+pub const FIRST_ROLLUP_PRECOMPILE_ADDRESS: u256 = 0x100;
+
+pub fn eth_precompile_addresses() -> Set<EthAddress> {
+    let mut precompile_addresses: Array<EthAddress> = array![];
+    //TODO(2.8) use range operator
+    let mut i = FIRST_ETHEREUM_PRECOMPILE_ADDRESS;
+    while i <= LAST_ETHEREUM_PRECOMPILE_ADDRESS {
+        precompile_addresses.append(i.try_into().unwrap());
+        i = i + 1;
+    };
+    Set { inner: precompile_addresses }
+}
 
 
 trait Precompile {
@@ -90,5 +107,31 @@ impl PrecompilesImpl of Precompiles {
         vm.return_data = result;
         vm.stop();
         return Result::Ok(());
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::eth_precompile_addresses;
+
+    #[test]
+    fn test_eth_precompile_addresses() {
+        let addresses = eth_precompile_addresses();
+        assert_eq!(
+            addresses.inner.span(),
+            [
+                0x01.try_into().unwrap(),
+                0x02.try_into().unwrap(),
+                0x03.try_into().unwrap(),
+                0x04.try_into().unwrap(),
+                0x05.try_into().unwrap(),
+                0x06.try_into().unwrap(),
+                0x07.try_into().unwrap(),
+                0x08.try_into().unwrap(),
+                0x09.try_into().unwrap(),
+                0x0a.try_into().unwrap()
+            ].span()
+        );
     }
 }

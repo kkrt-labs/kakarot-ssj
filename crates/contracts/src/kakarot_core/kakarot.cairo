@@ -30,6 +30,7 @@ pub mod KakarotCore {
         Transfer, Message, Environment, TransactionResult, TransactionResultTrait, ExecutionSummary,
         ExecutionSummaryTrait, Address, AddressTrait
     };
+    use evm::precompiles::eth_precompile_addresses;
     use evm::state::{State, StateTrait};
     use super::{INVOKE_ETH_CALL_FORBIDDEN};
     use utils::address::compute_contract_address;
@@ -327,7 +328,7 @@ pub mod KakarotCore {
             accessed_addresses.add(env.coinbase);
             accessed_addresses.add(to.evm);
             accessed_addresses.add(origin.evm);
-            accessed_addresses.extend(constants::precompile_addresses().spanset());
+            accessed_addresses.extend(eth_precompile_addresses().spanset());
 
             let mut accessed_storage_keys: Set<(EthAddress, u256)> = Default::default();
 

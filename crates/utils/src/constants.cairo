@@ -1,6 +1,7 @@
 use core::starknet::EthAddress;
-use utils::set::{Set};
+use evm::precompiles::{FIRST_ETHEREUM_PRECOMPILE_ADDRESS, LAST_ETHEREUM_PRECOMPILE_ADDRESS};
 use utils::traits::{U8IntoEthAddress};
+
 // FELT PRIME
 // 2^251 + 17 * 2^192 + 1
 const FELT252_PRIME: u256 = 0x800000000000011000000000000000000000000000000000000000000000001;
@@ -36,21 +37,6 @@ const EMPTY_KECCAK: u256 = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bf
 
 const BURN_ADDRESS: felt252 = 0xdead;
 
-//PRECOMPILES
-pub fn precompile_addresses() -> Set<EthAddress> {
-    let inner: Array<EthAddress> = array![
-        0x01_u8.into(),
-        0x02_u8.into(),
-        0x03_u8.into(),
-        0x04_u8.into(),
-        0x05_u8.into(),
-        0x06_u8.into(),
-        0x07_u8.into(),
-        0x08_u8.into(),
-        0x09_u8.into()
-    ];
-    Set { inner }
-}
 
 // Numeric constants
 pub const POW_256_0: u128 = 0x1;
