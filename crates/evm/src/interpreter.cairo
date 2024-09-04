@@ -146,7 +146,7 @@ impl EVMImpl of EVMTrait {
 
     fn execute_code(ref vm: VM) -> ExecutionResult {
         // Handle precompile logic
-        if vm.message.target.evm.is_precompile() {
+        if vm.message.code_address.evm.is_precompile() {
             let result = Precompiles::exec_precompile(ref vm);
 
             match result {

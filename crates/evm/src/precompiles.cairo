@@ -28,7 +28,7 @@ trait Precompile {
 #[generate_trait]
 impl PrecompilesImpl of Precompiles {
     fn exec_precompile(ref vm: VM) -> Result<(), EVMError> {
-        let precompile_address = vm.message.target.evm;
+        let precompile_address = vm.message.code_address.evm;
         let input = vm.message().data;
 
         let (gas, result) = if precompile_address.address == 0x100 {

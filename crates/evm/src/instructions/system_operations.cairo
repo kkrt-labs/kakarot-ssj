@@ -765,7 +765,7 @@ mod tests {
     fn test_exec_call_code() {
         // Given
         // Set vm bytecode
-        // (call 0xffffff 0x100 0 0 0 0 1)
+        // (callcode 0xffffff 0x1234 0 0 0 0 1)
         let bytecode = [
             0x60,
             0x01,
@@ -780,8 +780,8 @@ mod tests {
             0x60,
             0x00,
             0x61,
-            0x01,
-            0x00,
+            0x12,
+            0x34,
             0x62,
             0xff,
             0xff,
@@ -801,7 +801,7 @@ mod tests {
         };
         vm.env.state.set_account(eoa_account);
 
-        // Deploy bytecode at 0x100
+        // Deploy bytecode at 0x1234
         // ret (+ 0x1 0x1)
         let deployed_bytecode = [
             0x60,
@@ -823,7 +823,7 @@ mod tests {
             0x00,
             0xf3
         ].span();
-        let eth_address: EthAddress = 0x100.try_into().unwrap();
+        let eth_address: EthAddress = 0x1234.try_into().unwrap();
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
         );
@@ -855,7 +855,7 @@ mod tests {
         // Given
 
         // Set vm bytecode
-        // (call 0xffffff 0x100 0 0 0 0 1)
+        // (delegatecall 0xffffff 0x1234 0 0 0 0 1)
         let bytecode = [
             0x60,
             0x01,
@@ -868,8 +868,8 @@ mod tests {
             0x60,
             0x00,
             0x61,
-            0x01,
-            0x00,
+            0x12,
+            0x34,
             0x62,
             0xff,
             0xff,
@@ -889,7 +889,7 @@ mod tests {
         };
         vm.env.state.set_account(eoa_account);
 
-        // Deploy bytecode at 0x100
+        // Deploy bytecode at 0x1234
         // ret (+ 0x1 0x1)
         let deployed_bytecode = [
             0x60,
@@ -911,7 +911,7 @@ mod tests {
             0x00,
             0xf3
         ].span();
-        let eth_address: EthAddress = 0x100.try_into().unwrap();
+        let eth_address: EthAddress = 0x1234.try_into().unwrap();
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
         );
