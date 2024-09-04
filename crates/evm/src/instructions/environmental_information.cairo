@@ -133,14 +133,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
 
         let calldata: Span<u8> = self.message().data;
-        let copied = if offset < calldata.len() {
-            calldata.slice(offset, core::cmp::min(size, calldata.len() - offset))
-        } else {
-            [].span()
-        };
-
-        self.memory.store_padded_segment(dest_offset, size, copied);
-
+        copy_bytes_to_memory(ref self, calldata, dest_offset, offset, size);
         Result::Ok(())
     }
 
@@ -168,15 +161,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
         let bytecode: Span<u8> = self.message().code;
 
-        let bytecode_len = bytecode.len();
-        let copied = if offset < bytecode_len {
-            bytecode.slice(offset, core::cmp::min(size, bytecode_len - offset))
-        } else {
-            [].span()
-        };
-
-        self.memory.store_padded_segment(dest_offset, size, copied);
-
+        copy_bytes_to_memory(ref self, bytecode, dest_offset, offset, size);
         Result::Ok(())
     }
 
@@ -228,13 +213,7 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         self.charge_gas(access_gas_cost + copy_gas_cost + memory_expansion.expansion_cost)?;
 
         let bytecode = self.env.state.get_account(evm_address).code;
-        let bytecode_len = bytecode.len();
-        let bytecode_slice = if offset < bytecode_len {
-            bytecode.slice(offset, core::cmp::min(size, bytecode_len - offset))
-        } else {
-            [].span()
-        };
-        self.memory.store_padded_segment(dest_offset, size, bytecode_slice);
+        copy_bytes_to_memory(ref self, bytecode, dest_offset, offset, size);
         Result::Ok(())
     }
 
@@ -317,6 +296,17 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     }
 }
 
+#[inline(always)]
+fn copy_bytes_to_memory(ref self: VM, bytes: Span<u8>, dest_offset: usize, offset: usize, size: usize) {
+    let bytes_slice = if offset < bytes.len() {
+        bytes.slice(offset, core::cmp::min(size, bytes.len() - offset))
+    } else {
+        [].span()
+    };
+
+    self.memory.store_padded_segment(dest_offset, size, bytes_slice);
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -344,6 +334,68 @@ mod tests {
     use utils::traits::{EthAddressIntoU256};
 
     const EMPTY_KECCAK: u256 = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
+
+    mod test_internals {
+        use super::super::copy_bytes_to_memory;
+        use evm::memory::MemoryTrait;
+        use evm::model::vm::VMTrait;
+        use evm::test_utils::VMBuilderTrait;
+
+        fn test_copy_bytes_to_memory_helper(
+            bytes: Span<u8>,
+            dest_offset: usize,
+            offset: usize,
+            size: usize,
+            expected: Span<u8>
+        ) {
+            // Given
+            let mut vm = VMBuilderTrait::new_with_presets().build();
+
+            // When
+            copy_bytes_to_memory(ref vm, bytes, dest_offset, offset, size);
+
+            // Then
+            let mut result = ArrayTrait::new();
+            vm.memory.load_n(size, ref result, dest_offset);
+            assert_eq!(result.span(), expected);
+        }
+
+        #[test]
+        fn test_copy_bytes_to_memory_normal_case() {
+            let bytes = [1, 2, 3, 4, 5].span();
+            test_copy_bytes_to_memory_helper(bytes, 0, 0, 5, bytes);
+        }
+
+        #[test]
+        fn test_copy_bytes_to_memory_with_offset() {
+            let bytes = [1, 2, 3, 4, 5].span();
+            test_copy_bytes_to_memory_helper(bytes, 0, 2, 3, [3, 4, 5].span());
+        }
+
+        #[test]
+        fn test_copy_bytes_to_memory_size_larger_than_remaining_bytes() {
+            let bytes = [1, 2, 3, 4, 5].span();
+            test_copy_bytes_to_memory_helper(bytes, 0, 3, 5, [4, 5, 0, 0, 0].span());
+        }
+
+        #[test]
+        fn test_copy_bytes_to_memory_offset_out_of_bounds() {
+            let bytes = [1, 2, 3, 4, 5].span();
+            test_copy_bytes_to_memory_helper(bytes, 0, 10, 5, [0, 0, 0, 0, 0].span());
+        }
+
+        #[test]
+        fn test_copy_bytes_to_memory_zero_size() {
+            let bytes = [1, 2, 3, 4, 5].span();
+            test_copy_bytes_to_memory_helper(bytes, 0, 0, 0, [].span());
+        }
+
+        #[test]
+        fn test_copy_bytes_to_memory_non_zero_dest_offset() {
+            let bytes = [1, 2, 3, 4, 5].span();
+            test_copy_bytes_to_memory_helper(bytes, 10, 0, 5, bytes);
+        }
+    }
 
     // *************************************************************************
     // 0x30: ADDRESS
@@ -591,11 +643,6 @@ mod tests {
     }
 
     #[test]
-    fn test_calldatacopy_with_offset() {
-        test_calldatacopy(32, 2, 1, [6].span());
-    }
-
-    #[test]
     fn test_calldatacopy_with_out_of_bound_bytes() {
         // For out of bound bytes, 0s will be copied.
         let mut expected = array![4, 5, 6];
@@ -711,11 +758,6 @@ mod tests {
     }
 
     #[test]
-    fn test_codecopy_with_offset() {
-        test_codecopy(32, 2, 0);
-    }
-
-    #[test]
     fn test_codecopy_with_out_of_bound_bytes() {
         test_codecopy(32, 0, 8);
     }
@@ -828,8 +870,12 @@ mod tests {
         assert_eq!(vm.stack.peek().unwrap(), 350);
     }
 
+    // *************************************************************************
+    // 0x3C - EXTCODECOPY
+    // *************************************************************************
+
     #[test]
-    fn test_exec_extcodecopy_should_copy_bytecode_slice() {
+    fn test_exec_extcodecopy_should_copy_code_of_input_account() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let account = Account {
@@ -857,12 +903,9 @@ mod tests {
         // Then
         let mut bytecode_slice = array![];
         vm.memory.load_n(50, ref bytecode_slice, 20);
-        assert_eq!(bytecode_slice.span(), counter_evm_bytecode().slice(200, 50));
+        assert_eq!(bytecode_slice.span(), account.code.slice(200, 50));
     }
 
-    // *************************************************************************
-    // 0x3C - EXTCODECOPY
-    // *************************************************************************
     #[test]
     fn test_exec_extcodecopy_ca_offset_out_of_bounds_should_return_zeroes() {
         // Given
@@ -944,79 +987,17 @@ mod tests {
         assert_eq!(res.unwrap_err(), EVMError::TypeConversionError(TYPE_CONVERSION_ERROR));
     }
 
-    #[test]
-    fn test_returndata_copy_overflowing_add_error() {
-        test_returndata_copy(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
-    }
-
-    #[test]
-    fn test_returndata_copy_basic() {
-        test_returndata_copy(32, 0, 0);
-    }
-
-    #[test]
-    fn test_returndata_copy_with_offset() {
-        test_returndata_copy(32, 2, 0);
-    }
-
-    #[test]
-    fn test_returndata_copy_with_out_of_bound_bytes() {
-        test_returndata_copy(32, 30, 10);
-    }
-
-    #[test]
-    fn test_returndata_copy_with_multiple_words() {
-        test_returndata_copy(32, 0, 33);
-    }
-
-    fn test_returndata_copy(dest_offset: u32, offset: u32, mut size: u32) {
+    fn test_returndatacopy_helper(
+        return_data: Span<u8>,
+        dest_offset: u32,
+        offset: u32,
+        size: u32,
+        expected_result: Result<Span<u8>, EVMError>
+    ) {
         // Given
-        // Set the return data of the current context
-        let return_data = array![
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26,
-            27,
-            28,
-            29,
-            30,
-            31,
-            32,
-            33,
-            34,
-            35,
-            36
-        ];
         let mut vm = VMBuilderTrait::new_with_presets()
-            .with_return_data(return_data.span())
+            .with_return_data(return_data)
             .build();
-
-        if (size == 0) {
-            size = return_data.len() - offset;
-        }
 
         vm.stack.push(size.into()).expect('push failed');
         vm.stack.push(offset.into()).expect('push failed');
@@ -1026,38 +1007,42 @@ mod tests {
         let res = vm.exec_returndatacopy();
 
         // Then
-        assert!(vm.stack.is_empty());
-
-        match offset.checked_add(size) {
-            Option::Some(x) => {
-                if (x > return_data.len()) {
-                    assert_eq!(res.unwrap_err(), EVMError::ReturnDataOutOfBounds);
-                    return;
-                }
+        match expected_result {
+            Result::Ok(expected) => {
+                assert!(res.is_ok());
+                let mut result = ArrayTrait::new();
+                vm.memory.load_n(size.try_into().unwrap(), ref result, dest_offset.try_into().unwrap());
+                assert_eq!(result.span(), expected);
             },
-            Option::None => {
-                assert_eq!(res.unwrap_err(), EVMError::ReturnDataOutOfBounds);
-                return;
+            Result::Err(expected_error) => {
+                assert!(res.is_err());
+                assert_eq!(res.unwrap_err(), expected_error);
             }
         }
+    }
 
-        let _result: u256 = vm.memory.load_internal(dest_offset).into();
-        let mut results: Array<u8> = ArrayTrait::new();
+    #[test]
+    fn test_returndatacopy_basic() {
+        let return_data = array![1, 2, 3, 4, 5].span();
+        test_returndatacopy_helper(return_data, 0, 0, 5, Result::Ok(return_data));
+    }
 
-        let mut i = 0;
-        while i != (size / 32) + 1 {
-            let result: u256 = vm.memory.load_internal(dest_offset + (i * 32)).into();
-            let result_span = u256_to_bytes_array(result).span();
+    #[test]
+    fn test_returndatacopy_with_offset() {
+        let return_data = array![1, 2, 3, 4, 5].span();
+        test_returndatacopy_helper(return_data, 0, 2, 3, Result::Ok([3, 4, 5].span()));
+    }
 
-            if ((i + 1) * 32 > size) {
-                ArrayExtTrait::concat(ref results, result_span.slice(0, size - (i * 32)));
-            } else {
-                ArrayExtTrait::concat(ref results, result_span);
-            }
+    #[test]
+    fn test_returndatacopy_out_of_bounds() {
+        let return_data = array![1, 2, 3, 4, 5].span();
+        test_returndatacopy_helper(return_data, 0, 3, 3, Result::Err(EVMError::ReturnDataOutOfBounds));
+    }
 
-            i += 1;
-        };
-        assert_eq!(results.span(), return_data.span().slice(offset, size));
+    #[test]
+    fn test_returndatacopy_overflowing_add() {
+        let return_data = array![1, 2, 3, 4, 5].span();
+        test_returndatacopy_helper(return_data, 0, 0xFFFFFFFF, 1, Result::Err(EVMError::ReturnDataOutOfBounds));
     }
 
     // *************************************************************************
