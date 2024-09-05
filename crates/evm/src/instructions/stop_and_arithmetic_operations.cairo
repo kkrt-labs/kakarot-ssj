@@ -199,7 +199,6 @@ impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// a ** b: integer result of raising a to the bth power modulo 2^256.
     /// # Specification: https://www.evm.codes/#0a?fork=shanghai
     fn exec_exp(ref self: VM) -> Result<(), EVMError> {
-        self.charge_gas(gas::HIGH)?;
         let base = self.stack.pop()?;
         let exponent = self.stack.pop()?;
 
@@ -646,6 +645,7 @@ mod tests {
     fn test_exec_exp() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
+        let initial_gas = vm.gas_left();
         vm.stack.push(2).expect('push failed');
         vm.stack.push(10).expect('push failed');
 
@@ -655,12 +655,15 @@ mod tests {
         // Then
         assert(vm.stack.len() == 1, 'stack should have one element');
         assert(vm.stack.peek().unwrap() == 100, 'stack top should be 100');
+        let expected_gas_used = 10 + 50 * 1;
+        assert_eq!(initial_gas - vm.gas_left(), expected_gas_used);
     }
 
     #[test]
     fn test_exec_exp_overflow() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
+        let initial_gas = vm.gas_left();
         vm.stack.push(2).expect('push failed');
         vm.stack.push(Bounded::<u128>::MAX.into() + 1).unwrap();
 
@@ -672,6 +675,8 @@ mod tests {
         assert(
             vm.stack.peek().unwrap() == 0, 'stack top should be 0'
         ); // (2^128)^2 = 2^256 = 0 % 2^256
+        let expected_gas_used = 10 + 50 * 1;
+        assert_eq!(initial_gas - vm.gas_left(), expected_gas_used);
     }
 
     #[test]
