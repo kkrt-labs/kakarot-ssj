@@ -174,7 +174,7 @@ mod tests {
             .memory
             .store(0x7618b065f9832de4ca6ca971a7a1adc826d0f7c00181a5fb2ddf79ae00b4e10e, 0x80); // y
 
-        vm.stack.push(0x01).unwrap(); // retSize
+        vm.stack.push(0x20).unwrap(); // retSize
         vm.stack.push(0xa0).unwrap(); // retOffset
         vm.stack.push(0xa0).unwrap(); // argsSize
         vm.stack.push(0x0).unwrap(); // argsOffset
@@ -185,9 +185,9 @@ mod tests {
         vm.exec_staticcall().unwrap();
 
         let mut result = Default::default();
-        vm.memory.load_n(0x1, ref result, 0xa0);
+        vm.memory.load_n(0x20, ref result, 0xa0);
 
-        assert_eq!(result, array![0x01]);
+        assert_eq!(result.span(), super::ONE_32_BYTES.span());
     }
 
     #[test]
