@@ -18,6 +18,51 @@ use evm::precompiles::Precompile;
 use garaga::core::circuit::AddInputResultTrait2;
 use garaga::utils::u384_eq_zero;
 use utils::helpers::{U256Trait, ToBytes, FromBytes};
+use utils::helpers::{load_word, u256_to_bytes_array};
+
+
+const BASE_COST: u128 = 150;
+const U256_BYTES_LEN: usize = 32;
+
+impl EcAdd of Precompile {
+    #[inline(always)]
+    fn address() -> EthAddress {
+        EthAddress { address: 0x6 }
+    }
+
+    fn exec(mut input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
+        let gas = BASE_COST;
+
+        let x1_bytes = *(input.multi_pop_front::<32>().unwrap());
+        let x1: u256 = load_word(U256_BYTES_LEN, x1_bytes.unbox().span());
+
+        let y1_bytes = *(input.multi_pop_front::<32>().unwrap());
+        let y1: u256 = load_word(U256_BYTES_LEN, y1_bytes.unbox().span());
+
+        let x2_bytes = *(input.multi_pop_front::<32>().unwrap());
+        let x2: u256 = load_word(U256_BYTES_LEN, x2_bytes.unbox().span());
+
+        let y2_bytes = *(input.multi_pop_front::<32>().unwrap());
+        let y2: u256 = load_word(U256_BYTES_LEN, y2_bytes.unbox().span());
+
+        let (x, y) = match ec_add(x1, y1, x2, y2) {
+            Option::Some((x, y)) => { (x, y) },
+            Option::None => {
+                return Result::Err(EVMError::InvalidParameter('invalid ec_add parameters'));
+            },
+        };
+
+        let mut result_bytes = array![];
+        // Append x to the result bytes.
+        let x_bytes = x.to_be_bytes_padded();
+        result_bytes.append_span(x_bytes);
+        // Append y to the result bytes.
+        let y_bytes = y.to_be_bytes_padded();
+        result_bytes.append_span(y_bytes);
+
+        return Result::Ok((gas, result_bytes.span()));
+    }
+}
 
 
 fn ec_add(x1: u256, y1: u256, x2: u256, y2: u256) -> Option<(u256, u256)> {

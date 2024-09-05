@@ -18,67 +18,6 @@ pub mod snforge_utils {
         get_call_trace, CallTrace, CallEntryPoint, CallResult, EntryPointType, CallType, CallFailure
     };
 
-    impl CloneEntryPointType of Clone<EntryPointType> {
-        fn clone(self: @EntryPointType) -> EntryPointType {
-            match self {
-                EntryPointType::Constructor => EntryPointType::Constructor,
-                EntryPointType::External => EntryPointType::External,
-                EntryPointType::L1Handler => EntryPointType::L1Handler,
-            }
-        }
-    }
-
-    impl CloneCallEntryPoint of Clone<CallEntryPoint> {
-        fn clone(self: @CallEntryPoint) -> CallEntryPoint {
-            CallEntryPoint {
-                entry_point_type: self.entry_point_type.clone(),
-                entry_point_selector: self.entry_point_selector.clone(),
-                calldata: self.calldata.clone(),
-                contract_address: self.contract_address.clone(),
-                caller_address: self.caller_address.clone(),
-                call_type: self.call_type.clone(),
-            }
-        }
-    }
-
-    impl CloneCallType of Clone<CallType> {
-        fn clone(self: @CallType) -> CallType {
-            match self {
-                CallType::Call => CallType::Call,
-                CallType::Delegate => CallType::Delegate,
-            }
-        }
-    }
-
-    impl CloneCallResult of Clone<CallResult> {
-        fn clone(self: @CallResult) -> CallResult {
-            match self {
-                CallResult::Success(val) => CallResult::Success(val.clone()),
-                CallResult::Failure(val) => CallResult::Failure(val.clone()),
-            }
-        }
-    }
-
-    impl CloneCallFailure of Clone<CallFailure> {
-        fn clone(self: @CallFailure) -> CallFailure {
-            match self {
-                CallFailure::Panic(val) => CallFailure::Panic(val.clone()),
-                CallFailure::Error(val) => CallFailure::Error(val.clone()),
-            }
-        }
-    }
-
-
-    impl CloneCallTrace of Clone<CallTrace> {
-        fn clone(self: @CallTrace) -> CallTrace {
-            CallTrace {
-                entry_point: self.entry_point.clone(),
-                nested_calls: self.nested_calls.clone(),
-                result: self.result.clone(),
-            }
-        }
-    }
-
     pub fn is_called(contract_address: ContractAddress, selector: felt252) -> bool {
         let call_trace = get_call_trace();
 
