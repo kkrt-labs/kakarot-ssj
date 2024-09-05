@@ -55,7 +55,9 @@ pub impl RLPImpl of RLPTrait {
                 return Result::Err(RLPError::InputTooShort);
             }
             let string_len_bytes = input.slice(1, len_bytes_count);
-            let string_len: u32 = string_len_bytes.from_be_bytes().unwrap();
+            let string_len: u32 = string_len_bytes
+                .from_be_bytes_partial()
+                .expect('rlp_decode_type_string_len');
             if input_len <= len_bytes_count + string_len {
                 return Result::Err(RLPError::InputTooShort);
             }
@@ -73,7 +75,9 @@ pub impl RLPImpl of RLPTrait {
                 return Result::Err(RLPError::InputTooShort);
             }
             let list_len_bytes = input.slice(1, len_bytes_count);
-            let list_len: u32 = list_len_bytes.from_be_bytes().unwrap();
+            let list_len: u32 = list_len_bytes
+                .from_be_bytes_partial()
+                .expect('rlp_decode_type_list_len');
             if input_len <= len_bytes_count + list_len {
                 return Result::Err(RLPError::InputTooShort);
             }
@@ -209,7 +213,7 @@ pub impl RLPHelpersImpl of RLPHelpersTrait {
                 if bytes.len() == 0 {
                     return Result::Ok(0);
                 }
-                let value = bytes.from_be_bytes().ok_or(RLPHelpersError::FailedParsingU128)?;
+                let value = bytes.from_be_bytes_partial().expect('parse_u128_from_string');
                 Result::Ok(value)
             },
             RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
@@ -239,7 +243,7 @@ pub impl RLPHelpersImpl of RLPHelpersTrait {
                 if bytes.len() == 0 {
                     return Result::Ok(0);
                 }
-                let value = bytes.from_be_bytes().ok_or(RLPHelpersError::FailedParsingU256)?;
+                let value = bytes.from_be_bytes_partial().expect('parse_u256_from_string');
                 Result::Ok(value)
             },
             RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }

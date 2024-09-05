@@ -9,6 +9,43 @@ use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 const P256VERIFY_PRECOMPILE_GAS_COST: u128 = 3450;
 
+const ONE_32_BYTES: [
+    u8
+    ; 32] = [
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x01
+];
+
 impl P256Verify of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
@@ -62,7 +99,7 @@ impl P256Verify of Precompile {
             return Result::Ok((gas, [].span()));
         }
 
-        return Result::Ok((gas, [1].span()));
+        return Result::Ok((gas, ONE_32_BYTES.span()));
     }
 }
 
@@ -105,7 +142,7 @@ mod tests {
 
         let (gas, result) = P256Verify::exec(calldata.span()).unwrap();
 
-        let result: u256 = result.from_be_bytes().unwrap();
+        let result: u256 = result.from_be_bytes().expect('p256verify_precompile_test');
         assert_eq!(result, 0x01);
         assert_eq!(gas, 3450);
     }
@@ -137,7 +174,7 @@ mod tests {
             .memory
             .store(0x7618b065f9832de4ca6ca971a7a1adc826d0f7c00181a5fb2ddf79ae00b4e10e, 0x80); // y
 
-        vm.stack.push(0x01).unwrap(); // retSize
+        vm.stack.push(0x20).unwrap(); // retSize
         vm.stack.push(0xa0).unwrap(); // retOffset
         vm.stack.push(0xa0).unwrap(); // argsSize
         vm.stack.push(0x0).unwrap(); // argsOffset
@@ -148,9 +185,9 @@ mod tests {
         vm.exec_staticcall().unwrap();
 
         let mut result = Default::default();
-        vm.memory.load_n(0x1, ref result, 0xa0);
+        vm.memory.load_n(0x20, ref result, 0xa0);
 
-        assert_eq!(result, array![0x01]);
+        assert_eq!(result.span(), super::ONE_32_BYTES.span());
     }
 
     #[test]

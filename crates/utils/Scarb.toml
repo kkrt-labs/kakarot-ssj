@@ -9,6 +9,10 @@ edition = "2023_10"
 evm = { path = "../evm" }
 alexandria_data_structures = { path = "../alexandria_data_structures" }
 
+# For profiling
+[cairo]
+unstable-add-statements-functions-debug-info = true
+
 [tool]
 fmt.workspace = true
 
