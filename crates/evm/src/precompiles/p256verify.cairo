@@ -9,6 +9,43 @@ use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 const P256VERIFY_PRECOMPILE_GAS_COST: u128 = 3450;
 
+const ONE_32_BYTES: [
+    u8
+    ; 32] = [
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x01
+];
+
 impl P256Verify of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
@@ -62,7 +99,7 @@ impl P256Verify of Precompile {
             return Result::Ok((gas, [].span()));
         }
 
-        return Result::Ok((gas, [1].span()));
+        return Result::Ok((gas, ONE_32_BYTES.span()));
     }
 }
 
@@ -105,7 +142,7 @@ mod tests {
 
         let (gas, result) = P256Verify::exec(calldata.span()).unwrap();
 
-        let result: u256 = result.from_be_bytes().unwrap();
+        let result: u256 = result.from_be_bytes().expect('p256verify_precompile_test');
         assert_eq!(result, 0x01);
         assert_eq!(gas, 3450);
     }
