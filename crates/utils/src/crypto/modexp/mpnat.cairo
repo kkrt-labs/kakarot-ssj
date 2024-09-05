@@ -70,7 +70,7 @@ pub impl MPNatTraitImpl of MPNatTrait {
             buf.copy_from_bytes_le((WORD_BYTES - r), bytes.slice(0, r)).unwrap();
 
             // safe unwrap, since we know that bytes won't overflow
-            let word = buf.to_le_bytes().from_be_bytes().unwrap();
+            let word = buf.to_le_bytes().from_be_bytes().expect('mpnat_from_big_endian_word');
             digits.set(i, word);
 
             if i == 0 {
@@ -88,7 +88,7 @@ pub impl MPNatTraitImpl of MPNatTrait {
             buf.copy_from_bytes_le(0, bytes.slice(j, next_j - j)).unwrap();
 
             // safe unwrap, since we know that bytes won't overflow
-            let word: u64 = buf.to_le_bytes().from_be_bytes().unwrap();
+            let word: u64 = buf.to_le_bytes().from_be_bytes().expect('mpnat_from_big_endian_word');
             digits.set(i, word);
 
             if i == 0 {
@@ -369,7 +369,7 @@ pub impl MPNatTraitImpl of MPNatTrait {
         }
 
         if exp.len() <= (ByteSize::<usize>::byte_size()) {
-            let exp_as_number: usize = exp.from_le_bytes().unwrap();
+            let exp_as_number: usize = exp.from_le_bytes_partial().expect('modpow_exp_as_number');
 
             match self.digits.len().checked_mul(exp_as_number) {
                 Option::Some(max_output_digits) => {
@@ -714,7 +714,7 @@ mod tests {
 
             i += 1;
         };
-        result.from_le_bytes().unwrap()
+        result.from_le_bytes_partial().expect('mpnat_to_u128')
     }
 
     fn check_modpow_even(base: u128, exp: u128, modulus: u128, expected: u128) {
