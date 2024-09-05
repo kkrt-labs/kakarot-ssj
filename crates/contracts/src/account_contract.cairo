@@ -322,7 +322,6 @@ pub mod AccountContract {
             assert(tx_info.version.into() >= 1_u256, 'Deprecated tx version');
             assert(signature.len() == 5, 'Invalid signature length');
 
-
             let call = outside_execution.calls.at(0);
             assert(*call.to == self.ownable.owner(), 'to is not kakarot core');
             assert!(
@@ -334,16 +333,13 @@ pub mod AccountContract {
 
             let signature = deserialize_signature(signature, chain_id).expect('invalid signature');
 
-            let eth_caller_address: felt252 = outside_execution.caller.into();
-
-            //TODO(execute-from-outside): move validation to KakarotCore
+            // TODO(execute-from-outside): move validation to KakarotCore
             let tx_metadata = TransactionMetadata {
                 address: self.Account_evm_address.read(),
                 chain_id,
                 account_nonce: self.Account_nonce.read().into(),
                 signature
             };
-
 
             let encoded_tx = deserialize_bytes((*outside_execution.calls[0]).calldata)
                 .expect('conversion to Span<u8> failed')
