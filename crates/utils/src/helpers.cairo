@@ -575,7 +575,7 @@ pub impl FromBytesImpl<
     +ByteSize<T>,
     +BytesUsedTrait<T>,
     +Into<u8, T>,
-    +Into<u32, T>,
+    +Into<u16, T>,
     +TryInto<T, u8>,
     +Copy<T>,
     +Drop<T>,
@@ -585,47 +585,31 @@ pub impl FromBytesImpl<
     fn from_be_bytes(self: Span<u8>) -> Option<T> {
         let byte_size = ByteSize::<T>::byte_size();
 
-        let len = self.len();
-        if len == 0 {
-            return Option::Some(Zero::zero());
-        }
-        if len > byte_size {
+        if self.len() != byte_size {
             return Option::None;
         }
-        let offset: u32 = len - 1;
-        let mut result: T = Zero::zero();
-        let mut i: u32 = 0;
-        while i != len {
-            let byte: T = (*self.at(i)).into();
-            // Safe unwrap, since offset - i is inbound in case of u8 { offset - i = 0 }, and
-            // TryInto<u32, u32>, TryInto<u32, u64>, TryInto<u32, u128>, TryInto<u32, 256> are safe
-            result += byte.shl((8 * (offset - i)).into());
 
-            i += 1;
+        let mut result: T = Zero::zero();
+        for byte in self {
+            let tmp = result * 256_u16.into();
+            result = tmp + (*byte).into();
         };
         Option::Some(result)
     }
 
     fn from_le_bytes(self: Span<u8>) -> Option<T> {
         let byte_size = ByteSize::<T>::byte_size();
-        let len = self.len();
 
-        if len == 0 {
-            return Option::Some(Zero::zero());
-        }
-        if len > byte_size {
+        if self.len() != byte_size {
             return Option::None;
         }
 
         let mut result: T = Zero::zero();
-        let mut i: u32 = 0;
-        while i != len {
-            let byte: T = (*self.at(i)).into();
-            // safe unwrap, as i is inbound in case of u8 { max value can be 8 * 1 = 8 }, and
-            // TryInto<u32, u32>, TryInto<u32, u64>, TryInto<u32, u128>, TryInto<u32, 256> are safe
-            result += byte.shl((8 * i).into());
-
-            i += 1;
+        let mut i = self.len();
+        while i != 0 {
+            i -= 1;
+            let tmp = result * 256_u16.into();
+            result = tmp + (*self[i]).into();
         };
         Option::Some(result)
     }
