@@ -310,18 +310,18 @@ pub mod AccountContract {
             let tx_info = get_tx_info();
 
             if (outside_execution.caller.into() != 'ANY_CALLER') {
-                assert(caller == outside_execution.caller, 'Invalid caller');
+                assert(caller == outside_execution.caller, 'SNIP9: Invalid caller');
             }
 
             let block_timestamp = get_block_timestamp();
-            assert(block_timestamp > outside_execution.execute_after, 'Too early call');
-            assert(block_timestamp < outside_execution.execute_before, 'Too late call');
+            assert(block_timestamp > outside_execution.execute_after, 'SNIP9: Too early call');
+            assert(block_timestamp < outside_execution.execute_before, 'SNIP9: Too late call');
 
+            assert(outside_execution.calls.len() == 1, 'Multicall not supported');
             assert(self.Account_bytecode_len.read().is_zero(), 'EOAs cannot have code');
             assert(tx_info.version.into() >= 1_u256, 'Deprecated tx version');
             assert(signature.len() == 5, 'Invalid signature length');
 
-            assert(outside_execution.calls.len() == 1, 'Multicall not supported');
 
             let call = outside_execution.calls.at(0);
             assert(*call.to == self.ownable.owner(), 'to is not kakarot core');
@@ -336,14 +336,16 @@ pub mod AccountContract {
 
             let eth_caller_address: felt252 = outside_execution.caller.into();
 
+            //TODO(execute-from-outside): move validation to KakarotCore
             let tx_metadata = TransactionMetadata {
-                address: eth_caller_address.try_into().unwrap(),
+                address: self.Account_evm_address.read(),
                 chain_id,
-                account_nonce: outside_execution.nonce.into(),
+                account_nonce: self.Account_nonce.read().into(),
                 signature
             };
 
-            let encoded_tx = deserialize_bytes(*outside_execution.calls[0].calldata)
+
+            let encoded_tx = deserialize_bytes((*outside_execution.calls[0]).calldata)
                 .expect('conversion to Span<u8> failed')
                 .span();
 

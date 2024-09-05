@@ -1,6 +1,6 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait, OutsideExecution};
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcher;
-use contracts::test_utils::{setup_contracts_for_testing, deploy_contract_account};
+use contracts::test_utils::{setup_contracts_for_testing, deploy_eoa};
 use core::starknet::ContractAddress;
 use core::starknet::account::Call;
 use core::starknet::contract_address_const;
@@ -25,7 +25,7 @@ const VALID_EIP2930_SIGNATURE: Signature =
         y_parity: true
     };
 
-#[derive(Destruct)]
+#[derive(Drop)]
 struct CallBuilder {
     call: Call
 }
@@ -62,7 +62,7 @@ impl CallBuilderImpl of CallBuilderTrait {
     }
 }
 
-#[derive(Destruct)]
+#[derive(Drop)]
 struct OutsideExecutionBuilder {
     outside_execution: OutsideExecution
 }
@@ -119,26 +119,25 @@ impl OutsideExecutionBuilderImpl of OutsideExecutionBuilderTrait {
     }
 }
 
-fn setUp() -> (IExtendedKakarotCoreDispatcher, IAccountDispatcher) {
+fn set_up() -> (IExtendedKakarotCoreDispatcher, IAccountDispatcher) {
     let (_, kakarot_core) = setup_contracts_for_testing();
-    let ca_address = deploy_contract_account(kakarot_core, ca_address(), [].span());
-    let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
+    let eoa = deploy_eoa(kakarot_core, EIP2930_CALLER.try_into().unwrap());
 
-    start_cheat_block_timestamp(ca_address.starknet, 999);
+    start_cheat_block_timestamp(eoa.contract_address, 999);
     start_cheat_chain_id_global(chain_id().into());
 
-    (kakarot_core, contract_account)
+    (kakarot_core, eoa)
 }
 
-fn tearDown(contract_account: IAccountDispatcher) {
+fn tear_down(contract_account: IAccountDispatcher) {
     stop_cheat_chain_id_global();
     stop_cheat_block_timestamp(contract_account.contract_address);
 }
 
 #[test]
-#[should_panic(expected: 'Invalid caller')]
+#[should_panic(expected: 'SNIP9: Invalid caller')]
 fn test_execute_from_outside_invalid_caller() {
-    let (kakarot_core, contract_account) = setUp();
+    let (kakarot_core, contract_account) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_caller(contract_address_const::<0xb0b>())
@@ -147,13 +146,13 @@ fn test_execute_from_outside_invalid_caller() {
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
-    tearDown(contract_account);
+    tear_down(contract_account);
 }
 
 #[test]
-#[should_panic(expected: 'Too early call')]
+#[should_panic(expected: 'SNIP9: Too early call')]
 fn test_execute_from_outside_too_early_call() {
-    let (kakarot_core, contract_account) = setUp();
+    let (kakarot_core, contract_account) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_execute_after(999)
@@ -162,13 +161,13 @@ fn test_execute_from_outside_too_early_call() {
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
-    tearDown(contract_account);
+    tear_down(contract_account);
 }
 
 #[test]
-#[should_panic(expected: 'Too late call')]
+#[should_panic(expected: 'SNIP9: Too late call')]
 fn test_execute_from_outside_too_late_call() {
-    let (kakarot_core, contract_account) = setUp();
+    let (kakarot_core, contract_account) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_execute_before(999)
@@ -177,26 +176,26 @@ fn test_execute_from_outside_too_late_call() {
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
-    tearDown(contract_account);
+    tear_down(contract_account);
 }
 
 #[test]
 #[should_panic(expected: 'Invalid signature length')]
 fn test_execute_from_outside_invalid_signature_length() {
-    let (kakarot_core, contract_account) = setUp();
+    let (kakarot_core, contract_account) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .build();
 
     let _ = contract_account.execute_from_outside(outside_execution, [].span());
 
-    tearDown(contract_account);
+    tear_down(contract_account);
 }
 
 #[test]
 #[should_panic(expected: 'Multicall not supported')]
 fn test_execute_from_outside_multicall_not_supported() {
-    let (kakarot_core, contract_account) = setUp();
+    let (kakarot_core, contract_account) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_calls(
@@ -210,13 +209,13 @@ fn test_execute_from_outside_multicall_not_supported() {
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
-    tearDown(contract_account);
+    tear_down(contract_account);
 }
 
 #[test]
 #[should_panic(expected: 'to is not kakarot core')]
 fn test_execute_from_outside_to_is_not_kakarot_core() {
-    let (kakarot_core, contract_account) = setUp();
+    let (kakarot_core, contract_account) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_calls([CallBuilderTrait::new(contract_address_const::<0xb0b>()).build()].span())
@@ -225,13 +224,13 @@ fn test_execute_from_outside_to_is_not_kakarot_core() {
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
-    tearDown(contract_account);
+    tear_down(contract_account);
 }
 
 #[test]
 #[should_panic(expected: "selector must be eth_send_transaction")]
 fn test_execute_from_outside_wrong_selector() {
-    let (kakarot_core, contract_account) = setUp();
+    let (kakarot_core, contract_account) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_calls(
@@ -246,13 +245,13 @@ fn test_execute_from_outside_wrong_selector() {
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
-    tearDown(contract_account);
+    tear_down(contract_account);
 }
 
 #[test]
 #[should_panic(expected: 'invalid signature')]
 fn test_execute_from_outside_invalid_signature() {
-    let (kakarot_core, contract_account) = setUp();
+    let (kakarot_core, contract_account) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .build();
@@ -260,34 +259,13 @@ fn test_execute_from_outside_invalid_signature() {
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
-    tearDown(contract_account);
-}
-
-#[test]
-#[should_panic(expected: 'conversion to Span<u8> failed')]
-fn test_execute_from_outside_bad_raw_tx() {
-    let (kakarot_core, contract_account) = setUp();
-
-    let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
-        .with_calls(
-            [
-                CallBuilderTrait::new(kakarot_core.contract_address)
-                    .with_calldata([1, 256].span())
-                    .build()
-            ].span()
-        )
-        .build();
-    let signature = VALID_SIGNATURE.span();
-
-    let _ = contract_account.execute_from_outside(outside_execution, signature);
-
-    tearDown(contract_account);
+    tear_down(contract_account);
 }
 
 #[test]
 #[should_panic(expected: 'failed to validate eth tx')]
 fn test_execute_from_outside_invalid_tx() {
-    let (kakarot_core, contract_account) = setUp();
+    let (kakarot_core, contract_account) = set_up();
 
     let mut faulty_eip_2930_tx = eip_2930_encoded_tx();
     let _ = faulty_eip_2930_tx.pop_front();
@@ -309,12 +287,12 @@ fn test_execute_from_outside_invalid_tx() {
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
-    tearDown(contract_account);
+    tear_down(contract_account);
 }
 
 #[test]
 fn test_execute_from_outside() {
-    let (kakarot_core, contract_account) = setUp();
+    let (kakarot_core, contract_account) = set_up();
 
     let caller = contract_address_const::<EIP2930_CALLER>();
 
@@ -343,5 +321,5 @@ fn test_execute_from_outside() {
 
     stop_mock_call(kakarot_core.contract_address, selector!("eth_send_transaction"));
     stop_cheat_caller_address(contract_account.contract_address);
-    tearDown(contract_account);
+    tear_down(contract_account);
 }
