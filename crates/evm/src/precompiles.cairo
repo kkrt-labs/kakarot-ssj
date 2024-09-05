@@ -67,11 +67,11 @@ impl PrecompilesImpl of Precompiles {
                         precompile_address.address
                     )
                 },
-                4 => { Identity::exec(input)? },
-                5 => { ModExp::exec(input)? },
-                6 => { EcAdd::exec(input)? },
-                7 => { EcMul::exec(input)? },
-                8 => {
+                0x04 => { Identity::exec(input)? },
+                0x05 => { ModExp::exec(input)? },
+                0x06 => { EcAdd::exec(input)? },
+                0x07 => { EcMul::exec(input)? },
+                0x08 => {
                     // we should never reach this branch!
                     panic!(
                         "pre-compile at address {} isn't implemented yet",
