@@ -33,21 +33,20 @@ impl EcMul of Precompile {
     fn exec(mut input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
         let gas = BASE_COST;
 
-        // from_be_bytes should be used
+        let x1_bytes = *(input.multi_pop_front::<32>().unwrap());
+        let x1: u256 = load_word(U256_BYTES_LEN, x1_bytes.unbox().span());
 
-        // Load x
-        let bytes_32 = *(input.multi_pop_front::<32>().unwrap());
-        let x: u256 = load_word(U256_BYTES_LEN, bytes_32.unbox().span());
-        // Load y
-        let bytes_32 = *(input.multi_pop_front::<32>().unwrap());
-        let y: u256 = load_word(U256_BYTES_LEN, bytes_32.unbox().span());
-        // Load s
-        let bytes_32 = *(input.multi_pop_front::<32>().unwrap());
-        let s: u256 = load_word(U256_BYTES_LEN, bytes_32.unbox().span());
+        let y1_bytes = *(input.multi_pop_front::<32>().unwrap());
+        let y1: u256 = load_word(U256_BYTES_LEN, y1_bytes.unbox().span());
 
-        let (x, y) = match ec_mul(x, y, s) {
+        let s_bytes = *(input.multi_pop_front::<32>().unwrap());
+        let s: u256 = load_word(U256_BYTES_LEN, s_bytes.unbox().span());
+
+        let (x, y) = match ec_mul(x1, y1, s) {
             Option::Some((x, y)) => { (x, y) },
-            Option::None => (0, 0),
+            Option::None => {
+                return Result::Err(EVMError::InvalidParameter('invalid ec_mul parameters'));
+            },
         };
 
         // Append x and y to the result bytes.

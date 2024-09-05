@@ -33,22 +33,23 @@ impl EcAdd of Precompile {
     fn exec(mut input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
         let gas = BASE_COST;
 
-        // Load x1
-        let bytes_32 = *(input.multi_pop_front::<32>().unwrap());
-        let x1: u256 = load_word(U256_BYTES_LEN, bytes_32.unbox().span());
-        // Load y1
-        let bytes_32 = *(input.multi_pop_front::<32>().unwrap());
-        let y1: u256 = load_word(U256_BYTES_LEN, bytes_32.unbox().span());
-        // Load x2
-        let bytes_32 = *(input.multi_pop_front::<32>().unwrap());
-        let x2: u256 = load_word(U256_BYTES_LEN, bytes_32.unbox().span());
-        // Load y2
-        let bytes_32 = *(input.multi_pop_front::<32>().unwrap());
-        let y2: u256 = load_word(U256_BYTES_LEN, bytes_32.unbox().span());
+        let x1_bytes = *(input.multi_pop_front::<32>().unwrap());
+        let x1: u256 = load_word(U256_BYTES_LEN, x1_bytes.unbox().span());
+
+        let y1_bytes = *(input.multi_pop_front::<32>().unwrap());
+        let y1: u256 = load_word(U256_BYTES_LEN, y1_bytes.unbox().span());
+
+        let x2_bytes = *(input.multi_pop_front::<32>().unwrap());
+        let x2: u256 = load_word(U256_BYTES_LEN, x2_bytes.unbox().span());
+
+        let y2_bytes = *(input.multi_pop_front::<32>().unwrap());
+        let y2: u256 = load_word(U256_BYTES_LEN, y2_bytes.unbox().span());
 
         let (x, y) = match ec_add(x1, y1, x2, y2) {
             Option::Some((x, y)) => { (x, y) },
-            Option::None => (0, 0),
+            Option::None => {
+                return Result::Err(EVMError::InvalidParameter('invalid ec_add parameters'));
+            },
         };
 
         let mut result_bytes = array![];
