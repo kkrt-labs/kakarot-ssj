@@ -1,7 +1,7 @@
 use core::fmt::{Debug, Formatter, Error, Display};
 use core::nullable::{NullableTrait};
-use core::starknet::{StorageBaseAddress, EthAddress};
 use core::num::traits::Bounded;
+use core::starknet::{StorageBaseAddress, EthAddress};
 //! Stack implementation.
 //! # Example
 //! ```
@@ -339,11 +339,11 @@ mod tests {
     }
 
     mod pop {
+        use core::num::traits::Bounded;
         use core::starknet::storage_base_address_const;
         use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
         use super::StackTrait;
         use utils::traits::StorageBaseAddressPartialEq;
-        use core::num::traits::Bounded;
 
         #[test]
         fn test_should_pop_an_element_from_the_stack() {
