@@ -197,7 +197,11 @@ mod tests {
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
         vm.memory.store_with_expansion(Bounded::<u256>::MAX, 0);
-        vm.memory.store_with_expansion(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
+        vm
+            .memory
+            .store_with_expansion(
+                0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20
+            );
 
         vm.stack.push(0x00).expect('push failed');
         vm.stack.push(Bounded::<u256>::MAX).expect('push failed');
@@ -234,7 +238,11 @@ mod tests {
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
         vm.memory.store_with_expansion(Bounded::<u256>::MAX, 0);
-        vm.memory.store_with_expansion(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
+        vm
+            .memory
+            .store_with_expansion(
+                0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20
+            );
 
         vm.stack.push(Bounded::<u256>::MAX).expect('push failed');
         vm.stack.push(0x00).expect('push failed');
@@ -364,7 +372,11 @@ mod tests {
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
         vm.memory.store_with_expansion(Bounded::<u256>::MAX, 0);
-        vm.memory.store_with_expansion(0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20);
+        vm
+            .memory
+            .store_with_expansion(
+                0x0123456789ABCDEF000000000000000000000000000000000000000000000000, 0x20
+            );
 
         vm.stack.push(Bounded::<u256>::MAX).expect('push failed');
         vm.stack.push(0x00).expect('push failed');

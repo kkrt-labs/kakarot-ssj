@@ -169,7 +169,11 @@ mod tests {
         vm.stack.push(0x00).expect('push failed');
         vm.stack.push(0x00).expect('push failed');
 
-        vm.memory.store_with_expansion(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0
+            );
 
         // When
         vm.exec_sha3().expect('exec_sha3 failed');
@@ -193,7 +197,11 @@ mod tests {
         vm.stack.push(0x05).expect('push failed');
         vm.stack.push(0x04).expect('push failed');
 
-        vm.memory.store_with_expansion(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0
+            );
 
         // When
         vm.exec_sha3().expect('exec_sha3 failed');
@@ -215,7 +223,11 @@ mod tests {
         vm.stack.push(24).expect('push failed');
         vm.stack.push(10).expect('push failed');
 
-        vm.memory.store_with_expansion(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0
+            );
 
         // When
         vm.exec_sha3().expect('exec_sha3 failed');
@@ -234,7 +246,11 @@ mod tests {
         vm.stack.push(0xFFFFF).expect('push failed');
         vm.stack.push(1000).expect('push failed');
 
-        vm.memory.store_with_expansion(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0
+            );
 
         // When
         vm.exec_sha3().expect('exec_sha3 failed');
@@ -256,7 +272,11 @@ mod tests {
         vm.stack.push(1000000).expect('push failed');
         vm.stack.push(2).expect('push failed');
 
-        vm.memory.store_with_expansion(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0
+            );
 
         // When
         vm.exec_sha3().expect('exec_sha3 failed');
@@ -278,8 +298,16 @@ mod tests {
         vm.stack.push(1000000).expect('push failed');
         vm.stack.push(2).expect('push failed');
 
-        vm.memory.store_with_expansion(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
-        vm.memory.store_with_expansion(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0
+            );
+        vm
+            .memory
+            .store_with_expansion(
+                0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0
+            );
 
         // When
         vm.exec_sha3().expect('exec_sha3 failed');
@@ -301,7 +329,11 @@ mod tests {
         vm.stack.push(1).expect('push failed');
         vm.stack.push(2048).expect('push failed');
 
-        vm.memory.store_with_expansion(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0
+            );
 
         // When
         vm.exec_sha3().expect('exec_sha3 failed');
@@ -323,7 +355,11 @@ mod tests {
         vm.stack.push(0).expect('push failed');
         vm.stack.push(1024).expect('push failed');
 
-        vm.memory.store_with_expansion(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0
+            );
 
         // When
         vm.exec_sha3().expect('exec_sha3 failed');
@@ -345,7 +381,11 @@ mod tests {
         vm.stack.push(32).expect('push failed');
         vm.stack.push(2016).expect('push failed');
 
-        vm.memory.store_with_expansion(0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFFFFFFFF00000000000000000000000000000000000000000000000000000000, 0
+            );
 
         // When
         vm.exec_sha3().expect('exec_sha3 failed');
@@ -367,7 +407,11 @@ mod tests {
         vm.stack.push(32).expect('push failed');
         vm.stack.push(0).expect('push failed');
 
-        vm.memory.store_with_expansion(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0
+            );
 
         // When
         vm.exec_sha3().expect('exec_sha3 failed');
@@ -389,7 +433,11 @@ mod tests {
         vm.stack.push(31).expect('push failed');
         vm.stack.push(0).expect('push failed');
 
-        vm.memory.store_with_expansion(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0
+            );
 
         // When
         vm.exec_sha3().expect('exec_sha3 failed');
@@ -411,7 +459,11 @@ mod tests {
         vm.stack.push(33).expect('push failed');
         vm.stack.push(0).expect('push failed');
 
-        vm.memory.store_with_expansion(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0
+            );
 
         // When
         vm.exec_sha3().expect('exec_sha3 failed');
@@ -437,7 +489,9 @@ mod tests {
         while mem_dst <= 0x0C80 {
             vm
                 .memory
-                .store_with_expansion(0xFAFAFAFA00000000000000000000000000000000000000000000000000000000, mem_dst);
+                .store_with_expansion(
+                    0xFAFAFAFA00000000000000000000000000000000000000000000000000000000, mem_dst
+                );
             mem_dst += 0x20;
         };
 
@@ -459,7 +513,11 @@ mod tests {
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let mut to_hash: Array<u64> = Default::default();
 
-        vm.memory.store_with_expansion(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0
+            );
         let mut size = 32;
         let mut offset = 0;
 
@@ -483,7 +541,11 @@ mod tests {
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let mut to_hash: Array<u64> = Default::default();
 
-        vm.memory.store_with_expansion(0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0);
+        vm
+            .memory
+            .store_with_expansion(
+                0xFAFFFFFF000000E500000077000000DEAD0000000004200000FADE0000450000, 0
+            );
         let mut size = 33;
         let mut offset = 0;
 

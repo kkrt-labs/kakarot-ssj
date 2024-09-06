@@ -168,7 +168,9 @@ fn calculate_memory_gas_cost(size_in_bytes: usize) -> u128 {
 fn memory_expansion(current_size: usize, operations: Span<(usize, usize)>) -> MemoryExpansion {
     let mut max_size = current_size;
 
-    for (offset, size) in operations {
+    for (
+        offset, size
+    ) in operations {
         if *size != 0 {
             let end = *offset + *size;
             if end > max_size {

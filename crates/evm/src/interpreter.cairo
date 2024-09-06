@@ -244,7 +244,13 @@ impl EVMImpl of EVMTrait {
     }
 
     fn execute_opcode(ref self: VM, opcode: u8) -> Result<(), EVMError> {
-        println!("Address {:?}, opcode {:?}, pc {:?}, gas left in call {:?}", self.message().code_address.evm, opcode, self.pc(), self.gas_left());
+        println!(
+            "Address {:?}, opcode {:?}, pc {:?}, gas left in call {:?}",
+            self.message().code_address.evm,
+            opcode,
+            self.pc(),
+            self.gas_left()
+        );
         // Call the appropriate function based on the opcode.
         if opcode == 0 {
             // STOP

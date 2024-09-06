@@ -60,9 +60,9 @@ impl CreateHelpersImpl of CreateHelpers {
             CreateType::Create2 => {
                 let calldata_words = ceil32(size) / 32;
                 gas::CREATE
-                + gas::KECCAK256WORD * calldata_words.into()
-                + memory_expansion.expansion_cost
-                + init_code_gas
+                    + gas::KECCAK256WORD * calldata_words.into()
+                    + memory_expansion.expansion_cost
+                    + init_code_gas
             },
         };
         self.charge_gas(charged_gas)?;
