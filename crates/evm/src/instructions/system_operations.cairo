@@ -263,9 +263,6 @@ impl SystemOperations of SystemOperationsTrait {
     fn exec_create2(ref self: VM) -> Result<(), EVMError> {
         ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
 
-        // TODO: add dynamic gas costs
-        self.charge_gas(gas::CREATE)?;
-
         let create_args = self.prepare_create(CreateType::Create2)?;
         self.generic_create(create_args)
     }
