@@ -32,7 +32,8 @@ mod tests {
     use evm::precompiles::identity::Identity;
     use evm::stack::StackTrait;
     use evm::test_utils::{
-        VMBuilderTrait, native_token, other_starknet_address, setup_test_storages
+        VMBuilderTrait, MemoryTestUtilsTrait, native_token, other_starknet_address,
+        setup_test_storages
     };
     use snforge_std::{start_mock_call, test_address};
 
@@ -64,7 +65,7 @@ mod tests {
         vm.stack.push(0x4).unwrap(); // address
         vm.stack.push(0xFFFFFFFF).unwrap(); // gas
 
-        vm.memory.store(0x2A, 0x1F);
+        vm.memory.store_with_expansion(0x2A, 0x1F);
 
         start_mock_call::<u256>(native_token(), selector!("balanceOf"), 0);
         vm.exec_staticcall().unwrap();

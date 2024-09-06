@@ -80,7 +80,9 @@ mod tests {
     use evm::precompiles::ec_recover::EcRecover;
     use evm::stack::StackTrait;
     use evm::test_utils::setup_test_storages;
-    use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
+    use evm::test_utils::{
+        VMBuilderTrait, MemoryTestUtilsTrait, native_token, other_starknet_address
+    };
     use snforge_std::{start_mock_call, test_address};
     use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
@@ -122,7 +124,7 @@ mod tests {
             .store(
                 0x456e9aea5e197a1f1af7a3e85a3212fa4049a3ba34c2289b4c860fc0b0c64ef3, 0x0
             ); // msg_hash
-        vm.memory.store(0x1C, 0x20); // v
+        vm.memory.store_with_expansion(0x1C, 0x20); // v
         vm
             .memory
             .store(0x9242685bf161793cc25603c231bc2f568eb630ea16aa137d2664ac8038825608, 0x40); // r

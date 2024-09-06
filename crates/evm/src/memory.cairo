@@ -56,10 +56,6 @@ impl MemoryImpl of MemoryTrait {
     /// index = Y + i * MEMORY_SEGMENT_SIZE
     #[inline(always)]
     fn store(ref self: Memory, element: u256, offset: usize) {
-        //TODO(optimization): new bytes len was already compute when charging the gas
-        let new_min_bytes_len = helpers::ceil32(offset + 32);
-        self.bytes_len = max(new_min_bytes_len, self.size());
-
         // Check alignment of offset to bytes16 chunks
         let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
 
@@ -92,9 +88,6 @@ impl MemoryImpl of MemoryTrait {
     /// * `offset` - The offset within memory to store the byte at.
     #[inline(always)]
     fn store_byte(ref self: Memory, value: u8, offset: usize) {
-        let new_min_bytes_len = helpers::ceil32(offset + 1);
-        self.bytes_len = max(new_min_bytes_len, self.size());
-
         // Compute actual offset in Memory, given active_segment of Memory (current Execution
         // Context id)
         // And Memory Segment Size
@@ -136,10 +129,6 @@ impl MemoryImpl of MemoryTrait {
         if elements.len() == 0 {
             return;
         }
-
-        // Compute new bytes_len.
-        let new_min_bytes_len = helpers::ceil32(offset + elements.len());
-        self.bytes_len = max(new_min_bytes_len, self.size());
 
         // Compute the offset inside the Memory, given its active segment, following the formula:
         // index = offset + self.active_segment * 125000
@@ -224,8 +213,6 @@ impl MemoryImpl of MemoryTrait {
     /// * `u256` - The loaded value.
     #[inline(always)]
     fn load(ref self: Memory, offset: usize) -> u256 {
-        self.ensure_length(32 + offset);
-
         self.load_internal(offset)
     }
 
@@ -233,8 +220,6 @@ impl MemoryImpl of MemoryTrait {
     /// inside elements.
     #[inline(always)]
     fn load_n(ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize) {
-        self.ensure_length(elements_len + offset);
-
         self.load_n_internal(elements_len, ref elements, offset);
     }
 
@@ -705,8 +690,8 @@ mod tests {
         memory.store(value, 0);
 
         // Then
-        let len = memory.size();
-        assert(len == 32, 'memory should be 32bytes');
+        assert_eq!(memory.items.get(0), 0);
+        assert_eq!(memory.items.get(1), 1);
     }
 
     #[test]
@@ -716,11 +701,14 @@ mod tests {
 
         // When
         let value: u256 = 1;
-        memory.store(value, 1);
+        let offset = 1;
+        memory.store(value, offset);
 
         // Then
-        let len = memory.size();
-        assert(len == 64, 'memory should be 64bytes');
+        let internal_index = offset / 2;
+        assert_eq!(memory.items.get(internal_index.into()), 0);
+        assert_eq!(memory.items.get(internal_index.into() + 1), 0);
+        assert_eq!(memory.items.get(internal_index.into() + 2), 0x01000000000000000000000000000000);
     }
 
     #[test]
@@ -730,20 +718,26 @@ mod tests {
 
         // When
         let value: u256 = 1;
+        let offset = 0;
         let bytes_array = helpers::u256_to_bytes_array(value);
-        memory.store_n(bytes_array.span(), 0);
+        memory.store_n(bytes_array.span(), offset);
 
         // Then
-        let len = memory.size();
-        assert(len == 32, 'memory should be 32bytes');
+        let internal_index = offset / 2;
+        assert_eq!(memory.items.get(internal_index.into()), 0);
+        assert_eq!(memory.items.get(internal_index.into() + 1), 1);
     }
 
 
     #[test]
     fn test_store_n_no_aligned_words() {
         let mut memory = MemoryTrait::new();
-        memory.store_n([1, 2].span(), 15);
-        assert(memory.size() == 32, 'memory should be 32 bytes');
+        let byte_offset = 15;
+        memory.store_n([1, 2].span(), byte_offset);
+
+        let internal_index = byte_offset / 16;
+        assert_eq!(memory.items.get(internal_index.into()), 0x01);
+        assert_eq!(memory.items.get(internal_index.into() + 1), 0x02000000000000000000000000000000);
     }
 
     #[test]
@@ -789,7 +783,6 @@ mod tests {
         memory.store_n(bytes_arr, 15);
         // value [1], will be stored in first word, values [2:34] will be stored in aligned words,
         // value [35] will be stored in final word
-        assert(memory.size() == 64, 'memory should be 64 bytes');
 
         let mut stored_bytes = Default::default();
         memory.load_n_internal(35, ref stored_bytes, 15);
@@ -891,6 +884,7 @@ mod tests {
         let mut memory = MemoryTrait::new();
         let value: u256 = 1;
         let bytes_array = helpers::u256_to_bytes_array(value);
+        memory.bytes_len = 32;
         memory.store_n(bytes_array.span(), 0);
 
         // When
@@ -903,25 +897,7 @@ mod tests {
     }
 
     #[test]
-    fn test_expand__should_return_expanded_memory_and_cost() {
-        // Given
-        let mut memory = MemoryTrait::new();
-        let value: u256 = 1;
-        let bytes_array = helpers::u256_to_bytes_array(value);
-
-        memory.store_n(bytes_array.span(), 0);
-
-        // When
-        memory.expand(1);
-
-        // Then
-        assert(memory.size() == 64, 'memory should be 64bytes');
-        let value = memory.load_internal(0);
-        assert(value == 1, 'value should be 1');
-    }
-
-    #[test]
-    fn test_expand__should_return_expanded_memory_by_one_word_and_cost() {
+    fn test_expand__should_return_expanded_memory_by_one_word() {
         // Given
         let mut memory = MemoryTrait::new();
 
@@ -929,7 +905,7 @@ mod tests {
         memory.expand(1);
 
         // Then
-        assert(memory.size() == 32, 'memory should be 32bytes');
+        assert_eq!(memory.size(), 32);
     }
 
     #[test]
@@ -941,7 +917,7 @@ mod tests {
         memory.expand(32);
 
         // Then
-        assert(memory.size() == 32, 'memory should be 32bytes');
+        assert_eq!(memory.size(), 32);
     }
 
     #[test]
@@ -953,7 +929,7 @@ mod tests {
         memory.expand(33);
 
         // Then
-        assert(memory.size() == 64, 'memory should be 96bytes');
+        assert_eq!(memory.size(), 64);
     }
 
     #[test]
@@ -963,15 +939,16 @@ mod tests {
         let value: u256 = 1;
         let bytes_array = helpers::u256_to_bytes_array(value);
 
+        memory.bytes_len = 32;
         memory.store_n(bytes_array.span(), 0);
 
         // When
         memory.ensure_length(1);
 
         // Then
-        assert(memory.size() == 32, 'memory should be 32bytes');
+        assert_eq!(memory.size(), 32);
         let value = memory.load_internal(0);
-        assert(value == 1, 'value should be 1');
+        assert_eq!(value, 1);
     }
 
     #[test]
@@ -981,35 +958,32 @@ mod tests {
         let value: u256 = 1;
         let bytes_array = helpers::u256_to_bytes_array(value);
 
+        memory.bytes_len = 32;
         memory.store_n(bytes_array.span(), 0);
 
         // When
         memory.ensure_length(33);
 
         // Then
-        assert(memory.size() == 64, 'memory should be 64bytes');
+        assert_eq!(memory.size(), 64);
         let value = memory.load_internal(0);
-        assert(value == 1, 'value should be 1');
+        assert_eq!(value, 1);
     }
 
     #[test]
-    fn test_expand_and_load_should_return_expanded_memory_and_element_and_cost() {
+    fn test_load_should_return_element() {
         // Given
         let mut memory = MemoryTrait::new();
         let value: u256 = 1;
         let bytes_array = helpers::u256_to_bytes_array(value);
+        memory.bytes_len = 32;
         memory.store_n(bytes_array.span(), 0);
 
         // When
-        memory.load(32);
+        let value = memory.load(32);
 
         // Then
-        assert(memory.size() == 64, 'memory should be 64 bytes');
-        let value = memory.load_internal(0);
-        assert(value == 1, 'loaded_element should be 1');
-
-        let value = memory.load_internal(32);
-        assert(value == 0, 'value should be 0');
+        assert_eq!(value, 0);
     }
 
     #[test]
@@ -1022,12 +996,14 @@ mod tests {
         memory.store_padded_segment(0, 0, bytes);
 
         // Then
-        let len = memory.size();
-        assert(len == 0, 'memory should be 0bytes');
+        let item_0 = memory.items.get(0);
+        let item_1 = memory.items.get(1);
+        assert_eq!(item_0, 0);
+        assert_eq!(item_1, 0);
     }
 
     #[test]
-    fn test_store_padded_segment_should_expand_memory() {
+    fn test_store_padded_segment_should_write_to_memory() {
         // Given
         let mut memory = MemoryTrait::new();
 
@@ -1036,10 +1012,8 @@ mod tests {
         memory.store_padded_segment(10, 10, bytes);
 
         // Then
-        let len = memory.size();
-        assert(len == 32, 'memory should be length 32');
         let word = memory.load(10);
-        assert(word == 0, 'word should be 0');
+        assert_eq!(word, 0);
     }
 
     #[test]
@@ -1052,9 +1026,6 @@ mod tests {
         memory.store_padded_segment(0, 5, bytes);
 
         // Then
-        let len = memory.size();
-        assert(len == 32, 'memory should be 32bytes');
-
         let first_word = memory.load_internal(0);
         assert(
             first_word == 0x0102030405000000000000000000000000000000000000000000000000000000,
@@ -1077,9 +1048,6 @@ mod tests {
         memory.store_padded_segment(0, 10, bytes);
 
         // Then
-        let len = memory.size();
-        assert(len == 32, 'memory should be 32bytes');
-
         let first_word = memory.load_internal(0);
         assert(
             first_word == 0x01020304050000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
@@ -1100,10 +1068,6 @@ mod tests {
         // When
         let bytes = [1, 2, 3, 4, 5].span();
         memory.store_padded_segment(5, 10, bytes);
-
-        // Then
-        let len = memory.size();
-        assert(len == 32, 'memory should be 32bytes');
 
         let first_word = memory.load_internal(0);
         assert(
@@ -1128,9 +1092,6 @@ mod tests {
         memory.store_padded_segment(30, 10, bytes);
 
         // Then
-        let len = memory.size();
-        assert(len == 64, 'memory should be 64bytes');
-
         let first_word = memory.load_internal(0);
         assert(
             first_word == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0102,
@@ -1156,7 +1117,6 @@ mod tests {
         // Then
         assert(memory.items[0] == 0x01, 'Wrong value for word 0');
         assert(memory.items[1] == 0x00, 'Wrong value for word 1');
-        assert(memory.size() == 32, 'Wrong memory length');
     }
     #[test]
     fn test_store_byte_should_store_byte_at_offset_2() {
@@ -1169,7 +1129,6 @@ mod tests {
         // Then
         assert(memory.items[0] == 0xff00, 'Wrong value for word 0');
         assert(memory.items[1] == 0x00, 'Wrong value for word 1');
-        assert(memory.size() == 32, 'Wrong memory length');
     }
 
     #[test]
@@ -1185,7 +1144,6 @@ mod tests {
         // Then
         assert(memory.items[0] == 0xFFFF, 'Wrong value for word 0');
         assert(memory.items[1] == 0x01FF, 'Wrong value for word 1');
-        assert(memory.size() == 32, 'Wrong memory length');
     }
 
     #[test]
@@ -1200,7 +1158,6 @@ mod tests {
         assert(memory.items[0] == 0x0, 'Wrong value for word 0');
         assert(memory.items[1] == 0x0, 'Wrong value for word 1');
         assert(memory.items[2] == 0x01000000000000000000000000000000, 'Wrong value for word 2');
-        assert(memory.size() == 64, 'Wrong memory length');
     }
 
     #[test]
@@ -1216,6 +1173,5 @@ mod tests {
         // Then
         assert(memory.items[0] == 0x0100, 'Wrong value in word 0');
         assert(memory.items[1] == 0xffABffffffffffffffffffffffffffff, 'Wrong value in word 1');
-        assert(memory.size() == 32, 'Wrong memory length');
     }
 }

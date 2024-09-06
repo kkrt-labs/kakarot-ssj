@@ -129,7 +129,10 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
         let words_size: u128 = (ceil32(size) / 32).into();
         let copy_gas_cost = gas::COPY * words_size;
-        let memory_expansion = gas::memory_expansion(self.memory.size(), dest_offset + size);
+        let memory_expansion = gas::memory_expansion(
+            self.memory.size(), [(dest_offset, size)].span()
+        );
+        self.memory.ensure_length(memory_expansion.new_size);
         self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
 
         let calldata: Span<u8> = self.message().data;
@@ -156,7 +159,10 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
         let words_size: u128 = (ceil32(size) / 32).into();
         let copy_gas_cost = gas::COPY * words_size;
-        let memory_expansion = gas::memory_expansion(self.memory.size(), dest_offset + size);
+        let memory_expansion = gas::memory_expansion(
+            self.memory.size(), [(dest_offset, size)].span()
+        );
+        self.memory.ensure_length(memory_expansion.new_size);
         self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
 
         let bytecode: Span<u8> = self.message().code;
@@ -202,7 +208,10 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
         // GAS
         let words_size: u128 = (ceil32(size) / 32).into();
-        let memory_expansion = gas::memory_expansion(self.memory.size(), dest_offset + size);
+        let memory_expansion = gas::memory_expansion(
+            self.memory.size(), [(dest_offset, size)].span()
+        );
+        self.memory.ensure_length(memory_expansion.new_size);
         let copy_gas_cost = gas::COPY * words_size;
         let access_gas_cost = if self.accessed_addresses.contains(evm_address) {
             gas::WARM_ACCESS_COST
@@ -245,12 +254,10 @@ impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let words_size: u128 = (ceil32(size.into()) / 32).into();
         let copy_gas_cost = gas::COPY * words_size;
 
-        let (max_memory_size, overflow) = dest_offset.overflowing_add(size);
-        if overflow {
-            return Result::Err(EVMError::OutOfGas);
-        }
-
-        let memory_expansion = gas::memory_expansion(self.memory.size(), max_memory_size);
+        let memory_expansion = gas::memory_expansion(
+            self.memory.size(), [(dest_offset, size)].span()
+        );
+        self.memory.ensure_length(memory_expansion.new_size);
         self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
 
         let data_to_copy: Span<u8> = return_data.slice(offset, size);
