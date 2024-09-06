@@ -30,7 +30,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// CALL
     /// # Specification: https://www.evm.codes/#f1?fork=shanghai
     fn exec_call(ref self: VM) -> Result<(), EVMError> {
-        let gas = self.stack.pop_u128()?;
+        let gas = self.stack.pop_saturating_u128()?;
         let to = self.stack.pop_eth_address()?;
         let value = self.stack.pop()?;
         let args_offset = self.stack.pop_usize()?;
@@ -109,7 +109,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// CALLCODE
     /// # Specification: https://www.evm.codes/#f2?fork=shanghai
     fn exec_callcode(ref self: VM) -> Result<(), EVMError> {
-        let gas = self.stack.pop_u128()?;
+        let gas = self.stack.pop_saturating_u128()?;
         let code_address = self.stack.pop_eth_address()?;
         let value = self.stack.pop()?;
         let args_offset = self.stack.pop_usize()?;
@@ -194,7 +194,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// DELEGATECALL
     /// # Specification: https://www.evm.codes/#f4?fork=shanghai
     fn exec_delegatecall(ref self: VM) -> Result<(), EVMError> {
-        let gas = self.stack.pop_u128()?;
+        let gas = self.stack.pop_saturating_u128()?;
         let code_address = self.stack.pop_eth_address()?;
         let args_offset = self.stack.pop_usize()?;
         let args_size = self.stack.pop_usize()?;
@@ -247,7 +247,7 @@ impl SystemOperations of SystemOperationsTrait {
     /// STATICCALL
     /// # Specification: https://www.evm.codes/#fa?fork=shanghai
     fn exec_staticcall(ref self: VM) -> Result<(), EVMError> {
-        let gas = self.stack.pop_u128()?;
+        let gas = self.stack.pop_saturating_u128()?;
         let to = self.stack.pop_eth_address()?;
         let args_offset = self.stack.pop_usize()?;
         let args_size = self.stack.pop_usize()?;
