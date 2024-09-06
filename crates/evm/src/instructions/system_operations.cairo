@@ -117,20 +117,9 @@ impl SystemOperations of SystemOperationsTrait {
         let ret_offset = self.stack.pop_usize()?;
         let ret_size = self.stack.pop_usize()?;
 
-        let args_max_offset = args_offset + args_size;
-        let ret_max_offset = ret_offset + ret_size;
-
         let to = self.message().target.evm;
 
-        let max_memory_size = if args_max_offset > ret_max_offset {
-            args_max_offset
-        } else {
-            ret_max_offset
-        };
-
         // GAS
-        //TODO(optimization): if we know how much the memory is going to be expanded,
-        // we can return the new size and save a computation later.
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(args_offset, args_size), (ret_offset, ret_size)].span()
         );
@@ -213,8 +202,6 @@ impl SystemOperations of SystemOperationsTrait {
         let ret_size = self.stack.pop_usize()?;
 
         // GAS
-        //TODO(optimization): if we know how much the memory is going to be expanded,
-        // we can return the new size and save a computation later.
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(args_offset, args_size), (ret_offset, ret_size)].span()
         );
@@ -268,8 +255,6 @@ impl SystemOperations of SystemOperationsTrait {
         let ret_size = self.stack.pop_usize()?;
 
         // GAS
-        //TODO(optimization): if we know how much the memory is going to be expanded,
-        // we can return the new size and save a computation later.
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(args_offset, args_size), (ret_offset, ret_size)].span()
         );
@@ -405,8 +390,8 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::state::{StateTrait, State};
     use evm::test_utils::{
-        VMBuilderTrait, native_token, evm_address, test_dual_address, other_evm_address,
-        setup_test_storages, register_account, origin, uninitialized_account
+        VMBuilderTrait, MemoryTestUtilsTrait, native_token, evm_address, test_dual_address,
+        other_evm_address, setup_test_storages, register_account, origin, uninitialized_account
     };
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use snforge_std::{test_address, start_mock_call};
@@ -963,7 +948,7 @@ mod tests {
 
         // Load into memory the bytecode of Storage.sol
         let storage_initcode = storage_evm_initcode();
-        vm.memory.store_n(storage_initcode, 0);
+        vm.memory.store_n_with_expansion(storage_initcode, 0);
 
         vm.stack.push(storage_initcode.len().into()).unwrap();
         vm.stack.push(0).expect('push failed');
@@ -1029,7 +1014,7 @@ mod tests {
 
         // Load into memory the bytecode to init, which is the revert opcode
         let revert_initcode = [0xFD].span();
-        vm.memory.store_n(revert_initcode, 0);
+        vm.memory.store_n_with_expansion(revert_initcode, 0);
 
         vm.stack.push(revert_initcode.len().into()).unwrap();
         vm.stack.push(0).expect('push failed');
@@ -1093,7 +1078,7 @@ mod tests {
 
         // Load into memory the bytecode of Storage.sol
         let storage_initcode = storage_evm_initcode();
-        vm.memory.store_n(storage_initcode, 0);
+        vm.memory.store_n_with_expansion(storage_initcode, 0);
 
         vm.stack.push(0).expect('push failed');
         vm.stack.push(storage_initcode.len().into()).unwrap();

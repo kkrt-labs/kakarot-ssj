@@ -5,7 +5,9 @@ def process_logs(logs):
     gas_consumption = {}
     previous_gas = {}
 
-    pattern = re.compile(r"Address (\d+), opcode (\w+), pc (\d+), gas left in call (\d+)")
+    pattern = re.compile(
+        r"Address (\d+), opcode (\w+), pc (\d+), gas left in call (\d+)"
+    )
 
     for line in logs.split("\n"):
         match = pattern.search(line)
@@ -23,7 +25,9 @@ def process_logs(logs):
                 gas_consumption[address] += gas_used
                 previous_gas[address] = gas_left
 
-            print(f"{hex(address)} - {pc} - {opcode} --> total gas used: {gas_consumption[address]}")
+            print(
+                f"{hex(address)} - {pc} - {opcode} --> total gas used: {gas_consumption[address]}"
+            )
 
 
 # Example usage

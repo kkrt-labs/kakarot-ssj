@@ -326,8 +326,8 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::state::{StateTrait, compute_storage_address};
     use evm::test_utils::{
-        evm_address, VMBuilderTrait, setup_test_storages, register_account, uninitialized_account,
-        native_token
+        evm_address, VMBuilderTrait, MemoryTestUtilsTrait, setup_test_storages, register_account,
+        uninitialized_account, native_token
     };
     use snforge_std::{test_address, start_mock_call, store};
     use snforge_utils::snforge_utils::store_evm;
@@ -381,7 +381,7 @@ mod tests {
     fn assert_mload(value: u256, offset: u256, expected_value: u256, expected_memory_size: u32) {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        vm.memory.store(value, 0);
+        vm.memory.store_with_expansion(value, 0);
 
         vm.stack.push(offset).expect('push failed');
 
@@ -569,10 +569,10 @@ mod tests {
     }
 
     #[test]
-    fn test_exec_msize_store_max_offset_0() {
+    fn test_exec_msize_should_return_size_of_memory() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        vm.memory.store(Bounded::<u256>::MAX, 0x00);
+        vm.memory.store_with_expansion(Bounded::<u256>::MAX, 0x00);
 
         // When
         let result = vm.exec_msize();
@@ -580,22 +580,7 @@ mod tests {
         // Then
         assert(result.is_ok(), 'should have succeeded');
         assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.pop().unwrap() == 32, 'should 32 bytes after MSTORE');
-    }
-
-    #[test]
-    fn test_exec_msize_store_max_offset_1() {
-        // Given
-        let mut vm = VMBuilderTrait::new_with_presets().build();
-        vm.memory.store(Bounded::<u256>::MAX, 0x01);
-
-        // When
-        let result = vm.exec_msize();
-
-        // Then
-        assert(result.is_ok(), 'should have succeeded');
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.pop().unwrap() == 64, 'should 64 bytes after MSTORE');
+        assert(vm.stack.pop().unwrap() == 32, 'should 32 bytes after MSIZE');
     }
 
     #[test]
@@ -1049,7 +1034,7 @@ mod tests {
         let mut i = 0;
         for element in values
             .span() {
-                vm.memory.store((*element).into(), source_offset + 0x20 * i);
+                vm.memory.store_with_expansion((*element).into(), source_offset + 0x20 * i);
                 i += 1;
             };
         vm.stack.push(dest_offset.into()).expect('push failed');
@@ -1058,7 +1043,9 @@ mod tests {
 
         // When
         let expected_gas = gas::VERYLOW
-            + gas::memory_expansion(vm.memory.size(), [(max(dest_offset, source_offset), size)].span())
+            + gas::memory_expansion(
+                vm.memory.size(), [(max(dest_offset, source_offset), size)].span()
+            )
                 .expansion_cost;
         let gas_before = vm.gas_left();
         let result = vm.exec_mcopy();

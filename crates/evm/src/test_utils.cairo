@@ -49,6 +49,19 @@ fn register_account(evm_address: EthAddress, starknet_address: ContractAddress) 
 }
 
 
+#[generate_trait]
+impl MemoryUtilsImpl of MemoryTestUtilsTrait {
+    fn store_with_expansion(ref self: Memory, element: u256, offset: usize) {
+        self.ensure_length(offset + 32);
+        self.store(element, offset);
+    }
+
+    fn store_n_with_expansion(ref self: Memory, elements: Span<u8>, offset: usize) {
+        self.ensure_length(offset + elements.len());
+        self.store_n(elements, offset);
+    }
+}
+
 #[derive(Destruct)]
 struct VMBuilder {
     vm: VM
