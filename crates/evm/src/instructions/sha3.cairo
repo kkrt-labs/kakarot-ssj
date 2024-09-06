@@ -208,11 +208,8 @@ mod tests {
 
         // Then
         let result = vm.stack.peek().unwrap();
-        assert(
-            result == 0xc41589e7559804ea4a2080dad19d876a024ccb05117835447d72ce08c1d020ec,
-            'wrong result'
-        );
-        assert_eq!(vm.memory.size(), 32, 'wrong memory size');
+        assert_eq!(result, 0xc41589e7559804ea4a2080dad19d876a024ccb05117835447d72ce08c1d020ec);
+        assert_eq!(vm.memory.size(), 32);
     }
 
     #[test]
