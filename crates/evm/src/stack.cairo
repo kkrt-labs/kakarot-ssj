@@ -1,6 +1,7 @@
 use core::fmt::{Debug, Formatter, Error, Display};
 use core::nullable::{NullableTrait};
 use core::starknet::{StorageBaseAddress, EthAddress};
+use core::num::traits::Bounded;
 //! Stack implementation.
 //! # Example
 //! ```
@@ -37,6 +38,7 @@ trait StackTrait {
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError>;
     fn pop_u64(ref self: Stack) -> Result<u64, EVMError>;
     fn pop_u128(ref self: Stack) -> Result<u128, EVMError>;
+    fn pop_saturating_u128(ref self: Stack) -> Result<u128, EVMError>;
     fn pop_i256(ref self: Stack) -> Result<i256, EVMError>;
     fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError>;
     fn pop_n(ref self: Stack, n: usize) -> Result<Array<u256>, EVMError>;
@@ -149,6 +151,17 @@ impl StackImpl of StackTrait {
         Result::Ok(item)
     }
 
+    /// Calls `Stack::pop` and saturates the result to u128
+    ///
+    #[inline(always)]
+    fn pop_saturating_u128(ref self: Stack) -> Result<u128, EVMError> {
+        let item: u256 = self.pop()?;
+        if item.high != 0 {
+            return Result::Ok(Bounded::<u128>::MAX);
+        };
+        Result::Ok(item.low)
+    }
+
     /// Calls `Stack::pop` and converts it to usize
     ///
     /// # Errors
@@ -252,7 +265,7 @@ mod tests {
         let mut stack = StackTrait::new();
 
         // Then
-        assert(stack.len() == 0, 'stack length should be 0');
+        assert_eq!(stack.len(), 0);
     }
 
     #[test]
@@ -261,12 +274,12 @@ mod tests {
         let mut stack = StackTrait::new();
 
         // Then
-        assert(stack.is_empty() == true, 'stack should be empty');
+        assert!(stack.is_empty());
 
         // When
         stack.push(1).unwrap();
         // Then
-        assert(stack.is_empty() == false, 'stack should not be empty');
+        assert!(!stack.is_empty());
     }
 
     #[test]
@@ -275,12 +288,12 @@ mod tests {
         let mut stack = StackTrait::new();
 
         // Then
-        assert(stack.len() == 0, 'stack length should be 0');
+        assert_eq!(stack.len(), 0);
 
         // When
         stack.push(1).unwrap();
         // Then
-        assert(stack.len() == 1, 'stack length should be 1');
+        assert_eq!(stack.len(), 1);
     }
 
     mod push {
@@ -300,9 +313,9 @@ mod tests {
             // Then
             let res = stack.peek().unwrap();
 
-            assert(stack.is_empty() == false, 'stack should not be empty');
-            assert(stack.len() == 1, 'len should be 1');
-            assert(res == 1, 'wrong result');
+            assert_eq!(stack.is_empty(), false);
+            assert_eq!(stack.len(), 1);
+            assert_eq!(res, 1);
         }
 
         #[test]
@@ -319,9 +332,9 @@ mod tests {
 
             // Then
             let res = stack.push(1);
-            assert(stack.len() == constants::STACK_MAX_DEPTH, 'wrong length');
-            assert(res.is_err(), 'should return error');
-            assert(res.unwrap_err() == EVMError::StackOverflow, 'should return StackOverflow');
+            assert_eq!(stack.len(), constants::STACK_MAX_DEPTH);
+            assert!(res.is_err());
+            assert_eq!(res.unwrap_err(), EVMError::StackOverflow);
         }
     }
 
@@ -330,6 +343,7 @@ mod tests {
         use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
         use super::StackTrait;
         use utils::traits::StorageBaseAddressPartialEq;
+        use core::num::traits::Bounded;
 
         #[test]
         fn test_should_pop_an_element_from_the_stack() {
@@ -343,8 +357,8 @@ mod tests {
             let last_item = stack.pop().unwrap();
 
             // Then
-            assert(last_item == 3, 'wrong result');
-            assert(stack.len() == 2, 'wrong length');
+            assert_eq!(last_item, 3);
+            assert_eq!(stack.len(), 2);
         }
 
 
@@ -360,11 +374,9 @@ mod tests {
             let elements = stack.pop_n(3).unwrap();
 
             // Then
-            assert(stack.len() == 0, 'wrong length');
-            assert(elements.len() == 3, 'wrong returned array length');
-            assert(*elements[0] == 3, 'wrong result at index 0');
-            assert(*elements[1] == 2, 'wrong result at index 1');
-            assert(*elements[2] == 1, 'wrong result at index 2');
+            assert_eq!(stack.len(), 0);
+            assert_eq!(elements.len(), 3);
+            assert_eq!(elements.span(), [1, 2, 3].span())
         }
 
 
@@ -394,6 +406,35 @@ mod tests {
                 result.unwrap_err() == EVMError::StackUnderflow, "should return StackUnderflow"
             );
         }
+
+
+        #[test]
+        fn test_pop_saturating_u128_should_return_max_when_overflow() {
+            // Given
+            let mut stack = StackTrait::new();
+            stack.push(Bounded::<u256>::MAX).unwrap();
+
+            // When
+            let result = stack.pop_saturating_u128();
+
+            // Then
+            assert!(result.is_ok());
+            assert_eq!(result.unwrap(), Bounded::<u128>::MAX);
+        }
+
+        #[test]
+        fn test_pop_saturating_u128_should_return_value_when_no_overflow() {
+            // Given
+            let mut stack = StackTrait::new();
+            stack.push(1234567890).unwrap();
+
+            // When
+            let result = stack.pop_saturating_u128();
+
+            // Then
+            assert!(result.is_ok());
+            assert_eq!(result.unwrap(), 1234567890);
+        }
     }
 
     mod peek {
@@ -411,7 +452,7 @@ mod tests {
 
             // Then
             let last_item = stack.peek().unwrap();
-            assert(last_item == 2, 'wrong result');
+            assert_eq!(last_item, 2);
         }
 
 
@@ -427,7 +468,7 @@ mod tests {
             let result = stack.peek_at(0).unwrap();
 
             // Then
-            assert(result == 3, 'wrong result');
+            assert_eq!(result, 3);
         }
 
         #[test]
@@ -442,7 +483,7 @@ mod tests {
             let result = stack.peek_at(1).unwrap();
 
             // Then
-            assert(result == 2, 'wrong result');
+            assert_eq!(result, 2);
         }
 
         #[test]
@@ -473,26 +514,26 @@ mod tests {
             stack.push(3).unwrap();
             stack.push(4).unwrap();
             let index3 = stack.peek_at(3).unwrap();
-            assert(index3 == 1, 'wrong index3');
+            assert_eq!(index3, 1);
             let index2 = stack.peek_at(2).unwrap();
-            assert(index2 == 2, 'wrong index2');
+            assert_eq!(index2, 2);
             let index1 = stack.peek_at(1).unwrap();
-            assert(index1 == 3, 'wrong index1');
+            assert_eq!(index1, 3);
             let index0 = stack.peek_at(0).unwrap();
-            assert(index0 == 4, 'wrong index0');
+            assert_eq!(index0, 4);
 
             // When
             stack.swap_i(2).expect('swap failed');
 
             // Then
             let index3 = stack.peek_at(3).unwrap();
-            assert(index3 == 1, 'post-swap: wrong index3');
+            assert_eq!(index3, 1);
             let index2 = stack.peek_at(2).unwrap();
-            assert(index2 == 4, 'post-swap: wrong index2');
+            assert_eq!(index2, 4);
             let index1 = stack.peek_at(1).unwrap();
-            assert(index1 == 3, 'post-swap: wrong index1');
+            assert_eq!(index1, 3);
             let index0 = stack.peek_at(0).unwrap();
-            assert(index0 == 2, 'post-swap: wrong index0');
+            assert_eq!(index0, 2);
         }
 
         #[test]
@@ -503,10 +544,8 @@ mod tests {
             // When & Then
             let result = stack.swap_i(1);
 
-            assert(result.is_err(), 'should return an EVMError');
-            assert!(
-                result.unwrap_err() == EVMError::StackUnderflow, "should return StackUnderflow"
-            );
+            assert!(result.is_err());
+            assert_eq!(result.unwrap_err(), EVMError::StackUnderflow);
         }
 
         #[test]
@@ -518,10 +557,8 @@ mod tests {
             // When & Then
             let result = stack.swap_i(2);
 
-            assert(result.is_err(), 'should return an EVMError');
-            assert!(
-                result.unwrap_err() == EVMError::StackUnderflow, "should return StackUnderflow"
-            );
+            assert!(result.is_err());
+            assert_eq!(result.unwrap_err(), EVMError::StackUnderflow);
         }
     }
 }
