@@ -120,6 +120,8 @@ mod embeddable_impls {
     use core::{starknet, starknet::SyscallResultTrait};
     use evm::errors::EVMError;
     use evm::precompiles::blake2f::Blake2f;
+    use evm::precompiles::ec_add::EcAdd;
+    use evm::precompiles::ec_mul::EcMul;
     use evm::precompiles::ec_recover::EcRecover;
     use evm::precompiles::identity::Identity;
     use evm::precompiles::modexp::ModExp;
