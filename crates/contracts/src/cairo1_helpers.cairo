@@ -138,6 +138,8 @@ mod embeddable_impls {
                 2 => Sha256::exec(data),
                 3 | 4 => Result::Err(EVMError::NotImplemented),
                 5 => ModExp::exec(data),
+                6 => EcAdd::exec(data),
+                7 => EcMul::exec(data),
                 _ => Result::Err(EVMError::NotImplemented),
             };
             match result {
