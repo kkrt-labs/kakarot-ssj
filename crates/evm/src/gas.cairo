@@ -155,20 +155,39 @@ fn calculate_memory_gas_cost(size_in_bytes: usize) -> u128 {
 }
 
 
-fn memory_expansion(memory_size: usize, max_offset: usize) -> MemoryExpansion {
-    let new_size = helpers::ceil32(max_offset);
+/// Calculates memory expansion based on multiple memory operations.
+///
+/// # Arguments
+///
+/// * `current_size`: Current size of the memory.
+/// * `operations`: A span of tuples (offset, size) representing memory operations.
+///
+/// # Returns
+///
+/// * `MemoryExpansion`: New size and expansion cost.
+fn memory_expansion(current_size: usize, operations: Span<(usize, usize)>) -> MemoryExpansion {
+    let mut max_size = current_size;
 
-    if new_size <= memory_size {
-        return MemoryExpansion { new_size: memory_size, expansion_cost: 0 };
+    for (offset, size) in operations {
+        if *size != 0 {
+            let end = *offset + *size;
+            if end > max_size {
+                max_size = end;
+            }
+        }
+    };
+
+    let new_size = helpers::ceil32(max_size);
+
+    if new_size <= current_size {
+        return MemoryExpansion { new_size: current_size, expansion_cost: 0 };
     }
 
-    let prev_cost = calculate_memory_gas_cost(memory_size);
+    let prev_cost = calculate_memory_gas_cost(current_size);
     let new_cost = calculate_memory_gas_cost(new_size);
     let expansion_cost = new_cost - prev_cost;
-
     MemoryExpansion { new_size, expansion_cost }
 }
-
 
 /// Calculates the gas to be charged for the init code in CREATE/CREATE2
 /// opcodes as well as create transactions.

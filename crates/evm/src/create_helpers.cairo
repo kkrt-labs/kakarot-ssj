@@ -52,16 +52,17 @@ impl CreateHelpersImpl of CreateHelpers {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
-        let memory_expansion = gas::memory_expansion(self.memory.size(), offset + size);
+        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span());
+        self.memory.ensure_length(memory_expansion.new_size);
         let init_code_gas = gas::init_code_cost(size);
         let charged_gas = match create_type {
             CreateType::Create => gas::CREATE + memory_expansion.expansion_cost + init_code_gas,
             CreateType::Create2 => {
                 let calldata_words = ceil32(size) / 32;
                 gas::CREATE
-                    + gas::KECCAK256WORD * calldata_words.into()
-                    + memory_expansion.expansion_cost
-                    + init_code_gas
+                + gas::KECCAK256WORD * calldata_words.into()
+                + memory_expansion.expansion_cost
+                + init_code_gas
             },
         };
         self.charge_gas(charged_gas)?;
