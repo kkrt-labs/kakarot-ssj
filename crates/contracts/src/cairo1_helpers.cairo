@@ -120,6 +120,8 @@ mod embeddable_impls {
     use core::{starknet, starknet::SyscallResultTrait};
     use evm::errors::EVMError;
     use evm::precompiles::blake2f::Blake2f;
+    use evm::precompiles::ec_add::EcAdd;
+    use evm::precompiles::ec_mul::EcMul;
     use evm::precompiles::ec_recover::EcRecover;
     use evm::precompiles::identity::Identity;
     use evm::precompiles::modexp::ModExp;
@@ -138,6 +140,8 @@ mod embeddable_impls {
                 2 => Sha256::exec(data),
                 3 | 4 => Result::Err(EVMError::NotImplemented),
                 5 => ModExp::exec(data),
+                6 => EcAdd::exec(data),
+                7 => EcMul::exec(data),
                 _ => Result::Err(EVMError::NotImplemented),
             };
             match result {
