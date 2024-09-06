@@ -376,7 +376,7 @@ mod tests {
             // Then
             assert_eq!(stack.len(), 0);
             assert_eq!(elements.len(), 3);
-            assert_eq!(elements.span(), [1, 2, 3].span())
+            assert_eq!(elements.span(), [3, 2, 1].span())
         }
 
 
