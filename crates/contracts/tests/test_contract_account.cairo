@@ -19,7 +19,7 @@ fn test_ca_deploy() {
 
     let initial_bytecode = contract_account.bytecode();
     assert(initial_bytecode.is_empty(), 'bytecode should be empty');
-    assert(contract_account.get_evm_address() == ca_address(), 'wrong ca evm address');
+    assert(contract_account.get_evm_address() == ca_address.evm, 'wrong ca evm address');
     assert(contract_account.get_nonce() == 1, 'wrong nonce');
 }
 
