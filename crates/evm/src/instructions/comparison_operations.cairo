@@ -4,7 +4,6 @@ use evm::gas;
 use evm::model::vm::{VM, VMTrait};
 // Internal imports
 use evm::stack::StackTrait;
-use utils::constants::{POW_2_127};
 use utils::i256::i256;
 use utils::math::{Exponentiation, Bitshift, WrappingBitshift};
 use utils::traits::BoolIntoNumeric;
@@ -175,7 +174,7 @@ impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
         let value: i256 = self.stack.pop_i256()?;
 
         // Checks the MSB bit sign for a 256-bit integer
-        let positive = value.value.high < POW_2_127;
+        let positive = value.value.high < pow!(2, 127);
         let sign = if positive {
             // If sign is positive, set it to 0.
             0

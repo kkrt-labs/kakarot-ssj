@@ -9,6 +9,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "alexandria_macros"
+version = "0.1.0"
+source = "git+https://github.com/keep-starknet-strange/alexandria.git#7c19379ab6cf0f8b48be3c5b118ffddd7e26a4d2"
+
+[[package]]
 name = "contracts"
 version = "0.1.0"
 dependencies = [
@@ -34,7 +39,7 @@ dependencies = [
 [[package]]
 name = "garaga"
 version = "0.1.0"
-source = "git+https://github.com/keep-starknet-strange/garaga.git#933784eee3811334cf1a5b83d9ffcc9cfda3be8c"
+source = "git+https://github.com/keep-starknet-strange/garaga.git#866281e342b0b61f7c2906b9f6d812fe414a100c"
 
 [[package]]
 name = "openzeppelin"
@@ -69,6 +74,7 @@ name = "utils"
 version = "0.1.0"
 dependencies = [
  "alexandria_data_structures",
+ "alexandria_macros",
  "evm",
  "snforge_std",
 ]

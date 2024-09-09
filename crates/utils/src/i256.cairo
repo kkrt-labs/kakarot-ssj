@@ -1,6 +1,5 @@
 use core::integer::{u256_try_as_non_zero};
 use core::num::traits::Bounded;
-use utils::constants::POW_2_127;
 use utils::math::{Bitshift, Exponentiation};
 
 #[derive(Copy, Drop, PartialEq)]
@@ -35,8 +34,8 @@ pub impl I256PartialOrd of PartialOrd<i256> {
 
     #[inline(always)]
     fn lt(lhs: i256, rhs: i256) -> bool {
-        let lhs_positive = lhs.value.high < POW_2_127;
-        let rhs_positive = rhs.value.high < POW_2_127;
+        let lhs_positive = lhs.value.high < pow!(2, 127);
+        let rhs_positive = rhs.value.high < pow!(2, 127);
 
         if (lhs_positive != rhs_positive) {
             !lhs_positive
@@ -47,8 +46,8 @@ pub impl I256PartialOrd of PartialOrd<i256> {
 
     #[inline(always)]
     fn gt(lhs: i256, rhs: i256) -> bool {
-        let lhs_positive = lhs.value.high < POW_2_127;
-        let rhs_positive = rhs.value.high < POW_2_127;
+        let lhs_positive = lhs.value.high < pow!(2, 127);
+        let rhs_positive = rhs.value.high < pow!(2, 127);
 
         if (lhs_positive != rhs_positive) {
             lhs_positive
@@ -92,14 +91,14 @@ fn i256_signed_div_rem(a: i256, div: NonZero<u256>) -> (i256, i256) {
 
     // Take the absolute value of a and div.
     // Checks the MSB bit sign for a 256-bit integer
-    let a_positive = a.value.high < POW_2_127;
+    let a_positive = a.value.high < pow!(2, 127);
     let a = if a_positive {
         a
     } else {
         i256_neg(a).into()
     };
 
-    let div_positive = div.value.high < POW_2_127;
+    let div_positive = div.value.high < pow!(2, 127);
     div = if div_positive {
         div
     } else {
