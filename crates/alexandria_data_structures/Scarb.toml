@@ -8,6 +8,7 @@ version = "0.1.0"
 
 [dev-dependencies]
 snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.30.0" }
+assert_macros = "2.8.2"
 
 [scripts]
 test = "snforge test --max-n-steps 4294967295"
