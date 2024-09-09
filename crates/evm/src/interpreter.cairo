@@ -513,6 +513,10 @@ impl EVMImpl of EVMTrait {
             // TSTORE
             return self.exec_tstore();
         }
+        if opcode == 94 {
+            // MCOPY
+            return self.exec_mcopy();
+        }
         if opcode == 95 {
             // PUSH0
             return self.exec_push0();
