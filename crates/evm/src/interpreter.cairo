@@ -11,8 +11,8 @@ use evm::instructions::{
 use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{
-    Message, Environment, Address, Transfer, ExecutionSummary, ExecutionSummaryTrait,
-    ExecutionResult, ExecutionResultTrait, ExecutionResultStatus, AddressTrait
+    Message, Environment, Transfer, ExecutionSummary, ExecutionSummaryTrait, ExecutionResult,
+    ExecutionResultTrait, ExecutionResultStatus, AddressTrait
 };
 use evm::precompiles::Precompiles;
 use evm::state::StateTrait;

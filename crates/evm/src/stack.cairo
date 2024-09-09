@@ -340,8 +340,7 @@ mod tests {
 
     mod pop {
         use core::num::traits::Bounded;
-        use core::starknet::storage_base_address_const;
-        use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
+        use evm::errors::EVMError;
         use super::StackTrait;
         use utils::traits::StorageBaseAddressPartialEq;
 

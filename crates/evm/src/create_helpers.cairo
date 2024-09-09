@@ -5,12 +5,10 @@ use evm::errors::{ensure, EVMError};
 use evm::gas;
 use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
+use evm::model::Message;
 use evm::model::account::{Account, AccountTrait};
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{
-    ExecutionResult, ExecutionResultTrait, ExecutionResultStatus, ExecutionSummary, Environment
-};
-use evm::model::{Message, Address, Transfer};
+use evm::model::{ExecutionResult, ExecutionResultTrait, ExecutionResultStatus};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use utils::address::{compute_contract_address, compute_create2_contract_address};

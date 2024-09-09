@@ -28,7 +28,6 @@ pub mod KakarotCore {
     use evm::state::StateTrait;
     use evm::{EVMTrait};
     use utils::address::compute_contract_address;
-    use utils::constants;
     use utils::eth_transaction::AccessListItemTrait;
     use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, AccessListItem};
     use utils::helpers::compute_starknet_address;
@@ -119,7 +118,7 @@ pub mod KakarotCore {
     }
 
     #[abi(embed_v0)]
-    impl KakarotCoreImpl of IKakarotCore<ContractState> {
+    pub impl KakarotCoreImpl of IKakarotCore<ContractState> {
         fn set_native_token(ref self: ContractState, native_token: ContractAddress) {
             self.ownable.assert_only_owner();
             self.Kakarot_native_token_address.write(native_token);

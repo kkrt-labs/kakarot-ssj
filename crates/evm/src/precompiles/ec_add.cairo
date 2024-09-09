@@ -1,28 +1,27 @@
-use core::RangeCheck;
 use core::circuit::CircuitElement as CE;
 use core::circuit::CircuitInput as CI;
 
 use core::circuit::{
-    u384, u96, CircuitElement, CircuitInput, circuit_add, circuit_sub, circuit_mul, circuit_inverse,
+    u384, CircuitElement, CircuitInput, circuit_add, circuit_sub, circuit_mul, circuit_inverse,
     EvalCircuitTrait, CircuitOutputsTrait, CircuitModulus, CircuitInputs
 };
 use core::num::traits::Zero;
 use core::option::Option;
 use core::starknet::{EthAddress};
-use evm::errors::{EVMError, EVMErrorTrait};
+use evm::errors::EVMError;
 use evm::precompiles::Precompile;
 use garaga::core::circuit::AddInputResultTrait2;
-use utils::helpers::{U256Trait, ToBytes, FromBytes};
-use utils::helpers::{load_word, u256_to_bytes_array};
+use utils::helpers::ToBytes;
+use utils::helpers::load_word;
 
 
 const BASE_COST: u128 = 150;
 const U256_BYTES_LEN: usize = 32;
 
-impl EcAdd of Precompile {
+pub impl EcAdd of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
-        EthAddress { address: 0x6 }
+        0x6.try_into().unwrap()
     }
 
     fn exec(mut input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {

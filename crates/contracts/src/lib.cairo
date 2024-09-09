@@ -1,12 +1,12 @@
-mod account_contract;
-mod cairo1_helpers;
-mod components;
+pub mod account_contract;
+pub mod cairo1_helpers;
+pub mod components;
 
 pub mod errors;
 
 // Kakarot smart contract
-mod kakarot_core;
-mod storage;
+pub mod kakarot_core;
+pub mod storage;
 
 #[cfg(target: 'test')]
 pub mod test_data;

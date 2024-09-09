@@ -29,7 +29,7 @@ use evm::errors::EVMError;
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
 
-use utils::set::{Set};
+use utils::set::{Set, SetTrait};
 
 
 pub const FIRST_ETHEREUM_PRECOMPILE_ADDRESS: u256 = 0x01;
@@ -44,7 +44,7 @@ pub fn eth_precompile_addresses() -> Set<EthAddress> {
         precompile_addresses.append(i.try_into().unwrap());
         i = i + 1;
     };
-    Set { inner: precompile_addresses }
+    SetTrait::from_array(precompile_addresses)
 }
 
 
@@ -71,10 +71,7 @@ pub impl PrecompilesImpl of Precompiles {
                 0x02 => { Sha256::exec(input)? },
                 0x03 => {
                     // we should never reach this branch!
-                    panic!(
-                        "pre-compile at address {:?} isn't implemented yet",
-                        precompile_address.address
-                    )
+                    panic!("pre-compile at address {:?} isn't implemented yet", precompile_address)
                 },
                 0x04 => { Identity::exec(input)? },
                 0x05 => { ModExp::exec(input)? },
@@ -87,10 +84,7 @@ pub impl PrecompilesImpl of Precompiles {
                 0x09 => { Blake2f::exec(input)? },
                 0x0a => {
                     // Point Evaluation
-                    panic!(
-                        "pre-compile at address {} isn't implemented yet",
-                        precompile_address.address
-                    )
+                    panic!("pre-compile at address {:?} isn't implemented yet", precompile_address)
                 },
                 _ => {
                     // we should never reach this branch!

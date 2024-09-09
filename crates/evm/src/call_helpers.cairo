@@ -8,7 +8,7 @@ use evm::errors::EVMError;
 use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{Transfer, Address, Message, ExecutionResultTrait, ExecutionResultStatus};
+use evm::model::{Address, Message, ExecutionResultStatus};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use utils::constants;

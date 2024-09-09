@@ -89,9 +89,7 @@ mod tests {
     use core::result::ResultTrait;
     use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
     use evm::instructions::LoggingOperationsTrait;
-    use evm::memory::MemoryTrait;
     use evm::stack::StackTrait;
-    use evm::state::StateTrait;
     use evm::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait};
     use utils::helpers::u256_to_bytes_array;
 

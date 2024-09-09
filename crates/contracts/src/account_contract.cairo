@@ -57,7 +57,6 @@ pub mod AccountContract {
     use core::panic_with_felt252;
     use core::starknet::SyscallResultTrait;
     use core::starknet::account::{Call};
-    use core::starknet::secp256_trait::Signature;
     use core::starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess

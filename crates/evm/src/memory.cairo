@@ -1,4 +1,4 @@
-use core::cmp::{max, min};
+use core::cmp::min;
 use core::dict::{Felt252Dict, Felt252DictTrait};
 use core::integer::{u32_safe_divmod};
 use utils::constants::{

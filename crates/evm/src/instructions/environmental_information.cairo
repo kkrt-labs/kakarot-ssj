@@ -310,7 +310,6 @@ fn copy_bytes_to_memory(
 mod tests {
     use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherImpl;
     use contracts::test_data::counter_evm_bytecode;
-    use core::num::traits::CheckedAdd;
     use core::starknet::EthAddress;
     use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
     use evm::instructions::EnvironmentInformationTrait;
@@ -329,7 +328,6 @@ mod tests {
 
     mod test_internals {
         use evm::memory::MemoryTrait;
-        use evm::model::vm::VMTrait;
         use evm::test_utils::VMBuilderTrait;
         use super::super::copy_bytes_to_memory;
 

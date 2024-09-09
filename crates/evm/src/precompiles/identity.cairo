@@ -27,11 +27,8 @@ mod tests {
     use evm::memory::MemoryTrait;
     use evm::precompiles::identity::Identity;
     use evm::stack::StackTrait;
-    use evm::test_utils::{
-        VMBuilderTrait, MemoryTestUtilsTrait, native_token, other_starknet_address,
-        setup_test_storages
-    };
-    use snforge_std::{start_mock_call, test_address};
+    use evm::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait, native_token, setup_test_storages};
+    use snforge_std::start_mock_call;
 
     // source:
     // <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='wFirsWplaceqparameters%20in%20memorybFFjdata~0vMSTOREvvwDoqcall~1QX3FQ_1YX1FY_4jaddressZ4%200xFFFFFFFFjgasvSTATICCALLvvwPutqresulWalonVonqstackvPOPb20vMLOAD'~Z1j//%20v%5Cnq%20thVj%20wb~0x_Offset~ZvPUSHYjargsXSizebWt%20Ve%20Qjret%01QVWXYZ_bjqvw~_>

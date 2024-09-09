@@ -29,33 +29,33 @@ pub struct Environment {
     pub state: State
 }
 #[derive(Copy, Drop, Default, PartialEq, Debug)]
-struct Message {
-    caller: Address,
-    target: Address,
-    gas_limit: u128,
-    data: Span<u8>,
-    code: Span<u8>,
-    code_address: Address,
-    value: u256,
-    should_transfer_value: bool,
-    depth: usize,
-    read_only: bool,
-    accessed_addresses: SpanSet<EthAddress>,
-    accessed_storage_keys: SpanSet<(EthAddress, u256)>,
+pub struct Message {
+    pub caller: Address,
+    pub target: Address,
+    pub gas_limit: u128,
+    pub data: Span<u8>,
+    pub code: Span<u8>,
+    pub code_address: Address,
+    pub value: u256,
+    pub should_transfer_value: bool,
+    pub depth: usize,
+    pub read_only: bool,
+    pub accessed_addresses: SpanSet<EthAddress>,
+    pub accessed_storage_keys: SpanSet<(EthAddress, u256)>,
 }
 
 #[derive(Drop, Debug)]
-struct ExecutionResult {
-    status: ExecutionResultStatus,
-    return_data: Span<u8>,
-    gas_left: u128,
-    accessed_addresses: SpanSet<EthAddress>,
-    accessed_storage_keys: SpanSet<(EthAddress, u256)>,
-    gas_refund: u128,
+pub struct ExecutionResult {
+    pub status: ExecutionResultStatus,
+    pub return_data: Span<u8>,
+    pub gas_left: u128,
+    pub accessed_addresses: SpanSet<EthAddress>,
+    pub accessed_storage_keys: SpanSet<(EthAddress, u256)>,
+    pub gas_refund: u128,
 }
 
 #[derive(Copy, Drop, PartialEq, Debug)]
-enum ExecutionResultStatus {
+pub enum ExecutionResultStatus {
     Success,
     Revert,
     Exception,

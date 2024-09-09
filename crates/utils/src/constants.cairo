@@ -1,4 +1,3 @@
-use core::starknet::EthAddress;
 use utils::traits::{U8IntoEthAddress};
 
 // FELT PRIME

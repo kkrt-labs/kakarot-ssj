@@ -316,11 +316,10 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::state::StateTrait;
     use evm::test_utils::{
-        evm_address, VMBuilderTrait, MemoryTestUtilsTrait, setup_test_storages, register_account,
-        uninitialized_account, native_token
+        VMBuilderTrait, MemoryTestUtilsTrait, setup_test_storages, uninitialized_account,
+        native_token
     };
-    use snforge_std::{test_address, start_mock_call, store};
-    use snforge_utils::snforge_utils::store_evm;
+    use snforge_std::{test_address, start_mock_call};
     use utils::helpers::compute_starknet_address;
 
     #[test]

@@ -12,9 +12,7 @@ pub mod snforge_utils {
     use snforge_std::cheatcodes::events::{Events};
     use array_utils::ArrayExtTrait;
 
-    use snforge_std::trace::{
-        get_call_trace, CallTrace, CallEntryPoint, CallResult, EntryPointType, CallType, CallFailure
-    };
+    use snforge_std::trace::{get_call_trace, CallTrace, CallEntryPoint};
 
     pub fn is_called(contract_address: ContractAddress, selector: felt252) -> bool {
         let call_trace = get_call_trace();
