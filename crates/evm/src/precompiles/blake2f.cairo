@@ -84,8 +84,8 @@ pub impl Blake2f of Precompile {
 mod tests {
     use core::array::SpanTrait;
     use evm::errors::EVMError;
-    use evm::instructions::memory_operations::MemoryOperationTrait;
-    use evm::instructions::system_operations::SystemOperationsTrait;
+    use evm::instructions::MemoryOperationTrait;
+    use evm::instructions::SystemOperationsTrait;
     use evm::memory::MemoryTrait;
     use evm::precompiles::blake2f::Blake2f;
     use evm::stack::StackTrait;

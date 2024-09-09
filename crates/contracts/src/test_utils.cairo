@@ -3,7 +3,8 @@ use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcher, interface::IExtendedKakarotCoreDispatcherTrait
 };
 use core::result::ResultTrait;
-use core::starknet::{EthAddress, ContractAddress, deploy_syscall};
+use core::starknet::syscalls::deploy_syscall;
+use core::starknet::{EthAddress, ContractAddress};
 use evm::model::{Address};
 
 use evm::test_utils::{other_starknet_address, sequencer_evm_address};

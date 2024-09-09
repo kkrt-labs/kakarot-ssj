@@ -23,8 +23,8 @@ pub mod ownable_component {
     use super::Errors;
 
     #[storage]
-    pub(crate) struct Storage {
-        pub(crate) Ownable_owner: ContractAddress
+    pub struct Storage {
+        pub Ownable_owner: ContractAddress
     }
 
     #[event]
@@ -41,7 +41,7 @@ pub mod ownable_component {
 
 
     #[embeddable_as(Ownable)]
-    impl OwnableImpl<
+    pub impl OwnableImpl<
         TContractState, +HasComponent<TContractState>
     > of super::IOwnable<ComponentState<TContractState>> {
         fn owner(self: @ComponentState<TContractState>) -> ContractAddress {

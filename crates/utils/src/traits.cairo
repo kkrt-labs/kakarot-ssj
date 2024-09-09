@@ -123,7 +123,7 @@ pub impl U8IntoEthAddress of Into<u8, EthAddress> {
 
 #[cfg(test)]
 mod tests {
-    use core::starknet::storage_base_address_from_felt252;
+    use core::starknet::storage_access::storage_base_address_from_felt252;
     use utils::traits::{StorageBaseAddressPartialEq};
 
     #[test]

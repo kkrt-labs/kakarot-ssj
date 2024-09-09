@@ -235,7 +235,7 @@ impl MemoryImpl of MemoryTrait {
 }
 
 #[generate_trait]
-impl InternalMemoryMethods of InternalMemoryTrait {
+pub(crate) impl InternalMemoryMethods of InternalMemoryTrait {
     /// Stores a `u256` element at a specified offset within a memory chunk.
     ///
     /// It first computes the

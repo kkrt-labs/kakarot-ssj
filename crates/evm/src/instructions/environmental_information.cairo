@@ -308,7 +308,6 @@ fn copy_bytes_to_memory(
 
 #[cfg(test)]
 mod tests {
-    use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherImpl;
     use contracts::test_data::counter_evm_bytecode;
     use core::starknet::EthAddress;
     use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
@@ -1042,7 +1041,7 @@ mod tests {
     fn test_exec_extcodehash_precompile() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        let precompile_evm_address: EthAddress = evm::model::LAST_ETHEREUM_PRECOMPILE_ADDRESS
+        let precompile_evm_address: EthAddress = evm::precompiles::LAST_ETHEREUM_PRECOMPILE_ADDRESS
             .try_into()
             .unwrap();
         let precompile_starknet_address = compute_starknet_address(

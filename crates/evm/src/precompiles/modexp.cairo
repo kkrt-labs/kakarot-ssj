@@ -156,7 +156,7 @@ mod tests {
     use core::starknet::EthAddress;
     use core::starknet::testing::set_contract_address;
 
-    use evm::instructions::system_operations::SystemOperationsTrait;
+    use evm::instructions::SystemOperationsTrait;
 
     use evm::memory::MemoryTrait;
     use evm::precompiles::Precompiles;

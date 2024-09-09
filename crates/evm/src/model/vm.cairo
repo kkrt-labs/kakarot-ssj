@@ -162,7 +162,6 @@ pub impl VMImpl of VMTrait {
 
 #[cfg(test)]
 mod tests {
-    use evm::errors::DebugEVMError;
     use evm::errors::EVMError;
     use evm::model::Message;
     use evm::model::vm::VMTrait;

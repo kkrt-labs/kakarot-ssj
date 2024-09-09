@@ -14,7 +14,7 @@ use snforge_utils::snforge_utils::{EventsFilterBuilderTrait, ContractEvents, Con
 
 
 #[starknet::contract]
-mod MockContract {
+pub mod MockContract {
     use contracts::components::ownable::{ownable_component};
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
@@ -33,7 +33,7 @@ mod MockContract {
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         OwnableEvent: ownable_component::Event
     }
 }

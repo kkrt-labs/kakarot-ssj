@@ -33,7 +33,7 @@ fn compute_y_parity(v: u128, chain_id: u128) -> Option<bool> {
     return Option::None;
 }
 
-fn serialize_transaction_signature(
+pub fn serialize_transaction_signature(
     sig: Signature, tx_type: TransactionType, chain_id: u128
 ) -> Array<felt252> {
     let mut res: Array<felt252> = array![
@@ -90,7 +90,7 @@ pub fn serialize_bytes(self: Span<u8>) -> Array<felt252> {
 
 #[cfg(test)]
 mod tests {
-    use core::starknet::eth_signature::Signature;
+    use core::starknet::secp256_trait::Signature;
     use utils::constants::CHAIN_ID;
     use utils::eth_transaction::TransactionType;
     use utils::serialization::{deserialize_signature, serialize_transaction_signature};

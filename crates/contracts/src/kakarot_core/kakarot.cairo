@@ -63,7 +63,7 @@ pub mod KakarotCore {
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         OwnableEvent: ownable_component::Event,
         UpgradeableEvent: upgradeable_component::Event,
         AccountDeployed: AccountDeployed,
@@ -242,7 +242,7 @@ pub mod KakarotCore {
     }
 
     #[generate_trait]
-    impl KakarotCoreInternalImpl of KakarotCoreInternal {
+    pub impl KakarotCoreInternalImpl of KakarotCoreInternal {
         fn is_view(self: @ContractState) -> bool {
             let tx_info = get_tx_info().unbox();
 

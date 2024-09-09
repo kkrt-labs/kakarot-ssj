@@ -230,8 +230,8 @@ pub mod Cairo1Helpers {
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl Precompiles = super::embeddable_impls::Precompiles<ContractState>;
+    pub impl Precompiles = super::embeddable_impls::Precompiles<ContractState>;
 
     #[abi(embed_v0)]
-    impl Helpers = super::embeddable_impls::Helpers<ContractState>;
+    pub impl Helpers = super::embeddable_impls::Helpers<ContractState>;
 }

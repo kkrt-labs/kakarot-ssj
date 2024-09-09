@@ -104,12 +104,13 @@ pub impl PrecompilesImpl of Precompiles {
 #[cfg(test)]
 mod tests {
     use super::eth_precompile_addresses;
+    use utils::set::SetTrait;
 
     #[test]
     fn test_eth_precompile_addresses() {
         let addresses = eth_precompile_addresses();
         assert_eq!(
-            addresses.inner.span(),
+            addresses.to_span(),
             [
                 0x01.try_into().unwrap(),
                 0x02.try_into().unwrap(),

@@ -485,7 +485,8 @@ pub impl EthTransactionImpl of EthTransactionTrait {
 #[cfg(test)]
 mod tests {
     use core::option::OptionTrait;
-    use core::starknet::eth_signature::{EthAddress, Signature};
+    use core::starknet::EthAddress;
+    use core::starknet::secp256_trait::{Signature};
     use evm::test_utils::chain_id;
 
     use utils::eth_transaction::{

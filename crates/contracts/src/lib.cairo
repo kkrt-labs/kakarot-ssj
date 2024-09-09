@@ -22,15 +22,16 @@ pub use cairo1_helpers::{
     IPrecompilesDispatcherTrait, IHelpersDispatcherTrait
 };
 pub use kakarot_core::{
-    KakarotCore, IKakarotCore, IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait
+    KakarotCore, IKakarotCore, IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait,
+    IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
 pub use uninitialized_account::{UninitializedAccount};
 
 //TODO: hide this behind a feature flag
-mod test_contracts {
-    mod test_upgradeable;
+pub mod test_contracts {
+    pub mod test_upgradeable;
 }
 
-mod mocks {
-    mod cairo1_helpers_fixture;
+pub mod mocks {
+    pub mod cairo1_helpers_fixture;
 }

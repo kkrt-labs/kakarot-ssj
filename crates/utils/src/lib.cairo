@@ -11,7 +11,7 @@ pub mod rlp;
 pub mod serialization;
 pub mod set;
 
-mod test_data;
+pub mod test_data;
 
 pub mod traits;
 //! Utilities for kakarot standard library.

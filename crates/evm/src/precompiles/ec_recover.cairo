@@ -69,7 +69,7 @@ pub impl EcRecover of Precompile {
 #[cfg(test)]
 mod tests {
     use core::array::ArrayTrait;
-    use evm::instructions::system_operations::SystemOperationsTrait;
+    use evm::instructions::SystemOperationsTrait;
     use evm::memory::MemoryTrait;
 
     use evm::precompiles::ec_recover::EcRecover;

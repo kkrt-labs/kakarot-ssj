@@ -1,4 +1,4 @@
-fn legacy_rlp_encoded_tx() -> Span<u8> {
+pub fn legacy_rlp_encoded_tx() -> Span<u8> {
     // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0, 0]
     // expected rlp decoding:  [ "0x", "0x3b9aca00", "0x1e8480",
     // "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef", "0x4b4b5254",
@@ -61,7 +61,7 @@ fn legacy_rlp_encoded_tx() -> Span<u8> {
     ].span()
 }
 
-fn legacy_rlp_encoded_deploy_tx() -> Span<u8> {
+pub fn legacy_rlp_encoded_deploy_tx() -> Span<u8> {
     // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0, 0]
     // expected rlp decoding:
     // ["0x","0x0a","0x061a80","0x","0x0186a0","0x600160010a5060006000f3","0x4b4b5254","0x","0x"]
@@ -101,7 +101,7 @@ fn legacy_rlp_encoded_deploy_tx() -> Span<u8> {
 }
 
 
-fn eip_2930_encoded_tx() -> Span<u8> {
+pub fn eip_2930_encoded_tx() -> Span<u8> {
     // tx_format (EIP-2930, unsigned): 0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to, value,
     // data, accessList])
     // expected rlp decoding:   [ "0x4b4b5254", "0x", "0x3b9aca00", "0x1e8480",
@@ -260,7 +260,7 @@ fn eip_2930_encoded_tx() -> Span<u8> {
     ].span()
 }
 
-fn eip_1559_encoded_tx() -> Span<u8> {
+pub fn eip_1559_encoded_tx() -> Span<u8> {
     // tx_format (EIP-1559, unsigned):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas,
     // max_fee_per_gas, gas_limit, destination, amount, data, access_list])
     // expected rlp decoding: [ "0x4b4b5254", "0x", "0x", "0x3b9aca00", "0x1e8480",

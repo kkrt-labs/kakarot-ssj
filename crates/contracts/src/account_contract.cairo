@@ -100,7 +100,7 @@ pub mod AccountContract {
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         transaction_executed: TransactionExecuted,
         OwnableEvent: ownable_component::Event
     }

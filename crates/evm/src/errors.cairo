@@ -91,7 +91,7 @@ pub impl EVMErrorImpl of EVMErrorTrait {
     }
 }
 
-impl DebugEVMError of Debug<EVMError> {
+pub impl DebugEVMError of Debug<EVMError> {
     fn fmt(self: @EVMError, ref f: Formatter) -> Result<(), Error> {
         let error_message = (*self).to_string();
         Display::fmt(@error_message, ref f)

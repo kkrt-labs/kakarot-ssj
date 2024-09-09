@@ -51,7 +51,7 @@ pub impl Sha256 of Precompile {
 #[cfg(test)]
 mod tests {
     use core::result::ResultTrait;
-    use evm::instructions::system_operations::SystemOperationsTrait;
+    use evm::instructions::SystemOperationsTrait;
 
     use evm::memory::MemoryTrait;
     use evm::precompiles::sha256::Sha256;

@@ -105,7 +105,7 @@ pub impl P256Verify of Precompile {
 #[cfg(test)]
 mod tests {
     use core::array::ArrayTrait;
-    use evm::instructions::system_operations::SystemOperationsTrait;
+    use evm::instructions::SystemOperationsTrait;
     use evm::memory::MemoryTrait;
 
     use evm::precompiles::p256verify::P256Verify;
