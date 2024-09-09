@@ -7,13 +7,13 @@ use core::circuit::{
     circuit_mul, circuit_inverse, EvalCircuitResult, EvalCircuitTrait, CircuitOutputsTrait,
     CircuitModulus, AddInputResultTrait, CircuitInputs, CircuitInputAccumulator
 };
+use core::num::traits::Zero;
 
 
 use core::option::Option;
 use core::starknet::SyscallResultTrait;
 use core::starknet::{EthAddress};
 use evm::errors::{EVMError};
-use core::num::traits::Zero;
 use evm::precompiles::Precompile;
 use garaga::core::circuit::AddInputResultTrait2;
 use utils::helpers::{U256Trait, ToBytes, FromBytes};
@@ -105,7 +105,10 @@ fn ec_add(x1: u256, y1: u256, x2: u256, y2: u256) -> Option<(u256, u256)> {
                     Option::Some((
                         x, y
                     )) => Option::Some(
-                        (TryInto::<u384, u256>::try_into(x).unwrap(), TryInto::<u384, u256>::try_into(y).unwrap())
+                        (
+                            TryInto::<u384, u256>::try_into(x).unwrap(),
+                            TryInto::<u384, u256>::try_into(y).unwrap()
+                        )
                     ),
                     Option::None => Option::Some((0, 0)),
                 }
@@ -270,8 +273,7 @@ fn eq_neg_mod_p(a: u384, b: u384) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        eq_mod_p, eq_neg_mod_p, double_ec_point_unchecked,
-        add_ec_point_unchecked, is_on_curve, u384
+        eq_mod_p, eq_neg_mod_p, double_ec_point_unchecked, add_ec_point_unchecked, is_on_curve, u384
     };
     use utils::helpers::{U256Trait, ToBytes, FromBytes};
 

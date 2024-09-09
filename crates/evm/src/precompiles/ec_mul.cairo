@@ -83,9 +83,7 @@ fn ec_mul(x1: u256, y1: u256, s: u256) -> Option<(u256, u256)> {
                 match pt {
                     Option::Some((
                         x, y
-                    )) => Option::Some(
-                        (x.try_into().unwrap(), y.try_into().unwrap())
-                    ),
+                    )) => Option::Some((x.try_into().unwrap(), y.try_into().unwrap())),
                     Option::None => Option::Some((0, 0)),
                 }
             }
