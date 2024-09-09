@@ -679,29 +679,30 @@ pub impl MPNatTraitImpl of MPNatTrait {
     }
 }
 
+pub fn mp_nat_to_u128(ref x: MPNat) -> u128 {
+    let result = x.digits.to_le_bytes();
+    let mut i: usize = 0;
+    loop {
+        if i == result.len() {
+            break;
+        };
+
+        i += 1;
+    };
+    result.from_le_bytes_partial().expect('mpnat_to_u128')
+}
+
 #[cfg(test)]
 mod tests {
     use alexandria_data_structures::vec::Felt252VecImpl;
     use alexandria_data_structures::vec::VecTrait;
-    use utils::crypto::modexp::mpnat::{MPNat, MPNatTrait};
-    use utils::helpers::{Felt252VecTrait, ToBytes, FromBytes};
+    use utils::crypto::modexp::mpnat::MPNatTrait;
+    use utils::helpers::ToBytes;
     use utils::math::{Bitshift, WrappingBitshift};
+    use super::mp_nat_to_u128;
 
     // the tests are taken from
     // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/mpnat.rs#L825)
-
-    pub fn mp_nat_to_u128(ref x: MPNat) -> u128 {
-        let result = x.digits.to_le_bytes();
-        let mut i: usize = 0;
-        loop {
-            if i == result.len() {
-                break;
-            };
-
-            i += 1;
-        };
-        result.from_le_bytes_partial().expect('mpnat_to_u128')
-    }
 
     fn check_modpow_even(base: u128, exp: u128, modulus: u128, expected: u128) {
         let mut x = MPNatTrait::from_big_endian(base.to_be_bytes());

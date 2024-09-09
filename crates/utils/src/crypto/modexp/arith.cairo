@@ -598,7 +598,7 @@ mod tests {
         mod_inv, monsq, monpro, compute_r_mod_n, in_place_shl, in_place_shr, big_wrapping_pow,
         big_wrapping_mul, big_sq, borrowing_sub, shifted_carrying_mul
     };
-    use utils::crypto::modexp::mpnat::tests::{mp_nat_to_u128};
+    use utils::crypto::modexp::mpnat::{mp_nat_to_u128};
     use utils::crypto::modexp::mpnat::{
         MPNat, MPNatTrait, WORD_MAX, DOUBLE_WORD_MAX, BASE, Word, WORD_BYTES
     };
