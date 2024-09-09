@@ -14,7 +14,7 @@ use evm::precompiles::Precompile;
 
 use evm::precompiles::ec_add::{
     is_on_curve, eq_mod_p, eq_neg_mod_p, double_ec_point_unchecked, add_ec_point_unchecked,
-    ec_safe_add, u384_circuit_output_to_u256
+    ec_safe_add,
 };
 use garaga::core::circuit::AddInputResultTrait2;
 use garaga::utils::u384_eq_zero;
@@ -84,7 +84,7 @@ fn ec_mul(x1: u256, y1: u256, s: u256) -> Option<(u256, u256)> {
                     Option::Some((
                         x, y
                     )) => Option::Some(
-                        (u384_circuit_output_to_u256(x), u384_circuit_output_to_u256(y))
+                        (x.try_into().unwrap(), y.try_into().unwrap())
                     ),
                     Option::None => Option::Some((0, 0)),
                 }

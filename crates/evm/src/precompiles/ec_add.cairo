@@ -9,14 +9,13 @@ use core::circuit::{
 };
 
 
-use core::internal::BoundedInt;
 use core::option::Option;
 use core::starknet::SyscallResultTrait;
 use core::starknet::{EthAddress};
 use evm::errors::{EVMError};
+use core::num::traits::Zero;
 use evm::precompiles::Precompile;
 use garaga::core::circuit::AddInputResultTrait2;
-use garaga::utils::u384_eq_zero;
 use utils::helpers::{U256Trait, ToBytes, FromBytes};
 use utils::helpers::{load_word, u256_to_bytes_array};
 
@@ -106,7 +105,7 @@ fn ec_add(x1: u256, y1: u256, x2: u256, y2: u256) -> Option<(u256, u256)> {
                     Option::Some((
                         x, y
                     )) => Option::Some(
-                        (u384_circuit_output_to_u256(x), u384_circuit_output_to_u256(y))
+                        (TryInto::<u384, u256>::try_into(x).unwrap(), TryInto::<u384, u256>::try_into(y).unwrap())
                     ),
                     Option::None => Option::Some((0, 0)),
                 }
@@ -166,7 +165,7 @@ fn is_on_curve(x: u384, y: u384) -> bool {
 
     let outputs = circuit_inputs.done_2().eval(modulus).unwrap();
     let zero_check: u384 = outputs.get_output(check);
-    return u384_eq_zero(zero_check);
+    return zero_check.is_zero();
 }
 
 
@@ -250,7 +249,7 @@ fn eq_mod_p(a: u384, b: u384) -> bool {
 
     let outputs = (sub,).new_inputs().next_2(a).next_2(b).done_2().eval(modulus).unwrap();
 
-    return u384_eq_zero(outputs.get_output(sub));
+    return outputs.get_output(sub).is_zero();
 }
 
 // returns true if a == -b mod p_bn254
@@ -266,101 +265,55 @@ fn eq_neg_mod_p(a: u384, b: u384) -> bool {
 
     let outputs = (check,).new_inputs().next_2(a).next_2(b).done_2().eval(modulus).unwrap();
 
-    return u384_eq_zero(outputs.get_output(check));
+    return outputs.get_output(check).is_zero();
 }
-type ConstValue<const VALUE: felt252> = BoundedInt<VALUE, VALUE>;
-const POW64: felt252 = 0x10000000000000000;
-const POW32: felt252 = 0x100000000;
-const POW96: felt252 = 0x1000000000000000000000000;
-const POW32_TYPED: ConstValue<POW32> = 0x100000000;
-const NZ_POW32_TYPED: NonZero<ConstValue<POW32>> = 0x100000000;
-
-const NZ_POW64_TYPED: NonZero<ConstValue<POW64>> = 0x10000000000000000;
-
-
-trait DivRemHelper<Lhs, Rhs> {
-    type DivT;
-    type RemT;
-}
-impl DivRemU96By64 of DivRemHelper<u96, ConstValue<POW64>> {
-    type DivT = BoundedInt<0, { POW32 - 1 }>;
-    type RemT = BoundedInt<0, { POW64 - 1 }>;
-}
-
-impl DivRemU96By32 of DivRemHelper<u96, ConstValue<POW32>> {
-    type DivT = BoundedInt<0, { POW64 - 1 }>;
-    type RemT = BoundedInt<0, { POW32 - 1 }>;
-}
-
-extern fn bounded_int_div_rem<Lhs, Rhs, impl H: DivRemHelper<Lhs, Rhs>>(
-    lhs: Lhs, rhs: NonZero<Rhs>,
-) -> (H::DivT, H::RemT) implicits(RangeCheck) nopanic;
-
-
-// Cuts a u384 into a u256.
-// Must be used on circuit outputs ran with a p <=256 bits
-// so that the outputs are guaranteed to be less than p.
-fn u384_circuit_output_to_u256(x: u384) -> u256 {
-    // limb3_96 || limb2_96 || limb1_96 || limb0_96
-    let (q_limb1_64, r_limb1_32) = bounded_int_div_rem(x.limb1, NZ_POW32_TYPED);
-    // limb3_96 || limb2_96 || q_limb1_64 || r_limb1_32 || limb0_96
-    let low: felt252 = (r_limb1_32.into() * POW96) + x.limb0.into();
-    // limb3_96 || limb2_96 || q_limb1_64 || low_128
-    let (_q_limb2_32, r_limb2_64) = bounded_int_div_rem(x.limb2, NZ_POW64_TYPED);
-    // limb3_96 || q_limb2_32 || r_limb2_64 || q_limb1_64 || low_128
-
-    let high: felt252 = (r_limb2_64.into() * POW64) + q_limb1_64.into();
-
-    return u256 { low: low.try_into().unwrap(), high: high.try_into().unwrap() };
-}
-
 #[cfg(test)]
 mod tests {
     use super::{
-        u384_circuit_output_to_u256, eq_mod_p, eq_neg_mod_p, double_ec_point_unchecked,
-        add_ec_point_unchecked, is_on_curve, u384, POW32, POW64, POW96
+        eq_mod_p, eq_neg_mod_p, double_ec_point_unchecked,
+        add_ec_point_unchecked, is_on_curve, u384
     };
     use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
     #[test]
-    fn test_u384_circuit_output_to_u256() {
+    fn test_u384_to_u256() {
         let x = u384 { limb0: 0x1, limb1: 0x0, limb2: 0x0, limb3: 0x0 };
-        let y = u384_circuit_output_to_u256(x);
+        let y = TryInto::<u384, u256>::try_into(x).unwrap();
         assert_eq!(y, u256 { low: 0x1, high: 0x0 });
         let x = u384 { limb0: 0x0, limb1: 0x0, limb2: 0x0, limb3: 0x0 };
-        let y = u384_circuit_output_to_u256(x);
+        let y = TryInto::<u384, u256>::try_into(x).unwrap();
         assert_eq!(y, u256 { low: 0x0, high: 0x0 });
         let x = u384 { limb0: 0xc77661, limb1: 0x0, limb2: 0x0, limb3: 0x0 };
-        let y = u384_circuit_output_to_u256(x);
+        let y = TryInto::<u384, u256>::try_into(x).unwrap();
         assert_eq!(y, u256 { low: 0xc77661, high: 0x0 });
         let x = u384 { limb0: 0xa1f1ae97, limb1: 0x0, limb2: 0x0, limb3: 0x0 };
-        let y = u384_circuit_output_to_u256(x);
+        let y = TryInto::<u384, u256>::try_into(x).unwrap();
         assert_eq!(y, u256 { low: 0xa1f1ae97, high: 0x0 });
 
         let x = u384 { limb0: 0x6dbd0f5925f2ea8792be851d, limb1: 0x60, limb2: 0x0, limb3: 0x0 };
-        let y = u384_circuit_output_to_u256(x);
+        let y = TryInto::<u384, u256>::try_into(x).unwrap();
         assert_eq!(y, u256 { low: 0x606dbd0f5925f2ea8792be851d, high: 0x0 });
 
         let x = u384 { limb0: 0x288ad273930c8e07bee0b040, limb1: 0x9a80, limb2: 0x0, limb3: 0x0 };
-        let y = u384_circuit_output_to_u256(x);
+        let y = TryInto::<u384, u256>::try_into(x).unwrap();
         assert_eq!(y, u256 { low: 0x9a80288ad273930c8e07bee0b040, high: 0x0 });
 
         let x = u384 {
             limb0: 0x79f59cab560d347406f8f978, limb1: 0x32355e68, limb2: 0x0, limb3: 0x0
         };
-        let y = u384_circuit_output_to_u256(x);
+        let y = TryInto::<u384, u256>::try_into(x).unwrap();
         assert_eq!(y, u256 { low: 0x32355e6879f59cab560d347406f8f978, high: 0x0 });
 
         let x = u384 {
             limb0: 0xf7c12fd7cd43a2091356f287, limb1: 0x5670d3784d, limb2: 0x0, limb3: 0x0
         };
-        let y = u384_circuit_output_to_u256(x);
+        let y = TryInto::<u384, u256>::try_into(x).unwrap();
         assert_eq!(y, u256 { low: 0x70d3784df7c12fd7cd43a2091356f287, high: 0x56 });
 
         let x = u384 {
             limb0: 0x4def54e61b4eee26c407edc8, limb1: 0x6a3d1d0cac6d, limb2: 0x0, limb3: 0x0
         };
-        let y = u384_circuit_output_to_u256(x);
+        let y = TryInto::<u384, u256>::try_into(x).unwrap();
         assert_eq!(y, u256 { low: 0x1d0cac6d4def54e61b4eee26c407edc8, high: 0x6a3d });
 
         let x = u384 {
@@ -369,7 +322,7 @@ mod tests {
             limb2: 0x0,
             limb3: 0x0
         };
-        let y = u384_circuit_output_to_u256(x);
+        let y = TryInto::<u384, u256>::try_into(x).unwrap();
         assert_eq!(y, u256 { low: 0x836f45e30a666c4bd0b0f6ac7bfc6697, high: 0x55354b07685a19 });
 
         let x = u384 {
@@ -378,7 +331,7 @@ mod tests {
             limb2: 0x0,
             limb3: 0x0
         };
-        let y = u384_circuit_output_to_u256(x);
+        let y = TryInto::<u384, u256>::try_into(x).unwrap();
         assert_eq!(y, u256 { low: 0x7a497f6bf99e6e4a89d4c4bf4eeb5764, high: 0xba69422bccfb0bf0 });
 
         let x = u384 {
@@ -387,7 +340,7 @@ mod tests {
             limb2: 0xda,
             limb3: 0x0
         };
-        let y = u384_circuit_output_to_u256(x);
+        let y = TryInto::<u384, u256>::try_into(x).unwrap();
         assert_eq!(y, u256 { low: 0xf4262ef4a18fd325c835625f53342a9f, high: 0xda3f862f6ff3d3c356 });
 
         let x = u384 {
@@ -396,7 +349,7 @@ mod tests {
             limb2: 0x4bb761b32d048,
             limb3: 0x0
         };
-        let y = u384_circuit_output_to_u256(x);
+        let y = TryInto::<u384, u256>::try_into(x).unwrap();
         assert_eq!(
             y,
             u256 { low: 0x4abd71f14332f4d7188cef59cbdef8db, high: 0x4bb761b32d048bb3e59509bf71bec }
