@@ -1,9 +1,9 @@
-use contracts::account_contract::{AccountContract, IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::errors::KAKAROT_REENTRANCY;
 use contracts::test_data::counter_evm_bytecode;
 use contracts::test_utils::{
     setup_contracts_for_testing, deploy_contract_account, fund_account_with_native_token
 };
+use contracts::{IAccountDispatcher, IAccountDispatcherTrait};
 use core::starknet::ContractAddress;
 use core::starknet::account::{Call};
 use core::starknet::testing;
@@ -105,9 +105,9 @@ fn test_ca_external_starknet_call_kakarot_get_starknet_address() {
     let contract_account = IAccountDispatcher { contract_address: ca_address.starknet };
 
     let call = Call {
-        to: kakarot_core.contract_address,
-        selector: selector!("get_starknet_address"),
-        calldata: array![ca_address.evm.address].span(),
+        to: kakarot_core.contract_address, selector: selector!("get_starknet_address"), calldata: [
+            ca_address.evm.into()
+        ].span(),
     };
     start_cheat_caller_address(ca_address.starknet, kakarot_core.contract_address);
     let (success, data) = contract_account.execute_starknet_call(call);
@@ -127,7 +127,7 @@ fn test_ca_external_starknet_call_cannot_call_kakarot_other_selector() {
     let call = Call {
         to: kakarot_core.contract_address,
         selector: selector!("get_native_token"),
-        calldata: array![].span(),
+        calldata: [].span(),
     };
     start_cheat_caller_address(ca_address.starknet, kakarot_core.contract_address);
     let (success, data) = contract_account.execute_starknet_call(call);

@@ -1,5 +1,3 @@
-use core::starknet::{ContractAddress, EthAddress, ClassHash};
-
 const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
 
@@ -9,14 +7,12 @@ pub mod KakarotCore {
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::kakarot_core::interface::IKakarotCore;
-    use core::num::traits::{Zero, CheckedAdd, CheckedSub, CheckedMul};
-    use core::starknet::SyscallResultTrait;
+    use core::num::traits::{Zero, CheckedSub};
     use core::starknet::event::EventEmitter;
     use core::starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess
     };
-    use core::starknet::syscalls::deploy_syscall;
     use core::starknet::{
         EthAddress, ContractAddress, ClassHash, get_tx_info, get_contract_address,
         get_caller_address
@@ -24,21 +20,17 @@ pub mod KakarotCore {
     use evm::backend::starknet_backend;
     use evm::errors::{EVMError, ensure, EVMErrorTrait,};
     use evm::gas;
-    use evm::interpreter::{EVMTrait};
-    use evm::model::account::{Account, AccountTrait};
+    use evm::model::account::AccountTrait;
     use evm::model::{
-        Transfer, Message, Environment, TransactionResult, TransactionResultTrait, ExecutionSummary,
-        ExecutionSummaryTrait, Address, AddressTrait
+        Message, TransactionResult, TransactionResultTrait, ExecutionSummaryTrait, Address
     };
     use evm::precompiles::eth_precompile_addresses;
-    use evm::state::{State, StateTrait};
-    use super::{INVOKE_ETH_CALL_FORBIDDEN};
+    use evm::state::StateTrait;
+    use evm::{EVMTrait};
     use utils::address::compute_contract_address;
-    use utils::constants;
     use utils::eth_transaction::AccessListItemTrait;
     use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, AccessListItem};
-    use utils::helpers::{compute_starknet_address, EthAddressExTrait};
-    use utils::rlp::RLPTrait;
+    use utils::helpers::compute_starknet_address;
     use utils::set::{Set, SetTrait};
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
@@ -54,14 +46,14 @@ pub mod KakarotCore {
 
     #[storage]
     pub struct Storage {
-        Kakarot_evm_to_starknet_address: Map::<EthAddress, ContractAddress>,
-        Kakarot_uninitialized_account_class_hash: ClassHash,
-        Kakarot_account_contract_class_hash: ClassHash,
-        Kakarot_native_token_address: ContractAddress,
-        Kakarot_coinbase: EthAddress,
-        Kakarot_base_fee: u128,
-        Kakarot_prev_randao: u256,
-        Kakarot_block_gas_limit: u128,
+        pub Kakarot_evm_to_starknet_address: Map::<EthAddress, ContractAddress>,
+        pub Kakarot_uninitialized_account_class_hash: ClassHash,
+        pub Kakarot_account_contract_class_hash: ClassHash,
+        pub Kakarot_native_token_address: ContractAddress,
+        pub Kakarot_coinbase: EthAddress,
+        pub Kakarot_base_fee: u128,
+        pub Kakarot_prev_randao: u256,
+        pub Kakarot_block_gas_limit: u128,
         // Components
         #[substorage(v0)]
         ownable: ownable_component::Storage,
@@ -71,7 +63,7 @@ pub mod KakarotCore {
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         OwnableEvent: ownable_component::Event,
         UpgradeableEvent: upgradeable_component::Event,
         AccountDeployed: AccountDeployed,
@@ -80,24 +72,24 @@ pub mod KakarotCore {
     }
 
     #[derive(Copy, Drop, starknet::Event)]
-    struct AccountDeployed {
+    pub struct AccountDeployed {
         #[key]
-        evm_address: EthAddress,
+        pub evm_address: EthAddress,
         #[key]
-        starknet_address: ContractAddress,
+        pub starknet_address: ContractAddress,
     }
 
     #[derive(Copy, Drop, starknet::Event)]
-    struct AccountClassHashChange {
-        old_class_hash: ClassHash,
-        new_class_hash: ClassHash,
+    pub struct AccountClassHashChange {
+        pub old_class_hash: ClassHash,
+        pub new_class_hash: ClassHash,
     }
 
 
     #[derive(Copy, Drop, starknet::Event)]
-    struct EOAClassHashChange {
-        old_class_hash: ClassHash,
-        new_class_hash: ClassHash,
+    pub struct EOAClassHashChange {
+        pub old_class_hash: ClassHash,
+        pub new_class_hash: ClassHash,
     }
 
 
@@ -126,7 +118,7 @@ pub mod KakarotCore {
     }
 
     #[abi(embed_v0)]
-    impl KakarotCoreImpl of IKakarotCore<ContractState> {
+    pub impl KakarotCoreImpl of IKakarotCore<ContractState> {
         fn set_native_token(ref self: ContractState, native_token: ContractAddress) {
             self.ownable.assert_only_owner();
             self.Kakarot_native_token_address.write(native_token);
@@ -250,7 +242,7 @@ pub mod KakarotCore {
     }
 
     #[generate_trait]
-    impl KakarotCoreInternalImpl of KakarotCoreInternal {
+    pub impl KakarotCoreInternalImpl of KakarotCoreInternal {
         fn is_view(self: @ContractState) -> bool {
             let tx_info = get_tx_info().unbox();
 

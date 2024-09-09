@@ -1,7 +1,4 @@
-use core::fmt::{Debug, Formatter, Error, Display};
-use core::nullable::{NullableTrait};
-use core::num::traits::Bounded;
-use core::starknet::{StorageBaseAddress, EthAddress};
+use core::dict::{Felt252Dict, Felt252DictTrait};
 //! Stack implementation.
 //! # Example
 //! ```
@@ -17,7 +14,10 @@ use core::starknet::{StorageBaseAddress, EthAddress};
 
 //! let value = stack.pop()?;
 //! ```
-use evm::errors::{ensure, EVMError, TYPE_CONVERSION_ERROR};
+use core::nullable::{NullableTrait};
+use core::num::traits::Bounded;
+use core::starknet::EthAddress;
+use evm::errors::{ensure, EVMError};
 
 use utils::constants;
 use utils::i256::i256;
@@ -26,12 +26,12 @@ use utils::traits::{TryIntoResult};
 
 //TODO(optimization): make len `felt252` based to avoid un-necessary checks
 #[derive(Destruct, Default)]
-struct Stack {
-    items: Felt252Dict<Nullable<u256>>,
-    len: usize,
+pub struct Stack {
+    pub items: Felt252Dict<Nullable<u256>>,
+    pub len: usize,
 }
 
-trait StackTrait {
+pub trait StackTrait {
     fn new() -> Stack;
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError>;
     fn pop(ref self: Stack) -> Result<u256, EVMError>;
@@ -340,8 +340,7 @@ mod tests {
 
     mod pop {
         use core::num::traits::Bounded;
-        use core::starknet::storage_base_address_const;
-        use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
+        use evm::errors::EVMError;
         use super::StackTrait;
         use utils::traits::StorageBaseAddressPartialEq;
 

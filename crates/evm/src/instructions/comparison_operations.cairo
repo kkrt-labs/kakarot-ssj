@@ -6,11 +6,11 @@ use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
 use utils::constants::{POW_2_127};
 use utils::i256::i256;
-use utils::math::{Exponentiation, Bitshift, WrappingBitshift};
+use utils::math::{Bitshift, WrappingBitshift};
 use utils::traits::BoolIntoNumeric;
 
 #[generate_trait]
-impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
+pub impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
     /// 0x10 - LT
     /// # Specification: https://www.evm.codes/#10?fork=shanghai
     fn exec_lt(ref self: VM) -> Result<(), EVMError> {

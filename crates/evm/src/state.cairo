@@ -1,20 +1,15 @@
-use contracts::kakarot_core::{IKakarotCore, KakarotCore};
+use core::dict::{Felt252Dict, Felt252DictTrait};
 use core::hash::{HashStateTrait, HashStateExTrait};
 use core::nullable::{match_nullable, FromNullableResult};
-use core::num::traits::{OverflowingAdd, OverflowingSub, OverflowingMul};
+use core::num::traits::{OverflowingAdd, OverflowingSub};
 use core::poseidon::PoseidonTrait;
-use core::starknet::SyscallResultTrait;
-use core::starknet::{
-    Store, StorageBaseAddress, storage_base_address_from_felt252, ContractAddress, EthAddress,
-    emit_event_syscall
-};
+use core::starknet::storage_access::{StorageBaseAddress, storage_base_address_from_felt252};
+use core::starknet::{EthAddress};
 use evm::backend::starknet_backend::fetch_original_storage;
 
-use evm::errors::{ensure, EVMError, WRITE_SYSCALL_FAILED, READ_SYSCALL_FAILED, BALANCE_OVERFLOW};
+use evm::errors::{ensure, EVMError, BALANCE_OVERFLOW};
 use evm::model::account::{AccountTrait, AccountInternalTrait};
-use evm::model::{Event, Transfer, Account, Address, AddressTrait};
-use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use utils::helpers::{ArrayExtTrait, ResultExTrait};
+use evm::model::{Event, Transfer, Account};
 use utils::set::{Set, SetTrait};
 
 /// The `StateChangeLog` tracks the changes applied to storage during the execution of a
@@ -32,9 +27,9 @@ use utils::set::{Set, SetTrait};
 /// * `changes` - A `Felt252Dict` of contextual changes. Tracks the changes applied inside a single
 /// execution context.
 /// * `keyset` - An `Array` of contextual keys.
-struct StateChangeLog<T> {
-    changes: Felt252Dict<Nullable<T>>,
-    keyset: Set<felt252>,
+pub struct StateChangeLog<T> {
+    pub changes: Felt252Dict<Nullable<T>>,
+    pub keyset: Set<felt252>,
 }
 
 impl StateChangeLogDestruct<T, +Drop<T>> of Destruct<StateChangeLog<T>> {
@@ -99,28 +94,28 @@ impl StateChangeLogImpl<T, +Drop<T>, +Copy<T>> of StateChangeLogTrait<T> {
 }
 
 #[derive(Default, Destruct)]
-struct State {
+pub struct State {
     /// Accounts states - without storage and balances, which are handled separately.
-    accounts: StateChangeLog<Account>,
+    pub accounts: StateChangeLog<Account>,
     /// Account storage states. `EthAddress` indicates the target contract,
     /// `u256` indicates the storage key.
     /// `u256` indicates the value stored.
     /// We have to store the target contract, as we can't derive it from the
     /// hashed address only when finalizing.
-    accounts_storage: StateChangeLog<(EthAddress, u256, u256)>,
+    pub accounts_storage: StateChangeLog<(EthAddress, u256, u256)>,
     /// Account states
     /// Pending emitted events
-    events: Array<Event>,
+    pub events: Array<Event>,
     /// Pending transfers
-    transfers: Array<Transfer>,
+    pub transfers: Array<Transfer>,
     /// Account transient storage states. `EthAddress` indicates the target contract,
     /// `u256` indicates the storage key.
     /// `u256` indicates the value stored.
-    transient_account_storage: StateChangeLog<(EthAddress, u256, u256)>,
+    pub transient_account_storage: StateChangeLog<(EthAddress, u256, u256)>,
 }
 
 #[generate_trait]
-impl StateImpl of StateTrait {
+pub impl StateImpl of StateTrait {
     fn get_account(ref self: State, evm_address: EthAddress) -> Account {
         let maybe_account = self.accounts.read(evm_address.into());
         match maybe_account {
@@ -225,7 +220,7 @@ impl StateImpl of StateTrait {
 /// The key is computed as follows:
 /// 1. Compute the hash of the EVM address and the key(low, high) using Poseidon.
 /// 2. Return the hash
-fn compute_storage_key(evm_address: EthAddress, key: u256) -> felt252 {
+pub fn compute_storage_key(evm_address: EthAddress, key: u256) -> felt252 {
     let hash = PoseidonTrait::new().update_with(evm_address).update_with(key).finalize();
     hash
 }
@@ -237,7 +232,7 @@ fn compute_storage_key(evm_address: EthAddress, key: u256) -> felt252 {
 /// Note: the storage_base_address_from_felt252 function always works for any felt - and returns the
 /// number normalized into the range [0, 2^251 - 256). (x % (2^251 - 256))
 /// https://github.com/starkware-libs/cairo/issues/4187
-fn compute_storage_address(key: u256) -> StorageBaseAddress {
+pub fn compute_storage_address(key: u256) -> StorageBaseAddress {
     let hash = PoseidonTrait::new().update_with(key).finalize();
     storage_base_address_from_felt252(hash)
 }
@@ -279,7 +274,7 @@ mod tests {
     mod test_state_changelog {
         use evm::state::{StateChangeLog, StateChangeLogTrait};
         use evm::test_utils;
-        use utils::set::{Set, SetTrait};
+        use utils::set::SetTrait;
 
         #[test]
         fn test_read_empty_log() {
@@ -312,19 +307,13 @@ mod tests {
 
     mod test_state {
         use core::starknet::EthAddress;
-        use evm::model::account::{Account, AccountTrait, AccountInternalTrait};
+        use evm::model::account::{Account, AccountTrait};
         use evm::model::{Event, Transfer, Address};
         use evm::state::{State, StateTrait};
         use evm::test_utils;
-        use openzeppelin::token::erc20::interface::{
-            IERC20CamelDispatcher, IERC20CamelDispatcherTrait
-        };
-        use snforge_std::{
-            declare, DeclareResultTrait, start_cheat_caller_address, test_address, start_mock_call,
-            stop_mock_call
-        };
+        use snforge_std::{test_address, start_mock_call};
         use utils::helpers::compute_starknet_address;
-        use utils::set::{Set, SetTrait};
+        use utils::set::SetTrait;
 
         #[test]
         fn test_get_account_when_inexistant() {

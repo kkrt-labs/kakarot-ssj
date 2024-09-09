@@ -1,5 +1,4 @@
 use core::cmp::min;
-use core::starknet::EthAddress;
 use utils::eth_transaction::{AccessListItem, EthereumTransaction, EthereumTransactionTrait};
 use utils::helpers;
 
@@ -7,50 +6,50 @@ use utils::helpers;
 //! Code is based on alloy project
 //! Source: <https://github.com/bluealloy/revm/blob/main/crates/interpreter/src/gas/constants.rs>
 
-const ZERO: u128 = 0;
-const BASE: u128 = 2;
-const VERYLOW: u128 = 3;
-const LOW: u128 = 5;
-const MID: u128 = 8;
-const HIGH: u128 = 10;
-const JUMPDEST: u128 = 1;
-const SELFDESTRUCT: u128 = 5000;
-const CREATE: u128 = 32000;
-const CALLVALUE: u128 = 9000;
-const NEWACCOUNT: u128 = 25000;
-const EXP: u128 = 10;
-const EXP_GAS_PER_BYTE: u128 = 50;
-const MEMORY: u128 = 3;
-const LOG: u128 = 375;
-const LOGDATA: u128 = 8;
-const LOGTOPIC: u128 = 375;
-const KECCAK256: u128 = 30;
-const KECCAK256WORD: u128 = 6;
-const COPY: u128 = 3;
-const BLOCKHASH: u128 = 20;
-const CODEDEPOSIT: u128 = 200;
+pub const ZERO: u128 = 0;
+pub const BASE: u128 = 2;
+pub const VERYLOW: u128 = 3;
+pub const LOW: u128 = 5;
+pub const MID: u128 = 8;
+pub const HIGH: u128 = 10;
+pub const JUMPDEST: u128 = 1;
+pub const SELFDESTRUCT: u128 = 5000;
+pub const CREATE: u128 = 32000;
+pub const CALLVALUE: u128 = 9000;
+pub const NEWACCOUNT: u128 = 25000;
+pub const EXP: u128 = 10;
+pub const EXP_GAS_PER_BYTE: u128 = 50;
+pub const MEMORY: u128 = 3;
+pub const LOG: u128 = 375;
+pub const LOGDATA: u128 = 8;
+pub const LOGTOPIC: u128 = 375;
+pub const KECCAK256: u128 = 30;
+pub const KECCAK256WORD: u128 = 6;
+pub const COPY: u128 = 3;
+pub const BLOCKHASH: u128 = 20;
+pub const CODEDEPOSIT: u128 = 200;
 
-const SSTORE_SET: u128 = 20000;
-const SSTORE_RESET: u128 = 5000;
-const REFUND_SSTORE_CLEARS: u128 = 4800;
+pub const SSTORE_SET: u128 = 20000;
+pub const SSTORE_RESET: u128 = 5000;
+pub const REFUND_SSTORE_CLEARS: u128 = 4800;
 
-const TRANSACTION_ZERO_DATA: u128 = 4;
-const TRANSACTION_NON_ZERO_DATA_INIT: u128 = 16;
-const TRANSACTION_NON_ZERO_DATA_FRONTIER: u128 = 68;
-const TRANSACTION_BASE_COST: u128 = 21000;
-const TRANSACTION_CREATE_COST: u128 = 32000;
+pub const TRANSACTION_ZERO_DATA: u128 = 4;
+pub const TRANSACTION_NON_ZERO_DATA_INIT: u128 = 16;
+pub const TRANSACTION_NON_ZERO_DATA_FRONTIER: u128 = 68;
+pub const TRANSACTION_BASE_COST: u128 = 21000;
+pub const TRANSACTION_CREATE_COST: u128 = 32000;
 
 // Berlin EIP-2929 constants
-const ACCESS_LIST_ADDRESS: u128 = 2400;
-const ACCESS_LIST_STORAGE_KEY: u128 = 1900;
-const COLD_SLOAD_COST: u128 = 2100;
-const COLD_ACCOUNT_ACCESS_COST: u128 = 2600;
-const WARM_ACCESS_COST: u128 = 100;
+pub const ACCESS_LIST_ADDRESS: u128 = 2400;
+pub const ACCESS_LIST_STORAGE_KEY: u128 = 1900;
+pub const COLD_SLOAD_COST: u128 = 2100;
+pub const COLD_ACCOUNT_ACCESS_COST: u128 = 2600;
+pub const WARM_ACCESS_COST: u128 = 100;
 
 /// EIP-3860 : Limit and meter initcode
-const INITCODE_WORD_COST: u128 = 2;
+pub const INITCODE_WORD_COST: u128 = 2;
 
-const CALL_STIPEND: u128 = 2300;
+pub const CALL_STIPEND: u128 = 2300;
 
 // EIP-4844
 pub const BLOB_HASH_COST: u128 = 3;
@@ -62,9 +61,9 @@ pub const BLOB_HASH_COST: u128 = 3;
 /// * `cost`: The non-refundable portion of gas reserved for executing the call opcode.
 /// * `stipend`: The portion of gas available to sub-calls that is refundable if not consumed.
 #[derive(Drop)]
-struct MessageCallGas {
-    cost: u128,
-    stipend: u128,
+pub struct MessageCallGas {
+    pub cost: u128,
+    pub stipend: u128,
 }
 
 /// Defines the new size and the expansion cost after memory expansion.
@@ -74,9 +73,9 @@ struct MessageCallGas {
 /// * `new_size`: The new size of the memory after extension.
 /// * `expansion_cost`: The cost of the memory extension.
 #[derive(Drop)]
-struct MemoryExpansion {
-    new_size: u32,
-    expansion_cost: u128,
+pub struct MemoryExpansion {
+    pub new_size: u32,
+    pub expansion_cost: u128,
 }
 
 /// Calculates the maximum gas that is allowed for making a message call.
@@ -86,7 +85,7 @@ struct MemoryExpansion {
 ///
 /// # Returns
 /// * The maximum gas allowed for the message call.
-fn max_message_call_gas(gas: u128) -> u128 {
+pub fn max_message_call_gas(gas: u128) -> u128 {
     gas - (gas / 64)
 }
 
@@ -106,7 +105,7 @@ fn max_message_call_gas(gas: u128) -> u128 {
 /// # Returns
 ///
 /// * `message_call_gas`: `MessageCallGas`
-fn calculate_message_call_gas(
+pub fn calculate_message_call_gas(
     value: u256, gas: u128, gas_left: u128, memory_cost: u128, extra_gas: u128
 ) -> MessageCallGas {
     let call_stipend = if value == 0 {
@@ -142,7 +141,7 @@ fn calculate_message_call_gas(
 /// # Returns
 ///
 /// * `total_gas_cost` - The gas cost for storing data in memory.
-fn calculate_memory_gas_cost(size_in_bytes: usize) -> u128 {
+pub fn calculate_memory_gas_cost(size_in_bytes: usize) -> u128 {
     let _512: NonZero<u128> = 512_u128.try_into().unwrap();
     let size_in_words = (size_in_bytes + 31) / 32;
     let linear_cost = size_in_words.into() * MEMORY;
@@ -165,7 +164,7 @@ fn calculate_memory_gas_cost(size_in_bytes: usize) -> u128 {
 /// # Returns
 ///
 /// * `MemoryExpansion`: New size and expansion cost.
-fn memory_expansion(current_size: usize, operations: Span<(usize, usize)>) -> MemoryExpansion {
+pub fn memory_expansion(current_size: usize, operations: Span<(usize, usize)>) -> MemoryExpansion {
     let mut max_size = current_size;
 
     for (
@@ -202,7 +201,7 @@ fn memory_expansion(current_size: usize, operations: Span<(usize, usize)>) -> Me
 ///
 /// * `init_code_gas` - The gas to be charged for the init code.
 #[inline(always)]
-fn init_code_cost(code_size: usize) -> u128 {
+pub fn init_code_cost(code_size: usize) -> u128 {
     let code_size_in_words = helpers::ceil32(code_size) / 32;
     code_size_in_words.into() * INITCODE_WORD_COST
 }
@@ -220,7 +219,7 @@ fn init_code_cost(code_size: usize) -> u128 {
 ///
 /// Reference:
 /// https://github.com/ethereum/execution-specs/blob/master/src/ethereum/shanghai/fork.py#L689
-fn calculate_intrinsic_gas_cost(tx: @EthereumTransaction) -> u128 {
+pub fn calculate_intrinsic_gas_cost(tx: @EthereumTransaction) -> u128 {
     let mut data_cost: u128 = 0;
 
     let target = tx.destination();
@@ -259,7 +258,6 @@ fn calculate_intrinsic_gas_cost(tx: @EthereumTransaction) -> u128 {
 
 #[cfg(test)]
 mod tests {
-    use core::option::OptionTrait;
     use core::starknet::EthAddress;
 
     use evm::gas::{
@@ -268,10 +266,9 @@ mod tests {
     };
     use evm::test_utils::evm_address;
     use utils::eth_transaction::{
-        EthereumTransaction, LegacyTransaction, AccessListTransaction, EthereumTransactionTrait,
-        AccessListItem
+        EthereumTransaction, LegacyTransaction, AccessListTransaction, AccessListItem
     };
-    use utils::helpers::{U256Trait, ToBytes};
+    use utils::helpers::ToBytes;
 
     #[test]
     fn test_calculate_intrinsic_gas_cost() {

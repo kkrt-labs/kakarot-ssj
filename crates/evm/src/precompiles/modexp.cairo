@@ -10,20 +10,18 @@ use core::starknet::EthAddress;
 use core::traits::TryInto;
 
 use evm::errors::EVMError;
-use evm::model::vm::VM;
-use evm::model::vm::VMTrait;
 
 use evm::precompiles::Precompile;
 use utils::crypto::modexp::lib::modexp;
-use utils::helpers::{U256Trait, U8SpanExTrait, U64Trait, FromBytes, BitsUsed};
+use utils::helpers::{U8SpanExTrait, FromBytes, BitsUsed};
 
 const HEADER_LENGTH: usize = 96;
 const MIN_GAS: u128 = 200;
 
-impl ModExp of Precompile {
+pub impl ModExp of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
-        EthAddress { address: 0x5 }
+        0x5.try_into().unwrap()
     }
 
     fn exec(input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
@@ -158,7 +156,7 @@ mod tests {
     use core::starknet::EthAddress;
     use core::starknet::testing::set_contract_address;
 
-    use evm::instructions::system_operations::SystemOperationsTrait;
+    use evm::instructions::SystemOperationsTrait;
 
     use evm::memory::MemoryTrait;
     use evm::precompiles::Precompiles;

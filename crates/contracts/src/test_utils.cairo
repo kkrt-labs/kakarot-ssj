@@ -1,56 +1,46 @@
-use contracts::account_contract::{AccountContract};
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::{
-    interface::IExtendedKakarotCoreDispatcher, interface::IExtendedKakarotCoreDispatcherTrait,
-    KakarotCore
+    interface::IExtendedKakarotCoreDispatcher, interface::IExtendedKakarotCoreDispatcherTrait
 };
-use contracts::uninitialized_account::{UninitializedAccount};
-use core::fmt::Debug;
 use core::result::ResultTrait;
-use core::starknet::ClassHash;
-use core::starknet::{
-    testing, contract_address_const, EthAddress, ContractAddress, deploy_syscall,
-    get_contract_address
-};
-use evm::backend::starknet_backend;
+use core::starknet::syscalls::deploy_syscall;
+use core::starknet::{EthAddress, ContractAddress};
 use evm::model::{Address};
 
-use evm::test_utils::{ca_address, other_starknet_address, chain_id, sequencer_evm_address};
-use openzeppelin::token::erc20::ERC20;
+use evm::test_utils::{other_starknet_address, sequencer_evm_address};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use snforge_std::{
-    declare, DeclareResult, DeclareResultTrait, ContractClassTrait, start_cheat_caller_address,
-    start_cheat_sequencer_address_global, stop_cheat_caller_address, CheatSpan,
-    start_cheat_caller_address_global
+    declare, DeclareResultTrait, start_cheat_caller_address, start_cheat_sequencer_address_global,
+    stop_cheat_caller_address, start_cheat_caller_address_global
 };
 use utils::constants::BLOCK_GAS_LIMIT;
 use utils::eth_transaction::LegacyTransaction;
 
 
-mod constants {
-    use core::starknet::{EthAddress, testing, contract_address_const, ContractAddress};
-    fn ZERO() -> ContractAddress {
+pub mod constants {
+    use core::starknet::{EthAddress, contract_address_const, ContractAddress};
+    pub fn ZERO() -> ContractAddress {
         contract_address_const::<0>()
     }
 
-    fn OWNER() -> ContractAddress {
+    pub fn OWNER() -> ContractAddress {
         contract_address_const::<0xabde1>()
     }
 
-    fn OTHER() -> ContractAddress {
+    pub fn OTHER() -> ContractAddress {
         contract_address_const::<0xe1145>()
     }
 
-    pub(crate) fn EVM_ADDRESS() -> EthAddress {
+    pub fn EVM_ADDRESS() -> EthAddress {
         0xc0ffee.try_into().unwrap()
     }
 
-    pub(crate) fn ETH_BANK() -> ContractAddress {
+    pub fn ETH_BANK() -> ContractAddress {
         contract_address_const::<0x777>()
     }
 }
 
-fn deploy_native_token() -> IERC20CamelDispatcher {
+pub fn deploy_native_token() -> IERC20CamelDispatcher {
     let calldata: Array<felt252> = array![
         'STARKNET_ETH', 'ETH', 0x00, 0xfffffffffffffffffffffffffff, constants::ETH_BANK().into()
     ];
@@ -62,7 +52,7 @@ fn deploy_native_token() -> IERC20CamelDispatcher {
     }
 }
 
-fn deploy_kakarot_core(
+pub fn deploy_kakarot_core(
     native_token: ContractAddress, mut eoas: Span<EthAddress>
 ) -> IExtendedKakarotCoreDispatcher {
     let account_contract_class_hash = declare("AccountContract")
@@ -97,7 +87,7 @@ fn deploy_kakarot_core(
     }
 }
 
-pub(crate) fn deploy_contract_account(
+pub fn deploy_contract_account(
     kakarot_core: IExtendedKakarotCoreDispatcher, evm_address: EthAddress, bytecode: Span<u8>
 ) -> Address {
     let eoa = deploy_eoa(kakarot_core, evm_address);
@@ -109,14 +99,14 @@ pub(crate) fn deploy_contract_account(
     Address { evm: evm_address, starknet: starknet_address }
 }
 
-fn deploy_eoa(
+pub fn deploy_eoa(
     kakarot_core: IExtendedKakarotCoreDispatcher, evm_address: EthAddress
 ) -> IAccountDispatcher {
     let starknet_address = kakarot_core.deploy_externally_owned_account(evm_address);
     IAccountDispatcher { contract_address: starknet_address }
 }
 
-fn call_transaction(
+pub fn call_transaction(
     chain_id: u128, destination: Option<EthAddress>, calldata: Span<u8>
 ) -> LegacyTransaction {
     LegacyTransaction {
@@ -124,7 +114,7 @@ fn call_transaction(
     }
 }
 
-fn fund_account_with_native_token(
+pub fn fund_account_with_native_token(
     contract_address: ContractAddress, native_token: IERC20CamelDispatcher, amount: u256,
 ) {
     start_cheat_caller_address(native_token.contract_address, constants::ETH_BANK());
@@ -132,9 +122,7 @@ fn fund_account_with_native_token(
     stop_cheat_caller_address(native_token.contract_address);
 }
 
-pub(crate) fn setup_contracts_for_testing() -> (
-    IERC20CamelDispatcher, IExtendedKakarotCoreDispatcher
-) {
+pub fn setup_contracts_for_testing() -> (IERC20CamelDispatcher, IExtendedKakarotCoreDispatcher) {
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(
         native_token.contract_address, [sequencer_evm_address()].span()

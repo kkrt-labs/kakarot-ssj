@@ -1,20 +1,19 @@
 use contracts::account_contract::AccountContract::unsafe_new_contract_state as account_contract_state;
 use core::ops::DerefMut;
 use core::ops::SnapshotDeref;
-use core::starknet::{
-    SyscallResult, storage_read_syscall, Store, StorageBaseAddress, StorageAddress,
-    storage_write_syscall
+use core::starknet::storage::{
+    StoragePointerReadAccess, StoragePointerWriteAccess, StorageTrait, StorageTraitMut
 };
-use starknet::storage::StorageTrait;
-use starknet::storage::StorageTraitMut;
-use super::account_contract::IAccount;
+use core::starknet::storage_access::StorageBaseAddress;
+use core::starknet::syscalls::{storage_read_syscall, storage_write_syscall};
+use core::starknet::{SyscallResult, Store, StorageAddress};
 use utils::utils::{pack_bytes, load_packed_bytes};
 
 /// A wrapper type for the bytecode storage. Packing / unpacking is done transparently inside the
 /// `read` and `write` methods of `Store`.
 #[derive(Copy, Drop)]
-struct StorageBytecode {
-    bytecode: Span<u8>
+pub struct StorageBytecode {
+    pub bytecode: Span<u8>
 }
 
 const BYTES_PER_FELT: NonZero<u32> = 31;
@@ -88,10 +87,8 @@ impl StoreBytecode of Store<StorageBytecode> {
 
 #[cfg(test)]
 mod tests {
-    use contracts::account_contract::AccountContract::{
-        unsafe_new_contract_state as account_contract_state, ContractState as AccountContractState
-    };
-    use starknet::contract_address::ContractAddress;
+    use contracts::account_contract::AccountContract::unsafe_new_contract_state as account_contract_state;
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use starknet::storage_access::Store;
     use starknet::storage_access::{
         StorageBaseAddress, StorageAddress, storage_base_address_from_felt252
@@ -102,7 +99,7 @@ mod tests {
     use super::StorageBytecode;
     use super::StorageTrait;
     use super::StorageTraitMut;
-    use utils::utils::{pack_bytes, load_packed_bytes};
+    use utils::utils::pack_bytes;
 
     #[test]
     fn test_store_bytecode_empty() {

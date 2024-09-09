@@ -16,10 +16,11 @@ use contracts::test_utils::{
 use core::array::SpanTrait;
 use core::box::BoxTrait;
 use core::starknet::account::{Call};
-use core::starknet::class_hash::Felt252TryIntoClassHash;
+use core::starknet::secp256_trait::Signature;
+use core::starknet::syscalls::deploy_syscall;
 use core::starknet::{
-    deploy_syscall, ContractAddress, ClassHash, VALIDATED, get_contract_address,
-    contract_address_const, EthAddress, eth_signature::{Signature}, get_tx_info, Event
+    ContractAddress, ClassHash, VALIDATED, get_contract_address, contract_address_const, EthAddress,
+    get_tx_info, Event
 };
 
 use evm::model::{Address, AddressTrait};

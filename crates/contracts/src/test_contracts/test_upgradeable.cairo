@@ -1,18 +1,14 @@
-use MockContractUpgradeableV0::HasComponentImpl_upgradeable_component;
-use contracts::components::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use contracts::components::upgradeable::{upgradeable_component};
-use core::serde::Serde;
-use core::starknet::{deploy_syscall, ClassHash, ContractAddress, testing};
 
 use upgradeable_component::{UpgradeableImpl};
 
 #[starknet::interface]
-trait IMockContractUpgradeable<TContractState> {
+pub trait IMockContractUpgradeable<TContractState> {
     fn version(self: @TContractState) -> felt252;
 }
 
 #[starknet::contract]
-mod MockContractUpgradeableV0 {
+pub mod MockContractUpgradeableV0 {
     use contracts::components::upgradeable::{upgradeable_component};
     use super::IMockContractUpgradeable;
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
@@ -28,7 +24,7 @@ mod MockContractUpgradeableV0 {
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         UpgradeableEvent: upgradeable_component::Event
     }
 
@@ -41,7 +37,7 @@ mod MockContractUpgradeableV0 {
 }
 
 #[starknet::contract]
-mod MockContractUpgradeableV1 {
+pub mod MockContractUpgradeableV1 {
     use contracts::components::upgradeable::{upgradeable_component};
     use super::IMockContractUpgradeable;
     component!(path: upgradeable_component, storage: upgradeable, event: upgradeableEvent);
@@ -54,7 +50,7 @@ mod MockContractUpgradeableV1 {
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         upgradeableEvent: upgradeable_component::Event
     }
 
@@ -68,12 +64,11 @@ mod MockContractUpgradeableV1 {
 
 #[cfg(test)]
 mod tests {
+    use contracts::components::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
+    use core::starknet::syscalls::{deploy_syscall};
     use snforge_std::{declare, DeclareResultTrait};
-    use starknet::{deploy_syscall, ClassHash};
-    use super::{
-        IMockContractUpgradeableDispatcher, IUpgradeableDispatcher, IUpgradeableDispatcherTrait,
-        IMockContractUpgradeableDispatcherTrait
-    };
+    use starknet::{ClassHash};
+    use super::{IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait};
 
     #[test]
     fn test_upgradeable_update_contract() {

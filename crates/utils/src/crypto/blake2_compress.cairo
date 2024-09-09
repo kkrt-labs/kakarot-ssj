@@ -1,8 +1,6 @@
 use alexandria_data_structures::vec::{Felt252Vec, VecTrait};
-use core::num::traits::Bounded;
 use core::num::traits::{BitSize, WrappingAdd};
-use core::option::OptionTrait;
-use utils::math::{Bitshift, WrappingBitshift};
+use utils::math::WrappingBitshift;
 
 const SIGMA_LINE_1: [usize; 16] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 const SIGMA_LINE_2: [usize; 16] = [14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3];
@@ -70,7 +68,7 @@ fn rotate_right(value: u64, n: u32) -> u64 {
 /// * `f` - final block indicator flag
 /// # Returns
 /// updated state vector
-fn compress(rounds: usize, h: Span<u64>, m: Span<u64>, t: Span<u64>, f: bool) -> Span<u64> {
+pub fn compress(rounds: usize, h: Span<u64>, m: Span<u64>, t: Span<u64>, f: bool) -> Span<u64> {
     let mut v = VecTrait::<Felt252Vec, u64>::new();
     let mut i = 0;
     while i != 16 {

@@ -1,10 +1,8 @@
-use core::starknet::{EthAddress, ContractAddress};
 use evm::create_helpers::CreateHelpers;
-use evm::errors::{EVMError, ensure, PC_OUT_OF_BOUNDS, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
+use evm::errors::{EVMError, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
 
 use evm::instructions::{
-    duplication_operations, environmental_information, ExchangeOperationsTrait, logging_operations,
-    LoggingOperationsTrait, memory_operations, sha3, StopAndArithmeticOperationsTrait,
+    ExchangeOperationsTrait, LoggingOperationsTrait, StopAndArithmeticOperationsTrait,
     ComparisonAndBitwiseOperationsTrait, SystemOperationsTrait, BlockInformationTrait,
     DuplicationOperationsTrait, EnvironmentInformationTrait, PushOperationsTrait,
     MemoryOperationTrait
@@ -13,17 +11,16 @@ use evm::instructions::{
 use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{
-    Message, Environment, Address, Transfer, ExecutionSummary, ExecutionSummaryTrait,
-    ExecutionResult, ExecutionResultTrait, ExecutionResultStatus, AddressTrait
+    Message, Environment, Transfer, ExecutionSummary, ExecutionSummaryTrait, ExecutionResult,
+    ExecutionResultTrait, ExecutionResultStatus, AddressTrait
 };
 use evm::precompiles::Precompiles;
-use evm::stack::{Stack, StackTrait};
-use evm::state::{State, StateTrait};
+use evm::state::StateTrait;
 use utils::constants;
-use utils::helpers::{U256Trait, compute_starknet_address, EthAddressExTrait};
+use utils::helpers::EthAddressExTrait;
 
 #[generate_trait]
-impl EVMImpl of EVMTrait {
+pub impl EVMImpl of EVMTrait {
     fn process_message_call(
         message: Message, mut env: Environment, is_deploy_tx: bool,
     ) -> ExecutionSummary {

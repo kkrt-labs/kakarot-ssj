@@ -1,27 +1,23 @@
-use core::cmp::{max, min};
-use core::integer::{
-    u32_safe_divmod, u32_as_non_zero, u128_safe_divmod, u128_as_non_zero, u256_as_non_zero
-};
+use core::cmp::min;
+use core::dict::{Felt252Dict, Felt252DictTrait};
+use core::integer::{u32_safe_divmod};
 use utils::constants::{
     POW_2_0, POW_2_8, POW_2_16, POW_2_24, POW_2_32, POW_2_40, POW_2_48, POW_2_56, POW_2_64,
     POW_2_72, POW_2_80, POW_2_88, POW_2_96, POW_2_104, POW_2_112, POW_2_120, POW_256_16
 };
-use utils::{
-    helpers, helpers::SpanExtTrait, helpers::ArrayExtTrait, math::Exponentiation,
-    math::WrappingExponentiation, math::Bitshift
-};
+use utils::{helpers, helpers::ArrayExtTrait, math::Bitshift};
 
 // 2**17
 const MEMORY_SEGMENT_SIZE: usize = 131072;
 
 
 #[derive(Destruct, Default)]
-struct Memory {
+pub struct Memory {
     items: Felt252Dict<u128>,
     bytes_len: usize,
 }
 
-trait MemoryTrait {
+pub trait MemoryTrait {
     fn new() -> Memory;
     fn size(self: @Memory) -> usize;
     fn store(ref self: Memory, element: u256, offset: usize);
@@ -56,8 +52,10 @@ impl MemoryImpl of MemoryTrait {
     /// index = Y + i * MEMORY_SEGMENT_SIZE
     #[inline(always)]
     fn store(ref self: Memory, element: u256, offset: usize) {
+        let nonzero_16: NonZero<u32> = 16_u32.try_into().unwrap();
+
         // Check alignment of offset to bytes16 chunks
-        let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
+        let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, nonzero_16);
 
         if offset_in_chunk == 0 {
             // Offset is aligned. This is the simplest and most efficient case,
@@ -88,12 +86,14 @@ impl MemoryImpl of MemoryTrait {
     /// * `offset` - The offset within memory to store the byte at.
     #[inline(always)]
     fn store_byte(ref self: Memory, value: u8, offset: usize) {
+        let nonzero_16: NonZero<u32> = 16_u32.try_into().unwrap();
+
         // Compute actual offset in Memory, given active_segment of Memory (current Execution
         // Context id)
         // And Memory Segment Size
 
         // Get offset's memory word index and left-based offset of byte in word.
-        let (chunk_index, left_offset) = u32_safe_divmod(offset, u32_as_non_zero(16));
+        let (chunk_index, left_offset) = u32_safe_divmod(offset, nonzero_16);
 
         // As the memory words are in big-endian order, we need to convert our left-based offset
         // to a right-based one.a
@@ -130,13 +130,15 @@ impl MemoryImpl of MemoryTrait {
             return;
         }
 
+        let nonzero_16: NonZero<u32> = 16_u32.try_into().unwrap();
+
         // Compute the offset inside the Memory, given its active segment, following the formula:
         // index = offset + self.active_segment * 125000
 
         // Check alignment of offset to bytes16 chunks.
-        let (initial_chunk, offset_in_chunk_i) = u32_safe_divmod(offset, u32_as_non_zero(16));
+        let (initial_chunk, offset_in_chunk_i) = u32_safe_divmod(offset, nonzero_16);
         let (final_chunk, mut offset_in_chunk_f) = u32_safe_divmod(
-            offset + elements.len() - 1, u32_as_non_zero(16)
+            offset + elements.len() - 1, nonzero_16
         );
         offset_in_chunk_f += 1;
         let mask_i: u256 = helpers::pow256_rev(offset_in_chunk_i);
@@ -233,7 +235,7 @@ impl MemoryImpl of MemoryTrait {
 }
 
 #[generate_trait]
-impl InternalMemoryMethods of InternalMemoryTrait {
+pub(crate) impl InternalMemoryMethods of InternalMemoryTrait {
     /// Stores a `u256` element at a specified offset within a memory chunk.
     ///
     /// It first computes the
@@ -253,8 +255,9 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         let mask_c: u256 = POW_256_16 / mask;
 
         // Split the 2 input bytes16 chunks at offset_in_chunk.
-        let (el_hh, el_hl) = DivRem::div_rem(element.high.into(), u256_as_non_zero(mask_c));
-        let (el_lh, el_ll) = DivRem::div_rem(element.low.into(), u256_as_non_zero(mask_c));
+        let nonzero_mask_c: NonZero<u256> = mask_c.try_into().unwrap();
+        let (el_hh, el_hl) = DivRem::div_rem(element.high.into(), nonzero_mask_c);
+        let (el_lh, el_ll) = DivRem::div_rem(element.low.into(), nonzero_mask_c);
 
         // Read the words at chunk_index, chunk_index + 2.
         let w0: u128 = self.items.get(chunk_index.into());
@@ -294,8 +297,10 @@ impl InternalMemoryMethods of InternalMemoryTrait {
         ref self: Memory, initial_chunk: usize, mask_i: u256, mask_f: u256, elements: Span<u8>
     ) {
         let word: u128 = self.items.get(initial_chunk.into());
-        let (word_high, word_low) = DivRem::div_rem(word.into(), u256_as_non_zero(mask_i));
-        let (_, word_low_l) = DivRem::div_rem(word_low, u256_as_non_zero(mask_f));
+        let nonzero_mask_i: NonZero<u256> = mask_i.try_into().unwrap();
+        let nonzero_mask_f: NonZero<u256> = mask_f.try_into().unwrap();
+        let (word_high, word_low) = DivRem::div_rem(word.into(), nonzero_mask_i);
+        let (_, word_low_l) = DivRem::div_rem(word_low, nonzero_mask_f);
         let bytes_as_word = helpers::load_word(elements.len(), elements);
         let new_w: u128 = (word_high * mask_i + bytes_as_word.into() * mask_f + word_low_l)
             .try_into()
@@ -387,8 +392,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
     fn load_internal(ref self: Memory, offset: usize) -> u256 {
         // Compute the offset inside the dict, given its active segment, following the formula:
         // index = offset + self.active_segment * 125000
-
-        let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, u32_as_non_zero(16));
+        let nonzero_16: NonZero<u32> = 16_u32.try_into().unwrap();
+        let (chunk_index, offset_in_chunk) = u32_safe_divmod(offset, nonzero_16);
 
         if offset_in_chunk == 0 {
             // Offset is aligned. This is the simplest and most efficient case,
@@ -414,7 +419,8 @@ impl InternalMemoryMethods of InternalMemoryTrait {
 
         // Compute element words
         let w0_l: u256 = w0.into() % mask;
-        let (w1_h, w1_l): (u256, u256) = DivRem::div_rem(w1.into(), u256_as_non_zero(mask));
+        let nonzero_mask: NonZero<u256> = mask.try_into().unwrap();
+        let (w1_h, w1_l): (u256, u256) = DivRem::div_rem(w1.into(), nonzero_mask);
         let w2_h: u256 = w2.into() / mask;
         let el_h: u128 = (w0_l * mask_c + w1_h).try_into().unwrap();
         let el_l: u128 = (w1_l * mask_c + w2_h).try_into().unwrap();
@@ -442,13 +448,15 @@ impl InternalMemoryMethods of InternalMemoryTrait {
             return;
         }
 
+        let nonzero_16: NonZero<u32> = 16_u32.try_into().unwrap();
+
         // Compute the offset inside the Memory, given its active segment, following the formula:
         // index = offset + self.active_segment * 125000
 
         // Check alignment of offset to bytes16 chunks.
-        let (initial_chunk, offset_in_chunk_i) = u32_safe_divmod(offset, u32_as_non_zero(16));
+        let (initial_chunk, offset_in_chunk_i) = u32_safe_divmod(offset, nonzero_16);
         let (final_chunk, mut offset_in_chunk_f) = u32_safe_divmod(
-            offset + elements_len - 1, u32_as_non_zero(16)
+            offset + elements_len - 1, nonzero_16
         );
         offset_in_chunk_f += 1;
         let mask_i: u256 = helpers::pow256_rev(offset_in_chunk_i);
@@ -616,46 +624,42 @@ mod tests {
     use utils::constants::{POW_2_8, POW_2_56, POW_2_64, POW_2_120};
     use utils::{math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtTrait};
 
-    mod internal {
-        use evm::memory::{MemoryTrait, InternalMemoryTrait};
-        use utils::{math::Exponentiation, helpers};
 
-        fn load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-            offset: usize, low: u128, high: u128
-        ) {
-            // Given
-            let mut memory = MemoryTrait::new();
+    fn load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        offset: usize, low: u128, high: u128
+    ) {
+        // Given
+        let mut memory = MemoryTrait::new();
 
-            let value: u256 = u256 { low: low, high: high };
+        let value: u256 = u256 { low: low, high: high };
 
-            let bytes_array = helpers::u256_to_bytes_array(value);
+        let bytes_array = helpers::u256_to_bytes_array(value);
 
-            memory.store_n(bytes_array.span(), offset);
+        memory.store_n(bytes_array.span(), offset);
 
-            // When
-            let mut elements: Array<u8> = Default::default();
-            memory.load_n_internal(32, ref elements, offset);
+        // When
+        let mut elements: Array<u8> = Default::default();
+        memory.load_n_internal(32, ref elements, offset);
 
-            // Then
-            assert(elements == bytes_array, 'result not matching expected');
-        }
+        // Then
+        assert(elements == bytes_array, 'result not matching expected');
+    }
 
-        fn load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
-            offset: usize, low: u128, high: u128, active_segment: usize,
-        ) {
-            // Given
-            let mut memory = MemoryTrait::new();
+    fn load_should_load_an_element_from_the_memory_with_offset_stored_with_store(
+        offset: usize, low: u128, high: u128, active_segment: usize,
+    ) {
+        // Given
+        let mut memory = MemoryTrait::new();
 
-            let value: u256 = u256 { low: low, high: high };
+        let value: u256 = u256 { low: low, high: high };
 
-            memory.store(value, offset);
+        memory.store(value, offset);
 
-            // When
-            let result: u256 = memory.load_internal(offset);
+        // When
+        let result: u256 = memory.load_internal(offset);
 
-            // Then
-            assert(result == value, 'result not matching expected');
-        }
+        // Then
+        assert(result == value, 'result not matching expected');
     }
 
 
@@ -840,41 +844,39 @@ mod tests {
 
     #[test]
     fn test_load_should_load_an_element_from_the_memory_with_offset_8() {
-        internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
             8, 2 * POW_2_64, POW_2_64
         );
     }
     #[test]
     fn test_load_should_load_an_element_from_the_memory_with_offset_7() {
-        internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
             7, 2 * POW_2_56, POW_2_56
         );
     }
     #[test]
     fn test_load_should_load_an_element_from_the_memory_with_offset_23() {
-        internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
             23, 3 * POW_2_56, 2 * POW_2_56
         );
     }
 
     #[test]
     fn test_load_should_load_an_element_from_the_memory_with_offset_33() {
-        internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
             33, 4 * POW_2_8, 3 * POW_2_8
         );
     }
     #[test]
     fn test_load_should_load_an_element_from_the_memory_with_offset_63() {
-        internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
+        load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
             63, 0, 4 * POW_2_120
         );
     }
 
     #[test]
     fn test_load_should_load_an_element_from_the_memory_with_offset_500() {
-        internal::load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(
-            500, 0, 0
-        );
+        load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(500, 0, 0);
     }
 
 

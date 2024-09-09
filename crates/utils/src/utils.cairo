@@ -1,5 +1,3 @@
-use core::array;
-use core::felt252_div;
 use core::num::traits::Zero;
 
 /// Pack an array of bytes into 31-byte words and a final word.

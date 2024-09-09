@@ -1,29 +1,19 @@
-use contracts::kakarot_core::KakarotCore;
-use contracts::kakarot_core::interface::IKakarotCore;
-//! CREATE, CREATE2 opcode helpers
-use core::cmp::min;
-use core::keccak::cairo_keccak;
 use core::num::traits::Bounded;
 use core::num::traits::Zero;
-use core::starknet::{EthAddress, get_tx_info};
-use evm::errors::{
-    ensure, EVMError, CALL_GAS_GT_GAS_LIMIT, ACTIVE_MACHINE_STATE_IN_CALL_FINALIZATION
-};
+use core::starknet::EthAddress;
+use evm::errors::{ensure, EVMError};
 use evm::gas;
 use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
+use evm::model::Message;
 use evm::model::account::{Account, AccountTrait};
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{
-    ExecutionResult, ExecutionResultTrait, ExecutionResultStatus, ExecutionSummary, Environment
-};
-use evm::model::{Message, Address, Transfer};
+use evm::model::{ExecutionResult, ExecutionResultTrait, ExecutionResultStatus};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
 use utils::address::{compute_contract_address, compute_create2_contract_address};
 use utils::constants;
-use utils::helpers::ArrayExtTrait;
-use utils::helpers::{ResultExTrait, EthAddressExTrait, U256Trait, U8SpanExTrait, ceil32};
+use utils::helpers::ceil32;
 use utils::set::SetTrait;
 use utils::traits::{
     BoolIntoNumeric, EthAddressIntoU256, U256TryIntoResult, SpanU8TryIntoResultEthAddress
@@ -31,20 +21,20 @@ use utils::traits::{
 
 /// Helper struct to prepare CREATE and CREATE2 opcodes
 #[derive(Drop)]
-struct CreateArgs {
+pub struct CreateArgs {
     to: EthAddress,
     value: u256,
     bytecode: Span<u8>,
 }
 
 #[derive(Copy, Drop)]
-enum CreateType {
+pub enum CreateType {
     Create,
     Create2,
 }
 
 #[generate_trait]
-impl CreateHelpersImpl of CreateHelpers {
+pub impl CreateHelpersImpl of CreateHelpers {
     ///  Prepare the initialization of a new child or so-called sub-context
     /// As part of the CREATE family of opcodes.
     fn prepare_create(ref self: VM, create_type: CreateType) -> Result<CreateArgs, EVMError> {
@@ -189,11 +179,7 @@ impl CreateHelpersImpl of CreateHelpers {
 
 #[cfg(test)]
 mod tests {
-    use contracts::test_data::counter_evm_bytecode;
-    use core::starknet::EthAddress;
-    use evm::create_helpers::CreateHelpers;
-    use evm::test_utils::{VMBuilderTrait};
-    use utils::address::{compute_contract_address, compute_create2_contract_address};
     //TODO: test create helpers
+
 
 }

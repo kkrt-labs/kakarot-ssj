@@ -1,6 +1,6 @@
 // LENGTH
-const RLP_EMPTY_INPUT: felt252 = 'KKT: EmptyInput';
-const RLP_INPUT_TOO_SHORT: felt252 = 'KKT: InputTooShort';
+pub const RLP_EMPTY_INPUT: felt252 = 'KKT: EmptyInput';
+pub const RLP_INPUT_TOO_SHORT: felt252 = 'KKT: InputTooShort';
 
 #[derive(Drop, Copy, PartialEq)]
 pub enum RLPError {

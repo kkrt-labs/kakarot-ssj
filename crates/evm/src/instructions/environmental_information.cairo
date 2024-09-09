@@ -1,14 +1,6 @@
-use contracts::kakarot_core::interface::{IKakarotCore};
-use contracts::kakarot_core::{KakarotCore};
-use core::hash::{HashStateExTrait, HashStateTrait};
-use core::keccak::cairo_keccak;
 use core::num::traits::OverflowingAdd;
 use core::num::traits::Zero;
-use core::pedersen::{PedersenTrait, HashState};
-use core::starknet::{
-    Store, storage_base_address_from_felt252, ContractAddress, get_contract_address
-};
-use evm::errors::{ensure, EVMError, READ_SYSCALL_FAILED};
+use evm::errors::{ensure, EVMError};
 use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::account::{AccountTrait};
@@ -16,17 +8,14 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{AddressTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use utils::constants::EMPTY_KECCAK;
-use utils::helpers::ResultExTrait;
-use utils::helpers::{ceil32, load_word, U256Trait, U8SpanExTrait};
-use utils::math::BitshiftImpl;
+use utils::helpers::{ceil32, load_word, U8SpanExTrait};
 use utils::set::SetTrait;
 use utils::traits::{EthAddressIntoU256};
 
 
 #[generate_trait]
-impl EnvironmentInformationImpl of EnvironmentInformationTrait {
+pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// 0x30 - ADDRESS
     /// Get address of currently executing account.
     /// # Specification: https://www.evm.codes/#30?fork=shanghai
@@ -319,26 +308,18 @@ fn copy_bytes_to_memory(
 
 #[cfg(test)]
 mod tests {
-    use contracts::kakarot_core::{interface::IExtendedKakarotCoreDispatcherImpl, KakarotCore};
     use contracts::test_data::counter_evm_bytecode;
-    use core::num::traits::CheckedAdd;
     use core::starknet::EthAddress;
-
-    use core::starknet::testing::set_contract_address;
     use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
     use evm::instructions::EnvironmentInformationTrait;
     use evm::memory::{InternalMemoryTrait, MemoryTrait};
 
-    use evm::model::vm::{VM, VMTrait};
+    use evm::model::vm::VMTrait;
     use evm::model::{Account, Address};
     use evm::stack::StackTrait;
     use evm::state::StateTrait;
-    use evm::test_utils::{
-        VMBuilderTrait, evm_address, origin, callvalue, native_token, other_address, gas_price,
-        tx_gas_limit, register_account
-    };
-    use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
-    use snforge_std::{test_address, start_mock_call};
+    use evm::test_utils::{VMBuilderTrait, origin, callvalue, gas_price};
+    use snforge_std::test_address;
     use utils::helpers::{u256_to_bytes_array, ArrayExtTrait, compute_starknet_address};
     use utils::traits::{EthAddressIntoU256};
 
@@ -346,7 +327,6 @@ mod tests {
 
     mod test_internals {
         use evm::memory::MemoryTrait;
-        use evm::model::vm::VMTrait;
         use evm::test_utils::VMBuilderTrait;
         use super::super::copy_bytes_to_memory;
 
@@ -1061,7 +1041,7 @@ mod tests {
     fn test_exec_extcodehash_precompile() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
-        let precompile_evm_address: EthAddress = evm::model::LAST_ETHEREUM_PRECOMPILE_ADDRESS
+        let precompile_evm_address: EthAddress = evm::precompiles::LAST_ETHEREUM_PRECOMPILE_ADDRESS
             .try_into()
             .unwrap();
         let precompile_starknet_address = compute_starknet_address(

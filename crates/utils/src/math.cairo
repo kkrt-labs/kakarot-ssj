@@ -1,12 +1,7 @@
 use core::integer::{u512};
-use core::keccak::u128_split;
-use core::num::traits::Bounded;
-use core::num::traits::{
-    Zero, One, BitSize, OverflowingAdd, OverflowingMul, WrappingMul, SaturatingAdd
-};
-use core::ops;
+use core::num::traits::{Zero, One, BitSize, OverflowingAdd, OverflowingMul};
 use core::panic_with_felt252;
-use core::starknet::secp256_trait::Secp256PointTrait;
+use core::traits::{BitAnd};
 
 // === Exponentiation ===
 
@@ -17,7 +12,7 @@ pub trait Exponentiation<T> {
     fn pow(self: T, exponent: T) -> T;
 }
 
-pub impl ExponentiationImpl<
+impl ExponentiationImpl<
     T,
     +Zero<T>,
     +One<T>,
@@ -182,7 +177,7 @@ pub trait Bitshift<T> {
     fn shr(self: T, shift: T) -> T;
 }
 
-pub impl BitshiftImpl<
+impl BitshiftImpl<
     T,
     +Zero<T>,
     +One<T>,

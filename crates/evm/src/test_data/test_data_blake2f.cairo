@@ -1,5 +1,5 @@
 // source: [EIP-152](https://eips.ethereum.org/EIPS/eip-152), Test Vector 1
-fn blake2_precompile_fail_wrong_length_input_1_test_case() -> (Span<u8>, Span<u8>) {
+pub fn blake2_precompile_fail_wrong_length_input_1_test_case() -> (Span<u8>, Span<u8>) {
     let input = [
         0,
         0,
@@ -221,7 +221,7 @@ fn blake2_precompile_fail_wrong_length_input_1_test_case() -> (Span<u8>, Span<u8
 }
 
 // source: [EIP-152](https://eips.ethereum.org/EIPS/eip-152), Test Vector 2
-fn blake2_precompile_fail_wrong_length_input_2_test_case() -> (Span<u8>, Span<u8>) {
+pub fn blake2_precompile_fail_wrong_length_input_2_test_case() -> (Span<u8>, Span<u8>) {
     let input = [
         0,
         0,
@@ -445,7 +445,7 @@ fn blake2_precompile_fail_wrong_length_input_2_test_case() -> (Span<u8>, Span<u8
 }
 
 // source: [EIP-152](https://eips.ethereum.org/EIPS/eip-152), Test Vector 3
-fn blake2_precompile_fail_wrong_length_input_3_test_case() -> (Span<u8>, Span<u8>) {
+pub fn blake2_precompile_fail_wrong_length_input_3_test_case() -> (Span<u8>, Span<u8>) {
     let input = [
         0,
         0,
@@ -668,7 +668,7 @@ fn blake2_precompile_fail_wrong_length_input_3_test_case() -> (Span<u8>, Span<u8
 }
 
 // source: [EIP-152](https://eips.ethereum.org/EIPS/eip-152), Test Vector 4
-fn blake2_precompile_pass_0_test_case() -> (Span<u8>, Span<u8>) {
+pub fn blake2_precompile_pass_0_test_case() -> (Span<u8>, Span<u8>) {
     let input = [
         0,
         0,
@@ -957,7 +957,7 @@ fn blake2_precompile_pass_0_test_case() -> (Span<u8>, Span<u8>) {
 
 
 // source: [EIP-152](https://eips.ethereum.org/EIPS/eip-152), Test Vector 5
-fn blake2_precompile_pass_1_test_case() -> (Span<u8>, Span<u8>) {
+pub fn blake2_precompile_pass_1_test_case() -> (Span<u8>, Span<u8>) {
     let input = [
         0,
         0,
@@ -1245,7 +1245,7 @@ fn blake2_precompile_pass_1_test_case() -> (Span<u8>, Span<u8>) {
 }
 
 // source: [EIP-152](https://eips.ethereum.org/EIPS/eip-152), Test Vector 6
-fn blake2_precompile_pass_2_test_case() -> (Span<u8>, Span<u8>) {
+pub fn blake2_precompile_pass_2_test_case() -> (Span<u8>, Span<u8>) {
     let input = [
         0,
         0,

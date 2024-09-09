@@ -1,5 +1,7 @@
 pub mod interface;
 mod kakarot;
-use interface::IKakarotCore;
-
-use kakarot::KakarotCore;
+pub use interface::{
+    IKakarotCore, IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait,
+    IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
+};
+pub use kakarot::KakarotCore;

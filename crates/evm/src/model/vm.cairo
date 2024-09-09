@@ -1,33 +1,33 @@
+use core::dict::{Felt252Dict, Felt252DictTrait};
 use core::num::traits::CheckedSub;
 use core::starknet::EthAddress;
-use evm::errors::{EVMError, ensure};
-use evm::memory::{Memory, MemoryTrait};
-use evm::model::{Message, Environment, ExecutionResult, ExecutionResultStatus, AccountTrait};
-use evm::stack::{Stack, StackTrait};
-use utils::helpers::{SpanExtTrait, ArrayExtTrait};
-use utils::set::{Set, SetTrait, SpanSet};
+use evm::errors::EVMError;
+use evm::memory::Memory;
+use evm::model::{Message, Environment, ExecutionResultStatus, ExecutionResult, AccountTrait};
+use evm::stack::Stack;
+use utils::set::{Set, SetTrait, SpanSet, SpanSetTrait};
 use utils::traits::{SpanDefault};
 
 #[derive(Default, Destruct)]
-struct VM {
-    stack: Stack,
-    memory: Memory,
-    pc: usize,
-    valid_jumpdests: Felt252Dict<bool>,
-    return_data: Span<u8>,
-    env: Environment,
-    message: Message,
-    gas_left: u128,
-    running: bool,
-    error: bool,
-    accessed_addresses: Set<EthAddress>,
-    accessed_storage_keys: Set<(EthAddress, u256)>,
-    gas_refund: u128
+pub struct VM {
+    pub stack: Stack,
+    pub memory: Memory,
+    pub pc: usize,
+    pub valid_jumpdests: Felt252Dict<bool>,
+    pub return_data: Span<u8>,
+    pub env: Environment,
+    pub message: Message,
+    pub gas_left: u128,
+    pub running: bool,
+    pub error: bool,
+    pub accessed_addresses: Set<EthAddress>,
+    pub accessed_storage_keys: Set<(EthAddress, u256)>,
+    pub gas_refund: u128
 }
 
 
 #[generate_trait]
-impl VMImpl of VMTrait {
+pub impl VMImpl of VMTrait {
     #[inline(always)]
     fn new(message: Message, env: Environment) -> VM {
         VM {
@@ -41,8 +41,8 @@ impl VMImpl of VMTrait {
             gas_left: message.gas_limit,
             running: true,
             error: false,
-            accessed_addresses: message.accessed_addresses.inner.clone(),
-            accessed_storage_keys: message.accessed_storage_keys.inner.clone(),
+            accessed_addresses: message.accessed_addresses.clone_set(),
+            accessed_storage_keys: message.accessed_storage_keys.clone_set(),
             gas_refund: 0
         }
     }
@@ -162,13 +162,10 @@ impl VMImpl of VMTrait {
 
 #[cfg(test)]
 mod tests {
-    use evm::errors::DebugEVMError;
-    use evm::errors::{EVMError, READ_SYSCALL_FAILED};
-    use evm::model::vm::{VM, VMTrait};
-    use evm::model::{Message, Environment};
-    use evm::test_utils::{
-        tx_gas_limit, evm_address, starknet_address, VMBuilderTrait, test_address, gas_price
-    };
+    use evm::errors::EVMError;
+    use evm::model::Message;
+    use evm::model::vm::VMTrait;
+    use evm::test_utils::{tx_gas_limit, VMBuilderTrait};
 
     #[test]
     fn test_vm_default() {
@@ -260,11 +257,11 @@ mod tests {
 
         let mut vm = VMTrait::new(message, Default::default());
 
-        assert!(vm.is_valid_jump(0x3) == true, "expected jump to be valid");
-        assert!(vm.is_valid_jump(0x9) == true, "expected jump to be valid");
+        assert!(vm.is_valid_jump(0x3), "expected jump to be valid");
+        assert!(vm.is_valid_jump(0x9), "expected jump to be valid");
 
-        assert!(vm.is_valid_jump(0x4) == false, "expected jump to be invalid");
-        assert!(vm.is_valid_jump(0x5) == false, "expected jump to be invalid");
+        assert!(!vm.is_valid_jump(0x4), "expected jump to be invalid");
+        assert!(!vm.is_valid_jump(0x5), "expected jump to be invalid");
     }
 
     #[test]
@@ -273,6 +270,6 @@ mod tests {
         message.code = [0x60, 0x5B, 0x60, 0x00].span();
 
         let mut vm = VMTrait::new(message, Default::default());
-        assert!(vm.is_valid_jump(0x1) == false, "expected false");
+        assert!(!vm.is_valid_jump(0x1), "expected false");
     }
 }

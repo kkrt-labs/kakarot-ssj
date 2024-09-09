@@ -1,18 +1,12 @@
 use core::cmp::max;
-use core::hash::{HashStateTrait, HashStateExTrait};
-use core::poseidon::PoseidonTrait;
-use core::starknet::{storage_base_address_from_felt252, Store};
 use evm::backend::starknet_backend::fetch_original_storage;
 //! Stack Memory Storage and Flow Operations.
-use evm::errors::{EVMError, ensure, INVALID_DESTINATION, READ_SYSCALL_FAILED};
+use evm::errors::{EVMError, ensure};
 use evm::gas;
 use evm::memory::MemoryTrait;
-use evm::model::account::AccountTrait;
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{AddressTrait};
 use evm::stack::StackTrait;
-use evm::state::{StateTrait, compute_storage_key};
-use utils::helpers::U256Trait;
+use evm::state::StateTrait;
 use utils::set::SetTrait;
 
 #[inline(always)]
@@ -26,7 +20,7 @@ fn jump(ref self: VM, index: usize) -> Result<(), EVMError> {
 }
 
 #[generate_trait]
-impl MemoryOperation of MemoryOperationTrait {
+pub impl MemoryOperation of MemoryOperationTrait {
     /// 0x50 - POP operation.
     /// Pops the first item on the stack (top of the stack).
     /// # Specification: https://www.evm.codes/#50?fork=shanghai
@@ -309,28 +303,23 @@ impl MemoryOperation of MemoryOperationTrait {
 
 #[cfg(test)]
 mod tests {
-    use contracts::account_contract::{AccountContract};
     use core::cmp::max;
     use core::num::traits::Bounded;
     use core::result::ResultTrait;
-    use core::starknet::get_contract_address;
-    use evm::backend::starknet_backend::fetch_original_storage;
-    use evm::backend::starknet_backend;
-    use evm::errors::{EVMError, INVALID_DESTINATION};
+    use evm::errors::EVMError;
     use evm::gas;
-    use evm::instructions::{MemoryOperationTrait, EnvironmentInformationTrait};
-    use evm::memory::{InternalMemoryTrait, MemoryTrait};
+    use evm::instructions::MemoryOperationTrait;
+    use evm::memory::MemoryTrait;
     use evm::model::Address;
-    use evm::model::vm::{VM, VMTrait};
+    use evm::model::vm::VMTrait;
     use evm::model::{Account, AccountTrait};
     use evm::stack::StackTrait;
-    use evm::state::{StateTrait, compute_storage_address};
+    use evm::state::StateTrait;
     use evm::test_utils::{
-        evm_address, VMBuilderTrait, MemoryTestUtilsTrait, setup_test_storages, register_account,
-        uninitialized_account, native_token
+        VMBuilderTrait, MemoryTestUtilsTrait, setup_test_storages, uninitialized_account,
+        native_token
     };
-    use snforge_std::{test_address, start_mock_call, store};
-    use snforge_utils::snforge_utils::store_evm;
+    use snforge_std::{test_address, start_mock_call};
     use utils::helpers::compute_starknet_address;
 
     #[test]

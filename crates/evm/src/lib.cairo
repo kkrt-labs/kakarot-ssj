@@ -1,4 +1,4 @@
-mod backend;
+pub mod backend;
 // Call opcodes helpers
 mod call_helpers;
 
@@ -6,13 +6,13 @@ mod call_helpers;
 mod create_helpers;
 
 // Errors module
-mod errors;
+pub mod errors;
 
 // Gas module
-mod gas;
+pub mod gas;
 
 // instructions module
-mod instructions;
+pub mod instructions;
 
 // interpreter module
 mod interpreter;
@@ -21,7 +21,7 @@ mod interpreter;
 mod memory;
 
 // Data Models module
-mod model;
+pub mod model;
 
 // instructions module
 pub mod precompiles;
@@ -30,10 +30,11 @@ pub mod precompiles;
 mod stack;
 
 // Local state
-mod state;
+pub mod state;
 
 #[cfg(target: 'test')]
-mod test_data;
+pub mod test_data;
 
 #[cfg(target: 'test')]
-mod test_utils;
+pub mod test_utils;
+pub use interpreter::EVMTrait;

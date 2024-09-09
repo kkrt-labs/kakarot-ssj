@@ -1,10 +1,10 @@
-use core::starknet::account::{Call};
 //! The generic account that is deployed by Kakarot Core before being "specialized" into an
 //! Externally Owned Account or a Contract Account This aims at having only one class hash for all
 //! the contracts deployed by Kakarot, thus enforcing a unique and consistent address mapping Eth
 //! Address <=> Starknet Address
 
-use core::starknet::{ContractAddress, EthAddress, ClassHash};
+use core::starknet::account::{Call};
+use core::starknet::{EthAddress, ClassHash, ContractAddress};
 
 #[derive(Copy, Drop, Serde, Debug)]
 pub struct OutsideExecution {
@@ -49,28 +49,22 @@ pub mod AccountContract {
     use contracts::components::ownable::IOwnable;
     use contracts::components::ownable::ownable_component::InternalTrait;
     use contracts::components::ownable::ownable_component;
-    use contracts::errors::{
-        BYTECODE_READ_ERROR, BYTECODE_WRITE_ERROR, STORAGE_READ_ERROR, STORAGE_WRITE_ERROR,
-        NONCE_READ_ERROR, NONCE_WRITE_ERROR, KAKAROT_VALIDATION_FAILED, KAKAROT_REENTRANCY
-    };
+    use contracts::errors::{KAKAROT_VALIDATION_FAILED, KAKAROT_REENTRANCY};
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use contracts::storage::StorageBytecode;
-    use core::integer;
     use core::num::traits::Bounded;
     use core::num::traits::zero::Zero;
     use core::panic_with_felt252;
     use core::starknet::SyscallResultTrait;
     use core::starknet::account::{Call};
-    use core::starknet::secp256_trait::Signature;
     use core::starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess
     };
-    use core::starknet::storage_access::{storage_base_address_from_felt252, StorageBaseAddress};
     use core::starknet::syscalls::{call_contract_syscall, replace_class_syscall};
     use core::starknet::{
-        ContractAddress, EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address,
-        get_tx_info, Store, get_block_timestamp
+        EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address, get_tx_info,
+        get_block_timestamp
     };
     use core::traits::TryInto;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
@@ -78,9 +72,6 @@ pub mod AccountContract {
     use utils::constants::{POW_2_32};
     use utils::eth_transaction::EthereumTransactionTrait;
     use utils::eth_transaction::{EthTransactionTrait, TransactionMetadata};
-    use utils::helpers::SpanExtTrait;
-    use utils::helpers::{ByteArrayExTrait, ResultExTrait};
-    use utils::math::OverflowingMul;
     use utils::serialization::{deserialize_signature, deserialize_bytes, serialize_bytes};
 
     // Add ownable component
@@ -95,30 +86,30 @@ pub mod AccountContract {
 
     #[storage]
     pub(crate) struct Storage {
-        Account_bytecode: StorageBytecode,
+        pub(crate) Account_bytecode: StorageBytecode,
         pub(crate) Account_bytecode_len: u32,
-        Account_storage: Map<u256, u256>,
-        Account_is_initialized: bool,
-        Account_nonce: u64,
-        Account_implementation: ClassHash,
-        Account_evm_address: EthAddress,
-        Account_code_hash: u256,
+        pub(crate) Account_storage: Map<u256, u256>,
+        pub(crate) Account_is_initialized: bool,
+        pub(crate) Account_nonce: u64,
+        pub(crate) Account_implementation: ClassHash,
+        pub(crate) Account_evm_address: EthAddress,
+        pub(crate) Account_code_hash: u256,
         #[substorage(v0)]
         ownable: ownable_component::Storage
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         transaction_executed: TransactionExecuted,
         OwnableEvent: ownable_component::Event
     }
 
     #[derive(Drop, starknet::Event, Debug)]
-    struct TransactionExecuted {
-        response: Span<felt252>,
-        success: bool,
-        gas_used: u128
+    pub struct TransactionExecuted {
+        pub response: Span<felt252>,
+        pub success: bool,
+        pub gas_used: u128
     }
 
     #[constructor]

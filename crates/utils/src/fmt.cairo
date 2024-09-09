@@ -1,5 +1,4 @@
-use core::fmt::{Display, Debug, Formatter, Error};
-use core::starknet::{EthAddress, ContractAddress};
+use core::fmt::{Debug, Formatter, Error};
 use utils::set::{SpanSet, SpanSetTrait};
 
 mod display_felt252_based {
@@ -17,7 +16,6 @@ mod display_felt252_based {
 
 mod debug_display_based {
     use core::fmt::{Display, Debug, Formatter, Error};
-    use core::to_byte_array::AppendFormattedToByteArray;
     pub impl TDisplay<T, +Display<T>> of Debug<T> {
         fn fmt(self: @T, ref f: Formatter) -> Result<(), Error> {
             Display::fmt(self, ref f)

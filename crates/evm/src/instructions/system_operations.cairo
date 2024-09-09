@@ -1,22 +1,17 @@
-use contracts::kakarot_core::{KakarotCore, IKakarotCore};
-//! System operations.
-
-use core::box::BoxTrait;
-use evm::call_helpers::{CallHelpers, CallType};
+use evm::call_helpers::CallHelpers;
 use evm::create_helpers::{CreateHelpers, CreateType};
-use evm::errors::{ensure, EVMError, VALUE_TRANSFER_IN_STATIC_CALL};
+use evm::errors::{ensure, EVMError};
 use evm::gas;
 use evm::memory::MemoryTrait;
+use evm::model::Transfer;
 use evm::model::account::{AccountTrait};
 use evm::model::vm::{VM, VMTrait};
-use evm::model::{Address, Transfer};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use utils::math::Exponentiation;
 use utils::set::SetTrait;
 
 #[generate_trait]
-impl SystemOperations of SystemOperationsTrait {
+pub impl SystemOperations of SystemOperationsTrait {
     /// CREATE
     /// # Specification: https://www.evm.codes/#f0?fork=shanghai
     fn exec_create(ref self: VM) -> Result<(), EVMError> {
@@ -371,29 +366,23 @@ impl SystemOperations of SystemOperationsTrait {
 
 #[cfg(test)]
 mod tests {
-    use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
     use contracts::test_data::{storage_evm_bytecode, storage_evm_initcode};
     use core::result::ResultTrait;
     use core::starknet::EthAddress;
-    use core::starknet::testing::set_contract_address;
     use core::traits::TryInto;
-    use evm::backend::starknet_backend;
-    use evm::call_helpers::{CallHelpers, CallHelpersImpl};
-    use evm::errors::EVMErrorTrait;
+    use evm::call_helpers::CallHelpersImpl;
     use evm::instructions::MemoryOperationTrait;
     use evm::instructions::SystemOperationsTrait;
     use evm::interpreter::{EVMTrait};
-    use evm::memory::MemoryTrait;
     use evm::model::account::{Account};
-    use evm::model::vm::{VM, VMTrait};
-    use evm::model::{AccountTrait, Address, Transfer};
+    use evm::model::vm::VMTrait;
+    use evm::model::{AccountTrait, Address};
     use evm::stack::StackTrait;
-    use evm::state::{StateTrait, State};
+    use evm::state::{StateTrait};
     use evm::test_utils::{
-        VMBuilderTrait, MemoryTestUtilsTrait, native_token, evm_address, test_dual_address,
-        other_evm_address, setup_test_storages, register_account, origin, uninitialized_account
+        VMBuilderTrait, MemoryTestUtilsTrait, native_token, evm_address, setup_test_storages,
+        origin, uninitialized_account
     };
-    use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use snforge_std::{test_address, start_mock_call};
     use utils::helpers::compute_starknet_address;
     use utils::helpers::load_word;

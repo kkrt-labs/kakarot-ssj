@@ -3,9 +3,7 @@ use core::starknet::EthAddress;
 use core::traits::TryInto;
 
 use evm::errors::EVMError;
-use utils::errors::RLPErrorTrait;
-use utils::helpers::{U8SpanExTrait, U64Trait, U256Trait, EthAddressExTrait, ArrayExtTrait, ToBytes};
-use utils::math::WrappingBitshift;
+use utils::helpers::{U8SpanExTrait, EthAddressExTrait, ToBytes};
 use utils::rlp::{RLPTrait, RLPItem};
 use utils::traits::{TryIntoResult};
 

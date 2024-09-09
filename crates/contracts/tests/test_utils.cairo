@@ -4,13 +4,13 @@ use contracts::kakarot_core::{
     interface::IExtendedKakarotCoreDispatcher, interface::IExtendedKakarotCoreDispatcherTrait,
     KakarotCore
 };
-use contracts::uninitialized_account::{UninitializedAccount};
+use contracts::{UninitializedAccount};
 use core::fmt::Debug;
 use core::result::ResultTrait;
 use core::starknet::ClassHash;
+use core::starknet::syscalls::deploy_syscall;
 use core::starknet::{
-    testing, contract_address_const, EthAddress, ContractAddress, deploy_syscall,
-    get_contract_address
+    testing, contract_address_const, EthAddress, ContractAddress, get_contract_address
 };
 use evm::backend::starknet_backend;
 use evm::model::{Address};

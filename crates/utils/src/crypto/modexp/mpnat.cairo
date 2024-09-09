@@ -2,37 +2,32 @@
 // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/tree/develop/engine-modexp)
 use alexandria_data_structures::vec::VecTrait;
 use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
-use core::array::ArrayTrait;
 use core::array::SpanTrait;
-use core::dict::Felt252DictTrait;
-use core::num::traits::BitSize;
-use core::num::traits::{CheckedAdd, CheckedSub, CheckedMul};
+use core::num::traits::CheckedMul;
 use core::option::OptionTrait;
 use core::result::ResultTrait;
-use core::traits::Destruct;
-use core::traits::TryInto;
 
 use super::arith::{
     big_wrapping_pow, mod_inv, compute_r_mod_n, join_as_double, in_place_shl, in_place_shr,
     in_place_add, in_place_mul_sub, big_wrapping_mul, monsq, monpro, borrowing_sub, carrying_add
 };
 use utils::helpers::{FromBytes, U64Trait, Felt252VecTrait, U128Trait, BitsUsed, ByteSize};
-use utils::math::{Bitshift, WrappingBitshift};
+use utils::math::Bitshift;
 
-type Word = u64;
-type DoubleWord = u128;
-const WORD_BYTES: usize = 8;
-const WORD_BITS: usize = 64;
-const WORD_MAX: Word = 18446744073709551615;
+pub type Word = u64;
+pub type DoubleWord = u128;
+pub const WORD_BYTES: usize = 8;
+pub const WORD_BITS: usize = 64;
+pub const WORD_MAX: Word = 18446744073709551615;
 // 2**64
-const BASE: DoubleWord = 18446744073709551616;
-const DOUBLE_WORD_MAX: DoubleWord = 340282366920938463463374607431768211455;
+pub const BASE: DoubleWord = 18446744073709551616;
+pub const DOUBLE_WORD_MAX: DoubleWord = 340282366920938463463374607431768211455;
 /// Multi-precision natural number, represented in base `Word::MAX + 1 = 2^WORD_BITS`.
 /// The digits are stored in little-endian order, i.e. digits[0] is the least
 /// significant digit.
 #[derive(Destruct)]
 pub struct MPNat {
-    digits: Felt252Vec<u64>
+    pub digits: Felt252Vec<u64>
 }
 
 
@@ -684,38 +679,30 @@ pub impl MPNatTraitImpl of MPNatTrait {
     }
 }
 
+pub fn mp_nat_to_u128(ref x: MPNat) -> u128 {
+    let result = x.digits.to_le_bytes();
+    let mut i: usize = 0;
+    loop {
+        if i == result.len() {
+            break;
+        };
+
+        i += 1;
+    };
+    result.from_le_bytes_partial().expect('mpnat_to_u128')
+}
+
 #[cfg(test)]
 mod tests {
+    use alexandria_data_structures::vec::Felt252VecImpl;
     use alexandria_data_structures::vec::VecTrait;
-    use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
-    use core::result::ResultTrait;
-    use core::traits::Into;
-
-    use utils::crypto::modexp::arith::{
-        mod_inv, monsq, monpro, compute_r_mod_n, in_place_shl, in_place_shr, big_wrapping_pow,
-        big_wrapping_mul, big_sq, borrowing_sub, shifted_carrying_mul
-    };
-    use utils::crypto::modexp::mpnat::{
-        MPNat, MPNatTrait, WORD_MAX, DOUBLE_WORD_MAX, Word, DoubleWord, WORD_BYTES
-    };
-    use utils::helpers::{Felt252VecTrait, ToBytes, FromBytes};
+    use super::mp_nat_to_u128;
+    use utils::crypto::modexp::mpnat::MPNatTrait;
+    use utils::helpers::ToBytes;
     use utils::math::{Bitshift, WrappingBitshift};
 
     // the tests are taken from
     // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/mpnat.rs#L825)
-
-    pub fn mp_nat_to_u128(ref x: MPNat) -> u128 {
-        let result = x.digits.to_le_bytes();
-        let mut i: usize = 0;
-        loop {
-            if i == result.len() {
-                break;
-            };
-
-            i += 1;
-        };
-        result.from_le_bytes_partial().expect('mpnat_to_u128')
-    }
 
     fn check_modpow_even(base: u128, exp: u128, modulus: u128, expected: u128) {
         let mut x = MPNatTrait::from_big_endian(base.to_be_bytes());

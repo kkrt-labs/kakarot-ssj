@@ -1,32 +1,27 @@
-use core::RangeCheck;
 use core::circuit::CircuitElement as CE;
 use core::circuit::CircuitInput as CI;
 
 use core::circuit::{
-    RangeCheck96, AddMod, MulMod, u384, u96, CircuitElement, CircuitInput, circuit_add, circuit_sub,
-    circuit_mul, circuit_inverse, EvalCircuitResult, EvalCircuitTrait, CircuitOutputsTrait,
-    CircuitModulus, AddInputResultTrait, CircuitInputs, CircuitInputAccumulator
+    u384, CircuitElement, CircuitInput, circuit_add, circuit_sub, circuit_mul, circuit_inverse,
+    EvalCircuitTrait, CircuitOutputsTrait, CircuitModulus, CircuitInputs
 };
 use core::num::traits::Zero;
-
-
 use core::option::Option;
-use core::starknet::SyscallResultTrait;
 use core::starknet::{EthAddress};
-use evm::errors::{EVMError};
+use evm::errors::EVMError;
 use evm::precompiles::Precompile;
 use garaga::core::circuit::AddInputResultTrait2;
-use utils::helpers::{U256Trait, ToBytes, FromBytes};
-use utils::helpers::{load_word, u256_to_bytes_array};
+use utils::helpers::ToBytes;
+use utils::helpers::load_word;
 
 
 const BASE_COST: u128 = 150;
 const U256_BYTES_LEN: usize = 32;
 
-impl EcAdd of Precompile {
+pub impl EcAdd of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
-        EthAddress { address: 0x6 }
+        0x6.try_into().unwrap()
     }
 
     fn exec(mut input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
@@ -123,7 +118,7 @@ fn ec_add(x1: u256, y1: u256, x2: u256, y2: u256) -> Option<(u256, u256)> {
 
 // assumes that the points are on the curve and not the point at infinity.
 // Returns None if the points are the same and opposite y coordinates (Point at infinity)
-fn ec_safe_add(x1: u384, y1: u384, x2: u384, y2: u384) -> Option<(u384, u384)> {
+pub fn ec_safe_add(x1: u384, y1: u384, x2: u384, y2: u384) -> Option<(u384, u384)> {
     let same_x = eq_mod_p(x1, x2);
 
     if same_x {
@@ -144,7 +139,7 @@ fn ec_safe_add(x1: u384, y1: u384, x2: u384, y2: u384) -> Option<(u384, u384)> {
 
 // Check if a point is on the curve.
 // Point at infinity (0,0) will return false.
-fn is_on_curve(x: u384, y: u384) -> bool {
+pub fn is_on_curve(x: u384, y: u384) -> bool {
     let (b, _x, _y) = (CE::<CI<0>> {}, CE::<CI<1>> {}, CE::<CI<2>> {});
 
     // Compute (y^2 - (x^2 + b)) % p_bn254
@@ -207,7 +202,7 @@ fn add_ec_point_unchecked(xP: u384, yP: u384, xQ: u384, yQ: u384) -> (u384, u384
 }
 
 // Double BN254 EC point without checking if the point is on the curve
-fn double_ec_point_unchecked(x: u384, y: u384) -> (u384, u384) {
+pub fn double_ec_point_unchecked(x: u384, y: u384) -> (u384, u384) {
     // CONSTANT stack
     let in0 = CE::<CI<0>> {}; // 0x3
     // INPUT stack
@@ -269,92 +264,4 @@ fn eq_neg_mod_p(a: u384, b: u384) -> bool {
     let outputs = (check,).new_inputs().next_2(a).next_2(b).done_2().eval(modulus).unwrap();
 
     return outputs.get_output(check).is_zero();
-}
-#[cfg(test)]
-mod tests {
-    use super::{
-        eq_mod_p, eq_neg_mod_p, double_ec_point_unchecked, add_ec_point_unchecked, is_on_curve, u384
-    };
-    use utils::helpers::{U256Trait, ToBytes, FromBytes};
-
-    #[test]
-    fn test_u384_to_u256() {
-        let x = u384 { limb0: 0x1, limb1: 0x0, limb2: 0x0, limb3: 0x0 };
-        let y = TryInto::<u384, u256>::try_into(x).unwrap();
-        assert_eq!(y, u256 { low: 0x1, high: 0x0 });
-        let x = u384 { limb0: 0x0, limb1: 0x0, limb2: 0x0, limb3: 0x0 };
-        let y = TryInto::<u384, u256>::try_into(x).unwrap();
-        assert_eq!(y, u256 { low: 0x0, high: 0x0 });
-        let x = u384 { limb0: 0xc77661, limb1: 0x0, limb2: 0x0, limb3: 0x0 };
-        let y = TryInto::<u384, u256>::try_into(x).unwrap();
-        assert_eq!(y, u256 { low: 0xc77661, high: 0x0 });
-        let x = u384 { limb0: 0xa1f1ae97, limb1: 0x0, limb2: 0x0, limb3: 0x0 };
-        let y = TryInto::<u384, u256>::try_into(x).unwrap();
-        assert_eq!(y, u256 { low: 0xa1f1ae97, high: 0x0 });
-
-        let x = u384 { limb0: 0x6dbd0f5925f2ea8792be851d, limb1: 0x60, limb2: 0x0, limb3: 0x0 };
-        let y = TryInto::<u384, u256>::try_into(x).unwrap();
-        assert_eq!(y, u256 { low: 0x606dbd0f5925f2ea8792be851d, high: 0x0 });
-
-        let x = u384 { limb0: 0x288ad273930c8e07bee0b040, limb1: 0x9a80, limb2: 0x0, limb3: 0x0 };
-        let y = TryInto::<u384, u256>::try_into(x).unwrap();
-        assert_eq!(y, u256 { low: 0x9a80288ad273930c8e07bee0b040, high: 0x0 });
-
-        let x = u384 {
-            limb0: 0x79f59cab560d347406f8f978, limb1: 0x32355e68, limb2: 0x0, limb3: 0x0
-        };
-        let y = TryInto::<u384, u256>::try_into(x).unwrap();
-        assert_eq!(y, u256 { low: 0x32355e6879f59cab560d347406f8f978, high: 0x0 });
-
-        let x = u384 {
-            limb0: 0xf7c12fd7cd43a2091356f287, limb1: 0x5670d3784d, limb2: 0x0, limb3: 0x0
-        };
-        let y = TryInto::<u384, u256>::try_into(x).unwrap();
-        assert_eq!(y, u256 { low: 0x70d3784df7c12fd7cd43a2091356f287, high: 0x56 });
-
-        let x = u384 {
-            limb0: 0x4def54e61b4eee26c407edc8, limb1: 0x6a3d1d0cac6d, limb2: 0x0, limb3: 0x0
-        };
-        let y = TryInto::<u384, u256>::try_into(x).unwrap();
-        assert_eq!(y, u256 { low: 0x1d0cac6d4def54e61b4eee26c407edc8, high: 0x6a3d });
-
-        let x = u384 {
-            limb0: 0xa666c4bd0b0f6ac7bfc6697,
-            limb1: 0x55354b07685a19836f45e3,
-            limb2: 0x0,
-            limb3: 0x0
-        };
-        let y = TryInto::<u384, u256>::try_into(x).unwrap();
-        assert_eq!(y, u256 { low: 0x836f45e30a666c4bd0b0f6ac7bfc6697, high: 0x55354b07685a19 });
-
-        let x = u384 {
-            limb0: 0xf99e6e4a89d4c4bf4eeb5764,
-            limb1: 0xba69422bccfb0bf07a497f6b,
-            limb2: 0x0,
-            limb3: 0x0
-        };
-        let y = TryInto::<u384, u256>::try_into(x).unwrap();
-        assert_eq!(y, u256 { low: 0x7a497f6bf99e6e4a89d4c4bf4eeb5764, high: 0xba69422bccfb0bf0 });
-
-        let x = u384 {
-            limb0: 0xa18fd325c835625f53342a9f,
-            limb1: 0x3f862f6ff3d3c356f4262ef4,
-            limb2: 0xda,
-            limb3: 0x0
-        };
-        let y = TryInto::<u384, u256>::try_into(x).unwrap();
-        assert_eq!(y, u256 { low: 0xf4262ef4a18fd325c835625f53342a9f, high: 0xda3f862f6ff3d3c356 });
-
-        let x = u384 {
-            limb0: 0x4332f4d7188cef59cbdef8db,
-            limb1: 0xbb3e59509bf71bec4abd71f1,
-            limb2: 0x4bb761b32d048,
-            limb3: 0x0
-        };
-        let y = TryInto::<u384, u256>::try_into(x).unwrap();
-        assert_eq!(
-            y,
-            u256 { low: 0x4abd71f14332f4d7188cef59cbdef8db, high: 0x4bb761b32d048bb3e59509bf71bec }
-        );
-    }
 }

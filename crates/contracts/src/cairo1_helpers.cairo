@@ -106,26 +106,27 @@ pub trait IHelpers<T> {
 }
 
 
-mod embeddable_impls {
+pub mod embeddable_impls {
     use core::keccak::{cairo_keccak, keccak_u256s_be_inputs};
     use core::num::traits::Zero;
     use core::starknet::EthAddress;
-    use core::starknet::eth_signature::{
-        Signature, verify_eth_signature, public_key_point_to_eth_address
+    use core::starknet::eth_signature::{verify_eth_signature};
+    use core::starknet::secp256_trait::{
+        Signature, recover_public_key, Secp256PointTrait, is_valid_signature
     };
-    use core::starknet::secp256_trait::{recover_public_key, Secp256PointTrait, is_valid_signature};
+    use core::starknet::secp256_trait::{Secp256Trait};
     use core::starknet::secp256k1::Secp256k1Point;
-    use core::starknet::secp256r1::{secp256r1_new_syscall, Secp256r1Point};
+    use core::starknet::secp256r1::{Secp256r1Point};
     use core::traits::Into;
     use core::{starknet, starknet::SyscallResultTrait};
     use evm::errors::EVMError;
-    use evm::precompiles::blake2f::Blake2f;
-    use evm::precompiles::ec_add::EcAdd;
-    use evm::precompiles::ec_mul::EcMul;
-    use evm::precompiles::ec_recover::EcRecover;
-    use evm::precompiles::identity::Identity;
-    use evm::precompiles::modexp::ModExp;
-    use evm::precompiles::sha256::Sha256;
+    use evm::precompiles::Blake2f;
+    use evm::precompiles::EcAdd;
+    use evm::precompiles::EcMul;
+    use evm::precompiles::EcRecover;
+    use evm::precompiles::Identity;
+    use evm::precompiles::ModExp;
+    use evm::precompiles::Sha256;
     use utils::helpers::U256Trait;
 
 
@@ -209,7 +210,9 @@ mod embeddable_impls {
         fn verify_signature_secp256r1(
             self: @TContractState, msg_hash: u256, r: u256, s: u256, x: u256, y: u256
         ) -> bool {
-            let maybe_public_key: Option<Secp256r1Point> = secp256r1_new_syscall(x, y)
+            let maybe_public_key: Option<Secp256r1Point> = Secp256Trait::secp256_ec_new_syscall(
+                x, y
+            )
                 .unwrap_syscall();
             let public_key = match maybe_public_key {
                 Option::Some(public_key) => public_key,
@@ -227,8 +230,8 @@ pub mod Cairo1Helpers {
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl Precompiles = super::embeddable_impls::Precompiles<ContractState>;
+    pub impl Precompiles = super::embeddable_impls::Precompiles<ContractState>;
 
     #[abi(embed_v0)]
-    impl Helpers = super::embeddable_impls::Helpers<ContractState>;
+    pub impl Helpers = super::embeddable_impls::Helpers<ContractState>;
 }
