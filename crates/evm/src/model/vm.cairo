@@ -164,9 +164,9 @@ pub impl VMImpl of VMTrait {
 mod tests {
     use evm::errors::DebugEVMError;
     use evm::errors::EVMError;
-    use evm::model::vm::VMTrait;
     use evm::model::Message;
-    use evm::test_utils::{ tx_gas_limit, VMBuilderTrait };
+    use evm::model::vm::VMTrait;
+    use evm::test_utils::{tx_gas_limit, VMBuilderTrait};
 
     #[test]
     fn test_vm_default() {
@@ -258,11 +258,11 @@ mod tests {
 
         let mut vm = VMTrait::new(message, Default::default());
 
-        assert!(vm.is_valid_jump(0x3) , "expected jump to be valid");
-        assert!(vm.is_valid_jump(0x9) , "expected jump to be valid");
+        assert!(vm.is_valid_jump(0x3), "expected jump to be valid");
+        assert!(vm.is_valid_jump(0x9), "expected jump to be valid");
 
-        assert!(!vm.is_valid_jump(0x4) , "expected jump to be invalid");
-        assert!(!vm.is_valid_jump(0x5) , "expected jump to be invalid");
+        assert!(!vm.is_valid_jump(0x4), "expected jump to be invalid");
+        assert!(!vm.is_valid_jump(0x5), "expected jump to be invalid");
     }
 
     #[test]
@@ -271,6 +271,6 @@ mod tests {
         message.code = [0x60, 0x5B, 0x60, 0x00].span();
 
         let mut vm = VMTrait::new(message, Default::default());
-        assert!(!vm.is_valid_jump(0x1) , "expected false");
+        assert!(!vm.is_valid_jump(0x1), "expected false");
     }
 }

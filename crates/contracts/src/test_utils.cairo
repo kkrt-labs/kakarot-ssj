@@ -1,12 +1,17 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-use contracts::kakarot_core::{ interface::IExtendedKakarotCoreDispatcher, interface::IExtendedKakarotCoreDispatcherTrait };
+use contracts::kakarot_core::{
+    interface::IExtendedKakarotCoreDispatcher, interface::IExtendedKakarotCoreDispatcherTrait
+};
 use core::result::ResultTrait;
-use core::starknet::{ EthAddress, ContractAddress, deploy_syscall };
+use core::starknet::{EthAddress, ContractAddress, deploy_syscall};
 use evm::model::{Address};
 
-use evm::test_utils::{ other_starknet_address, sequencer_evm_address };
+use evm::test_utils::{other_starknet_address, sequencer_evm_address};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use snforge_std::{ declare, DeclareResultTrait, start_cheat_caller_address, start_cheat_sequencer_address_global, stop_cheat_caller_address, start_cheat_caller_address_global };
+use snforge_std::{
+    declare, DeclareResultTrait, start_cheat_caller_address, start_cheat_sequencer_address_global,
+    stop_cheat_caller_address, start_cheat_caller_address_global
+};
 use utils::constants::BLOCK_GAS_LIMIT;
 use utils::eth_transaction::LegacyTransaction;
 

@@ -86,7 +86,6 @@ impl MemoryImpl of MemoryTrait {
     /// * `offset` - The offset within memory to store the byte at.
     #[inline(always)]
     fn store_byte(ref self: Memory, value: u8, offset: usize) {
-
         let nonzero_16: NonZero<u32> = 16_u32.try_into().unwrap();
 
         // Compute actual offset in Memory, given active_segment of Memory (current Execution
@@ -623,7 +622,7 @@ mod tests {
     use core::num::traits::Bounded;
     use evm::memory::{MemoryTrait, InternalMemoryTrait};
     use utils::constants::{POW_2_8, POW_2_56, POW_2_64, POW_2_120};
-    use utils::{ math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtTrait };
+    use utils::{math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtTrait};
 
 
     fn load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(

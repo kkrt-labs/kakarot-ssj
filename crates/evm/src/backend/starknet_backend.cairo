@@ -249,12 +249,12 @@ mod tests {
     use evm::model::Address;
     use evm::model::account::Account;
     use evm::state::{State, StateTrait};
+    use evm::test_utils::evm_address;
     use evm::test_utils::{
         setup_test_storages, uninitialized_account, account_contract, register_account
     };
-    use evm::test_utils::evm_address;
-    use snforge_std::{ test_address, start_mock_call, get_class_hash };
-    use snforge_utils::snforge_utils::{ assert_not_called, assert_called };
+    use snforge_std::{test_address, start_mock_call, get_class_hash};
+    use snforge_utils::snforge_utils::{assert_not_called, assert_called};
     use utils::helpers::compute_starknet_address;
 
     #[test]

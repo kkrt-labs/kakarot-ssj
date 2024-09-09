@@ -64,15 +64,15 @@ fn exec_log_i(ref self: VM, topics_len: u8) -> Result<(), EVMError> {
     let size = self.stack.pop_usize()?;
     let topics: Array<u256> = self.stack.pop_n(topics_len.into())?;
 
-        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span());
-        self.memory.ensure_length(memory_expansion.new_size);
-        self
-            .charge_gas(
-                gas::LOG
-                    + topics_len.into() * gas::LOGTOPIC
-                    + size.into() * gas::LOGDATA
-                    + memory_expansion.expansion_cost
-            )?;
+    let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span());
+    self.memory.ensure_length(memory_expansion.new_size);
+    self
+        .charge_gas(
+            gas::LOG
+                + topics_len.into() * gas::LOGTOPIC
+                + size.into() * gas::LOGDATA
+                + memory_expansion.expansion_cost
+        )?;
 
     let mut data: Array<u8> = Default::default();
     self.memory.load_n(size, ref data, offset);
@@ -87,7 +87,7 @@ fn exec_log_i(ref self: VM, topics_len: u8) -> Result<(), EVMError> {
 mod tests {
     use core::num::traits::Bounded;
     use core::result::ResultTrait;
-    use evm::errors::{ EVMError, TYPE_CONVERSION_ERROR };
+    use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
     use evm::instructions::LoggingOperationsTrait;
     use evm::memory::MemoryTrait;
     use evm::stack::StackTrait;

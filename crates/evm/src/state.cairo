@@ -307,11 +307,11 @@ mod tests {
 
     mod test_state {
         use core::starknet::EthAddress;
-        use evm::model::account::{ Account, AccountTrait };
+        use evm::model::account::{Account, AccountTrait};
         use evm::model::{Event, Transfer, Address};
         use evm::state::{State, StateTrait};
         use evm::test_utils;
-        use snforge_std::{ test_address, start_mock_call };
+        use snforge_std::{test_address, start_mock_call};
         use utils::helpers::compute_starknet_address;
         use utils::set::SetTrait;
 

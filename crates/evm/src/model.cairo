@@ -204,7 +204,6 @@ pub struct Transfer {
 
 #[cfg(test)]
 mod tests {
-
     mod test_is_deployed {
         use evm::model::AddressTrait;
         use evm::test_utils;

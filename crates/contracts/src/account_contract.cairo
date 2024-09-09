@@ -4,7 +4,7 @@
 //! Address <=> Starknet Address
 
 use core::starknet::account::{Call};
-use core::starknet::{EthAddress, ClassHash};
+use core::starknet::{EthAddress, ClassHash, ContractAddress};
 
 #[derive(Copy, Drop, Serde, Debug)]
 pub struct OutsideExecution {
@@ -64,7 +64,8 @@ pub mod AccountContract {
     };
     use core::starknet::syscalls::{call_contract_syscall, replace_class_syscall};
     use core::starknet::{
-        EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address, get_tx_info
+        EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address, get_tx_info,
+        get_block_timestamp
     };
     use core::traits::TryInto;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};

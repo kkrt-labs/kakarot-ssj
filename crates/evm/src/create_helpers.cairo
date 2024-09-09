@@ -5,7 +5,6 @@ use evm::errors::{ensure, EVMError};
 use evm::gas;
 use evm::interpreter::EVMTrait;
 use evm::memory::MemoryTrait;
-use evm::model::Message;
 use evm::model::account::{Account, AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{
@@ -183,5 +182,6 @@ pub impl CreateHelpersImpl of CreateHelpers {
 #[cfg(test)]
 mod tests {
     //TODO: test create helpers
+
 
 }

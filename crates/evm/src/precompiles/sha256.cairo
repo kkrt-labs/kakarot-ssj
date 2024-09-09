@@ -56,9 +56,7 @@ mod tests {
     use evm::memory::MemoryTrait;
     use evm::precompiles::sha256::Sha256;
     use evm::stack::StackTrait;
-    use evm::test_utils::{
-        VMBuilderTrait, MemoryTestUtilsTrait, native_token, setup_test_storages
-    };
+    use evm::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait, native_token, setup_test_storages};
     use snforge_std::{start_mock_call};
     use utils::helpers::ToBytes;
     use utils::helpers::{FromBytes};

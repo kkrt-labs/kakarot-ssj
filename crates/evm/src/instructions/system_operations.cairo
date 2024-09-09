@@ -377,12 +377,12 @@ mod tests {
     use evm::memory::MemoryTrait;
     use evm::model::account::{Account};
     use evm::model::vm::VMTrait;
-    use evm::model::{ AccountTrait, Address };
+    use evm::model::{AccountTrait, Address};
     use evm::stack::StackTrait;
     use evm::state::{StateTrait};
     use evm::test_utils::{
-        VMBuilderTrait, MemoryTestUtilsTrait, native_token, evm_address, test_dual_address, other_evm_address,
-        setup_test_storages, register_account, origin, uninitialized_account
+        VMBuilderTrait, MemoryTestUtilsTrait, native_token, evm_address, test_dual_address,
+        other_evm_address, setup_test_storages, register_account, origin, uninitialized_account
     };
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use snforge_std::{test_address, start_mock_call};

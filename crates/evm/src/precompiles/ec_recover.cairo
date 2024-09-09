@@ -75,9 +75,11 @@ mod tests {
     use evm::precompiles::ec_recover::EcRecover;
     use evm::stack::StackTrait;
     use evm::test_utils::setup_test_storages;
-    use evm::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait, native_token, other_starknet_address};
+    use evm::test_utils::{
+        VMBuilderTrait, MemoryTestUtilsTrait, native_token, other_starknet_address
+    };
     use snforge_std::start_mock_call;
-    use utils::helpers::{ U256Trait, ToBytes, FromBytes };
+    use utils::helpers::{U256Trait, ToBytes, FromBytes};
 
 
     // source:

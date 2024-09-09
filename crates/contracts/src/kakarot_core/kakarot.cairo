@@ -21,7 +21,10 @@ pub mod KakarotCore {
     use evm::errors::{EVMError, ensure, EVMErrorTrait,};
     use evm::gas;
     use evm::model::account::AccountTrait;
-    use evm::model::{Message, TransactionResult, TransactionResultTrait, Address};
+    use evm::model::{
+        Message, TransactionResult, TransactionResultTrait, ExecutionSummaryTrait, Address
+    };
+    use evm::precompiles::eth_precompile_addresses;
     use evm::state::StateTrait;
     use evm::{EVMTrait};
     use utils::address::compute_contract_address;

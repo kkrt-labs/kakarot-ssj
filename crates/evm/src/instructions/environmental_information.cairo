@@ -320,7 +320,7 @@ mod tests {
     use evm::model::{Account, Address};
     use evm::stack::StackTrait;
     use evm::state::StateTrait;
-    use evm::test_utils::{ VMBuilderTrait, origin, callvalue, gas_price };
+    use evm::test_utils::{VMBuilderTrait, origin, callvalue, gas_price};
     use snforge_std::test_address;
     use utils::helpers::{u256_to_bytes_array, ArrayExtTrait, compute_starknet_address};
     use utils::traits::{EthAddressIntoU256};

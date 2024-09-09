@@ -1,10 +1,8 @@
 mod blake2f;
 
 mod ec_add;
-// use ec_add::EcAdd;
 
 mod ec_mul;
-// use ec_mul::EcMul;
 
 mod ec_recover;
 
@@ -15,7 +13,10 @@ mod modexp;
 mod p256verify;
 
 mod sha256;
+
 pub use blake2f::Blake2f;
+pub use ec_add::EcAdd;
+pub use ec_mul::EcMul;
 pub use ec_recover::EcRecover;
 pub use identity::Identity;
 pub use modexp::ModExp;
@@ -27,14 +28,6 @@ use core::traits::Into;
 use evm::errors::EVMError;
 use evm::model::vm::VM;
 use evm::model::vm::VMTrait;
-use evm::precompiles::blake2f::Blake2f;
-use evm::precompiles::ec_add::EcAdd;
-use evm::precompiles::ec_mul::EcMul;
-use evm::precompiles::ec_recover::EcRecover;
-use evm::precompiles::identity::Identity;
-use evm::precompiles::modexp::ModExp;
-use evm::precompiles::p256verify::P256Verify;
-use evm::precompiles::sha256::Sha256;
 
 use utils::set::{Set};
 

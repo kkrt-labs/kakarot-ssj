@@ -95,7 +95,7 @@ mod tests {
         blake2_precompile_fail_wrong_length_input_3_test_case, blake2_precompile_pass_1_test_case,
         blake2_precompile_pass_0_test_case, blake2_precompile_pass_2_test_case
     };
-    use evm::test_utils::{ VMBuilderTrait, native_token, setup_test_storages };
+    use evm::test_utils::{VMBuilderTrait, native_token, setup_test_storages};
     use snforge_std::start_mock_call;
     use utils::helpers::FromBytes;
 

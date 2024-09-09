@@ -28,7 +28,8 @@ mod tests {
     use evm::precompiles::identity::Identity;
     use evm::stack::StackTrait;
     use evm::test_utils::{
-        VMBuilderTrait, MemoryTestUtilsTrait, native_token, other_starknet_address, setup_test_storages
+        VMBuilderTrait, MemoryTestUtilsTrait, native_token, other_starknet_address,
+        setup_test_storages
     };
     use snforge_std::{start_mock_call, test_address};
 

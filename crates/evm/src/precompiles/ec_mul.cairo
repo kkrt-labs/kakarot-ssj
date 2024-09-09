@@ -1,5 +1,8 @@
 use core::circuit::u384;
 use core::option::Option;
+use core::starknet::{EthAddress};
+use evm::errors::{EVMError, EVMErrorTrait};
+use evm::precompiles::Precompile;
 
 use evm::precompiles::ec_add::{
     is_on_curve, eq_mod_p, eq_neg_mod_p, double_ec_point_unchecked, add_ec_point_unchecked,

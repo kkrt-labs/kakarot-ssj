@@ -140,15 +140,14 @@ pub impl BlockInformation of BlockInformationTrait {
 
 #[cfg(test)]
 mod tests {
-
     use core::result::ResultTrait;
     use evm::instructions::BlockInformationTrait;
     use evm::model::account::Account;
     use evm::model::vm::VMTrait;
     use evm::stack::StackTrait;
     use evm::state::StateTrait;
-    use evm::test_utils::{ VMBuilderTrait, gas_price, setup_test_storages };
-    use snforge_std::{ start_cheat_block_number_global, start_cheat_block_timestamp_global };
+    use evm::test_utils::{VMBuilderTrait, gas_price, setup_test_storages};
+    use snforge_std::{start_cheat_block_number_global, start_cheat_block_timestamp_global};
     use utils::constants;
     use utils::traits::{EthAddressIntoU256};
 

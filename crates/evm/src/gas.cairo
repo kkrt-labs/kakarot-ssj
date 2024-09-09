@@ -265,7 +265,9 @@ mod tests {
         ACCESS_LIST_STORAGE_KEY
     };
     use evm::test_utils::evm_address;
-    use utils::eth_transaction::{ EthereumTransaction, LegacyTransaction, AccessListTransaction, AccessListItem };
+    use utils::eth_transaction::{
+        EthereumTransaction, LegacyTransaction, AccessListTransaction, AccessListItem
+    };
     use utils::helpers::ToBytes;
 
     #[test]

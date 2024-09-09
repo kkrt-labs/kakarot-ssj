@@ -1,5 +1,4 @@
 use core::dict::{Felt252Dict, Felt252DictTrait};
-use core::num::traits::Bounded;
 //! Stack implementation.
 //! # Example
 //! ```
@@ -16,6 +15,7 @@ use core::num::traits::Bounded;
 //! let value = stack.pop()?;
 //! ```
 use core::nullable::{NullableTrait};
+use core::num::traits::Bounded;
 use core::starknet::EthAddress;
 use evm::errors::{ensure, EVMError};
 

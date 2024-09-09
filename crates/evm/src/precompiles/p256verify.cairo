@@ -113,7 +113,7 @@ mod tests {
     use evm::test_utils::{VMBuilderTrait};
     use evm::test_utils::{setup_test_storages, native_token};
     use snforge_std::start_mock_call;
-    use utils::helpers::{ ToBytes, FromBytes };
+    use utils::helpers::{ToBytes, FromBytes};
 
 
     // source:
