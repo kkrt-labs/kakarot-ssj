@@ -696,10 +696,10 @@ pub fn mp_nat_to_u128(ref x: MPNat) -> u128 {
 mod tests {
     use alexandria_data_structures::vec::Felt252VecImpl;
     use alexandria_data_structures::vec::VecTrait;
+    use super::mp_nat_to_u128;
     use utils::crypto::modexp::mpnat::MPNatTrait;
     use utils::helpers::ToBytes;
     use utils::math::{Bitshift, WrappingBitshift};
-    use super::mp_nat_to_u128;
 
     // the tests are taken from
     // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/mpnat.rs#L825)

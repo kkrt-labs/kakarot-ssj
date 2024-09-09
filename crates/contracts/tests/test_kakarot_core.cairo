@@ -1,16 +1,14 @@
+use contracts::UninitializedAccount;
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::interface::{
     IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
-use contracts::kakarot_core::{
-    KakarotCore, KakarotCore::KakarotCoreInternal
-};
+use contracts::kakarot_core::{KakarotCore, KakarotCore::KakarotCoreInternal};
 use contracts::test_contracts::test_upgradeable::{
     MockContractUpgradeableV1, IMockContractUpgradeableDispatcher,
     IMockContractUpgradeableDispatcherTrait
 };
 use contracts::test_data::{deploy_counter_calldata, counter_evm_bytecode};
-use contracts::UninitializedAccount;
 use contracts::{test_utils as contract_utils,};
 use core::fmt::{Debug, Formatter, Error};
 use core::num::traits::Zero;
