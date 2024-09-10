@@ -18,7 +18,7 @@
 ![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)
 [![Read FAQ](https://img.shields.io/badge/Ask%20Question-Read%20FAQ-000000)](https://www.newton.so/view?tags=kakarot)
 ![GitHub Repo stars](https://img.shields.io/github/stars/kkrt-labs/kakarot-ssj?style=social)
-[![Twitter Follow](https://img.shields.io/twitter/follow/KakarotZkEvm?style=social)](https://twitter.com/KakarotZkEvm)
+[![Twitter Follow](https://img.shields.io/twitter/follow/KakarotZkEvm?style=social)](https://x.com/KakarotZkEvm)
 
 </div>
 
@@ -100,7 +100,7 @@ scarb test
 
 ### Format
 
-The project uses [trunk](trunk.io) for everything except cairo files. If you
+The project uses [trunk](https://trunk.io/) for everything except cairo files. If you
 don't have it installed already, you can do:
 
 ```bash
