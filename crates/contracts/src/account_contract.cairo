@@ -57,6 +57,7 @@ pub mod AccountContract {
     use core::panic_with_felt252;
     use core::starknet::SyscallResultTrait;
     use core::starknet::account::{Call};
+    use core::starknet::eth_signature::verify_eth_signature;
     use core::starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess
@@ -73,6 +74,7 @@ pub mod AccountContract {
     use utils::eth_transaction::validation::validate_eth_tx;
     use utils::eth_transaction::{TransactionMetadata};
     use utils::serialization::{deserialize_signature, deserialize_bytes, serialize_bytes};
+    use core::cmp::min;
     use utils::traits::DefaultSignature;
 
     // Add ownable component
@@ -163,95 +165,17 @@ pub mod AccountContract {
 
         // EOA functions
         fn __validate__(ref self: ContractState, calls: Array<Call>) -> felt252 {
-            let tx_info = get_tx_info().unbox();
-            assert(get_caller_address().is_zero(), 'EOA: reentrant call');
-            assert(calls.len() == 1, 'EOA: multicall not supported');
-            // todo: activate check once using snfoundry
-            // assert(tx_info.version.try_into().unwrap() >= 1_u128, 'EOA: deprecated tx version');
-            assert(self.Account_bytecode_len.read().is_zero(), 'EOAs: Cannot have code');
-            assert(tx_info.signature.len() == 5, 'EOA: invalid signature length');
-
-            let call = calls.at(0);
-            assert(*call.to == self.ownable.owner(), 'to is not kakarot core');
-            assert!(
-                *call.selector == selector!("eth_send_transaction"),
-                "Validate: selector must be eth_send_transaction"
-            );
-
-            let chain_id: u64 = tx_info.chain_id.try_into().unwrap() % POW_2_32.try_into().unwrap();
-            let signature = deserialize_signature(tx_info.signature, chain_id)
-                .expect('EOA: invalid signature');
-
-            let tx_metadata = TransactionMetadata {
-                address: self.Account_evm_address.read(),
-                chain_id,
-                account_nonce: tx_info.nonce.try_into().unwrap(),
-                signature
-            };
-
-            let mut encoded_tx = deserialize_bytes(*call.calldata)
-                .expect('conversion to Span<u8> failed')
-                .span();
-            let unsigned_transaction = TransactionUnsignedTrait::decode_enveloped(ref encoded_tx)
-                .expect('EOA: could not decode tx');
-            let validation_result = validate_eth_tx(tx_metadata, unsigned_transaction)
-                .expect('failed to validate eth tx');
-
-            assert(validation_result, 'transaction validation failed');
-
-            VALIDATED
+            panic!("EOA: __validate__ not supported")
         }
 
         /// Validate Declare is not used for Kakarot
         fn __validate_declare__(self: @ContractState, class_hash: felt252) -> felt252 {
-            panic_with_felt252('Cannot Declare EOA')
+            panic!("EOA: declare not supported")
         }
 
         fn __execute__(ref self: ContractState, calls: Array<Call>) -> Array<Span<felt252>> {
-            let caller = get_caller_address();
-            let tx_info = get_tx_info().unbox();
-            assert(caller.is_zero(), 'EOA: reentrant call');
-            assert(calls.len() == 1, 'EOA: multicall not supported');
-            // todo: activate check once using snfoundry
-            // assert(tx_info.version.try_into().unwrap() >= 1_u128, 'EOA: deprecated tx version');
-
-            let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
-            let latest_class = kakarot.get_account_contract_class_hash();
-            let this_class = self.Account_implementation.read();
-
-            if (latest_class != this_class) {
-                self.Account_implementation.write(latest_class);
-                let response = IAccountLibraryDispatcher { class_hash: latest_class }
-                    .__execute__(calls);
-                replace_class_syscall(latest_class).unwrap_syscall();
-                return response;
-            }
-
-            // Increment nonce to match protocol's nonce for EOAs.
-            self.Account_nonce.write(tx_info.nonce.try_into().unwrap() + 1);
-
-            let call: @Call = calls[0];
-
-            let mut encoded_tx = deserialize_bytes(*call.calldata)
-                .expect('conversion to Span<u8> failed')
-                .span();
-            let unsigned_transaction = TransactionUnsignedTrait::decode_enveloped(ref encoded_tx)
-                .expect('EOA: could not decode tx');
-
-            //TODO: validation of EIP-1559 transactions
-            // Not done because this endpoint will end up deprecated after EIP-1559
-            let is_valid = true;
-
-            let (success, return_data, gas_used) = if is_valid {
-                kakarot.eth_send_transaction(unsigned_transaction.transaction)
-            } else {
-                (false, KAKAROT_VALIDATION_FAILED.span(), 0)
-            };
-            let return_data = serialize_bytes(return_data).span();
-
-            self.emit(TransactionExecuted { response: return_data, success: success, gas_used });
-
-            array![return_data]
+            panic!("EOA: __execute__ not supported");
+            array![]
         }
 
         fn write_bytecode(ref self: ContractState, bytecode: Span<u8>) {
@@ -304,6 +228,7 @@ pub mod AccountContract {
             let caller = get_caller_address();
             let tx_info = get_tx_info();
 
+            // SNIP-9 Validation
             if (outside_execution.caller.into() != 'ANY_CALLER') {
                 assert(caller == outside_execution.caller, 'SNIP9: Invalid caller');
             }
@@ -312,20 +237,18 @@ pub mod AccountContract {
             assert(block_timestamp > outside_execution.execute_after, 'SNIP9: Too early call');
             assert(block_timestamp < outside_execution.execute_before, 'SNIP9: Too late call');
 
-            assert(outside_execution.calls.len() == 1, 'Multicall not supported');
-            assert(self.Account_bytecode_len.read().is_zero(), 'EOAs cannot have code');
-            assert(tx_info.version.into() >= 1_u256, 'Deprecated tx version');
-            assert(signature.len() == 5, 'Invalid signature length');
+            // Kakarot-Specific Validation
+            assert(outside_execution.calls.len() == 1, 'KKRT: Multicall not supported');
+            assert(tx_info.version.into() >= 1_u256, 'KKRT: Deprecated tx version: 0');
 
-            let call = outside_execution.calls.at(0);
-            assert(*call.to == self.ownable.owner(), 'to is not kakarot core');
-            assert!(
-                *call.selector == selector!("eth_send_transaction"),
-                "selector must be eth_send_transaction"
-            );
+            // EOA Validation
+            assert(self.Account_bytecode_len.read().is_zero(), 'EOA: cannot have code');
+
             let chain_id: u64 = tx_info.chain_id.try_into().unwrap() % POW_2_32.try_into().unwrap();
+            assert(signature.len() == 5, 'Invalid signature length');
             let signature = deserialize_signature(signature, chain_id)
                 .expect('EOA: invalid signature');
+
             let mut encoded_tx_data = deserialize_bytes((*outside_execution.calls[0]).calldata)
                 .expect('conversion to Span<u8> failed')
                 .span();
@@ -333,37 +256,22 @@ pub mod AccountContract {
                 ref encoded_tx_data
             )
                 .expect('EOA: could not decode tx');
-            // TODO(execute-from-outside): move validation to KakarotCore
-            let tx_metadata = TransactionMetadata {
-                address: self.Account_evm_address.read(),
-                chain_id,
-                account_nonce: self.Account_nonce.read().into(),
-                signature
-            };
 
-            let validation_result = validate_eth_tx(tx_metadata, unsigned_transaction)
-                .expect('failed to validate eth tx');
-
-            assert(validation_result, 'transaction validation failed');
-
-            //TODO: validate eip1559 transactions
-            // let is_valid = match tx.try_into_fee_market_transaction() {
-            //     Option::Some(tx_fee_infos) => { self.validate_eip1559_tx(@tx, tx_fee_infos) },
-            //     Option::None => true
-            // };
-            let is_valid = true;
+            let address = self.Account_evm_address.read();
+            verify_eth_signature(unsigned_transaction.hash, signature, address);
 
             let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
-
-            let return_data = if is_valid {
-                let (_, return_data, _) = kakarot
-                    .eth_send_transaction(unsigned_transaction.transaction);
-                return_data
-            } else {
-                KAKAROT_VALIDATION_FAILED.span()
-            };
+            let (success, return_data, gas_used) = kakarot
+                .eth_send_transaction(unsigned_transaction.transaction);
             let return_data = serialize_bytes(return_data).span();
 
+            // See Argent account
+            // https://github.com/argentlabs/argent-contracts-starknet/blob/1352198956f36fb35fa544c4e46a3507a3ec20e3/src/presets/user_account.cairo#L211-L213
+            // See 300 max data_len for events
+            // https://github.com/starkware-libs/blockifier/blob/9bfb3d4c8bf1b68a0c744d1249b32747c75a4d87/crates/blockifier/resources/versioned_constants.json
+            // The whole data_len should be less than 300, so it's the return_data should be less
+            // than 297 (+3 for return_data_len, success, gas_used)
+            self.emit(TransactionExecuted { response: return_data.slice(0, min(297, return_data.len())), success: success, gas_used });
             array![return_data]
         }
     }

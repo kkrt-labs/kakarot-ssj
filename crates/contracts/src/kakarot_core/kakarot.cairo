@@ -18,6 +18,7 @@ pub mod KakarotCore {
         get_caller_address
     };
     use evm::backend::starknet_backend;
+    use evm::backend::validation::validate_eth_tx;
     use evm::errors::{EVMError, ensure, EVMErrorTrait,};
     use evm::gas;
     use evm::model::account::AccountTrait;
@@ -27,9 +28,12 @@ pub mod KakarotCore {
     use evm::precompiles::eth_precompile_addresses;
     use evm::state::StateTrait;
     use evm::{EVMTrait};
+    use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use utils::address::compute_contract_address;
+    use utils::constants::{POW_2_32};
     use utils::eth_transaction::common::TxKind;
     use utils::eth_transaction::eip2930::{AccessListItem, AccessListItemTrait};
+    use utils::eth_transaction::get_effective_gas_price;
     use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
     use utils::helpers::compute_starknet_address;
     use utils::set::{Set, SetTrait};
@@ -164,6 +168,8 @@ pub mod KakarotCore {
         }
 
         fn eth_send_transaction(ref self: ContractState, tx: Transaction) -> (bool, Span<u8>, u64) {
+            validate_eth_tx(@self, tx);
+
             let starknet_caller_address = get_caller_address();
             let account = IAccountDispatcher { contract_address: starknet_caller_address };
             let origin = Address {
@@ -275,6 +281,8 @@ pub mod KakarotCore {
             let gas_fee = gas_limit.into() * gas_price;
             let mut sender_account = env.state.get_account(origin.evm);
             let sender_balance = sender_account.balance();
+            sender_account.set_nonce(sender_account.nonce() + 1);
+            env.state.set_account(sender_account);
             match ensure(
                 sender_balance >= gas_fee.into() + tx.value(), EVMError::InsufficientBalance
             ) {

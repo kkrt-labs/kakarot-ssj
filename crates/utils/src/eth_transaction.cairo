@@ -23,9 +23,9 @@ pub struct TransactionMetadata {
 
 /// Get the effective gas price of a transaction as specfified in EIP-1559 with relevant
 /// checks.
-fn get_effective_gas_price(
-    max_fee_per_gas: Option<u256>, max_priority_fee_per_gas: Option<u256>, block_base_fee: u256,
-) -> Result<u256, EthTransactionError> {
+pub fn get_effective_gas_price(
+    max_fee_per_gas: Option<u128>, max_priority_fee_per_gas: Option<u128>, block_base_fee: u128,
+) -> Result<u128, EthTransactionError> {
     match max_fee_per_gas {
         Option::Some(max_fee) => {
             let max_priority_fee_per_gas = max_priority_fee_per_gas.unwrap_or(0);
