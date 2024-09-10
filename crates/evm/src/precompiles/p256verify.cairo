@@ -5,7 +5,7 @@ use evm::errors::{EVMError};
 use evm::precompiles::Precompile;
 use utils::helpers::FromBytes;
 
-const P256VERIFY_PRECOMPILE_GAS_COST: u128 = 3450;
+const P256VERIFY_PRECOMPILE_GAS_COST: u64 = 3450;
 
 const ONE_32_BYTES: [
     u8
@@ -50,8 +50,8 @@ pub impl P256Verify of Precompile {
         0x100.try_into().unwrap()
     }
 
-    fn exec(input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
-        let gas: u128 = P256VERIFY_PRECOMPILE_GAS_COST;
+    fn exec(input: Span<u8>) -> Result<(u64, Span<u8>), EVMError> {
+        let gas = P256VERIFY_PRECOMPILE_GAS_COST;
 
         if input.len() != 160 {
             return Result::Ok((gas, [].span()));
@@ -111,7 +111,7 @@ mod tests {
     use evm::precompiles::p256verify::P256Verify;
     use evm::stack::StackTrait;
     use evm::test_utils::{VMBuilderTrait};
-    use evm::test_utils::{setup_test_storages, native_token};
+    use evm::test_utils::{setup_test_environment, native_token};
     use snforge_std::start_mock_call;
     use utils::helpers::{ToBytes, FromBytes};
 
@@ -150,7 +150,7 @@ mod tests {
     #[test]
     //TODO(sn-foundry): fix or delete
     fn test_p256verify_precompile_static_call() {
-        setup_test_storages();
+        setup_test_environment();
 
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -214,7 +214,7 @@ mod tests {
     //TODO(sn-foundry): fix or delete
     #[test]
     fn test_p256verify_precompile_input_too_short_static_call() {
-        setup_test_storages();
+        setup_test_environment();
 
         let mut vm = VMBuilderTrait::new_with_presets().build();
 

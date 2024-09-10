@@ -5,8 +5,8 @@ use evm::precompiles::Precompile;
 use utils::helpers::{FromBytes, ToBytes};
 use utils::math::Bitshift;
 
-const BASE_COST: u128 = 60;
-const COST_PER_WORD: u128 = 12;
+const BASE_COST: u64 = 60;
+const COST_PER_WORD: u64 = 12;
 
 pub impl Sha256 of Precompile {
     #[inline(always)]
@@ -14,7 +14,7 @@ pub impl Sha256 of Precompile {
         0x2.try_into().unwrap()
     }
 
-    fn exec(mut input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
+    fn exec(mut input: Span<u8>) -> Result<(u64, Span<u8>), EVMError> {
         let data_word_size = ((input.len() + 31) / 32).into();
         let gas = BASE_COST + data_word_size * COST_PER_WORD;
 
@@ -56,7 +56,9 @@ mod tests {
     use evm::memory::MemoryTrait;
     use evm::precompiles::sha256::Sha256;
     use evm::stack::StackTrait;
-    use evm::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait, native_token, setup_test_storages};
+    use evm::test_utils::{
+        VMBuilderTrait, MemoryTestUtilsTrait, native_token, setup_test_environment
+    };
     use snforge_std::{start_mock_call};
     use utils::helpers::ToBytes;
     use utils::helpers::{FromBytes};
@@ -147,7 +149,7 @@ mod tests {
     // <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='wFirsWplaceqparameters%20in%20memorybFFjdata~0vMSTOREvvwDoqcallZSizeZ_1XSizeb1FX_2jaddressY4%200xFFFFFFFFjgasvSTATICCALLvvwPutqresulWalonVonqstackvPOPb20vMLOAD'~Y1j//%20v%5Cnq%20thVj%20wb~0x_Offset~Zb20jretYvPUSHXjargsWt%20Ve%20%01VWXYZ_bjqvw~_>
     #[test]
     fn test_sha_256_precompile_static_call() {
-        setup_test_storages();
+        setup_test_environment();
 
         let mut vm = VMBuilderTrait::new_with_presets().build();
 

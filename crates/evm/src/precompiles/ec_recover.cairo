@@ -9,7 +9,7 @@ use utils::helpers::{ToBytes, FromBytes};
 use utils::traits::BoolIntoNumeric;
 use utils::traits::EthAddressIntoU256;
 
-const EC_RECOVER_PRECOMPILE_GAS_COST: u128 = 3000;
+const EC_RECOVER_PRECOMPILE_GAS_COST: u64 = 3000;
 
 pub impl EcRecover of Precompile {
     #[inline(always)]
@@ -17,8 +17,8 @@ pub impl EcRecover of Precompile {
         0x1.try_into().unwrap()
     }
 
-    fn exec(input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
-        let gas: u128 = EC_RECOVER_PRECOMPILE_GAS_COST;
+    fn exec(input: Span<u8>) -> Result<(u64, Span<u8>), EVMError> {
+        let gas = EC_RECOVER_PRECOMPILE_GAS_COST;
 
         let message_hash = input.slice(0, 32);
         let message_hash = match message_hash.from_be_bytes() {
@@ -74,7 +74,7 @@ mod tests {
 
     use evm::precompiles::ec_recover::EcRecover;
     use evm::stack::StackTrait;
-    use evm::test_utils::setup_test_storages;
+    use evm::test_utils::setup_test_environment;
     use evm::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait, native_token};
     use snforge_std::start_mock_call;
     use utils::helpers::{ToBytes, FromBytes};
@@ -109,7 +109,7 @@ mod tests {
     // <https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='jFirsNplace_parameters%20in%20memoryZ456e9aea5e197a1f1af7a3e85a3212fa4049a3ba34c2289b4c860fc0b0c64ef3whash~Y~28wvX2YZ9242685bf161793cc25603c231bc2f568eb630ea16aa137d2664ac8038825608wrX4YZ4f8ae3bd7535248d0bd448298cc2e2071e56992d0774dc340c368ae950852adawsX6YqqjDo_call~32JSizeX80JOffsetX8VSize~VOffset~1waddressW4QFFFFFFFFwgasqSTATICCALLqqjPut_resulNalonKon_stackqPOPX80qMLOAD'~W1%20w%20jq%5Cnj//%20_%20thKZW32QY0qMSTOREX~0xWqPUSHV0wargsQ%200xNt%20Ke%20Jwret%01JKNQVWXYZ_jqw~_>
     #[test]
     fn test_ec_precompile_static_call() {
-        setup_test_storages();
+        setup_test_environment();
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
         vm

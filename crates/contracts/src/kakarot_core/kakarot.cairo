@@ -28,8 +28,9 @@ pub mod KakarotCore {
     use evm::state::StateTrait;
     use evm::{EVMTrait};
     use utils::address::compute_contract_address;
-    use utils::eth_transaction::AccessListItemTrait;
-    use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, AccessListItem};
+    use utils::eth_transaction::common::TxKind;
+    use utils::eth_transaction::eip2930::{AccessListItem, AccessListItemTrait};
+    use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
     use utils::helpers::compute_starknet_address;
     use utils::set::{Set, SetTrait};
 
@@ -51,9 +52,9 @@ pub mod KakarotCore {
         pub Kakarot_account_contract_class_hash: ClassHash,
         pub Kakarot_native_token_address: ContractAddress,
         pub Kakarot_coinbase: EthAddress,
-        pub Kakarot_base_fee: u128,
+        pub Kakarot_base_fee: u64,
         pub Kakarot_prev_randao: u256,
-        pub Kakarot_block_gas_limit: u128,
+        pub Kakarot_block_gas_limit: u64,
         // Components
         #[substorage(v0)]
         ownable: ownable_component::Storage,
@@ -103,7 +104,7 @@ pub mod KakarotCore {
         account_contract_class_hash: ClassHash,
         uninitialized_account_class_hash: ClassHash,
         coinbase: EthAddress,
-        block_gas_limit: u128,
+        block_gas_limit: u64,
         mut eoas_to_deploy: Span<EthAddress>,
     ) {
         self.ownable.initializer(owner);
@@ -148,8 +149,8 @@ pub mod KakarotCore {
         }
 
         fn eth_call(
-            self: @ContractState, origin: EthAddress, tx: EthereumTransaction
-        ) -> (bool, Span<u8>, u128) {
+            self: @ContractState, origin: EthAddress, tx: Transaction
+        ) -> (bool, Span<u8>, u64) {
             if !self.is_view() {
                 core::panic_with_felt252('fn must be called, not invoked');
             };
@@ -162,9 +163,7 @@ pub mod KakarotCore {
             (success, return_data, gas_used)
         }
 
-        fn eth_send_transaction(
-            ref self: ContractState, tx: EthereumTransaction
-        ) -> (bool, Span<u8>, u128) {
+        fn eth_send_transaction(ref self: ContractState, tx: Transaction) -> (bool, Span<u8>, u64) {
             let starknet_caller_address = get_caller_address();
             let account = IAccountDispatcher { contract_address: starknet_caller_address };
             let origin = Address {
@@ -216,12 +215,12 @@ pub mod KakarotCore {
             self.emit(AccountDeployed { evm_address, starknet_address });
         }
 
-        fn get_block_gas_limit(self: @ContractState) -> u128 {
+        fn get_block_gas_limit(self: @ContractState) -> u64 {
             self.Kakarot_block_gas_limit.read()
         }
 
 
-        fn get_base_fee(self: @ContractState) -> u128 {
+        fn get_base_fee(self: @ContractState) -> u64 {
             self.Kakarot_base_fee.read()
         }
 
@@ -265,15 +264,15 @@ pub mod KakarotCore {
 
 
         fn process_transaction(
-            self: @ContractState, origin: Address, tx: EthereumTransaction
+            self: @ContractState, origin: Address, tx: Transaction
         ) -> TransactionResult {
             //TODO(gas) handle FeeMarketTransaction
-            let gas_price = tx.gas_price();
+            let gas_price = tx.max_fee_per_gas();
             let gas_limit = tx.gas_limit();
             let mut env = starknet_backend::get_env(origin.evm, gas_price);
 
             // TX Gas
-            let gas_fee = gas_limit * gas_price;
+            let gas_fee = gas_limit.into() * gas_price;
             let mut sender_account = env.state.get_account(origin.evm);
             let sender_balance = sender_account.balance();
             match ensure(
@@ -281,9 +280,7 @@ pub mod KakarotCore {
             ) {
                 Result::Ok(_) => {},
                 Result::Err(err) => {
-                    return TransactionResultTrait::exceptional_failure(
-                        err.to_bytes(), tx.gas_limit()
-                    );
+                    return TransactionResultTrait::exceptional_failure(err.to_bytes(), gas_limit);
                 }
             };
 
@@ -291,29 +288,28 @@ pub mod KakarotCore {
                 Option::Some(gas_left) => gas_left,
                 Option::None => {
                     return TransactionResultTrait::exceptional_failure(
-                        EVMError::OutOfGas.to_bytes(), tx.gas_limit()
+                        EVMError::OutOfGas.to_bytes(), gas_limit
                     );
                 }
             };
-
             // Handle deploy/non-deploy transaction cases
-            let (to, is_deploy_tx, code, code_address, calldata) = match tx.destination() {
-                Option::Some(to) => {
-                    let target_starknet_address = self.compute_starknet_address(to);
-                    let to = Address { evm: to, starknet: target_starknet_address };
-                    let code = env.state.get_account(to.evm).code;
-                    (to, false, code, to, tx.calldata())
-                },
-                Option::None => {
+            let (to, is_deploy_tx, code, code_address, calldata) = match tx.kind() {
+                TxKind::Create => {
                     // Deploy tx case.
                     let mut origin_nonce: u64 = get_tx_info().unbox().nonce.try_into().unwrap();
                     let to_evm_address = compute_contract_address(origin.evm, origin_nonce);
                     let to_starknet_address = self.compute_starknet_address(to_evm_address);
                     let to = Address { evm: to_evm_address, starknet: to_starknet_address };
-                    let code = tx.calldata();
+                    let code = tx.input();
                     let calldata = [].span();
                     (to, true, code, Zero::zero(), calldata)
                 },
+                TxKind::Call(to) => {
+                    let target_starknet_address = self.compute_starknet_address(to);
+                    let to = Address { evm: to, starknet: target_starknet_address };
+                    let code = env.state.get_account(to.evm).code;
+                    (to, false, code, to, tx.input())
+                }
             };
 
             let mut accessed_addresses: Set<EthAddress> = Default::default();
@@ -324,7 +320,7 @@ pub mod KakarotCore {
 
             let mut accessed_storage_keys: Set<(EthAddress, u256)> = Default::default();
 
-            if let Option::Some(mut access_list) = tx.try_access_list() {
+            if let Option::Some(mut access_list) = tx.access_list() {
                 for access_list_item in access_list {
                     let AccessListItem { ethereum_address, storage_keys: _ } = *access_list_item;
                     let storage_keys = access_list_item.to_storage_keys();
@@ -363,7 +359,7 @@ pub mod KakarotCore {
             // without pre-emtively charging for the tx gas fee and then refund.
             // This is not true for EIP-1559 transactions - not supported yet.
             let total_gas_used = gas_used - gas_refund;
-            let _transaction_fee = total_gas_used * gas_price;
+            let _transaction_fee = total_gas_used.into() * gas_price;
 
             //TODO(gas): EF-tests doesn't yet support in-EVM gas charging, they assume that the gas
             //charged is always correct for now.

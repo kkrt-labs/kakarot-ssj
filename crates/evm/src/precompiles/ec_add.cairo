@@ -15,7 +15,7 @@ use utils::helpers::ToBytes;
 use utils::helpers::load_word;
 
 
-const BASE_COST: u128 = 150;
+const BASE_COST: u64 = 150;
 const U256_BYTES_LEN: usize = 32;
 
 pub impl EcAdd of Precompile {
@@ -24,7 +24,7 @@ pub impl EcAdd of Precompile {
         0x6.try_into().unwrap()
     }
 
-    fn exec(mut input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
+    fn exec(mut input: Span<u8>) -> Result<(u64, Span<u8>), EVMError> {
         let gas = BASE_COST;
 
         let x1_bytes = *(input.multi_pop_front::<32>().unwrap());

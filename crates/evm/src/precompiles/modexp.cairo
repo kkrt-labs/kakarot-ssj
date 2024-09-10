@@ -16,7 +16,7 @@ use utils::crypto::modexp::lib::modexp;
 use utils::helpers::{U8SpanExTrait, FromBytes, BitsUsed};
 
 const HEADER_LENGTH: usize = 96;
-const MIN_GAS: u128 = 200;
+const MIN_GAS: u64 = 200;
 
 pub impl ModExp of Precompile {
     #[inline(always)]
@@ -24,7 +24,7 @@ pub impl ModExp of Precompile {
         0x5.try_into().unwrap()
     }
 
-    fn exec(input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
+    fn exec(input: Span<u8>) -> Result<(u64, Span<u8>), EVMError> {
         // The format of input is:
         // <length_of_BASE> <length_of_EXPONENT> <length_of_MODULUS> <BASE> <EXPONENT> <MODULUS>
         // Where every length is a 32-byte left-padded integer representing the number of bytes

@@ -1,5 +1,5 @@
 use core::starknet::{ContractAddress, EthAddress, ClassHash};
-use utils::eth_transaction::EthereumTransaction;
+use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
 
 #[starknet::interface]
 pub trait IKakarotCore<TContractState> {
@@ -28,14 +28,12 @@ pub trait IKakarotCore<TContractState> {
     /// Performs view calls into the blockchain
     /// It cannot modify the state of the chain
     fn eth_call(
-        self: @TContractState, origin: EthAddress, tx: EthereumTransaction
-    ) -> (bool, Span<u8>, u128);
+        self: @TContractState, origin: EthAddress, tx: Transaction
+    ) -> (bool, Span<u8>, u64);
 
     /// Transaction entrypoint into the EVM
     /// Executes an EVM transaction and possibly modifies the state
-    fn eth_send_transaction(
-        ref self: TContractState, tx: EthereumTransaction
-    ) -> (bool, Span<u8>, u128);
+    fn eth_send_transaction(ref self: TContractState, tx: Transaction) -> (bool, Span<u8>, u64);
 
     /// Upgrade the KakarotCore smart contract
     /// Using replace_class_syscall
@@ -53,9 +51,10 @@ pub trait IKakarotCore<TContractState> {
     fn register_account(ref self: TContractState, evm_address: EthAddress);
 
     // Getter for the Block Gas Limit
-    fn get_block_gas_limit(self: @TContractState) -> u128;
+    fn get_block_gas_limit(self: @TContractState) -> u64;
+
     // Getter for the Base Fee
-    fn get_base_fee(self: @TContractState) -> u128;
+    fn get_base_fee(self: @TContractState) -> u64;
 
     // Getter for the Starknet Address
     fn get_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
@@ -88,12 +87,12 @@ pub trait IExtendedKakarotCore<TContractState> {
     /// Performs view calls into the blockchain
     /// It cannot modify the state of the chain
     fn eth_call(
-        self: @TContractState, origin: EthAddress, tx: EthereumTransaction
-    ) -> (bool, Span<u8>);
+        self: @TContractState, origin: EthAddress, tx: Transaction
+    ) -> (bool, Span<u8>, u64);
 
     /// Transaction entrypoint into the EVM
     /// Executes an EVM transaction and possibly modifies the state
-    fn eth_send_transaction(ref self: TContractState, tx: EthereumTransaction) -> (bool, Span<u8>);
+    fn eth_send_transaction(ref self: TContractState, tx: Transaction) -> (bool, Span<u8>, u64);
 
     /// Upgrade the KakarotCore smart contract
     /// Using replace_class_syscall
@@ -111,9 +110,9 @@ pub trait IExtendedKakarotCore<TContractState> {
     fn register_account(ref self: TContractState, evm_address: EthAddress);
 
     // Getter for the Block Gas Limit
-    fn get_block_gas_limit(self: @TContractState) -> u128;
+    fn get_block_gas_limit(self: @TContractState) -> u64;
     // Getter for the Base Fee
-    fn get_base_fee(self: @TContractState) -> u128;
+    fn get_base_fee(self: @TContractState) -> u64;
 
     // Getter for the Starknet Address
     fn get_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;

@@ -8,6 +8,7 @@ use evm::memory::{Memory, MemoryTrait};
 
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{Message, Environment, Address, AccountTrait};
+use snforge_std::start_cheat_chain_id_global;
 use snforge_std::test_address;
 use starknet::storage::StorageTraitMut;
 use utils::constants;
@@ -21,12 +22,13 @@ pub fn account_contract() -> ClassHash {
 }
 
 
-pub fn setup_test_storages() {
+pub fn setup_test_environment() {
     let mut kakarot_core = KakarotCore::contract_state_for_testing();
     let mut kakarot_storage = kakarot_core.deref_mut().storage_mut();
     kakarot_storage.Kakarot_account_contract_class_hash.write(account_contract());
     kakarot_storage.Kakarot_uninitialized_account_class_hash.write(uninitialized_account());
     kakarot_storage.Kakarot_native_token_address.write(native_token());
+    start_cheat_chain_id_global(chain_id().into());
 }
 
 pub fn register_account(evm_address: EthAddress, starknet_address: ContractAddress) {
@@ -57,7 +59,7 @@ struct VMBuilder {
 #[generate_trait]
 pub impl VMBuilderImpl of VMBuilderTrait {
     fn new() -> VMBuilder {
-        VMBuilder { vm: Default::default() }.with_gas_limit(0x100000000000000000000)
+        VMBuilder { vm: Default::default() }.with_gas_limit(0x1000000000000000)
     }
 
     fn new_with_presets() -> VMBuilder {
@@ -89,7 +91,7 @@ pub impl VMBuilderImpl of VMBuilderTrait {
         self
     }
 
-    fn with_gas_limit(mut self: VMBuilder, gas_limit: u128) -> VMBuilder {
+    fn with_gas_limit(mut self: VMBuilder, gas_limit: u64) -> VMBuilder {
         self.vm.message.gas_limit = gas_limit;
         self
     }
@@ -119,7 +121,7 @@ pub impl VMBuilderImpl of VMBuilderTrait {
         return self.vm;
     }
 
-    fn with_gas_left(mut self: VMBuilder, gas_left: u128) -> VMBuilder {
+    fn with_gas_left(mut self: VMBuilder, gas_left: u64) -> VMBuilder {
         self.vm.gas_left = gas_left;
         self
     }
@@ -177,7 +179,7 @@ pub fn native_token() -> ContractAddress {
     contract_address_const::<'native_token'>()
 }
 
-pub fn chain_id() -> u128 {
+pub fn chain_id() -> u64 {
     'KKRT'.try_into().unwrap()
 }
 
@@ -194,8 +196,8 @@ pub fn eoa_address() -> EthAddress {
     evm_address
 }
 
-pub fn tx_gas_limit() -> u128 {
-    15000000000
+pub fn tx_gas_limit() -> u64 {
+    constants::BLOCK_GAS_LIMIT
 }
 
 pub fn gas_price() -> u128 {

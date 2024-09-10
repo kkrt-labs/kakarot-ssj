@@ -7,14 +7,16 @@ use core::starknet::syscalls::deploy_syscall;
 use core::starknet::{EthAddress, ContractAddress};
 use evm::model::{Address};
 
-use evm::test_utils::{other_starknet_address, sequencer_evm_address};
+use evm::test_utils::{other_starknet_address, sequencer_evm_address, chain_id};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+use snforge_std::start_cheat_chain_id_global;
 use snforge_std::{
     declare, DeclareResultTrait, start_cheat_caller_address, start_cheat_sequencer_address_global,
     stop_cheat_caller_address, start_cheat_caller_address_global
 };
 use utils::constants::BLOCK_GAS_LIMIT;
-use utils::eth_transaction::LegacyTransaction;
+use utils::eth_transaction::common::{TxKind, TxKindTrait};
+use utils::eth_transaction::legacy::TxLegacy;
 
 
 pub mod constants {
@@ -107,10 +109,16 @@ pub fn deploy_eoa(
 }
 
 pub fn call_transaction(
-    chain_id: u128, destination: Option<EthAddress>, calldata: Span<u8>
-) -> LegacyTransaction {
-    LegacyTransaction {
-        chain_id, nonce: 0, gas_price: 0, gas_limit: 500000000, destination, amount: 0, calldata
+    chain_id: u64, destination: Option<EthAddress>, input: Span<u8>
+) -> TxLegacy {
+    TxLegacy {
+        chain_id: Option::Some(chain_id),
+        nonce: 0,
+        gas_price: 0,
+        gas_limit: 500000000,
+        to: destination.into(),
+        value: 0,
+        input
     }
 }
 
@@ -133,5 +141,6 @@ pub fn setup_contracts_for_testing() -> (IERC20CamelDispatcher, IExtendedKakarot
     let sequencer_sn_address = kakarot_core.address_registry(sequencer);
     start_cheat_sequencer_address_global(sequencer_sn_address);
     start_cheat_caller_address_global(kakarot_core.contract_address);
+    start_cheat_chain_id_global(chain_id().into());
     return (native_token, kakarot_core);
 }

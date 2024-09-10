@@ -48,7 +48,7 @@ pub impl CallHelpersImpl of CallHelpers {
     /// Then, the EVM execution loop will start on this new execution context.
     fn generic_call(
         ref self: VM,
-        gas: u128,
+        gas: u64,
         value: u256,
         caller: EthAddress,
         to: EthAddress,

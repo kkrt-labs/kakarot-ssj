@@ -16,7 +16,7 @@ pub trait IPrecompiles<T> {
     ///   * A boolean indicating the success or failure of the execution.
     ///   * The gas cost of the execution.
     ///   * The output data from the execution.
-    fn exec_precompile(self: @T, address: felt252, data: Span<u8>) -> (bool, u128, Span<u8>);
+    fn exec_precompile(self: @T, address: felt252, data: Span<u8>) -> (bool, u64, Span<u8>);
 }
 
 #[starknet::interface]
@@ -134,7 +134,7 @@ pub mod embeddable_impls {
     pub impl Precompiles<TContractState> of super::IPrecompiles<TContractState> {
         fn exec_precompile(
             self: @TContractState, address: felt252, data: Span<u8>
-        ) -> (bool, u128, Span<u8>) {
+        ) -> (bool, u64, Span<u8>) {
             let result = match address {
                 0 => Result::Err(EVMError::NotImplemented),
                 1 => Result::Err(EVMError::NotImplemented),

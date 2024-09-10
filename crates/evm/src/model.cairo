@@ -19,20 +19,20 @@ use utils::traits::{EthAddressDefault, ContractAddressDefault, SpanDefault};
 pub struct Environment {
     pub origin: EthAddress,
     pub gas_price: u128,
-    pub chain_id: u128,
+    pub chain_id: u64,
     pub prevrandao: u256,
     pub block_number: u64,
-    pub block_gas_limit: u128,
+    pub block_gas_limit: u64,
     pub block_timestamp: u64,
     pub coinbase: EthAddress,
-    pub base_fee: u128,
+    pub base_fee: u64,
     pub state: State
 }
 #[derive(Copy, Drop, Default, PartialEq, Debug)]
 pub struct Message {
     pub caller: Address,
     pub target: Address,
-    pub gas_limit: u128,
+    pub gas_limit: u64,
     pub data: Span<u8>,
     pub code: Span<u8>,
     pub code_address: Address,
@@ -48,10 +48,10 @@ pub struct Message {
 pub struct ExecutionResult {
     pub status: ExecutionResultStatus,
     pub return_data: Span<u8>,
-    pub gas_left: u128,
+    pub gas_left: u64,
     pub accessed_addresses: SpanSet<EthAddress>,
     pub accessed_storage_keys: SpanSet<(EthAddress, u256)>,
-    pub gas_refund: u128,
+    pub gas_refund: u64,
 }
 
 #[derive(Copy, Drop, PartialEq, Debug)]
@@ -81,7 +81,7 @@ pub impl ExecutionResultImpl of ExecutionResultTrait {
     /// Decrements the gas_left field of the current execution context by the value amount.
     /// # Error : returns `EVMError::OutOfGas` if gas_left - value < 0
     #[inline(always)]
-    fn charge_gas(ref self: ExecutionResult, value: u128) -> Result<(), EVMError> {
+    fn charge_gas(ref self: ExecutionResult, value: u64) -> Result<(), EVMError> {
         self.gas_left = self.gas_left.checked_sub(value).ok_or(EVMError::OutOfGas)?;
         Result::Ok(())
     }
@@ -103,9 +103,9 @@ pub impl ExecutionResultImpl of ExecutionResultTrait {
 pub struct ExecutionSummary {
     pub status: ExecutionResultStatus,
     pub return_data: Span<u8>,
-    pub gas_left: u128,
+    pub gas_left: u64,
     pub state: State,
-    pub gas_refund: u128
+    pub gas_refund: u64
 }
 
 #[generate_trait]
@@ -136,13 +136,13 @@ pub impl ExecutionSummaryImpl of ExecutionSummaryTrait {
 pub struct TransactionResult {
     pub success: bool,
     pub return_data: Span<u8>,
-    pub gas_used: u128,
+    pub gas_used: u64,
     pub state: State
 }
 
 #[generate_trait]
 pub impl TransactionResultImpl of TransactionResultTrait {
-    fn exceptional_failure(error: Span<u8>, gas_used: u128) -> TransactionResult {
+    fn exceptional_failure(error: Span<u8>, gas_used: u64) -> TransactionResult {
         TransactionResult {
             success: false, return_data: error, gas_used, state: Default::default()
         }
@@ -214,7 +214,7 @@ mod tests {
         #[test]
         fn test_is_deployed_returns_true_if_in_registry() {
             // Given
-            test_utils::setup_test_storages();
+            test_utils::setup_test_environment();
             let starknet_address = compute_starknet_address(
                 test_address(), test_utils::evm_address(), test_utils::uninitialized_account()
             );
@@ -230,7 +230,7 @@ mod tests {
         #[test]
         fn test_is_deployed_undeployed() {
             // Given
-            test_utils::setup_test_storages();
+            test_utils::setup_test_environment();
 
             // When
             let is_deployed = test_utils::evm_address().is_deployed();

@@ -70,9 +70,11 @@ pub mod AccountContract {
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait, OutsideExecution};
     use utils::constants::{POW_2_32};
-    use utils::eth_transaction::EthereumTransactionTrait;
+    use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
+    use utils::eth_transaction::validation::validate_eth_tx;
     use utils::eth_transaction::{EthTransactionTrait, TransactionMetadata};
     use utils::serialization::{deserialize_signature, deserialize_bytes, serialize_bytes};
+    use utils::traits::DefaultSignature;
 
     // Add ownable component
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
@@ -109,7 +111,7 @@ pub mod AccountContract {
     pub struct TransactionExecuted {
         pub response: Span<felt252>,
         pub success: bool,
-        pub gas_used: u128
+        pub gas_used: u64
     }
 
     #[constructor]
@@ -177,7 +179,7 @@ pub mod AccountContract {
                 "Validate: selector must be eth_send_transaction"
             );
 
-            let chain_id: u128 = tx_info.chain_id.try_into().unwrap() % POW_2_32;
+            let chain_id: u64 = tx_info.chain_id.try_into().unwrap() % POW_2_32.try_into().unwrap();
             let signature = deserialize_signature(tx_info.signature, chain_id)
                 .expect('EOA: invalid signature');
 
@@ -190,9 +192,7 @@ pub mod AccountContract {
 
             let encoded_tx = deserialize_bytes(*call.calldata)
                 .expect('conversion to Span<u8> failed');
-            let validation_result = EthTransactionTrait::validate_eth_tx(
-                tx_metadata, encoded_tx.span()
-            )
+            let validation_result = validate_eth_tx(tx_metadata, encoded_tx.span())
                 .expect('failed to validate eth tx');
 
             assert(validation_result, 'transaction validation failed');
@@ -229,17 +229,29 @@ pub mod AccountContract {
             self.Account_nonce.write(tx_info.nonce.try_into().unwrap() + 1);
 
             let call: @Call = calls[0];
-            let encoded_tx = deserialize_bytes(*call.calldata).expect('conversion failed').span();
+            let encoded_tx_data = deserialize_bytes(*call.calldata)
+                .expect('conversion failed')
+                .span();
 
-            let tx = EthTransactionTrait::decode(encoded_tx).expect('rlp decoding of tx failed');
+            let chain_id: u64 = tx_info.chain_id.try_into().unwrap() % POW_2_32.try_into().unwrap();
 
-            let is_valid = match tx.try_into_fee_market_transaction() {
-                Option::Some(tx_fee_infos) => { self.validate_eip1559_tx(@tx, tx_fee_infos) },
-                Option::None => true
-            };
+            //TODO: add a type for unsigned transaction
+            let unsigned_transaction = EthTransactionTrait::decode(
+                encoded_tx_data, Default::default()
+            )
+                .expect('EOA: couldnt decode tx');
+
+            //TODO: validate as part of execute_from_outside
+            // let tx = EthTransactionTrait::decode(encoded_tx).expect('rlp decoding of tx failed');
+
+            // let is_valid = match tx.try_into_fee_market_transaction() {
+            //     Option::Some(tx_fee_infos) => { self.validate_eip1559_tx(@tx, tx_fee_infos) },
+            //     Option::None => true
+            // };
+            let is_valid = true;
 
             let (success, return_data, gas_used) = if is_valid {
-                kakarot.eth_send_transaction(tx)
+                kakarot.eth_send_transaction(unsigned_transaction.transaction)
             } else {
                 (false, KAKAROT_VALIDATION_FAILED.span(), 0)
             };
@@ -319,11 +331,14 @@ pub mod AccountContract {
                 *call.selector == selector!("eth_send_transaction"),
                 "selector must be eth_send_transaction"
             );
-
-            let chain_id: u128 = tx_info.chain_id.try_into().unwrap() % POW_2_32;
-
-            let signature = deserialize_signature(signature, chain_id).expect('invalid signature');
-
+            let chain_id: u64 = tx_info.chain_id.try_into().unwrap() % POW_2_32.try_into().unwrap();
+            let signature = deserialize_signature(signature, chain_id)
+                .expect('EOA: invalid signature');
+            let encoded_tx_data = deserialize_bytes((*outside_execution.calls[0]).calldata)
+                .expect('conversion to Span<u8> failed')
+                .span();
+            let signed_transaction = EthTransactionTrait::decode(encoded_tx_data, signature)
+                .expect('couldnt decode tx');
             // TODO(execute-from-outside): move validation to KakarotCore
             let tx_metadata = TransactionMetadata {
                 address: self.Account_evm_address.read(),
@@ -332,26 +347,23 @@ pub mod AccountContract {
                 signature
             };
 
-            let encoded_tx = deserialize_bytes((*outside_execution.calls[0]).calldata)
-                .expect('conversion to Span<u8> failed')
-                .span();
-
-            let validation_result = EthTransactionTrait::validate_eth_tx(tx_metadata, encoded_tx)
+            let validation_result = validate_eth_tx(tx_metadata, encoded_tx_data)
                 .expect('failed to validate eth tx');
 
             assert(validation_result, 'transaction validation failed');
 
-            let tx = EthTransactionTrait::decode(encoded_tx).expect('rlp decoding of tx failed');
-
-            let is_valid = match tx.try_into_fee_market_transaction() {
-                Option::Some(tx_fee_infos) => { self.validate_eip1559_tx(@tx, tx_fee_infos) },
-                Option::None => true
-            };
+            //TODO: validate eip1559 transactions
+            // let is_valid = match tx.try_into_fee_market_transaction() {
+            //     Option::Some(tx_fee_infos) => { self.validate_eip1559_tx(@tx, tx_fee_infos) },
+            //     Option::None => true
+            // };
+            let is_valid = true;
 
             let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
 
             let return_data = if is_valid {
-                let (_, return_data, _) = kakarot.eth_send_transaction(tx);
+                let (_, return_data, _) = kakarot
+                    .eth_send_transaction(signed_transaction.transaction);
                 return_data
             } else {
                 KAKAROT_VALIDATION_FAILED.span()
@@ -364,49 +376,46 @@ pub mod AccountContract {
 
     #[generate_trait]
     impl Eip1559TransactionImpl of Eip1559TransactionTrait {
-        fn validate_eip1559_tx(
-            ref self: ContractState,
-            tx: @utils::eth_transaction::EthereumTransaction,
-            tx_fee_infos: utils::eth_transaction::FeeMarketTransaction
-        ) -> bool {
-            let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
-            let block_gas_limit = kakarot.get_block_gas_limit();
+        //TODO: refactor
+        fn validate_eip1559_tx(ref self: ContractState, tx: Transaction,) -> bool {
+            // let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
+            // let block_gas_limit = kakarot.get_block_gas_limit();
 
-            if tx.gas_limit() >= block_gas_limit {
-                return false;
-            }
+            // if tx.gas_limit() >= block_gas_limit {
+            //     return false;
+            // }
 
-            let base_fee = kakarot.get_base_fee();
-            let native_token = kakarot.get_native_token();
-            let balance = IERC20CamelDispatcher { contract_address: native_token }
-                .balanceOf(get_contract_address());
+            // let base_fee = kakarot.get_base_fee();
+            // let native_token = kakarot.get_native_token();
+            // let balance = IERC20CamelDispatcher { contract_address: native_token }
+            //     .balanceOf(get_contract_address());
 
-            let max_fee_per_gas = tx_fee_infos.max_fee_per_gas;
-            let max_priority_fee_per_gas = tx_fee_infos.max_priority_fee_per_gas;
+            // let max_fee_per_gas = tx_fee_infos.max_fee_per_gas;
+            // let max_priority_fee_per_gas = tx_fee_infos.max_priority_fee_per_gas;
 
-            // ensure that the user was willing to at least pay the base fee
-            if base_fee >= max_fee_per_gas {
-                return false;
-            }
+            // // ensure that the user was willing to at least pay the base fee
+            // if base_fee >= max_fee_per_gas {
+            //     return false;
+            // }
 
-            // ensure that the max priority fee per gas is not greater than the max fee per gas
-            if max_priority_fee_per_gas >= max_fee_per_gas {
-                return false;
-            }
+            // // ensure that the max priority fee per gas is not greater than the max fee per gas
+            // if max_priority_fee_per_gas >= max_fee_per_gas {
+            //     return false;
+            // }
 
-            let max_gas_fee = tx.gas_limit() * max_fee_per_gas;
-            let tx_cost = max_gas_fee.into() + tx_fee_infos.amount;
+            // let max_gas_fee = tx.gas_limit() * max_fee_per_gas;
+            // let tx_cost = max_gas_fee.into() + tx_fee_infos.amount;
 
-            if tx_cost >= balance {
-                return false;
-            }
+            // if tx_cost >= balance {
+            //     return false;
+            // }
 
-            // priority fee is capped because the base fee is filled first
-            let possible_priority_fee = max_fee_per_gas - base_fee;
+            // // priority fee is capped because the base fee is filled first
+            // let possible_priority_fee = max_fee_per_gas - base_fee;
 
-            if max_priority_fee_per_gas >= possible_priority_fee {
-                return false;
-            }
+            // if max_priority_fee_per_gas >= possible_priority_fee {
+            //     return false;
+            // }
 
             return true;
         }

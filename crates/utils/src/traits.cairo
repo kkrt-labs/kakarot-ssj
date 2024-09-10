@@ -1,9 +1,17 @@
 use core::array::SpanTrait;
 use core::num::traits::{Zero, One};
+use core::starknet::secp256_trait::{Signature};
 use core::starknet::storage_access::{StorageBaseAddress, storage_address_from_base};
 use core::starknet::{EthAddress, ContractAddress};
 use evm::errors::{EVMError, ensure, TYPE_CONVERSION_ERROR};
 use utils::math::{Bitshift};
+
+pub impl DefaultSignature of Default<Signature> {
+    #[inline(always)]
+    fn default() -> Signature {
+        Signature { r: 0, s: 0, y_parity: false, }
+    }
+}
 
 pub impl SpanDefault<T, impl TDrop: Drop<T>> of Default<Span<T>> {
     #[inline(always)]

@@ -316,7 +316,7 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::state::StateTrait;
     use evm::test_utils::{
-        VMBuilderTrait, MemoryTestUtilsTrait, setup_test_storages, uninitialized_account,
+        VMBuilderTrait, MemoryTestUtilsTrait, setup_test_environment, uninitialized_account,
         native_token
     };
     use snforge_std::{test_address, start_mock_call};
@@ -780,7 +780,7 @@ mod tests {
     #[test]
     fn test_exec_sload_should_push_value_on_stack() {
         // Given
-        setup_test_storages();
+        setup_test_environment();
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let evm_address = vm.message().target.evm;
 
@@ -801,7 +801,7 @@ mod tests {
     #[test]
     fn test_exec_sstore_on_account_in_st() {
         // Given
-        setup_test_storages();
+        setup_test_environment();
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let test_address = test_address();
         let evm_address = vm.message().target.evm;
@@ -833,7 +833,7 @@ mod tests {
     #[test]
     fn test_exec_sstore_on_account_undeployed() {
         // Given
-        setup_test_storages();
+        setup_test_environment();
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let evm_address = vm.message().target.evm;
         let key: u256 = 0x100000000000000000000000000000001;
@@ -854,7 +854,7 @@ mod tests {
     #[test]
     fn test_exec_sstore_on_contract_account_alive() {
         // Given
-        setup_test_storages();
+        setup_test_environment();
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let test_address = test_address();
         let evm_address = vm.message().target.evm;
@@ -887,7 +887,7 @@ mod tests {
     #[test]
     fn test_exec_sstore_should_fail_static_call() {
         // Given
-        setup_test_storages();
+        setup_test_environment();
         let mut vm = VMBuilderTrait::new_with_presets().with_read_only().build();
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
@@ -907,7 +907,7 @@ mod tests {
     #[test]
     fn test_exec_sstore_should_fail_gas_left_inf_call_stipend_eip_1706() {
         // Given
-        setup_test_storages();
+        setup_test_environment();
         let mut vm = VMBuilderTrait::new_with_presets().with_gas_left(gas::CALL_STIPEND).build();
         let test_address = test_address();
         let evm_address = vm.message().target.evm;
