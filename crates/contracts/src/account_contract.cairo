@@ -191,7 +191,9 @@ pub mod AccountContract {
 
             let encoded_tx = deserialize_bytes(*call.calldata)
                 .expect('conversion to Span<u8> failed');
-            let validation_result = validate_eth_tx(tx_metadata, encoded_tx.span())
+            let unsigned_transaction = EthTransactionTrait::decode(encoded_tx.span())
+                .expect('could not decode tx');
+            let validation_result = validate_eth_tx(tx_metadata, unsigned_transaction)
                 .expect('failed to validate eth tx');
 
             assert(validation_result, 'transaction validation failed');
@@ -240,9 +242,7 @@ pub mod AccountContract {
                 .unwrap();
 
             //TODO: add a type for unsigned transaction
-            let unsigned_transaction = EthTransactionTrait::decode(
-                encoded_tx_data, Default::default()
-            )
+            let unsigned_transaction = EthTransactionTrait::decode(encoded_tx_data)
                 .expect('EOA: could not decode tx');
 
             //TODO: validate as part of execute_from_outside
@@ -341,7 +341,7 @@ pub mod AccountContract {
             let encoded_tx_data = deserialize_bytes((*outside_execution.calls[0]).calldata)
                 .expect('conversion to Span<u8> failed')
                 .span();
-            let signed_transaction = EthTransactionTrait::decode(encoded_tx_data, signature)
+            let unsigned_transaction = EthTransactionTrait::decode(encoded_tx_data)
                 .expect('could not decode tx');
             // TODO(execute-from-outside): move validation to KakarotCore
             let tx_metadata = TransactionMetadata {
@@ -351,7 +351,7 @@ pub mod AccountContract {
                 signature
             };
 
-            let validation_result = validate_eth_tx(tx_metadata, encoded_tx_data)
+            let validation_result = validate_eth_tx(tx_metadata, unsigned_transaction)
                 .expect('failed to validate eth tx');
 
             assert(validation_result, 'transaction validation failed');
@@ -367,7 +367,7 @@ pub mod AccountContract {
 
             let return_data = if is_valid {
                 let (_, return_data, _) = kakarot
-                    .eth_send_transaction(signed_transaction.transaction);
+                    .eth_send_transaction(unsigned_transaction.transaction);
                 return_data
             } else {
                 KAKAROT_VALIDATION_FAILED.span()

@@ -1,5 +1,5 @@
 use core::starknet::eth_signature::verify_eth_signature;
-use crate::eth_transaction::transaction::TransactionTrait;
+use crate::eth_transaction::transaction::{TransactionUnsigned, TransactionTrait};
 use crate::eth_transaction::{TransactionMetadata, EthTransactionError, EthTransactionTrait};
 
 /// Validate an Ethereum transaction
@@ -12,17 +12,15 @@ use crate::eth_transaction::{TransactionMetadata, EthTransactionError, EthTransa
 /// * `tx_metadata` - The ethereum transaction metadata
 /// * `encoded_tx_data` - The raw rlp encoded transaction data
 pub fn validate_eth_tx(
-    tx_metadata: TransactionMetadata, encoded_tx_data: Span<u8>
+    tx_metadata: TransactionMetadata, unsigned_transaction: TransactionUnsigned
 ) -> Result<bool, EthTransactionError> {
     let TransactionMetadata { address, account_nonce, chain_id, signature } = tx_metadata;
 
-    let signed_transaction = EthTransactionTrait::decode(encoded_tx_data, signature)?;
-
-    if (signed_transaction.transaction.nonce() != account_nonce) {
+    if (unsigned_transaction.transaction.nonce() != account_nonce) {
         return Result::Err(EthTransactionError::IncorrectAccountNonce);
     }
     //TODO(eip-155): support pre-eip155 transactions
-    let chain_id_from_tx = signed_transaction
+    let chain_id_from_tx = unsigned_transaction
         .transaction
         .chain_id()
         .expect('Chain id should be set');
@@ -33,7 +31,7 @@ pub fn validate_eth_tx(
     // max_fee should be later provided by the RPC, and hence this check is necessary
 
     // this will panic if verification fails
-    verify_eth_signature(signed_transaction.hash, signature, address);
+    verify_eth_signature(unsigned_transaction.hash, signature, address);
 
     Result::Ok(true)
 }
@@ -45,7 +43,7 @@ mod tests {
     use core::starknet::secp256_trait::{Signature};
     use crate::errors::EthTransactionError;
     use crate::eth_transaction::validation::validate_eth_tx;
-    use crate::eth_transaction::{TransactionMetadata};
+    use crate::eth_transaction::{TransactionMetadata, EthTransactionTrait};
     use crate::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
     use evm::test_utils::chain_id;
 
@@ -66,8 +64,10 @@ mod tests {
         };
 
         let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
+        let unsigned_transaction = EthTransactionTrait::decode(encoded_tx_data)
+            .expect('could not decode tx');
 
-        let result = validate_eth_tx(validate_tx_param, encoded_tx_data)
+        let result = validate_eth_tx(validate_tx_param, unsigned_transaction)
             .expect('signature verification failed');
         assert(result, 'result is not true');
     }
@@ -90,8 +90,10 @@ mod tests {
         };
 
         let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
+        let unsigned_transaction = EthTransactionTrait::decode(encoded_tx_data)
+            .expect('could not decode tx');
 
-        let maybe_result = validate_eth_tx(validate_tx_param, encoded_tx_data);
+        let maybe_result = validate_eth_tx(validate_tx_param, unsigned_transaction);
         let result = match maybe_result {
             Result::Ok(result) => result,
             Result::Err(err) => panic!("decode failed: {:?}", err.into()),
@@ -117,8 +119,10 @@ mod tests {
         };
 
         let validate_tx_param = TransactionMetadata { address, account_nonce, chain_id, signature };
+        let unsigned_transaction = EthTransactionTrait::decode(encoded_tx_data)
+            .expect('could not decode tx');
 
-        let maybe_result = validate_eth_tx(validate_tx_param, encoded_tx_data);
+        let maybe_result = validate_eth_tx(validate_tx_param, unsigned_transaction);
         let result = match maybe_result {
             Result::Ok(result) => result,
             Result::Err(err) => panic!("decode failed: {:?}", err.into()),
@@ -147,8 +151,10 @@ mod tests {
         let validate_tx_param = TransactionMetadata {
             address, account_nonce: wrong_account_nonce, chain_id, signature
         };
+        let unsigned_transaction = EthTransactionTrait::decode(encoded_tx_data)
+            .expect('could not decode tx');
 
-        let error = validate_eth_tx(validate_tx_param, encoded_tx_data).unwrap_err();
+        let error = validate_eth_tx(validate_tx_param, unsigned_transaction).unwrap_err();
         assert_eq!(error, EthTransactionError::IncorrectAccountNonce);
     }
 
@@ -173,8 +179,10 @@ mod tests {
         let validate_tx_param = TransactionMetadata {
             address, account_nonce, chain_id: wrong_chain_id, signature
         };
+        let unsigned_transaction = EthTransactionTrait::decode(encoded_tx_data)
+            .expect('could not decode tx');
 
-        let error = validate_eth_tx(validate_tx_param, encoded_tx_data).unwrap_err();
+        let error = validate_eth_tx(validate_tx_param, unsigned_transaction).unwrap_err();
         assert_eq!(error, EthTransactionError::IncorrectChainId);
     }
 }

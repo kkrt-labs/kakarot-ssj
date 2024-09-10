@@ -16,7 +16,7 @@ use crate::eth_transaction::common::TxKind;
 use eip1559::TxEip1559Trait;
 use eip2930::TxEip2930Trait;
 use legacy::TxLegacy;
-use transaction::{Transaction, TransactionSigned};
+use transaction::{Transaction, TransactionUnsignedTrait, TransactionUnsigned};
 use tx_type::TxType;
 use utils::errors::{
     RLPErrorTrait, EthTransactionError, RLPError, RLPErrorImpl, RLPHelpersErrorImpl,
@@ -44,175 +44,6 @@ pub enum TransactTo {
     Create,
 }
 
-#[generate_trait]
-pub impl EncodedTransactionImpl of EncodedTransactionTrait {
-    //TODO: make normal decode function
-    fn decode_raw(
-        mut tx_data: Span<u8>, signature: Signature
-    ) -> Result<TransactionSigned, EthTransactionError> {
-        if tx_data.is_empty() {
-            return Result::Err(EthTransactionError::RLPError(RLPError::InputTooShort));
-        }
-        let is_legacy_tx = Self::is_legacy_tx(tx_data);
-        let transaction_signed = if is_legacy_tx {
-            Self::decode_legacy_tx(ref tx_data, signature)?
-        } else {
-            Self::decode_enveloped_typed_transaction(ref tx_data, signature)?
-        };
-        //TODO: check that the entire input was consumed and that there are no extra bytes at the
-        //end.
-
-        Result::Ok(transaction_signed)
-    }
-
-    /// Decode a legacy Ethereum transaction
-    /// This function decodes a legacy Ethereum transaction in accordance with EIP-155.
-    /// It returns transaction details including nonce, gas price, gas limit, destination address,
-    /// amount, payload, message hash, chain id. The transaction hash is computed by keccak hashing
-    /// the signed transaction data, which includes the chain ID in accordance with EIP-155.
-    /// # Arguments
-    /// * encoded_tx_data - The raw rlp encoded transaction data
-    /// * encoded_tx_data - is of the format: rlp![nonce, gasPrice, gasLimit, to , value, data,
-    /// chainId, 0, 0]
-    /// Note: this function assumes that tx_type has been checked to make sure it is a legacy
-    /// transaction
-    fn decode_legacy_tx(
-        ref encoded_tx_data: Span<u8>, signature: Signature
-    ) -> Result<TransactionSigned, EthTransactionError> {
-        let decoded_data = RLPTrait::decode(encoded_tx_data);
-        let decoded_data = decoded_data.map_err()?;
-
-        if (decoded_data.len() != 1) {
-            return Result::Err(EthTransactionError::TopLevelRlpListWrongLength(decoded_data.len()));
-        }
-
-        let decoded_data = *decoded_data.at(0);
-        let legacy_tx: TxLegacy = match decoded_data {
-            RLPItem::String => { Result::Err(EthTransactionError::ExpectedRLPItemToBeList)? },
-            RLPItem::List(mut val) => {
-                if (val.len() != 9) {
-                    return Result::Err(EthTransactionError::LegacyTxWrongPayloadLength(val.len()));
-                }
-
-                let boxed_fields = val
-                    .multi_pop_front::<7>()
-                    .ok_or(EthTransactionError::RLPError(RLPError::InputTooShort))?;
-                let [
-                    nonce_encoded,
-                    gas_price_encoded,
-                    gas_limit_encoded,
-                    to_encoded,
-                    value_encoded,
-                    input_encoded,
-                    chain_id_encoded
-                ] =
-                    (*boxed_fields)
-                    .unbox();
-
-                let nonce = nonce_encoded.parse_u64_from_string().map_err()?;
-                let gas_price = gas_price_encoded.parse_u128_from_string().map_err()?;
-                let gas_limit = gas_limit_encoded.parse_u64_from_string().map_err()?;
-                let to = to_encoded.try_parse_address_from_string().map_err()?;
-                let value = value_encoded.parse_u256_from_string().map_err()?;
-                let input = input_encoded.parse_bytes_from_string().map_err()?;
-                let chain_id = chain_id_encoded.parse_u64_from_string().map_err()?;
-
-                let transact_to = match to {
-                    Option::Some(to) => { TxKind::Call(to) },
-                    Option::None => { TxKind::Create }
-                };
-
-                TxLegacy {
-                    nonce,
-                    gas_price,
-                    gas_limit,
-                    to: transact_to,
-                    value,
-                    input,
-                    chain_id: Option::Some(chain_id),
-                }
-            }
-        };
-
-        //TODO: keccak hash
-        let tx_hash = encoded_tx_data.compute_keccak256_hash();
-
-        Result::Ok(
-            TransactionSigned {
-                transaction: Transaction::Legacy(legacy_tx), hash: tx_hash, signature: signature,
-            }
-        )
-    }
-
-    /// Decodes an enveloped EIP-2718 typed transaction.
-    ///
-    /// This should _only_ be used internally in general transaction decoding methods,
-    /// which have already ensured that the input is a typed transaction with the following format:
-    /// `tx-type || rlp(tx-data)`
-    ///
-    /// Note that this format does not start with any RLP header, and instead starts with a single
-    /// byte indicating the transaction type.
-    ///
-    /// CAUTION: this expects that `data` is `tx-type || rlp(tx-data)`
-    fn decode_enveloped_typed_transaction(
-        ref data: Span<u8>, signature: Signature
-    ) -> Result<TransactionSigned, EthTransactionError> {
-        // keep this around so we can use it to calculate the hash
-        let original_encoding_without_header = data;
-
-        let tx_type = data
-            .pop_front()
-            .ok_or(EthTransactionError::RLPError(RLPError::InputTooShort))?;
-        let tx_type: TxType = (*tx_type)
-            .try_into()
-            .ok_or(EthTransactionError::RLPError(RLPError::Custom('unsupported tx type')))?;
-
-        let decoded_data = RLPTrait::decode(data).map_err()?;
-        if (decoded_data.len() != 1) {
-            return Result::Err(
-                EthTransactionError::RLPError(RLPError::Custom('not encoded as list'))
-            );
-        }
-
-        let decoded_data = match *decoded_data.at(0) {
-            RLPItem::String => {
-                return Result::Err(
-                    EthTransactionError::RLPError(RLPError::Custom('not encoded as list'))
-                );
-            },
-            RLPItem::List(v) => { v }
-        };
-
-        let transaction = match tx_type {
-            TxType::Eip2930 => Transaction::Eip2930(TxEip2930Trait::decode_fields(decoded_data)?),
-            TxType::Eip1559 => Transaction::Eip1559(TxEip1559Trait::decode_fields(decoded_data)?),
-            TxType::Legacy => {
-                return Result::Err(
-                    EthTransactionError::RLPError(RLPError::Custom('unexpected legacy tx type'))
-                );
-            }
-        };
-
-        let tx_hash = original_encoding_without_header.compute_keccak256_hash();
-        Result::Ok(TransactionSigned { transaction, hash: tx_hash, signature })
-    }
-
-    /// Check if a raw transaction is a legacy Ethereum transaction
-    /// This function checks if a raw transaction is a legacy Ethereum transaction by checking the
-    /// transaction type according to EIP-2718.
-    /// # Arguments
-    /// * `encoded_tx_data` - The raw rlp encoded transaction data
-    #[inline(always)]
-    fn is_legacy_tx(encoded_tx_data: Span<u8>) -> bool {
-        // From EIP2718: if it starts with a value in the range [0xc0, 0xfe] then it is a legacy
-        // transaction type
-        if (*encoded_tx_data[0] > 0xbf && *encoded_tx_data[0] < 0xff) {
-            return true;
-        }
-
-        return false;
-    }
-}
 
 #[derive(Drop, PartialEq)]
 pub enum TransactionType {
@@ -256,10 +87,8 @@ pub impl EthTransactionImpl of EthTransactionTrait {
     /// # Arguments
     /// * `encoded_tx_data` - The raw transaction rlp encoded data
     #[inline(always)]
-    fn decode(
-        encoded_tx_data: Span<u8>, signature: Signature
-    ) -> Result<TransactionSigned, EthTransactionError> {
-        EncodedTransactionTrait::decode_raw(encoded_tx_data, signature)
+    fn decode(encoded_tx_data: Span<u8>) -> Result<TransactionUnsigned, EthTransactionError> {
+        TransactionUnsignedTrait::decode_enveloped(encoded_tx_data)
     }
 }
 
@@ -308,7 +137,7 @@ mod tests {
     use evm::test_utils::chain_id;
     use utils::eth_transaction::transaction::TransactionTrait;
 
-    use utils::eth_transaction::{EthTransactionTrait, EncodedTransactionTrait};
+    use utils::eth_transaction::{EthTransactionTrait, TransactionUnsignedTrait};
     use utils::helpers::ToBytes;
     use utils::test_data::{
         legacy_rlp_encoded_tx, legacy_rlp_encoded_deploy_tx, eip_2930_encoded_tx,
@@ -328,7 +157,7 @@ mod tests {
 
         let data = legacy_rlp_encoded_tx();
 
-        let maybe_signed_tx = EthTransactionTrait::decode(data, Default::default());
+        let maybe_signed_tx = EthTransactionTrait::decode(data);
         let signed_tx = match maybe_signed_tx {
             Result::Ok(signed_tx) => signed_tx,
             Result::Err(err) => panic!("decode failed: {:?}", err.into()),
@@ -357,7 +186,7 @@ mod tests {
         // ["0x","0x0a","0x061a80","0x","0x0186a0","0x600160010a5060006000f3","0x4b4b5254","0x","0x"]
         let data = legacy_rlp_encoded_deploy_tx();
 
-        let maybe_signed_tx = EthTransactionTrait::decode(data, Default::default());
+        let maybe_signed_tx = EthTransactionTrait::decode(data);
         let signed_tx = match maybe_signed_tx {
             Result::Ok(signed_tx) => signed_tx,
             Result::Err(err) => panic!("decode failed: {:?}", err.into()),
@@ -390,7 +219,7 @@ mod tests {
         // chain id used: 0x434841494e5f4944
         let data = eip_2930_encoded_tx();
 
-        let maybe_signed_tx = EthTransactionTrait::decode(data, Default::default());
+        let maybe_signed_tx = EthTransactionTrait::decode(data);
         let signed_tx = match maybe_signed_tx {
             Result::Ok(signed_tx) => signed_tx,
             Result::Err(err) => panic!("decode failed: {:?}", err.into()),
@@ -435,7 +264,7 @@ mod tests {
         // chain id used: 0x434841494e5f4944
         let data = eip_1559_encoded_tx();
 
-        let maybe_signed_tx = EthTransactionTrait::decode(data, Default::default());
+        let maybe_signed_tx = EthTransactionTrait::decode(data);
         let signed_tx = match maybe_signed_tx {
             Result::Ok(signed_tx) => signed_tx,
             Result::Err(err) => panic!("decode failed: {:?}", err.into()),
@@ -475,7 +304,7 @@ mod tests {
     #[test]
     fn test_is_legacy_tx_eip_155_tx() {
         let encoded_tx_data = legacy_rlp_encoded_tx();
-        let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
+        let result = TransactionUnsignedTrait::is_legacy_tx(encoded_tx_data);
 
         assert(result, 'is_legacy_tx expected true');
     }
@@ -483,7 +312,7 @@ mod tests {
     #[test]
     fn test_is_legacy_tx_eip_1559_tx() {
         let encoded_tx_data = eip_1559_encoded_tx();
-        let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
+        let result = TransactionUnsignedTrait::is_legacy_tx(encoded_tx_data);
 
         assert(!result, 'is_legacy_tx expected false');
     }
@@ -491,7 +320,7 @@ mod tests {
     #[test]
     fn test_is_legacy_tx_eip_2930_tx() {
         let encoded_tx_data = eip_2930_encoded_tx();
-        let result = EncodedTransactionTrait::is_legacy_tx(encoded_tx_data);
+        let result = TransactionUnsignedTrait::is_legacy_tx(encoded_tx_data);
 
         assert(!result, 'is_legacy_tx expected false');
     }
