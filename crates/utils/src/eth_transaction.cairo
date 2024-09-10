@@ -13,10 +13,10 @@ use core::option::OptionTrait;
 use core::starknet::{EthAddress, secp256_trait::Signature,};
 use core::traits::TryInto;
 use crate::eth_transaction::common::TxKind;
-use eip1559::{TxEip1559, TxEip1559Trait};
-use eip2930::{TxEip2930, TxEip2930Trait};
+use eip1559::TxEip1559Trait;
+use eip2930::TxEip2930Trait;
 use legacy::TxLegacy;
-use transaction::{Transaction, TransactionSigned, TransactionTrait};
+use transaction::{Transaction, TransactionSigned};
 use tx_type::TxType;
 use utils::errors::{
     RLPErrorTrait, EthTransactionError, RLPError, RLPErrorImpl, RLPHelpersErrorImpl,
@@ -302,19 +302,14 @@ fn get_effective_gas_price(
 #[cfg(test)]
 mod tests {
     use core::option::OptionTrait;
-    use core::starknet::EthAddress;
-    use core::starknet::secp256_trait::{Signature};
     use crate::eth_transaction::eip2930::AccessListItem;
     use crate::eth_transaction::tx_type::TxType;
     use crate::traits::DefaultSignature;
     use evm::test_utils::chain_id;
-    use utils::eth_transaction::transaction::{Transaction, TransactionSigned, TransactionTrait};
+    use utils::eth_transaction::transaction::TransactionTrait;
 
-    use utils::eth_transaction::{
-        EthTransactionTrait, EncodedTransactionTrait, TransactionMetadata, EthTransactionError
-    };
-    use utils::helpers::{U256Trait, ToBytes};
-    use utils::rlp::{RLPTrait, RLPItem, RLPHelpersTrait};
+    use utils::eth_transaction::{EthTransactionTrait, EncodedTransactionTrait};
+    use utils::helpers::ToBytes;
     use utils::test_data::{
         legacy_rlp_encoded_tx, legacy_rlp_encoded_deploy_tx, eip_2930_encoded_tx,
         eip_1559_encoded_tx

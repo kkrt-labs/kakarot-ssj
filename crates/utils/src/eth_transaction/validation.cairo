@@ -1,5 +1,5 @@
 use core::starknet::eth_signature::verify_eth_signature;
-use crate::eth_transaction::transaction::{Transaction, TransactionSigned, TransactionTrait};
+use crate::eth_transaction::transaction::TransactionTrait;
 use crate::eth_transaction::{TransactionMetadata, EthTransactionError, EthTransactionTrait};
 
 /// Validate an Ethereum transaction

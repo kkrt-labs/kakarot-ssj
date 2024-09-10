@@ -15,7 +15,6 @@ use snforge_std::{
     stop_cheat_caller_address, start_cheat_caller_address_global
 };
 use utils::constants::BLOCK_GAS_LIMIT;
-use utils::eth_transaction::common::{TxKind, TxKindTrait};
 use utils::eth_transaction::legacy::TxLegacy;
 
 

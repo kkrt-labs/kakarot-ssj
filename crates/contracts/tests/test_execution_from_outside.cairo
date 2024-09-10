@@ -276,7 +276,7 @@ fn test_execute_from_outside_invalid_signature() {
 }
 
 #[test]
-#[should_panic(expected: 'EOA: couldnt decode tx')]
+#[should_panic(expected: 'EOA: could not decode tx')]
 fn test_execute_from_outside_invalid_tx() {
     let (kakarot_core, contract_account) = set_up();
 

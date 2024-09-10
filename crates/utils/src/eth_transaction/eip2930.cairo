@@ -1,7 +1,7 @@
 use core::starknet::EthAddress;
 use crate::errors::{EthTransactionError, RLPError, RLPHelpersErrorTrait};
 use crate::eth_transaction::common::TxKind;
-use crate::rlp::{RLPItem, RLPHelpersTrait, RLPTrait};
+use crate::rlp::{RLPItem, RLPHelpersTrait};
 use crate::traits::SpanDefault;
 
 

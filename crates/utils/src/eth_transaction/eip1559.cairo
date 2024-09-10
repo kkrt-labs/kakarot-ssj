@@ -2,7 +2,7 @@ use core::num::traits::SaturatingSub;
 use crate::errors::{EthTransactionError, RLPError, RLPHelpersErrorTrait};
 use crate::eth_transaction::common::TxKind;
 use crate::eth_transaction::eip2930::AccessListItem;
-use crate::rlp::{RLPItem, RLPHelpersTrait, RLPTrait};
+use crate::rlp::{RLPItem, RLPHelpersTrait};
 use crate::traits::SpanDefault;
 
 /// A transaction with a priority fee ([EIP-1559](https://eips.ethereum.org/EIPS/eip-1559)).

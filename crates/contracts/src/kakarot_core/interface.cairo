@@ -1,5 +1,5 @@
 use core::starknet::{ContractAddress, EthAddress, ClassHash};
-use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
+use utils::eth_transaction::transaction::Transaction;
 
 #[starknet::interface]
 pub trait IKakarotCore<TContractState> {

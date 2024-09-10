@@ -1,5 +1,5 @@
 use core::cmp::min;
-use utils::eth_transaction::common::{TxKind, TxKindTrait};
+use utils::eth_transaction::common::TxKindTrait;
 use utils::eth_transaction::eip2930::{AccessListItem};
 use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
 use utils::helpers;
@@ -266,11 +266,9 @@ mod tests {
         ACCESS_LIST_STORAGE_KEY
     };
     use evm::test_utils::evm_address;
-    use utils::eth_transaction::common::{TxKind, TxKindTrait};
-    use utils::eth_transaction::eip1559::TxEip1559;
     use utils::eth_transaction::eip2930::{AccessListItem, TxEip2930};
     use utils::eth_transaction::legacy::TxLegacy;
-    use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
+    use utils::eth_transaction::transaction::Transaction;
     use utils::helpers::ToBytes;
 
     #[test]

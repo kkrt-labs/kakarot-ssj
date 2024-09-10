@@ -63,14 +63,13 @@ pub mod AccountContract {
     };
     use core::starknet::syscalls::{call_contract_syscall, replace_class_syscall};
     use core::starknet::{
-        EthAddress, ClassHash, VALIDATED, get_caller_address, get_contract_address, get_tx_info,
-        get_block_timestamp
+        EthAddress, ClassHash, VALIDATED, get_caller_address, get_tx_info, get_block_timestamp
     };
     use core::traits::TryInto;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait, OutsideExecution};
     use utils::constants::{POW_2_32};
-    use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
+    use utils::eth_transaction::transaction::Transaction;
     use utils::eth_transaction::validation::validate_eth_tx;
     use utils::eth_transaction::{EthTransactionTrait, TransactionMetadata};
     use utils::serialization::{deserialize_signature, deserialize_bytes, serialize_bytes};
@@ -233,13 +232,18 @@ pub mod AccountContract {
                 .expect('conversion failed')
                 .span();
 
-            let chain_id: u64 = tx_info.chain_id.try_into().unwrap() % POW_2_32.try_into().unwrap();
+            let _chain_id: u64 = tx_info
+                .chain_id
+                .try_into()
+                .unwrap() % POW_2_32
+                .try_into()
+                .unwrap();
 
             //TODO: add a type for unsigned transaction
             let unsigned_transaction = EthTransactionTrait::decode(
                 encoded_tx_data, Default::default()
             )
-                .expect('EOA: couldnt decode tx');
+                .expect('EOA: could not decode tx');
 
             //TODO: validate as part of execute_from_outside
             // let tx = EthTransactionTrait::decode(encoded_tx).expect('rlp decoding of tx failed');
@@ -338,7 +342,7 @@ pub mod AccountContract {
                 .expect('conversion to Span<u8> failed')
                 .span();
             let signed_transaction = EthTransactionTrait::decode(encoded_tx_data, signature)
-                .expect('couldnt decode tx');
+                .expect('could not decode tx');
             // TODO(execute-from-outside): move validation to KakarotCore
             let tx_metadata = TransactionMetadata {
                 address: self.Account_evm_address.read(),
