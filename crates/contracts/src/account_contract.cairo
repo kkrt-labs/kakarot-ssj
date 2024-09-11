@@ -69,9 +69,9 @@ pub mod AccountContract {
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait, OutsideExecution};
     use utils::constants::{POW_2_32};
-    use utils::eth_transaction::transaction::Transaction;
+    use utils::eth_transaction::transaction::{TransactionUnsignedTrait, Transaction};
     use utils::eth_transaction::validation::validate_eth_tx;
-    use utils::eth_transaction::{EthTransactionTrait, TransactionMetadata};
+    use utils::eth_transaction::{TransactionMetadata};
     use utils::serialization::{deserialize_signature, deserialize_bytes, serialize_bytes};
     use utils::traits::DefaultSignature;
 
@@ -189,10 +189,11 @@ pub mod AccountContract {
                 signature
             };
 
-            let encoded_tx = deserialize_bytes(*call.calldata)
-                .expect('conversion to Span<u8> failed');
-            let unsigned_transaction = EthTransactionTrait::decode(encoded_tx.span())
-                .expect('could not decode tx');
+            let mut encoded_tx = deserialize_bytes(*call.calldata)
+                .expect('conversion to Span<u8> failed')
+                .span();
+            let unsigned_transaction = TransactionUnsignedTrait::decode_enveloped(ref encoded_tx)
+                .expect('EOA: could not decode tx');
             let validation_result = validate_eth_tx(tx_metadata, unsigned_transaction)
                 .expect('failed to validate eth tx');
 
@@ -230,7 +231,7 @@ pub mod AccountContract {
             self.Account_nonce.write(tx_info.nonce.try_into().unwrap() + 1);
 
             let call: @Call = calls[0];
-            let encoded_tx_data = deserialize_bytes(*call.calldata)
+            let _encoded_tx_data = deserialize_bytes(*call.calldata)
                 .expect('conversion failed')
                 .span();
 
@@ -242,16 +243,14 @@ pub mod AccountContract {
                 .unwrap();
 
             //TODO: add a type for unsigned transaction
-            let unsigned_transaction = EthTransactionTrait::decode(encoded_tx_data)
+            let mut encoded_tx = deserialize_bytes(*call.calldata)
+                .expect('conversion to Span<u8> failed')
+                .span();
+            let unsigned_transaction = TransactionUnsignedTrait::decode_enveloped(ref encoded_tx)
                 .expect('EOA: could not decode tx');
 
-            //TODO: validate as part of execute_from_outside
-            // let tx = EthTransactionTrait::decode(encoded_tx).expect('rlp decoding of tx failed');
-
-            // let is_valid = match tx.try_into_fee_market_transaction() {
-            //     Option::Some(tx_fee_infos) => { self.validate_eip1559_tx(@tx, tx_fee_infos) },
-            //     Option::None => true
-            // };
+            //TODO: validation of EIP-1559 transactions
+            // Not done because this endpoint will end up deprecated after EIP-1559
             let is_valid = true;
 
             let (success, return_data, gas_used) = if is_valid {
@@ -338,11 +337,13 @@ pub mod AccountContract {
             let chain_id: u64 = tx_info.chain_id.try_into().unwrap() % POW_2_32.try_into().unwrap();
             let signature = deserialize_signature(signature, chain_id)
                 .expect('EOA: invalid signature');
-            let encoded_tx_data = deserialize_bytes((*outside_execution.calls[0]).calldata)
+            let mut encoded_tx_data = deserialize_bytes((*outside_execution.calls[0]).calldata)
                 .expect('conversion to Span<u8> failed')
                 .span();
-            let unsigned_transaction = EthTransactionTrait::decode(encoded_tx_data)
-                .expect('could not decode tx');
+            let unsigned_transaction = TransactionUnsignedTrait::decode_enveloped(
+                ref encoded_tx_data
+            )
+                .expect('EOA: could not decode tx');
             // TODO(execute-from-outside): move validation to KakarotCore
             let tx_metadata = TransactionMetadata {
                 address: self.Account_evm_address.read(),

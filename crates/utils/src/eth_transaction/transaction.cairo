@@ -1,12 +1,11 @@
 use core::starknet::EthAddress;
-use core::starknet::secp256_trait::Signature;
 use crate::errors::{RLPError, EthTransactionError, RLPErrorTrait, RLPHelpersErrorTrait};
 use crate::eth_transaction::common::{TxKind, TxKindTrait};
 use crate::eth_transaction::eip1559::{TxEip1559, TxEip1559Trait};
 use crate::eth_transaction::eip2930::{AccessListItem, TxEip2930, TxEip2930Trait};
 use crate::eth_transaction::legacy::TxLegacy;
 use crate::eth_transaction::tx_type::{TxType};
-use crate::helpers::{ByteArrayExTrait, U8SpanExTrait};
+use crate::helpers::U8SpanExTrait;
 use crate::rlp::{RLPItem, RLPTrait, RLPHelpersTrait};
 use crate::traits::{DefaultSignature};
 
@@ -203,7 +202,7 @@ pub impl _TransactionUnsigned of TransactionUnsignedTrait {
     /// Both for legacy and EIP-2718 transactions, an error will be returned if there is an excess
     /// of bytes in input data.
     fn decode_enveloped(
-        mut tx_data: Span<u8>,
+        ref tx_data: Span<u8>,
     ) -> Result<TransactionUnsigned, EthTransactionError> {
         if tx_data.is_empty() {
             return Result::Err(EthTransactionError::RLPError(RLPError::InputTooShort));
@@ -237,15 +236,15 @@ pub impl _TransactionUnsigned of TransactionUnsignedTrait {
     fn decode_legacy_tx(
         ref encoded_tx_data: Span<u8>
     ) -> Result<TransactionUnsigned, EthTransactionError> {
-        let decoded_data = RLPTrait::decode(encoded_tx_data);
-        let decoded_data = decoded_data.map_err()?;
+        let rlp_decoded_data = RLPTrait::decode(encoded_tx_data);
+        let rlp_decoded_data = rlp_decoded_data.map_err()?;
 
-        if (decoded_data.len() != 1) {
-            return Result::Err(EthTransactionError::TopLevelRlpListWrongLength(decoded_data.len()));
+        if (rlp_decoded_data.len() != 1) {
+            return Result::Err(EthTransactionError::TopLevelRlpListWrongLength(rlp_decoded_data.len()));
         }
 
-        let decoded_data = *decoded_data.at(0);
-        let legacy_tx: TxLegacy = match decoded_data {
+        let rlp_decoded_data = *rlp_decoded_data.at(0);
+        let legacy_tx: TxLegacy = match rlp_decoded_data {
             RLPItem::String => { Result::Err(EthTransactionError::ExpectedRLPItemToBeList)? },
             RLPItem::List(mut val) => {
                 if (val.len() != 9) {
@@ -311,26 +310,26 @@ pub impl _TransactionUnsigned of TransactionUnsignedTrait {
     ///
     /// CAUTION: this expects that `data` is `tx-type || rlp(tx-data)`
     fn decode_enveloped_typed_transaction(
-        ref data: Span<u8>
+        ref encoded_tx_data: Span<u8>
     ) -> Result<TransactionUnsigned, EthTransactionError> {
         // keep this around so we can use it to calculate the hash
-        let original_encoding_without_header = data;
+        let original_data = encoded_tx_data;
 
-        let tx_type = data
+        let tx_type = encoded_tx_data
             .pop_front()
             .ok_or(EthTransactionError::RLPError(RLPError::InputTooShort))?;
         let tx_type: TxType = (*tx_type)
             .try_into()
             .ok_or(EthTransactionError::RLPError(RLPError::Custom('unsupported tx type')))?;
 
-        let decoded_data = RLPTrait::decode(data).map_err()?;
-        if (decoded_data.len() != 1) {
+        let rlp_decoded_data = RLPTrait::decode(encoded_tx_data).map_err()?;
+        if (rlp_decoded_data.len() != 1) {
             return Result::Err(
                 EthTransactionError::RLPError(RLPError::Custom('not encoded as list'))
             );
         }
 
-        let decoded_data = match *decoded_data.at(0) {
+        let rlp_decoded_data = match *rlp_decoded_data.at(0) {
             RLPItem::String => {
                 return Result::Err(
                     EthTransactionError::RLPError(RLPError::Custom('not encoded as list'))
@@ -340,8 +339,8 @@ pub impl _TransactionUnsigned of TransactionUnsignedTrait {
         };
 
         let transaction = match tx_type {
-            TxType::Eip2930 => Transaction::Eip2930(TxEip2930Trait::decode_fields(decoded_data)?),
-            TxType::Eip1559 => Transaction::Eip1559(TxEip1559Trait::decode_fields(decoded_data)?),
+            TxType::Eip2930 => Transaction::Eip2930(TxEip2930Trait::decode_fields(rlp_decoded_data)?),
+            TxType::Eip1559 => Transaction::Eip1559(TxEip1559Trait::decode_fields(rlp_decoded_data)?),
             TxType::Legacy => {
                 return Result::Err(
                     EthTransactionError::RLPError(RLPError::Custom('unexpected legacy tx type'))
@@ -349,8 +348,16 @@ pub impl _TransactionUnsigned of TransactionUnsignedTrait {
             }
         };
 
-        let tx_hash = original_encoding_without_header.compute_keccak256_hash();
+        let tx_hash = original_data.compute_keccak256_hash();
         Result::Ok(TransactionUnsigned { transaction, hash: tx_hash })
+    }
+
+    /// Returns the hash of the unsigned transaction
+    ///
+    /// The hash is used to recover the sender address when verifying the signature
+    /// attached to the transaction
+    fn compute_hash(encoded_tx_data: Span<u8>) -> u256 {
+        encoded_tx_data.compute_keccak256_hash()
     }
 
     /// Check if a raw transaction is a legacy Ethereum transaction
@@ -372,24 +379,148 @@ pub impl _TransactionUnsigned of TransactionUnsignedTrait {
 
 #[cfg(test)]
 mod tests {
-    use crate::errors::{EthTransactionError, RLPError};
-    use crate::helpers::ByteArrayExTrait;
-    use super::{TransactionUnsignedTrait};
+    use crate::eth_transaction::common::TxKind;
+    use crate::eth_transaction::eip2930::AccessListItem;
+    use crate::eth_transaction::tx_type::TxType;
+    use crate::test_data::{
+        legacy_rlp_encoded_tx, legacy_rlp_encoded_deploy_tx, eip_2930_encoded_tx,
+        eip_1559_encoded_tx
+    };
+    use super::{TransactionTrait, TransactionUnsignedTrait};
 
 
-    //TODO: tests
-    // #[test]
-// fn test_decode_recover_mainnet_tx() {
-//     // random mainnet tx
-//     <https://etherscan.io/tx/0x86718885c4b4218c6af87d3d0b0d83e3cc465df2a05c048aa4db9f1a6f9de91f>
-//     let signed_tx:ByteArray = ""
-//     let signed_tx_bytes = signed_tx.into_bytes();
+    #[test]
+    fn test_decode_legacy_tx() {
+        // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0,
+        // 0]
+        // expected rlp decoding:  [ "0x", "0x3b9aca00", "0x1e8480",
+        // "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef",
+        // "0x4b4b5254", "0x", "0x" ]
+        // message_hash: 0xcf71743e6e25fef715398915997f782b95554c8bbfb7b3f7701e007332ed31b4
+        // chain id used: 'KKRT'
+        let mut encoded_tx_data = legacy_rlp_encoded_tx();
+        let decoded = TransactionUnsignedTrait::decode_enveloped(ref encoded_tx_data).unwrap();
+        assert_eq!(decoded.transaction.nonce(), 0);
+        assert_eq!(decoded.transaction.max_fee_per_gas(), 0x3b9aca00);
+        assert_eq!(decoded.transaction.gas_limit(), 0x1e8480);
+        assert_eq!(
+            decoded.transaction.kind(),
+            TxKind::Call(0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.try_into().unwrap())
+        );
+        assert_eq!(decoded.transaction.value(), 0x016345785d8a0000);
+        assert_eq!(decoded.transaction.input(), [0xab, 0xcd, 0xef].span());
+        assert_eq!(decoded.transaction.chain_id(), Option::Some(0x4b4b5254));
+        assert_eq!(decoded.transaction.transaction_type(), TxType::Legacy);
+    }
 
-    //     let decoded = TransactionUnsignedTrait::decode_enveloped(tx_bytes).unwrap();
-//     assert_eq!(
-//         decoded.recover_signer(),
-//         Some(Address::from_str("0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5").unwrap())
-//     );
-// }
+    #[test]
+    fn test_decode_deploy_tx() {
+        // tx_format (EIP-155, unsigned): [nonce, gasPrice, gasLimit, to, value, data, chainId, 0,
+        // 0]
+        // expected rlp decoding:
+        // ["0x","0x0a","0x061a80","0x","0x0186a0","0x600160010a5060006000f3","0x4b4b5254","0x","0x"]
+        let mut encoded_tx_data = legacy_rlp_encoded_deploy_tx();
+        let decoded = TransactionUnsignedTrait::decode_enveloped(ref encoded_tx_data).unwrap();
+        assert_eq!(decoded.transaction.nonce(), 0);
+        assert_eq!(decoded.transaction.max_fee_per_gas(), 0x0a);
+        assert_eq!(decoded.transaction.gas_limit(), 0x061a80);
+        assert_eq!(decoded.transaction.kind(), TxKind::Create);
+        assert_eq!(decoded.transaction.value(), 0x0186a0);
+        assert_eq!(
+            decoded.transaction.input(),
+            [0x60, 0x01, 0x60, 0x01, 0x0a, 0x50, 0x60, 0x00, 0x60, 0x00, 0xf3].span()
+        );
+        assert_eq!(decoded.transaction.chain_id(), Option::Some(0x4b4b5254));
+        assert_eq!(decoded.transaction.transaction_type(), TxType::Legacy);
+    }
 
+    #[test]
+    fn test_decode_eip2930_tx() {
+        // tx_format (EIP-2930, unsigned): 0x01  || rlp([chainId, nonce, gasPrice, gasLimit, to,
+        // value, data, accessList])
+        // expected rlp decoding:   [ "0x4b4b5254", "0x", "0x3b9aca00", "0x1e8480",
+        // "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef",
+        // [["0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+        // ["0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65",
+        // "0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94"]]] ]
+        // message_hash: 0xc00f61dcc99a78934275c404267b9d035cad7f71cf3ae2ed2c5a55b601a5c107
+        // chain id used: 'KKRT'
+
+        let mut encoded_tx_data = eip_2930_encoded_tx();
+        let decoded = TransactionUnsignedTrait::decode_enveloped(ref encoded_tx_data).unwrap();
+        assert_eq!(decoded.transaction.chain_id(), Option::Some(0x4b4b5254));
+        assert_eq!(decoded.transaction.nonce(), 0);
+        assert_eq!(decoded.transaction.max_fee_per_gas(), 0x3b9aca00);
+        assert_eq!(decoded.transaction.gas_limit(), 0x1e8480);
+        assert_eq!(
+            decoded.transaction.kind(),
+            TxKind::Call(0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.try_into().unwrap())
+        );
+        assert_eq!(decoded.transaction.value(), 0x016345785d8a0000);
+        assert_eq!(decoded.transaction.input(), [0xab, 0xcd, 0xef].span());
+        assert_eq!(decoded.transaction.transaction_type(), TxType::Eip2930);
+    }
+
+    #[test]
+    fn test_decode_eip1559_tx() {
+        // tx_format (EIP-1559, unsigned):  0x02 || rlp([chain_id, nonce, max_priority_fee_per_gas,
+        // max_fee_per_gas, gas_limit, destination, amount, data, access_list])
+        // expected rlp decoding: [ "0x4b4b5254", "0x", "0x", "0x3b9aca00", "0x1e8480",
+        // "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "0x016345785d8a0000", "0xabcdef",
+        // [[["0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+        // ["0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65",
+        // "0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94"]]] ] ]
+        // message_hash: 0xa2de478d0c94b4be637523b818d03b6a1841fca63fd044976fcdbef3c57a87b0
+        // chain id used: 'KKRT'
+
+        let mut encoded_tx_data = eip_1559_encoded_tx();
+        let decoded = TransactionUnsignedTrait::decode_enveloped(ref encoded_tx_data).unwrap();
+        assert_eq!(decoded.transaction.chain_id(), Option::Some(0x4b4b5254));
+        assert_eq!(decoded.transaction.nonce(), 0);
+        assert_eq!(decoded.transaction.max_fee_per_gas(), 0x3b9aca00);
+        assert_eq!(decoded.transaction.gas_limit(), 0x1e8480);
+        assert_eq!(
+            decoded.transaction.kind(),
+            TxKind::Call(0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.try_into().unwrap())
+        );
+        assert_eq!(decoded.transaction.value(), 0x016345785d8a0000);
+        assert_eq!(decoded.transaction.input(), [0xab, 0xcd, 0xef].span());
+        let expected_access_list = [
+            AccessListItem {
+                ethereum_address: 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.try_into().unwrap(),
+                storage_keys: [
+                    0xde9fbe35790b85c23f42b7430c78f122636750cc217a534c80a9a0520969fa65,
+                    0xd5362e94136f76bfc8dad0b510b94561af7a387f1a9d0d45e777c11962e5bd94
+                ].span()
+            }
+        ].span();
+        assert_eq!(
+            decoded.transaction.access_list().expect('access_list is none'), expected_access_list
+        );
+        assert_eq!(decoded.transaction.transaction_type(), TxType::Eip1559);
+    }
+
+    #[test]
+    fn test_is_legacy_tx_eip_155_tx() {
+        let encoded_tx_data = legacy_rlp_encoded_tx();
+        let result = TransactionUnsignedTrait::is_legacy_tx(encoded_tx_data);
+
+        assert(result, 'is_legacy_tx expected true');
+    }
+
+    #[test]
+    fn test_is_legacy_tx_eip_1559_tx() {
+        let encoded_tx_data = eip_1559_encoded_tx();
+        let result = TransactionUnsignedTrait::is_legacy_tx(encoded_tx_data);
+
+        assert(!result, 'is_legacy_tx expected false');
+    }
+
+    #[test]
+    fn test_is_legacy_tx_eip_2930_tx() {
+        let encoded_tx_data = eip_2930_encoded_tx();
+        let result = TransactionUnsignedTrait::is_legacy_tx(encoded_tx_data);
+
+        assert(!result, 'is_legacy_tx expected false');
+    }
 }
