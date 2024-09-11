@@ -1,16 +1,16 @@
 use contracts::IKakarotCore;
-use starknet::storage::StorageTrait;
-use core::ops::SnapshotDeref;
-use contracts::kakarot_core::KakarotCore;
-use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
+use contracts::kakarot_core::KakarotCore;
+use core::ops::SnapshotDeref;
+use core::starknet::storage::{StoragePointerReadAccess};
 use core::starknet::{get_caller_address, get_tx_info};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+use starknet::storage::StorageTrait;
 use utils::constants::POW_2_32;
-use core::starknet::storage::{StoragePointerReadAccess};
 use utils::eth_transaction::get_effective_gas_price;
+use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
 
-pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transaction){
+pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transaction) {
     let kakarot_storage = kakarot_state.snapshot_deref().storage();
     // Validate transaction
 
@@ -51,9 +51,7 @@ pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transacti
     assert(tx_cost <= balance, 'Not enough ETH');
 
     let effective_gas_price = get_effective_gas_price(
-        Option::Some(tx.max_fee_per_gas()),
-        tx.max_priority_fee_per_gas(),
-        block_base_fee.into()
+        Option::Some(tx.max_fee_per_gas()), tx.max_priority_fee_per_gas(), block_base_fee.into()
     );
     assert(effective_gas_price.is_ok(), 'Invalid effective gas price');
 }

@@ -52,6 +52,7 @@ pub mod AccountContract {
     use contracts::errors::{KAKAROT_VALIDATION_FAILED, KAKAROT_REENTRANCY};
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use contracts::storage::StorageBytecode;
+    use core::cmp::min;
     use core::num::traits::Bounded;
     use core::num::traits::zero::Zero;
     use core::panic_with_felt252;
@@ -74,7 +75,6 @@ pub mod AccountContract {
     use utils::eth_transaction::validation::validate_eth_tx;
     use utils::eth_transaction::{TransactionMetadata};
     use utils::serialization::{deserialize_signature, deserialize_bytes, serialize_bytes};
-    use core::cmp::min;
     use utils::traits::DefaultSignature;
 
     // Add ownable component
@@ -271,7 +271,14 @@ pub mod AccountContract {
             // https://github.com/starkware-libs/blockifier/blob/9bfb3d4c8bf1b68a0c744d1249b32747c75a4d87/crates/blockifier/resources/versioned_constants.json
             // The whole data_len should be less than 300, so it's the return_data should be less
             // than 297 (+3 for return_data_len, success, gas_used)
-            self.emit(TransactionExecuted { response: return_data.slice(0, min(297, return_data.len())), success: success, gas_used });
+            self
+                .emit(
+                    TransactionExecuted {
+                        response: return_data.slice(0, min(297, return_data.len())),
+                        success: success,
+                        gas_used
+                    }
+                );
             array![return_data]
         }
     }
