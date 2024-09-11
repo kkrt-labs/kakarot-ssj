@@ -381,7 +381,7 @@ pub mod AccountContract {
 
     #[generate_trait]
     impl Eip1559TransactionImpl of Eip1559TransactionTrait {
-        //TODO: refactor
+        //TODO: refactor into a generic tx validation function.
         fn validate_eip1559_tx(ref self: ContractState, tx: Transaction,) -> bool {
             // let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
             // let block_gas_limit = kakarot.get_block_gas_limit();

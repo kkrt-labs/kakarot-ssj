@@ -75,7 +75,7 @@ pub impl _impl of TxEip1559Trait {
         }
     }
 
-    fn decode_fields(mut data: Span<RLPItem>) -> Result<TxEip1559, EthTransactionError> {
+    fn decode_fields(ref data: Span<RLPItem>) -> Result<TxEip1559, EthTransactionError> {
         let boxed_fields = data
             .multi_pop_front::<9>()
             .ok_or(EthTransactionError::RLPError(RLPError::InputTooShort))?;

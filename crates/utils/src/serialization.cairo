@@ -42,8 +42,7 @@ pub fn serialize_transaction_signature(
 
     let value = match tx_type {
         TxType::Legacy(_) => { sig.y_parity.into() + 2 * chain_id + 35 },
-        TxType::Eip2930(_) => { sig.y_parity.into() },
-        TxType::Eip1559(_) => { sig.y_parity.into() }
+        TxType::Eip2930(_)| TxType::Eip1559(_)  => { sig.y_parity.into() }
     };
 
     res.append(value.into());

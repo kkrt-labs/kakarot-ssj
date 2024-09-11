@@ -240,7 +240,9 @@ pub impl _TransactionUnsigned of TransactionUnsignedTrait {
         let rlp_decoded_data = rlp_decoded_data.map_err()?;
 
         if (rlp_decoded_data.len() != 1) {
-            return Result::Err(EthTransactionError::TopLevelRlpListWrongLength(rlp_decoded_data.len()));
+            return Result::Err(
+                EthTransactionError::TopLevelRlpListWrongLength(rlp_decoded_data.len())
+            );
         }
 
         let rlp_decoded_data = *rlp_decoded_data.at(0);
@@ -329,7 +331,7 @@ pub impl _TransactionUnsigned of TransactionUnsignedTrait {
             );
         }
 
-        let rlp_decoded_data = match *rlp_decoded_data.at(0) {
+        let mut rlp_decoded_data = match *rlp_decoded_data.at(0) {
             RLPItem::String => {
                 return Result::Err(
                     EthTransactionError::RLPError(RLPError::Custom('not encoded as list'))
@@ -339,8 +341,12 @@ pub impl _TransactionUnsigned of TransactionUnsignedTrait {
         };
 
         let transaction = match tx_type {
-            TxType::Eip2930 => Transaction::Eip2930(TxEip2930Trait::decode_fields(rlp_decoded_data)?),
-            TxType::Eip1559 => Transaction::Eip1559(TxEip1559Trait::decode_fields(rlp_decoded_data)?),
+            TxType::Eip2930 => Transaction::Eip2930(
+                TxEip2930Trait::decode_fields(ref rlp_decoded_data)?
+            ),
+            TxType::Eip1559 => Transaction::Eip1559(
+                TxEip1559Trait::decode_fields(ref rlp_decoded_data)?
+            ),
             TxType::Legacy => {
                 return Result::Err(
                     EthTransactionError::RLPError(RLPError::Custom('unexpected legacy tx type'))

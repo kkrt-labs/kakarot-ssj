@@ -72,7 +72,7 @@ pub struct TxEip2930 {
 
 #[generate_trait]
 pub impl _impl of TxEip2930Trait {
-    fn decode_fields(mut data: Span<RLPItem>) -> Result<TxEip2930, EthTransactionError> {
+    fn decode_fields(ref data: Span<RLPItem>) -> Result<TxEip2930, EthTransactionError> {
         let boxed_fields = data
             .multi_pop_front::<8>()
             .ok_or(EthTransactionError::RLPError(RLPError::InputTooShort))?;
