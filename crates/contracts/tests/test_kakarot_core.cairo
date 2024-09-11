@@ -33,9 +33,11 @@ use snforge_utils::snforge_utils::{
     EventsFilterBuilderTrait, ContractEvents, ContractEventsTrait, store_evm
 };
 use starknet::storage::StorageTrait;
+use utils::constants::EMPTY_KECCAK;
 use utils::eth_transaction::common::{TxKind, TxKindTrait};
 use utils::eth_transaction::legacy::TxLegacy;
 use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
+use utils::helpers::U8SpanExTrait;
 use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
 
 #[test]
@@ -281,6 +283,7 @@ fn test_process_transaction() {
     test_utils::register_account(eoa_evm_address, eoa_starknet_address);
     start_mock_call::<u256>(eoa_starknet_address, selector!("get_nonce"), 0);
     start_mock_call::<Span<u8>>(eoa_starknet_address, selector!("bytecode"), [].span());
+    start_mock_call::<u256>(eoa_starknet_address, selector!("get_code_hash"), EMPTY_KECCAK);
 
     let contract_evm_address = test_utils::other_evm_address();
     let contract_starknet_address = utils::helpers::compute_starknet_address(
@@ -288,9 +291,18 @@ fn test_process_transaction() {
     );
     test_utils::register_account(contract_evm_address, contract_starknet_address);
     start_mock_call::<u256>(contract_starknet_address, selector!("get_nonce"), 1);
+    let counter_evm_bytecode = counter_evm_bytecode();
     start_mock_call::<
         Span<u8>
-    >(contract_starknet_address, selector!("bytecode"), counter_evm_bytecode());
+    >(contract_starknet_address, selector!("bytecode"), counter_evm_bytecode);
+
+    start_mock_call::<
+        u256
+    >(
+        contract_starknet_address,
+        selector!("get_code_hash"),
+        counter_evm_bytecode.compute_keccak256_hash()
+    );
     start_mock_call::<u256>(contract_starknet_address, selector!("storage"), 0);
 
     let nonce = 0;

@@ -384,6 +384,8 @@ mod tests {
         origin, uninitialized_account
     };
     use snforge_std::{test_address, start_mock_call};
+    use utils::constants::EMPTY_KECCAK;
+    use utils::helpers::U8SpanExTrait;
     use utils::helpers::compute_starknet_address;
     use utils::helpers::load_word;
     use utils::traits::{EthAddressIntoU256};
@@ -481,6 +483,7 @@ mod tests {
             address: vm.message().target,
             balance: 0,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             nonce: 0,
             is_created: false,
             selfdestruct: false,
@@ -489,17 +492,19 @@ mod tests {
 
         // Deploy bytecode at 0xabfa740ccd
         // ret (+ 0x1 0x1)
-        let deployed_bytecode = [
-            0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
-        ].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
         );
+        let deployed_bytecode = [
+            0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
+        ].span();
+        let code_hash = deployed_bytecode.compute_keccak256_hash();
         let contract_account = Account {
             address: Address { evm: eth_address, starknet: starknet_address, },
             balance: 0,
             code: deployed_bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: false,
             selfdestruct: false,
@@ -546,11 +551,13 @@ mod tests {
             0xf1,
             0x00
         ].span();
+        let code_hash = bytecode.compute_keccak256_hash();
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
         let caller_account = Account {
             address: vm.message().target,
             balance: 0,
             code: bytecode,
+            code_hash: code_hash,
             nonce: 0,
             is_created: false,
             selfdestruct: false,
@@ -559,15 +566,17 @@ mod tests {
 
         // Deploy bytecode at 0xabfa740ccd
         // (+ 0x1 0x1)
-        let deployed_bytecode = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
         );
+        let deployed_bytecode = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
+        let code_hash = deployed_bytecode.compute_keccak256_hash();
         let contract_account = Account {
             address: Address { evm: eth_address, starknet: starknet_address, },
             balance: 0,
             code: deployed_bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: false,
             selfdestruct: false,
@@ -611,12 +620,13 @@ mod tests {
             0xfa,
             0x00
         ].span();
-
+        let code_hash = bytecode.compute_keccak256_hash();
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
         let caller_account = Account {
             address: vm.message().target,
             balance: 0,
             code: bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: false,
             selfdestruct: false,
@@ -624,17 +634,19 @@ mod tests {
         vm.env.state.set_account(caller_account);
         // Deploy bytecode at 0xabfa740ccd
         // ret (+ 0x1 0x1)
-        let deployed_bytecode = [
-            0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
-        ].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
         );
+        let deployed_bytecode = [
+            0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
+        ].span();
+        let code_hash = deployed_bytecode.compute_keccak256_hash();
         let contract_account = Account {
             address: Address { evm: eth_address, starknet: starknet_address, },
             balance: 0,
             code: deployed_bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: false,
             selfdestruct: false,
@@ -679,12 +691,13 @@ mod tests {
             0xfa,
             0x00
         ].span();
-
+        let code_hash = bytecode.compute_keccak256_hash();
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
         let caller_account = Account {
             address: vm.message().target,
             balance: 0,
             code: bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: false,
             selfdestruct: false,
@@ -693,15 +706,17 @@ mod tests {
 
         // Deploy bytecode at 0xabfa740ccd
         // (+ 0x1 0x1)
-        let deployed_bytecode = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
         );
+        let deployed_bytecode = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
+        let code_hash = deployed_bytecode.compute_keccak256_hash();
         let contract_account = Account {
             address: Address { evm: eth_address, starknet: starknet_address, },
             balance: 0,
             code: deployed_bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: false,
             selfdestruct: false,
@@ -746,11 +761,13 @@ mod tests {
             0xf2,
             0x00
         ].span();
+        let code_hash = bytecode.compute_keccak256_hash();
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
         let eoa_account = Account {
             address: vm.message().target,
             balance: 0,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             nonce: 0,
             is_created: false,
             selfdestruct: false,
@@ -779,6 +796,7 @@ mod tests {
             0x00,
             0xf3
         ].span();
+        let code_hash = deployed_bytecode.compute_keccak256_hash();
         let eth_address: EthAddress = 0x1234.try_into().unwrap();
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
@@ -787,6 +805,7 @@ mod tests {
             address: Address { evm: eth_address, starknet: starknet_address, },
             balance: 0,
             code: deployed_bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: false,
             selfdestruct: false,
@@ -834,11 +853,13 @@ mod tests {
             0xf4,
             0x00
         ].span();
+        let code_hash = bytecode.compute_keccak256_hash();
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
         let eoa_account = Account {
             address: vm.message().target,
             balance: 0,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             nonce: 0,
             is_created: false,
             selfdestruct: false,
@@ -867,6 +888,7 @@ mod tests {
             0x00,
             0xf3
         ].span();
+        let code_hash = deployed_bytecode.compute_keccak256_hash();
         let eth_address: EthAddress = 0x1234.try_into().unwrap();
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
@@ -875,6 +897,7 @@ mod tests {
             address: Address { evm: eth_address, starknet: starknet_address, },
             balance: 0,
             code: deployed_bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: false,
             selfdestruct: false,
@@ -917,14 +940,17 @@ mod tests {
             },
             balance: 2,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             nonce: 0,
             is_created: false,
             selfdestruct: false,
         };
+        let code_hash = deployed_bytecode.compute_keccak256_hash();
         let contract_account = Account {
             address: Address { evm: eth_address, starknet: starknet_address, },
             balance: 2,
             code: deployed_bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: false,
             selfdestruct: false,
@@ -985,14 +1011,17 @@ mod tests {
             },
             balance: 2,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             nonce: 0,
             is_created: false,
             selfdestruct: false,
         };
+        let code_hash = deployed_bytecode.compute_keccak256_hash();
         let deployer = Account {
             address: Address { evm: eth_address, starknet: starknet_address, },
             balance: 2,
             code: deployed_bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: false,
             selfdestruct: false,
@@ -1046,14 +1075,17 @@ mod tests {
             },
             balance: 2,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             nonce: 0,
             is_created: false,
             selfdestruct: false,
         };
+        let code_hash = deployed_bytecode.compute_keccak256_hash();
         let contract_account = Account {
             address: Address { evm: eth_address, starknet: starknet_address, },
             balance: 2,
             code: deployed_bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: false,
             selfdestruct: false,
@@ -1109,10 +1141,12 @@ mod tests {
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
         );
+        let code_hash = deployed_bytecode.compute_keccak256_hash();
         let contract_account = Account {
             address: Address { evm: eth_address, starknet: starknet_address, },
             balance: 2,
             code: deployed_bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: false,
             selfdestruct: false,
@@ -1138,10 +1172,12 @@ mod tests {
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
         );
+        let code_hash = deployed_bytecode.compute_keccak256_hash();
         let contract_account = Account {
             address: Address { evm: eth_address, starknet: starknet_address, },
             balance: 2,
             code: deployed_bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: true,
             selfdestruct: false,
@@ -1155,6 +1191,7 @@ mod tests {
             },
             balance: 0,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             nonce: 0,
             is_created: false,
             selfdestruct: false,
@@ -1186,10 +1223,12 @@ mod tests {
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
         );
+        let code_hash = deployed_bytecode.compute_keccak256_hash();
         let contract_account = Account {
             address: Address { evm: eth_address, starknet: starknet_address, },
             balance: 2,
             code: deployed_bytecode,
+            code_hash: code_hash,
             nonce: 1,
             is_created: false,
             selfdestruct: false,
@@ -1203,6 +1242,7 @@ mod tests {
             },
             balance: 0,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             nonce: 0,
             is_created: false,
             selfdestruct: false,

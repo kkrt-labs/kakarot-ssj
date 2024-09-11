@@ -148,6 +148,7 @@ mod tests {
     use evm::state::StateTrait;
     use evm::test_utils::{VMBuilderTrait, gas_price, setup_test_environment};
     use snforge_std::{start_cheat_block_number_global, start_cheat_block_timestamp_global};
+    use utils::constants::EMPTY_KECCAK;
     use utils::constants;
     use utils::traits::{EthAddressIntoU256};
 
@@ -268,6 +269,7 @@ mod tests {
             balance: 400,
             nonce: 0,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             selfdestruct: false,
             is_created: true,
         };

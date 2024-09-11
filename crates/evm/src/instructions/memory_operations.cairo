@@ -320,6 +320,8 @@ mod tests {
         native_token
     };
     use snforge_std::{test_address, start_mock_call};
+    use utils::constants::EMPTY_KECCAK;
+    use utils::helpers::U8SpanExTrait;
     use utils::helpers::compute_starknet_address;
 
     #[test]
@@ -808,10 +810,16 @@ mod tests {
         let starknet_address = compute_starknet_address(
             test_address, evm_address, uninitialized_account()
         );
+        let bytecode = [0xab, 0xcd, 0xef].span();
+        let code_hash = bytecode.compute_keccak256_hash();
         let account = Account {
-            address: Address { evm: evm_address, starknet: starknet_address }, code: [
-                0xab, 0xcd, 0xef
-            ].span(), nonce: 1, balance: 0, selfdestruct: false, is_created: false,
+            address: Address { evm: evm_address, starknet: starknet_address },
+            code: bytecode,
+            code_hash: code_hash,
+            nonce: 1,
+            balance: 0,
+            selfdestruct: false,
+            is_created: false,
         };
         vm.env.state.set_account(account);
 
@@ -861,10 +869,16 @@ mod tests {
         let starknet_address = compute_starknet_address(
             test_address, evm_address, uninitialized_account()
         );
+        let bytecode = [0xab, 0xcd, 0xef].span();
+        let code_hash = bytecode.compute_keccak256_hash();
         let account = Account {
-            address: Address { evm: evm_address, starknet: starknet_address }, code: [
-                0xab, 0xcd, 0xef
-            ].span(), nonce: 1, balance: 0, selfdestruct: false, is_created: false,
+            address: Address { evm: evm_address, starknet: starknet_address },
+            code: bytecode,
+            code_hash: code_hash,
+            nonce: 1,
+            balance: 0,
+            selfdestruct: false,
+            is_created: false,
         };
         let key: u256 = 0x100000000000000000000000000000001;
         let value: u256 = 0xABDE1E11A5;
