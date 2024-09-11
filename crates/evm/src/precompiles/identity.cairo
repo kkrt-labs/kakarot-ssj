@@ -2,8 +2,8 @@ use core::starknet::EthAddress;
 use evm::errors::EVMError;
 use evm::precompiles::Precompile;
 
-const BASE_COST: u128 = 15;
-const COST_PER_WORD: u128 = 3;
+const BASE_COST: u64 = 15;
+const COST_PER_WORD: u64 = 3;
 
 pub impl Identity of Precompile {
     #[inline(always)]
@@ -11,7 +11,7 @@ pub impl Identity of Precompile {
         0x4.try_into().unwrap()
     }
 
-    fn exec(input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
+    fn exec(input: Span<u8>) -> Result<(u64, Span<u8>), EVMError> {
         let data_word_size = ((input.len() + 31) / 32).into();
         let gas = BASE_COST + data_word_size * COST_PER_WORD;
 
@@ -27,7 +27,9 @@ mod tests {
     use evm::memory::MemoryTrait;
     use evm::precompiles::identity::Identity;
     use evm::stack::StackTrait;
-    use evm::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait, native_token, setup_test_storages};
+    use evm::test_utils::{
+        VMBuilderTrait, MemoryTestUtilsTrait, native_token, setup_test_environment
+    };
     use snforge_std::start_mock_call;
 
     // source:
@@ -48,7 +50,7 @@ mod tests {
     //TODO(sn-foundry): fix or delete
     #[test]
     fn test_identity_precompile_static_call() {
-        setup_test_storages();
+        setup_test_environment();
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
         vm.stack.push(0x20).unwrap(); // retSize

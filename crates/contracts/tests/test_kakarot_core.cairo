@@ -24,16 +24,18 @@ use evm::test_utils::{sequencer_evm_address, chain_id};
 use evm::test_utils;
 use snforge_std::{
     declare, DeclareResultTrait, start_cheat_caller_address, stop_cheat_caller_address,
-    start_cheat_signature, stop_cheat_signature, start_cheat_chain_id, stop_cheat_chain_id,
-    start_cheat_transaction_hash, stop_cheat_transaction_hash, spy_events, Event, EventSpyTrait,
-    test_address, cheat_caller_address, CheatSpan, store, load, EventSpyAssertionsTrait,
-    start_mock_call, stop_mock_call
+    start_cheat_signature, stop_cheat_signature, start_cheat_chain_id_global,
+    stop_cheat_chain_id_global, start_cheat_transaction_hash, stop_cheat_transaction_hash,
+    spy_events, Event, EventSpyTrait, test_address, cheat_caller_address, CheatSpan, store, load,
+    EventSpyAssertionsTrait, start_mock_call, stop_mock_call
 };
 use snforge_utils::snforge_utils::{
     EventsFilterBuilderTrait, ContractEvents, ContractEventsTrait, store_evm
 };
 use starknet::storage::StorageTrait;
-use utils::eth_transaction::{EthereumTransaction, EthereumTransactionTrait, LegacyTransaction};
+use utils::eth_transaction::common::{TxKind, TxKindTrait};
+use utils::eth_transaction::legacy::TxLegacy;
+use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
 use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
 
 #[test]
@@ -195,8 +197,8 @@ fn test_eth_send_transaction_non_deploy_tx() {
     let tx = contract_utils::call_transaction(
         chain_id(), Option::Some(counter_address), data_get_tx
     );
-    let (_, return_data) = kakarot_core
-        .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
+    let (_, return_data, _) = kakarot_core
+        .eth_call(origin: evm_address, tx: Transaction::Legacy(tx));
 
     assert_eq!(return_data, u256_to_bytes_array(0).span());
 
@@ -206,18 +208,17 @@ fn test_eth_send_transaction_non_deploy_tx() {
     // When
     start_cheat_caller_address(kakarot_core.contract_address, eoa);
 
-    let tx = LegacyTransaction {
-        chain_id: chain_id(),
+    let tx = TxLegacy {
+        chain_id: Option::Some(chain_id()),
         nonce: 0,
-        destination: Option::Some(counter_address),
-        amount: value,
+        to: counter_address.into(),
+        value,
         gas_price,
         gas_limit,
-        calldata: data_increment_counter
+        input: data_increment_counter
     };
 
-    let (success, _) = kakarot_core
-        .eth_send_transaction(EthereumTransaction::LegacyTransaction(tx));
+    let (success, _, _) = kakarot_core.eth_send_transaction(Transaction::Legacy(tx));
     assert!(success);
 
     // Then
@@ -228,10 +229,8 @@ fn test_eth_send_transaction_non_deploy_tx() {
     let tx = contract_utils::call_transaction(
         chain_id(), Option::Some(counter_address), data_get_tx
     );
-    let (_, _) = kakarot_core
-        .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
-    let (_, return_data) = kakarot_core
-        .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
+    let (_, return_data, _) = kakarot_core
+        .eth_call(origin: evm_address, tx: Transaction::Legacy(tx));
 
     // Then
     assert_eq!(return_data, u256_to_bytes_array(1).span());
@@ -260,8 +259,8 @@ fn test_eth_call() {
 
     // When
     let tx = contract_utils::call_transaction(chain_id(), to, calldata);
-    let (success, return_data) = kakarot_core
-        .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
+    let (success, return_data, _) = kakarot_core
+        .eth_call(origin: evm_address, tx: Transaction::Legacy(tx));
 
     // Then
     assert_eq!(success, true);
@@ -271,7 +270,7 @@ fn test_eth_call() {
 #[test]
 fn test_process_transaction() {
     // Pre
-    test_utils::setup_test_storages();
+    test_utils::setup_test_environment();
     let chain_id = chain_id();
 
     // Given
@@ -295,18 +294,21 @@ fn test_process_transaction() {
     start_mock_call::<u256>(contract_starknet_address, selector!("storage"), 0);
 
     let nonce = 0;
-    let to = Option::Some(contract_evm_address);
     let gas_limit = test_utils::tx_gas_limit();
     let gas_price = test_utils::gas_price();
     let value = 0;
     // selector: function get()
-    let calldata = [0x6d, 0x4c, 0xe6, 0x3c].span();
+    let input = [0x6d, 0x4c, 0xe6, 0x3c].span();
 
-    let tx = EthereumTransaction::LegacyTransaction(
-        LegacyTransaction {
-            chain_id, nonce, destination: to, amount: value, gas_price, gas_limit, calldata
-        }
-    );
+    let tx = TxLegacy {
+        chain_id: Option::Some(chain_id),
+        nonce,
+        to: contract_evm_address.into(),
+        value,
+        gas_price,
+        gas_limit,
+        input
+    };
 
     // When
     let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
@@ -315,7 +317,8 @@ fn test_process_transaction() {
     >(test_utils::native_token(), selector!("balanceOf"), 0xfffffffffffffffffffffffffff);
     let result = kakarot_core
         .process_transaction(
-            origin: Address { evm: eoa_evm_address, starknet: eoa_starknet_address }, :tx
+            origin: Address { evm: eoa_evm_address, starknet: eoa_starknet_address },
+            tx: Transaction::Legacy(tx)
         );
     let return_data = result.return_data;
 
@@ -342,18 +345,17 @@ fn test_eth_send_transaction_deploy_tx() {
     // When
     // Set the contract address to the EOA address, so that the caller of the `eth_send_transaction`
     // is an eoa
-    let tx = LegacyTransaction {
-        chain_id: chain_id(),
+    let tx = TxLegacy {
+        chain_id: Option::Some(chain_id()),
         nonce: 0,
-        destination: Option::None,
-        amount: value,
+        to: Option::None.into(),
+        value,
         gas_price,
         gas_limit,
-        calldata: deploy_counter_calldata()
+        input: deploy_counter_calldata()
     };
     start_cheat_caller_address(kakarot_core.contract_address, eoa);
-    let (_, deploy_result) = kakarot_core
-        .eth_send_transaction(EthereumTransaction::LegacyTransaction(tx));
+    let (_, deploy_result, _) = kakarot_core.eth_send_transaction(Transaction::Legacy(tx));
 
     // Then
     let expected_address: EthAddress = 0x19587b345dcadfe3120272bd0dbec24741891759
@@ -369,21 +371,19 @@ fn test_eth_send_transaction_deploy_tx() {
     assert(bytecode == counter_evm_bytecode(), 'wrong bytecode');
 
     // Check that the account was created and `get` returns 0.
-    let calldata = [0x6d, 0x4c, 0xe6, 0x3c].span();
-    let to = Option::Some(expected_address);
+    let input = [0x6d, 0x4c, 0xe6, 0x3c].span();
 
     // No need to set address back to eoa, as eth_call doesn't use the caller address.
-    let tx = LegacyTransaction {
-        chain_id: chain_id(),
+    let tx = TxLegacy {
+        chain_id: Option::Some(chain_id()),
         nonce: 0,
-        destination: to,
-        amount: value,
+        to: expected_address.into(),
+        value,
         gas_price,
         gas_limit,
-        calldata
+        input
     };
-    let (_, result) = kakarot_core
-        .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx));
+    let (_, result, _) = kakarot_core.eth_call(origin: evm_address, tx: Transaction::Legacy(tx));
     // Then
     assert(result == u256_to_bytes_array(0).span(), 'wrong result');
 }

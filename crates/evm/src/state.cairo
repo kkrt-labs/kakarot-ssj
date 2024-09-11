@@ -317,7 +317,7 @@ mod tests {
 
         #[test]
         fn test_get_account_when_inexistant() {
-            test_utils::setup_test_storages();
+            test_utils::setup_test_environment();
             let deployer = test_address();
             let mut state: State = Default::default();
 
@@ -344,7 +344,7 @@ mod tests {
 
         #[test]
         fn test_get_account_when_cached() {
-            test_utils::setup_test_storages();
+            test_utils::setup_test_environment();
             let deployer = test_address();
             let mut state: State = Default::default();
 
@@ -367,7 +367,7 @@ mod tests {
 
         #[test]
         fn test_get_account_when_deployed() {
-            test_utils::setup_test_storages();
+            test_utils::setup_test_environment();
             let deployer = test_address();
             let mut state: State = Default::default();
 
@@ -408,7 +408,7 @@ mod tests {
 
         #[test]
         fn test_read_state_from_sn_storage() {
-            test_utils::setup_test_storages();
+            test_utils::setup_test_environment();
             let starknet_address = compute_starknet_address(
                 test_address(), test_utils::evm_address(), test_utils::uninitialized_account()
             );
@@ -444,7 +444,7 @@ mod tests {
         fn test_add_transfer() {
             //Given
             let mut state: State = Default::default();
-            test_utils::setup_test_storages();
+            test_utils::setup_test_environment();
             let deployer = test_address();
 
             let sender_evm_address = test_utils::evm_address();
@@ -501,7 +501,7 @@ mod tests {
         fn test_add_transfer_with_same_sender_and_recipient() {
             //Given
             let mut state: State = Default::default();
-            test_utils::setup_test_storages();
+            test_utils::setup_test_environment();
             let deployer = test_address();
 
             let sender_evm_address = test_utils::evm_address();
@@ -541,7 +541,7 @@ mod tests {
         fn test_add_transfer_when_amount_is_zero() {
             //Given
             let mut state: State = Default::default();
-            test_utils::setup_test_storages();
+            test_utils::setup_test_environment();
             let deployer = test_address();
 
             let sender_evm_address = test_utils::evm_address();
@@ -594,7 +594,7 @@ mod tests {
         #[test]
         fn test_read_balance_cached() {
             let mut state: State = Default::default();
-            test_utils::setup_test_storages();
+            test_utils::setup_test_environment();
             let deployer = test_address();
 
             let evm_address = test_utils::evm_address();
@@ -616,7 +616,7 @@ mod tests {
 
         #[test]
         fn test_read_balance_from_storage() {
-            test_utils::setup_test_storages();
+            test_utils::setup_test_environment();
             let deployer = test_address();
             let evm_address = test_utils::evm_address();
             let starknet_address = compute_starknet_address(

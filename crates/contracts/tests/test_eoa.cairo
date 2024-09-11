@@ -36,9 +36,8 @@ use snforge_std::{
     cheat_caller_address
 };
 use snforge_utils::snforge_utils::{ContractEvents, ContractEventsTrait, EventsFilterBuilderTrait};
-use utils::eth_transaction::{
-    TransactionType, EthereumTransaction, EthereumTransactionTrait, LegacyTransaction
-};
+use utils::eth_transaction::transaction::Transaction;
+use utils::eth_transaction::tx_type::TxType;
 use utils::helpers::{U8SpanExTrait, u256_to_bytes_array};
 use utils::serialization::{serialize_bytes, serialize_transaction_signature};
 use utils::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
@@ -77,8 +76,8 @@ fn test___execute__a() {
     // check counter value is 0 before doing inc
     let tx = call_transaction(chain_id(), Option::Some(other_evm_address()), data_get_tx);
 
-    let (_, return_data) = kakarot_core
-        .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx),);
+    let (_, return_data, _) = kakarot_core
+        .eth_call(origin: evm_address, tx: Transaction::Legacy(tx),);
 
     assert_eq!(return_data, u256_to_bytes_array(0).span());
 
@@ -129,8 +128,8 @@ fn test___execute__a() {
     }
     // check counter value has increased
     let tx = call_transaction(chain_id(), Option::Some(other_evm_address()), data_get_tx);
-    let (_, return_data) = kakarot_core
-        .eth_call(origin: evm_address, tx: EthereumTransaction::LegacyTransaction(tx),);
+    let (_, return_data, _) = kakarot_core
+        .eth_call(origin: evm_address, tx: Transaction::Legacy(tx),);
     assert_eq!(return_data, u256_to_bytes_array(1).span());
 }
 
@@ -207,7 +206,7 @@ fn test___validate__fail__to_address_not_kakarot_core() {
     };
     start_cheat_signature(
         eoa_contract.contract_address,
-        serialize_transaction_signature(signature, TransactionType::Legacy, 1).span()
+        serialize_transaction_signature(signature, TxType::Legacy, 1).span()
     );
 
     let call = Call {
@@ -246,7 +245,7 @@ fn test___validate__fail__selector_not_eth_send_transaction() {
     };
     start_cheat_signature(
         eoa_contract.contract_address,
-        serialize_transaction_signature(signature, TransactionType::Legacy, chain_id).span()
+        serialize_transaction_signature(signature, TxType::Legacy, chain_id).span()
     );
 
     let call = Call {
@@ -282,7 +281,7 @@ fn test___validate__legacy_transaction() {
     };
     start_cheat_signature(
         eoa_contract.contract_address,
-        serialize_transaction_signature(signature, TransactionType::Legacy, chain_id).span()
+        serialize_transaction_signature(signature, TxType::Legacy, chain_id).span()
     );
 
     let call = Call {
@@ -322,7 +321,7 @@ fn test___validate__eip_2930_transaction() {
 
     start_cheat_signature(
         eoa_contract.contract_address,
-        serialize_transaction_signature(signature, TransactionType::EIP2930, chain_id).span()
+        serialize_transaction_signature(signature, TxType::Eip2930, chain_id).span()
     );
 
     let call = Call {
@@ -368,7 +367,7 @@ fn test___validate__eip_1559_transaction() {
 
     start_cheat_signature(
         eoa_contract.contract_address,
-        serialize_transaction_signature(signature, TransactionType::EIP1559, chain_id).span()
+        serialize_transaction_signature(signature, TxType::Eip1559, chain_id).span()
     );
     cheat_caller_address(
         eoa_contract.contract_address, contract_address_const::<0>(), CheatSpan::TargetCalls(1)

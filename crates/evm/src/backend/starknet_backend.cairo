@@ -251,7 +251,7 @@ mod tests {
     use evm::state::{State, StateTrait};
     use evm::test_utils::evm_address;
     use evm::test_utils::{
-        setup_test_storages, uninitialized_account, account_contract, register_account
+        setup_test_environment, uninitialized_account, account_contract, register_account
     };
     use snforge_std::{test_address, start_mock_call, get_class_hash};
     use snforge_utils::snforge_utils::{assert_not_called, assert_called};
@@ -264,7 +264,7 @@ mod tests {
     fn test_deploy() {
         // store the classes in the context of the local execution, to be used for deploying the
         // account class
-        setup_test_storages();
+        setup_test_environment();
         let test_address = test_address();
 
         start_mock_call::<
@@ -283,7 +283,7 @@ mod tests {
     //TODO(starknet-foundry): it's impossible to deploy an un-declared class, nor is it possible to
     //mock_deploy.
     fn test_account_commit_undeployed_create_should_change_set_all() {
-        setup_test_storages();
+        setup_test_environment();
         let test_address = test_address();
         let evm_address = evm_address();
         let starknet_address = compute_starknet_address(
@@ -315,7 +315,7 @@ mod tests {
 
     #[test]
     fn test_account_commit_deployed_and_created_should_write_code() {
-        setup_test_storages();
+        setup_test_environment();
         let test_address = test_address();
         let evm_address = evm_address();
         let starknet_address = compute_starknet_address(
@@ -347,7 +347,7 @@ mod tests {
     //TODO(starknet-foundry): it's impossible to deploy an un-declared class, nor is it possible to
     //mock_deploy.
     fn test_exec_sstore_finalized() { // // Given
-    // setup_test_storages();
+    // setup_test_environment();
     // let mut vm = VMBuilderTrait::new_with_presets().build();
     // let evm_address = vm.message().target.evm;
     // let starknet_address = compute_starknet_address(

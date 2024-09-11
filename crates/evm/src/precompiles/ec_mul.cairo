@@ -9,7 +9,7 @@ use utils::helpers::{load_word, ToBytes};
 
 // const BN254_ORDER: u256 = 0x30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001;
 
-const BASE_COST: u128 = 6000;
+const BASE_COST: u64 = 6000;
 const U256_BYTES_LEN: usize = 32;
 
 pub impl EcMul of Precompile {
@@ -17,7 +17,7 @@ pub impl EcMul of Precompile {
         0x7.try_into().unwrap()
     }
 
-    fn exec(mut input: Span<u8>) -> Result<(u128, Span<u8>), EVMError> {
+    fn exec(mut input: Span<u8>) -> Result<(u64, Span<u8>), EVMError> {
         let gas = BASE_COST;
 
         let x1_bytes = *(input.multi_pop_front::<32>().unwrap());

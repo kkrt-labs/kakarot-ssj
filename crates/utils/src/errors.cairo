@@ -2,11 +2,12 @@
 pub const RLP_EMPTY_INPUT: felt252 = 'KKT: EmptyInput';
 pub const RLP_INPUT_TOO_SHORT: felt252 = 'KKT: InputTooShort';
 
-#[derive(Drop, Copy, PartialEq)]
+#[derive(Drop, Copy, PartialEq, Debug)]
 pub enum RLPError {
     EmptyInput,
     InputTooShort,
-    InvalidInput
+    InvalidInput,
+    Custom: felt252
 }
 
 
@@ -15,7 +16,8 @@ pub impl RLPErrorIntoU256 of Into<RLPError, u256> {
         match self {
             RLPError::EmptyInput => 'input is null'.into(),
             RLPError::InputTooShort => 'input too short'.into(),
-            RLPError::InvalidInput => 'rlp input not conform'.into()
+            RLPError::InvalidInput => 'rlp input not conform'.into(),
+            RLPError::Custom(msg) => msg.into()
         }
     }
 }
@@ -31,7 +33,7 @@ pub impl RLPErrorImpl<T> of RLPErrorTrait<T> {
 }
 
 
-#[derive(Drop, Copy, PartialEq)]
+#[derive(Drop, Copy, PartialEq, Debug)]
 pub enum RLPHelpersError {
     NotAString,
     FailedParsingU128,
@@ -52,7 +54,7 @@ pub impl RLPHelpersErrorImpl<T> of RLPHelpersErrorTrait<T> {
 }
 
 
-#[derive(Drop, Copy, PartialEq)]
+#[derive(Drop, Copy, PartialEq, Debug)]
 pub enum EthTransactionError {
     RLPError: RLPError,
     ExpectedRLPItemToBeList,
@@ -67,5 +69,12 @@ pub enum EthTransactionError {
     TypedTxWrongPayloadLength: usize,
     IncorrectChainId,
     IncorrectAccountNonce,
+    /// If the transaction's fee is less than the base fee of the block
+    FeeCapTooLow,
+    /// Thrown to ensure no one is able to specify a transaction with a tip higher than the total
+    /// fee cap.
+    TipAboveFeeCap,
+    /// Thrown to ensure no one is able to specify a transaction with a tip that is too high.
+    TipVeryHigh,
     Other: felt252
 }

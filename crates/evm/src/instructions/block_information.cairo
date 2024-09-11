@@ -146,7 +146,7 @@ mod tests {
     use evm::model::vm::VMTrait;
     use evm::stack::StackTrait;
     use evm::state::StateTrait;
-    use evm::test_utils::{VMBuilderTrait, gas_price, setup_test_storages};
+    use evm::test_utils::{VMBuilderTrait, gas_price, setup_test_environment};
     use snforge_std::{start_cheat_block_number_global, start_cheat_block_timestamp_global};
     use utils::constants;
     use utils::traits::{EthAddressIntoU256};
@@ -261,7 +261,7 @@ mod tests {
     #[test]
     fn test_exec_selfbalance_should_push_balance() {
         // Given
-        setup_test_storages();
+        setup_test_environment();
         let mut vm = VMBuilderTrait::new_with_presets().build();
         let account = Account {
             address: vm.message().target,

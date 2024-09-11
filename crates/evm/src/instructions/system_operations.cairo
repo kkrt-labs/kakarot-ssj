@@ -25,7 +25,7 @@ pub impl SystemOperations of SystemOperationsTrait {
     /// CALL
     /// # Specification: https://www.evm.codes/#f1?fork=shanghai
     fn exec_call(ref self: VM) -> Result<(), EVMError> {
-        let gas = self.stack.pop_saturating_u128()?;
+        let gas = self.stack.pop_saturating_u64()?;
         let to = self.stack.pop_eth_address()?;
         let value = self.stack.pop()?;
         let args_offset = self.stack.pop_usize()?;
@@ -104,7 +104,7 @@ pub impl SystemOperations of SystemOperationsTrait {
     /// CALLCODE
     /// # Specification: https://www.evm.codes/#f2?fork=shanghai
     fn exec_callcode(ref self: VM) -> Result<(), EVMError> {
-        let gas = self.stack.pop_saturating_u128()?;
+        let gas = self.stack.pop_saturating_u64()?;
         let code_address = self.stack.pop_eth_address()?;
         let value = self.stack.pop()?;
         let args_offset = self.stack.pop_usize()?;
@@ -189,7 +189,7 @@ pub impl SystemOperations of SystemOperationsTrait {
     /// DELEGATECALL
     /// # Specification: https://www.evm.codes/#f4?fork=shanghai
     fn exec_delegatecall(ref self: VM) -> Result<(), EVMError> {
-        let gas = self.stack.pop_saturating_u128()?;
+        let gas = self.stack.pop_saturating_u64()?;
         let code_address = self.stack.pop_eth_address()?;
         let args_offset = self.stack.pop_usize()?;
         let args_size = self.stack.pop_usize()?;
@@ -242,7 +242,7 @@ pub impl SystemOperations of SystemOperationsTrait {
     /// STATICCALL
     /// # Specification: https://www.evm.codes/#fa?fork=shanghai
     fn exec_staticcall(ref self: VM) -> Result<(), EVMError> {
-        let gas = self.stack.pop_saturating_u128()?;
+        let gas = self.stack.pop_saturating_u64()?;
         let to = self.stack.pop_eth_address()?;
         let args_offset = self.stack.pop_usize()?;
         let args_size = self.stack.pop_usize()?;
@@ -380,7 +380,7 @@ mod tests {
     use evm::stack::StackTrait;
     use evm::state::{StateTrait};
     use evm::test_utils::{
-        VMBuilderTrait, MemoryTestUtilsTrait, native_token, evm_address, setup_test_storages,
+        VMBuilderTrait, MemoryTestUtilsTrait, native_token, evm_address, setup_test_environment,
         origin, uninitialized_account
     };
     use snforge_std::{test_address, start_mock_call};
@@ -901,7 +901,7 @@ mod tests {
     #[test]
     fn test_exec_create_no_value_transfer() {
         // Given
-        setup_test_storages();
+        setup_test_environment();
 
         let deployed_bytecode = [0xff].span();
         let eth_address: EthAddress = evm_address();
@@ -969,7 +969,7 @@ mod tests {
     #[test]
     fn test_exec_create_failure() {
         // Given
-        setup_test_storages();
+        setup_test_environment();
 
         let deployed_bytecode = [0xFF].span();
         let eth_address: EthAddress = evm_address();
@@ -1030,7 +1030,7 @@ mod tests {
     #[test]
     fn test_exec_create2() {
         // Given
-        setup_test_storages();
+        setup_test_environment();
 
         let deployed_bytecode = [0xff].span();
         let eth_address: EthAddress = evm_address();

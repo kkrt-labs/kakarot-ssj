@@ -297,7 +297,8 @@ mod tests {
     mod test_fetch {
         use evm::model::account::{Account, AccountTrait, Address};
         use evm::test_utils::{
-            register_account, setup_test_storages, uninitialized_account, evm_address, native_token,
+            register_account, setup_test_environment, uninitialized_account, evm_address,
+            native_token,
         };
         use snforge_std::{test_address, start_mock_call};
         use snforge_utils::snforge_utils::assert_called;
@@ -306,7 +307,7 @@ mod tests {
         #[test]
         fn test_should_fetch_data_from_storage_if_registered() {
             // Given
-            setup_test_storages();
+            setup_test_environment();
             let starknet_address = compute_starknet_address(
                 test_address(), evm_address(), uninitialized_account()
             );
@@ -339,7 +340,7 @@ mod tests {
         #[test]
         fn test_should_return_none_if_not_registered() {
             // Given
-            setup_test_storages();
+            setup_test_environment();
             let _starknet_address = compute_starknet_address(
                 test_address(), evm_address(), uninitialized_account()
             );
@@ -351,7 +352,8 @@ mod tests {
     mod test_fetch_or_create {
         use evm::model::account::{Account, AccountTrait, Address};
         use evm::test_utils::{
-            register_account, setup_test_storages, uninitialized_account, evm_address, native_token,
+            register_account, setup_test_environment, uninitialized_account, evm_address,
+            native_token,
         };
         use snforge_std::{test_address, start_mock_call};
         use snforge_utils::snforge_utils::assert_called;
@@ -360,7 +362,7 @@ mod tests {
         #[test]
         fn test_should_fetch_data_from_storage_if_registered() {
             // Given
-            setup_test_storages();
+            setup_test_environment();
             let starknet_address = compute_starknet_address(
                 test_address(), evm_address(), uninitialized_account()
             );
@@ -393,7 +395,7 @@ mod tests {
         #[test]
         fn test_should_create_new_account_with_starknet_balance_if_not_registered() {
             // Given
-            setup_test_storages();
+            setup_test_environment();
             let starknet_address = compute_starknet_address(
                 test_address(), evm_address(), uninitialized_account()
             );

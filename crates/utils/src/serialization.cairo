@@ -1,8 +1,8 @@
 use core::starknet::secp256_trait::{Signature};
-use utils::eth_transaction::TransactionType;
+use utils::eth_transaction::tx_type::TxType;
 use utils::traits::BoolIntoNumeric;
 
-pub fn deserialize_signature(signature: Span<felt252>, chain_id: u128) -> Option<Signature> {
+pub fn deserialize_signature(signature: Span<felt252>, chain_id: u64) -> Option<Signature> {
     let r_low: u128 = (*signature.at(0)).try_into()?;
     let r_high: u128 = (*signature.at(1)).try_into()?;
 
@@ -24,8 +24,8 @@ pub fn deserialize_signature(signature: Span<felt252>, chain_id: u128) -> Option
     )
 }
 
-fn compute_y_parity(v: u128, chain_id: u128) -> Option<bool> {
-    let y_parity = v - (chain_id * 2 + 35);
+fn compute_y_parity(v: u128, chain_id: u64) -> Option<bool> {
+    let y_parity = v - (chain_id.into() * 2 + 35);
     if (y_parity == 0 || y_parity == 1) {
         return Option::Some(y_parity == 1);
     }
@@ -34,16 +34,15 @@ fn compute_y_parity(v: u128, chain_id: u128) -> Option<bool> {
 }
 
 pub fn serialize_transaction_signature(
-    sig: Signature, tx_type: TransactionType, chain_id: u128
+    sig: Signature, tx_type: TxType, chain_id: u64
 ) -> Array<felt252> {
     let mut res: Array<felt252> = array![
         sig.r.low.into(), sig.r.high.into(), sig.s.low.into(), sig.s.high.into()
     ];
 
     let value = match tx_type {
-        TransactionType::Legacy => { sig.y_parity.into() + 2 * chain_id + 35 },
-        TransactionType::EIP2930 => { sig.y_parity.into() },
-        TransactionType::EIP1559 => { sig.y_parity.into() }
+        TxType::Legacy(_) => { sig.y_parity.into() + 2 * chain_id + 35 },
+        TxType::Eip2930(_) | TxType::Eip1559(_) => { sig.y_parity.into() }
     };
 
     res.append(value.into());
@@ -92,7 +91,7 @@ pub fn serialize_bytes(self: Span<u8>) -> Array<felt252> {
 mod tests {
     use core::starknet::secp256_trait::Signature;
     use utils::constants::CHAIN_ID;
-    use utils::eth_transaction::TransactionType;
+    use utils::eth_transaction::tx_type::TxType;
     use utils::serialization::{deserialize_signature, serialize_transaction_signature};
 
     #[test]
@@ -153,20 +152,13 @@ mod tests {
             0x0_felt252,
         ].span();
 
-        let result = serialize_transaction_signature(signature_0, TransactionType::Legacy, CHAIN_ID)
-            .span();
+        let result = serialize_transaction_signature(signature_0, TxType::Legacy, CHAIN_ID).span();
         assert_eq!(result, expected_signature_0);
 
-        let result = serialize_transaction_signature(
-            signature_1, TransactionType::EIP2930, CHAIN_ID
-        )
-            .span();
+        let result = serialize_transaction_signature(signature_1, TxType::Eip2930, CHAIN_ID).span();
         assert_eq!(result, expected_signature_1);
 
-        let result = serialize_transaction_signature(
-            signature_2, TransactionType::EIP1559, CHAIN_ID
-        )
-            .span();
+        let result = serialize_transaction_signature(signature_2, TxType::Eip1559, CHAIN_ID).span();
         assert_eq!(result, expected_signature_2);
     }
 

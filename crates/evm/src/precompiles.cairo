@@ -50,7 +50,7 @@ pub fn eth_precompile_addresses() -> Set<EthAddress> {
 
 pub trait Precompile {
     fn address() -> EthAddress;
-    fn exec(input: Span<u8>) -> Result<(u128, Span<u8>), EVMError>;
+    fn exec(input: Span<u8>) -> Result<(u64, Span<u8>), EVMError>;
 }
 
 #[generate_trait]

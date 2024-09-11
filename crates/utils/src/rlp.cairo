@@ -3,18 +3,18 @@ use core::array::SpanTrait;
 use core::option::OptionTrait;
 use core::panic_with_felt252;
 use core::starknet::EthAddress;
-use utils::errors::{RLPError, RLPHelpersError};
-use utils::eth_transaction::AccessListItem;
-use utils::helpers::{EthAddressExTrait, ArrayExtension, ToBytes, FromBytes};
+use crate::errors::{RLPError, RLPHelpersError};
+use crate::eth_transaction::eip2930::AccessListItem;
+use crate::helpers::{EthAddressExTrait, ArrayExtension, ToBytes, FromBytes};
 
 // Possible RLP types
-#[derive(Drop, PartialEq)]
+#[derive(Drop, PartialEq, Debug)]
 pub enum RLPType {
     String,
     List
 }
 
-#[derive(Drop, Copy, PartialEq)]
+#[derive(Drop, Copy, PartialEq, Debug)]
 pub enum RLPItem {
     String: Span<u8>,
     List: Span<RLPItem>
@@ -202,6 +202,20 @@ pub impl RLPImpl of RLPTrait {
 
 #[generate_trait]
 pub impl RLPHelpersImpl of RLPHelpersTrait {
+    fn parse_u64_from_string(self: RLPItem) -> Result<u64, RLPHelpersError> {
+        match self {
+            RLPItem::String(bytes) => {
+                // Empty strings means 0
+                if bytes.len() == 0 {
+                    return Result::Ok(0);
+                }
+                let value = bytes.from_be_bytes_partial().expect('parse_u64_from_string');
+                Result::Ok(value)
+            },
+            RLPItem::List(_) => { Result::Err(RLPHelpersError::NotAString) }
+        }
+    }
+
     fn parse_u128_from_string(self: RLPItem) -> Result<u128, RLPHelpersError> {
         match self {
             RLPItem::String(bytes) => {
@@ -337,8 +351,8 @@ mod tests {
     use core::option::OptionTrait;
 
     use core::result::ResultTrait;
+    use crate::eth_transaction::eip2930::AccessListItem;
     use utils::errors::RLPError;
-    use utils::eth_transaction::AccessListItem;
     use utils::rlp::{RLPType, RLPTrait, RLPItem, RLPHelpersTrait};
 
     // Tests source :

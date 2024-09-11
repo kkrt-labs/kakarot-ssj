@@ -11,7 +11,7 @@ use snforge_std::{
     stop_cheat_block_timestamp, start_cheat_chain_id_global, stop_cheat_chain_id_global,
     start_mock_call, stop_mock_call
 };
-use utils::eth_transaction::TransactionType;
+use utils::eth_transaction::tx_type::TxType;
 use utils::serialization::{serialize_bytes, serialize_transaction_signature};
 use utils::test_data::eip_2930_encoded_tx;
 
@@ -249,13 +249,26 @@ fn test_execute_from_outside_wrong_selector() {
 }
 
 #[test]
-#[should_panic(expected: 'invalid signature')]
+#[should_panic(expected: 'EOA: invalid signature')]
 fn test_execute_from_outside_invalid_signature() {
     let (kakarot_core, contract_account) = set_up();
 
+    let caller = contract_address_const::<EIP2930_CALLER>();
+
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
+        .with_caller(caller)
         .build();
     let signature: Span<felt252> = [1, 2, 3, 4, (chain_id() * 2 + 40).into()].span();
+
+    start_cheat_caller_address(contract_account.contract_address, caller);
+
+    start_mock_call::<
+        (bool, Span<u8>, u128)
+    >(
+        kakarot_core.contract_address,
+        selector!("eth_send_transaction"),
+        (true, [1, 2, 3].span(), 0)
+    );
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
@@ -263,7 +276,7 @@ fn test_execute_from_outside_invalid_signature() {
 }
 
 #[test]
-#[should_panic(expected: 'failed to validate eth tx')]
+#[should_panic(expected: 'EOA: could not decode tx')]
 fn test_execute_from_outside_invalid_tx() {
     let (kakarot_core, contract_account) = set_up();
 
@@ -281,7 +294,7 @@ fn test_execute_from_outside_invalid_tx() {
         .build();
 
     let signature = serialize_transaction_signature(
-        VALID_EIP2930_SIGNATURE, TransactionType::EIP2930, chain_id()
+        VALID_EIP2930_SIGNATURE, TxType::Eip2930, chain_id()
     )
         .span();
 
@@ -291,7 +304,7 @@ fn test_execute_from_outside_invalid_tx() {
 }
 
 #[test]
-fn test_execute_from_outside() {
+fn test_execute_from_outside_a() {
     let (kakarot_core, contract_account) = set_up();
 
     let caller = contract_address_const::<EIP2930_CALLER>();
@@ -300,7 +313,7 @@ fn test_execute_from_outside() {
         .with_caller(caller)
         .build();
     let signature = serialize_transaction_signature(
-        VALID_EIP2930_SIGNATURE, TransactionType::EIP2930, chain_id()
+        VALID_EIP2930_SIGNATURE, TxType::Eip2930, chain_id()
     )
         .span();
 

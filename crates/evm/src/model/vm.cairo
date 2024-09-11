@@ -17,12 +17,12 @@ pub struct VM {
     pub return_data: Span<u8>,
     pub env: Environment,
     pub message: Message,
-    pub gas_left: u128,
+    pub gas_left: u64,
     pub running: bool,
     pub error: bool,
     pub accessed_addresses: Set<EthAddress>,
     pub accessed_storage_keys: Set<(EthAddress, u256)>,
-    pub gas_refund: u128
+    pub gas_refund: u64
 }
 
 
@@ -50,7 +50,7 @@ pub impl VMImpl of VMTrait {
     /// Decrements the gas_left field of the current vm by the value amount.
     /// # Error : returns `EVMError::OutOfGas` if gas_left - value < 0
     #[inline(always)]
-    fn charge_gas(ref self: VM, value: u128) -> Result<(), EVMError> {
+    fn charge_gas(ref self: VM, value: u64) -> Result<(), EVMError> {
         self.gas_left = match self.gas_left.checked_sub(value) {
             Option::Some(gas_left) => gas_left,
             Option::None => { return Result::Err(EVMError::OutOfGas); },
@@ -110,12 +110,12 @@ pub impl VMImpl of VMTrait {
     }
 
     #[inline(always)]
-    fn gas_left(self: @VM) -> u128 {
+    fn gas_left(self: @VM) -> u64 {
         *self.gas_left
     }
 
     #[inline(always)]
-    fn gas_refund(self: @VM) -> u128 {
+    fn gas_refund(self: @VM) -> u64 {
         *self.gas_refund
     }
 
