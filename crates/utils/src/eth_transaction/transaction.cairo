@@ -293,8 +293,7 @@ pub impl _TransactionUnsigned of TransactionUnsignedTrait {
             }
         };
 
-        //TODO: keccak hash
-        let tx_hash = encoded_tx_data.compute_keccak256_hash();
+        let tx_hash = Self::compute_hash(encoded_tx_data);
 
         Result::Ok(
             TransactionUnsigned { transaction: Transaction::Legacy(legacy_tx), hash: tx_hash, }
@@ -354,7 +353,7 @@ pub impl _TransactionUnsigned of TransactionUnsignedTrait {
             }
         };
 
-        let tx_hash = original_data.compute_keccak256_hash();
+        let tx_hash = Self::compute_hash(original_data);
         Result::Ok(TransactionUnsigned { transaction, hash: tx_hash })
     }
 
@@ -362,6 +361,7 @@ pub impl _TransactionUnsigned of TransactionUnsignedTrait {
     ///
     /// The hash is used to recover the sender address when verifying the signature
     /// attached to the transaction
+    #[inline(always)]
     fn compute_hash(encoded_tx_data: Span<u8>) -> u256 {
         encoded_tx_data.compute_keccak256_hash()
     }

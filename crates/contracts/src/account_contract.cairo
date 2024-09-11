@@ -231,18 +231,7 @@ pub mod AccountContract {
             self.Account_nonce.write(tx_info.nonce.try_into().unwrap() + 1);
 
             let call: @Call = calls[0];
-            let _encoded_tx_data = deserialize_bytes(*call.calldata)
-                .expect('conversion failed')
-                .span();
 
-            let _chain_id: u64 = tx_info
-                .chain_id
-                .try_into()
-                .unwrap() % POW_2_32
-                .try_into()
-                .unwrap();
-
-            //TODO: add a type for unsigned transaction
             let mut encoded_tx = deserialize_bytes(*call.calldata)
                 .expect('conversion to Span<u8> failed')
                 .span();

@@ -21,14 +21,6 @@ pub struct TransactionMetadata {
     pub signature: Signature,
 }
 
-#[derive(Copy, Drop, Debug, PartialEq)]
-pub enum TransactTo {
-    /// Simple call to an address.
-    Call: EthAddress,
-    /// Contract creation.
-    Create,
-}
-
 /// Get the effective gas price of a transaction as specfified in EIP-1559 with relevant
 /// checks.
 fn get_effective_gas_price(
