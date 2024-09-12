@@ -49,30 +49,27 @@ pub mod AccountContract {
     use contracts::components::ownable::IOwnable;
     use contracts::components::ownable::ownable_component::InternalTrait;
     use contracts::components::ownable::ownable_component;
-    use contracts::errors::{KAKAROT_VALIDATION_FAILED, KAKAROT_REENTRANCY};
+    use contracts::errors::KAKAROT_REENTRANCY;
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use contracts::storage::StorageBytecode;
     use core::cmp::min;
     use core::num::traits::Bounded;
     use core::num::traits::zero::Zero;
-    use core::panic_with_felt252;
-    use core::starknet::SyscallResultTrait;
     use core::starknet::account::{Call};
     use core::starknet::eth_signature::verify_eth_signature;
     use core::starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess
     };
-    use core::starknet::syscalls::{call_contract_syscall, replace_class_syscall};
+    use core::starknet::syscalls::call_contract_syscall;
     use core::starknet::{
-        EthAddress, ClassHash, VALIDATED, get_caller_address, get_tx_info, get_block_timestamp
+        EthAddress, ClassHash, get_caller_address, get_tx_info, get_block_timestamp
     };
     use core::traits::TryInto;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-    use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait, OutsideExecution};
+    use super::OutsideExecution;
     use utils::constants::{POW_2_32};
     use utils::eth_transaction::transaction::{TransactionUnsignedTrait, Transaction};
-    use utils::eth_transaction::{TransactionMetadata};
     use utils::serialization::{deserialize_signature, deserialize_bytes, serialize_bytes};
     use utils::traits::DefaultSignature;
 

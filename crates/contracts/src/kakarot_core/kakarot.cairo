@@ -28,12 +28,9 @@ pub mod KakarotCore {
     use evm::precompiles::eth_precompile_addresses;
     use evm::state::StateTrait;
     use evm::{EVMTrait};
-    use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use utils::address::compute_contract_address;
-    use utils::constants::{POW_2_32};
     use utils::eth_transaction::common::TxKind;
     use utils::eth_transaction::eip2930::{AccessListItem, AccessListItemTrait};
-    use utils::eth_transaction::get_effective_gas_price;
     use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
     use utils::helpers::compute_starknet_address;
     use utils::set::{Set, SetTrait};

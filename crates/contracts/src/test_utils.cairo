@@ -138,10 +138,7 @@ pub fn fund_account_with_native_token(
 pub fn setup_contracts_for_testing() -> (IERC20CamelDispatcher, IExtendedKakarotCoreDispatcher) {
     let sequencer: EthAddress = sequencer_evm_address();
     let native_token = deploy_native_token();
-    let kakarot_core = deploy_kakarot_core(
-        native_token.contract_address, [sequencer].span()
-    );
-
+    let kakarot_core = deploy_kakarot_core(native_token.contract_address, [sequencer].span());
 
     let sequencer_sn_address = kakarot_core.address_registry(sequencer);
     start_cheat_sequencer_address_global(sequencer_sn_address);

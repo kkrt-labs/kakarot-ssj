@@ -35,7 +35,9 @@ const main = async () => {
   console.log("address of the wallet is", wallet.address);
 
   let tx_type = parseInt(
-    await question("enter transaction, 0: legacy, 1: 2930, 2:1559, 3: inc_counter "),
+    await question(
+      "enter transaction, 0: legacy, 1: 2930, 2:1559, 3: inc_counter ",
+    ),
   );
 
   // for type 0 and type 1
@@ -60,7 +62,10 @@ const main = async () => {
     case 3:
       tx_type = 1;
       tx = JSON.parse(
-        readFileSync("./scripts/data/input_eip_2930_counter_inc_tx.json", "utf-8"),
+        readFileSync(
+          "./scripts/data/input_eip_2930_counter_inc_tx.json",
+          "utf-8",
+        ),
       );
       break;
     default:

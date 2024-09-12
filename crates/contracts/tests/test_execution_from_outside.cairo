@@ -9,6 +9,7 @@ use contracts::test_utils::{
     setup_contracts_for_testing, deploy_eoa, deploy_contract_account,
     fund_account_with_native_token, call_transaction
 };
+use core::num::traits::Bounded;
 use core::starknet::account::Call;
 use core::starknet::secp256_trait::Signature;
 use core::starknet::{
@@ -26,9 +27,9 @@ use snforge_std::{
     stop_cheat_signature, start_cheat_chain_id, stop_cheat_chain_id, start_cheat_transaction_hash,
     stop_cheat_transaction_hash, spy_events, EventSpyTrait, EventsFilterTrait, CheatSpan,
     cheat_caller_address, stop_mock_call, stop_cheat_block_timestamp, start_cheat_block_timestamp,
-    start_cheat_chain_id_global, stop_cheat_chain_id_global, start_mock_call, start_cheat_caller_address_global, stop_cheat_caller_address_global
+    start_cheat_chain_id_global, stop_cheat_chain_id_global, start_mock_call,
+    start_cheat_caller_address_global, stop_cheat_caller_address_global
 };
-use core::num::traits::Bounded;
 
 use snforge_utils::snforge_utils::{ContractEvents, ContractEventsTrait, EventsFilterBuilderTrait};
 use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
@@ -149,8 +150,8 @@ impl OutsideExecutionBuilderImpl of OutsideExecutionBuilderTrait {
 
 fn set_up() -> (IExtendedKakarotCoreDispatcher, IAccountDispatcher, IERC20CamelDispatcher) {
     let (native_token, kakarot_core) = setup_contracts_for_testing();
-    // When we deploy the EOA, we use get_caller_address to get the address of the KakarotCore contract
-    // and set the caller address to that.
+    // When we deploy the EOA, we use get_caller_address to get the address of the KakarotCore
+    // contract and set the caller address to that.
     // Therefore, we need to stop the global caller address cheat so that the EOA is deployed
     // by the real KakarotCore contract and not the one impersonated by the cheat
     stop_cheat_caller_address_global();
@@ -334,9 +335,7 @@ fn test_execute_from_outside_should_fail_with_multi_calls() {
 #[test]
 fn test_execute_from_outside_legacy_tx() {
     let (kakarot_core, eoa, native_token) = set_up();
-    fund_account_with_native_token(
-        eoa.contract_address, native_token, Bounded::<u128>::MAX.into()
-    );
+    fund_account_with_native_token(eoa.contract_address, native_token, Bounded::<u128>::MAX.into());
 
     let caller = contract_address_const::<EIP2930_CALLER>();
 
@@ -380,9 +379,7 @@ fn test_execute_from_outside_legacy_tx() {
 #[test]
 fn test_execute_from_outside_eip2930_tx() {
     let (kakarot_core, eoa, native_token) = set_up();
-    fund_account_with_native_token(
-        eoa.contract_address, native_token, Bounded::<u128>::MAX.into()
-    );
+    fund_account_with_native_token(eoa.contract_address, native_token, Bounded::<u128>::MAX.into());
     let caller = contract_address_const::<EIP2930_CALLER>();
 
     // Defaults with an eip2930 tx
@@ -409,9 +406,7 @@ fn test_execute_from_outside_eip2930_tx() {
 #[test]
 fn test_execute_from_outside_eip1559_tx() {
     let (kakarot_core, eoa, native_token) = set_up();
-    fund_account_with_native_token(
-        eoa.contract_address, native_token, Bounded::<u128>::MAX.into()
-    );
+    fund_account_with_native_token(eoa.contract_address, native_token, Bounded::<u128>::MAX.into());
 
     let computed_starknet_address = kakarot_core.compute_starknet_address(transaction_signer());
 
@@ -452,9 +447,7 @@ fn test_execute_from_outside_eip1559_tx() {
 #[test]
 fn test_execute_from_outside_eip_2930_counter_inc_tx() {
     let (kakarot_core, eoa, native_token) = set_up();
-    fund_account_with_native_token(
-        eoa.contract_address, native_token, Bounded::<u128>::MAX.into()
-    );
+    fund_account_with_native_token(eoa.contract_address, native_token, Bounded::<u128>::MAX.into());
 
     let kakarot_address = kakarot_core.contract_address;
 
