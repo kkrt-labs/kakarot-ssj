@@ -170,8 +170,7 @@ pub mod AccountContract {
         }
 
         fn __execute__(ref self: ContractState, calls: Array<Call>) -> Array<Span<felt252>> {
-            panic!("EOA: __execute__ not supported");
-            array![]
+            panic!("EOA: __execute__ not supported")
         }
 
         fn write_bytecode(ref self: ContractState, bytecode: Span<u8>) {
