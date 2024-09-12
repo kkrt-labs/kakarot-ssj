@@ -1,29 +1,52 @@
-use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait, OutsideExecution};
-use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcher;
-use contracts::test_utils::{setup_contracts_for_testing, deploy_eoa};
-use core::starknet::ContractAddress;
-use core::starknet::account::Call;
-use core::starknet::contract_address_const;
-use core::starknet::secp256_trait::Signature;
-use evm::test_utils::{ca_address, chain_id};
-use snforge_std::{
-    start_cheat_caller_address, stop_cheat_caller_address, start_cheat_block_timestamp,
-    stop_cheat_block_timestamp, start_cheat_chain_id_global, stop_cheat_chain_id_global,
-    start_mock_call, stop_mock_call
+use contracts::account_contract::{
+    AccountContract, IAccountDispatcher, IAccountDispatcherTrait, OutsideExecution
 };
+use contracts::kakarot_core::interface::{
+    IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
+};
+use contracts::test_data::{counter_evm_bytecode, eip_2930_rlp_encoded_counter_inc_tx,};
+use contracts::test_utils::{
+    setup_contracts_for_testing, deploy_eoa, deploy_contract_account,
+    fund_account_with_native_token, call_transaction
+};
+use core::num::traits::Bounded;
+use core::starknet::account::Call;
+use core::starknet::secp256_trait::Signature;
+use core::starknet::{
+    ContractAddress, ClassHash, VALIDATED, get_contract_address, contract_address_const, EthAddress,
+    get_tx_info, Event
+};
+use evm::test_utils::{
+    kakarot_address, other_evm_address, other_starknet_address, eoa_address, tx_gas_limit,
+    gas_price, VMBuilderTrait
+};
+use evm::test_utils::{ca_address, chain_id};
+use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+use snforge_std::{
+    start_cheat_caller_address, stop_cheat_caller_address, start_cheat_signature,
+    stop_cheat_signature, start_cheat_chain_id, stop_cheat_chain_id, start_cheat_transaction_hash,
+    stop_cheat_transaction_hash, spy_events, EventSpyTrait, EventsFilterTrait, CheatSpan,
+    cheat_caller_address, stop_mock_call, stop_cheat_block_timestamp, start_cheat_block_timestamp,
+    start_cheat_chain_id_global, stop_cheat_chain_id_global, start_mock_call,
+    start_cheat_caller_address_global, stop_cheat_caller_address_global
+};
+
+use snforge_utils::snforge_utils::{ContractEvents, ContractEventsTrait, EventsFilterBuilderTrait};
+use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
 use utils::eth_transaction::tx_type::TxType;
+use utils::helpers::{U8SpanExTrait, u256_to_bytes_array};
 use utils::serialization::{serialize_bytes, serialize_transaction_signature};
-use utils::test_data::eip_2930_encoded_tx;
+use utils::test_data::{
+    legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx, legacy_rlp_encoded_deploy_tx
+};
 
-const VALID_SIGNATURE: [felt252; 5] = [1, 2, 3, 4, 0];
+fn transaction_signer() -> EthAddress {
+    0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466.try_into().unwrap()
+}
 
-const EIP2930_CALLER: felt252 = 0xaA36F24f65b5F0f2c642323f3d089A3F0f2845Bf;
-const VALID_EIP2930_SIGNATURE: Signature =
-    Signature {
-        r: 0xbced8d81c36fe13c95b883b67898b47b4b70cae79e89fa27856ddf8c533886d1,
-        s: 0x3de0109f00bc3ed95ffec98edd55b6f750cb77be8e755935dbd6cfec59da7ad0,
-        y_parity: true
-    };
+const PLACEHOLDER_SIGNATURE: [felt252; 5] = [1, 2, 3, 4, 0];
+
+const SNIP9_CALLER: felt252 = 0xaA36F24f65b5F0f2c642323f3d089A3F0f2845Bf;
 
 #[derive(Drop)]
 struct CallBuilder {
@@ -52,8 +75,8 @@ impl CallBuilderImpl of CallBuilderTrait {
         self
     }
 
-    fn with_calldata(mut self: CallBuilder, calldata: Span<felt252>) -> CallBuilder {
-        self.call.calldata = calldata;
+    fn with_calldata(mut self: CallBuilder, calldata: Span<u8>) -> CallBuilder {
+        self.call.calldata = serialize_bytes(calldata).span();
         self
     }
 
@@ -119,14 +142,22 @@ impl OutsideExecutionBuilderImpl of OutsideExecutionBuilderTrait {
     }
 }
 
-fn set_up() -> (IExtendedKakarotCoreDispatcher, IAccountDispatcher) {
-    let (_, kakarot_core) = setup_contracts_for_testing();
-    let eoa = deploy_eoa(kakarot_core, EIP2930_CALLER.try_into().unwrap());
+fn set_up() -> (IExtendedKakarotCoreDispatcher, IAccountDispatcher, IERC20CamelDispatcher) {
+    let (native_token, kakarot_core) = setup_contracts_for_testing();
+    // When we deploy the EOA, we use get_caller_address to get the address of the KakarotCore
+    // contract and set the caller address to that.
+    // Therefore, we need to stop the global caller address cheat so that the EOA is deployed
+    // by the real KakarotCore contract and not the one impersonated by the cheat
+    stop_cheat_caller_address_global();
+    let eoa = IAccountDispatcher {
+        contract_address: kakarot_core.deploy_externally_owned_account(transaction_signer())
+    };
+    start_cheat_caller_address_global(kakarot_core.contract_address);
 
     start_cheat_block_timestamp(eoa.contract_address, 999);
     start_cheat_chain_id_global(chain_id().into());
 
-    (kakarot_core, eoa)
+    (kakarot_core, eoa, native_token)
 }
 
 fn tear_down(contract_account: IAccountDispatcher) {
@@ -137,12 +168,12 @@ fn tear_down(contract_account: IAccountDispatcher) {
 #[test]
 #[should_panic(expected: 'SNIP9: Invalid caller')]
 fn test_execute_from_outside_invalid_caller() {
-    let (kakarot_core, contract_account) = set_up();
+    let (kakarot_core, contract_account, _) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_caller(contract_address_const::<0xb0b>())
         .build();
-    let signature = VALID_SIGNATURE.span();
+    let signature = PLACEHOLDER_SIGNATURE.span();
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
@@ -152,12 +183,12 @@ fn test_execute_from_outside_invalid_caller() {
 #[test]
 #[should_panic(expected: 'SNIP9: Too early call')]
 fn test_execute_from_outside_too_early_call() {
-    let (kakarot_core, contract_account) = set_up();
+    let (kakarot_core, contract_account, _) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_execute_after(999)
         .build();
-    let signature = VALID_SIGNATURE.span();
+    let signature = PLACEHOLDER_SIGNATURE.span();
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
@@ -167,12 +198,12 @@ fn test_execute_from_outside_too_early_call() {
 #[test]
 #[should_panic(expected: 'SNIP9: Too late call')]
 fn test_execute_from_outside_too_late_call() {
-    let (kakarot_core, contract_account) = set_up();
+    let (kakarot_core, contract_account, _) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_execute_before(999)
         .build();
-    let signature = VALID_SIGNATURE.span();
+    let signature = PLACEHOLDER_SIGNATURE.span();
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
@@ -180,9 +211,9 @@ fn test_execute_from_outside_too_late_call() {
 }
 
 #[test]
-#[should_panic(expected: 'Invalid signature length')]
-fn test_execute_from_outside_invalid_signature_length() {
-    let (kakarot_core, contract_account) = set_up();
+#[should_panic(expected: 'EOA: Invalid signature length')]
+fn test_execute_from_outside_inPLACEHOLDER_SIGNATURE_length() {
+    let (kakarot_core, contract_account, _) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .build();
@@ -193,9 +224,9 @@ fn test_execute_from_outside_invalid_signature_length() {
 }
 
 #[test]
-#[should_panic(expected: 'Multicall not supported')]
+#[should_panic(expected: 'KKRT: Multicall not supported')]
 fn test_execute_from_outside_multicall_not_supported() {
-    let (kakarot_core, contract_account) = set_up();
+    let (kakarot_core, contract_account, _) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_calls(
@@ -205,43 +236,7 @@ fn test_execute_from_outside_multicall_not_supported() {
             ].span()
         )
         .build();
-    let signature = VALID_SIGNATURE.span();
-
-    let _ = contract_account.execute_from_outside(outside_execution, signature);
-
-    tear_down(contract_account);
-}
-
-#[test]
-#[should_panic(expected: 'to is not kakarot core')]
-fn test_execute_from_outside_to_is_not_kakarot_core() {
-    let (kakarot_core, contract_account) = set_up();
-
-    let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
-        .with_calls([CallBuilderTrait::new(contract_address_const::<0xb0b>()).build()].span())
-        .build();
-    let signature = VALID_SIGNATURE.span();
-
-    let _ = contract_account.execute_from_outside(outside_execution, signature);
-
-    tear_down(contract_account);
-}
-
-#[test]
-#[should_panic(expected: "selector must be eth_send_transaction")]
-fn test_execute_from_outside_wrong_selector() {
-    let (kakarot_core, contract_account) = set_up();
-
-    let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
-        .with_calls(
-            [
-                CallBuilderTrait::new(kakarot_core.contract_address)
-                    .with_selector('bad_selector')
-                    .build()
-            ].span()
-        )
-        .build();
-    let signature = VALID_SIGNATURE.span();
+    let signature = PLACEHOLDER_SIGNATURE.span();
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
@@ -250,10 +245,10 @@ fn test_execute_from_outside_wrong_selector() {
 
 #[test]
 #[should_panic(expected: 'EOA: invalid signature')]
-fn test_execute_from_outside_invalid_signature() {
-    let (kakarot_core, contract_account) = set_up();
+fn test_execute_from_outside_inPLACEHOLDER_SIGNATURE() {
+    let (kakarot_core, contract_account, _) = set_up();
 
-    let caller = contract_address_const::<EIP2930_CALLER>();
+    let caller = contract_address_const::<SNIP9_CALLER>();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_caller(caller)
@@ -261,15 +256,6 @@ fn test_execute_from_outside_invalid_signature() {
     let signature: Span<felt252> = [1, 2, 3, 4, (chain_id() * 2 + 40).into()].span();
 
     start_cheat_caller_address(contract_account.contract_address, caller);
-
-    start_mock_call::<
-        (bool, Span<u8>, u128)
-    >(
-        kakarot_core.contract_address,
-        selector!("eth_send_transaction"),
-        (true, [1, 2, 3].span(), 0)
-    );
-
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
     tear_down(contract_account);
@@ -278,25 +264,27 @@ fn test_execute_from_outside_invalid_signature() {
 #[test]
 #[should_panic(expected: 'EOA: could not decode tx')]
 fn test_execute_from_outside_invalid_tx() {
-    let (kakarot_core, contract_account) = set_up();
+    let (kakarot_core, contract_account, _) = set_up();
 
     let mut faulty_eip_2930_tx = eip_2930_encoded_tx();
+    let signature = Signature {
+        r: 0x5c4ae1ed01c8df4277f02aa3443f8183ed44627217fd7f27badaed8795906e78,
+        s: 0x4d2af576441428d47c174ffddc6e70b980527a57795b3c87a71878f97ecef274,
+        y_parity: true
+    };
     let _ = faulty_eip_2930_tx.pop_front();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_calls(
             [
                 CallBuilderTrait::new(kakarot_core.contract_address)
-                    .with_calldata(serialize_bytes(faulty_eip_2930_tx).span())
+                    .with_calldata(faulty_eip_2930_tx)
                     .build()
             ].span()
         )
         .build();
 
-    let signature = serialize_transaction_signature(
-        VALID_EIP2930_SIGNATURE, TxType::Eip2930, chain_id()
-    )
-        .span();
+    let signature = serialize_transaction_signature(signature, TxType::Eip2930, chain_id()).span();
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
@@ -304,35 +292,264 @@ fn test_execute_from_outside_invalid_tx() {
 }
 
 #[test]
-fn test_execute_from_outside_a() {
-    let (kakarot_core, contract_account) = set_up();
+#[should_panic(expected: 'KKRT: Multicall not supported')]
+fn test_execute_from_outside_should_fail_with_zero_calls() {
+    let (kakarot_core, contract_account, _) = set_up();
 
-    let caller = contract_address_const::<EIP2930_CALLER>();
+    let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
+        .with_calls([].span())
+        .build();
+    let signature = PLACEHOLDER_SIGNATURE.span();
+
+    let _ = contract_account.execute_from_outside(outside_execution, signature);
+
+    tear_down(contract_account);
+}
+
+#[test]
+#[should_panic(expected: 'EOA: cannot have code')]
+fn test_execute_from_outside_should_fail_account_with_code() {
+    let (kakarot_core, _, _) = set_up();
+
+    let contract_address = deploy_contract_account(
+        kakarot_core, other_evm_address(), counter_evm_bytecode()
+    )
+        .starknet;
+    let contract_account = IAccountDispatcher { contract_address };
+
+    let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
+        .build();
+    let signature = PLACEHOLDER_SIGNATURE.span();
+
+    start_cheat_block_timestamp(contract_account.contract_address, 999);
+    let _ = contract_account.execute_from_outside(outside_execution, signature);
+
+    tear_down(contract_account);
+}
+
+
+#[test]
+#[should_panic(expected: 'KKRT: Multicall not supported')]
+fn test_execute_from_outside_should_fail_with_multi_calls() {
+    let (kakarot_core, eoa, _) = set_up();
+
+    let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
+        .with_calls(
+            [
+                CallBuilderTrait::new(kakarot_core.contract_address)
+                    .with_calldata(legacy_rlp_encoded_tx())
+                    .build()
+            ; 2].span()
+        )
+        .build();
+    let signature = PLACEHOLDER_SIGNATURE.span();
+
+    let _ = eoa.execute_from_outside(outside_execution, signature);
+
+    tear_down(eoa);
+}
+
+
+#[test]
+fn test_execute_from_outside_legacy_tx() {
+    let (kakarot_core, eoa, native_token) = set_up();
+    fund_account_with_native_token(eoa.contract_address, native_token, Bounded::<u128>::MAX.into());
+
+    let caller = contract_address_const::<SNIP9_CALLER>();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_caller(caller)
+        .with_calls(
+            [
+                CallBuilderTrait::new(kakarot_core.contract_address)
+                    .with_calldata(legacy_rlp_encoded_tx())
+                    .build()
+            ].span()
+        )
         .build();
+
+    // to reproduce locally:
+    // run: cp .env.example .env
+    // bun install & bun run scripts/compute_rlp_encoding.ts
+
     let signature = serialize_transaction_signature(
-        VALID_EIP2930_SIGNATURE, TxType::Eip2930, chain_id()
+        Signature {
+            r: 0xf2805d01dd4fa240c79039c85a77554fc186cc73c2025d7f8c02bc8fe1a982b5,
+            s: 0x27ff351275563c1a29ab9eaeec4a3b63fbc4035d6da6b8b6af52c7993b5869ec,
+            y_parity: true
+        },
+        TxType::Legacy,
+        chain_id()
     )
         .span();
 
-    start_cheat_caller_address(contract_account.contract_address, caller);
+    cheat_caller_address(eoa.contract_address, caller, CheatSpan::TargetCalls(1));
+    stop_cheat_caller_address(kakarot_core.contract_address);
+    let data = eoa.execute_from_outside(outside_execution, signature);
 
-    start_mock_call::<
-        (bool, Span<u8>, u128)
-    >(
-        kakarot_core.contract_address,
-        selector!("eth_send_transaction"),
-        (true, [1, 2, 3].span(), 0)
+    assert_eq!(data.len(), 1);
+    assert_eq!(*data[0], [].span());
+
+    stop_cheat_caller_address(eoa.contract_address);
+    tear_down(eoa);
+}
+
+#[test]
+fn test_execute_from_outside_eip2930_tx() {
+    let (kakarot_core, eoa, native_token) = set_up();
+    fund_account_with_native_token(eoa.contract_address, native_token, Bounded::<u128>::MAX.into());
+    let caller = contract_address_const::<SNIP9_CALLER>();
+
+    // Signature for the default eip2930 tx
+    let signature = Signature {
+        r: 0x5c4ae1ed01c8df4277f02aa3443f8183ed44627217fd7f27badaed8795906e78,
+        s: 0x4d2af576441428d47c174ffddc6e70b980527a57795b3c87a71878f97ecef274,
+        y_parity: true
+    };
+
+    // Defaults with an eip2930 tx
+    let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
+        .with_caller(caller)
+        .build();
+    let signature = serialize_transaction_signature(signature, TxType::Eip2930, chain_id()).span();
+
+    cheat_caller_address(eoa.contract_address, caller, CheatSpan::TargetCalls(1));
+    stop_cheat_caller_address(kakarot_core.contract_address);
+    let data = eoa.execute_from_outside(outside_execution, signature);
+
+    assert_eq!(data.len(), 1);
+    assert_eq!(*data[0], [].span());
+
+    stop_cheat_caller_address(eoa.contract_address);
+    tear_down(eoa);
+}
+
+
+#[test]
+fn test_execute_from_outside_eip1559_tx() {
+    let (kakarot_core, eoa, native_token) = set_up();
+    fund_account_with_native_token(eoa.contract_address, native_token, Bounded::<u128>::MAX.into());
+
+    let caller = contract_address_const::<SNIP9_CALLER>();
+
+    let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
+        .with_caller(caller)
+        .with_calls(
+            [
+                CallBuilderTrait::new(kakarot_core.contract_address)
+                    .with_calldata(eip_1559_encoded_tx())
+                    .build()
+            ].span()
+        )
+        .build();
+
+    // to reproduce locally:
+    // run: cp .env.example .env
+    // bun install & bun run scripts/compute_rlp_encoding.ts
+    let signature = Signature {
+        r: 0xb2563dbafa29dd6f126f0e6581b772d3f07063e2f07fb7bdf73aad34a04c4283,
+        s: 0x73df539e40359b81b8f260ed04431de098fc149bc5e27120e6711acabaecd067,
+        y_parity: true
+    };
+    let signature = serialize_transaction_signature(signature, TxType::Eip1559, chain_id()).span();
+
+    // Stop all cheats and only mock the EFO caller.
+    stop_cheat_caller_address_global();
+    cheat_caller_address(eoa.contract_address, caller, CheatSpan::TargetCalls(1));
+    let data = eoa.execute_from_outside(outside_execution, signature);
+
+    assert_eq!(data.len(), 1);
+    assert_eq!(*data[0], [].span());
+
+    tear_down(eoa);
+}
+
+#[test]
+fn test_execute_from_outside_eip_2930_counter_inc_tx() {
+    let (kakarot_core, eoa, native_token) = set_up();
+    fund_account_with_native_token(eoa.contract_address, native_token, Bounded::<u128>::MAX.into());
+
+    let kakarot_address = kakarot_core.contract_address;
+
+    deploy_contract_account(kakarot_core, other_evm_address(), counter_evm_bytecode());
+
+    start_cheat_caller_address(kakarot_address, eoa.contract_address);
+
+    // Then
+    // selector: function get()
+    let data_get_tx = [0x6d, 0x4c, 0xe6, 0x3c].span();
+
+    // check counter value is 0 before doing inc
+    let tx = call_transaction(chain_id(), Option::Some(other_evm_address()), data_get_tx);
+
+    let (_, return_data, _) = kakarot_core
+        .eth_call(origin: transaction_signer(), tx: Transaction::Legacy(tx),);
+
+    assert_eq!(return_data, u256_to_bytes_array(0).span());
+
+    // perform inc on the counter
+    let call = Call {
+        to: kakarot_address,
+        selector: selector!("eth_send_transaction"),
+        calldata: serialize_bytes(eip_2930_rlp_encoded_counter_inc_tx()).span()
+    };
+
+    start_cheat_transaction_hash(eoa.contract_address, selector!("transaction_hash"));
+    start_cheat_block_timestamp(eoa.contract_address, 100);
+    cheat_caller_address(
+        eoa.contract_address, contract_address_const::<0>(), CheatSpan::TargetCalls(1)
     );
+    let mut spy = spy_events();
+    let outside_execution = OutsideExecution {
+        caller: contract_address_const::<'ANY_CALLER'>(),
+        nonce: 0,
+        execute_after: 0,
+        execute_before: 10000000,
+        calls: array![call].span()
+    };
+    let signature = Signature {
+        r: 0x8cd55583b5da62b3fd23586bf4f1ffd496046b9d248a7983ec41bd6fb673f379,
+        s: 0x09432a74ec3720a226ac040ce828f92e22350c4d8f7b188693cad035e99372ed,
+        y_parity: true
+    };
+    let signature = serialize_transaction_signature(signature, TxType::Eip2930, chain_id()).span();
+    stop_cheat_caller_address(kakarot_core.contract_address);
+    let result = eoa.execute_from_outside(outside_execution, signature);
+    assert_eq!(result.len(), 1);
 
-    let data = contract_account.execute_from_outside(outside_execution, signature);
+    let expected_event = AccountContract::Event::transaction_executed(
+        AccountContract::TransactionExecuted {
+            response: *result.span()[0], success: true, gas_used: 0
+        }
+    );
+    let mut keys = array![];
+    let mut data = array![];
+    expected_event.append_keys_and_data(ref keys, ref data);
+    let mut contract_events = EventsFilterBuilderTrait::from_events(@spy.get_events())
+        .with_contract_address(eoa.contract_address)
+        .with_keys(keys.span())
+        .build();
 
-    assert(data.len() == 1, 'bad length');
-    assert(*data.at(0) == [1, 2, 3].span(), 'bad data');
-
-    stop_mock_call(kakarot_core.contract_address, selector!("eth_send_transaction"));
-    stop_cheat_caller_address(contract_account.contract_address);
-    tear_down(contract_account);
+    let mut received_keys = contract_events.events[0].keys.span();
+    let mut received_data = contract_events.events[0].data.span();
+    let deserialized_received: AccountContract::Event = Event::deserialize(
+        ref received_keys, ref received_data
+    )
+        .unwrap();
+    if let AccountContract::Event::transaction_executed(transaction_executed) =
+        deserialized_received {
+        let expected_response = *result.span()[0];
+        let expected_success = true;
+        let not_expected_gas_used = 0;
+        assert_eq!(transaction_executed.response, expected_response);
+        assert_eq!(transaction_executed.success, expected_success);
+        assert_ne!(transaction_executed.gas_used, not_expected_gas_used);
+    } else {
+        panic!("Expected transaction_executed event");
+    }
+    // check counter value has increased
+    let tx = call_transaction(chain_id(), Option::Some(other_evm_address()), data_get_tx);
+    let (_, return_data, _) = kakarot_core
+        .eth_call(origin: transaction_signer(), tx: Transaction::Legacy(tx),);
+    assert_eq!(return_data, u256_to_bytes_array(1).span());
 }

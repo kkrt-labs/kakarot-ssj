@@ -200,8 +200,10 @@ pub fn tx_gas_limit() -> u64 {
     constants::BLOCK_GAS_LIMIT
 }
 
+pub const BASE_FEE: u128 = 1000;
+
 pub fn gas_price() -> u128 {
-    32
+    BASE_FEE + 1
 }
 
 pub fn value() -> u256 {

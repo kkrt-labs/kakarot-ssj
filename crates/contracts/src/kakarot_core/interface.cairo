@@ -55,6 +55,8 @@ pub trait IKakarotCore<TContractState> {
 
     // Getter for the Base Fee
     fn get_base_fee(self: @TContractState) -> u64;
+    /// Setter for the base fee
+    fn set_base_fee(ref self: TContractState, base_fee: u64);
 
     // Getter for the Starknet Address
     fn get_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
@@ -113,6 +115,8 @@ pub trait IExtendedKakarotCore<TContractState> {
     fn get_block_gas_limit(self: @TContractState) -> u64;
     // Getter for the Base Fee
     fn get_base_fee(self: @TContractState) -> u64;
+    /// Setter for the base fee
+    fn set_base_fee(ref self: TContractState, base_fee: u64);
 
     // Getter for the Starknet Address
     fn get_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
