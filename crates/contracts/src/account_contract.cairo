@@ -154,6 +154,7 @@ pub mod AccountContract {
         }
 
         fn set_code_hash(ref self: ContractState, code_hash: u256) {
+            self.ownable.assert_only_owner();
             self.Account_code_hash.write(code_hash);
         }
 

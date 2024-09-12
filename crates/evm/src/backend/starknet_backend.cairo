@@ -195,8 +195,8 @@ fn commit_account(self: @Account, ref state: State) {
     //committed.
     if self.is_created() {
         starknet_account.write_bytecode(self.bytecode());
+        starknet_account.set_code_hash(self.code_hash());
         //TODO: save valid jumpdests https://github.com/kkrt-labs/kakarot-ssj/issues/839
-    //TODO: set code hash https://github.com/kkrt-labs/kakarot-ssj/issues/840
     }
     return;
 }
@@ -255,6 +255,7 @@ mod tests {
     };
     use snforge_std::{test_address, start_mock_call, get_class_hash};
     use snforge_utils::snforge_utils::{assert_not_called, assert_called};
+    use utils::helpers::U8SpanExTrait;
     use utils::helpers::compute_starknet_address;
 
     #[test]
@@ -293,10 +294,16 @@ mod tests {
         let mut state: State = Default::default();
 
         // When
+        let bytecode = [0x1].span();
+        let code_hash = bytecode.compute_keccak256_hash();
         let mut account = Account {
-            address: Address { evm: evm_address, starknet: starknet_address }, nonce: 420, code: [
-                0x1
-            ].span(), balance: 0, selfdestruct: false, is_created: true,
+            address: Address { evm: evm_address, starknet: starknet_address },
+            nonce: 420,
+            code: bytecode,
+            code_hash: code_hash,
+            balance: 0,
+            selfdestruct: false,
+            is_created: true,
         };
         state.set_account(account);
 
@@ -324,14 +331,21 @@ mod tests {
         register_account(evm_address, starknet_address);
 
         let mut state: State = Default::default();
+        let bytecode = [0x1].span();
+        let code_hash = bytecode.compute_keccak256_hash();
         let mut account = Account {
-            address: Address { evm: evm_address, starknet: starknet_address }, nonce: 420, code: [
-                0x1
-            ].span(), balance: 0, selfdestruct: false, is_created: true,
+            address: Address { evm: evm_address, starknet: starknet_address },
+            nonce: 420,
+            code: bytecode,
+            code_hash: code_hash,
+            balance: 0,
+            selfdestruct: false,
+            is_created: true,
         };
         state.set_account(account);
 
         start_mock_call::<()>(starknet_address, selector!("write_bytecode"), ());
+        start_mock_call::<()>(starknet_address, selector!("set_code_hash"), ());
         start_mock_call::<()>(starknet_address, selector!("set_nonce"), ());
         starknet_backend::commit(ref state).expect('commitment failed');
 
@@ -339,6 +353,7 @@ mod tests {
         //TODO(starknet-foundry): we should be able to assert this has been called with specific
         //data, to pass in mock_call
         assert_called(starknet_address, selector!("write_bytecode"));
+        assert_called(starknet_address, selector!("set_code_hash"));
         assert_called(starknet_address, selector!("set_nonce"));
     }
 

@@ -5,6 +5,8 @@ use core::num::traits::Zero;
 use core::starknet::{ContractAddress, EthAddress};
 use evm::backend::starknet_backend::fetch_balance;
 use evm::model::Address;
+use utils::constants::EMPTY_KECCAK;
+use utils::helpers::U8SpanExTrait;
 
 #[derive(Drop)]
 struct AccountBuilder {
@@ -18,6 +20,7 @@ impl AccountBuilderImpl of AccountBuilderTrait {
             account: Account {
                 address: address,
                 code: [].span(),
+                code_hash: EMPTY_KECCAK,
                 nonce: 0,
                 balance: 0,
                 selfdestruct: false,
@@ -45,10 +48,18 @@ impl AccountBuilderImpl of AccountBuilderTrait {
     /// * `self` - The address of the Contract Account to load the bytecode from
     /// # Returns
     /// * The bytecode of the Contract Account as a ByteArray
+    #[inline(always)]
     fn fetch_bytecode(mut self: AccountBuilder) -> AccountBuilder {
         let account = IAccountDispatcher { contract_address: self.account.address.starknet };
         let bytecode = account.bytecode();
         self.account.code = bytecode;
+        self
+    }
+
+    #[inline(always)]
+    fn fetch_code_hash(mut self: AccountBuilder) -> AccountBuilder {
+        let account = IAccountDispatcher { contract_address: self.account.address.starknet };
+        self.account.code_hash = account.get_code_hash();
         self
     }
 
@@ -62,6 +73,7 @@ impl AccountBuilderImpl of AccountBuilderTrait {
 pub struct Account {
     pub address: Address,
     pub code: Span<u8>,
+    pub code_hash: u256,
     pub nonce: u64,
     pub balance: u256,
     pub selfdestruct: bool,
@@ -110,7 +122,12 @@ pub impl AccountImpl of AccountTrait {
         }
         let address = Address { starknet: starknet_address, evm: evm_address };
         Option::Some(
-            AccountBuilderTrait::new(address).fetch_nonce().fetch_bytecode().fetch_balance().build()
+            AccountBuilderTrait::new(address)
+                .fetch_nonce()
+                .fetch_bytecode()
+                .fetch_balance()
+                .fetch_code_hash()
+                .build()
         )
     }
 
@@ -166,6 +183,11 @@ pub impl AccountImpl of AccountTrait {
         *self.code
     }
 
+    #[inline(always)]
+    fn code_hash(self: @Account) -> u256 {
+        *self.code_hash
+    }
+
 
     /// Sets the nonce of the Account
     /// # Arguments
@@ -182,12 +204,19 @@ pub impl AccountImpl of AccountTrait {
     }
 
     /// Sets the code of the Account
+    /// Also sets the code hash to be synced with the code
     /// # Arguments
     /// * `self` The Account to set the code on
     /// * `code` The new code
     #[inline(always)]
     fn set_code(ref self: Account, code: Span<u8>) {
         self.code = code;
+        if code.is_empty() {
+            self.code_hash = EMPTY_KECCAK;
+            return;
+        }
+        let hash = code.compute_keccak256_hash();
+        self.code_hash = hash;
     }
 
     /// Registers an account for SELFDESTRUCT
@@ -251,6 +280,8 @@ pub(crate) impl AccountInternals of AccountInternalTrait {
 mod tests {
     mod test_has_code_or_nonce {
         use evm::model::account::{Account, AccountTrait, Address};
+        use utils::constants::EMPTY_KECCAK;
+        use utils::helpers::U8SpanExTrait;
 
         #[test]
         fn test_should_return_false_when_empty() {
@@ -258,6 +289,7 @@ mod tests {
                 address: Address { evm: 1.try_into().unwrap(), starknet: 1.try_into().unwrap() },
                 nonce: 0,
                 code: [].span(),
+                code_hash: EMPTY_KECCAK,
                 balance: 0,
                 selfdestruct: false,
                 is_created: false,
@@ -268,12 +300,16 @@ mod tests {
 
         #[test]
         fn test_should_return_true_when_code() {
+            let bytecode = [0x5b].span();
+            let code_hash = bytecode.compute_keccak256_hash();
             let account = Account {
                 address: Address { evm: 1.try_into().unwrap(), starknet: 1.try_into().unwrap() },
                 nonce: 1,
-                code: [
-                    0x5b
-                ].span(), balance: 0, selfdestruct: false, is_created: false,
+                code: bytecode,
+                code_hash: code_hash,
+                balance: 0,
+                selfdestruct: false,
+                is_created: false,
             };
 
             assert!(account.has_code_or_nonce());
@@ -285,6 +321,7 @@ mod tests {
                 address: Address { evm: 1.try_into().unwrap(), starknet: 1.try_into().unwrap() },
                 nonce: 1,
                 code: [].span(),
+                code_hash: EMPTY_KECCAK,
                 balance: 0,
                 selfdestruct: false,
                 is_created: false,
@@ -302,6 +339,7 @@ mod tests {
         };
         use snforge_std::{test_address, start_mock_call};
         use snforge_utils::snforge_utils::assert_called;
+        use utils::constants::EMPTY_KECCAK;
         use utils::helpers::compute_starknet_address;
 
         #[test]
@@ -317,6 +355,7 @@ mod tests {
                 address: Address { evm: evm_address(), starknet: starknet_address },
                 nonce: 1,
                 code: [].span(),
+                code_hash: EMPTY_KECCAK,
                 balance: 100,
                 selfdestruct: false,
                 is_created: false,
@@ -326,12 +365,14 @@ mod tests {
             start_mock_call::<u256>(native_token(), selector!("balanceOf"), 100);
             start_mock_call::<u64>(starknet_address, selector!("get_nonce"), 1);
             start_mock_call::<Span<u8>>(starknet_address, selector!("bytecode"), [].span());
+            start_mock_call::<u256>(starknet_address, selector!("get_code_hash"), EMPTY_KECCAK);
             let account = AccountTrait::fetch(evm_address()).expect('Account should exist');
 
             // Then
             assert_eq!(account, expected);
             assert_called(starknet_address, selector!("get_nonce"));
             assert_called(starknet_address, selector!("bytecode"));
+            assert_called(starknet_address, selector!("get_code_hash"));
             //TODO(starknet-foundry): we mocked the balanceOf call, but we should also check if it
             //was called with the right data
             assert_called(native_token(), selector!("balanceOf"));
@@ -357,6 +398,7 @@ mod tests {
         };
         use snforge_std::{test_address, start_mock_call};
         use snforge_utils::snforge_utils::assert_called;
+        use utils::constants::EMPTY_KECCAK;
         use utils::helpers::compute_starknet_address;
 
         #[test]
@@ -372,6 +414,7 @@ mod tests {
                 address: Address { evm: evm_address(), starknet: starknet_address },
                 nonce: 1,
                 code: [].span(),
+                code_hash: EMPTY_KECCAK,
                 balance: 100,
                 selfdestruct: false,
                 is_created: false,
@@ -381,12 +424,14 @@ mod tests {
             start_mock_call::<u256>(native_token(), selector!("balanceOf"), 100);
             start_mock_call::<u64>(starknet_address, selector!("get_nonce"), 1);
             start_mock_call::<Span<u8>>(starknet_address, selector!("bytecode"), [].span());
+            start_mock_call::<u256>(starknet_address, selector!("get_code_hash"), EMPTY_KECCAK);
             let account = AccountTrait::fetch_or_create(evm_address());
 
             // Then
             assert_eq!(account, expected);
             assert_called(starknet_address, selector!("get_nonce"));
             assert_called(starknet_address, selector!("bytecode"));
+            assert_called(starknet_address, selector!("get_code_hash"));
             //TODO(starknet-foundry): we mocked the balanceOf call, but we should also check if it
             //was called with the right data
             assert_called(native_token(), selector!("balanceOf"));
@@ -404,6 +449,7 @@ mod tests {
                 address: Address { evm: evm_address(), starknet: starknet_address },
                 nonce: 0,
                 code: [].span(),
+                code_hash: EMPTY_KECCAK,
                 balance: 50,
                 selfdestruct: false,
                 is_created: false,

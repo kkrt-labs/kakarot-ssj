@@ -312,6 +312,8 @@ mod tests {
         use evm::state::{State, StateTrait};
         use evm::test_utils;
         use snforge_std::{test_address, start_mock_call};
+        use utils::constants::EMPTY_KECCAK;
+        use utils::helpers::U8SpanExTrait;
         use utils::helpers::compute_starknet_address;
         use utils::set::SetTrait;
 
@@ -329,6 +331,7 @@ mod tests {
             let expected_account = Account {
                 address: Address { evm: evm_address, starknet: starknet_address },
                 code: [].span(),
+                code_hash: EMPTY_KECCAK,
                 nonce: 0,
                 balance: 0,
                 selfdestruct: false,
@@ -352,10 +355,17 @@ mod tests {
             let starknet_address = compute_starknet_address(
                 deployer.into(), evm_address, test_utils::uninitialized_account()
             );
+
+            let bytecode = [0xab, 0xcd, 0xef].span();
+            let code_hash = bytecode.compute_keccak256_hash();
             let expected_account = Account {
-                address: Address { evm: evm_address, starknet: starknet_address }, code: [
-                    0xab, 0xcd, 0xef
-                ].span(), nonce: 1, balance: 420, selfdestruct: false, is_created: false,
+                address: Address { evm: evm_address, starknet: starknet_address },
+                code: bytecode,
+                code_hash: code_hash,
+                nonce: 1,
+                balance: 420,
+                selfdestruct: false,
+                is_created: false,
             };
 
             state.set_account(expected_account);
@@ -376,16 +386,23 @@ mod tests {
                 deployer, evm_address, test_utils::uninitialized_account()
             );
             test_utils::register_account(evm_address, starknet_address);
+            let bytecode = [0xab, 0xcd, 0xef].span();
+            let code_hash = bytecode.compute_keccak256_hash();
             let expected_account = Account {
-                address: Address { evm: evm_address, starknet: starknet_address }, code: [
-                    0xab, 0xcd, 0xef
-                ].span(), nonce: 1, balance: 420, selfdestruct: false, is_created: false,
+                address: Address { evm: evm_address, starknet: starknet_address },
+                code: bytecode,
+                code_hash: code_hash,
+                nonce: 1,
+                balance: 420,
+                selfdestruct: false,
+                is_created: false,
             };
 
             start_mock_call::<u256>(test_utils::native_token(), selector!("balanceOf"), 420);
             start_mock_call::<
                 Span<u8>
             >(starknet_address, selector!("bytecode"), [0xab, 0xcd, 0xef].span());
+            start_mock_call::<u256>(starknet_address, selector!("get_code_hash"), code_hash);
             start_mock_call::<u256>(starknet_address, selector!("get_nonce"), 1);
             let account = state.get_account(evm_address);
 
@@ -418,11 +435,13 @@ mod tests {
             let key = 10;
             let value = 100;
 
+            let bytecode = [0xab, 0xcd, 0xef].span();
+            let code_hash = bytecode.compute_keccak256_hash();
+
             start_mock_call::<u256>(starknet_address, selector!("storage"), value);
             start_mock_call::<u256>(test_utils::native_token(), selector!("balanceOf"), 10000);
-            start_mock_call::<
-                Span<u8>
-            >(starknet_address, selector!("bytecode"), [0xab, 0xcd, 0xef].span());
+            start_mock_call::<Span<u8>>(starknet_address, selector!("bytecode"), bytecode);
+            start_mock_call::<u256>(starknet_address, selector!("get_code_hash"), code_hash);
             start_mock_call::<u256>(starknet_address, selector!("get_nonce"), 1);
             let read_value = state.read_state(test_utils::evm_address(), key);
 
@@ -471,6 +490,7 @@ mod tests {
                 address: sender_address,
                 balance: 300,
                 code: [].span(),
+                code_hash: EMPTY_KECCAK,
                 nonce: 0,
                 selfdestruct: false,
                 is_created: false,
@@ -480,6 +500,7 @@ mod tests {
                 address: recipient_address,
                 balance: 0,
                 code: [].span(),
+                code_hash: EMPTY_KECCAK,
                 nonce: 0,
                 selfdestruct: false,
                 is_created: false,
@@ -522,6 +543,7 @@ mod tests {
                 address: sender_address,
                 balance: 300,
                 code: [].span(),
+                code_hash: EMPTY_KECCAK,
                 nonce: 0,
                 selfdestruct: false,
                 is_created: false,
@@ -567,6 +589,7 @@ mod tests {
                 address: sender_address,
                 balance: 300,
                 code: [].span(),
+                code_hash: EMPTY_KECCAK,
                 nonce: 0,
                 selfdestruct: false,
                 is_created: false,
@@ -576,6 +599,7 @@ mod tests {
                 address: recipient_address,
                 balance: 0,
                 code: [].span(),
+                code_hash: EMPTY_KECCAK,
                 nonce: 0,
                 selfdestruct: false,
                 is_created: false,
@@ -606,7 +630,13 @@ mod tests {
             let balance = 100;
 
             let mut account = Account {
-                address, balance, code: [].span(), nonce: 0, selfdestruct: false, is_created: false,
+                address,
+                balance,
+                code: [].span(),
+                code_hash: EMPTY_KECCAK,
+                nonce: 0,
+                selfdestruct: false,
+                is_created: false,
             };
             state.set_account(account);
             let read_balance = state.get_account(address.evm).balance();
@@ -626,10 +656,11 @@ mod tests {
 
             // Transfer native tokens to sender
             let mut state: State = Default::default();
+            let bytecode = [0xab, 0xcd, 0xef].span();
+            let code_hash = bytecode.compute_keccak256_hash();
             start_mock_call::<u256>(test_utils::native_token(), selector!("balanceOf"), 10000);
-            start_mock_call::<
-                Span<u8>
-            >(starknet_address, selector!("bytecode"), [0xab, 0xcd, 0xef].span());
+            start_mock_call::<Span<u8>>(starknet_address, selector!("bytecode"), bytecode);
+            start_mock_call::<u256>(starknet_address, selector!("get_code_hash"), code_hash);
             start_mock_call::<u256>(starknet_address, selector!("get_nonce"), 1);
             let read_balance = state.get_account(evm_address).balance();
 

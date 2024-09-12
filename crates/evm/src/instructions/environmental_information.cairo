@@ -8,8 +8,7 @@ use evm::model::vm::{VM, VMTrait};
 use evm::model::{AddressTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
-use utils::constants::EMPTY_KECCAK;
-use utils::helpers::{ceil32, load_word, U8SpanExTrait};
+use utils::helpers::{ceil32, load_word};
 use utils::set::SetTrait;
 use utils::traits::{EthAddressIntoU256};
 
@@ -280,15 +279,7 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
             || (!account.has_code_or_nonce() && account.balance.is_zero()) {
             return self.stack.push(0);
         }
-        let bytecode = account.code;
-
-        if bytecode.is_empty() {
-            return self.stack.push(EMPTY_KECCAK);
-        }
-
-        // `cairo_keccak` takes in an array of little-endian u64s
-        let hash = bytecode.compute_keccak256_hash();
-        self.stack.push(hash)
+        self.stack.push(account.code_hash)
     }
 }
 
@@ -320,10 +311,12 @@ mod tests {
     use evm::state::StateTrait;
     use evm::test_utils::{VMBuilderTrait, origin, callvalue, gas_price};
     use snforge_std::test_address;
-    use utils::helpers::{u256_to_bytes_array, ArrayExtTrait, compute_starknet_address};
+    use utils::constants::EMPTY_KECCAK;
+    use utils::helpers::{
+        u256_to_bytes_array, ArrayExtTrait, compute_starknet_address, U8SpanExTrait
+    };
     use utils::traits::{EthAddressIntoU256};
 
-    const EMPTY_KECCAK: u256 = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
 
     mod test_internals {
         use evm::memory::MemoryTrait;
@@ -411,6 +404,7 @@ mod tests {
             balance: 400,
             nonce: 0,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             selfdestruct: false,
             is_created: true,
         };
@@ -823,6 +817,7 @@ mod tests {
             balance: 1,
             nonce: 1,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             selfdestruct: false,
             is_created: true,
         };
@@ -840,10 +835,16 @@ mod tests {
     fn test_exec_extcodesize_should_push_bytecode_len() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
+        let bytecode = [0xff; 350].span();
+        let code_hash = bytecode.compute_keccak256_hash();
         let account = Account {
-            address: vm.message().target, balance: 1, nonce: 1, code: [
-                0xff
-            ; 350].span(), selfdestruct: false, is_created: true,
+            address: vm.message().target,
+            balance: 1,
+            nonce: 1,
+            code: bytecode,
+            code_hash,
+            selfdestruct: false,
+            is_created: true,
         };
         vm.env.state.set_account(account);
         vm.stack.push(account.address.evm.into()).expect('push failed');
@@ -863,11 +864,14 @@ mod tests {
     fn test_exec_extcodecopy_should_copy_code_of_input_account() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
+        let bytecode = counter_evm_bytecode();
+        let code_hash = bytecode.compute_keccak256_hash();
         let account = Account {
             address: vm.message().target,
             balance: 1,
             nonce: 1,
-            code: counter_evm_bytecode(),
+            code: bytecode,
+            code_hash,
             selfdestruct: false,
             is_created: true,
         };
@@ -895,11 +899,14 @@ mod tests {
     fn test_exec_extcodecopy_ca_offset_out_of_bounds_should_return_zeroes() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
+        let bytecode = counter_evm_bytecode();
+        let code_hash = bytecode.compute_keccak256_hash();
         let account = Account {
             address: vm.message().target,
             balance: 1,
             nonce: 1,
-            code: counter_evm_bytecode(),
+            code: bytecode,
+            code_hash,
             selfdestruct: false,
             is_created: true,
         };
@@ -1054,6 +1061,7 @@ mod tests {
             balance: 1,
             nonce: 0,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             selfdestruct: false,
             is_created: true,
         };
@@ -1076,6 +1084,7 @@ mod tests {
             balance: 0,
             nonce: 0,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             selfdestruct: false,
             is_created: true,
         };
@@ -1098,6 +1107,7 @@ mod tests {
             balance: 1,
             nonce: 1,
             code: [].span(),
+            code_hash: EMPTY_KECCAK,
             selfdestruct: false,
             is_created: true,
         };
@@ -1115,11 +1125,14 @@ mod tests {
     fn test_exec_extcodehash_with_bytecode() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
+        let bytecode = counter_evm_bytecode();
+        let code_hash = bytecode.compute_keccak256_hash();
         let account = Account {
             address: vm.message().target,
             balance: 1,
             nonce: 1,
-            code: counter_evm_bytecode(),
+            code: bytecode,
+            code_hash,
             selfdestruct: false,
             is_created: true,
         };
