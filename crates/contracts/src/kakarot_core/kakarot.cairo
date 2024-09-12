@@ -7,7 +7,7 @@ pub mod KakarotCore {
     use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::kakarot_core::interface::IKakarotCore;
-    use core::num::traits::{Zero, CheckedSub};
+    use core::num::traits::Zero;
     use core::starknet::event::EventEmitter;
     use core::starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
@@ -19,12 +19,8 @@ pub mod KakarotCore {
     };
     use evm::backend::starknet_backend;
     use evm::backend::validation::validate_eth_tx;
-    use evm::errors::{EVMError, ensure, EVMErrorTrait,};
-    use evm::gas;
     use evm::model::account::AccountTrait;
-    use evm::model::{
-        Message, TransactionResult, TransactionResultTrait, ExecutionSummaryTrait, Address
-    };
+    use evm::model::{Message, TransactionResult, ExecutionSummaryTrait, Address};
     use evm::precompiles::eth_precompile_addresses;
     use evm::state::StateTrait;
     use evm::{EVMTrait};
@@ -156,16 +152,24 @@ pub mod KakarotCore {
                 core::panic_with_felt252('fn must be called, not invoked');
             };
 
-            let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
+            let (gas_price, intrinsic_gas) = validate_eth_tx(self, tx);
 
-            let TransactionResult { success, return_data, gas_used, state: _ } = self
-                .process_transaction(origin, tx, tx.effective_gas_price(Option::None));
+            let starknet_caller_address = get_caller_address();
+            let account = IAccountDispatcher { contract_address: starknet_caller_address };
+            let origin = Address {
+                evm: account.get_evm_address(), starknet: starknet_caller_address
+            };
+
+            let TransactionResult { success, return_data, gas_used, state: _state } = self
+                .process_transaction(origin, tx, gas_price, intrinsic_gas);
 
             (success, return_data, gas_used)
         }
 
-        fn eth_send_transaction(ref self: ContractState, tx: Transaction) -> (bool, Span<u8>, u64) {
-            let gas_price = validate_eth_tx(@self, tx);
+        fn eth_send_transaction(
+            ref self: ContractState, mut tx: Transaction
+        ) -> (bool, Span<u8>, u64) {
+            let (gas_price, intrinsic_gas) = validate_eth_tx(@self, tx);
 
             let starknet_caller_address = get_caller_address();
             let account = IAccountDispatcher { contract_address: starknet_caller_address };
@@ -174,7 +178,7 @@ pub mod KakarotCore {
             };
 
             let TransactionResult { success, return_data, gas_used, mut state } = self
-                .process_transaction(origin, tx, gas_price);
+                .process_transaction(origin, tx, gas_price, intrinsic_gas);
             starknet_backend::commit(ref state).expect('Committing state failed');
             (success, return_data, gas_used)
         }
@@ -271,34 +275,20 @@ pub mod KakarotCore {
 
 
         fn process_transaction(
-            self: @ContractState, origin: Address, tx: Transaction, gas_price: u128
+            self: @ContractState,
+            origin: Address,
+            tx: Transaction,
+            gas_price: u128,
+            intrinsic_gas: u64
         ) -> TransactionResult {
-            let gas_limit = tx.gas_limit();
+            // Charge the cost of intrinsic gas - which has been verified to be <= gas_limit.
+            let gas_left = tx.gas_limit() - intrinsic_gas;
             let mut env = starknet_backend::get_env(origin.evm, gas_price);
 
-            // TX Gas
-            let gas_fee = gas_limit.into() * gas_price;
             let mut sender_account = env.state.get_account(origin.evm);
-            let sender_balance = sender_account.balance();
             sender_account.set_nonce(sender_account.nonce() + 1);
             env.state.set_account(sender_account);
-            match ensure(
-                sender_balance >= gas_fee.into() + tx.value(), EVMError::InsufficientBalance
-            ) {
-                Result::Ok(_) => {},
-                Result::Err(err) => {
-                    return TransactionResultTrait::exceptional_failure(err.to_bytes(), gas_limit);
-                }
-            };
 
-            let gas_left = match gas_limit.checked_sub(gas::calculate_intrinsic_gas_cost(@tx)) {
-                Option::Some(gas_left) => gas_left,
-                Option::None => {
-                    return TransactionResultTrait::exceptional_failure(
-                        EVMError::OutOfGas.to_bytes(), gas_limit
-                    );
-                }
-            };
             // Handle deploy/non-deploy transaction cases
             let (to, is_deploy_tx, code, code_address, calldata) = match tx.kind() {
                 TxKind::Create => {

@@ -853,7 +853,7 @@ mod tests {
             0xf4,
             0x00
         ].span();
-        let code_hash = bytecode.compute_keccak256_hash();
+        let _code_hash = bytecode.compute_keccak256_hash();
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
         let eoa_account = Account {
             address: vm.message().target,

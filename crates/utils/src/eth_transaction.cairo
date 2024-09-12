@@ -9,7 +9,7 @@ use core::cmp::min;
 use core::num::traits::{CheckedAdd, Zero};
 use core::option::OptionTrait;
 use core::starknet::{EthAddress, secp256_trait::Signature,};
-use utils::errors::{EthTransactionError, RLPErrorImpl, RLPHelpersErrorImpl};
+use utils::errors::{EthTransactionError, RLPErrorImpl};
 
 use utils::helpers::ByteArrayExt;
 

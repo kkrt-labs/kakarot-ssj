@@ -1,5 +1,5 @@
 use core::starknet::EthAddress;
-use crate::errors::{RLPError, EthTransactionError, RLPErrorTrait, RLPHelpersErrorTrait};
+use crate::errors::{RLPError, EthTransactionError, RLPErrorTrait};
 use crate::eth_transaction::common::{TxKind, TxKindTrait};
 use crate::eth_transaction::eip1559::{TxEip1559, TxEip1559Trait};
 use crate::eth_transaction::eip2930::{AccessListItem, TxEip2930, TxEip2930Trait};
