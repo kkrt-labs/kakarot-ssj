@@ -309,12 +309,19 @@ fn test_execute_from_outside_should_fail_with_zero_calls() {
 #[test]
 #[should_panic(expected: 'EOA: cannot have code')]
 fn test_execute_from_outside_should_fail_account_with_code() {
-    let (kakarot_core, contract_account, _) = set_up();
+    let (kakarot_core, _, _) = set_up();
+
+    let contract_address = deploy_contract_account(
+        kakarot_core, other_evm_address(), counter_evm_bytecode()
+    )
+        .starknet;
+    let contract_account = IAccountDispatcher { contract_address };
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .build();
     let signature = PLACEHOLDER_SIGNATURE.span();
 
+    start_cheat_block_timestamp(contract_account.contract_address, 999);
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
     tear_down(contract_account);
@@ -324,13 +331,7 @@ fn test_execute_from_outside_should_fail_account_with_code() {
 #[test]
 #[should_panic(expected: 'KKRT: Multicall not supported')]
 fn test_execute_from_outside_should_fail_with_multi_calls() {
-    let (kakarot_core, _, _) = set_up();
-
-    let contract_address = deploy_contract_account(
-        kakarot_core, other_evm_address(), counter_evm_bytecode()
-    )
-        .starknet;
-    let contract_account = IAccountDispatcher { contract_address };
+    let (kakarot_core, eoa, _) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_calls(
@@ -343,9 +344,9 @@ fn test_execute_from_outside_should_fail_with_multi_calls() {
         .build();
     let signature = PLACEHOLDER_SIGNATURE.span();
 
-    let _ = contract_account.execute_from_outside(outside_execution, signature);
+    let _ = eoa.execute_from_outside(outside_execution, signature);
 
-    tear_down(contract_account);
+    tear_down(eoa);
 }
 
 
