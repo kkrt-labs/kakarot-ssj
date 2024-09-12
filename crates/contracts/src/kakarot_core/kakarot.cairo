@@ -162,13 +162,13 @@ pub mod KakarotCore {
             let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
 
             let TransactionResult { success, return_data, gas_used, state: _ } = self
-                .process_transaction(origin, tx);
+                .process_transaction(origin, tx, tx.effective_gas_price(Option::None));
 
             (success, return_data, gas_used)
         }
 
         fn eth_send_transaction(ref self: ContractState, tx: Transaction) -> (bool, Span<u8>, u64) {
-            validate_eth_tx(@self, tx);
+            let gas_price = validate_eth_tx(@self, tx);
 
             let starknet_caller_address = get_caller_address();
             let account = IAccountDispatcher { contract_address: starknet_caller_address };
@@ -177,7 +177,7 @@ pub mod KakarotCore {
             };
 
             let TransactionResult { success, return_data, gas_used, mut state } = self
-                .process_transaction(origin, tx);
+                .process_transaction(origin, tx, gas_price);
             starknet_backend::commit(ref state).expect('Committing state failed');
             (success, return_data, gas_used)
         }
@@ -225,6 +225,10 @@ pub mod KakarotCore {
             self.Kakarot_block_gas_limit.read()
         }
 
+        fn set_base_fee(ref self: ContractState, base_fee: u64) {
+            self.ownable.assert_only_owner();
+            self.Kakarot_base_fee.write(base_fee);
+        }
 
         fn get_base_fee(self: @ContractState) -> u64 {
             self.Kakarot_base_fee.read()
@@ -270,10 +274,10 @@ pub mod KakarotCore {
 
 
         fn process_transaction(
-            self: @ContractState, origin: Address, tx: Transaction
+            self: @ContractState, origin: Address, tx: Transaction, gas_price: u128
         ) -> TransactionResult {
             //TODO(gas) handle FeeMarketTransaction
-            let gas_price = tx.max_fee_per_gas();
+            //TODO(gas) use effective gas price
             let gas_limit = tx.gas_limit();
             let mut env = starknet_backend::get_env(origin.evm, gas_price);
 
@@ -351,7 +355,6 @@ pub mod KakarotCore {
                 accessed_addresses: accessed_addresses.spanset(),
                 accessed_storage_keys: accessed_storage_keys.spanset(),
             };
-
             let mut summary = EVMTrait::process_message_call(message, env, is_deploy_tx);
 
             // Gas refunds

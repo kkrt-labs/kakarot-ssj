@@ -12,7 +12,7 @@ use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDi
 use snforge_std::start_cheat_chain_id_global;
 use snforge_std::{
     declare, DeclareResultTrait, start_cheat_caller_address, start_cheat_sequencer_address_global,
-    stop_cheat_caller_address, start_cheat_caller_address_global
+    stop_cheat_caller_address, start_cheat_caller_address_global, cheat_caller_address, CheatSpan
 };
 use utils::constants::BLOCK_GAS_LIMIT;
 use utils::eth_transaction::legacy::TxLegacy;
@@ -80,12 +80,18 @@ pub fn deploy_kakarot_core(
         (*kakarot_core_class_hash).into(), 0, calldata.span(), false
     );
 
-    match maybe_address {
+    let kakarot_core = match maybe_address {
         Result::Ok((
             contract_address, _
         )) => { IExtendedKakarotCoreDispatcher { contract_address } },
         Result::Err(err) => panic(err)
-    }
+    };
+    cheat_caller_address(
+        kakarot_core.contract_address, other_starknet_address(), CheatSpan::TargetCalls(1)
+    );
+    kakarot_core.set_base_fee(1000);
+
+    kakarot_core
 }
 
 pub fn deploy_contract_account(
@@ -130,12 +136,12 @@ pub fn fund_account_with_native_token(
 }
 
 pub fn setup_contracts_for_testing() -> (IERC20CamelDispatcher, IExtendedKakarotCoreDispatcher) {
+    let sequencer: EthAddress = sequencer_evm_address();
     let native_token = deploy_native_token();
     let kakarot_core = deploy_kakarot_core(
-        native_token.contract_address, [sequencer_evm_address()].span()
+        native_token.contract_address, [sequencer].span()
     );
 
-    let sequencer: EthAddress = sequencer_evm_address();
 
     let sequencer_sn_address = kakarot_core.address_registry(sequencer);
     start_cheat_sequencer_address_global(sequencer_sn_address);

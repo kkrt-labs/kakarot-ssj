@@ -171,7 +171,6 @@ fn test_kakarot_core_upgrade_contract() {
 }
 
 #[test]
-#[available_gas(2000000000000000000)]
 fn test_eth_send_transaction_non_deploy_tx() {
     // Given
     let (native_token, kakarot_core) = contract_utils::setup_contracts_for_testing();
@@ -318,7 +317,8 @@ fn test_process_transaction() {
     let result = kakarot_core
         .process_transaction(
             origin: Address { evm: eoa_evm_address, starknet: eoa_starknet_address },
-            tx: Transaction::Legacy(tx)
+            tx: Transaction::Legacy(tx),
+            :gas_price
         );
     let return_data = result.return_data;
 
@@ -361,14 +361,14 @@ fn test_eth_send_transaction_deploy_tx() {
     let expected_address: EthAddress = 0x19587b345dcadfe3120272bd0dbec24741891759
         .try_into()
         .unwrap();
-    assert(deploy_result == expected_address.to_bytes().span(), 'returndata not counter bytecode');
+    assert_eq!(deploy_result, expected_address.to_bytes().span());
 
     // Set back the contract address to Kakarot for the calculation of the deployed SN contract
     // address, where we use a kakarot internal functions and thus must "mock" its address.
     let computed_sn_addr = kakarot_core.compute_starknet_address(expected_address);
     let CA = IAccountDispatcher { contract_address: computed_sn_addr };
     let bytecode = CA.bytecode();
-    assert(bytecode == counter_evm_bytecode(), 'wrong bytecode');
+    assert_eq!(bytecode, counter_evm_bytecode());
 
     // Check that the account was created and `get` returns 0.
     let input = [0x6d, 0x4c, 0xe6, 0x3c].span();

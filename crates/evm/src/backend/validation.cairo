@@ -10,7 +10,7 @@ use utils::constants::POW_2_32;
 use utils::eth_transaction::get_effective_gas_price;
 use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
 
-pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transaction) {
+pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transaction) -> u128 {
     let kakarot_storage = kakarot_state.snapshot_deref().storage();
     // Validate transaction
 
@@ -34,14 +34,12 @@ pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transacti
     // Validate gas
     assert(tx.gas_limit() <= kakarot_state.get_block_gas_limit(), 'Tx gas > Block gas');
     let block_base_fee = kakarot_storage.Kakarot_base_fee.read();
-    assert(tx.max_fee_per_gas() <= block_base_fee.into(), 'Max fee per gas too low');
-    assert(
-        tx.max_priority_fee_per_gas().unwrap_or(0) <= tx.max_fee_per_gas(),
-        'Max prio fee > max fee per gas'
+    let effective_gas_price = get_effective_gas_price(
+        Option::Some(tx.max_fee_per_gas()), tx.max_priority_fee_per_gas(), block_base_fee.into()
     );
+    assert!(effective_gas_price.is_ok(), "{:?}", effective_gas_price.unwrap_err());
 
     // Validate balance
-    let evm_address = account.get_evm_address();
     let balance = IERC20CamelDispatcher {
         contract_address: kakarot_storage.Kakarot_native_token_address.read()
     }
@@ -49,9 +47,5 @@ pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transacti
     let max_gas_fee = tx.gas_limit().into() * tx.max_fee_per_gas();
     let tx_cost = tx.value() + max_gas_fee.into();
     assert(tx_cost <= balance, 'Not enough ETH');
-
-    let effective_gas_price = get_effective_gas_price(
-        Option::Some(tx.max_fee_per_gas()), tx.max_priority_fee_per_gas(), block_base_fee.into()
-    );
-    assert(effective_gas_price.is_ok(), 'Invalid effective gas price');
+    effective_gas_price.unwrap()
 }

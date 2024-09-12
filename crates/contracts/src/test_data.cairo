@@ -1733,8 +1733,12 @@ pub fn storage_evm_bytecode() -> Span<u8> {
 pub fn eip_2930_rlp_encoded_counter_inc_tx() -> Span<u8> {
     [
         1,
-        231,
-        1,
+        235,
+        132,
+        75,
+        75,
+        82,
+        84,
         128,
         132,
         59,

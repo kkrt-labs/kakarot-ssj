@@ -72,7 +72,6 @@ pub mod AccountContract {
     use super::{IAccountLibraryDispatcher, IAccountDispatcherTrait, OutsideExecution};
     use utils::constants::{POW_2_32};
     use utils::eth_transaction::transaction::{TransactionUnsignedTrait, Transaction};
-    use utils::eth_transaction::validation::validate_eth_tx;
     use utils::eth_transaction::{TransactionMetadata};
     use utils::serialization::{deserialize_signature, deserialize_bytes, serialize_bytes};
     use utils::traits::DefaultSignature;
@@ -245,7 +244,7 @@ pub mod AccountContract {
             assert(self.Account_bytecode_len.read().is_zero(), 'EOA: cannot have code');
 
             let chain_id: u64 = tx_info.chain_id.try_into().unwrap() % POW_2_32.try_into().unwrap();
-            assert(signature.len() == 5, 'Invalid signature length');
+            assert(signature.len() == 5, 'EOA: Invalid signature length');
             let signature = deserialize_signature(signature, chain_id)
                 .expect('EOA: invalid signature');
 

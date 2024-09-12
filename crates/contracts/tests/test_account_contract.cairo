@@ -1,13 +1,12 @@
 use contracts::errors::KAKAROT_REENTRANCY;
 use contracts::test_data::counter_evm_bytecode;
 use contracts::test_utils::{
-    setup_contracts_for_testing, deploy_contract_account, fund_account_with_native_token
+    setup_contracts_for_testing, deploy_contract_account, fund_account_with_native_token, deploy_eoa
 };
 use contracts::{IAccountDispatcher, IAccountDispatcherTrait};
-use core::starknet::ContractAddress;
 use core::starknet::account::{Call};
-use core::starknet::testing;
-use evm::test_utils::{ca_address, native_token};
+use core::starknet::{EthAddress,ContractAddress};
+use evm::test_utils::{ca_address, native_token, eoa_address};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use snforge_std::{start_cheat_caller_address, stop_cheat_caller_address};
 
@@ -52,6 +51,16 @@ fn test_ca_get_nonce() {
     let nonce = contract_account.get_nonce();
 
     assert(nonce == expected_nonce, 'wrong contract nonce');
+}
+
+#[test]
+fn test_get_evm_address() {
+    let expected_address: EthAddress = eoa_address();
+    let (_, kakarot_core) = setup_contracts_for_testing();
+
+    let eoa_contract = deploy_eoa(kakarot_core, eoa_address());
+
+    assert(eoa_contract.get_evm_address() == expected_address, 'wrong evm_address');
 }
 
 
