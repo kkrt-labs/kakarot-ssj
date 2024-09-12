@@ -44,15 +44,9 @@ fn transaction_signer() -> EthAddress {
     0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466.try_into().unwrap()
 }
 
-const VALID_SIGNATURE: [felt252; 5] = [1, 2, 3, 4, 0];
+const PLACEHOLDER_SIGNATURE: [felt252; 5] = [1, 2, 3, 4, 0];
 
-const EIP2930_CALLER: felt252 = 0xaA36F24f65b5F0f2c642323f3d089A3F0f2845Bf;
-const VALID_EIP2930_SIGNATURE: Signature =
-    Signature {
-        r: 0x5c4ae1ed01c8df4277f02aa3443f8183ed44627217fd7f27badaed8795906e78,
-        s: 0x4d2af576441428d47c174ffddc6e70b980527a57795b3c87a71878f97ecef274,
-        y_parity: true
-    };
+const SNIP9_CALLER: felt252 = 0xaA36F24f65b5F0f2c642323f3d089A3F0f2845Bf;
 
 #[derive(Drop)]
 struct CallBuilder {
@@ -179,7 +173,7 @@ fn test_execute_from_outside_invalid_caller() {
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_caller(contract_address_const::<0xb0b>())
         .build();
-    let signature = VALID_SIGNATURE.span();
+    let signature = PLACEHOLDER_SIGNATURE.span();
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
@@ -194,7 +188,7 @@ fn test_execute_from_outside_too_early_call() {
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_execute_after(999)
         .build();
-    let signature = VALID_SIGNATURE.span();
+    let signature = PLACEHOLDER_SIGNATURE.span();
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
@@ -209,7 +203,7 @@ fn test_execute_from_outside_too_late_call() {
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_execute_before(999)
         .build();
-    let signature = VALID_SIGNATURE.span();
+    let signature = PLACEHOLDER_SIGNATURE.span();
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
@@ -218,7 +212,7 @@ fn test_execute_from_outside_too_late_call() {
 
 #[test]
 #[should_panic(expected: 'EOA: Invalid signature length')]
-fn test_execute_from_outside_invalid_signature_length() {
+fn test_execute_from_outside_inPLACEHOLDER_SIGNATURE_length() {
     let (kakarot_core, contract_account, _) = set_up();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
@@ -242,7 +236,7 @@ fn test_execute_from_outside_multicall_not_supported() {
             ].span()
         )
         .build();
-    let signature = VALID_SIGNATURE.span();
+    let signature = PLACEHOLDER_SIGNATURE.span();
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
@@ -251,10 +245,10 @@ fn test_execute_from_outside_multicall_not_supported() {
 
 #[test]
 #[should_panic(expected: 'EOA: invalid signature')]
-fn test_execute_from_outside_invalid_signature() {
+fn test_execute_from_outside_inPLACEHOLDER_SIGNATURE() {
     let (kakarot_core, contract_account, _) = set_up();
 
-    let caller = contract_address_const::<EIP2930_CALLER>();
+    let caller = contract_address_const::<SNIP9_CALLER>();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_caller(caller)
@@ -273,6 +267,11 @@ fn test_execute_from_outside_invalid_tx() {
     let (kakarot_core, contract_account, _) = set_up();
 
     let mut faulty_eip_2930_tx = eip_2930_encoded_tx();
+    let signature = Signature {
+        r: 0x5c4ae1ed01c8df4277f02aa3443f8183ed44627217fd7f27badaed8795906e78,
+        s: 0x4d2af576441428d47c174ffddc6e70b980527a57795b3c87a71878f97ecef274,
+        y_parity: true
+    };
     let _ = faulty_eip_2930_tx.pop_front();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
@@ -285,10 +284,7 @@ fn test_execute_from_outside_invalid_tx() {
         )
         .build();
 
-    let signature = serialize_transaction_signature(
-        VALID_EIP2930_SIGNATURE, TxType::Eip2930, chain_id()
-    )
-        .span();
+    let signature = serialize_transaction_signature(signature, TxType::Eip2930, chain_id()).span();
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
@@ -303,7 +299,7 @@ fn test_execute_from_outside_should_fail_with_zero_calls() {
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_calls([].span())
         .build();
-    let signature = VALID_SIGNATURE.span();
+    let signature = PLACEHOLDER_SIGNATURE.span();
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
@@ -324,7 +320,7 @@ fn test_execute_from_outside_should_fail_with_multi_calls() {
             ; 2].span()
         )
         .build();
-    let signature = VALID_SIGNATURE.span();
+    let signature = PLACEHOLDER_SIGNATURE.span();
 
     let _ = contract_account.execute_from_outside(outside_execution, signature);
 
@@ -337,7 +333,7 @@ fn test_execute_from_outside_legacy_tx() {
     let (kakarot_core, eoa, native_token) = set_up();
     fund_account_with_native_token(eoa.contract_address, native_token, Bounded::<u128>::MAX.into());
 
-    let caller = contract_address_const::<EIP2930_CALLER>();
+    let caller = contract_address_const::<SNIP9_CALLER>();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_caller(caller)
@@ -380,16 +376,20 @@ fn test_execute_from_outside_legacy_tx() {
 fn test_execute_from_outside_eip2930_tx() {
     let (kakarot_core, eoa, native_token) = set_up();
     fund_account_with_native_token(eoa.contract_address, native_token, Bounded::<u128>::MAX.into());
-    let caller = contract_address_const::<EIP2930_CALLER>();
+    let caller = contract_address_const::<SNIP9_CALLER>();
+
+    // Signature for the default eip2930 tx
+    let signature = Signature {
+        r: 0x5c4ae1ed01c8df4277f02aa3443f8183ed44627217fd7f27badaed8795906e78,
+        s: 0x4d2af576441428d47c174ffddc6e70b980527a57795b3c87a71878f97ecef274,
+        y_parity: true
+    };
 
     // Defaults with an eip2930 tx
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_caller(caller)
         .build();
-    let signature = serialize_transaction_signature(
-        VALID_EIP2930_SIGNATURE, TxType::Eip2930, chain_id()
-    )
-        .span();
+    let signature = serialize_transaction_signature(signature, TxType::Eip2930, chain_id()).span();
 
     cheat_caller_address(eoa.contract_address, caller, CheatSpan::TargetCalls(1));
     stop_cheat_caller_address(kakarot_core.contract_address);
@@ -408,9 +408,7 @@ fn test_execute_from_outside_eip1559_tx() {
     let (kakarot_core, eoa, native_token) = set_up();
     fund_account_with_native_token(eoa.contract_address, native_token, Bounded::<u128>::MAX.into());
 
-    let computed_starknet_address = kakarot_core.compute_starknet_address(transaction_signer());
-
-    let caller = contract_address_const::<EIP2930_CALLER>();
+    let caller = contract_address_const::<SNIP9_CALLER>();
 
     let outside_execution = OutsideExecutionBuilderTrait::new(kakarot_core.contract_address)
         .with_caller(caller)

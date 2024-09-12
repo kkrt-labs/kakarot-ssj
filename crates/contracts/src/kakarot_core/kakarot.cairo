@@ -273,8 +273,6 @@ pub mod KakarotCore {
         fn process_transaction(
             self: @ContractState, origin: Address, tx: Transaction, gas_price: u128
         ) -> TransactionResult {
-            //TODO(gas) handle FeeMarketTransaction
-            //TODO(gas) use effective gas price
             let gas_limit = tx.gas_limit();
             let mut env = starknet_backend::get_env(origin.evm, gas_price);
 
