@@ -3,7 +3,7 @@ use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::interface::{
     IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
 };
-use contracts::kakarot_core::{KakarotCore, KakarotCore::KakarotCoreInternal};
+use contracts::kakarot_core::{KakarotCore};
 use contracts::test_contracts::test_upgradeable::{
     MockContractUpgradeableV1, IMockContractUpgradeableDispatcher,
     IMockContractUpgradeableDispatcherTrait
@@ -268,77 +268,6 @@ fn test_eth_call() {
     assert_eq!(return_data, u256_to_bytes_array(1).span());
 }
 
-#[test]
-fn test_process_transaction() {
-    // Pre
-    test_utils::setup_test_environment();
-    let chain_id = chain_id();
-
-    // Given
-    let eoa_evm_address = test_utils::evm_address();
-    let eoa_starknet_address = utils::helpers::compute_starknet_address(
-        test_address(), eoa_evm_address, test_utils::uninitialized_account()
-    );
-    test_utils::register_account(eoa_evm_address, eoa_starknet_address);
-    start_mock_call::<u256>(eoa_starknet_address, selector!("get_nonce"), 0);
-    start_mock_call::<Span<u8>>(eoa_starknet_address, selector!("bytecode"), [].span());
-    start_mock_call::<u256>(eoa_starknet_address, selector!("get_code_hash"), EMPTY_KECCAK);
-
-    let contract_evm_address = test_utils::other_evm_address();
-    let contract_starknet_address = utils::helpers::compute_starknet_address(
-        test_address(), contract_evm_address, test_utils::uninitialized_account()
-    );
-    test_utils::register_account(contract_evm_address, contract_starknet_address);
-    start_mock_call::<u256>(contract_starknet_address, selector!("get_nonce"), 1);
-    let counter_evm_bytecode = counter_evm_bytecode();
-    start_mock_call::<
-        Span<u8>
-    >(contract_starknet_address, selector!("bytecode"), counter_evm_bytecode);
-
-    start_mock_call::<
-        u256
-    >(
-        contract_starknet_address,
-        selector!("get_code_hash"),
-        counter_evm_bytecode.compute_keccak256_hash()
-    );
-    start_mock_call::<u256>(contract_starknet_address, selector!("storage"), 0);
-
-    let nonce = 0;
-    let gas_limit = test_utils::tx_gas_limit();
-    let gas_price = test_utils::gas_price();
-    let value = 0;
-    // selector: function get()
-    let input = [0x6d, 0x4c, 0xe6, 0x3c].span();
-
-    let tx = TxLegacy {
-        chain_id: Option::Some(chain_id),
-        nonce,
-        to: contract_evm_address.into(),
-        value,
-        gas_price,
-        gas_limit,
-        input
-    };
-
-    // When
-    let mut kakarot_core = KakarotCore::unsafe_new_contract_state();
-    start_mock_call::<
-        u256
-    >(test_utils::native_token(), selector!("balanceOf"), 0xfffffffffffffffffffffffffff);
-    let result = kakarot_core
-        .process_transaction(
-            origin: Address { evm: eoa_evm_address, starknet: eoa_starknet_address },
-            tx: Transaction::Legacy(tx),
-            :gas_price,
-            intrinsic_gas: 0
-        );
-    let return_data = result.return_data;
-
-    // Then
-    assert!(result.success);
-    assert_eq!(return_data, u256_to_bytes_array(0).span());
-}
 
 #[test]
 fn test_eth_send_transaction_deploy_tx() {

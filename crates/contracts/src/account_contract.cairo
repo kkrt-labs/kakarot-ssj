@@ -50,6 +50,7 @@ pub mod AccountContract {
     use contracts::components::ownable::ownable_component::InternalTrait;
     use contracts::components::ownable::ownable_component;
     use contracts::errors::KAKAROT_REENTRANCY;
+    use contracts::kakarot_core::eth_rpc::{IEthRPCDispatcher, IEthRPCDispatcherTrait};
     use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
     use contracts::storage::StorageBytecode;
     use core::cmp::min;
@@ -69,7 +70,7 @@ pub mod AccountContract {
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use super::OutsideExecution;
     use utils::constants::{POW_2_32};
-    use utils::eth_transaction::transaction::{TransactionUnsignedTrait, Transaction};
+    use utils::eth_transaction::transaction::TransactionUnsignedTrait;
     use utils::serialization::{deserialize_signature, deserialize_bytes, serialize_bytes};
     use utils::traits::DefaultSignature;
 
@@ -256,7 +257,9 @@ pub mod AccountContract {
             let address = self.Account_evm_address.read();
             verify_eth_signature(unsigned_transaction.hash, signature, address);
 
-            let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
+            let kakarot = IEthRPCDispatcher { contract_address: self.ownable.owner() };
+            //TODO: refactor this to call eth_send_raw_unsigned_tx. Only the transactions bytes are
+            //passed.
             let (success, return_data, gas_used) = kakarot
                 .eth_send_transaction(unsigned_transaction.transaction);
             let return_data = serialize_bytes(return_data).span();
@@ -276,53 +279,6 @@ pub mod AccountContract {
                     }
                 );
             array![return_data]
-        }
-    }
-
-    #[generate_trait]
-    impl Eip1559TransactionImpl of Eip1559TransactionTrait {
-        //TODO: refactor into a generic tx validation function.
-        fn validate_eip1559_tx(ref self: ContractState, tx: Transaction,) -> bool {
-            // let kakarot = IKakarotCoreDispatcher { contract_address: self.ownable.owner() };
-            // let block_gas_limit = kakarot.get_block_gas_limit();
-
-            // if tx.gas_limit() >= block_gas_limit {
-            //     return false;
-            // }
-
-            // let base_fee = kakarot.get_base_fee();
-            // let native_token = kakarot.get_native_token();
-            // let balance = IERC20CamelDispatcher { contract_address: native_token }
-            //     .balanceOf(get_contract_address());
-
-            // let max_fee_per_gas = tx_fee_infos.max_fee_per_gas;
-            // let max_priority_fee_per_gas = tx_fee_infos.max_priority_fee_per_gas;
-
-            // // ensure that the user was willing to at least pay the base fee
-            // if base_fee >= max_fee_per_gas {
-            //     return false;
-            // }
-
-            // // ensure that the max priority fee per gas is not greater than the max fee per gas
-            // if max_priority_fee_per_gas >= max_fee_per_gas {
-            //     return false;
-            // }
-
-            // let max_gas_fee = tx.gas_limit() * max_fee_per_gas;
-            // let tx_cost = max_gas_fee.into() + tx_fee_infos.amount;
-
-            // if tx_cost >= balance {
-            //     return false;
-            // }
-
-            // // priority fee is capped because the base fee is filled first
-            // let possible_priority_fee = max_fee_per_gas - base_fee;
-
-            // if max_priority_fee_per_gas >= possible_priority_fee {
-            //     return false;
-            // }
-
-            return true;
         }
     }
 }

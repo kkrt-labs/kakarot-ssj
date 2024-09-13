@@ -24,17 +24,6 @@ pub trait IKakarotCore<TContractState> {
         ref self: TContractState, evm_address: EthAddress
     ) -> ContractAddress;
 
-    /// View entrypoint into the EVM
-    /// Performs view calls into the blockchain
-    /// It cannot modify the state of the chain
-    fn eth_call(
-        self: @TContractState, origin: EthAddress, tx: Transaction
-    ) -> (bool, Span<u8>, u64);
-
-    /// Transaction entrypoint into the EVM
-    /// Executes an EVM transaction and possibly modifies the state
-    fn eth_send_transaction(ref self: TContractState, tx: Transaction) -> (bool, Span<u8>, u64);
-
     /// Upgrade the KakarotCore smart contract
     /// Using replace_class_syscall
     fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
