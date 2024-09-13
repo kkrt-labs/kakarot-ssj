@@ -36,7 +36,7 @@ const main = async () => {
 
   let tx_type = parseInt(
     await question(
-      "enter transaction, 0: legacy, 1: 2930, 2:1559, 3: inc_counter ",
+      "enter transaction, 0: legacy, 1: 2930, 2:1559, 3: inc_counter, 4: y_parity_false eip1559: ",
     ),
   );
 
@@ -64,6 +64,15 @@ const main = async () => {
       tx = JSON.parse(
         readFileSync(
           "./scripts/data/input_eip_2930_counter_inc_tx.json",
+          "utf-8",
+        ),
+      );
+      break;
+    case 4:
+      tx_type = 2;
+      tx = JSON.parse(
+        readFileSync(
+          "./scripts/data/input_eip1559_y_parity_false.json",
           "utf-8",
         ),
       );
