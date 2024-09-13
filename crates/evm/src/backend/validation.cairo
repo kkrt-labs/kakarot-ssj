@@ -47,7 +47,7 @@ pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transacti
     assert!(effective_gas_price.is_ok(), "{:?}", effective_gas_price.unwrap_err());
     // Intrinsic Gas
     let intrinsic_gas = gas::calculate_intrinsic_gas_cost(@tx);
-    assert(gas_limit > intrinsic_gas, 'Intrinsic gas > gas limit');
+    assert(gas_limit >= intrinsic_gas, 'Intrinsic gas > gas limit');
 
     // Validate balance
     let balance = IERC20CamelDispatcher {
