@@ -1046,12 +1046,15 @@ mod tests {
         vm.stack.push(source_offset.into()).expect('push failed');
         vm.stack.push(dest_offset.into()).expect('push failed');
 
+        let words_size = ((size + 31) / 32).into();
+        let copy_gas_cost = gas::COPY * words_size;
+
         // When
         let expected_gas = gas::VERYLOW
             + gas::memory_expansion(
                 vm.memory.size(), [(max(dest_offset, source_offset), size)].span()
             )
-                .expansion_cost;
+                .expansion_cost + copy_gas_cost;
         let gas_before = vm.gas_left();
         let result = vm.exec_mcopy();
         let gas_after = vm.gas_left();
