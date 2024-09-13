@@ -11,7 +11,9 @@ pub fn deserialize_signature(signature: Span<felt252>, chain_id: u64) -> Option<
 
     let v: u128 = (*signature.at(4)).try_into()?;
 
-    let y_parity = if (v == 0 || v == 1) {
+    let odd_y_parity = if v == 0 {
+        false
+    } else if v == 1 {
         true
     } else {
         compute_y_parity(v, chain_id)?
@@ -19,7 +21,9 @@ pub fn deserialize_signature(signature: Span<felt252>, chain_id: u64) -> Option<
 
     Option::Some(
         Signature {
-            r: u256 { low: r_low, high: r_high }, s: u256 { low: s_low, high: s_high }, y_parity,
+            r: u256 { low: r_low, high: r_high },
+            s: u256 { low: s_low, high: s_high },
+            y_parity: odd_y_parity,
         }
     )
 }
@@ -196,6 +200,13 @@ mod tests {
             y_parity: true
         };
 
+        // tx_type = 2 with false y parity - cf input_eip1559_y_parity_false.json
+        let signature_3 = Signature {
+            r: 0x782ce82b688abbf13a5e7536b27be67d2795a28b9d4bf819120c17630d88e609,
+            s: 0x43b90a3315977fe71c9b3687a89857544158e23c5045e7a5852bae03323c9898,
+            y_parity: false
+        };
+
         let signature_0_felt252_arr: Array<felt252> = array![
             signature_0.r.low.into(),
             signature_0.r.high.into(),
@@ -209,7 +220,7 @@ mod tests {
             signature_1.r.high.into(),
             signature_1.s.low.into(),
             signature_1.s.high.into(),
-            0x0
+            0x1
         ];
 
         let signature_2_felt252_arr: Array<felt252> = array![
@@ -217,6 +228,14 @@ mod tests {
             signature_2.r.high.into(),
             signature_2.s.low.into(),
             signature_2.s.high.into(),
+            0x1
+        ];
+
+        let signature_3_felt252_arr: Array<felt252> = array![
+            signature_3.r.low.into(),
+            signature_3.r.high.into(),
+            signature_3.s.low.into(),
+            signature_3.s.high.into(),
             0x0
         ];
 
@@ -231,5 +250,9 @@ mod tests {
         let result: Signature = deserialize_signature(signature_2_felt252_arr.span(), CHAIN_ID)
             .unwrap();
         assert_eq!(result, signature_2);
+
+        let result: Signature = deserialize_signature(signature_3_felt252_arr.span(), CHAIN_ID)
+            .unwrap();
+        assert_eq!(result, signature_3);
     }
 }
