@@ -152,16 +152,10 @@ pub mod KakarotCore {
                 core::panic_with_felt252('fn must be called, not invoked');
             };
 
-            let (gas_price, intrinsic_gas) = validate_eth_tx(self, tx);
-
-            let starknet_caller_address = get_caller_address();
-            let account = IAccountDispatcher { contract_address: starknet_caller_address };
-            let origin = Address {
-                evm: account.get_evm_address(), starknet: starknet_caller_address
-            };
+            let origin = Address { evm: origin, starknet: self.compute_starknet_address(origin) };
 
             let TransactionResult { success, return_data, gas_used, state: _state } = self
-                .process_transaction(origin, tx, gas_price, intrinsic_gas);
+                .process_transaction(origin, tx, tx.effective_gas_price(Option::None), 0);
 
             (success, return_data, gas_used)
         }

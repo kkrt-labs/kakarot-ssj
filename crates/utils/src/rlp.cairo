@@ -2487,57 +2487,224 @@ mod tests {
     }
 
     #[test]
+    fn test_rlp_item_parse_access_list_empty() {
+        let rlp_encoded_access_list: Span<u8> = [0xc0].span();
+        let decoded_data = RLPTrait::decode(rlp_encoded_access_list).unwrap();
+        assert_eq!(decoded_data.len(), 1);
+
+        let rlp_item = *decoded_data[0];
+        let res = rlp_item.parse_access_list().unwrap();
+        assert_eq!(res.len(), 0);
+    }
+
+    #[test]
     fn test_rlp_item_parse_access_list() {
-        // [ [ "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", [ "0x01", "0x02", "0x03", "0x04",
-        // "0x05" ] ]]
+        // (('0x0000000000000000000000000000000000000001',
+        // ('0x0100000000000000000000000000000000000000000000000000000000000000',)),
+        // ('0x0000000000000000000000000000000000000002',
+        // ('0x0100000000000000000000000000000000000000000000000000000000000000',
+        // '0x0200000000000000000000000000000000000000000000000000000000000000')),
+        // ('0x0000000000000000000000000000000000000003', ()))
         let rlp_encoded_access_list: Span<u8> = [
-            220,
-            219,
+            248,
+            170,
+            247,
             148,
-            31,
-            152,
-            64,
-            168,
-            93,
-            90,
-            245,
-            191,
-            29,
-            23,
-            98,
-            249,
-            37,
-            189,
-            173,
-            220,
-            66,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             1,
-            249,
-            132,
-            197,
+            225,
+            160,
             1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            248,
+            89,
+            148,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             2,
+            248,
+            66,
+            160,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            160,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            214,
+            148,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             3,
-            4,
-            5
+            192
         ].span();
         let decoded_data = RLPTrait::decode(rlp_encoded_access_list).unwrap();
         assert_eq!(decoded_data.len(), 1);
 
         let rlp_item = *decoded_data[0];
 
-        let expected_access_list_item = AccessListItem {
-            ethereum_address: 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.try_into().unwrap(),
-            storage_keys: [
-                0x1, 0x2, 0x3, 0x4, 0x5
-            ].span()
-        };
-
-        let expected_access_list = [expected_access_list_item].span();
+        let expected_access_list = [
+            AccessListItem {
+                ethereum_address: 0x0000000000000000000000000000000000000001.try_into().unwrap(),
+                storage_keys: [
+                    0x0100000000000000000000000000000000000000000000000000000000000000
+                ].span()
+            },
+            AccessListItem {
+                ethereum_address: 0x0000000000000000000000000000000000000002.try_into().unwrap(),
+                storage_keys: [
+                    0x0100000000000000000000000000000000000000000000000000000000000000,
+                    0x0200000000000000000000000000000000000000000000000000000000000000
+                ].span()
+            },
+            AccessListItem {
+                ethereum_address: 0x0000000000000000000000000000000000000003.try_into().unwrap(),
+                storage_keys: [].span()
+            }
+        ].span();
 
         let res = rlp_item.parse_access_list().unwrap();
-        assert_eq!(res.len(), 1);
-
-        assert!(res == expected_access_list, "access list are not equal");
+        assert!(res == expected_access_list);
     }
 }
