@@ -39,10 +39,10 @@ pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transacti
 
     // Validate gas
     let gas_limit = tx.gas_limit();
-    assert(gas_limit <= kakarot_state.get_block_gas_limit(), 'Tx gas > Block gas');
+    assert(gas_limit <= kakarot_storage.Kakarot_block_gas_limit.read(), 'Tx gas > Block gas');
     let block_base_fee = kakarot_storage.Kakarot_base_fee.read();
     let effective_gas_price = get_effective_gas_price(
-        Option::Some(tx.max_fee_per_gas()), tx.max_priority_fee_per_gas(), block_base_fee.into()
+        tx.max_fee_per_gas(), tx.max_priority_fee_per_gas(), block_base_fee.into()
     );
     assert!(effective_gas_price.is_ok(), "{:?}", effective_gas_price.unwrap_err());
     // Intrinsic Gas
