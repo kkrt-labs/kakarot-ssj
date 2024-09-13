@@ -1054,7 +1054,8 @@ mod tests {
             + gas::memory_expansion(
                 vm.memory.size(), [(max(dest_offset, source_offset), size)].span()
             )
-                .expansion_cost + copy_gas_cost;
+                .expansion_cost
+            + copy_gas_cost;
         let gas_before = vm.gas_left();
         let result = vm.exec_mcopy();
         let gas_after = vm.gas_left();
