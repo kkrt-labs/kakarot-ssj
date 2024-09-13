@@ -7,6 +7,7 @@ use evm::memory::MemoryTrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
+use utils::helpers::ceil32;
 use utils::set::SetTrait;
 
 #[inline(always)]
@@ -281,15 +282,17 @@ pub impl MemoryOperation of MemoryOperationTrait {
     /// Copy memory from one location to another.
     /// # Specification: https://www.evm.codes/#5e?fork=cancun
     fn exec_mcopy(ref self: VM) -> Result<(), EVMError> {
-        let size = self.stack.pop_usize()?;
-        let source_offset = self.stack.pop_usize()?;
         let dest_offset = self.stack.pop_usize()?;
+        let source_offset = self.stack.pop_usize()?;
+        let size = self.stack.pop_usize()?;
 
+        let words_size = (ceil32(size) / 32).into();
+        let copy_gas_cost = gas::COPY * words_size;
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(max(dest_offset, source_offset), size)].span()
         );
         self.memory.ensure_length(memory_expansion.new_size);
-        self.charge_gas(gas::VERYLOW + memory_expansion.expansion_cost)?;
+        self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
 
         if size == 0 {
             return Result::Ok(());
@@ -1039,16 +1042,20 @@ mod tests {
                 vm.memory.store_with_expansion((*element).into(), source_offset + 0x20 * i);
                 i += 1;
             };
-        vm.stack.push(dest_offset.into()).expect('push failed');
-        vm.stack.push(source_offset.into()).expect('push failed');
         vm.stack.push(size.into()).expect('push failed');
+        vm.stack.push(source_offset.into()).expect('push failed');
+        vm.stack.push(dest_offset.into()).expect('push failed');
+
+        let words_size = ((size + 31) / 32).into();
+        let copy_gas_cost = gas::COPY * words_size;
 
         // When
         let expected_gas = gas::VERYLOW
             + gas::memory_expansion(
                 vm.memory.size(), [(max(dest_offset, source_offset), size)].span()
             )
-                .expansion_cost;
+                .expansion_cost
+            + copy_gas_cost;
         let gas_before = vm.gas_left();
         let result = vm.exec_mcopy();
         let gas_after = vm.gas_left();
