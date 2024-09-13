@@ -5,7 +5,7 @@ use evm::instructions::{
     ExchangeOperationsTrait, LoggingOperationsTrait, StopAndArithmeticOperationsTrait,
     ComparisonAndBitwiseOperationsTrait, SystemOperationsTrait, BlockInformationTrait,
     DuplicationOperationsTrait, EnvironmentInformationTrait, PushOperationsTrait,
-    MemoryOperationTrait
+    MemoryOperationTrait, Sha3Trait
 };
 
 use evm::model::account::{AccountTrait};
@@ -242,595 +242,599 @@ pub impl EVMImpl of EVMTrait {
 
     fn execute_opcode(ref self: VM, opcode: u8) -> Result<(), EVMError> {
         // Call the appropriate function based on the opcode.
-        if opcode == 0 {
+        if opcode == 0x00 {
             // STOP
             return self.exec_stop();
         }
-        if opcode == 1 {
+        if opcode == 0x01 {
             // ADD
             return self.exec_add();
         }
-        if opcode == 2 {
+        if opcode == 0x02 {
             // MUL
             return self.exec_mul();
         }
-        if opcode == 3 {
+        if opcode == 0x03 {
             // SUB
             return self.exec_sub();
         }
-        if opcode == 4 {
+        if opcode == 0x04 {
             // DIV
             return self.exec_div();
         }
-        if opcode == 5 {
+        if opcode == 0x05 {
             // SDIV
             return self.exec_sdiv();
         }
-        if opcode == 6 {
+        if opcode == 0x06 {
             // MOD
             return self.exec_mod();
         }
-        if opcode == 7 {
+        if opcode == 0x07 {
             // SMOD
             return self.exec_smod();
         }
-        if opcode == 8 {
+        if opcode == 0x08 {
             // ADDMOD
             return self.exec_addmod();
         }
-        if opcode == 9 {
+        if opcode == 0x09 {
             // MULMOD
             return self.exec_mulmod();
         }
-        if opcode == 10 {
+        if opcode == 0x0A {
             // EXP
             return self.exec_exp();
         }
-        if opcode == 11 {
+        if opcode == 0x0B {
             // SIGNEXTEND
             return self.exec_signextend();
         }
-        if opcode == 16 {
+        if opcode == 0x10 {
             // LT
             return self.exec_lt();
         }
-        if opcode == 17 {
+        if opcode == 0x11 {
             // GT
             return self.exec_gt();
         }
-        if opcode == 18 {
+        if opcode == 0x12 {
             // SLT
             return self.exec_slt();
         }
-        if opcode == 19 {
+        if opcode == 0x13 {
             // SGT
             return self.exec_sgt();
         }
-        if opcode == 20 {
+        if opcode == 0x14 {
             // EQ
             return self.exec_eq();
         }
-        if opcode == 21 {
+        if opcode == 0x15 {
             // ISZERO
             return self.exec_iszero();
         }
-        if opcode == 22 {
+        if opcode == 0x16 {
             // AND
             return self.exec_and();
         }
-        if opcode == 23 {
+        if opcode == 0x17 {
             // OR
             return self.exec_or();
         }
-        if opcode == 24 {
+        if opcode == 0x18 {
             // XOR
             return self.exec_xor();
         }
-        if opcode == 25 {
+        if opcode == 0x19 {
             // NOT
             return self.exec_not();
         }
-        if opcode == 26 {
+        if opcode == 0x1A {
             // BYTE
             return self.exec_byte();
         }
-        if opcode == 27 {
+        if opcode == 0x1B {
             // SHL
             return self.exec_shl();
         }
-        if opcode == 28 {
+        if opcode == 0x1C {
             // SHR
             return self.exec_shr();
         }
-        if opcode == 29 {
+        if opcode == 0x1D {
             // SAR
             return self.exec_sar();
         }
-        if opcode == 48 {
+        if opcode == 0x20 {
+            // KECCAK256
+            return self.exec_sha3();
+        }
+        if opcode == 0x30 {
             // ADDRESS
             return self.exec_address();
         }
-        if opcode == 49 {
+        if opcode == 0x31 {
             // BALANCE
             return self.exec_balance();
         }
-        if opcode == 50 {
+        if opcode == 0x32 {
             // ORIGIN
             return self.exec_origin();
         }
-        if opcode == 51 {
+        if opcode == 0x33 {
             // CALLER
             return self.exec_caller();
         }
-        if opcode == 52 {
+        if opcode == 0x34 {
             // CALLVALUE
             return self.exec_callvalue();
         }
-        if opcode == 53 {
+        if opcode == 0x35 {
             // CALLDATALOAD
             return self.exec_calldataload();
         }
-        if opcode == 54 {
+        if opcode == 0x36 {
             // CALLDATASIZE
             return self.exec_calldatasize();
         }
-        if opcode == 55 {
+        if opcode == 0x37 {
             // CALLDATACOPY
             return self.exec_calldatacopy();
         }
-        if opcode == 56 {
+        if opcode == 0x38 {
             // CODESIZE
             return self.exec_codesize();
         }
-        if opcode == 57 {
+        if opcode == 0x39 {
             // CODECOPY
             return self.exec_codecopy();
         }
-        if opcode == 58 {
+        if opcode == 0x3A {
             // GASPRICE
             return self.exec_gasprice();
         }
-        if opcode == 59 {
+        if opcode == 0x3B {
             // EXTCODESIZE
             return self.exec_extcodesize();
         }
-        if opcode == 60 {
+        if opcode == 0x3C {
             // EXTCODECOPY
             return self.exec_extcodecopy();
         }
-        if opcode == 61 {
+        if opcode == 0x3D {
             // RETURNDATASIZE
             return self.exec_returndatasize();
         }
-        if opcode == 62 {
+        if opcode == 0x3E {
             // RETURNDATACOPY
             return self.exec_returndatacopy();
         }
-        if opcode == 63 {
+        if opcode == 0x3F {
             // EXTCODEHASH
             return self.exec_extcodehash();
         }
-        if opcode == 64 {
+        if opcode == 0x40 {
             // BLOCKHASH
             return self.exec_blockhash();
         }
-        if opcode == 65 {
+        if opcode == 0x41 {
             // COINBASE
             return self.exec_coinbase();
         }
-        if opcode == 66 {
+        if opcode == 0x42 {
             // TIMESTAMP
             return self.exec_timestamp();
         }
-        if opcode == 67 {
+        if opcode == 0x43 {
             // NUMBER
             return self.exec_number();
         }
-        if opcode == 68 {
+        if opcode == 0x44 {
             // PREVRANDAO
             return self.exec_prevrandao();
         }
-        if opcode == 69 {
+        if opcode == 0x45 {
             // GASLIMIT
             return self.exec_gaslimit();
         }
-        if opcode == 70 {
+        if opcode == 0x46 {
             // CHAINID
             return self.exec_chainid();
         }
-        if opcode == 71 {
+        if opcode == 0x47 {
             // SELFBALANCE
             return self.exec_selfbalance();
         }
-        if opcode == 72 {
+        if opcode == 0x48 {
             // BASEFEE
             return self.exec_basefee();
         }
-        if opcode == 73 {
+        if opcode == 0x49 {
             // BLOBHASH
             return self.exec_blobhash();
         }
-        if opcode == 74 {
+        if opcode == 0x4A {
             // BLOBBASEFEE
             return self.exec_blobbasefee();
         }
-        if opcode == 80 {
+        if opcode == 0x50 {
             // POP
             return self.exec_pop();
         }
-        if opcode == 81 {
+        if opcode == 0x51 {
             // MLOAD
             return self.exec_mload();
         }
-        if opcode == 82 {
+        if opcode == 0x52 {
             // MSTORE
             return self.exec_mstore();
         }
-        if opcode == 83 {
+        if opcode == 0x53 {
             // MSTORE8
             return self.exec_mstore8();
         }
-        if opcode == 84 {
+        if opcode == 0x54 {
             // SLOAD
             return self.exec_sload();
         }
-        if opcode == 85 {
+        if opcode == 0x55 {
             // SSTORE
             return self.exec_sstore();
         }
-        if opcode == 86 {
+        if opcode == 0x56 {
             // JUMP
             return self.exec_jump();
         }
-        if opcode == 87 {
+        if opcode == 0x57 {
             // JUMPI
             return self.exec_jumpi();
         }
-        if opcode == 88 {
+        if opcode == 0x58 {
             // PC
             return self.exec_pc();
         }
-        if opcode == 89 {
+        if opcode == 0x59 {
             // MSIZE
             return self.exec_msize();
         }
-        if opcode == 90 {
+        if opcode == 0x5A {
             // GAS
             return self.exec_gas();
         }
-        if opcode == 91 {
+        if opcode == 0x5B {
             // JUMPDEST
             return self.exec_jumpdest();
         }
-        if opcode == 92 {
+        if opcode == 0x5C {
             // TLOAD
             return self.exec_tload();
         }
-        if opcode == 93 {
+        if opcode == 0x5D {
             // TSTORE
             return self.exec_tstore();
         }
-        if opcode == 94 {
+        if opcode == 0x5E {
             // MCOPY
             return self.exec_mcopy();
         }
-        if opcode == 95 {
+        if opcode == 0x5F {
             // PUSH0
             return self.exec_push0();
         }
-        if opcode == 96 {
+        if opcode == 0x60 {
             // PUSH1
             return self.exec_push1();
         }
-        if opcode == 97 {
+        if opcode == 0x61 {
             // PUSH2
             return self.exec_push2();
         }
-        if opcode == 98 {
+        if opcode == 0x62 {
             // PUSH3
             return self.exec_push3();
         }
-        if opcode == 99 {
+        if opcode == 0x63 {
             // PUSH4
             return self.exec_push4();
         }
-        if opcode == 100 {
+        if opcode == 0x64 {
             // PUSH5
             return self.exec_push5();
         }
-        if opcode == 101 {
+        if opcode == 0x65 {
             // PUSH6
             return self.exec_push6();
         }
-        if opcode == 102 {
+        if opcode == 0x66 {
             // PUSH7
             return self.exec_push7();
         }
-        if opcode == 103 {
+        if opcode == 0x67 {
             // PUSH8
             return self.exec_push8();
         }
-        if opcode == 104 {
+        if opcode == 0x68 {
             // PUSH9
             return self.exec_push9();
         }
-        if opcode == 105 {
+        if opcode == 0x69 {
             // PUSH10
             return self.exec_push10();
         }
-        if opcode == 106 {
+        if opcode == 0x6A {
             // PUSH11
             return self.exec_push11();
         }
-        if opcode == 107 {
+        if opcode == 0x6B {
             // PUSH12
             return self.exec_push12();
         }
-        if opcode == 108 {
+        if opcode == 0x6C {
             // PUSH13
             return self.exec_push13();
         }
-        if opcode == 109 {
+        if opcode == 0x6D {
             // PUSH14
             return self.exec_push14();
         }
-        if opcode == 110 {
+        if opcode == 0x6E {
             // PUSH15
             return self.exec_push15();
         }
-        if opcode == 111 {
+        if opcode == 0x6F {
             // PUSH16
             return self.exec_push16();
         }
-        if opcode == 112 {
+        if opcode == 0x70 {
             // PUSH17
             return self.exec_push17();
         }
-        if opcode == 113 {
+        if opcode == 0x71 {
             // PUSH18
             return self.exec_push18();
         }
-        if opcode == 114 {
+        if opcode == 0x72 {
             // PUSH19
             return self.exec_push19();
         }
-        if opcode == 115 {
+        if opcode == 0x73 {
             // PUSH20
             return self.exec_push20();
         }
-        if opcode == 116 {
+        if opcode == 0x74 {
             // PUSH21
             return self.exec_push21();
         }
-        if opcode == 117 {
+        if opcode == 0x75 {
             // PUSH22
             return self.exec_push22();
         }
-        if opcode == 118 {
+        if opcode == 0x76 {
             // PUSH23
             return self.exec_push23();
         }
-        if opcode == 119 {
+        if opcode == 0x77 {
             // PUSH24
             return self.exec_push24();
         }
-        if opcode == 120 {
+        if opcode == 0x78 {
             // PUSH25
             return self.exec_push25();
         }
-        if opcode == 121 {
+        if opcode == 0x79 {
             // PUSH26
             return self.exec_push26();
         }
-        if opcode == 122 {
+        if opcode == 0x7A {
             // PUSH27
             return self.exec_push27();
         }
-        if opcode == 123 {
+        if opcode == 0x7B {
             // PUSH28
             return self.exec_push28();
         }
-        if opcode == 124 {
+        if opcode == 0x7C {
             // PUSH29
             return self.exec_push29();
         }
-        if opcode == 125 {
+        if opcode == 0x7D {
             // PUSH30
             return self.exec_push30();
         }
-        if opcode == 126 {
+        if opcode == 0x7E {
             // PUSH31
             return self.exec_push31();
         }
-        if opcode == 127 {
+        if opcode == 0x7F {
             // PUSH32
             return self.exec_push32();
         }
-        if opcode == 128 {
+        if opcode == 0x80 {
             // DUP1
             return self.exec_dup1();
         }
-        if opcode == 129 {
+        if opcode == 0x81 {
             // DUP2
             return self.exec_dup2();
         }
-        if opcode == 130 {
+        if opcode == 0x82 {
             // DUP3
             return self.exec_dup3();
         }
-        if opcode == 131 {
+        if opcode == 0x83 {
             // DUP4
             return self.exec_dup4();
         }
-        if opcode == 132 {
+        if opcode == 0x84 {
             // DUP5
             return self.exec_dup5();
         }
-        if opcode == 133 {
+        if opcode == 0x85 {
             // DUP6
             return self.exec_dup6();
         }
-        if opcode == 134 {
+        if opcode == 0x86 {
             // DUP7
             return self.exec_dup7();
         }
-        if opcode == 135 {
+        if opcode == 0x87 {
             // DUP8
             return self.exec_dup8();
         }
-        if opcode == 136 {
+        if opcode == 0x88 {
             // DUP9
             return self.exec_dup9();
         }
-        if opcode == 137 {
+        if opcode == 0x89 {
             // DUP10
             return self.exec_dup10();
         }
-        if opcode == 138 {
+        if opcode == 0x8A {
             // DUP11
             return self.exec_dup11();
         }
-        if opcode == 139 {
+        if opcode == 0x8B {
             // DUP12
             return self.exec_dup12();
         }
-        if opcode == 140 {
+        if opcode == 0x8C {
             // DUP13
             return self.exec_dup13();
         }
-        if opcode == 141 {
+        if opcode == 0x8D {
             // DUP14
             return self.exec_dup14();
         }
-        if opcode == 142 {
+        if opcode == 0x8E {
             // DUP15
             return self.exec_dup15();
         }
-        if opcode == 143 {
+        if opcode == 0x8F {
             // DUP16
             return self.exec_dup16();
         }
-        if opcode == 144 {
+        if opcode == 0x90 {
             // SWAP1
             return self.exec_swap1();
         }
-        if opcode == 145 {
+        if opcode == 0x91 {
             // SWAP2
             return self.exec_swap2();
         }
-        if opcode == 146 {
+        if opcode == 0x92 {
             // SWAP3
             return self.exec_swap3();
         }
-        if opcode == 147 {
+        if opcode == 0x93 {
             // SWAP4
             return self.exec_swap4();
         }
-        if opcode == 148 {
+        if opcode == 0x94 {
             // SWAP5
             return self.exec_swap5();
         }
-        if opcode == 149 {
+        if opcode == 0x95 {
             // SWAP6
             return self.exec_swap6();
         }
-        if opcode == 150 {
+        if opcode == 0x96 {
             // SWAP7
             return self.exec_swap7();
         }
-        if opcode == 151 {
+        if opcode == 0x97 {
             // SWAP8
             return self.exec_swap8();
         }
-        if opcode == 152 {
+        if opcode == 0x98 {
             // SWAP9
             return self.exec_swap9();
         }
-        if opcode == 153 {
+        if opcode == 0x99 {
             // SWAP10
             return self.exec_swap10();
         }
-        if opcode == 154 {
+        if opcode == 0x9A {
             // SWAP11
             return self.exec_swap11();
         }
-        if opcode == 155 {
+        if opcode == 0x9B {
             // SWAP12
             return self.exec_swap12();
         }
-        if opcode == 156 {
+        if opcode == 0x9C {
             // SWAP13
             return self.exec_swap13();
         }
-        if opcode == 157 {
+        if opcode == 0x9D {
             // SWAP14
             return self.exec_swap14();
         }
-        if opcode == 158 {
+        if opcode == 0x9E {
             // SWAP15
             return self.exec_swap15();
         }
-        if opcode == 159 {
+        if opcode == 0x9F {
             // SWAP16
             return self.exec_swap16();
         }
-        if opcode == 160 {
+        if opcode == 0xA0 {
             // LOG0
             return self.exec_log0();
         }
-        if opcode == 161 {
+        if opcode == 0xA1 {
             // LOG1
             return self.exec_log1();
         }
-        if opcode == 162 {
+        if opcode == 0xA2 {
             // LOG2
             return self.exec_log2();
         }
-        if opcode == 163 {
+        if opcode == 0xA3 {
             // LOG3
             return self.exec_log3();
         }
-        if opcode == 164 {
+        if opcode == 0xA4 {
             // LOG4
             return self.exec_log4();
         }
-        if opcode == 240 {
+        if opcode == 0xF0 {
             // CREATE
             return self.exec_create();
         }
-        if opcode == 241 {
+        if opcode == 0xF1 {
             // CALL
             return self.exec_call();
         }
-        if opcode == 242 {
+        if opcode == 0xF2 {
             // CALLCODE
             return self.exec_callcode();
         }
-        if opcode == 243 {
+        if opcode == 0xF3 {
             // RETURN
             return self.exec_return();
         }
-        if opcode == 244 {
+        if opcode == 0xF4 {
             // DELEGATECALL
             return self.exec_delegatecall();
         }
-        if opcode == 245 {
+        if opcode == 0xF5 {
             // CREATE2
             return self.exec_create2();
         }
-        if opcode == 250 {
+        if opcode == 0xFA {
             // STATICCALL
             return self.exec_staticcall();
         }
-        if opcode == 253 {
+        if opcode == 0xFD {
             // REVERT
             return self.exec_revert();
         }
-        if opcode == 254 {
+        if opcode == 0xFE {
             // INVALID
             return self.exec_invalid();
         }
-        if opcode == 255 {
+        if opcode == 0xFF {
             // SELFDESTRUCT
             return self.exec_selfdestruct();
         }
