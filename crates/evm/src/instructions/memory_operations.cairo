@@ -320,7 +320,6 @@ mod tests {
         native_token
     };
     use snforge_std::{test_address, start_mock_call};
-    use utils::constants::EMPTY_KECCAK;
     use utils::helpers::U8SpanExTrait;
     use utils::helpers::compute_starknet_address;
 

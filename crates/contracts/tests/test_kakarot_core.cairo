@@ -330,7 +330,8 @@ fn test_process_transaction() {
         .process_transaction(
             origin: Address { evm: eoa_evm_address, starknet: eoa_starknet_address },
             tx: Transaction::Legacy(tx),
-            :gas_price
+            :gas_price,
+            intrinsic_gas: 0
         );
     let return_data = result.return_data;
 

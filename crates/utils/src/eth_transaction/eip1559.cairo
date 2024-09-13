@@ -1,5 +1,5 @@
 use core::num::traits::SaturatingSub;
-use crate::errors::{EthTransactionError, RLPError, RLPHelpersErrorTrait};
+use crate::errors::{EthTransactionError, RLPError, RLPErrorTrait};
 use crate::eth_transaction::common::TxKind;
 use crate::eth_transaction::eip2930::AccessListItem;
 use crate::rlp::{RLPItem, RLPHelpersTrait};

@@ -7,7 +7,13 @@ pub enum RLPError {
     EmptyInput,
     InputTooShort,
     InvalidInput,
-    Custom: felt252
+    Custom: felt252,
+    NotAString,
+    FailedParsingU128,
+    FailedParsingU256,
+    FailedParsingAddress,
+    FailedParsingAccessList,
+    NotAList
 }
 
 
@@ -17,7 +23,13 @@ pub impl RLPErrorIntoU256 of Into<RLPError, u256> {
             RLPError::EmptyInput => 'input is null'.into(),
             RLPError::InputTooShort => 'input too short'.into(),
             RLPError::InvalidInput => 'rlp input not conform'.into(),
-            RLPError::Custom(msg) => msg.into()
+            RLPError::Custom(msg) => msg.into(),
+            RLPError::NotAString => 'rlp input is not a string'.into(),
+            RLPError::FailedParsingU128 => 'rlp failed parsing u128'.into(),
+            RLPError::FailedParsingU256 => 'rlp failed parsing u256'.into(),
+            RLPError::FailedParsingAddress => 'rlp failed parsing address'.into(),
+            RLPError::FailedParsingAccessList => 'rlp failed parsing access_list'.into(),
+            RLPError::NotAList => 'rlp input is not a list'.into()
         }
     }
 }
@@ -32,35 +44,12 @@ pub impl RLPErrorImpl<T> of RLPErrorTrait<T> {
     }
 }
 
-
-#[derive(Drop, Copy, PartialEq, Debug)]
-pub enum RLPHelpersError {
-    NotAString,
-    FailedParsingU128,
-    FailedParsingU256,
-    FailedParsingAddress,
-    FailedParsingAccessList,
-    NotAList
-}
-
-#[generate_trait]
-pub impl RLPHelpersErrorImpl<T> of RLPHelpersErrorTrait<T> {
-    fn map_err(self: Result<T, RLPHelpersError>) -> Result<T, EthTransactionError> {
-        match self {
-            Result::Ok(val) => Result::Ok(val),
-            Result::Err(error) => { Result::Err(EthTransactionError::RlpHelpersError(error)) }
-        }
-    }
-}
-
-
 #[derive(Drop, Copy, PartialEq, Debug)]
 pub enum EthTransactionError {
     RLPError: RLPError,
     ExpectedRLPItemToBeList,
     ExpectedRLPItemToBeString,
     TransactionTypeError,
-    RlpHelpersError: RLPHelpersError,
     // the usize represents the encountered length of payload
     TopLevelRlpListWrongLength: usize,
     // the usize represents the encountered length of payload
