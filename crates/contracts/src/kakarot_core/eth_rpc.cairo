@@ -8,6 +8,7 @@ use evm::backend::starknet_backend;
 use evm::backend::validation::validate_eth_tx;
 use evm::model::{TransactionResult, Address};
 use evm::{EVMTrait};
+use utils::constants::POW_2_53;
 use utils::eth_transaction::transaction::{TransactionTrait, Transaction};
 
 #[starknet::interface]
@@ -130,7 +131,9 @@ pub impl EthRPC<
     }
 
     fn eth_chain_id(self: @TContractState) -> u64 {
-        panic!("unimplemented")
+        let tx_info = get_tx_info().unbox();
+        let tx_chain_id: u64 = tx_info.chain_id.try_into().unwrap();
+        tx_chain_id % POW_2_53.try_into().unwrap()
     }
 
     fn eth_call(
