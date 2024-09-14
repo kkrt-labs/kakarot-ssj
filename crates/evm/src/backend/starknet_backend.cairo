@@ -1,8 +1,6 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-use contracts::kakarot_core::{
-    KakarotCore, KakarotCore::KakarotCoreImpl
-};
 use contracts::kakarot_core::eth_rpc::IEthRPC;
+use contracts::kakarot_core::{KakarotCore, KakarotCore::KakarotCoreImpl};
 use core::num::traits::zero::Zero;
 use core::ops::SnapshotDeref;
 use core::starknet::storage::StoragePointerReadAccess;
