@@ -213,3 +213,27 @@ fn is_view(self: @KakarotCore::ContractState) -> bool {
     }
     true
 }
+
+#[cfg(test)]
+mod tests {
+    use contracts::kakarot_core::KakarotCore;
+    use contracts::kakarot_core::eth_rpc::IEthRPC;
+    use snforge_std::{start_cheat_chain_id_global};
+
+    fn set_up() -> KakarotCore::ContractState {
+        // Define the kakarot state to access contract functions
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
+
+        // Set up environment
+        start_cheat_chain_id_global(1);
+
+        kakarot_state
+    }
+
+
+    #[test]
+    fn test_eth_chain_id() {
+        let kakarot_state = set_up();
+        assert_eq!(kakarot_state.eth_chain_id(), 1);
+    }
+}
