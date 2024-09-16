@@ -36,6 +36,7 @@ pub trait StackTrait {
     fn push(ref self: Stack, item: u256) -> Result<(), EVMError>;
     fn pop(ref self: Stack) -> Result<u256, EVMError>;
     fn pop_usize(ref self: Stack) -> Result<usize, EVMError>;
+    fn pop_saturating_usize(ref self: Stack) -> Result<usize, EVMError>;
     fn pop_u64(ref self: Stack) -> Result<u64, EVMError>;
     fn pop_saturating_u64(ref self: Stack) -> Result<u64, EVMError>;
     fn pop_u128(ref self: Stack) -> Result<u128, EVMError>;
@@ -105,6 +106,19 @@ impl StackImpl of StackTrait {
         let item: u256 = self.pop()?;
         let item: usize = item.try_into_result()?;
         Result::Ok(item)
+    }
+
+    /// Calls `Stack::pop` and saturates the result to usize
+    #[inline(always)]
+    fn pop_saturating_usize(ref self: Stack) -> Result<usize, EVMError> {
+        let item: u256 = self.pop()?;
+        if item.high != 0 {
+            return Result::Ok(Bounded::<usize>::MAX);
+        };
+        match item.low.try_into() {
+            Option::Some(value) => Result::Ok(value),
+            Option::None => Result::Ok(Bounded::<usize>::MAX),
+        }
     }
 
     /// Calls `Stack::pop` and tries to convert it to u64
@@ -419,6 +433,31 @@ mod tests {
                 result.unwrap_err() == EVMError::StackUnderflow, "should return StackUnderflow"
             );
         }
+
+        #[test]
+        fn test_pop_saturating_usize_should_return_max_when_overflow() {
+            // Given
+            let mut stack = StackTrait::new();
+            stack.push(Bounded::<u64>::MAX.into()).unwrap();
+
+            // When
+            let result = stack.pop_saturating_usize();
+            assert!(result.is_ok());
+            assert_eq!(result.unwrap(), Bounded::<usize>::MAX);
+        }
+
+        #[test]
+        fn test_pop_saturating_usize_should_return_value_when_no_overflow() {
+            // Given
+            let mut stack = StackTrait::new();
+            stack.push(1234567890).unwrap();
+
+            // When
+            let result = stack.pop_saturating_usize();
+            assert!(result.is_ok());
+            assert_eq!(result.unwrap(), 1234567890);
+        }
+
 
         #[test]
         fn test_pop_saturating_u64_should_return_max_when_overflow() {

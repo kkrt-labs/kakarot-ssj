@@ -60,7 +60,7 @@ fn exec_log_i(ref self: VM, topics_len: u8) -> Result<(), EVMError> {
     ensure(!self.message().read_only, EVMError::WriteInStaticContext)?;
 
     // TODO(optimization): check benefits of n `pop` instead of `pop_n`
-    let offset = self.stack.pop_usize()?;
+    let offset = self.stack.pop_saturating_usize()?;
     let size = self.stack.pop_usize()?;
     let topics: Array<u256> = self.stack.pop_n(topics_len.into())?;
 

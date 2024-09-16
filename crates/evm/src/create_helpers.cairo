@@ -39,7 +39,7 @@ pub impl CreateHelpersImpl of CreateHelpers {
     /// As part of the CREATE family of opcodes.
     fn prepare_create(ref self: VM, create_type: CreateType) -> Result<CreateArgs, EVMError> {
         let value = self.stack.pop()?;
-        let offset = self.stack.pop_usize()?;
+        let offset = self.stack.pop_saturating_usize()?;
         let size = self.stack.pop_usize()?;
 
         let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span())?;

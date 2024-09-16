@@ -111,8 +111,8 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#37?fork=shanghai
     fn exec_calldatacopy(ref self: VM) -> Result<(), EVMError> {
-        let dest_offset = self.stack.pop_usize()?;
-        let offset = self.stack.pop_usize()?;
+        let dest_offset = self.stack.pop_saturating_usize()?;
+        let offset = self.stack.pop_saturating_usize()?;
         let size = self.stack.pop_usize()?;
 
         let words_size = (ceil32(size) / 32).into();
@@ -141,8 +141,8 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Copies slice of bytecode to memory.
     /// # Specification: https://www.evm.codes/#39?fork=shanghai
     fn exec_codecopy(ref self: VM) -> Result<(), EVMError> {
-        let dest_offset = self.stack.pop_usize()?;
-        let offset = self.stack.pop_usize()?;
+        let dest_offset = self.stack.pop_saturating_usize()?;
+        let offset = self.stack.pop_saturating_usize()?;
         let size = self.stack.pop_usize()?;
 
         let words_size = (ceil32(size) / 32).into();
@@ -190,8 +190,8 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// # Specification: https://www.evm.codes/#3c?fork=shanghai
     fn exec_extcodecopy(ref self: VM) -> Result<(), EVMError> {
         let evm_address = self.stack.pop_eth_address()?;
-        let dest_offset = self.stack.pop_usize()?;
-        let offset = self.stack.pop_usize()?;
+        let dest_offset = self.stack.pop_saturating_usize()?;
+        let offset = self.stack.pop_saturating_usize()?;
         let size = self.stack.pop_usize()?;
 
         // GAS
@@ -227,8 +227,8 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#3e?fork=shanghai
     fn exec_returndatacopy(ref self: VM) -> Result<(), EVMError> {
-        let dest_offset = self.stack.pop_usize()?;
-        let offset = self.stack.pop_usize()?;
+        let dest_offset = self.stack.pop_saturating_usize()?;
+        let offset = self.stack.pop_saturating_usize()?;
         let size = self.stack.pop_usize()?;
         let return_data: Span<u8> = self.return_data();
 

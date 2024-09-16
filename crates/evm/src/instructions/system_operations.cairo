@@ -28,9 +28,9 @@ pub impl SystemOperations of SystemOperationsTrait {
         let gas = self.stack.pop_saturating_u64()?;
         let to = self.stack.pop_eth_address()?;
         let value = self.stack.pop()?;
-        let args_offset = self.stack.pop_usize()?;
+        let args_offset = self.stack.pop_saturating_usize()?;
         let args_size = self.stack.pop_usize()?;
-        let ret_offset = self.stack.pop_usize()?;
+        let ret_offset = self.stack.pop_saturating_usize()?;
         let ret_size = self.stack.pop_usize()?;
 
         // GAS
@@ -107,9 +107,9 @@ pub impl SystemOperations of SystemOperationsTrait {
         let gas = self.stack.pop_saturating_u64()?;
         let code_address = self.stack.pop_eth_address()?;
         let value = self.stack.pop()?;
-        let args_offset = self.stack.pop_usize()?;
+        let args_offset = self.stack.pop_saturating_usize()?;
         let args_size = self.stack.pop_usize()?;
-        let ret_offset = self.stack.pop_usize()?;
+        let ret_offset = self.stack.pop_saturating_usize()?;
         let ret_size = self.stack.pop_usize()?;
 
         let to = self.message().target.evm;
@@ -170,7 +170,7 @@ pub impl SystemOperations of SystemOperationsTrait {
     /// RETURN
     /// # Specification: https://www.evm.codes/#f3?fork=shanghai
     fn exec_return(ref self: VM) -> Result<(), EVMError> {
-        let offset = self.stack.pop_usize()?;
+        let offset = self.stack.pop_saturating_usize()?;
         let size = self.stack.pop_usize()?;
         let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);
@@ -191,9 +191,9 @@ pub impl SystemOperations of SystemOperationsTrait {
     fn exec_delegatecall(ref self: VM) -> Result<(), EVMError> {
         let gas = self.stack.pop_saturating_u64()?;
         let code_address = self.stack.pop_eth_address()?;
-        let args_offset = self.stack.pop_usize()?;
+        let args_offset = self.stack.pop_saturating_usize()?;
         let args_size = self.stack.pop_usize()?;
-        let ret_offset = self.stack.pop_usize()?;
+        let ret_offset = self.stack.pop_saturating_usize()?;
         let ret_size = self.stack.pop_usize()?;
 
         // GAS
@@ -244,9 +244,9 @@ pub impl SystemOperations of SystemOperationsTrait {
     fn exec_staticcall(ref self: VM) -> Result<(), EVMError> {
         let gas = self.stack.pop_saturating_u64()?;
         let to = self.stack.pop_eth_address()?;
-        let args_offset = self.stack.pop_usize()?;
+        let args_offset = self.stack.pop_saturating_usize()?;
         let args_size = self.stack.pop_usize()?;
-        let ret_offset = self.stack.pop_usize()?;
+        let ret_offset = self.stack.pop_saturating_usize()?;
         let ret_size = self.stack.pop_usize()?;
 
         // GAS
@@ -287,7 +287,7 @@ pub impl SystemOperations of SystemOperationsTrait {
     /// REVERT
     /// # Specification: https://www.evm.codes/#fd?fork=shanghai
     fn exec_revert(ref self: VM) -> Result<(), EVMError> {
-        let offset = self.stack.pop_usize()?;
+        let offset = self.stack.pop_saturating_usize()?;
         let size = self.stack.pop_usize()?;
 
         let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span())?;
