@@ -129,18 +129,30 @@ pub impl VMImpl of VMTrait {
         self.accessed_storage_keys.spanset()
     }
 
-    /// Reads and return data from bytecode.
-    /// The program counter is incremented accordingly.
+    /// Reads and returns data from bytecode starting at the current program counter.
     ///
     /// # Arguments
     ///
-    /// * `self` - The `ExecutionContext` instance to read the data from.
+    /// * `self` - The `VM` instance to read the data from.
     /// * `len` - The length of the data to read from the bytecode.
+    ///
+    /// # Returns
+    ///
+    /// * A `Span<u8>` containing the requested bytecode slice.
+    /// * If the requested slice is out of bounds, returns an empty slice.
     #[inline(always)]
     fn read_code(self: @VM, len: usize) -> Span<u8> {
-        // Copy code slice from [pc, pc+len]
-        let code = self.message().code.slice(self.pc(), len);
-        code
+        let pc = self.pc();
+        let code_len = self.message().code.len();
+
+        // Check if the requested slice is within bounds
+        if pc + len > code_len {
+            // If out of bounds, return an empty slice
+            [].span()
+        } else {
+            // If within bounds, return the requested slice
+            self.message().code.slice(pc, len)
+        }
     }
 
     #[inline(always)]
@@ -218,19 +230,39 @@ mod tests {
     }
 
     #[test]
-    fn test_read_code() {
-        // Given a vm with some bytecode in the call context
-
+    fn test_read_code_within_bounds() {
         let bytecode = [0x01, 0x02, 0x03, 0x04, 0x05].span();
-
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
-        // When we read a code slice
+        vm.set_pc(1);
+
         let read_code = vm.read_code(3);
 
-        // Then the read code should be the expected slice and the PC should be updated
-        assert(read_code == [0x01, 0x02, 0x03].span(), 'wrong bytecode read');
-        // Read Code should not modify PC
-        assert(vm.pc() == 0, 'wrong pc');
+        assert_eq!(read_code, [0x02, 0x03, 0x04].span());
+        assert_eq!(vm.pc(), 1);
+    }
+
+    #[test]
+    fn test_read_code_out_of_bounds() {
+        let bytecode = [0x01, 0x02, 0x03].span();
+        let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
+        vm.set_pc(2);
+
+        let read_code = vm.read_code(2);
+
+        assert_eq!(read_code, [].span());
+        assert_eq!(vm.pc(), 2);
+    }
+
+    #[test]
+    fn test_read_code_at_boundary() {
+        let bytecode = [0x01, 0x02, 0x03, 0x04, 0x05].span();
+        let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
+        vm.set_pc(3);
+
+        let read_code = vm.read_code(2);
+
+        assert_eq!(read_code, [0x04, 0x05].span());
+        assert_eq!(vm.pc(), 3);
     }
 
     #[test]
