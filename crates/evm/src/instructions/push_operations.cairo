@@ -15,7 +15,11 @@ fn exec_push_i(ref self: VM, i: u8) -> Result<(), EVMError> {
 
     self.set_pc(self.pc() + i);
 
-    self.stack.push(load_word(i, data))
+    if data.len() == 0 {
+        self.stack.push(0)
+    } else {
+        self.stack.push(load_word(i, data))
+    }
 }
 
 #[generate_trait]
