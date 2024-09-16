@@ -304,8 +304,13 @@ pub impl EVMImpl of EVMTrait {
         let pc = vm.pc();
         let bytecode = vm.message().code;
 
-        // Check if PC is not out of bounds.
-        if pc >= bytecode.len() || vm.is_running() == false {
+        // If PC is out of bounds, stop the VM
+        // Also empties the returndata - akin to executing the STOP opcode.
+        if pc >= bytecode.len() {
+            vm.exec_stop();
+        }
+
+        if !vm.is_running() {
             // REVERT opcode case
             if vm.is_error() {
                 return ExecutionResult {
@@ -372,7 +377,7 @@ pub impl EVMImpl of EVMTrait {
         // Call the appropriate function based on the opcode.
         if opcode == 0x00 {
             // STOP
-            return self.exec_stop();
+            return Result::Ok(self.exec_stop());
         }
         if opcode == 0x01 {
             // ADD

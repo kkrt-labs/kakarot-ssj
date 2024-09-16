@@ -1,5 +1,6 @@
+use core::cmp::min;
 use core::dict::{Felt252Dict, Felt252DictTrait};
-use core::num::traits::CheckedSub;
+use core::num::traits::{SaturatingSub, CheckedSub};
 use core::starknet::EthAddress;
 use evm::errors::EVMError;
 use evm::memory::Memory;
@@ -139,20 +140,23 @@ pub impl VMImpl of VMTrait {
     /// # Returns
     ///
     /// * A `Span<u8>` containing the requested bytecode slice.
-    /// * If the requested slice is out of bounds, returns an empty slice.
+    /// * If the requested slice extends beyond the code length, returns remaining bytes.
     #[inline(always)]
     fn read_code(self: @VM, len: usize) -> Span<u8> {
         let pc = self.pc();
         let code_len = self.message().code.len();
 
-        // Check if the requested slice is within bounds
-        if pc + len > code_len {
-            // If out of bounds, return an empty slice
-            [].span()
-        } else {
-            // If within bounds, return the requested slice
-            self.message().code.slice(pc, len)
+        // If pc is out of bounds, return an empty span
+        if pc >= code_len {
+            return [].span();
         }
+
+        // Calculate the actual length to read
+        let remaining = code_len.saturating_sub(pc);
+        let actual_len = min(len, remaining);
+
+        // Return the slice with the actual length
+        self.message().code.slice(pc, actual_len)
     }
 
     #[inline(always)]
@@ -249,7 +253,7 @@ mod tests {
 
         let read_code = vm.read_code(2);
 
-        assert_eq!(read_code, [].span());
+        assert_eq!(read_code, [0x03].span());
         assert_eq!(vm.pc(), 2);
     }
 

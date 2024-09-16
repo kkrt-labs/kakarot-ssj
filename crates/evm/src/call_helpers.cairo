@@ -107,9 +107,11 @@ pub impl CallHelpersImpl of CallHelpers {
                 self.stack.push(0)?;
             },
             ExecutionResultStatus::Exception => {
-                // If the call has halted exceptionnaly, the return_data is emptied.
+                // If the call has halted exceptionnaly,
+                // the return_data is emptied, and nothing is stored in memory
                 self.return_data = [].span();
                 self.stack.push(0)?;
+                return Result::Ok(());
             },
         }
 

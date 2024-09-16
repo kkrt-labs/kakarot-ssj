@@ -14,9 +14,13 @@ pub impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// 0x00 - STOP
     /// Halts the execution of the current program.
     /// # Specification: https://www.evm.codes/#00?fork=shanghai
-    fn exec_stop(ref self: VM) -> Result<(), EVMError> {
+    fn exec_stop(ref self: VM) {
+        // return_data stored the return_data for the last executed sub context
+        // see CALLs opcodes. When we run the STOP opcode, we stop the current
+        // execution context with *no* return data (unlike RETURN and REVERT).
+        // hence we just clear the return_data and stop.
+        self.return_data = [].span();
         self.stop();
-        Result::Ok(())
     }
 
     /// 0x01 - ADD
@@ -268,15 +272,16 @@ mod tests {
 
 
     #[test]
-    fn test_exec_stop() {
+    fn test_exec_stop_should_stop_and_empty_return_data() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
-
+        vm.return_data = [1, 2, 3].span();
         // When
-        vm.exec_stop().expect('exec_stop failed');
+        vm.exec_stop();
 
         // Then
-        assert(!vm.is_running(), 'ctx not stopped');
+        assert!(!vm.is_running());
+        assert_eq!(vm.return_data, [].span());
     }
 
     #[test]
