@@ -245,7 +245,7 @@ fn test_execute_from_outside_multicall_not_supported() {
 
 #[test]
 #[should_panic(expected: 'EOA: invalid signature')]
-fn test_execute_from_outside_inPLACEHOLDER_SIGNATURE() {
+fn test_execute_from_outside_invalid_signature() {
     let (kakarot_core, contract_account, _) = set_up();
 
     let caller = contract_address_const::<SNIP9_CALLER>();
