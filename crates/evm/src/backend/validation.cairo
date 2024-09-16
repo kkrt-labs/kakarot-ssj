@@ -65,6 +65,7 @@ pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transacti
 #[cfg(test)]
 mod tests {
     use contracts::kakarot_core::KakarotCore;
+    use core::num::traits::Bounded;
     use core::ops::SnapshotDeref;
 
     use core::starknet::storage::StorageTrait;
@@ -78,7 +79,6 @@ mod tests {
     use utils::eth_transaction::common::TxKind;
     use utils::eth_transaction::eip1559::TxEip1559;
     use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
-    use core::num::traits::Bounded;
 
     fn set_up() -> KakarotCore::ContractState {
         // Define the addresses used in the tests, whose calls will be mocked
@@ -99,11 +99,12 @@ mod tests {
         store_felt252(kakarot_address, block_gas_limit_storage, BLOCK_GAS_LIMIT.into());
         store_felt252(kakarot_address, native_token_storage_address, native_token_address.into());
 
-
         // Mock the calls to the account contract and the native token contract
         start_cheat_caller_address(kakarot_address, account_starknet_address);
         start_mock_call(account_starknet_address, selector!("get_nonce"), 0);
-        start_mock_call(native_token_address, selector!("balanceOf"), Bounded::<u256>::MAX); // Min to pay for gas + value
+        start_mock_call(
+            native_token_address, selector!("balanceOf"), Bounded::<u256>::MAX
+        ); // Min to pay for gas + value
 
         kakarot_state
     }
