@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn test_block_fee_plus_priority_fee_overflow_should_err() {
-        let result = get_effective_gas_price(Bounded::MAX, Option::Some(1), Bounded::MAX - 1);
+        let result = get_effective_gas_price(Bounded::MAX, Option::Some(1), Bounded::MAX);
         assert_eq!(result, Result::Err(EthTransactionError::TipVeryHigh));
     }
 
