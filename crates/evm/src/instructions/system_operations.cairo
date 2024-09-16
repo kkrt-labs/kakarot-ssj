@@ -493,13 +493,11 @@ mod tests {
         vm.env.state.set_account(caller_account);
 
         // Deploy bytecode at 0xabfa740ccd
-        // (+ 0x1 0x1)
+        // SSTORE 0x42 at 0x42
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
         );
-        // Deploy bytecode at 0x1234
-        // SSTORE 0x42 at 0x42
         let deployed_bytecode = [
             0x60,
             0x01,
@@ -547,7 +545,7 @@ mod tests {
         // Given
 
         // Set vm bytecode
-        // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
+        // (staticcall 0xffffff 0xabfa740ccd 0 0 0 0 1)
         let bytecode = [
             0x60,
             0x01,
@@ -586,12 +584,12 @@ mod tests {
         };
         vm.env.state.set_account(caller_account);
 
+        // Deploy bytecode at 0xabfa740ccd
+        // SSTORE 0x42 at 0x42
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
         );
-        // Deploy bytecode at 0x1234
-        // SSTORE 0x42 at 0x42
         let deployed_bytecode = [
             0x60,
             0x01,

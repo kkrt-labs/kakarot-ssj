@@ -5,7 +5,7 @@ pub mod legacy;
 pub mod transaction;
 pub mod tx_type;
 use core::cmp::min;
-use core::num::traits::{CheckedAdd, Zero};
+use core::num::traits::CheckedAdd;
 use core::option::OptionTrait;
 use core::starknet::{EthAddress, secp256_trait::Signature,};
 use utils::errors::{EthTransactionError, RLPErrorImpl};

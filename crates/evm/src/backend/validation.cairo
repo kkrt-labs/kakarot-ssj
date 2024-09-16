@@ -1,4 +1,3 @@
-use contracts::IKakarotCore;
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::KakarotCore;
 use core::ops::SnapshotDeref;
@@ -78,7 +77,7 @@ mod tests {
     use utils::constants::BLOCK_GAS_LIMIT;
     use utils::eth_transaction::common::TxKind;
     use utils::eth_transaction::eip1559::TxEip1559;
-    use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
+    use utils::eth_transaction::transaction::Transaction;
 
     fn set_up() -> KakarotCore::ContractState {
         // Define the addresses used in the tests, whose calls will be mocked
