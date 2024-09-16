@@ -119,7 +119,7 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let copy_gas_cost = gas::COPY * words_size;
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(dest_offset, size)].span()
-        );
+        )?;
         self.memory.ensure_length(memory_expansion.new_size);
         self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
 
@@ -149,7 +149,7 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let copy_gas_cost = gas::COPY * words_size;
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(dest_offset, size)].span()
-        );
+        )?;
         self.memory.ensure_length(memory_expansion.new_size);
         self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
 
@@ -198,7 +198,7 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let words_size = (ceil32(size) / 32).into();
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(dest_offset, size)].span()
-        );
+        )?;
         self.memory.ensure_length(memory_expansion.new_size);
         let copy_gas_cost = gas::COPY * words_size;
         let access_gas_cost = if self.accessed_addresses.contains(evm_address) {
@@ -244,7 +244,7 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(dest_offset, size)].span()
-        );
+        )?;
         self.memory.ensure_length(memory_expansion.new_size);
         self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
 

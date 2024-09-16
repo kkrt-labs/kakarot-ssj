@@ -38,7 +38,7 @@ pub impl MemoryOperation of MemoryOperationTrait {
     fn exec_mload(ref self: VM) -> Result<(), EVMError> {
         let offset: usize = self.stack.pop_usize()?;
 
-        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, 32)].span());
+        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, 32)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);
         self.charge_gas(gas::VERYLOW + memory_expansion.expansion_cost)?;
 
@@ -52,7 +52,7 @@ pub impl MemoryOperation of MemoryOperationTrait {
     fn exec_mstore(ref self: VM) -> Result<(), EVMError> {
         let offset: usize = self.stack.pop_usize()?;
         let value: u256 = self.stack.pop()?;
-        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, 32)].span());
+        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, 32)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);
         self.charge_gas(gas::VERYLOW + memory_expansion.expansion_cost)?;
 
@@ -68,7 +68,7 @@ pub impl MemoryOperation of MemoryOperationTrait {
         let value = self.stack.pop()?;
         let value: u8 = (value.low & 0xFF).try_into().unwrap();
 
-        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, 1)].span());
+        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, 1)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);
         self.charge_gas(gas::VERYLOW + memory_expansion.expansion_cost)?;
 
@@ -290,7 +290,7 @@ pub impl MemoryOperation of MemoryOperationTrait {
         let copy_gas_cost = gas::COPY * words_size;
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(max(dest_offset, source_offset), size)].span()
-        );
+        )?;
         self.memory.ensure_length(memory_expansion.new_size);
         self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
 
@@ -1054,6 +1054,7 @@ mod tests {
             + gas::memory_expansion(
                 vm.memory.size(), [(max(dest_offset, source_offset), size)].span()
             )
+                .unwrap()
                 .expansion_cost
             + copy_gas_cost;
         let gas_before = vm.gas_left();

@@ -42,7 +42,7 @@ pub impl CreateHelpersImpl of CreateHelpers {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
-        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span());
+        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);
         let init_code_gas = gas::init_code_cost(size);
         let charged_gas = match create_type {

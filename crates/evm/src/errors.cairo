@@ -58,6 +58,7 @@ pub enum EVMError {
     OutOfGas,
     Assertion,
     DepthLimit,
+    MemoryLimitOOG
 }
 
 #[generate_trait]
@@ -81,6 +82,7 @@ pub impl EVMErrorImpl of EVMErrorTrait {
             EVMError::OutOfGas => 'out of gas'.into(),
             EVMError::Assertion => 'assertion failed'.into(),
             EVMError::DepthLimit => 'max call depth exceeded'.into(),
+            EVMError::MemoryLimitOOG => 'memory limit out of gas'.into(),
         }
     }
 
