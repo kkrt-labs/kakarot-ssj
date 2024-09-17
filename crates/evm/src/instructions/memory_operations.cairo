@@ -713,10 +713,8 @@ mod tests {
 
         // Then
         let pc = vm.pc();
-        // ideally we should assert that it incremented, but incrementing is done by
-        // `decode_and_execute`
-        // so we can assume that will be done
-        assert(pc == old_pc, 'PC should be same');
+        // If the jump is not taken, the PC should be incremented by 1
+        assert_eq!(pc, old_pc + 1);
     }
 
     #[test]
@@ -758,10 +756,8 @@ mod tests {
 
         // Then
         let pc = vm.pc();
-        // ideally we should assert that it incremented, but incrementing is done by
-        // `decode_and_execute`
-        // so we can assume that will be done
-        assert(pc == old_pc, 'PC should be same');
+        // If the jump is not taken, the PC should be incremented by 1
+        assert_eq!(pc, old_pc + 1);
     }
 
     #[test]

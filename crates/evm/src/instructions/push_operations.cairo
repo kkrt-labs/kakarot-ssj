@@ -329,8 +329,11 @@ mod tests {
         }
     }
 
+    /// Get a span of 0xFF bytes of length n preceded by a 0x00 byte
+    /// to account for the argument offset in push operations
     fn get_n_0xFF(mut n: u8) -> Span<u8> {
         let mut array: Array<u8> = ArrayTrait::new();
+        array.append(0x00);
         while n != 0 {
             array.append(0xFF);
             n -= 1;
