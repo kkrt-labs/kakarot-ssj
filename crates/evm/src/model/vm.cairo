@@ -135,6 +135,7 @@ pub impl VMImpl of VMTrait {
     /// # Arguments
     ///
     /// * `self` - The `VM` instance to read the data from.
+    /// * `pc` - The starting position in the bytecode to read from.
     /// * `len` - The length of the data to read from the bytecode.
     ///
     /// # Returns
