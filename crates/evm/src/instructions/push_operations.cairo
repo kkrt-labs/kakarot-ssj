@@ -4,7 +4,8 @@ use evm::errors::EVMError;
 use evm::gas;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
-use utils::helpers::load_word;
+use utils::helpers::FromBytes;
+use utils::helpers::U8SpanExTrait;
 
 /// Place i bytes items on stack.
 #[inline(always)]
@@ -18,7 +19,7 @@ fn exec_push_i(ref self: VM, i: u8) -> Result<(), EVMError> {
     if data.len() == 0 {
         self.stack.push(0)
     } else {
-        self.stack.push(load_word(i, data))
+        self.stack.push(data.pad_right_with_zeroes(i).from_be_bytes_partial().unwrap())
     }
 }
 
@@ -277,9 +278,55 @@ pub impl PushOperations of PushOperationsTrait {
 
 #[cfg(test)]
 mod tests {
+    use evm::gas;
     use evm::instructions::PushOperationsTrait;
+    use evm::model::vm::VMTrait;
     use evm::stack::StackTrait;
     use evm::test_utils::{VMBuilderTrait};
+    use super::exec_push_i;
+
+    #[test]
+    fn test_exec_push_i() {
+        // Test cases: (bytes_to_push, bytecode_length, expected_value)
+        let test_cases: Span<(u8, u8, u256)> = [
+            (1, 1, 0xFF), // Push 1 byte
+            (16, 16, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF), // Push 16 bytes
+            (
+                32, 32, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            ), // Push 32 bytes (max)
+            (
+                32, 16, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000000000000000000000
+            ), // Push 32 bytes, but only 16 available
+            (1, 0, 0), // Push 1 byte, but no bytes available
+        ].span();
+
+        for elem in test_cases {
+            let (bytes_to_push, bytecode_length, expected_value) = *elem;
+
+            let mut vm = VMBuilderTrait::new_with_presets()
+                .with_bytecode(get_n_0xFF(bytecode_length))
+                .build();
+            let initial_pc = vm.pc();
+            let initial_gas = vm.gas_left();
+
+            // Execute exec_push_i
+            let result = exec_push_i(ref vm, bytes_to_push);
+
+            assert!(result.is_ok());
+
+            // Check stack
+            assert_eq!(vm.stack.len(), 1);
+            assert_eq!(vm.stack.peek().unwrap(), expected_value);
+
+            // Check PC increment
+            let pc_increment = vm.pc() - initial_pc;
+            assert_eq!(pc_increment, bytes_to_push.into());
+
+            // Check gas consumption
+            let gas_consumed = initial_gas - vm.gas_left();
+            assert_eq!(gas_consumed, gas::VERYLOW);
+        }
+    }
 
     fn get_n_0xFF(mut n: u8) -> Span<u8> {
         let mut array: Array<u8> = ArrayTrait::new();
@@ -298,8 +345,8 @@ mod tests {
         // When
         vm.exec_push0().expect('exec_push0 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0);
     }
 
     #[test]
@@ -310,8 +357,8 @@ mod tests {
         // When
         vm.exec_push1().expect('exec_push1 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFF);
     }
 
     #[test]
@@ -322,8 +369,8 @@ mod tests {
         // When
         vm.exec_push2().expect('exec_push2 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFF);
     }
 
     #[test]
@@ -334,8 +381,8 @@ mod tests {
         // When
         vm.exec_push3().expect('exec_push3 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFF);
     }
 
     #[test]
@@ -346,8 +393,8 @@ mod tests {
         // When
         vm.exec_push4().expect('exec_push4 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFF);
     }
 
     #[test]
@@ -358,8 +405,8 @@ mod tests {
         // When
         vm.exec_push5().expect('exec_push5 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFF);
     }
 
     #[test]
@@ -370,8 +417,8 @@ mod tests {
         // When
         vm.exec_push6().expect('exec_push6 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFFFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFF);
     }
 
     #[test]
@@ -382,8 +429,8 @@ mod tests {
         // When
         vm.exec_push7().expect('exec_push7 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFF);
     }
 
 
@@ -395,8 +442,8 @@ mod tests {
         // When
         vm.exec_push8().expect('exec_push8 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -407,8 +454,8 @@ mod tests {
         // When
         vm.exec_push9().expect('exec_push9 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -419,8 +466,8 @@ mod tests {
         // When
         vm.exec_push10().expect('exec_push10 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -431,8 +478,8 @@ mod tests {
         // When
         vm.exec_push11().expect('exec_push11 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -443,8 +490,8 @@ mod tests {
         // When
         vm.exec_push12().expect('exec_push12 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -455,8 +502,8 @@ mod tests {
         // When
         vm.exec_push13().expect('exec_push13 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -467,8 +514,8 @@ mod tests {
         // When
         vm.exec_push14().expect('exec_push14 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -479,8 +526,8 @@ mod tests {
         // When
         vm.exec_push15().expect('exec_push15 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -491,8 +538,8 @@ mod tests {
         // When
         vm.exec_push16().expect('exec_push16 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 'invalid stack top');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -503,10 +550,8 @@ mod tests {
         // When
         vm.exec_push17().expect('exec_push17 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 'invalid stack top'
-        );
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -517,10 +562,8 @@ mod tests {
         // When
         vm.exec_push18().expect('exec_push18 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 'invalid stack top'
-        );
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
     #[test]
     fn test_push19() {
@@ -530,11 +573,8 @@ mod tests {
         // When
         vm.exec_push19().expect('exec_push19 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
-        );
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -545,11 +585,8 @@ mod tests {
         // When
         vm.exec_push20().expect('exec_push20 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
-        );
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -560,11 +597,8 @@ mod tests {
         // When
         vm.exec_push21().expect('exec_push21 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
-        );
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -575,11 +609,8 @@ mod tests {
         // When
         vm.exec_push22().expect('exec_push22 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
-        );
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
     #[test]
     fn test_push23() {
@@ -589,11 +620,8 @@ mod tests {
         // When
         vm.exec_push23().expect('exec_push23 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
-        );
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
     #[test]
     fn test_push24() {
@@ -603,11 +631,8 @@ mod tests {
         // When
         vm.exec_push24().expect('exec_push24 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
-        );
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -618,11 +643,8 @@ mod tests {
         // When
         vm.exec_push25().expect('exec_push25 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
-        );
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     #[test]
@@ -633,10 +655,9 @@ mod tests {
         // When
         vm.exec_push26().expect('exec_push26 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(
+            vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         );
     }
 
@@ -648,10 +669,9 @@ mod tests {
         // When
         vm.exec_push27().expect('exec_push27 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(
+            vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         );
     }
 
@@ -663,10 +683,9 @@ mod tests {
         // When
         vm.exec_push28().expect('exec_push28 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm.stack.peek().unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(
+            vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         );
     }
 
@@ -678,13 +697,9 @@ mod tests {
         // When
         vm.exec_push29().expect('exec_push29 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm
-                .stack
-                .peek()
-                .unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(
+            vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         );
     }
 
@@ -696,13 +711,9 @@ mod tests {
         // When
         vm.exec_push30().expect('exec_push30 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm
-                .stack
-                .peek()
-                .unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(
+            vm.stack.peek().unwrap(), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         );
     }
 
@@ -714,13 +725,10 @@ mod tests {
         // When
         vm.exec_push31().expect('exec_push31 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm
-                .stack
-                .peek()
-                .unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(
+            vm.stack.peek().unwrap(),
+            0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         );
     }
 
@@ -732,13 +740,10 @@ mod tests {
         // When
         vm.exec_push32().expect('exec_push32 failed');
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(
-            vm
-                .stack
-                .peek()
-                .unwrap() == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-            'invalid stack top'
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(
+            vm.stack.peek().unwrap(),
+            0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         );
     }
 }

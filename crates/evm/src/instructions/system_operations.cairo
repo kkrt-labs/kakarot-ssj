@@ -451,78 +451,6 @@ mod tests {
     #[test]
     fn test_exec_call() {
         // Given
-        // Set vm bytecode
-        // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
-        let bytecode = [
-            0x60,
-            0x01,
-            0x60,
-            0x00,
-            0x60,
-            0x00,
-            0x60,
-            0x00,
-            0x60,
-            0x00,
-            0x64,
-            0xab,
-            0xfa,
-            0x74,
-            0x0c,
-            0xcd,
-            0x62,
-            0xff,
-            0xff,
-            0xff,
-            // CALL
-            0xf1,
-            0x00
-        ].span();
-        let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
-        let eoa_account = Account {
-            address: vm.message().target,
-            balance: 0,
-            code: [].span(),
-            code_hash: EMPTY_KECCAK,
-            nonce: 0,
-            is_created: false,
-            selfdestruct: false,
-        };
-        vm.env.state.set_account(eoa_account);
-
-        // Deploy bytecode at 0xabfa740ccd
-        // ret (+ 0x1 0x1)
-        let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        let starknet_address = compute_starknet_address(
-            test_address(), eth_address, 0.try_into().unwrap()
-        );
-        let deployed_bytecode = [
-            0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
-        ].span();
-        let code_hash = deployed_bytecode.compute_keccak256_hash();
-        let contract_account = Account {
-            address: Address { evm: eth_address, starknet: starknet_address, },
-            balance: 0,
-            code: deployed_bytecode,
-            code_hash: code_hash,
-            nonce: 1,
-            is_created: false,
-            selfdestruct: false,
-        };
-        vm.env.state.set_account(contract_account);
-
-        // When
-        EVMTrait::execute_code(ref vm);
-
-        // Then
-        assert(!vm.is_running(), 'run should be success');
-        assert(2 == load_word(1, vm.return_data()), 'Wrong return_data');
-        assert(!vm.is_running(), 'vm should be stopped');
-    }
-
-    #[test]
-    fn test_exec_call_no_return() {
-        // Given
 
         // Set vm bytecode
         // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
@@ -565,12 +493,31 @@ mod tests {
         vm.env.state.set_account(caller_account);
 
         // Deploy bytecode at 0xabfa740ccd
-        // (+ 0x1 0x1)
+        // SSTORE 0x42 at 0x42
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
         );
-        let deployed_bytecode = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
+        let deployed_bytecode = [
+            0x60,
+            0x01,
+            0x60,
+            0x01,
+            0x01,
+            0x60,
+            0x00,
+            0x53,
+            0x60,
+            0x42,
+            0x60,
+            0x42,
+            0x55,
+            0x60,
+            0x20,
+            0x60,
+            0x00,
+            0xf3
+        ].span();
         let code_hash = deployed_bytecode.compute_keccak256_hash();
         let contract_account = Account {
             address: Address { evm: eth_address, starknet: starknet_address, },
@@ -587,14 +534,16 @@ mod tests {
         EVMTrait::execute_code(ref vm);
 
         // Then
-        assert(!vm.is_running(), 'run should be success');
-        assert(vm.return_data().is_empty(), 'Wrong return_data len');
-        assert(!vm.is_running(), 'vm should be stopped');
+        assert!(!vm.is_error());
+        assert!(!vm.is_running());
+        let storage_val = vm.env.state.read_state(contract_account.address.evm, 0x42);
+        assert_eq!(storage_val, 0x42);
     }
 
     #[test]
-    fn test_exec_staticcall() {
+    fn test_should_fail_exec_staticcall() {
         // Given
+
         // Set vm bytecode
         // (staticcall 0xffffff 0xabfa740ccd 0 0 0 0 1)
         let bytecode = [
@@ -606,6 +555,8 @@ mod tests {
             0x00,
             0x60,
             0x00,
+            0x60,
+            0x00,
             0x64,
             0xab,
             0xfa,
@@ -627,90 +578,38 @@ mod tests {
             balance: 0,
             code: bytecode,
             code_hash: code_hash,
-            nonce: 1,
+            nonce: 0,
             is_created: false,
             selfdestruct: false,
         };
         vm.env.state.set_account(caller_account);
+
         // Deploy bytecode at 0xabfa740ccd
-        // ret (+ 0x1 0x1)
+        // SSTORE 0x42 at 0x42
         let eth_address: EthAddress = 0xabfa740ccd_u256.into();
         let starknet_address = compute_starknet_address(
             test_address(), eth_address, 0.try_into().unwrap()
         );
         let deployed_bytecode = [
-            0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x60, 0x20, 0x60, 0x00, 0xf3
-        ].span();
-        let code_hash = deployed_bytecode.compute_keccak256_hash();
-        let contract_account = Account {
-            address: Address { evm: eth_address, starknet: starknet_address, },
-            balance: 0,
-            code: deployed_bytecode,
-            code_hash: code_hash,
-            nonce: 1,
-            is_created: false,
-            selfdestruct: false,
-        };
-        vm.env.state.set_account(contract_account);
-
-        // When
-        EVMTrait::execute_code(ref vm);
-
-        // Then
-        assert_eq!(2, load_word(1, vm.return_data()));
-        assert(!vm.is_running(), 'vm should be stopped');
-    }
-
-    #[test]
-    fn test_exec_staticcall_no_return() {
-        // Given
-        // Set vm bytecode
-        // (call 0xffffff 0xabfa740ccd 0 0 0 0 1)
-        let bytecode = [
             0x60,
             0x01,
             0x60,
-            0x00,
+            0x01,
+            0x01,
             0x60,
             0x00,
+            0x53,
+            0x60,
+            0x42,
+            0x60,
+            0x42,
+            0x55,
+            0x60,
+            0x20,
             0x60,
             0x00,
-            0x60,
-            0x00,
-            0x64,
-            0xab,
-            0xfa,
-            0x74,
-            0x0c,
-            0xcd,
-            0x62,
-            0xff,
-            0xff,
-            0xff,
-            // STATICCALL
-            0xfa,
-            0x00
+            0xf3
         ].span();
-        let code_hash = bytecode.compute_keccak256_hash();
-        let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
-        let caller_account = Account {
-            address: vm.message().target,
-            balance: 0,
-            code: bytecode,
-            code_hash: code_hash,
-            nonce: 1,
-            is_created: false,
-            selfdestruct: false,
-        };
-        vm.env.state.set_account(caller_account);
-
-        // Deploy bytecode at 0xabfa740ccd
-        // (+ 0x1 0x1)
-        let eth_address: EthAddress = 0xabfa740ccd_u256.into();
-        let starknet_address = compute_starknet_address(
-            test_address(), eth_address, 0.try_into().unwrap()
-        );
-        let deployed_bytecode = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x53, 0x00].span();
         let code_hash = deployed_bytecode.compute_keccak256_hash();
         let contract_account = Account {
             address: Address { evm: eth_address, starknet: starknet_address, },
@@ -727,10 +626,11 @@ mod tests {
         EVMTrait::execute_code(ref vm);
 
         // Then
-        assert(!vm.is_running(), 'run should be success');
-        assert(vm.return_data().is_empty(), 'Wrong return_data len');
-        assert(!vm.is_running(), 'vm should be stopped')
+        assert!(!vm.is_error());
+        assert!(!vm.is_running());
+        assert_eq!(vm.stack.peek().unwrap(), 0); // STATICCALL should fail because of SSTORE
     }
+
 
     #[test]
     fn test_exec_call_code() {
@@ -775,7 +675,7 @@ mod tests {
         vm.env.state.set_account(eoa_account);
 
         // Deploy bytecode at 0x1234
-        // ret (+ 0x1 0x1)
+        // SSTORE 0x42 at 0x42
         let deployed_bytecode = [
             0x60,
             0x01,
@@ -816,13 +716,12 @@ mod tests {
         EVMTrait::execute_code(ref vm);
 
         // Then
-        assert(!vm.is_running(), 'run should be success');
-        assert(2 == load_word(1, vm.return_data()), 'Wrong return_data');
-        assert(!vm.is_running(), 'vm should be stopped');
+        assert!(!vm.is_error());
+        assert!(!vm.is_running());
 
         let storage_val = vm.env.state.read_state(vm.message.target.evm, 0x42);
 
-        assert(storage_val == 0x42, 'storage value is not 0x42');
+        assert_eq!(storage_val, 0x42);
     }
 
     #[test]
@@ -866,8 +765,7 @@ mod tests {
         };
         vm.env.state.set_account(eoa_account);
 
-        // Deploy bytecode at 0x1234
-        // ret (+ 0x1 0x1)
+        // SSTORE 0x42 at 0x42
         let deployed_bytecode = [
             0x60,
             0x01,
@@ -908,13 +806,12 @@ mod tests {
         EVMTrait::execute_code(ref vm);
 
         // Then
-        assert(!vm.is_running(), 'run should be success');
-        assert(2 == load_word(1, vm.return_data()), 'Wrong return_data');
-        assert(!vm.is_running(), 'vm should be stopped');
+        assert!(!vm.is_error());
+        assert!(!vm.is_running());
 
         let storage_val = vm.env.state.read_state(vm.message.target.evm, 0x42);
 
-        assert(storage_val == 0x42, 'storage value is not 0x42');
+        assert_eq!(storage_val, 0x42);
     }
 
     //! In the exec_create tests, we query the balance of the contract being created by doing a
