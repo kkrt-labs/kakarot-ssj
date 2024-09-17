@@ -337,7 +337,6 @@ pub impl EVMImpl of EVMTrait {
 
         match Self::execute_opcode(ref vm, opcode) {
             Result::Ok(_) => {
-
                 if opcode != 0x56 && opcode != 0x57 {
                     // Increment pc if not a JUMP family opcode
                     vm.set_pc(vm.pc() + 1);
