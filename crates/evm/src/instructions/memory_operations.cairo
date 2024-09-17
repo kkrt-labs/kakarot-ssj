@@ -203,6 +203,10 @@ pub impl MemoryOperation of MemoryOperationTrait {
             // remove both `value` and `b`
             self.stack.pop()?;
             self.stack.pop()?;
+
+            // Return with a PC incremented by one - as JUMP and JUMPi increments
+            // are skipped in the main `execute_code` loop
+            self.set_pc(self.pc() + 1);
         }
 
         Result::Ok(())
