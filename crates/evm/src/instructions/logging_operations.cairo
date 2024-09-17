@@ -251,7 +251,10 @@ mod tests {
         assert_eq!(events.len(), 1);
 
         let event = events.pop_front().unwrap();
-        assert_eq!(event.keys.span(), [0x0123456789ABCDEF, Bounded::<u256>::MAX, 0x00, Bounded::<u256>::MAX].span());
+        assert_eq!(
+            event.keys.span(),
+            [0x0123456789ABCDEF, Bounded::<u256>::MAX, 0x00, Bounded::<u256>::MAX].span()
+        );
 
         assert_eq!(event.data.len(), 10);
         let data_expected = [0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x00, 0x00].span();
@@ -274,9 +277,7 @@ mod tests {
 
         // Then
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err(), EVMError::WriteInStaticContext
-        );
+        assert_eq!(result.unwrap_err(), EVMError::WriteInStaticContext);
     }
 
     #[test]
@@ -388,7 +389,10 @@ mod tests {
         assert_eq!(event1.data.span().slice(32, 8), data_expected);
 
         let event2 = events.pop_front().unwrap();
-        assert_eq!(event2.keys.span(), [0x0123456789ABCDEF, Bounded::<u256>::MAX, 0x00, Bounded::<u256>::MAX].span());
+        assert_eq!(
+            event2.keys.span(),
+            [0x0123456789ABCDEF, Bounded::<u256>::MAX, 0x00, Bounded::<u256>::MAX].span()
+        );
 
         assert_eq!(event2.data.len(), 10);
         let data_expected = [0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x00, 0x00].span();
