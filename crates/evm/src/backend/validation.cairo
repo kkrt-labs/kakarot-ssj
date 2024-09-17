@@ -7,15 +7,16 @@ use evm::gas;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::storage::StorageTrait;
 use utils::constants::POW_2_32;
-use utils::eth_transaction::get_effective_gas_price;
+use utils::eth_transaction::check_gas_fee;
 use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
 
 /// Validates the ethereum transaction by checking adherence to Ethereum rules regarding
 /// Gas logic, nonce, chainId and required balance.
-/// Returns
-/// - Effective gas price of the transaction
-/// - Intrinsic Gas Cost of the transcation
-pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transaction) -> (u128, u64) {
+///
+/// # Returns
+///
+/// * The intrinsic gas cost of the transaction
+pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transaction) -> u64 {
     let kakarot_storage = kakarot_state.snapshot_deref().storage();
     // Validate transaction
 
@@ -42,10 +43,11 @@ pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transacti
     let gas_limit = tx.gas_limit();
     assert(gas_limit <= kakarot_storage.Kakarot_block_gas_limit.read(), 'Tx gas > Block gas');
     let block_base_fee = kakarot_storage.Kakarot_base_fee.read();
-    let effective_gas_price = get_effective_gas_price(
+    let gas_fee_check = check_gas_fee(
         tx.max_fee_per_gas(), tx.max_priority_fee_per_gas(), block_base_fee.into()
     );
-    assert!(effective_gas_price.is_ok(), "{:?}", effective_gas_price.unwrap_err());
+    assert!(gas_fee_check.is_ok(), "{:?}", gas_fee_check.unwrap_err());
+
     // Intrinsic Gas
     let intrinsic_gas = gas::calculate_intrinsic_gas_cost(@tx);
     assert(gas_limit >= intrinsic_gas, 'Intrinsic gas > gas limit');
@@ -58,7 +60,7 @@ pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transacti
     let max_gas_fee = tx.gas_limit().into() * tx.max_fee_per_gas();
     let tx_cost = tx.value() + max_gas_fee.into();
     assert(tx_cost <= balance, 'Not enough ETH');
-    (effective_gas_price.unwrap(), intrinsic_gas)
+    intrinsic_gas
 }
 
 #[cfg(test)]
@@ -129,9 +131,9 @@ mod tests {
         );
 
         // Test that the function performs validation and assert expected results
-        let (effective_gas_price, intrinsic_gas) = validate_eth_tx(@kakarot_state, tx);
+        let intrinsic_gas = validate_eth_tx(@kakarot_state, tx);
 
-        assert_eq!(effective_gas_price, 2_000_000_000); // max_fee_per_gas
+        // assert_eq!(effective_gas_price, 2_000_000_000); // max_fee_per_gas
         assert_eq!(intrinsic_gas, 21000); // Standard intrinsic gas for a simple transfer
     }
 
