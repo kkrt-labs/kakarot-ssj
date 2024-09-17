@@ -200,10 +200,10 @@ pub fn tx_gas_limit() -> u64 {
     constants::BLOCK_GAS_LIMIT
 }
 
-pub const BASE_FEE: u128 = 1000;
+pub const BASE_FEE: u64 = 1000;
 
 pub fn gas_price() -> u128 {
-    BASE_FEE + 1
+    BASE_FEE.into() + 1
 }
 
 pub fn value() -> u256 {
@@ -262,7 +262,7 @@ pub fn preset_environment() -> Environment {
         block_timestamp: block_info.block_timestamp,
         block_gas_limit: constants::BLOCK_GAS_LIMIT,
         coinbase: coinbase(),
-        base_fee: 0,
+        base_fee: BASE_FEE,
         state: Default::default(),
     }
 }

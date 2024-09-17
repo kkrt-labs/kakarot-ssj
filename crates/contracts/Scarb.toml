@@ -15,6 +15,7 @@ utils = { path = "../utils" }
 fmt.workspace = true
 
 [[target.starknet-contract]]
+name = "kakarot_contract"
 casm = true
 casm-add-pythonic-hints = true
 build-external-contracts = ["openzeppelin::token::erc20::erc20::ERC20"]
