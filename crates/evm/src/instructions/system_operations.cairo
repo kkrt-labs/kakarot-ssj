@@ -320,6 +320,7 @@ pub impl SystemOperations of SystemOperationsTrait {
         // GAS
         let mut gas_cost = gas::SELFDESTRUCT;
         if !self.accessed_addresses.contains(recipient) {
+            self.accessed_addresses.add(recipient);
             gas_cost += gas::COLD_ACCOUNT_ACCESS_COST;
         };
 
