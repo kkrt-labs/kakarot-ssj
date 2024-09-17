@@ -20,11 +20,11 @@ pub struct TransactionMetadata {
     pub signature: Signature,
 }
 
-/// Get the effective gas price of a transaction as specfified in EIP-1559 with relevant
+/// Checks the effective gas price of a transaction as specfified in EIP-1559 with relevant
 /// checks.
-pub fn get_effective_gas_price(
+pub fn check_gas_fee(
     max_fee_per_gas: u128, max_priority_fee_per_gas: Option<u128>, block_base_fee: u128,
-) -> Result<u128, EthTransactionError> {
+) -> Result<(), EthTransactionError> {
     let max_priority_fee_per_gas = max_priority_fee_per_gas.unwrap_or(0);
 
     if max_fee_per_gas < block_base_fee {
@@ -35,61 +35,36 @@ pub fn get_effective_gas_price(
         // `max_priority_fee_per_gas` is greater than the `max_fee_per_gas`
         return Result::Err(EthTransactionError::TipAboveFeeCap);
     }
-    Result::Ok(
-        min(
-            max_fee_per_gas,
-            block_base_fee
-                .checked_add(max_priority_fee_per_gas)
-                .ok_or(EthTransactionError::TipVeryHigh)?,
-        )
-    )
+
+    Result::Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use core::num::traits::Bounded;
-    use super::get_effective_gas_price;
+    use super::check_gas_fee;
     use utils::errors::EthTransactionError;
 
     #[test]
-    fn test_max_fee_superior_block_fee_should_return_effective_gas_price() {
-        let result = get_effective_gas_price(100, Option::Some(10), 50);
-        assert_eq!(result, Result::Ok(60));
+    fn test_happy_path() {
+        let result = check_gas_fee(100, Option::Some(10), 50);
+        assert!(result.is_ok());
     }
 
     #[test]
-    fn test_max_fee_equal_block_fee_plus_priority_fee_should_return_max_fee() {
-        let result = get_effective_gas_price(100, Option::Some(50), 50);
-        assert_eq!(result, Result::Ok(100));
-    }
-
-    #[test]
-    fn test_max_fee_inferior_block_fee_should_err() {
-        let result = get_effective_gas_price(40, Option::Some(10), 50);
+    fn test_fee_cap_too_low() {
+        let result = check_gas_fee(40, Option::Some(10), 50);
         assert_eq!(result, Result::Err(EthTransactionError::FeeCapTooLow));
     }
 
     #[test]
-    fn test_max_fee_inferior_priority_fee_should_err() {
-        let result = get_effective_gas_price(100, Option::Some(110), 50);
+    fn test_tip_above_fee_cap() {
+        let result = check_gas_fee(100, Option::Some(110), 50);
         assert_eq!(result, Result::Err(EthTransactionError::TipAboveFeeCap));
     }
 
     #[test]
-    fn test_block_fee_plus_priority_fee_overflow_should_err() {
-        let result = get_effective_gas_price(Bounded::MAX, Option::Some(1), Bounded::MAX);
-        assert_eq!(result, Result::Err(EthTransactionError::TipVeryHigh));
-    }
-
-    #[test]
-    fn test_priority_fee_none_should_use_zero() {
-        let result = get_effective_gas_price(100, Option::None, 50);
-        assert_eq!(result, Result::Ok(50));
-    }
-
-    #[test]
-    fn test_max_fee_equal_block_fee_less_than_total_should_return_max_fee() {
-        let result = get_effective_gas_price(50, Option::Some(10), 50);
-        assert_eq!(result, Result::Ok(50));
+    fn test_priority_fee_none() {
+        let result = check_gas_fee(100, Option::None, 50);
+        assert!(result.is_ok());
     }
 }

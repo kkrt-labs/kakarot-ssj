@@ -1,8 +1,10 @@
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
 use core::num::traits::Zero;
+use core::ops::SnapshotDeref;
 use core::starknet::EthAddress;
 use core::starknet::get_tx_info;
+use core::starknet::storage::{StoragePointerReadAccess};
 use evm::backend::starknet_backend;
 use evm::create_helpers::CreateHelpers;
 use evm::errors::{EVMError, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
@@ -34,13 +36,11 @@ use utils::set::{Set, SetTrait};
 #[generate_trait]
 pub impl EVMImpl of EVMTrait {
     fn process_transaction(
-        ref self: KakarotCore::ContractState,
-        origin: Address,
-        tx: Transaction,
-        gas_price: u128,
-        intrinsic_gas: u64
+        ref self: KakarotCore::ContractState, origin: Address, tx: Transaction, intrinsic_gas: u64
     ) -> TransactionResult {
         // Charge the cost of intrinsic gas - which has been verified to be <= gas_limit.
+        let block_base_fee = self.snapshot_deref().Kakarot_base_fee.read();
+        let gas_price = tx.effective_gas_price(Option::Some(block_base_fee.into()));
         let gas_left = tx.gas_limit() - intrinsic_gas;
         let mut env = starknet_backend::get_env(origin.evm, gas_price);
 

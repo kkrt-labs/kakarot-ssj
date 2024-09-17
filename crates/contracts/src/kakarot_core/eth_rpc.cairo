@@ -147,7 +147,7 @@ pub impl EthRPC<
 
         let TransactionResult { success, return_data, gas_used, state: _state } =
             EVMTrait::process_transaction(
-            ref kakarot_state, origin, tx, tx.effective_gas_price(Option::None), 0
+            ref kakarot_state, origin, tx, 0
         );
 
         (success, return_data, gas_used)
@@ -164,7 +164,7 @@ pub impl EthRPC<
         ref self: TContractState, mut tx: Transaction
     ) -> (bool, Span<u8>, u64) {
         let mut kakarot_state = KakarotState::get_state();
-        let (gas_price, intrinsic_gas) = validate_eth_tx(@kakarot_state, tx);
+        let intrinsic_gas = validate_eth_tx(@kakarot_state, tx);
 
         let starknet_caller_address = get_caller_address();
         let account = IAccountDispatcher { contract_address: starknet_caller_address };
@@ -172,7 +172,7 @@ pub impl EthRPC<
 
         let TransactionResult { success, return_data, gas_used, mut state } =
             EVMTrait::process_transaction(
-            ref kakarot_state, origin, tx, gas_price, intrinsic_gas
+            ref kakarot_state, origin, tx, intrinsic_gas
         );
         starknet_backend::commit(ref state).expect('Committing state failed');
         (success, return_data, gas_used)
