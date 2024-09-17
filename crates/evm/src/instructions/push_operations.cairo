@@ -12,7 +12,8 @@ use utils::helpers::U8SpanExTrait;
 fn exec_push_i(ref self: VM, i: u8) -> Result<(), EVMError> {
     self.charge_gas(gas::VERYLOW)?;
     let i = i.into();
-    let data = self.read_code(i);
+    let args_pc = self.pc() + 1; // PUSH_N Arguments begin at pc + 1
+    let data = self.read_code(args_pc, i);
 
     self.set_pc(self.pc() + i);
 

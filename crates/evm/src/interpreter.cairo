@@ -334,11 +334,15 @@ pub impl EVMImpl of EVMTrait {
         }
 
         let opcode: u8 = *bytecode.at(pc);
-        // Increment pc
-        vm.set_pc(pc + 1);
 
         match Self::execute_opcode(ref vm, opcode) {
             Result::Ok(_) => {
+
+                if opcode != 0x56 && opcode != 0x57 {
+                    // Increment pc if not a JUMP family opcode
+                    vm.set_pc(vm.pc() + 1);
+                }
+
                 if vm.is_running() {
                     return Self::execute_code(ref vm);
                 }
