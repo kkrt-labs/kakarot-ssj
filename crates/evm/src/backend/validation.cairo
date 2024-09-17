@@ -133,7 +133,6 @@ mod tests {
         // Test that the function performs validation and assert expected results
         let intrinsic_gas = validate_eth_tx(@kakarot_state, tx);
 
-        // assert_eq!(effective_gas_price, 2_000_000_000); // max_fee_per_gas
         assert_eq!(intrinsic_gas, 21000); // Standard intrinsic gas for a simple transfer
     }
 
