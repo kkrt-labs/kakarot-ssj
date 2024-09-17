@@ -249,20 +249,20 @@ mod tests {
     use evm::model::Address;
     use evm::model::account::Account;
     use evm::state::{State, StateTrait};
-    use evm::test_utils::{evm_address};
     use evm::test_utils::{
         setup_test_environment, uninitialized_account, account_contract, register_account
     };
+    use evm::test_utils::{evm_address};
     use snforge_std::{test_address, start_mock_call, get_class_hash};
     use snforge_utils::snforge_utils::{assert_not_called, assert_called};
+    use super::commit_storage;
     use utils::helpers::U8SpanExTrait;
     use utils::helpers::compute_starknet_address;
-    use super::commit_storage;
 
     // Helper function to create a test account
     fn create_test_account(is_selfdestruct: bool, is_created: bool, id: felt252) -> Account {
         let evm_address = (evm_address().into() + id).try_into().unwrap();
-        let starknet_address = (0x5678 + id ).try_into().unwrap();
+        let starknet_address = (0x5678 + id).try_into().unwrap();
         Account {
             address: Address { evm: evm_address, starknet: starknet_address },
             nonce: 0,
@@ -275,9 +275,9 @@ mod tests {
     }
 
     mod test_commit_storage {
-        use super::{create_test_account, StateTrait, commit_storage};
         use snforge_std::start_mock_call;
         use snforge_utils::snforge_utils::{assert_called_with, assert_not_called};
+        use super::{create_test_account, StateTrait, commit_storage};
 
         #[test]
         fn test_commit_storage_normal_case() {
@@ -295,7 +295,9 @@ mod tests {
             commit_storage(ref state).expect('commit storage failed');
 
             //TODO(starknet-foundry): verify call args in assert_called
-            assert_called_with::<(u256, u256)>(account.address.starknet, selector!("write_storage"), (key, value));
+            assert_called_with::<
+                (u256, u256)
+            >(account.address.starknet, selector!("write_storage"), (key, value));
         }
 
         #[test]
@@ -333,7 +335,9 @@ mod tests {
             commit_storage(ref state).expect('commit storage failed');
 
             // Assert that write_storage was called
-            assert_called_with::<(u256, u256)>(account.address.starknet, selector!("write_storage"), (key, value));
+            assert_called_with::<
+                (u256, u256)
+            >(account.address.starknet, selector!("write_storage"), (key, value));
         }
 
         #[test]
@@ -367,9 +371,13 @@ mod tests {
             commit_storage(ref state).expect('commit storage failed');
 
             // Assert that write_storage was called for accounts 1 and 3, but not for account 2
-            assert_called_with::<(u256, u256)>(account0.address.starknet, selector!("write_storage"), (key, value));
+            assert_called_with::<
+                (u256, u256)
+            >(account0.address.starknet, selector!("write_storage"), (key, value));
             assert_not_called(account1.address.starknet, selector!("write_storage"));
-            assert_called_with::<(u256, u256)>(account2.address.starknet, selector!("write_storage"), (key, value));
+            assert_called_with::<
+                (u256, u256)
+            >(account2.address.starknet, selector!("write_storage"), (key, value));
         }
     }
 
