@@ -64,7 +64,7 @@ pub impl MemoryOperation of MemoryOperationTrait {
     /// Save single byte to memory
     /// # Specification: https://www.evm.codes/#53?fork=shanghai
     fn exec_mstore8(ref self: VM) -> Result<(), EVMError> {
-        let offset = self.stack.pop_usize()?;
+        let offset = self.stack.pop_saturating_usize()?;
         let value = self.stack.pop()?;
         let value: u8 = (value.low & 0xFF).try_into().unwrap();
 
@@ -282,7 +282,7 @@ pub impl MemoryOperation of MemoryOperationTrait {
     /// Copy memory from one location to another.
     /// # Specification: https://www.evm.codes/#5e?fork=cancun
     fn exec_mcopy(ref self: VM) -> Result<(), EVMError> {
-        let dest_offset = self.stack.pop_usize()?;
+        let dest_offset = self.stack.pop_saturating_usize()?;
         let source_offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
