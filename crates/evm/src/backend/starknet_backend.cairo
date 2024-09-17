@@ -233,7 +233,7 @@ fn commit_storage(ref self: State) -> Result<(), EVMError> {
         let (evm_address, key, value) = self.accounts_storage.changes.get(*state_key).deref();
         let mut account = self.get_account(evm_address);
         // @dev: EIP-6780 - If selfdestruct on an account created, dont commit data
-        if account.is_selfdestruct() {
+        if account.is_selfdestruct() && account.is_created() {
             continue;
         }
         IAccountDispatcher { contract_address: account.starknet_address() }
@@ -249,7 +249,7 @@ mod tests {
     use evm::model::Address;
     use evm::model::account::Account;
     use evm::state::{State, StateTrait};
-    use evm::test_utils::evm_address;
+    use evm::test_utils::{evm_address};
     use evm::test_utils::{
         setup_test_environment, uninitialized_account, account_contract, register_account
     };
@@ -257,6 +257,121 @@ mod tests {
     use snforge_utils::snforge_utils::{assert_not_called, assert_called};
     use utils::helpers::U8SpanExTrait;
     use utils::helpers::compute_starknet_address;
+    use super::commit_storage;
+
+    // Helper function to create a test account
+    fn create_test_account(is_selfdestruct: bool, is_created: bool, id: felt252) -> Account {
+        let evm_address = (evm_address().into() + id).try_into().unwrap();
+        let starknet_address = (0x5678 + id ).try_into().unwrap();
+        Account {
+            address: Address { evm: evm_address, starknet: starknet_address },
+            nonce: 0,
+            code: [].span(),
+            code_hash: 0,
+            balance: 0,
+            selfdestruct: is_selfdestruct,
+            is_created: is_created,
+        }
+    }
+
+    mod test_commit_storage {
+        use super::{create_test_account, StateTrait, commit_storage};
+        use snforge_std::start_mock_call;
+        use snforge_utils::snforge_utils::{assert_called_with, assert_not_called};
+
+        #[test]
+        fn test_commit_storage_normal_case() {
+            let mut state = Default::default();
+            let account = create_test_account(false, false, 0);
+            state.set_account(account);
+
+            let key = 0x100;
+            let value = 0x200;
+            state.write_state(account.address.evm, key, value);
+
+            // Mock the write_storage call
+            start_mock_call::<()>(account.address.starknet, selector!("write_storage"), ());
+
+            commit_storage(ref state).expect('commit storage failed');
+
+            //TODO(starknet-foundry): verify call args in assert_called
+            assert_called_with::<(u256, u256)>(account.address.starknet, selector!("write_storage"), (key, value));
+        }
+
+        #[test]
+        fn test_commit_storage_selfdestruct_and_created() {
+            let mut state = Default::default();
+            let account = create_test_account(true, true, 0);
+            state.set_account(account);
+
+            let key = 0x100;
+            let value = 0x200;
+            state.write_state(account.address.evm, key, value);
+
+            // Mock the write_storage call
+            start_mock_call::<()>(account.address.starknet, selector!("write_storage"), ());
+
+            commit_storage(ref state).expect('commit storage failed');
+
+            // Assert that write_storage was not called
+            assert_not_called(account.address.starknet, selector!("write_storage"));
+        }
+
+        #[test]
+        fn test_commit_storage_only_selfdestruct() {
+            let mut state = Default::default();
+            let account = create_test_account(true, false, 0);
+            state.set_account(account);
+
+            let key = 0x100;
+            let value = 0x200;
+            state.write_state(account.address.evm, key, value);
+
+            // Mock the write_storage call
+            start_mock_call::<()>(account.address.starknet, selector!("write_storage"), ());
+
+            commit_storage(ref state).expect('commit storage failed');
+
+            // Assert that write_storage was called
+            assert_called_with::<(u256, u256)>(account.address.starknet, selector!("write_storage"), (key, value));
+        }
+
+        #[test]
+        fn test_commit_storage_multiple_accounts() {
+            let mut state = Default::default();
+
+            // Account 0: Normal
+            let account0 = create_test_account(false, false, 0);
+            state.set_account(account0);
+
+            // Account 1: Selfdestruct and created
+            let account1 = create_test_account(true, true, 1);
+            state.set_account(account1);
+
+            // Account 2: Only selfdestruct
+            let account2 = create_test_account(true, false, 2);
+            state.set_account(account2);
+
+            // Set storage for all accounts
+            let key = 0x100;
+            let value = 0x200;
+            state.write_state(account0.address.evm, key, value);
+            state.write_state(account1.address.evm, key, value);
+            state.write_state(account2.address.evm, key, value);
+
+            // Mock the write_storage calls
+            start_mock_call::<()>(account0.address.starknet, selector!("write_storage"), ());
+            start_mock_call::<()>(account1.address.starknet, selector!("write_storage"), ());
+            start_mock_call::<()>(account2.address.starknet, selector!("write_storage"), ());
+
+            commit_storage(ref state).expect('commit storage failed');
+
+            // Assert that write_storage was called for accounts 1 and 3, but not for account 2
+            assert_called_with::<(u256, u256)>(account0.address.starknet, selector!("write_storage"), (key, value));
+            assert_not_called(account1.address.starknet, selector!("write_storage"));
+            assert_called_with::<(u256, u256)>(account2.address.starknet, selector!("write_storage"), (key, value));
+        }
+    }
 
     #[test]
     #[ignore]

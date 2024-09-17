@@ -35,7 +35,7 @@ mod tests {
         IHelloDispatcher { contract_address: hellocontract }.hello();
 
         assert_called(hellocontract, selector!("hello"));
-        assert_called_with(hellocontract, selector!("hello"), [].span());
+        assert_called_with::<()>(hellocontract, selector!("hello"), ());
     }
 
     #[test]
@@ -46,6 +46,6 @@ mod tests {
         IHelloDispatcher { contract_address: hellocontract }.bar();
 
         assert_called(hellocontract, selector!("hello"));
-        assert_called_with(hellocontract, selector!("hello"), [].span());
+        assert_called_with::<()>(hellocontract, selector!("hello"), ());
     }
 }
