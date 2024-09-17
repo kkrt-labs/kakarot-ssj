@@ -541,7 +541,7 @@ mod tests {
     }
 
     #[test]
-    fn test_exec_staticcall() {
+    fn test_should_fail_exec_staticcall() {
         // Given
 
         // Set vm bytecode

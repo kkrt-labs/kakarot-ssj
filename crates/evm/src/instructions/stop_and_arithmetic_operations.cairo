@@ -15,10 +15,10 @@ pub impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
     /// Halts the execution of the current program.
     /// # Specification: https://www.evm.codes/#00?fork=shanghai
     fn exec_stop(ref self: VM) {
-        // return_data stored the return_data for the last executed sub context
-        // see CALLs opcodes. When we run the STOP opcode, we stop the current
+        // return_data store the return_data for the last executed sub context
+        // see CALLs opcodes. When it runs the STOP opcode, it stops the current
         // execution context with *no* return data (unlike RETURN and REVERT).
-        // hence we just clear the return_data and stop.
+        // hence it just clear the return_data and stop.
         self.return_data = [].span();
         self.stop();
     }
