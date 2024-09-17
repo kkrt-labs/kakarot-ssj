@@ -64,7 +64,7 @@ fn exec_log_i(ref self: VM, topics_len: u8) -> Result<(), EVMError> {
     let size = self.stack.pop_usize()?;
     let topics: Array<u256> = self.stack.pop_n(topics_len.into())?;
 
-    let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span());
+    let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span())?;
     self.memory.ensure_length(memory_expansion.new_size);
     self
         .charge_gas(

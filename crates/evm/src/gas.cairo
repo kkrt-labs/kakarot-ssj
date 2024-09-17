@@ -1,4 +1,6 @@
 use core::cmp::min;
+use core::num::traits::CheckedAdd;
+use evm::errors::EVMError;
 use utils::eth_transaction::common::TxKindTrait;
 use utils::eth_transaction::eip2930::{AccessListItem};
 use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
@@ -166,30 +168,42 @@ pub fn calculate_memory_gas_cost(size_in_bytes: usize) -> u64 {
 /// # Returns
 ///
 /// * `MemoryExpansion`: New size and expansion cost.
-pub fn memory_expansion(current_size: usize, operations: Span<(usize, usize)>) -> MemoryExpansion {
-    let mut max_size = current_size;
+pub fn memory_expansion(
+    current_size: usize, mut operations: Span<(usize, usize)>
+) -> Result<MemoryExpansion, EVMError> {
+    let mut current_max_size = current_size;
 
-    for (
-        offset, size
-    ) in operations {
-        if *size != 0 {
-            let end = *offset + *size;
-            if end > max_size {
-                max_size = end;
-            }
+    // Using a high-level loop because Cairo doesn't support the `for` loop syntax with breaks
+    let max_size = loop {
+        match operations.pop_front() {
+            Option::Some((
+                offset, size
+            )) => {
+                if *size != 0 {
+                    match (*offset).checked_add(*size) {
+                        Option::Some(end) => {
+                            if end > current_max_size {
+                                current_max_size = end;
+                            }
+                        },
+                        Option::None => { break Result::Err(EVMError::MemoryLimitOOG); },
+                    }
+                }
+            },
+            Option::None => { break Result::Ok((current_max_size)); },
         }
-    };
+    }?;
 
     let new_size = helpers::ceil32(max_size);
 
     if new_size <= current_size {
-        return MemoryExpansion { new_size: current_size, expansion_cost: 0 };
+        return Result::Ok(MemoryExpansion { new_size: current_size, expansion_cost: 0 });
     }
 
     let prev_cost = calculate_memory_gas_cost(current_size);
     let new_cost = calculate_memory_gas_cost(new_size);
     let expansion_cost = new_cost - prev_cost;
-    MemoryExpansion { new_size, expansion_cost }
+    Result::Ok(MemoryExpansion { new_size, expansion_cost })
 }
 
 /// Calculates the gas to be charged for the init code in CREATE/CREATE2

@@ -36,7 +36,7 @@ pub impl SystemOperations of SystemOperationsTrait {
         // GAS
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(args_offset, args_size), (ret_offset, ret_size)].span()
-        );
+        )?;
         self.memory.ensure_length(memory_expansion.new_size);
 
         let access_gas_cost = if self.accessed_addresses.contains(to) {
@@ -117,7 +117,7 @@ pub impl SystemOperations of SystemOperationsTrait {
         // GAS
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(args_offset, args_size), (ret_offset, ret_size)].span()
-        );
+        )?;
         self.memory.ensure_length(memory_expansion.new_size);
 
         let access_gas_cost = if self.accessed_addresses.contains(code_address) {
@@ -172,7 +172,7 @@ pub impl SystemOperations of SystemOperationsTrait {
     fn exec_return(ref self: VM) -> Result<(), EVMError> {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
-        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span());
+        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);
         self.charge_gas(gas::ZERO + memory_expansion.expansion_cost)?;
 
@@ -199,7 +199,7 @@ pub impl SystemOperations of SystemOperationsTrait {
         // GAS
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(args_offset, args_size), (ret_offset, ret_size)].span()
-        );
+        )?;
         self.memory.ensure_length(memory_expansion.new_size);
 
         let access_gas_cost = if self.accessed_addresses.contains(code_address) {
@@ -252,7 +252,7 @@ pub impl SystemOperations of SystemOperationsTrait {
         // GAS
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(args_offset, args_size), (ret_offset, ret_size)].span()
-        );
+        )?;
         self.memory.ensure_length(memory_expansion.new_size);
 
         let access_gas_cost = if self.accessed_addresses.contains(to) {
@@ -290,7 +290,7 @@ pub impl SystemOperations of SystemOperationsTrait {
         let offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
-        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span());
+        let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);
         self.charge_gas(memory_expansion.expansion_cost)?;
 
