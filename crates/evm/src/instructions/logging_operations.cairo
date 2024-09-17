@@ -144,7 +144,7 @@ mod tests {
 
         let event = events.pop_front().unwrap();
         assert_eq!(event.keys.len(), 1);
-        assert_eq!(event.keys[0], 0x0123456789ABCDEF);
+        assert_eq!(event.keys.span(), [0x0123456789ABCDEF].span());
 
         assert_eq!(event.data.len(), 32);
         let data_expected = u256_to_bytes_array(Bounded::<u256>::MAX).span().slice(0, 32);
@@ -175,8 +175,7 @@ mod tests {
 
         let event = events.pop_front().unwrap();
         assert_eq!(event.keys.len(), 2);
-        assert_eq!(event.keys[0], 0x0123456789ABCDEF);
-        assert_eq!(event.keys[1], Bounded::<u256>::MAX);
+        assert_eq!(event.keys.span(), [0x0123456789ABCDEF, Bounded::<u256>::MAX].span());
 
         assert_eq!(event.data.len(), 5);
         let data_expected = u256_to_bytes_array(Bounded::<u256>::MAX).span().slice(0, 5);
