@@ -64,11 +64,13 @@ pub mod snforge_utils {
         }
     }
 
-    pub fn assert_called_with(
-        contract_address: ContractAddress, selector: felt252, calldata: Span<felt252>
+    pub fn assert_called_with<C, +Serde<C>, +Drop<C>, +Copy<C>>(
+        contract_address: ContractAddress, selector: felt252, calldata: C
     ) {
+        let mut serialized_calldata = array![];
+        Serde::serialize(@calldata, ref serialized_calldata);
         assert!(
-            is_called_with(contract_address, selector, calldata),
+            is_called_with(contract_address, selector, serialized_calldata.span()),
             "Expected call with specific data not found in trace"
         );
     }
