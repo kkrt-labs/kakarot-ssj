@@ -1,11 +1,12 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
+use contracts::kakarot_core::eth_rpc::IEthRPC;
 use contracts::kakarot_core::{KakarotCore, KakarotCore::KakarotCoreImpl};
 use core::num::traits::zero::Zero;
 use core::ops::SnapshotDeref;
 use core::starknet::storage::StoragePointerReadAccess;
 use core::starknet::syscalls::{deploy_syscall};
 use core::starknet::syscalls::{emit_event_syscall};
-use core::starknet::{EthAddress, get_tx_info, get_block_info, SyscallResultTrait};
+use core::starknet::{EthAddress, get_block_info, SyscallResultTrait};
 use evm::errors::{ensure, EVMError, EOA_EXISTS};
 use evm::model::{Address, AddressTrait, Environment, Account, AccountTrait};
 use evm::model::{Transfer};
@@ -71,7 +72,8 @@ pub fn get_bytecode(evm_address: EthAddress) -> Span<u8> {
 
 /// Populate an Environment with Starknet syscalls.
 pub fn get_env(origin: EthAddress, gas_price: u128) -> Environment {
-    let kakarot_state = KakarotCore::unsafe_new_contract_state().snapshot_deref();
+    let kakarot_state = KakarotCore::unsafe_new_contract_state();
+    let kakarot_storage = kakarot_state.snapshot_deref();
     let block_info = get_block_info().unbox();
 
     // tx.gas_price and env.gas_price have the same values here
@@ -79,13 +81,13 @@ pub fn get_env(origin: EthAddress, gas_price: u128) -> Environment {
     Environment {
         origin: origin,
         gas_price,
-        chain_id: get_tx_info().unbox().chain_id.try_into().unwrap(),
-        prevrandao: kakarot_state.Kakarot_prev_randao.read(),
+        chain_id: kakarot_state.eth_chain_id(),
+        prevrandao: kakarot_storage.Kakarot_prev_randao.read(),
         block_number: block_info.block_number,
         block_gas_limit: constants::BLOCK_GAS_LIMIT,
         block_timestamp: block_info.block_timestamp,
-        coinbase: kakarot_state.Kakarot_coinbase.read(),
-        base_fee: kakarot_state.Kakarot_base_fee.read(),
+        coinbase: kakarot_storage.Kakarot_coinbase.read(),
+        base_fee: kakarot_storage.Kakarot_base_fee.read(),
         state: Default::default(),
     }
 }

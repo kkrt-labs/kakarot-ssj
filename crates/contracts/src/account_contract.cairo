@@ -66,10 +66,8 @@ pub mod AccountContract {
     use core::starknet::{
         EthAddress, ClassHash, get_caller_address, get_tx_info, get_block_timestamp
     };
-    use core::traits::TryInto;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use super::OutsideExecution;
-    use utils::constants::{POW_2_32};
     use utils::eth_transaction::transaction::TransactionUnsignedTrait;
     use utils::serialization::{deserialize_signature, deserialize_bytes, serialize_bytes};
     use utils::traits::DefaultSignature;
@@ -241,7 +239,9 @@ pub mod AccountContract {
             // EOA Validation
             assert(self.Account_bytecode_len.read().is_zero(), 'EOA: cannot have code');
 
-            let chain_id: u64 = tx_info.chain_id.try_into().unwrap() % POW_2_32.try_into().unwrap();
+            let kakarot = IEthRPCDispatcher { contract_address: self.ownable.owner() };
+
+            let chain_id: u64 = kakarot.eth_chain_id();
             assert(signature.len() == 5, 'EOA: Invalid signature length');
             let signature = deserialize_signature(signature, chain_id)
                 .expect('EOA: invalid signature');
@@ -257,7 +257,6 @@ pub mod AccountContract {
             let address = self.Account_evm_address.read();
             verify_eth_signature(unsigned_transaction.hash, signature, address);
 
-            let kakarot = IEthRPCDispatcher { contract_address: self.ownable.owner() };
             //TODO: refactor this to call eth_send_raw_unsigned_tx. Only the transactions bytes are
             //passed.
             let (success, return_data, gas_used) = kakarot

@@ -8,6 +8,7 @@ use evm::backend::starknet_backend;
 use evm::backend::validation::validate_eth_tx;
 use evm::model::{TransactionResult, Address};
 use evm::{EVMTrait};
+use utils::constants::POW_2_53;
 use utils::eth_transaction::transaction::{TransactionTrait, Transaction};
 
 #[starknet::interface]
@@ -130,7 +131,9 @@ pub impl EthRPC<
     }
 
     fn eth_chain_id(self: @TContractState) -> u64 {
-        panic!("unimplemented")
+        let tx_info = get_tx_info().unbox();
+        let tx_chain_id: u64 = tx_info.chain_id.try_into().unwrap();
+        tx_chain_id % POW_2_53.try_into().unwrap()
     }
 
     fn eth_call(
@@ -210,3 +213,55 @@ fn is_view(self: @KakarotCore::ContractState) -> bool {
     }
     true
 }
+
+#[cfg(test)]
+mod tests {
+    use contracts::kakarot_core::KakarotCore;
+    use contracts::kakarot_core::eth_rpc::IEthRPC;
+    use snforge_std::{start_cheat_chain_id_global, stop_cheat_chain_id_global};
+    use utils::constants::POW_2_53;
+
+    fn set_up() -> KakarotCore::ContractState {
+        // Define the kakarot state to access contract functions
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
+
+        kakarot_state
+    }
+
+    fn tear_down() {
+        stop_cheat_chain_id_global();
+    }
+
+
+    #[test]
+    fn test_eth_chain_id_returns_input_when_less_than_pow_2_53() {
+        let kakarot_state = KakarotCore::unsafe_new_contract_state();
+        // Convert POW_2_53 - 1 to u64 since POW_2_53 is defined as u128
+        let chain_id: u64 = (POW_2_53 - 1).try_into().unwrap();
+        start_cheat_chain_id_global(chain_id.into());
+        assert_eq!(
+            kakarot_state.eth_chain_id(),
+            chain_id,
+            "Should return original chain ID when below 2^53"
+        );
+        tear_down();
+    }
+
+    #[test]
+    fn test_eth_chain_id_returns_modulo_when_greater_than_or_equal_to_pow_2_53() {
+        // Test with a value equal to 2^53
+        let kakarot_state = set_up();
+        let chain_id: u64 = POW_2_53.try_into().unwrap();
+        start_cheat_chain_id_global(chain_id.into());
+        assert_eq!(kakarot_state.eth_chain_id(), 0, "Should return 0 when chain ID is 2^53");
+
+        // Test with a value greater than 2^53
+        let chain_id: u64 = (POW_2_53 + 53).try_into().unwrap();
+        start_cheat_chain_id_global(chain_id.into());
+        assert_eq!(
+            kakarot_state.eth_chain_id(), 53, "Should return correct value after modulo operation"
+        );
+        tear_down();
+    }
+}
+

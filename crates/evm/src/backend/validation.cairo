@@ -1,8 +1,9 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::KakarotCore;
+use contracts::kakarot_core::eth_rpc::IEthRPC;
 use core::ops::SnapshotDeref;
 use core::starknet::storage::{StoragePointerReadAccess};
-use core::starknet::{get_caller_address, get_tx_info};
+use core::starknet::{get_caller_address};
 use evm::gas;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::storage::StorageTrait;
@@ -24,12 +25,7 @@ pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transacti
 
     // Validate chain_id for post eip155
     let tx_chain_id = tx.chain_id();
-    let kakarot_chain_id: u64 = get_tx_info()
-        .chain_id
-        .try_into()
-        .unwrap() % POW_2_32
-        .try_into()
-        .unwrap();
+    let kakarot_chain_id: u64 = kakarot_state.eth_chain_id();
     if (tx_chain_id.is_some()) {
         assert(tx_chain_id.unwrap() == kakarot_chain_id, 'Invalid chain id');
     }
