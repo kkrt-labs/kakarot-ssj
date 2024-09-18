@@ -104,7 +104,6 @@ pub impl MemoryOperation of MemoryOperationTrait {
     fn exec_sstore(ref self: VM) -> Result<(), EVMError> {
         let key = self.stack.pop()?;
         let new_value = self.stack.pop()?;
-        println!("key: {}, new_value: {}", key, new_value);
         ensure(self.gas_left() > gas::CALL_STIPEND, EVMError::OutOfGas)?; // EIP-1706
 
         let evm_address = self.message().target.evm;

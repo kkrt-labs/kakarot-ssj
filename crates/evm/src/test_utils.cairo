@@ -131,7 +131,7 @@ pub fn origin() -> EthAddress {
     'origin'.try_into().unwrap()
 }
 
-pub fn dual_origin() -> Address{
+pub fn dual_origin() -> Address {
     let origin_evm = origin();
     let origin_starknet = utils::helpers::compute_starknet_address(
         test_address(), origin_evm, uninitialized_account()

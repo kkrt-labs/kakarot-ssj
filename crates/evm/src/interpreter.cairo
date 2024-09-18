@@ -108,8 +108,9 @@ pub impl EVMImpl of EVMTrait {
 
         let (message, is_deploy_tx) = {
             let mut sender_account = env.state.get_account(origin.evm);
-            // Charge the intrinsic gas to the sender so that it's not available for the execution of the transaction
-            // but don't trigger any actual transfer, as only the actual consumde gas is charged at the end of the transaction
+            // Charge the intrinsic gas to the sender so that it's not available for the execution
+            // of the transaction but don't trigger any actual transfer, as only the actual consumde
+            // gas is charged at the end of the transaction
             sender_account.set_balance(sender_account.balance() - max_fee.into());
 
             let (message, is_deploy_tx) = self
@@ -123,7 +124,6 @@ pub impl EVMImpl of EVMTrait {
         };
 
         let mut summary = Self::process_message_call(message, env, is_deploy_tx);
-
 
         // Cancel the max_fee that was taken from the sender to prevent double charging
         let mut sender_account = summary.state.get_account(origin.evm);
@@ -406,7 +406,6 @@ pub impl EVMImpl of EVMTrait {
     }
 
     fn execute_opcode(ref self: VM, opcode: u8) -> Result<(), EVMError> {
-        println!("Address {:?}, opcode {:?}, pc {:?}, gas left in call {:?}", self.message().code_address.evm, opcode, self.pc(), self.gas_left());
         // Call the appropriate function based on the opcode.
         if opcode == 0x00 {
             // STOP
