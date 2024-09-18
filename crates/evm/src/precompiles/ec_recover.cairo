@@ -6,8 +6,8 @@ use core::traits::Into;
 use evm::errors::EVMError;
 use evm::precompiles::Precompile;
 use utils::helpers::{ToBytes, FromBytes};
-use utils::traits::BoolIntoNumeric;
 use utils::traits::EthAddressIntoU256;
+use utils::traits::{NumericIntoBool, BoolIntoNumeric};
 
 const EC_RECOVER_PRECOMPILE_GAS_COST: u64 = 3000;
 
@@ -30,11 +30,10 @@ pub impl EcRecover of Precompile {
         let y_parity = match v {
             Option::Some(v) => {
                 let y_parity = v - 27;
-                if (y_parity == 0 || y_parity == 1) {
-                    y_parity == 1
-                } else {
+                if (y_parity != 0 && y_parity != 1) {
                     return Result::Ok((gas, [].span()));
                 }
+                y_parity.into()
             },
             Option::None => { return Result::Ok((gas, [].span())); }
         };
