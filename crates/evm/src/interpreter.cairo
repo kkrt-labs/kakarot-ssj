@@ -40,9 +40,10 @@ pub impl EVMImpl of EVMTrait {
         self: @KakarotCore::ContractState,
         tx: @Transaction,
         sender_account: @Account,
-        ref env: Environment
-    ) -> (Address, bool, Span<u8>, Address, Span<u8>) {
-        match tx.kind() {
+        ref env: Environment,
+        gas_left: u64
+    ) -> (Message, bool) {
+        let (to, is_deploy_tx, code, code_address, calldata) = match tx.kind() {
             TxKind::Create => {
                 let origin_nonce: u64 = sender_account.nonce();
                 let to_evm_address = compute_contract_address(
@@ -58,31 +59,12 @@ pub impl EVMImpl of EVMTrait {
                 let code = env.state.get_account(to.evm).code;
                 (to, false, code, to, tx.input())
             }
-        }
-    }
-
-    fn process_transaction(
-        ref self: KakarotCore::ContractState, origin: Address, tx: Transaction, intrinsic_gas: u64
-    ) -> TransactionResult {
-        // Charge the cost of intrinsic gas - which has been verified to be <= gas_limit.
-        let block_base_fee = self.snapshot_deref().Kakarot_base_fee.read();
-        let gas_price = tx.effective_gas_price(Option::Some(block_base_fee.into()));
-        let gas_left = tx.gas_limit() - intrinsic_gas;
-        let mut env = starknet_backend::get_env(origin.evm, gas_price);
-
-        let mut sender_account = env.state.get_account(origin.evm);
-        // Handle deploy/non-deploy transaction cases
-        let (to, is_deploy_tx, code, code_address, calldata) = self
-            .prepare_message(@tx, @sender_account, ref env);
-
-        // Increment nonce of sender AFTER computing eventual created address
-        sender_account.set_nonce(sender_account.nonce() + 1);
-        env.state.set_account(sender_account);
+        };
 
         let mut accessed_addresses: Set<EthAddress> = Default::default();
         accessed_addresses.add(env.coinbase);
         accessed_addresses.add(to.evm);
-        accessed_addresses.add(origin.evm);
+        accessed_addresses.add(env.origin.evm);
         accessed_addresses.extend(eth_precompile_addresses().spanset());
 
         let mut accessed_storage_keys: Set<(EthAddress, u256)> = Default::default();
@@ -97,7 +79,7 @@ pub impl EVMImpl of EVMTrait {
         };
 
         let message = Message {
-            caller: origin,
+            caller: env.origin,
             target: to,
             gas_limit: gas_left,
             data: calldata,
@@ -110,7 +92,43 @@ pub impl EVMImpl of EVMTrait {
             accessed_addresses: accessed_addresses.spanset(),
             accessed_storage_keys: accessed_storage_keys.spanset(),
         };
+
+        (message, is_deploy_tx)
+    }
+
+    fn process_transaction(
+        ref self: KakarotCore::ContractState, origin: Address, tx: Transaction, intrinsic_gas: u64
+    ) -> TransactionResult {
+        // Charge the cost of intrinsic gas - which has been verified to be <= gas_limit.
+        let block_base_fee = self.snapshot_deref().Kakarot_base_fee.read();
+        let gas_price = tx.effective_gas_price(Option::Some(block_base_fee.into()));
+        let gas_left = tx.gas_limit() - intrinsic_gas;
+        let max_fee = tx.gas_limit().into() * gas_price;
+        let mut env = starknet_backend::get_env(origin, gas_price);
+
+        let (message, is_deploy_tx) = {
+            let mut sender_account = env.state.get_account(origin.evm);
+            // Charge the intrinsic gas to the sender so that it's not available for the execution of the transaction
+            // but don't trigger any actual transfer, as only the actual consumde gas is charged at the end of the transaction
+            sender_account.set_balance(sender_account.balance() - max_fee.into());
+
+            let (message, is_deploy_tx) = self
+                .prepare_message(@tx, @sender_account, ref env, gas_left);
+
+            // Increment nonce of sender AFTER computing eventual created address
+            sender_account.set_nonce(sender_account.nonce() + 1);
+
+            env.state.set_account(sender_account);
+            (message, is_deploy_tx)
+        };
+
         let mut summary = Self::process_message_call(message, env, is_deploy_tx);
+
+
+        // Cancel the max_fee that was taken from the sender to prevent double charging
+        let mut sender_account = summary.state.get_account(origin.evm);
+        sender_account.set_balance(sender_account.balance() + max_fee.into());
+        summary.state.set_account(sender_account);
 
         // Gas refunds
         let gas_used = tx.gas_limit() - summary.gas_left;
@@ -388,6 +406,7 @@ pub impl EVMImpl of EVMTrait {
     }
 
     fn execute_opcode(ref self: VM, opcode: u8) -> Result<(), EVMError> {
+        println!("Address {:?}, opcode {:?}, pc {:?}, gas left in call {:?}", self.message().code_address.evm, opcode, self.pc(), self.gas_left());
         // Call the appropriate function based on the opcode.
         if opcode == 0x00 {
             // STOP
@@ -994,9 +1013,9 @@ pub impl EVMImpl of EVMTrait {
 mod tests {
     use contracts::kakarot_core::KakarotCore;
     use core::num::traits::Zero;
-    use evm::model::{Account, Environment};
+    use evm::model::{Account, Environment, Message};
     use evm::state::StateTrait;
-    use evm::test_utils::test_dual_address;
+    use evm::test_utils::{dual_origin, test_dual_address};
     use super::EVMTrait;
     use utils::constants::EMPTY_KECCAK;
     use utils::eth_transaction::common::TxKind;
@@ -1015,7 +1034,7 @@ mod tests {
             is_created: true,
         };
         let mut env = Environment {
-            origin: 0x1234567890123456789012345678901234567890.try_into().unwrap(),
+            origin: dual_origin(),
             gas_price: 20000000000_u128, // 20 Gwei
             chain_id: 1_u64,
             prevrandao: 0_u256,
@@ -1045,16 +1064,20 @@ mod tests {
             }
         );
 
-        let (to, is_deploy_tx, code, code_address, calldata) = state
-            .prepare_message(@tx, @sender_account, ref env);
+        let (message, is_deploy_tx) = state
+            .prepare_message(@tx, @sender_account, ref env, tx.gas_limit());
 
         assert_eq!(is_deploy_tx, true);
-        assert_eq!(code, tx.input());
+        assert_eq!(message.code, tx.input());
         assert_eq!(
-            to.evm, 0xf50541960eec6df5caa295adee1a1a95c3c3241c.try_into().unwrap()
+            message.target.evm, 0xf50541960eec6df5caa295adee1a1a95c3c3241c.try_into().unwrap()
         ); // compute_contract_address('evm_address', 5);
-        assert_eq!(code_address, Zero::zero());
-        assert_eq!(calldata, [].span());
+        assert_eq!(message.code_address, Zero::zero());
+        assert_eq!(message.data, [].span());
+        assert_eq!(message.gas_limit, tx.gas_limit());
+        assert_eq!(message.depth, 0);
+        assert_eq!(message.should_transfer_value, true);
+        assert_eq!(message.value, 0_u256);
     }
 
     #[test]
@@ -1073,13 +1096,17 @@ mod tests {
             }
         );
 
-        let (to, is_deploy_tx, code, code_address, calldata) = state
-            .prepare_message(@tx, @sender_account, ref env);
+        let (message, is_deploy_tx) = state
+            .prepare_message(@tx, @sender_account, ref env, tx.gas_limit());
 
         assert_eq!(is_deploy_tx, false);
-        assert_eq!(to.evm, target_address.evm);
-        assert_eq!(code_address.evm, target_address.evm);
-        assert_eq!(code, sender_account.code);
-        assert_eq!(calldata, tx.input());
+        assert_eq!(message.target.evm, target_address.evm);
+        assert_eq!(message.code_address.evm, target_address.evm);
+        assert_eq!(message.code, sender_account.code);
+        assert_eq!(message.data, tx.input());
+        assert_eq!(message.gas_limit, tx.gas_limit());
+        assert_eq!(message.depth, 0);
+        assert_eq!(message.should_transfer_value, true);
+        assert_eq!(message.value, 1000000000000000000_u256);
     }
 }

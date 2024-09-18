@@ -17,7 +17,7 @@ use utils::traits::{EthAddressDefault, ContractAddressDefault, SpanDefault};
 
 #[derive(Destruct, Default)]
 pub struct Environment {
-    pub origin: EthAddress,
+    pub origin: Address,
     pub gas_price: u128,
     pub chain_id: u64,
     pub prevrandao: u256,

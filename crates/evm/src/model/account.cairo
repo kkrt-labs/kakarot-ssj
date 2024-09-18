@@ -163,6 +163,11 @@ pub impl AccountImpl of AccountTrait {
     }
 
     #[inline(always)]
+    fn set_balance(ref self: Account, value: u256) {
+        self.balance = value;
+    }
+
+    #[inline(always)]
     fn address(self: @Account) -> Address {
         *self.address
     }
@@ -265,14 +270,6 @@ pub impl AccountImpl of AccountTrait {
             i += 1;
         };
         jumpdests
-    }
-}
-
-#[generate_trait]
-pub(crate) impl AccountInternals of AccountInternalTrait {
-    #[inline(always)]
-    fn set_balance(ref self: Account, value: u256) {
-        self.balance = value;
     }
 }
 
