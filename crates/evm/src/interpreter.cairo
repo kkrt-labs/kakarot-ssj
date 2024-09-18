@@ -1,3 +1,4 @@
+use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
 use core::num::traits::Zero;
@@ -16,7 +17,7 @@ use evm::instructions::{
     MemoryOperationTrait, Sha3Trait
 };
 
-use evm::model::account::{AccountTrait};
+use evm::model::account::{Account, AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{
     Message, Environment, Transfer, ExecutionSummary, ExecutionSummaryTrait, ExecutionResult,
@@ -35,6 +36,31 @@ use utils::set::{Set, SetTrait};
 
 #[generate_trait]
 pub impl EVMImpl of EVMTrait {
+    fn prepare_message(
+        self: @KakarotCore::ContractState,
+        tx: @Transaction,
+        sender_account: @Account,
+        ref env: Environment
+    ) -> (Address, bool, Span<u8>, Address, Span<u8>) {
+        match tx.kind() {
+            TxKind::Create => {
+                let origin_nonce: u64 = sender_account.nonce();
+                let to_evm_address = compute_contract_address(
+                    sender_account.address().evm, origin_nonce
+                );
+                let to_starknet_address = self.compute_starknet_address(to_evm_address);
+                let to = Address { evm: to_evm_address, starknet: to_starknet_address };
+                (to, true, tx.input(), Zero::zero(), [].span())
+            },
+            TxKind::Call(to) => {
+                let target_starknet_address = self.compute_starknet_address(to);
+                let to = Address { evm: to, starknet: target_starknet_address };
+                let code = env.state.get_account(to.evm).code;
+                (to, false, code, to, tx.input())
+            }
+        }
+    }
+
     fn process_transaction(
         ref self: KakarotCore::ContractState, origin: Address, tx: Transaction, intrinsic_gas: u64
     ) -> TransactionResult {
@@ -45,28 +71,13 @@ pub impl EVMImpl of EVMTrait {
         let mut env = starknet_backend::get_env(origin.evm, gas_price);
 
         let mut sender_account = env.state.get_account(origin.evm);
+        // Handle deploy/non-deploy transaction cases
+        let (to, is_deploy_tx, code, code_address, calldata) = self
+            .prepare_message(@tx, @sender_account, ref env);
+
+        // Increment nonce of sender AFTER computing eventual created address
         sender_account.set_nonce(sender_account.nonce() + 1);
         env.state.set_account(sender_account);
-
-        // Handle deploy/non-deploy transaction cases
-        let (to, is_deploy_tx, code, code_address, calldata) = match tx.kind() {
-            TxKind::Create => {
-                // Deploy tx case.
-                let mut origin_nonce: u64 = get_tx_info().unbox().nonce.try_into().unwrap();
-                let to_evm_address = compute_contract_address(origin.evm, origin_nonce);
-                let to_starknet_address = self.compute_starknet_address(to_evm_address);
-                let to = Address { evm: to_evm_address, starknet: to_starknet_address };
-                let code = tx.input();
-                let calldata = [].span();
-                (to, true, code, Zero::zero(), calldata)
-            },
-            TxKind::Call(to) => {
-                let target_starknet_address = self.compute_starknet_address(to);
-                let to = Address { evm: to, starknet: target_starknet_address };
-                let code = env.state.get_account(to.evm).code;
-                (to, false, code, to, tx.input())
-            }
-        };
 
         let mut accessed_addresses: Set<EthAddress> = Default::default();
         accessed_addresses.add(env.coinbase);
@@ -976,5 +987,99 @@ pub impl EVMImpl of EVMTrait {
         }
         // Unknown opcode
         return Result::Err(EVMError::InvalidOpcode(opcode));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use contracts::kakarot_core::KakarotCore;
+    use core::num::traits::Zero;
+    use evm::model::{Account, Environment};
+    use evm::state::StateTrait;
+    use evm::test_utils::test_dual_address;
+    use super::EVMTrait;
+    use utils::constants::EMPTY_KECCAK;
+    use utils::eth_transaction::common::TxKind;
+    use utils::eth_transaction::legacy::TxLegacy;
+    use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
+
+    fn setup() -> (KakarotCore::ContractState, Account, Environment) {
+        let state = KakarotCore::contract_state_for_testing();
+        let sender_account = Account {
+            address: test_dual_address(),
+            nonce: 5,
+            balance: 1000000000000000000_u256, // 1 ETH
+            code: array![].span(),
+            code_hash: EMPTY_KECCAK,
+            selfdestruct: false,
+            is_created: true,
+        };
+        let mut env = Environment {
+            origin: 0x1234567890123456789012345678901234567890.try_into().unwrap(),
+            gas_price: 20000000000_u128, // 20 Gwei
+            chain_id: 1_u64,
+            prevrandao: 0_u256,
+            block_number: 12345_u64,
+            block_gas_limit: 30000000_u64,
+            block_timestamp: 1634567890_u64,
+            coinbase: 0x0000000000000000000000000000000000000000.try_into().unwrap(),
+            base_fee: 0_u64,
+            state: Default::default(),
+        };
+        env.state.set_account(sender_account);
+        (state, sender_account, env)
+    }
+
+    #[test]
+    fn test_prepare_message_create() {
+        let (mut state, sender_account, mut env) = setup();
+        let tx = Transaction::Legacy(
+            TxLegacy {
+                chain_id: Option::Some(1),
+                nonce: 5,
+                gas_price: 20000000000_u128, // 20 Gwei
+                gas_limit: 1000000_u64,
+                to: TxKind::Create,
+                value: 0_u256,
+                input: array![0x60, 0x80, 0x60, 0x40, 0x52].span(), // Simple contract bytecode
+            }
+        );
+
+        let (to, is_deploy_tx, code, code_address, calldata) = state
+            .prepare_message(@tx, @sender_account, ref env);
+
+        assert_eq!(is_deploy_tx, true);
+        assert_eq!(code, tx.input());
+        assert_eq!(
+            to.evm, 0xf50541960eec6df5caa295adee1a1a95c3c3241c.try_into().unwrap()
+        ); // compute_contract_address('evm_address', 5);
+        assert_eq!(code_address, Zero::zero());
+        assert_eq!(calldata, [].span());
+    }
+
+    #[test]
+    fn test_prepare_message_call() {
+        let (mut state, sender_account, mut env) = setup();
+        let target_address = sender_account.address;
+        let tx = Transaction::Legacy(
+            TxLegacy {
+                chain_id: Option::Some(1),
+                nonce: 5,
+                gas_price: 20000000000_u128, // 20 Gwei
+                gas_limit: 1000000_u64,
+                to: TxKind::Call(target_address.evm),
+                value: 1000000000000000000_u256, // 1 ETH
+                input: array![0x12, 0x34, 0x56, 0x78].span(), // Some calldata
+            }
+        );
+
+        let (to, is_deploy_tx, code, code_address, calldata) = state
+            .prepare_message(@tx, @sender_account, ref env);
+
+        assert_eq!(is_deploy_tx, false);
+        assert_eq!(to.evm, target_address.evm);
+        assert_eq!(code_address.evm, target_address.evm);
+        assert_eq!(code, sender_account.code);
+        assert_eq!(calldata, tx.input());
     }
 }
