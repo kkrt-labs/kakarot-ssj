@@ -42,7 +42,7 @@ pub fn deploy(evm_address: EthAddress) -> Result<Address, EVMError> {
     // Unlike CAs, there is not check for the existence of an EOA prealably to calling
     // `EOATrait::deploy` - therefore, we need to check that there is no collision.
     let mut is_deployed = evm_address.is_deployed();
-    ensure(!is_deployed, EVMError::DeployError(EOA_EXISTS))?;
+    ensure(!is_deployed, EVMError::Collision)?;
 
     let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
     let uninitialized_account_class_hash = kakarot_state.uninitialized_account_class_hash();

@@ -54,7 +54,7 @@ pub enum EVMError {
     InvalidParameter: felt252,
     InvalidOpcode: u8,
     WriteInStaticContext,
-    DeployError: felt252,
+    Collision,
     OutOfGas,
     Assertion,
     DepthLimit,
@@ -78,7 +78,7 @@ pub impl EVMErrorImpl of EVMErrorTrait {
             // TODO: refactor with dynamic strings once supported
             EVMError::InvalidOpcode => 'invalid opcode'.into(),
             EVMError::WriteInStaticContext => 'write protection',
-            EVMError::DeployError(error_message) => error_message,
+            EVMError::Collision => 'create collision'.into(),
             EVMError::OutOfGas => 'out of gas'.into(),
             EVMError::Assertion => 'assertion failed'.into(),
             EVMError::DepthLimit => 'max call depth exceeded'.into(),

@@ -20,8 +20,8 @@ use evm::instructions::{
 use evm::model::account::{Account, AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{
-    Message, Environment, Transfer, ExecutionSummary, ExecutionSummaryTrait, ExecutionResult,
-    ExecutionResultTrait, ExecutionResultStatus, AddressTrait, TransactionResult, Address
+    Message, Environment, Transfer, ExecutionSummary, ExecutionResult, ExecutionResultTrait,
+    ExecutionResultStatus, AddressTrait, TransactionResult, Address
 };
 use evm::precompiles::Precompiles;
 use evm::precompiles::eth_precompile_addresses;
@@ -170,7 +170,7 @@ pub impl EVMImpl of EVMTrait {
         // };
 
         TransactionResult {
-            success: summary.is_success(),
+            success: summary.status == ExecutionResultStatus::Success,
             return_data: summary.return_data,
             gas_used: total_gas_used,
             state: summary.state,
@@ -185,9 +185,13 @@ pub impl EVMImpl of EVMTrait {
         let result = if is_deploy_tx {
             // Check collision
             if target_account.has_code_or_nonce() {
-                return ExecutionSummaryTrait::exceptional_failure(
-                    EVMError::DeployError(CONTRACT_ACCOUNT_EXISTS).to_bytes(),
-                );
+                return ExecutionSummary {
+                    status: ExecutionResultStatus::Exception,
+                    return_data: EVMError::Collision.to_bytes(),
+                    gas_left: 0,
+                    state: env.state,
+                    gas_refund: 0
+                };
             }
 
             let mut result = Self::process_create_message(message, ref env);
