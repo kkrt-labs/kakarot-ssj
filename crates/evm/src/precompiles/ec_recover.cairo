@@ -1,10 +1,15 @@
-use core::starknet::secp256_trait::{recover_public_key, Signature};
+use core::starknet::secp256_trait::{
+    Signature, recover_public_key, Secp256PointTrait, is_valid_signature
+};
+use core::starknet::secp256_trait::{Secp256Trait};
 use core::starknet::{
-    EthAddress, eth_signature::{public_key_point_to_eth_address}, secp256k1::{Secp256k1Point}
+    EthAddress, eth_signature::{public_key_point_to_eth_address}, secp256k1::{Secp256k1Point},
+    SyscallResultTrait
 };
 use core::traits::Into;
 use evm::errors::EVMError;
 use evm::precompiles::Precompile;
+use utils::helpers::U8SpanExTrait;
 use utils::helpers::{ToBytes, FromBytes};
 use utils::traits::EthAddressIntoU256;
 use utils::traits::{NumericIntoBool, BoolIntoNumeric};
@@ -20,6 +25,8 @@ pub impl EcRecover of Precompile {
     fn exec(input: Span<u8>) -> Result<(u64, Span<u8>), EVMError> {
         let gas = EC_RECOVER_PRECOMPILE_GAS_COST;
 
+        // Pad the input to 128 bytes to avoid out-of-bounds accesses
+        let input = input.pad_right_with_zeroes(128);
         let message_hash = input.slice(0, 32);
         let message_hash = match message_hash.from_be_bytes() {
             Option::Some(message_hash) => message_hash,
@@ -29,10 +36,10 @@ pub impl EcRecover of Precompile {
         let v: Option<u256> = input.slice(32, 32).from_be_bytes();
         let y_parity = match v {
             Option::Some(v) => {
-                let y_parity = v - 27;
-                if (y_parity != 0 && y_parity != 1) {
+                if !(v == 27 || v == 28) {
                     return Result::Ok((gas, [].span()));
                 }
+                let y_parity = v - 27; //won't overflow because v is 27 or 28
                 y_parity.into()
             },
             Option::None => { return Result::Ok((gas, [].span())); }
@@ -54,7 +61,14 @@ pub impl EcRecover of Precompile {
 
         let recovered_public_key =
             match recover_public_key::<Secp256k1Point>(message_hash, signature) {
-            Option::Some(public_key_point) => public_key_point,
+            Option::Some(public_key_point) => {
+                // EVM spec requires that the public key is not the point at infinity
+                let (x, y) = public_key_point.get_coordinates().unwrap_syscall();
+                if (x == 0 && y == 0) {
+                    return Result::Ok((gas, [].span()));
+                }
+                public_key_point
+            },
             Option::None => { return Result::Ok((gas, [].span())); }
         };
 
