@@ -111,9 +111,7 @@ pub impl BlockInformation of BlockInformationTrait {
     fn exec_basefee(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
 
-        // Get the current base fee. (Kakarot doesn't use EIP 1559 so basefee
-        //  doesn't really exists there so we just use the gas price)
-        self.stack.push(self.env.gas_price.into())
+        self.stack.push(self.env.base_fee.into())
     }
 
     /// 0x49 - BLOBHASH
@@ -284,7 +282,7 @@ mod tests {
 
 
     #[test]
-    fn test_basefee() {
+    fn test_basefee_should_push_env_base_fee() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -292,8 +290,8 @@ mod tests {
         vm.exec_basefee().unwrap();
 
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == gas_price().into(), 'stack top should be gas_price');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), vm.env.base_fee.into());
     }
 
     #[test]
