@@ -188,21 +188,17 @@ pub impl MemoryOperation of MemoryOperationTrait {
     /// The new pc target has to be a JUMPDEST opcode.
     /// # Specification: https://www.evm.codes/#57?fork=shanghai
     fn exec_jumpi(ref self: VM) -> Result<(), EVMError> {
+        let index = self.stack.pop_usize()?;
+        let b = self.stack.pop()?;
+
         self.charge_gas(gas::HIGH)?;
 
-        // Peek the value so we don't need to push it back again in case we want to call `exec_jump`
-        let b = self.stack.peek_at(1)?;
-
         if b != 0x0 {
-            let index = self.stack.pop_usize()?;
             jump(ref self, index)?;
-            // counter would have been already popped by `exec_jump`
-            // so we just remove `b`
-            self.stack.pop()?;
         } else {
-            // remove both `value` and `b`
-            self.stack.pop()?;
-            self.stack.pop()?;
+            // Return with a PC incremented by one - as JUMP and JUMPi increments
+            // are skipped in the main `execute_code` loop
+            self.set_pc(self.pc() + 1);
         }
 
         Result::Ok(())
@@ -709,10 +705,8 @@ mod tests {
 
         // Then
         let pc = vm.pc();
-        // ideally we should assert that it incremented, but incrementing is done by
-        // `decode_and_execute`
-        // so we can assume that will be done
-        assert(pc == old_pc, 'PC should be same');
+        // If the jump is not taken, the PC should be incremented by 1
+        assert_eq!(pc, old_pc + 1);
     }
 
     #[test]
@@ -754,10 +748,8 @@ mod tests {
 
         // Then
         let pc = vm.pc();
-        // ideally we should assert that it incremented, but incrementing is done by
-        // `decode_and_execute`
-        // so we can assume that will be done
-        assert(pc == old_pc, 'PC should be same');
+        // If the jump is not taken, the PC should be incremented by 1
+        assert_eq!(pc, old_pc + 1);
     }
 
     #[test]

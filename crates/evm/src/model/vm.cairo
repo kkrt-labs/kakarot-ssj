@@ -130,11 +130,12 @@ pub impl VMImpl of VMTrait {
         self.accessed_storage_keys.spanset()
     }
 
-    /// Reads and returns data from bytecode starting at the current program counter.
+    /// Reads and returns data from bytecode starting at the provided pc.
     ///
     /// # Arguments
     ///
     /// * `self` - The `VM` instance to read the data from.
+    /// * `pc` - The starting position in the bytecode to read from.
     /// * `len` - The length of the data to read from the bytecode.
     ///
     /// # Returns
@@ -142,8 +143,7 @@ pub impl VMImpl of VMTrait {
     /// * A `Span<u8>` containing the requested bytecode slice.
     /// * If the requested slice extends beyond the code length, returns remaining bytes.
     #[inline(always)]
-    fn read_code(self: @VM, len: usize) -> Span<u8> {
-        let pc = self.pc();
+    fn read_code(self: @VM, pc: usize, len: usize) -> Span<u8> {
         let code_len = self.message().code.len();
 
         // If pc is out of bounds, return an empty span
@@ -239,7 +239,7 @@ mod tests {
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
         vm.set_pc(1);
 
-        let read_code = vm.read_code(3);
+        let read_code = vm.read_code(vm.pc(), 3);
 
         assert_eq!(read_code, [0x02, 0x03, 0x04].span());
         assert_eq!(vm.pc(), 1);
@@ -251,7 +251,7 @@ mod tests {
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
         vm.set_pc(2);
 
-        let read_code = vm.read_code(2);
+        let read_code = vm.read_code(vm.pc(), 3);
 
         assert_eq!(read_code, [0x03].span());
         assert_eq!(vm.pc(), 2);
@@ -263,7 +263,7 @@ mod tests {
         let mut vm = VMBuilderTrait::new_with_presets().with_bytecode(bytecode).build();
         vm.set_pc(3);
 
-        let read_code = vm.read_code(2);
+        let read_code = vm.read_code(vm.pc(), 3);
 
         assert_eq!(read_code, [0x04, 0x05].span());
         assert_eq!(vm.pc(), 3);
