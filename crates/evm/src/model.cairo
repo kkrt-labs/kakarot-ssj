@@ -108,30 +108,6 @@ pub struct ExecutionSummary {
     pub gas_refund: u64
 }
 
-#[generate_trait]
-pub impl ExecutionSummaryImpl of ExecutionSummaryTrait {
-    fn exceptional_failure(error: Span<u8>) -> ExecutionSummary {
-        ExecutionSummary {
-            status: ExecutionResultStatus::Exception,
-            return_data: error,
-            gas_left: 0,
-            state: Default::default(),
-            gas_refund: 0
-        }
-    }
-
-    fn is_success(self: @ExecutionSummary) -> bool {
-        *self.status == ExecutionResultStatus::Success
-    }
-
-    fn is_exception(self: @ExecutionSummary) -> bool {
-        *self.status == ExecutionResultStatus::Exception
-    }
-
-    fn is_revert(self: @ExecutionSummary) -> bool {
-        *self.status == ExecutionResultStatus::Revert
-    }
-}
 
 pub struct TransactionResult {
     pub success: bool,
