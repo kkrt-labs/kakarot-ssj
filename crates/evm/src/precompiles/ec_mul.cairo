@@ -5,7 +5,7 @@ use evm::errors::EVMError;
 use evm::precompiles::Precompile;
 
 use evm::precompiles::ec_add::{is_on_curve, double_ec_point_unchecked, ec_safe_add};
-use utils::helpers::{load_word, ToBytes};
+use utils::helpers::{load_word, ToBytes, U8SpanExTrait};
 
 // const BN254_ORDER: u256 = 0x30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001;
 
@@ -19,6 +19,9 @@ pub impl EcMul of Precompile {
 
     fn exec(mut input: Span<u8>) -> Result<(u64, Span<u8>), EVMError> {
         let gas = BASE_COST;
+
+        // Pad the input to 128 bytes to avoid out-of-bounds accesses
+        let mut input = input.pad_right_with_zeroes(96);
 
         let x1_bytes = *(input.multi_pop_front::<32>().unwrap());
         let x1: u256 = load_word(U256_BYTES_LEN, x1_bytes.unbox().span());

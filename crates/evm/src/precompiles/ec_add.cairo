@@ -12,7 +12,7 @@ use evm::errors::EVMError;
 use evm::precompiles::Precompile;
 use garaga::core::circuit::AddInputResultTrait2;
 use utils::helpers::ToBytes;
-use utils::helpers::load_word;
+use utils::helpers::{load_word, U8SpanExTrait};
 
 
 const BASE_COST: u64 = 150;
@@ -24,8 +24,11 @@ pub impl EcAdd of Precompile {
         0x6.try_into().unwrap()
     }
 
-    fn exec(mut input: Span<u8>) -> Result<(u64, Span<u8>), EVMError> {
+    fn exec(input: Span<u8>) -> Result<(u64, Span<u8>), EVMError> {
         let gas = BASE_COST;
+
+        // Pad the input to 128 bytes to avoid out-of-bounds accesses
+        let mut input = input.pad_right_with_zeroes(128);
 
         let x1_bytes = *(input.multi_pop_front::<32>().unwrap());
         let x1: u256 = load_word(U256_BYTES_LEN, x1_bytes.unbox().span());
