@@ -131,6 +131,14 @@ pub fn origin() -> EthAddress {
     'origin'.try_into().unwrap()
 }
 
+pub fn dual_origin() -> Address {
+    let origin_evm = origin();
+    let origin_starknet = utils::helpers::compute_starknet_address(
+        test_address(), origin_evm, uninitialized_account()
+    );
+    Address { evm: origin_evm, starknet: origin_starknet }
+}
+
 pub fn caller() -> EthAddress {
     'caller'.try_into().unwrap()
 }
@@ -253,8 +261,9 @@ pub fn preset_message() -> Message {
 
 pub fn preset_environment() -> Environment {
     let block_info = starknet::get_block_info().unbox();
+
     Environment {
-        origin: origin(),
+        origin: dual_origin(),
         gas_price: gas_price(),
         chain_id: chain_id(),
         prevrandao: 0,

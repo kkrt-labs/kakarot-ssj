@@ -8,7 +8,7 @@ use core::starknet::{EthAddress};
 use evm::backend::starknet_backend::fetch_original_storage;
 
 use evm::errors::{ensure, EVMError, BALANCE_OVERFLOW};
-use evm::model::account::{AccountTrait, AccountInternalTrait};
+use evm::model::account::{AccountTrait};
 use evm::model::{Event, Transfer, Account};
 use utils::set::{Set, SetTrait};
 

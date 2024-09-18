@@ -46,7 +46,7 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     /// # Specification: https://www.evm.codes/#32?fork=shanghai
     fn exec_origin(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
-        self.stack.push(self.env.origin.into())
+        self.stack.push(self.env.origin.evm.into())
     }
 
     /// 0x33 - CALLER
@@ -448,7 +448,7 @@ mod tests {
 
         // Then
         assert_eq!(vm.stack.len(), 1);
-        assert_eq!(vm.stack.peek().unwrap(), origin().into());
+        assert_eq!(vm.stack.peek().unwrap(), vm.env.origin.evm.into());
     }
 
 

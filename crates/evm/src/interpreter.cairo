@@ -1,3 +1,4 @@
+use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
 use core::num::traits::Zero;
@@ -16,7 +17,7 @@ use evm::instructions::{
     MemoryOperationTrait, Sha3Trait
 };
 
-use evm::model::account::{AccountTrait};
+use evm::model::account::{Account, AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{
     Message, Environment, Transfer, ExecutionSummary, ExecutionSummaryTrait, ExecutionResult,
@@ -35,30 +36,22 @@ use utils::set::{Set, SetTrait};
 
 #[generate_trait]
 pub impl EVMImpl of EVMTrait {
-    fn process_transaction(
-        ref self: KakarotCore::ContractState, origin: Address, tx: Transaction, intrinsic_gas: u64
-    ) -> TransactionResult {
-        // Charge the cost of intrinsic gas - which has been verified to be <= gas_limit.
-        let block_base_fee = self.snapshot_deref().Kakarot_base_fee.read();
-        let gas_price = tx.effective_gas_price(Option::Some(block_base_fee.into()));
-        let gas_left = tx.gas_limit() - intrinsic_gas;
-        let mut env = starknet_backend::get_env(origin.evm, gas_price);
-
-        let mut sender_account = env.state.get_account(origin.evm);
-        sender_account.set_nonce(sender_account.nonce() + 1);
-        env.state.set_account(sender_account);
-
-        // Handle deploy/non-deploy transaction cases
+    fn prepare_message(
+        self: @KakarotCore::ContractState,
+        tx: @Transaction,
+        sender_account: @Account,
+        ref env: Environment,
+        gas_left: u64
+    ) -> (Message, bool) {
         let (to, is_deploy_tx, code, code_address, calldata) = match tx.kind() {
             TxKind::Create => {
-                // Deploy tx case.
-                let mut origin_nonce: u64 = get_tx_info().unbox().nonce.try_into().unwrap();
-                let to_evm_address = compute_contract_address(origin.evm, origin_nonce);
+                let origin_nonce: u64 = sender_account.nonce();
+                let to_evm_address = compute_contract_address(
+                    sender_account.address().evm, origin_nonce
+                );
                 let to_starknet_address = self.compute_starknet_address(to_evm_address);
                 let to = Address { evm: to_evm_address, starknet: to_starknet_address };
-                let code = tx.input();
-                let calldata = [].span();
-                (to, true, code, Zero::zero(), calldata)
+                (to, true, tx.input(), Zero::zero(), [].span())
             },
             TxKind::Call(to) => {
                 let target_starknet_address = self.compute_starknet_address(to);
@@ -71,7 +64,7 @@ pub impl EVMImpl of EVMTrait {
         let mut accessed_addresses: Set<EthAddress> = Default::default();
         accessed_addresses.add(env.coinbase);
         accessed_addresses.add(to.evm);
-        accessed_addresses.add(origin.evm);
+        accessed_addresses.add(env.origin.evm);
         accessed_addresses.extend(eth_precompile_addresses().spanset());
 
         let mut accessed_storage_keys: Set<(EthAddress, u256)> = Default::default();
@@ -86,7 +79,7 @@ pub impl EVMImpl of EVMTrait {
         };
 
         let message = Message {
-            caller: origin,
+            caller: env.origin,
             target: to,
             gas_limit: gas_left,
             data: calldata,
@@ -99,7 +92,43 @@ pub impl EVMImpl of EVMTrait {
             accessed_addresses: accessed_addresses.spanset(),
             accessed_storage_keys: accessed_storage_keys.spanset(),
         };
+
+        (message, is_deploy_tx)
+    }
+
+    fn process_transaction(
+        ref self: KakarotCore::ContractState, origin: Address, tx: Transaction, intrinsic_gas: u64
+    ) -> TransactionResult {
+        // Charge the cost of intrinsic gas - which has been verified to be <= gas_limit.
+        let block_base_fee = self.snapshot_deref().Kakarot_base_fee.read();
+        let gas_price = tx.effective_gas_price(Option::Some(block_base_fee.into()));
+        let gas_left = tx.gas_limit() - intrinsic_gas;
+        let max_fee = tx.gas_limit().into() * gas_price;
+        let mut env = starknet_backend::get_env(origin, gas_price);
+
+        let (message, is_deploy_tx) = {
+            let mut sender_account = env.state.get_account(origin.evm);
+            // Charge the intrinsic gas to the sender so that it's not available for the execution
+            // of the transaction but don't trigger any actual transfer, as only the actual consumde
+            // gas is charged at the end of the transaction
+            sender_account.set_balance(sender_account.balance() - max_fee.into());
+
+            let (message, is_deploy_tx) = self
+                .prepare_message(@tx, @sender_account, ref env, gas_left);
+
+            // Increment nonce of sender AFTER computing eventual created address
+            sender_account.set_nonce(sender_account.nonce() + 1);
+
+            env.state.set_account(sender_account);
+            (message, is_deploy_tx)
+        };
+
         let mut summary = Self::process_message_call(message, env, is_deploy_tx);
+
+        // Cancel the max_fee that was taken from the sender to prevent double charging
+        let mut sender_account = summary.state.get_account(origin.evm);
+        sender_account.set_balance(sender_account.balance() + max_fee.into());
+        summary.state.set_account(sender_account);
 
         // Gas refunds
         let gas_used = tx.gas_limit() - summary.gas_left;
@@ -976,5 +1005,107 @@ pub impl EVMImpl of EVMTrait {
         }
         // Unknown opcode
         return Result::Err(EVMError::InvalidOpcode(opcode));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use contracts::kakarot_core::KakarotCore;
+    use core::num::traits::Zero;
+    use evm::model::{Account, Environment, Message};
+    use evm::state::StateTrait;
+    use evm::test_utils::{dual_origin, test_dual_address};
+    use super::EVMTrait;
+    use utils::constants::EMPTY_KECCAK;
+    use utils::eth_transaction::common::TxKind;
+    use utils::eth_transaction::legacy::TxLegacy;
+    use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
+
+    fn setup() -> (KakarotCore::ContractState, Account, Environment) {
+        let state = KakarotCore::contract_state_for_testing();
+        let sender_account = Account {
+            address: test_dual_address(),
+            nonce: 5,
+            balance: 1000000000000000000_u256, // 1 ETH
+            code: array![].span(),
+            code_hash: EMPTY_KECCAK,
+            selfdestruct: false,
+            is_created: true,
+        };
+        let mut env = Environment {
+            origin: dual_origin(),
+            gas_price: 20000000000_u128, // 20 Gwei
+            chain_id: 1_u64,
+            prevrandao: 0_u256,
+            block_number: 12345_u64,
+            block_gas_limit: 30000000_u64,
+            block_timestamp: 1634567890_u64,
+            coinbase: 0x0000000000000000000000000000000000000000.try_into().unwrap(),
+            base_fee: 0_u64,
+            state: Default::default(),
+        };
+        env.state.set_account(sender_account);
+        (state, sender_account, env)
+    }
+
+    #[test]
+    fn test_prepare_message_create() {
+        let (mut state, sender_account, mut env) = setup();
+        let tx = Transaction::Legacy(
+            TxLegacy {
+                chain_id: Option::Some(1),
+                nonce: 5,
+                gas_price: 20000000000_u128, // 20 Gwei
+                gas_limit: 1000000_u64,
+                to: TxKind::Create,
+                value: 0_u256,
+                input: array![0x60, 0x80, 0x60, 0x40, 0x52].span(), // Simple contract bytecode
+            }
+        );
+
+        let (message, is_deploy_tx) = state
+            .prepare_message(@tx, @sender_account, ref env, tx.gas_limit());
+
+        assert_eq!(is_deploy_tx, true);
+        assert_eq!(message.code, tx.input());
+        assert_eq!(
+            message.target.evm, 0xf50541960eec6df5caa295adee1a1a95c3c3241c.try_into().unwrap()
+        ); // compute_contract_address('evm_address', 5);
+        assert_eq!(message.code_address, Zero::zero());
+        assert_eq!(message.data, [].span());
+        assert_eq!(message.gas_limit, tx.gas_limit());
+        assert_eq!(message.depth, 0);
+        assert_eq!(message.should_transfer_value, true);
+        assert_eq!(message.value, 0_u256);
+    }
+
+    #[test]
+    fn test_prepare_message_call() {
+        let (mut state, sender_account, mut env) = setup();
+        let target_address = sender_account.address;
+        let tx = Transaction::Legacy(
+            TxLegacy {
+                chain_id: Option::Some(1),
+                nonce: 5,
+                gas_price: 20000000000_u128, // 20 Gwei
+                gas_limit: 1000000_u64,
+                to: TxKind::Call(target_address.evm),
+                value: 1000000000000000000_u256, // 1 ETH
+                input: array![0x12, 0x34, 0x56, 0x78].span(), // Some calldata
+            }
+        );
+
+        let (message, is_deploy_tx) = state
+            .prepare_message(@tx, @sender_account, ref env, tx.gas_limit());
+
+        assert_eq!(is_deploy_tx, false);
+        assert_eq!(message.target.evm, target_address.evm);
+        assert_eq!(message.code_address.evm, target_address.evm);
+        assert_eq!(message.code, sender_account.code);
+        assert_eq!(message.data, tx.input());
+        assert_eq!(message.gas_limit, tx.gas_limit());
+        assert_eq!(message.depth, 0);
+        assert_eq!(message.should_transfer_value, true);
+        assert_eq!(message.value, 1000000000000000000_u256);
     }
 }

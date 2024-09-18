@@ -71,7 +71,7 @@ pub fn get_bytecode(evm_address: EthAddress) -> Span<u8> {
 }
 
 /// Populate an Environment with Starknet syscalls.
-pub fn get_env(origin: EthAddress, gas_price: u128) -> Environment {
+pub fn get_env(origin: Address, gas_price: u128) -> Environment {
     let kakarot_state = KakarotCore::unsafe_new_contract_state();
     let kakarot_storage = kakarot_state.snapshot_deref();
     let block_info = get_block_info().unbox();
