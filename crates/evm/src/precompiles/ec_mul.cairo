@@ -11,6 +11,7 @@ use utils::helpers::{load_word, ToBytes, U8SpanExTrait};
 
 const BASE_COST: u64 = 6000;
 const U256_BYTES_LEN: usize = 32;
+const BN254_ORDER: u256 = 0x30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001;
 
 pub impl EcMul of Precompile {
     fn address() -> EthAddress {
@@ -52,34 +53,38 @@ pub impl EcMul of Precompile {
 
 // Returns Option::None in case of error.
 fn ec_mul(x1: u256, y1: u256, s: u256) -> Option<(u256, u256)> {
-    if x1 == 0 && y1 == 0 {
-        // Input point is at infinity, return it
-        return Option::Some((x1, y1));
+    if s >= BN254_ORDER {
+        return Option::None;
     } else {
-        // Point is not at infinity
-        let x1_u384: u384 = x1.into();
-        let y1_u384: u384 = y1.into();
-
-        if is_on_curve(x1_u384, y1_u384) {
-            if s == 0 {
-                return Option::Some((0, 0));
-            } else if s == 1 {
-                return Option::Some((x1, y1));
-            } else {
-                // Point is on the curve.
-                // s is >= 2.
-                let bits = get_bits_little(s);
-                let pt = ec_mul_inner((x1_u384, y1_u384), bits);
-                match pt {
-                    Option::Some((
-                        x, y
-                    )) => Option::Some((x.try_into().unwrap(), y.try_into().unwrap())),
-                    Option::None => Option::Some((0, 0)),
-                }
-            }
+        if x1 == 0 && y1 == 0 {
+            // Input point is at infinity, return it
+            return Option::Some((x1, y1));
         } else {
-            // Point is not on the curve
-            return Option::None;
+            // Point is not at infinity
+            let x1_u384: u384 = x1.into();
+            let y1_u384: u384 = y1.into();
+
+            if is_on_curve(x1_u384, y1_u384) {
+                if s == 0 {
+                    return Option::Some((0, 0));
+                } else if s == 1 {
+                    return Option::Some((x1, y1));
+                } else {
+                    // Point is on the curve.
+                    // s is >= 2.
+                    let bits = get_bits_little(s);
+                    let pt = ec_mul_inner((x1_u384, y1_u384), bits);
+                    match pt {
+                        Option::Some((
+                            x, y
+                        )) => Option::Some((x.try_into().unwrap(), y.try_into().unwrap())),
+                        Option::None => Option::Some((0, 0)),
+                    }
+                }
+            } else {
+                // Point is not on the curve
+                return Option::None;
+            }
         }
     }
 }
