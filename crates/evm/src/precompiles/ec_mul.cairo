@@ -135,7 +135,7 @@ mod tests {
 
     #[test]
     fn test_ec_mul() {
-        let (x1,y1,s) = (1,2,2);
+        let (x1, y1, s) = (1, 2, 2);
         let (x, y) = ec_mul(x1, y1, s).expect('ec_mul failed');
         assert_eq!(x, 0x030644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd3);
         assert_eq!(y, 0x15ed738c0e0a7c92e7845f96b2ae9c0a68a6a449e3538fc7ff3ebf7a5a18a2c4);

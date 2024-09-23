@@ -1,5 +1,6 @@
 use core::circuit::CircuitElement as CE;
 use core::circuit::CircuitInput as CI;
+use core::circuit::u96;
 
 use core::circuit::{
     u384, CircuitElement, CircuitInput, circuit_add, circuit_sub, circuit_mul, circuit_inverse,
@@ -13,12 +14,15 @@ use evm::precompiles::Precompile;
 use garaga::core::circuit::AddInputResultTrait2;
 use utils::helpers::ToBytes;
 use utils::helpers::{load_word, U8SpanExTrait};
-use core::circuit::u96;
 
 
 const BASE_COST: u64 = 150;
 const U256_BYTES_LEN: usize = 32;
-const PRIME: [u96; 4] = [0x6871ca8d3c208c16d87cfd47, 0xb85045b68181585d97816a91, 0x30644e72e131a029, 0x0];
+const PRIME: [
+    u96
+    ; 4] = [
+    0x6871ca8d3c208c16d87cfd47, 0xb85045b68181585d97816a91, 0x30644e72e131a029, 0x0
+];
 
 pub impl EcAdd of Precompile {
     #[inline(always)]
@@ -47,8 +51,7 @@ pub impl EcAdd of Precompile {
         let (x, y) = match ec_add(x1, y1, x2, y2) {
             Option::Some((x, y)) => { (x, y) },
             Option::None => {
-                let fmtstring: ByteArray = format!("x1:{},y1:{},x2:{},y2:{}", x1, y1, x2, y2);
-                return Result::Err(EVMError::InvalidParameter(fmtstring.pending_word));
+                return Result::Err(EVMError::InvalidParameter('invalid ec_add parameters'));
             },
         };
 
@@ -155,9 +158,7 @@ pub fn is_on_curve(x: u384, y: u384) -> bool {
     let rhs = circuit_add(x3, b);
     let check = circuit_sub(y2, rhs);
 
-    let modulus = TryInto::<
-        _, CircuitModulus
-    >::try_into(PRIME)
+    let modulus = TryInto::<_, CircuitModulus>::try_into(PRIME)
         .unwrap(); // BN254 prime field modulus
 
     let mut circuit_inputs = (check,).new_inputs();
@@ -190,9 +191,7 @@ fn add_ec_point_unchecked(xP: u384, yP: u384, xQ: u384, yQ: u384) -> (u384, u384
     let nx = circuit_sub(circuit_sub(slope_sqr, _xP), _xQ);
     let ny = circuit_sub(circuit_mul(slope, circuit_sub(_xP, nx)), _yP);
 
-    let modulus = TryInto::<
-        _, CircuitModulus
-    >::try_into(PRIME)
+    let modulus = TryInto::<_, CircuitModulus>::try_into(PRIME)
         .unwrap(); // BN254 prime field modulus
 
     let mut circuit_inputs = (nx, ny,).new_inputs();
@@ -224,9 +223,7 @@ pub fn double_ec_point_unchecked(x: u384, y: u384) -> (u384, u384) {
     let nx = circuit_sub(circuit_sub(slope_sqr, _x), _x);
     let ny = circuit_sub(circuit_mul(slope, circuit_sub(_x, nx)), _y);
 
-    let modulus = TryInto::<
-        _, CircuitModulus
-    >::try_into(PRIME)
+    let modulus = TryInto::<_, CircuitModulus>::try_into(PRIME)
         .unwrap(); // BN254 prime field modulus
 
     let mut circuit_inputs = (nx, ny,).new_inputs();
@@ -246,9 +243,7 @@ fn eq_mod_p(a: u384, b: u384) -> bool {
     let in2 = CircuitElement::<CircuitInput<1>> {};
     let sub = circuit_sub(in1, in2);
 
-    let modulus = TryInto::<
-        _, CircuitModulus
-    >::try_into(PRIME)
+    let modulus = TryInto::<_, CircuitModulus>::try_into(PRIME)
         .unwrap(); // BN254 prime field modulus
 
     let outputs = (sub,).new_inputs().next_2(a).next_2(b).done_2().eval(modulus).unwrap();
@@ -262,9 +257,7 @@ fn eq_neg_mod_p(a: u384, b: u384) -> bool {
     let _b = CE::<CI<1>> {};
     let check = circuit_add(_a, _b);
 
-    let modulus = TryInto::<
-        _, CircuitModulus
-    >::try_into(PRIME)
+    let modulus = TryInto::<_, CircuitModulus>::try_into(PRIME)
         .unwrap(); // BN254 prime field modulus
 
     let outputs = (check,).new_inputs().next_2(a).next_2(b).done_2().eval(modulus).unwrap();
@@ -273,7 +266,7 @@ fn eq_neg_mod_p(a: u384, b: u384) -> bool {
 }
 
 #[cfg(test)]
-mod tests{
+mod tests {
     use super::ec_add;
     #[test]
     fn test_ec_add() {
