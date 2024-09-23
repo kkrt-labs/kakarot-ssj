@@ -1,13 +1,15 @@
 use core::circuit::u384;
 use core::option::Option;
 use core::starknet::{EthAddress};
+use crate::precompiles::ec_operations::ec_add::ec_safe_add;
+
+use crate::precompiles::ec_operations::{
+    eq_mod_p, eq_neg_mod_p, is_on_curve, double_ec_point_unchecked, BN254_ORDER, BN254_PRIME_LIMBS,
+    BN254_PRIME
+};
 use evm::errors::EVMError;
 use evm::precompiles::Precompile;
-
-use evm::precompiles::ec_add::{is_on_curve, double_ec_point_unchecked, ec_safe_add};
 use utils::helpers::{load_word, ToBytes, U8SpanExTrait};
-
-// const BN254_ORDER: u256 = 0x30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001;
 
 const BASE_COST: u64 = 6000;
 const U256_BYTES_LEN: usize = 32;
@@ -52,6 +54,9 @@ pub impl EcMul of Precompile {
 
 // Returns Option::None in case of error.
 fn ec_mul(x1: u256, y1: u256, s: u256) -> Option<(u256, u256)> {
+    if x1 >= BN254_PRIME || y1 >= BN254_PRIME {
+        return Option::None;
+    }
     if x1 == 0 && y1 == 0 {
         // Input point is at infinity, return it
         return Option::Some((x1, y1));
