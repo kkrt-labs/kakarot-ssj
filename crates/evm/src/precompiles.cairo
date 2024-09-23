@@ -1,8 +1,6 @@
 mod blake2f;
 
-mod ec_add;
-
-mod ec_mul;
+mod ec_operations;
 
 mod ec_recover;
 
@@ -15,8 +13,8 @@ mod p256verify;
 mod sha256;
 
 pub use blake2f::Blake2f;
-pub use ec_add::EcAdd;
-pub use ec_mul::EcMul;
+pub use ec_operations::ec_add::EcAdd;
+pub use ec_operations::ec_mul::EcMul;
 pub use ec_recover::EcRecover;
 pub use identity::Identity;
 pub use modexp::ModExp;

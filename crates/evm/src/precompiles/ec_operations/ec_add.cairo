@@ -9,6 +9,10 @@ use core::circuit::{
 use core::num::traits::Zero;
 use core::option::Option;
 use core::starknet::{EthAddress};
+use crate::precompiles::ec_operations::{
+    eq_mod_p, eq_neg_mod_p, is_on_curve, double_ec_point_unchecked, BN254_ORDER, BN254_PRIME_LIMBS,
+    BN254_PRIME
+};
 use evm::errors::EVMError;
 use evm::precompiles::Precompile;
 use garaga::core::circuit::AddInputResultTrait2;
@@ -18,12 +22,6 @@ use utils::helpers::{load_word, U8SpanExTrait};
 
 const BASE_COST: u64 = 150;
 const U256_BYTES_LEN: usize = 32;
-const PRIME: [
-    u96
-    ; 4] = [
-    0x6871ca8d3c208c16d87cfd47, 0xb85045b68181585d97816a91, 0x30644e72e131a029, 0x0
-];
-
 pub impl EcAdd of Precompile {
     #[inline(always)]
     fn address() -> EthAddress {
@@ -69,6 +67,9 @@ pub impl EcAdd of Precompile {
 
 
 fn ec_add(x1: u256, y1: u256, x2: u256, y2: u256) -> Option<(u256, u256)> {
+    if x1 >= BN254_PRIME || y1 >= BN254_PRIME || x2 >= BN254_PRIME || y2 >= BN254_PRIME {
+        return Option::None;
+    }
     if x1 == 0 && y1 == 0 {
         if x2 == 0 && y2 == 0 {
             // Both are points at infinity, return either of them.
@@ -145,35 +146,6 @@ pub fn ec_safe_add(x1: u384, y1: u384, x2: u384, y2: u384) -> Option<(u384, u384
     }
 }
 
-
-// Check if a point is on the curve.
-// Point at infinity (0,0) will return false.
-pub fn is_on_curve(x: u384, y: u384) -> bool {
-    let (b, _x, _y) = (CE::<CI<0>> {}, CE::<CI<1>> {}, CE::<CI<2>> {});
-
-    // Compute (y^2 - (x^3 + b)) % p_bn254
-    let x2 = circuit_mul(_x, _x);
-    let x3 = circuit_mul(x2, _x);
-    let y2 = circuit_mul(_y, _y);
-    let rhs = circuit_add(x3, b);
-    let check = circuit_sub(y2, rhs);
-
-    let modulus = TryInto::<_, CircuitModulus>::try_into(PRIME)
-        .unwrap(); // BN254 prime field modulus
-
-    let mut circuit_inputs = (check,).new_inputs();
-    // Prefill constants:
-    circuit_inputs = circuit_inputs.next_2([3, 0, 0, 0]);
-    // Fill inputs:
-    circuit_inputs = circuit_inputs.next_2(x);
-    circuit_inputs = circuit_inputs.next_2(y);
-
-    let outputs = circuit_inputs.done_2().eval(modulus).unwrap();
-    let zero_check: u384 = outputs.get_output(check);
-    return zero_check.is_zero();
-}
-
-
 // Add two BN254 EC points without checking if:
 // - the points are on the curve
 // - the points are not the same
@@ -191,7 +163,7 @@ fn add_ec_point_unchecked(xP: u384, yP: u384, xQ: u384, yQ: u384) -> (u384, u384
     let nx = circuit_sub(circuit_sub(slope_sqr, _xP), _xQ);
     let ny = circuit_sub(circuit_mul(slope, circuit_sub(_xP, nx)), _yP);
 
-    let modulus = TryInto::<_, CircuitModulus>::try_into(PRIME)
+    let modulus = TryInto::<_, CircuitModulus>::try_into(BN254_PRIME_LIMBS)
         .unwrap(); // BN254 prime field modulus
 
     let mut circuit_inputs = (nx, ny,).new_inputs();
@@ -206,64 +178,6 @@ fn add_ec_point_unchecked(xP: u384, yP: u384, xQ: u384, yQ: u384) -> (u384, u384
     (outputs.get_output(nx), outputs.get_output(ny))
 }
 
-// Double BN254 EC point without checking if the point is on the curve
-pub fn double_ec_point_unchecked(x: u384, y: u384) -> (u384, u384) {
-    // CONSTANT stack
-    let in0 = CE::<CI<0>> {}; // 0x3
-    // INPUT stack
-    let (_x, _y) = (CE::<CI<1>> {}, CE::<CI<2>> {});
-
-    let x2 = circuit_mul(_x, _x);
-    let num = circuit_mul(in0, x2);
-    let den = circuit_add(_y, _y);
-    let inv_den = circuit_inverse(den);
-    let slope = circuit_mul(num, inv_den);
-    let slope_sqr = circuit_mul(slope, slope);
-
-    let nx = circuit_sub(circuit_sub(slope_sqr, _x), _x);
-    let ny = circuit_sub(circuit_mul(slope, circuit_sub(_x, nx)), _y);
-
-    let modulus = TryInto::<_, CircuitModulus>::try_into(PRIME)
-        .unwrap(); // BN254 prime field modulus
-
-    let mut circuit_inputs = (nx, ny,).new_inputs();
-    // Prefill constants:
-    circuit_inputs = circuit_inputs.next_2([0x3, 0x0, 0x0, 0x0]); // in0
-    // Fill inputs:
-    circuit_inputs = circuit_inputs.next_2(x); // in1
-    circuit_inputs = circuit_inputs.next_2(y); // in2
-
-    let outputs = circuit_inputs.done_2().eval(modulus).unwrap();
-
-    (outputs.get_output(nx), outputs.get_output(ny))
-}
-// returns true if a == b mod p_bn254
-fn eq_mod_p(a: u384, b: u384) -> bool {
-    let in1 = CircuitElement::<CircuitInput<0>> {};
-    let in2 = CircuitElement::<CircuitInput<1>> {};
-    let sub = circuit_sub(in1, in2);
-
-    let modulus = TryInto::<_, CircuitModulus>::try_into(PRIME)
-        .unwrap(); // BN254 prime field modulus
-
-    let outputs = (sub,).new_inputs().next_2(a).next_2(b).done_2().eval(modulus).unwrap();
-
-    return outputs.get_output(sub).is_zero();
-}
-
-// returns true if a == -b mod p_bn254
-fn eq_neg_mod_p(a: u384, b: u384) -> bool {
-    let _a = CE::<CI<0>> {};
-    let _b = CE::<CI<1>> {};
-    let check = circuit_add(_a, _b);
-
-    let modulus = TryInto::<_, CircuitModulus>::try_into(PRIME)
-        .unwrap(); // BN254 prime field modulus
-
-    let outputs = (check,).new_inputs().next_2(a).next_2(b).done_2().eval(modulus).unwrap();
-
-    return outputs.get_output(check).is_zero();
-}
 
 #[cfg(test)]
 mod tests {
