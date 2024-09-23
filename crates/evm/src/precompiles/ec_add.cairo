@@ -13,10 +13,12 @@ use evm::precompiles::Precompile;
 use garaga::core::circuit::AddInputResultTrait2;
 use utils::helpers::ToBytes;
 use utils::helpers::{load_word, U8SpanExTrait};
+use core::circuit::u96;
 
 
 const BASE_COST: u64 = 150;
 const U256_BYTES_LEN: usize = 32;
+const PRIME: [u96; 4] = [0x6871ca8d3c208c16d87cfd47, 0xb85045b68181585d97816a91, 0x30644e72e131a029, 0x0];
 
 pub impl EcAdd of Precompile {
     #[inline(always)]
@@ -45,7 +47,8 @@ pub impl EcAdd of Precompile {
         let (x, y) = match ec_add(x1, y1, x2, y2) {
             Option::Some((x, y)) => { (x, y) },
             Option::None => {
-                return Result::Err(EVMError::InvalidParameter('invalid ec_add parameters'));
+                let fmtstring: ByteArray = format!("x1:{},y1:{},x2:{},y2:{}", x1, y1, x2, y2);
+                return Result::Err(EVMError::InvalidParameter(fmtstring.pending_word));
             },
         };
 
@@ -145,16 +148,16 @@ pub fn ec_safe_add(x1: u384, y1: u384, x2: u384, y2: u384) -> Option<(u384, u384
 pub fn is_on_curve(x: u384, y: u384) -> bool {
     let (b, _x, _y) = (CE::<CI<0>> {}, CE::<CI<1>> {}, CE::<CI<2>> {});
 
-    // Compute (y^2 - (x^2 + b)) % p_bn254
+    // Compute (y^2 - (x^3 + b)) % p_bn254
     let x2 = circuit_mul(_x, _x);
+    let x3 = circuit_mul(x2, _x);
     let y2 = circuit_mul(_y, _y);
-    let y3 = circuit_mul(_y, y2);
-    let rhs = circuit_add(x2, b);
-    let check = circuit_sub(y3, rhs);
+    let rhs = circuit_add(x3, b);
+    let check = circuit_sub(y2, rhs);
 
     let modulus = TryInto::<
         _, CircuitModulus
-    >::try_into([0x6871ca8d3c208c16d87cfd47, 0xb85045b68181585d97816a91, 0x30644e72e131a029, 0x0])
+    >::try_into(PRIME)
         .unwrap(); // BN254 prime field modulus
 
     let mut circuit_inputs = (check,).new_inputs();
@@ -189,7 +192,7 @@ fn add_ec_point_unchecked(xP: u384, yP: u384, xQ: u384, yQ: u384) -> (u384, u384
 
     let modulus = TryInto::<
         _, CircuitModulus
-    >::try_into([0x6871ca8d3c208c16d87cfd47, 0xb85045b68181585d97816a91, 0x30644e72e131a029, 0x0])
+    >::try_into(PRIME)
         .unwrap(); // BN254 prime field modulus
 
     let mut circuit_inputs = (nx, ny,).new_inputs();
@@ -219,11 +222,11 @@ pub fn double_ec_point_unchecked(x: u384, y: u384) -> (u384, u384) {
     let slope_sqr = circuit_mul(slope, slope);
 
     let nx = circuit_sub(circuit_sub(slope_sqr, _x), _x);
-    let ny = circuit_sub(_y, circuit_mul(slope, circuit_sub(_x, nx)));
+    let ny = circuit_sub(circuit_mul(slope, circuit_sub(_x, nx)), _y);
 
     let modulus = TryInto::<
         _, CircuitModulus
-    >::try_into([0x6871ca8d3c208c16d87cfd47, 0xb85045b68181585d97816a91, 0x30644e72e131a029, 0x0])
+    >::try_into(PRIME)
         .unwrap(); // BN254 prime field modulus
 
     let mut circuit_inputs = (nx, ny,).new_inputs();
@@ -245,7 +248,7 @@ fn eq_mod_p(a: u384, b: u384) -> bool {
 
     let modulus = TryInto::<
         _, CircuitModulus
-    >::try_into([0x6871ca8d3c208c16d87cfd47, 0xb85045b68181585d97816a91, 0x30644e72e131a029, 0x0])
+    >::try_into(PRIME)
         .unwrap(); // BN254 prime field modulus
 
     let outputs = (sub,).new_inputs().next_2(a).next_2(b).done_2().eval(modulus).unwrap();
@@ -261,10 +264,25 @@ fn eq_neg_mod_p(a: u384, b: u384) -> bool {
 
     let modulus = TryInto::<
         _, CircuitModulus
-    >::try_into([0x6871ca8d3c208c16d87cfd47, 0xb85045b68181585d97816a91, 0x30644e72e131a029, 0x0])
+    >::try_into(PRIME)
         .unwrap(); // BN254 prime field modulus
 
     let outputs = (check,).new_inputs().next_2(a).next_2(b).done_2().eval(modulus).unwrap();
 
     return outputs.get_output(check).is_zero();
+}
+
+#[cfg(test)]
+mod tests{
+    use super::ec_add;
+    #[test]
+    fn test_ec_add() {
+        let x1 = 1;
+        let y1 = 2;
+        let x2 = 1;
+        let y2 = 2;
+        let (x, y) = ec_add(x1, y1, x2, y2).expect('ec_add failed');
+        assert_eq!(x, 0x030644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd3);
+        assert_eq!(y, 0x15ed738c0e0a7c92e7845f96b2ae9c0a68a6a449e3538fc7ff3ebf7a5a18a2c4);
+    }
 }
