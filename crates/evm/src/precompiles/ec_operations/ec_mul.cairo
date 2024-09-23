@@ -54,9 +54,6 @@ pub impl EcMul of Precompile {
 
 // Returns Option::None in case of error.
 fn ec_mul(x1: u256, y1: u256, s: u256) -> Option<(u256, u256)> {
-    if s >= BN254_ORDER {
-        return Option::None;
-    }
     if x1 >= BN254_PRIME || y1 >= BN254_PRIME {
         return Option::None;
     }
