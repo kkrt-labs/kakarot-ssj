@@ -120,11 +120,8 @@ pub mod embeddable_impls {
     use core::traits::Into;
     use core::{starknet, starknet::SyscallResultTrait};
     use evm::errors::EVMError;
-    use evm::precompiles::Blake2f;
     use evm::precompiles::EcAdd;
     use evm::precompiles::EcMul;
-    use evm::precompiles::EcRecover;
-    use evm::precompiles::Identity;
     use evm::precompiles::ModExp;
     use evm::precompiles::Sha256;
     use utils::helpers::U256Trait;
