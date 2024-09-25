@@ -1,7 +1,7 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
-use core::num::traits::Zero;
+use core::num::traits::{Bounded, Zero};
 use core::ops::SnapshotDeref;
 use core::starknet::EthAddress;
 use core::starknet::get_tx_info;
@@ -21,7 +21,7 @@ use evm::model::account::{Account, AccountTrait};
 use evm::model::vm::{VM, VMTrait};
 use evm::model::{
     Message, Environment, Transfer, ExecutionSummary, ExecutionResult, ExecutionResultTrait,
-    ExecutionResultStatus, AddressTrait, TransactionResult, Address
+    ExecutionResultStatus, AddressTrait, TransactionResult, TransactionResultTrait, Address
 };
 use evm::precompiles::Precompiles;
 use evm::precompiles::eth_precompile_addresses;
@@ -117,6 +117,11 @@ pub impl EVMImpl of EVMTrait {
                 .prepare_message(@tx, @sender_account, ref env, gas_left);
 
             // Increment nonce of sender AFTER computing eventual created address
+            if sender_account.nonce() == Bounded::<u64>::MAX {
+                return TransactionResultTrait::exceptional_failure(
+                    EVMError::NonceOverflow.to_bytes(), tx.gas_limit()
+                );
+            }
             sender_account.set_nonce(sender_account.nonce() + 1);
 
             env.state.set_account(sender_account);
