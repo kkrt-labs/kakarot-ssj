@@ -13,8 +13,8 @@ pub trait IPrecompiles<T> {
     /// # Returns
     ///
     /// * A tuple containing:
-    ///   * A boolean indicating the success or failure of the execution.
-    ///   * The gas cost of the execution.
+    ///   * True if the execution was successful, false otherwise.
+    ///   * The gas cost of the execution if successful, otherwise 0.
     ///   * The output data from the execution.
     fn exec_precompile(self: @T, address: felt252, data: Span<u8>) -> (bool, u64, Span<u8>);
 }

@@ -9,6 +9,7 @@ use evm::gas;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
 use evm::state::StateTrait;
+use utils::constants::MIN_BASE_FEE_PER_BLOB_GAS;
 use utils::traits::{EthAddressTryIntoResultContractAddress, EthAddressIntoU256};
 
 #[generate_trait]
@@ -131,7 +132,7 @@ pub impl BlockInformation of BlockInformationTrait {
     fn exec_blobbasefee(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::BASE)?;
 
-        self.stack.push(0)
+        self.stack.push(MIN_BASE_FEE_PER_BLOB_GAS.into())
     }
 }
 
@@ -336,7 +337,7 @@ mod tests {
 
 
     #[test]
-    fn test_blobbasefee_should_return_zero() {
+    fn test_blobbasefee_should_return_one() {
         // Given
         let mut vm = VMBuilderTrait::new_with_presets().build();
 
@@ -344,8 +345,8 @@ mod tests {
         vm.exec_blobbasefee().unwrap();
 
         // Then
-        assert(vm.stack.len() == 1, 'stack should have one element');
-        assert(vm.stack.peek().unwrap() == 0, 'stack top should be 0');
+        assert_eq!(vm.stack.len(), 1);
+        assert_eq!(vm.stack.peek().unwrap(), 1);
     }
 
 
