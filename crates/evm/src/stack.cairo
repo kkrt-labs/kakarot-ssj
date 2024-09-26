@@ -76,6 +76,7 @@ impl StackImpl of StackTrait {
 
         self.items.insert(length.into(), NullableTrait::new(item));
         self.len += 1;
+        println!("stack_push top {:?}", self.peek_at(0).unwrap());
         Result::Ok(())
     }
 
@@ -90,6 +91,7 @@ impl StackImpl of StackTrait {
 
         self.len -= 1;
         let item = self.items.get(self.len().into());
+        println!("stack_pop top {:?}", item.deref());
         Result::Ok(item.deref())
     }
 
@@ -200,7 +202,9 @@ impl StackImpl of StackTrait {
     #[inline(always)]
     fn pop_eth_address(ref self: Stack) -> Result<EthAddress, EVMError> {
         let item: u256 = self.pop()?;
+        println!("item_u256 {:?}", item);
         let item: EthAddress = item.into();
+        println!("item_eth_address {:?}", item);
         Result::Ok(item)
     }
 

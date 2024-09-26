@@ -33,6 +33,8 @@ pub impl SystemOperations of SystemOperationsTrait {
         let ret_offset = self.stack.pop_saturating_usize()?;
         let ret_size = self.stack.pop_usize()?;
 
+        println!("to {:?}", to);
+
         // GAS
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(args_offset, args_size), (ret_offset, ret_size)].span()

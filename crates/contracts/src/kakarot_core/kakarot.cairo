@@ -3,7 +3,8 @@ const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
 #[starknet::contract]
 pub mod KakarotCore {
-    use contracts::components::ownable::{ownable_component};
+    use starknet::storage::StorageAsPointer;
+use contracts::components::ownable::{ownable_component};
     use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
     use contracts::kakarot_core::eth_rpc;
     use contracts::kakarot_core::interface::IKakarotCore;
@@ -11,7 +12,7 @@ pub mod KakarotCore {
     use core::starknet::event::EventEmitter;
     use core::starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
-        StoragePointerWriteAccess
+        StoragePointerWriteAccess, StoragePathEntry
     };
     use core::starknet::{EthAddress, ContractAddress, ClassHash, get_contract_address};
     use evm::backend::starknet_backend;
@@ -143,6 +144,9 @@ pub mod KakarotCore {
         }
 
         fn address_registry(self: @ContractState, evm_address: EthAddress) -> ContractAddress {
+            let storage_address = self.Kakarot_evm_to_starknet_address.entry(evm_address).as_ptr().__storage_pointer_address__;
+            println!("evm_address: {:?}", evm_address);
+            println!("storage_address: {:?}", storage_address);
             self.Kakarot_evm_to_starknet_address.read(evm_address)
         }
 

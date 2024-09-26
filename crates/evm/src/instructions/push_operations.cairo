@@ -19,7 +19,12 @@ fn exec_push_i(ref self: VM, i: u8) -> Result<(), EVMError> {
     if data.len() == 0 {
         self.stack.push(0)
     } else {
-        self.stack.push(data.pad_right_with_zeroes(i).from_be_bytes_partial().unwrap())
+        let data_to_push = data.pad_right_with_zeroes(i).from_be_bytes_partial().unwrap();
+        if i == 2 {
+            println!("data {:?}", data);
+            println!("data_to_push {:?}", data_to_push);
+        }
+        self.stack.push(data_to_push)
     }
 }
 
