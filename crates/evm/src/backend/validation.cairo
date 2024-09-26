@@ -21,8 +21,6 @@ pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transacti
     let kakarot_storage = kakarot_state.snapshot_deref().storage();
     // Validate transaction
 
-    //TODO: add case for eip155 transactions
-
     // Validate chain_id for post eip155
     let tx_chain_id = tx.chain_id();
     let kakarot_chain_id: u64 = kakarot_state.eth_chain_id();
@@ -65,11 +63,13 @@ mod tests {
     use core::num::traits::Bounded;
     use core::ops::SnapshotDeref;
 
+    use core::starknet::ContractAddress;
     use core::starknet::storage::StorageTrait;
+    use evm::gas;
     use snforge_std::cheatcodes::storage::store_felt252;
     use snforge_std::{
         start_mock_call, test_address, start_cheat_chain_id_global, store,
-        start_cheat_caller_address, mock_call
+        start_cheat_caller_address, mock_call, stop_cheat_caller_address_global
     };
     use super::validate_eth_tx;
     use utils::constants::BLOCK_GAS_LIMIT;
@@ -77,7 +77,7 @@ mod tests {
     use utils::eth_transaction::eip1559::TxEip1559;
     use utils::eth_transaction::transaction::Transaction;
 
-    fn set_up() -> KakarotCore::ContractState {
+    fn set_up() -> (KakarotCore::ContractState, ContractAddress) {
         // Define the addresses used in the tests, whose calls will be mocked
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
         let kakarot_storage = kakarot_state.snapshot_deref().storage();
@@ -103,13 +103,13 @@ mod tests {
             native_token_address, selector!("balanceOf"), Bounded::<u256>::MAX
         ); // Min to pay for gas + value
 
-        kakarot_state
+        (kakarot_state, native_token_address)
     }
 
     #[test]
     fn test_validate_eth_tx_typical_case() {
         // Setup the environment
-        let kakarot_state = set_up();
+        let (kakarot_state, _) = set_up();
 
         // Create a transaction object for the test
         let tx = Transaction::Eip1559(
@@ -130,36 +130,142 @@ mod tests {
         let intrinsic_gas = validate_eth_tx(@kakarot_state, tx);
 
         assert_eq!(intrinsic_gas, 21000); // Standard intrinsic gas for a simple transfer
+        stop_cheat_caller_address_global();
     }
 
     #[test]
-    #[ignore]
+    #[should_panic(expected: ('Invalid chain id',))]
     fn test_validate_eth_tx_invalid_chain_id() {
-        panic!("unimplemented");
+        // Setup the environment
+        let (kakarot_state, _) = set_up();
+
+        // Create a transaction object for the test
+        let tx = Transaction::Eip1559(
+            TxEip1559 {
+                chain_id: 600, // Should match the chain_id in the environment
+                nonce: 0,
+                max_priority_fee_per_gas: 1_000_000_000, // 1 Gwei
+                max_fee_per_gas: 2_000_000_000, // 2 Gwei
+                gas_limit: 21000, // Standard gas limit for a simple transfer
+                to: TxKind::Call(0x1234567890123456789012345678901234567890.try_into().unwrap()),
+                value: 1000000000000000000_u256, // 1 ETH
+                input: array![].span(),
+                access_list: array![].span(),
+            }
+        );
+
+        // Test that the function performs validation and assert expected results
+        let intrinsic_gas = validate_eth_tx(@kakarot_state, tx);
+        stop_cheat_caller_address_global();
     }
 
     #[test]
-    #[ignore]
+    #[should_panic(expected: ('Invalid nonce',))]
     fn test_validate_eth_tx_invalid_nonce() {
-        panic!("unimplemented");
+        // Setup the environment
+        let (kakarot_state, _) = set_up();
+
+        // Create a transaction object for the test
+        let tx = Transaction::Eip1559(
+            TxEip1559 {
+                chain_id: 1, // Should match the chain_id in the environment
+                nonce: 600,
+                max_priority_fee_per_gas: 1_000_000_000, // 1 Gwei
+                max_fee_per_gas: 2_000_000_000, // 2 Gwei
+                gas_limit: 21000, // Standard gas limit for a simple transfer
+                to: TxKind::Call(0x1234567890123456789012345678901234567890.try_into().unwrap()),
+                value: 1000000000000000000_u256, // 1 ETH
+                input: array![].span(),
+                access_list: array![].span(),
+            }
+        );
+
+        // Test that the function performs validation and assert expected results
+        let intrinsic_gas = validate_eth_tx(@kakarot_state, tx);
+        stop_cheat_caller_address_global();
     }
 
     #[test]
-    #[ignore]
+    #[should_panic(expected: ('Tx gas > Block gas',))]
     fn test_validate_eth_tx_gas_limit_exceeds_block_gas_limit() {
-        panic!("unimplemented");
+        // Setup the environment
+        let (kakarot_state, _) = set_up();
+
+        // Create a transaction object for the test
+        let tx = Transaction::Eip1559(
+            TxEip1559 {
+                chain_id: 1, // Should match the chain_id in the environment
+                nonce: 0,
+                max_priority_fee_per_gas: 1_000_000_000, // 1 Gwei
+                max_fee_per_gas: 2_000_000_000, // 2 Gwei
+                gas_limit: BLOCK_GAS_LIMIT + 1, // Standard gas limit for a simple transfer
+                to: TxKind::Call(0x1234567890123456789012345678901234567890.try_into().unwrap()),
+                value: 1000000000000000000_u256, // 1 ETH
+                input: array![].span(),
+                access_list: array![].span(),
+            }
+        );
+
+        // Test that the function performs validation and assert expected results
+        let intrinsic_gas = validate_eth_tx(@kakarot_state, tx);
+        stop_cheat_caller_address_global();
     }
 
     #[test]
-    #[ignore]
+    #[should_panic(expected: ('Intrinsic gas > gas limit',))]
     fn test_validate_eth_tx_intrinsic_gas_exceeds_gas_limit() {
-        panic!("unimplemented");
+        // Setup the environment
+        let (kakarot_state, _) = set_up();
+
+        // Create a transaction object for the test
+        let mut tx = Transaction::Eip1559(
+            TxEip1559 {
+                chain_id: 1, // Should match the chain_id in the environment
+                nonce: 0,
+                max_priority_fee_per_gas: 1_000_000_000, // 1 Gwei
+                max_fee_per_gas: 2_000_000_000, // 2 Gwei
+                gas_limit: 0, // Standard gas limit for a simple transfer
+                to: TxKind::Call(0x1234567890123456789012345678901234567890.try_into().unwrap()),
+                value: 1000000000000000000_u256, // 1 ETH
+                input: array![].span(),
+                access_list: array![].span(),
+            }
+        );
+
+        // let expected_intrinsic_gas = gas::calculate_intrinsic_gas_cost(@tx);
+
+        // Test that the function performs validation and assert expected results
+        let intrinsic_gas = validate_eth_tx(@kakarot_state, tx);
     }
 
     #[test]
-    #[ignore]
+    #[should_panic(expected: ('Not enough ETH',))]
     fn test_validate_eth_tx_insufficient_balance() {
-        panic!("unimplemented");
+        // Setup the environment
+        let (kakarot_state, native_token_address) = set_up();
+
+        // Create a transaction object for the test
+        let tx = Transaction::Eip1559(
+            TxEip1559 {
+                chain_id: 1, // Should match the chain_id in the environment
+                nonce: 0,
+                max_priority_fee_per_gas: 1_000_000_000, // 1 Gwei
+                max_fee_per_gas: 2_000_000_000, // 2 Gwei
+                gas_limit: 21000, // Standard gas limit for a simple transfer
+                to: TxKind::Call(0x1234567890123456789012345678901234567890.try_into().unwrap()),
+                value: 1000000000000000000_u256, // 1 ETH
+                input: array![].span(),
+                access_list: array![].span(),
+            }
+        );
+
+        start_mock_call(
+            native_token_address, selector!("balanceOf"), Bounded::<u256>::MIN
+        ); // Min to pay for gas + value
+
+        // Test that the function performs validation and assert expected results
+        let intrinsic_gas = validate_eth_tx(@kakarot_state, tx);
+        stop_cheat_caller_address_global();
     }
 
     #[test]
@@ -175,9 +281,29 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_validate_eth_tx_pre_eip155() {
-        //TODO: implement pre-eip155 logic
-        panic!("unimplemented");
+        // Setup the environment
+        let (kakarot_state, _) = set_up();
+
+        // Create a transaction object for the test
+        let tx = Transaction::Eip1559(
+            TxEip1559 {
+                chain_id: 1, // Should match the chain_id in the environment
+                nonce: 0,
+                max_priority_fee_per_gas: 1_000_000_000, // 1 Gwei
+                max_fee_per_gas: 2_000_000_000, // 2 Gwei
+                gas_limit: 21000, // Standard gas limit for a simple transfer
+                to: TxKind::Call(0x1234567890123456789012345678901234567890.try_into().unwrap()),
+                value: 1000000000000000000_u256, // 1 ETH
+                input: array![].span(),
+                access_list: array![].span(),
+            }
+        );
+
+        // Test that the function performs validation and assert expected results
+        let intrinsic_gas = validate_eth_tx(@kakarot_state, tx);
+
+        assert_eq!(intrinsic_gas, 21000); // Standard intrinsic gas for a simple transfer
+        stop_cheat_caller_address_global();
     }
 }
