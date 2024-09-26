@@ -132,7 +132,11 @@ pub impl EthRPC<
     }
 
     fn eth_get_transaction_count(self: @TContractState, address: EthAddress) -> u64 {
-        panic!("unimplemented")
+        let kakarot_state = KakarotState::get_state();
+        let starknet_address = kakarot_state.compute_starknet_address(address);
+        let account = IAccountDispatcher { contract_address: starknet_address };
+        let nonce = account.get_nonce();
+        nonce
     }
 
     fn eth_chain_id(self: @TContractState) -> u64 {
