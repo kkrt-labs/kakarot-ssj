@@ -41,3 +41,101 @@ pub impl EthAddressExImpl of EthAddressExTrait {
         result.try_into()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use core::starknet::EthAddress;
+    use super::EthAddressExTrait;
+    #[test]
+    fn test_eth_address_to_bytes() {
+        let eth_address: EthAddress = 0x1234567890123456789012345678901234567890
+            .try_into()
+            .unwrap();
+        let bytes = eth_address.to_bytes();
+        assert_eq!(
+            bytes.span(),
+            [
+                0x12,
+                0x34,
+                0x56,
+                0x78,
+                0x90,
+                0x12,
+                0x34,
+                0x56,
+                0x78,
+                0x90,
+                0x12,
+                0x34,
+                0x56,
+                0x78,
+                0x90,
+                0x12,
+                0x34,
+                0x56,
+                0x78,
+                0x90
+            ].span()
+        );
+    }
+
+    #[test]
+    fn test_eth_address_from_bytes() {
+        let bytes = [
+            0x12,
+            0x34,
+            0x56,
+            0x78,
+            0x90,
+            0x12,
+            0x34,
+            0x56,
+            0x78,
+            0x90,
+            0x12,
+            0x34,
+            0x56,
+            0x78,
+            0x90,
+            0x12,
+            0x34,
+            0x56,
+            0x78,
+            0x90
+        ].span();
+        let eth_address = EthAddressExTrait::from_bytes(bytes);
+        assert_eq!(
+            eth_address,
+            Option::Some(0x1234567890123456789012345678901234567890.try_into().unwrap())
+        );
+    }
+
+    #[test]
+    fn test_eth_address_from_bytes_invalid_length() {
+        let bytes = [
+            0x12,
+            0x34,
+            0x56,
+            0x78,
+            0x90,
+            0x12,
+            0x34,
+            0x56,
+            0x78,
+            0x90,
+            0x12,
+            0x34,
+            0x56,
+            0x78,
+            0x90,
+            0x12,
+            0x34,
+            0x56,
+            0x78,
+            0x90,
+            0x12
+        ];
+        let eth_address = EthAddressExTrait::from_bytes(bytes.span());
+        assert_eq!(eth_address, Option::None);
+    }
+}
