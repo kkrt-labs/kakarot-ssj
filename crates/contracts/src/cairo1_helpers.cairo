@@ -123,7 +123,7 @@ pub mod embeddable_impls {
     use evm::precompiles::EcAdd;
     use evm::precompiles::EcMul;
     use evm::precompiles::Sha256;
-    use utils::helpers::U256Trait;
+    use utils::traits::integer::U256Trait;
 
 
     #[starknet::embeddable]

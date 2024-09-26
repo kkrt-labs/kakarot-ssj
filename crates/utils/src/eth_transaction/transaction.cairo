@@ -5,8 +5,8 @@ use crate::eth_transaction::eip1559::{TxEip1559, TxEip1559Trait};
 use crate::eth_transaction::eip2930::{AccessListItem, TxEip2930, TxEip2930Trait};
 use crate::eth_transaction::legacy::TxLegacy;
 use crate::eth_transaction::tx_type::{TxType};
-use crate::helpers::U8SpanExTrait;
 use crate::rlp::{RLPItem, RLPTrait, RLPHelpersTrait};
+use crate::traits::bytes::U8SpanExTrait;
 use crate::traits::{DefaultSignature};
 
 

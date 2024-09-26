@@ -1,10 +1,11 @@
 use core::array::ArrayTrait;
 use core::starknet::EthAddress;
 use core::traits::TryInto;
+use crate::traits::bytes::{ToBytes, U8SpanExTrait};
 
 use evm::errors::EVMError;
-use utils::helpers::{U8SpanExTrait, EthAddressExTrait, ToBytes};
 use utils::rlp::{RLPTrait, RLPItem};
+use utils::traits::eth_address::EthAddressExTrait;
 use utils::traits::{TryIntoResult};
 
 /// Computes the address of the new account that needs to be created.

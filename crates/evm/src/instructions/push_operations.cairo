@@ -4,8 +4,7 @@ use evm::errors::EVMError;
 use evm::gas;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
-use utils::helpers::FromBytes;
-use utils::helpers::U8SpanExTrait;
+use utils::traits::bytes::{FromBytes, U8SpanExTrait};
 
 /// Place i bytes items on stack.
 #[inline(always)]

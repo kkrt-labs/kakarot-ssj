@@ -5,9 +5,9 @@ use evm::errors::EVMError;
 use evm::gas;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
-use utils::helpers::BytesUsedTrait;
 use utils::i256::i256;
 use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
+use utils::traits::integer::BytesUsedTrait;
 
 #[generate_trait]
 pub impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {

@@ -312,9 +312,9 @@ mod tests {
     use evm::test_utils::{VMBuilderTrait, origin, callvalue, gas_price};
     use snforge_std::test_address;
     use utils::constants::EMPTY_KECCAK;
-    use utils::helpers::{
-        u256_to_bytes_array, ArrayExtTrait, compute_starknet_address, U8SpanExTrait
-    };
+    use utils::helpers::{u256_to_bytes_array, compute_starknet_address};
+    use utils::traits::array::ArrayExtTrait;
+    use utils::traits::bytes::{U8SpanExTrait};
     use utils::traits::{EthAddressIntoU256};
 
 

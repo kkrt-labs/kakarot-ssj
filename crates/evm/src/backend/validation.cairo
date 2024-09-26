@@ -7,7 +7,6 @@ use core::starknet::{get_caller_address};
 use evm::gas;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::storage::StorageTrait;
-use utils::constants::POW_2_32;
 use utils::eth_transaction::check_gas_fee;
 use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
 

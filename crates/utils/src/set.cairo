@@ -1,4 +1,4 @@
-use utils::helpers::{SpanExtTrait, ArrayExtTrait};
+use crate::traits::array::{SpanExtTrait, ArrayExtTrait};
 
 #[derive(Drop, PartialEq)]
 pub struct Set<T> {

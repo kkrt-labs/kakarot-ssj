@@ -1,44 +1,31 @@
-use contracts::UninitializedAccount;
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-use contracts::kakarot_core::interface::{
-    IExtendedKakarotCoreDispatcher, IExtendedKakarotCoreDispatcherTrait
-};
+use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::kakarot_core::{KakarotCore};
 use contracts::test_contracts::test_upgradeable::{
-    MockContractUpgradeableV1, IMockContractUpgradeableDispatcher,
-    IMockContractUpgradeableDispatcherTrait
+    IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait
 };
 use contracts::test_data::{deploy_counter_calldata, counter_evm_bytecode};
 use contracts::{test_utils as contract_utils,};
-use core::fmt::{Debug, Formatter, Error};
 use core::num::traits::Zero;
 use core::ops::SnapshotDeref;
 use core::option::OptionTrait;
 use core::starknet::storage::StoragePathEntry;
-use core::starknet::{testing, contract_address_const, ContractAddress, EthAddress, ClassHash};
+use core::starknet::{contract_address_const, ContractAddress, EthAddress, ClassHash};
 
 
 use core::traits::TryInto;
-use evm::model::{Address};
-use evm::test_utils::{sequencer_evm_address, chain_id};
+use evm::test_utils::chain_id;
 use evm::test_utils;
 use snforge_std::{
-    declare, DeclareResultTrait, start_cheat_caller_address, stop_cheat_caller_address,
-    start_cheat_signature, stop_cheat_signature, start_cheat_chain_id_global,
-    stop_cheat_chain_id_global, start_cheat_transaction_hash, stop_cheat_transaction_hash,
-    spy_events, Event, EventSpyTrait, test_address, cheat_caller_address, CheatSpan, store, load,
-    EventSpyAssertionsTrait, start_mock_call, stop_mock_call
+    declare, DeclareResultTrait, start_cheat_caller_address, spy_events, EventSpyTrait,
+    cheat_caller_address, CheatSpan, store
 };
-use snforge_utils::snforge_utils::{
-    EventsFilterBuilderTrait, ContractEvents, ContractEventsTrait, store_evm
-};
+use snforge_utils::snforge_utils::{EventsFilterBuilderTrait, ContractEventsTrait};
 use starknet::storage::StorageTrait;
-use utils::constants::EMPTY_KECCAK;
-use utils::eth_transaction::common::{TxKind, TxKindTrait};
 use utils::eth_transaction::legacy::TxLegacy;
-use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
-use utils::helpers::U8SpanExTrait;
-use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
+use utils::eth_transaction::transaction::Transaction;
+use utils::helpers::{u256_to_bytes_array};
+use utils::traits::eth_address::EthAddressExTrait;
 
 #[test]
 fn test_kakarot_core_owner() {

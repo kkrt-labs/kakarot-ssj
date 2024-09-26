@@ -3,6 +3,7 @@ pub mod constants;
 pub mod crypto;
 pub mod errors;
 pub mod eth_transaction;
+pub mod felt_vec;
 pub mod fmt;
 pub mod helpers;
 pub mod i256;

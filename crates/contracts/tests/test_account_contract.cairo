@@ -4,10 +4,10 @@ use contracts::test_utils::{
     setup_contracts_for_testing, deploy_contract_account, fund_account_with_native_token, deploy_eoa
 };
 use contracts::{IAccountDispatcher, IAccountDispatcherTrait};
+use core::starknet::EthAddress;
 use core::starknet::account::{Call};
-use core::starknet::{EthAddress, ContractAddress};
-use evm::test_utils::{ca_address, native_token, eoa_address};
-use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+use evm::test_utils::{ca_address, eoa_address};
+use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use snforge_std::{start_cheat_caller_address, stop_cheat_caller_address};
 
 #[test]
@@ -101,7 +101,7 @@ fn test_ca_external_starknet_call_native_token() {
     let (success, data) = contract_account.execute_starknet_call(call);
     stop_cheat_caller_address(ca_address.starknet);
 
-    assert(success == true, 'execute_starknet_call failed');
+    assert(success, 'execute_starknet_call failed');
     assert(data.len() == 2, 'wrong return data length');
     let balance = native_token.balanceOf(ca_address.starknet);
     assert((*data[0], *data[1]) == (balance.low.into(), balance.high.into()), 'wrong return data');
@@ -122,7 +122,7 @@ fn test_ca_external_starknet_call_kakarot_get_starknet_address() {
     let (success, data) = contract_account.execute_starknet_call(call);
     stop_cheat_caller_address(ca_address.starknet);
 
-    assert(success == true, 'execute_starknet_call failed');
+    assert(success, 'execute_starknet_call failed');
     assert(data.len() == 1, 'wrong return data length');
     assert(*data[0] == ca_address.starknet.try_into().unwrap(), 'wrong return data');
 }
@@ -142,7 +142,7 @@ fn test_ca_external_starknet_call_cannot_call_kakarot_other_selector() {
     let (success, data) = contract_account.execute_starknet_call(call);
     stop_cheat_caller_address(ca_address.starknet);
 
-    assert(success == false, 'execute_starknet_call failed');
+    assert(!success, 'execute_starknet_call failed');
     assert(data.len() == 19, 'wrong return data length');
     assert(data == KAKAROT_REENTRANCY.span(), 'wrong return data');
 }

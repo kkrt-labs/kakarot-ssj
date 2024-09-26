@@ -6,7 +6,7 @@ use core::starknet::{ContractAddress, EthAddress};
 use evm::backend::starknet_backend::fetch_balance;
 use evm::model::Address;
 use utils::constants::EMPTY_KECCAK;
-use utils::helpers::U8SpanExTrait;
+use utils::traits::bytes::U8SpanExTrait;
 
 #[derive(Drop)]
 struct AccountBuilder {
@@ -278,7 +278,7 @@ mod tests {
     mod test_has_code_or_nonce {
         use evm::model::account::{Account, AccountTrait, Address};
         use utils::constants::EMPTY_KECCAK;
-        use utils::helpers::U8SpanExTrait;
+        use utils::traits::bytes::U8SpanExTrait;
 
         #[test]
         fn test_should_return_false_when_empty() {
