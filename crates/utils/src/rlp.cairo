@@ -5,7 +5,9 @@ use core::panic_with_felt252;
 use core::starknet::EthAddress;
 use crate::errors::{RLPError};
 use crate::eth_transaction::eip2930::AccessListItem;
-use crate::helpers::{EthAddressExTrait, ArrayExtension, ToBytes, FromBytes};
+use crate::helpers::{EthAddressExTrait};
+use crate::traits::array::ArrayExtension;
+use crate::traits::bytes::{ToBytes, FromBytes};
 
 // Possible RLP types
 #[derive(Drop, PartialEq, Debug)]

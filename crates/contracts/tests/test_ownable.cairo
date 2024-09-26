@@ -3,14 +3,11 @@ use contracts::test_utils::constants::{ZERO, OWNER, OTHER};
 use contracts::test_utils;
 use core::num::traits::Zero;
 use core::starknet::ContractAddress;
-use core::starknet::testing;
 
 
 use ownable_component::{InternalImpl, OwnableImpl};
-use snforge_std::{
-    start_cheat_caller_address, stop_cheat_caller_address, spy_events, test_address, EventSpyTrait
-};
-use snforge_utils::snforge_utils::{EventsFilterBuilderTrait, ContractEvents, ContractEventsTrait};
+use snforge_std::{start_cheat_caller_address, spy_events, test_address, EventSpyTrait};
+use snforge_utils::snforge_utils::{EventsFilterBuilderTrait, ContractEventsTrait};
 
 
 #[starknet::contract]

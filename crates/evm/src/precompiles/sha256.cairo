@@ -2,8 +2,8 @@ use core::sha256::compute_sha256_u32_array;
 use core::starknet::EthAddress;
 use evm::errors::EVMError;
 use evm::precompiles::Precompile;
-use utils::helpers::{FromBytes, ToBytes};
 use utils::math::Bitshift;
+use utils::traits::bytes::{FromBytes, ToBytes};
 
 const BASE_COST: u64 = 60;
 const COST_PER_WORD: u64 = 12;
@@ -60,8 +60,7 @@ mod tests {
         VMBuilderTrait, MemoryTestUtilsTrait, native_token, setup_test_environment
     };
     use snforge_std::{start_mock_call};
-    use utils::helpers::ToBytes;
-    use utils::helpers::{FromBytes};
+    use utils::traits::bytes::{ToBytes, FromBytes};
 
     //source:
     //<https://www.evm.codes/playground?unit=Wei&codeType=Mnemonic&code='wFirsWplaceqparameters%20in%20memorybFFjdata~0vMSTOREvvwDoqcallZSizeZ_1XSizeb1FX_2jaddressY4%200xFFFFFFFFjgasvSTATICCALLvvwPutqresulWalonVonqstackvPOPb20vMLOAD'~Y1j//%20v%5Cnq%20thVj%20wb~0x_Offset~Zb20jretYvPUSHXjargsWt%20Ve%20%01VWXYZ_bjqvw~_>

@@ -13,7 +13,8 @@ use evm::errors::EVMError;
 
 use evm::precompiles::Precompile;
 use utils::crypto::modexp::lib::modexp;
-use utils::helpers::{U8SpanExTrait, FromBytes, BitsUsed};
+use utils::traits::bytes::{U8SpanExTrait, FromBytes};
+use utils::traits::integer::BitsUsed;
 
 const HEADER_LENGTH: usize = 96;
 const MIN_GAS: u64 = 200;

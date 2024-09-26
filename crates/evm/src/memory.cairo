@@ -5,7 +5,8 @@ use utils::constants::{
     POW_2_0, POW_2_8, POW_2_16, POW_2_24, POW_2_32, POW_2_40, POW_2_48, POW_2_56, POW_2_64,
     POW_2_72, POW_2_80, POW_2_88, POW_2_96, POW_2_104, POW_2_112, POW_2_120, POW_256_16
 };
-use utils::{helpers, helpers::ArrayExtTrait, math::Bitshift};
+use utils::traits::array::ArrayExtTrait;
+use utils::{helpers, math::Bitshift};
 
 // 2**17
 const MEMORY_SEGMENT_SIZE: usize = 131072;
@@ -622,7 +623,9 @@ mod tests {
     use core::num::traits::Bounded;
     use evm::memory::{MemoryTrait, InternalMemoryTrait};
     use utils::constants::{POW_2_8, POW_2_56, POW_2_64, POW_2_120};
-    use utils::{math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtTrait};
+    use utils::{
+        math::Exponentiation, math::WrappingExponentiation, helpers, traits::array::SpanExtTrait
+    };
 
 
     fn load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(

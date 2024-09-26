@@ -1,9 +1,10 @@
 use core::array::ArrayTrait;
 use core::starknet::EthAddress;
 use core::traits::TryInto;
+use crate::traits::bytes::{ToBytes, U8SpanExTrait};
 
 use evm::errors::EVMError;
-use utils::helpers::{U8SpanExTrait, EthAddressExTrait, ToBytes};
+use utils::helpers::{EthAddressExTrait};
 use utils::rlp::{RLPTrait, RLPItem};
 use utils::traits::{TryIntoResult};
 

@@ -9,7 +9,7 @@ use evm::backend::validation::validate_eth_tx;
 use evm::model::{TransactionResult, Address};
 use evm::{EVMTrait};
 use utils::constants::POW_2_53;
-use utils::eth_transaction::transaction::{TransactionTrait, Transaction};
+use utils::eth_transaction::transaction::Transaction;
 
 #[starknet::interface]
 pub trait IEthRPC<T> {

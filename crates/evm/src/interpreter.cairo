@@ -4,11 +4,10 @@ use contracts::kakarot_core::interface::IKakarotCore;
 use core::num::traits::{Bounded, Zero};
 use core::ops::SnapshotDeref;
 use core::starknet::EthAddress;
-use core::starknet::get_tx_info;
 use core::starknet::storage::{StoragePointerReadAccess};
 use evm::backend::starknet_backend;
 use evm::create_helpers::CreateHelpers;
-use evm::errors::{EVMError, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
+use evm::errors::{EVMError, EVMErrorTrait};
 
 use evm::instructions::{
     ExchangeOperationsTrait, LoggingOperationsTrait, StopAndArithmeticOperationsTrait,

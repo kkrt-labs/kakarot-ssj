@@ -12,33 +12,23 @@ use contracts::test_utils::{
 use core::num::traits::Bounded;
 use core::starknet::account::Call;
 use core::starknet::secp256_trait::Signature;
-use core::starknet::{
-    ContractAddress, ClassHash, VALIDATED, get_contract_address, contract_address_const, EthAddress,
-    get_tx_info, Event
-};
-use evm::test_utils::{
-    kakarot_address, other_evm_address, other_starknet_address, eoa_address, tx_gas_limit,
-    gas_price, VMBuilderTrait
-};
-use evm::test_utils::{ca_address, chain_id};
-use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+use core::starknet::{ContractAddress, contract_address_const, EthAddress, Event};
+use evm::test_utils::chain_id;
+use evm::test_utils::other_evm_address;
+use openzeppelin::token::erc20::interface::IERC20CamelDispatcher;
 use snforge_std::{
-    start_cheat_caller_address, stop_cheat_caller_address, start_cheat_signature,
-    stop_cheat_signature, start_cheat_chain_id, stop_cheat_chain_id, start_cheat_transaction_hash,
-    stop_cheat_transaction_hash, spy_events, EventSpyTrait, EventsFilterTrait, CheatSpan,
-    cheat_caller_address, stop_mock_call, stop_cheat_block_timestamp, start_cheat_block_timestamp,
-    start_cheat_chain_id_global, stop_cheat_chain_id_global, start_mock_call,
+    start_cheat_caller_address, stop_cheat_caller_address, start_cheat_transaction_hash, spy_events,
+    EventSpyTrait, CheatSpan, cheat_caller_address, stop_cheat_block_timestamp,
+    start_cheat_block_timestamp, start_cheat_chain_id_global, stop_cheat_chain_id_global,
     start_cheat_caller_address_global, stop_cheat_caller_address_global
 };
 
-use snforge_utils::snforge_utils::{ContractEvents, ContractEventsTrait, EventsFilterBuilderTrait};
-use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
+use snforge_utils::snforge_utils::EventsFilterBuilderTrait;
+use utils::eth_transaction::transaction::Transaction;
 use utils::eth_transaction::tx_type::TxType;
-use utils::helpers::{U8SpanExTrait, u256_to_bytes_array};
+use utils::helpers::u256_to_bytes_array;
 use utils::serialization::{serialize_bytes, serialize_transaction_signature};
-use utils::test_data::{
-    legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx, legacy_rlp_encoded_deploy_tx
-};
+use utils::test_data::{legacy_rlp_encoded_tx, eip_2930_encoded_tx, eip_1559_encoded_tx};
 
 fn transaction_signer() -> EthAddress {
     0x6Bd85F39321B00c6d603474C5B2fddEB9c92A466.try_into().unwrap()

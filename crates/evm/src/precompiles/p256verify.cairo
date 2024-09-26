@@ -3,7 +3,7 @@ use core::starknet::secp256_trait::{Secp256Trait};
 use core::starknet::{EthAddress, secp256r1::{Secp256r1Point}, secp256_trait::is_valid_signature};
 use evm::errors::{EVMError};
 use evm::precompiles::Precompile;
-use utils::helpers::FromBytes;
+use utils::traits::bytes::FromBytes;
 
 const P256VERIFY_PRECOMPILE_GAS_COST: u64 = 3450;
 
@@ -113,7 +113,7 @@ mod tests {
     use evm::test_utils::{VMBuilderTrait};
     use evm::test_utils::{setup_test_environment, native_token};
     use snforge_std::start_mock_call;
-    use utils::helpers::{ToBytes, FromBytes};
+    use utils::traits::bytes::{ToBytes, FromBytes};
 
 
     // source:

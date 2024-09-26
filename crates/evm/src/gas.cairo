@@ -283,7 +283,7 @@ mod tests {
     use utils::eth_transaction::eip2930::{AccessListItem, TxEip2930};
     use utils::eth_transaction::legacy::TxLegacy;
     use utils::eth_transaction::transaction::Transaction;
-    use utils::helpers::ToBytes;
+    use utils::traits::bytes::ToBytes;
 
     #[test]
     fn test_calculate_intrinsic_gas_cost() {

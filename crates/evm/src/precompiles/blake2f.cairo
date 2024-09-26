@@ -5,7 +5,7 @@ use core::starknet::EthAddress;
 use evm::errors::{EVMError, ensure};
 use evm::precompiles::Precompile;
 use utils::crypto::blake2_compress::compress;
-use utils::helpers::{FromBytes, ToBytes};
+use utils::traits::bytes::{FromBytes, ToBytes};
 
 const GF_ROUND: u64 = 1;
 const INPUT_LENGTH: usize = 213;
@@ -97,7 +97,7 @@ mod tests {
     };
     use evm::test_utils::{VMBuilderTrait, native_token, setup_test_environment};
     use snforge_std::start_mock_call;
-    use utils::helpers::FromBytes;
+    use utils::traits::bytes::FromBytes;
 
     #[test]
     fn test_blake2_precompile_fail_empty_input() {

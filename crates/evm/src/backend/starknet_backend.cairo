@@ -7,7 +7,7 @@ use core::starknet::storage::StoragePointerReadAccess;
 use core::starknet::syscalls::{deploy_syscall};
 use core::starknet::syscalls::{emit_event_syscall};
 use core::starknet::{EthAddress, get_block_info, SyscallResultTrait};
-use evm::errors::{ensure, EVMError, EOA_EXISTS};
+use evm::errors::{ensure, EVMError};
 use evm::model::{Address, AddressTrait, Environment, Account, AccountTrait};
 use evm::model::{Transfer};
 use evm::state::{State, StateTrait};
@@ -258,8 +258,8 @@ mod tests {
     use snforge_std::{test_address, start_mock_call, get_class_hash};
     use snforge_utils::snforge_utils::{assert_not_called, assert_called};
     use super::commit_storage;
-    use utils::helpers::U8SpanExTrait;
     use utils::helpers::compute_starknet_address;
+    use utils::traits::bytes::U8SpanExTrait;
 
     // Helper function to create a test account
     fn create_test_account(is_selfdestruct: bool, is_created: bool, id: felt252) -> Account {

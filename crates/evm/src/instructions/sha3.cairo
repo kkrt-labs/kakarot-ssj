@@ -8,7 +8,9 @@ use evm::gas;
 use evm::memory::MemoryTrait;
 use evm::model::vm::{VM, VMTrait};
 use evm::stack::StackTrait;
-use utils::helpers::{ArrayExtTrait, U256Trait, ceil32};
+use utils::helpers::ceil32;
+use utils::traits::array::ArrayExtTrait;
+use utils::traits::integer::U256Trait;
 
 #[generate_trait]
 pub impl Sha3Impl of Sha3Trait {

@@ -1,5 +1,5 @@
 use core::fmt::{Debug, Formatter, Error, Display};
-use utils::helpers::ToBytes;
+use utils::traits::bytes::ToBytes;
 
 // STACK
 

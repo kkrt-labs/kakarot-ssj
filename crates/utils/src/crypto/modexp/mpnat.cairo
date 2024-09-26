@@ -6,13 +6,15 @@ use core::array::SpanTrait;
 use core::num::traits::CheckedMul;
 use core::option::OptionTrait;
 use core::result::ResultTrait;
+use crate::felt_vec::{Felt252VecTrait};
 
 use super::arith::{
     big_wrapping_pow, mod_inv, compute_r_mod_n, join_as_double, in_place_shl, in_place_shr,
     in_place_add, in_place_mul_sub, big_wrapping_mul, monsq, monpro, borrowing_sub, carrying_add
 };
-use utils::helpers::{FromBytes, U64Trait, Felt252VecTrait, U128Trait, BitsUsed, ByteSize};
 use utils::math::Bitshift;
+use utils::traits::bytes::FromBytes;
+use utils::traits::integer::{U64Trait, U128Trait, BitsUsed, ByteSize};
 
 pub type Word = u64;
 pub type DoubleWord = u128;
@@ -698,8 +700,8 @@ mod tests {
     use alexandria_data_structures::vec::VecTrait;
     use super::mp_nat_to_u128;
     use utils::crypto::modexp::mpnat::MPNatTrait;
-    use utils::helpers::ToBytes;
     use utils::math::{Bitshift, WrappingBitshift};
+    use utils::traits::bytes::ToBytes;
 
     // the tests are taken from
     // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/mpnat.rs#L825)

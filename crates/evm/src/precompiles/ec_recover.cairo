@@ -1,7 +1,6 @@
 use core::starknet::secp256_trait::{
     Signature, recover_public_key, Secp256PointTrait, is_valid_signature
 };
-use core::starknet::secp256_trait::{Secp256Trait};
 use core::starknet::{
     EthAddress, eth_signature::{public_key_point_to_eth_address}, secp256k1::{Secp256k1Point},
     SyscallResultTrait
@@ -9,9 +8,8 @@ use core::starknet::{
 use core::traits::Into;
 use evm::errors::EVMError;
 use evm::precompiles::Precompile;
-use utils::helpers::U8SpanExTrait;
-use utils::helpers::{ToBytes, FromBytes};
 use utils::traits::EthAddressIntoU256;
+use utils::traits::bytes::{U8SpanExTrait, FromBytes, ToBytes};
 use utils::traits::{NumericIntoBool, BoolIntoNumeric};
 
 const EC_RECOVER_PRECOMPILE_GAS_COST: u64 = 3000;
@@ -90,7 +88,7 @@ mod tests {
     use evm::test_utils::setup_test_environment;
     use evm::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait, native_token};
     use snforge_std::start_mock_call;
-    use utils::helpers::{ToBytes, FromBytes};
+    use utils::traits::bytes::{ToBytes, FromBytes};
 
 
     // source:

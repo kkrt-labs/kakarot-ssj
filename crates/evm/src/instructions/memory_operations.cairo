@@ -319,8 +319,8 @@ mod tests {
         native_token
     };
     use snforge_std::{test_address, start_mock_call};
-    use utils::helpers::U8SpanExTrait;
     use utils::helpers::compute_starknet_address;
+    use utils::traits::bytes::U8SpanExTrait;
 
     #[test]
     fn test_pc_basic() {

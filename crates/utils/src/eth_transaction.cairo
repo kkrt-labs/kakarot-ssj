@@ -8,9 +8,8 @@ use core::cmp::min;
 use core::num::traits::CheckedAdd;
 use core::option::OptionTrait;
 use core::starknet::{EthAddress, secp256_trait::Signature,};
-use utils::errors::{EthTransactionError, RLPErrorImpl};
-
-use utils::helpers::ByteArrayExt;
+use crate::errors::{EthTransactionError, RLPErrorImpl};
+use crate::traits::bytes::ByteArrayExt;
 
 #[derive(Drop)]
 pub struct TransactionMetadata {

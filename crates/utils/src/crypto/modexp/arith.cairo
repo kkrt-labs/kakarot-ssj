@@ -4,12 +4,13 @@ use alexandria_data_structures::vec::{Felt252Vec, Felt252VecImpl};
 
 use core::num::traits::{WideMul, OverflowingAdd, OverflowingSub, WrappingMul};
 use core::option::OptionTrait;
+use crate::felt_vec::{Felt252VecTrait};
+use crate::helpers::{u128_split};
+use crate::math::WrappingBitshift;
+use crate::math::{Bitshift};
+use crate::traits::BoolIntoNumeric;
+use crate::traits::integer::U128Trait;
 use super::mpnat::{MPNat, Word, DoubleWord, WORD_BITS, BASE, DOUBLE_WORD_MAX, WORD_MAX};
-use utils::helpers::{u128_split, Felt252VecTrait, U128Trait};
-use utils::math::WrappingBitshift;
-use utils::math::{Bitshift};
-
-use utils::traits::BoolIntoNumeric;
 
 // Computes the "Montgomery Product" of two numbers.
 // See Coarsely Integrated Operand Scanning (CIOS) Method in
@@ -593,6 +594,7 @@ mod tests {
     use core::num::traits::{WrappingSub, WrappingMul};
     use core::result::ResultTrait;
     use core::traits::Into;
+    use crate::felt_vec::{Felt252VecTrait};
 
     use utils::crypto::modexp::arith::{
         mod_inv, monsq, monpro, compute_r_mod_n, in_place_shl, in_place_shr, big_wrapping_pow,
@@ -602,8 +604,8 @@ mod tests {
         MPNat, MPNatTrait, WORD_MAX, DOUBLE_WORD_MAX, BASE, Word, WORD_BYTES
     };
     use utils::crypto::modexp::mpnat::{mp_nat_to_u128};
-    use utils::helpers::{Felt252VecTrait, ToBytes};
     use utils::math::{WrappingBitshift, WrappingExponentiation};
+    use utils::traits::bytes::ToBytes;
 
     // the tests are taken from
     // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/arith.rs#L401)
