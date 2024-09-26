@@ -1,13 +1,13 @@
-use evm::call_helpers::CallHelpers;
-use evm::create_helpers::{CreateHelpers, CreateType};
-use evm::errors::{ensure, EVMError};
-use evm::gas;
-use evm::memory::MemoryTrait;
-use evm::model::Transfer;
-use evm::model::account::{AccountTrait};
-use evm::model::vm::{VM, VMTrait};
-use evm::stack::StackTrait;
-use evm::state::StateTrait;
+use crate::call_helpers::CallHelpers;
+use crate::create_helpers::{CreateHelpers, CreateType};
+use crate::errors::{ensure, EVMError};
+use crate::gas;
+use crate::memory::MemoryTrait;
+use crate::model::Transfer;
+use crate::model::account::{AccountTrait};
+use crate::model::vm::{VM, VMTrait};
+use crate::stack::StackTrait;
+use crate::state::StateTrait;
 use utils::set::SetTrait;
 
 #[generate_trait]
@@ -371,16 +371,16 @@ mod tests {
     use core::result::ResultTrait;
     use core::starknet::EthAddress;
     use core::traits::TryInto;
-    use evm::call_helpers::CallHelpersImpl;
-    use evm::instructions::MemoryOperationTrait;
-    use evm::instructions::SystemOperationsTrait;
-    use evm::interpreter::{EVMTrait};
-    use evm::model::account::{Account};
-    use evm::model::vm::VMTrait;
-    use evm::model::{AccountTrait, Address};
-    use evm::stack::StackTrait;
-    use evm::state::{StateTrait};
-    use evm::test_utils::{
+    use crate::call_helpers::CallHelpersImpl;
+    use crate::instructions::MemoryOperationTrait;
+    use crate::instructions::SystemOperationsTrait;
+    use crate::interpreter::{EVMTrait};
+    use crate::model::account::{Account};
+    use crate::model::vm::VMTrait;
+    use crate::model::{AccountTrait, Address};
+    use crate::stack::StackTrait;
+    use crate::state::{StateTrait};
+    use crate::test_utils::{
         VMBuilderTrait, MemoryTestUtilsTrait, native_token, evm_address, setup_test_environment,
         origin, uninitialized_account
     };

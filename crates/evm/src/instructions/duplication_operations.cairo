@@ -1,10 +1,10 @@
 //! Duplication Operations.
 
 // Internal imports
-use evm::errors::EVMError;
-use evm::gas;
-use evm::model::vm::{VM, VMTrait};
-use evm::stack::StackTrait;
+use crate::errors::EVMError;
+use crate::gas;
+use crate::model::vm::{VM, VMTrait};
+use crate::stack::StackTrait;
 
 /// Generic DUP operation
 #[inline(always)]
@@ -115,10 +115,10 @@ pub impl DuplicationOperations of DuplicationOperationsTrait {
 
 #[cfg(test)]
 mod tests {
-    use evm::instructions::DuplicationOperationsTrait;
-    use evm::stack::Stack;
-    use evm::stack::StackTrait;
-    use evm::test_utils::VMBuilderTrait;
+    use crate::instructions::DuplicationOperationsTrait;
+    use crate::stack::Stack;
+    use crate::stack::StackTrait;
+    use crate::test_utils::VMBuilderTrait;
 
 
     // ensures all values start from index `from` upto index `to` of stack are `0x0`

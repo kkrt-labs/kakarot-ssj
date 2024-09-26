@@ -1,8 +1,10 @@
 use core::num::traits::Bounded;
-use utils::constants::POW_2_127;
+use crate::constants::POW_2_127;
 
+/// Represents a signed 256-bit integer.
 #[derive(Copy, Drop, PartialEq)]
 pub struct i256 {
+    /// The underlying unsigned 256-bit value.
     pub value: u256,
 }
 
@@ -71,16 +73,23 @@ pub impl I256Rem of Rem<i256> {
     }
 }
 
-/// Signed integer division between two integers. Returns the quotient and the remainder.
-/// Conforms to EVM specifications - except that the type system enforces div != zero.
+/// Performs signed integer division between two integers.
+///
+/// This function conforms to EVM specifications, except that the type system enforces div != zero.
 /// See ethereum yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf, page 29).
-/// Note that the remainder may be negative if one of the inputs is negative and that
-/// (-2**255) / (-1) = -2**255 because 2*255 is out of range.
+///
+/// Note:
+/// - The remainder may be negative if one of the inputs is negative.
+/// - (-2**255) / (-1) = -2**255 because 2**255 is out of range.
+///
 /// # Arguments
+///
 /// * `a` - The dividend.
 /// * `div` - The divisor, passed as a signed NonZero<u256>.
+///
 /// # Returns
-/// * (quotient, reminder) of the signed division of `a` by `div`
+///
+/// A tuple containing (quotient, remainder) of the signed division of `a` by `div`.
 fn i256_signed_div_rem(a: i256, div: NonZero<u256>) -> (i256, i256) {
     let mut div = i256 { value: div.into() };
 
@@ -125,8 +134,17 @@ fn i256_signed_div_rem(a: i256, div: NonZero<u256>) -> (i256, i256) {
     (i256_neg(quot.into()), rem.into())
 }
 
-// Returns the negation of an integer.
-// Note that the negation of -2**255 is -2**255.
+/// Computes the negation of an i256 integer.
+///
+/// Note that the negation of -2**255 is -2**255.
+///
+/// # Arguments
+///
+/// * `a` - The i256 value to negate.
+///
+/// # Returns
+///
+/// The negation of the input value.
 fn i256_neg(a: i256) -> i256 {
     // If a is 0, adding one to its bitwise NOT will overflow and return 0.
     if a.value == 0 {
@@ -138,7 +156,7 @@ fn i256_neg(a: i256) -> i256 {
 #[cfg(test)]
 mod tests {
     use core::num::traits::Bounded;
-    use utils::i256::{i256, i256_neg, i256_signed_div_rem};
+    use crate::i256::{i256, i256_neg, i256_signed_div_rem};
 
     const MAX_SIGNED_VALUE: u256 =
         0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;

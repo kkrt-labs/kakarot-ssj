@@ -1,6 +1,6 @@
 use core::starknet::EthAddress;
-use evm::errors::EVMError;
-use evm::precompiles::Precompile;
+use crate::errors::EVMError;
+use crate::precompiles::Precompile;
 
 const BASE_COST: u64 = 15;
 const COST_PER_WORD: u64 = 3;
@@ -22,12 +22,12 @@ pub impl Identity of Precompile {
 #[cfg(test)]
 mod tests {
     use core::result::ResultTrait;
-    use evm::instructions::SystemOperationsTrait;
+    use crate::instructions::SystemOperationsTrait;
 
-    use evm::memory::MemoryTrait;
-    use evm::precompiles::identity::Identity;
-    use evm::stack::StackTrait;
-    use evm::test_utils::{
+    use crate::memory::MemoryTrait;
+    use crate::precompiles::identity::Identity;
+    use crate::stack::StackTrait;
+    use crate::test_utils::{
         VMBuilderTrait, MemoryTestUtilsTrait, native_token, setup_test_environment
     };
     use snforge_std::start_mock_call;

@@ -1,6 +1,6 @@
 #[starknet::contract]
 pub mod Cairo1HelpersFixture {
-    use contracts::cairo1_helpers::embeddable_impls;
+    use crate::cairo1_helpers::embeddable_impls;
 
     const VERSION: felt252 = 2;
 

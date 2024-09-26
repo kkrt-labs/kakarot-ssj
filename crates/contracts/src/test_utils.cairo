@@ -1,10 +1,10 @@
-use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-use contracts::kakarot_core::{
-    interface::IExtendedKakarotCoreDispatcher, interface::IExtendedKakarotCoreDispatcherTrait
-};
 use core::result::ResultTrait;
 use core::starknet::syscalls::deploy_syscall;
 use core::starknet::{EthAddress, ContractAddress};
+use crate::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
+use crate::kakarot_core::{
+    interface::IExtendedKakarotCoreDispatcher, interface::IExtendedKakarotCoreDispatcherTrait
+};
 use evm::model::{Address};
 
 use evm::test_utils::{other_starknet_address, sequencer_evm_address, chain_id};

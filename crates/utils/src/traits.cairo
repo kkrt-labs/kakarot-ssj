@@ -8,8 +8,8 @@ use core::num::traits::{Zero, One};
 use core::starknet::secp256_trait::{Signature};
 use core::starknet::storage_access::{StorageBaseAddress, storage_address_from_base};
 use core::starknet::{EthAddress, ContractAddress};
+use crate::math::{Bitshift};
 use evm::errors::{EVMError, ensure, TYPE_CONVERSION_ERROR};
-use utils::math::{Bitshift};
 
 pub impl DefaultSignature of Default<Signature> {
     #[inline(always)]
@@ -144,7 +144,7 @@ pub impl U8IntoEthAddress of Into<u8, EthAddress> {
 #[cfg(test)]
 mod tests {
     use core::starknet::storage_access::storage_base_address_from_felt252;
-    use utils::traits::{StorageBaseAddressPartialEq};
+    use crate::traits::{StorageBaseAddressPartialEq};
 
     #[test]
     fn test_eq_storage_base_address() {

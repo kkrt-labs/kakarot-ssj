@@ -1,12 +1,12 @@
 use core::cmp::max;
-use evm::backend::starknet_backend::fetch_original_storage;
+use crate::backend::starknet_backend::fetch_original_storage;
 //! Stack Memory Storage and Flow Operations.
-use evm::errors::{EVMError, ensure};
-use evm::gas;
-use evm::memory::MemoryTrait;
-use evm::model::vm::{VM, VMTrait};
-use evm::stack::StackTrait;
-use evm::state::StateTrait;
+use crate::errors::{EVMError, ensure};
+use crate::gas;
+use crate::memory::MemoryTrait;
+use crate::model::vm::{VM, VMTrait};
+use crate::stack::StackTrait;
+use crate::state::StateTrait;
 use utils::helpers::ceil32;
 use utils::set::SetTrait;
 
@@ -305,16 +305,16 @@ mod tests {
     use core::cmp::max;
     use core::num::traits::Bounded;
     use core::result::ResultTrait;
-    use evm::errors::EVMError;
-    use evm::gas;
-    use evm::instructions::MemoryOperationTrait;
-    use evm::memory::MemoryTrait;
-    use evm::model::Address;
-    use evm::model::vm::VMTrait;
-    use evm::model::{Account, AccountTrait};
-    use evm::stack::StackTrait;
-    use evm::state::StateTrait;
-    use evm::test_utils::{
+    use crate::errors::EVMError;
+    use crate::gas;
+    use crate::instructions::MemoryOperationTrait;
+    use crate::memory::MemoryTrait;
+    use crate::model::Address;
+    use crate::model::vm::VMTrait;
+    use crate::model::{Account, AccountTrait};
+    use crate::stack::StackTrait;
+    use crate::state::StateTrait;
+    use crate::test_utils::{
         VMBuilderTrait, MemoryTestUtilsTrait, setup_test_environment, uninitialized_account,
         native_token
     };

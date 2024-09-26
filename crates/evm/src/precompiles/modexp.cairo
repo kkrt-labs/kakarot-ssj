@@ -9,9 +9,9 @@ use core::option::OptionTrait;
 use core::starknet::EthAddress;
 use core::traits::TryInto;
 
-use evm::errors::EVMError;
+use crate::errors::EVMError;
 
-use evm::precompiles::Precompile;
+use crate::precompiles::Precompile;
 use utils::crypto::modexp::lib::modexp;
 use utils::traits::bytes::{U8SpanExTrait, FromBytes};
 use utils::traits::integer::BitsUsed;
@@ -157,12 +157,12 @@ mod tests {
     use core::starknet::EthAddress;
     use core::starknet::testing::set_contract_address;
 
-    use evm::instructions::SystemOperationsTrait;
+    use crate::instructions::SystemOperationsTrait;
 
-    use evm::memory::MemoryTrait;
-    use evm::precompiles::Precompiles;
-    use evm::stack::StackTrait;
-    use evm::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
+    use crate::memory::MemoryTrait;
+    use crate::precompiles::Precompiles;
+    use crate::stack::StackTrait;
+    use crate::test_utils::{VMBuilderTrait, native_token, other_starknet_address};
     use evm_tests::test_precompiles::test_data::test_data_modexp::{
         test_modexp_modsize0_returndatasizeFiller_data,
         test_modexp_create2callPrecompiles_test0_berlin_data, test_modexp_eip198_example_1_data,

@@ -1,9 +1,9 @@
 use core::num::traits::Bounded;
-use evm::errors::EVMError;
-use evm::gas;
-use evm::model::vm::{VM, VMTrait};
+use crate::errors::EVMError;
+use crate::gas;
+use crate::model::vm::{VM, VMTrait};
 // Internal imports
-use evm::stack::StackTrait;
+use crate::stack::StackTrait;
 use utils::constants::{POW_2_127};
 use utils::i256::i256;
 use utils::math::{Bitshift, WrappingBitshift};
@@ -198,9 +198,9 @@ pub impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
 #[cfg(test)]
 mod tests {
     use core::num::traits::Bounded;
-    use evm::instructions::ComparisonAndBitwiseOperationsTrait;
-    use evm::stack::StackTrait;
-    use evm::test_utils::VMBuilderTrait;
+    use crate::instructions::ComparisonAndBitwiseOperationsTrait;
+    use crate::stack::StackTrait;
+    use crate::test_utils::VMBuilderTrait;
 
     #[test]
     fn test_eq_same_pair() {

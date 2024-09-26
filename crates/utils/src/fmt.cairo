@@ -1,5 +1,5 @@
 use core::fmt::{Debug, Formatter, Error};
-use utils::set::{SpanSet, SpanSetTrait};
+use crate::set::{SpanSet, SpanSetTrait};
 
 mod display_felt252_based {
     use core::fmt::{Display, Formatter, Error};

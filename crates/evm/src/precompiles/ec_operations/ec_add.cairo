@@ -7,11 +7,11 @@ use core::circuit::{
 };
 use core::option::Option;
 use core::starknet::{EthAddress};
+use crate::errors::EVMError;
+use crate::precompiles::Precompile;
 use crate::precompiles::ec_operations::{
     eq_mod_p, eq_neg_mod_p, is_on_curve, double_ec_point_unchecked, BN254_PRIME_LIMBS, BN254_PRIME
 };
-use evm::errors::EVMError;
-use evm::precompiles::Precompile;
 use garaga::core::circuit::AddInputResultTrait2;
 use utils::helpers::{load_word};
 use utils::traits::bytes::{ToBytes, U8SpanExTrait};

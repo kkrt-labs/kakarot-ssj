@@ -61,6 +61,14 @@ pub struct TxEip1559 {
 #[generate_trait]
 pub impl _impl of TxEip1559Trait {
     /// Returns the effective gas price for the given `base_fee`.
+    ///
+    /// # Arguments
+    ///
+    /// * `base_fee` - The current network base fee, if available
+    ///
+    /// # Returns
+    ///
+    /// The effective gas price as a u128
     fn effective_gas_price(self: @TxEip1559, base_fee: Option<u128>) -> u128 {
         match base_fee {
             Option::Some(base_fee) => {
@@ -75,6 +83,15 @@ pub impl _impl of TxEip1559Trait {
         }
     }
 
+    /// Decodes the RLP-encoded fields into a TxEip1559 struct.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - A span of RLPItems containing the encoded transaction fields
+    ///
+    /// # Returns
+    ///
+    /// A Result containing either the decoded TxEip1559 struct or an EthTransactionError
     fn decode_fields(ref data: Span<RLPItem>) -> Result<TxEip1559, EthTransactionError> {
         let boxed_fields = data
             .multi_pop_front::<9>()
