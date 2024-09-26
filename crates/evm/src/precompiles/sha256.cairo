@@ -1,7 +1,7 @@
 use core::sha256::compute_sha256_u32_array;
 use core::starknet::EthAddress;
-use evm::errors::EVMError;
-use evm::precompiles::Precompile;
+use crate::errors::EVMError;
+use crate::precompiles::Precompile;
 use utils::math::Bitshift;
 use utils::traits::bytes::{FromBytes, ToBytes};
 
@@ -51,12 +51,12 @@ pub impl Sha256 of Precompile {
 #[cfg(test)]
 mod tests {
     use core::result::ResultTrait;
-    use evm::instructions::SystemOperationsTrait;
+    use crate::instructions::SystemOperationsTrait;
 
-    use evm::memory::MemoryTrait;
-    use evm::precompiles::sha256::Sha256;
-    use evm::stack::StackTrait;
-    use evm::test_utils::{
+    use crate::memory::MemoryTrait;
+    use crate::precompiles::sha256::Sha256;
+    use crate::stack::StackTrait;
+    use crate::test_utils::{
         VMBuilderTrait, MemoryTestUtilsTrait, native_token, setup_test_environment
     };
     use snforge_std::{start_mock_call};

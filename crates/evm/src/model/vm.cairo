@@ -2,10 +2,10 @@ use core::cmp::min;
 use core::dict::{Felt252Dict, Felt252DictTrait};
 use core::num::traits::{SaturatingSub, CheckedSub};
 use core::starknet::EthAddress;
-use evm::errors::EVMError;
-use evm::memory::Memory;
-use evm::model::{Message, Environment, ExecutionResultStatus, ExecutionResult, AccountTrait};
-use evm::stack::Stack;
+use crate::errors::EVMError;
+use crate::memory::Memory;
+use crate::model::{Message, Environment, ExecutionResultStatus, ExecutionResult, AccountTrait};
+use crate::stack::Stack;
 use utils::set::{Set, SetTrait, SpanSet, SpanSetTrait};
 use utils::traits::{SpanDefault};
 
@@ -178,10 +178,10 @@ pub impl VMImpl of VMTrait {
 
 #[cfg(test)]
 mod tests {
-    use evm::errors::EVMError;
-    use evm::model::Message;
-    use evm::model::vm::VMTrait;
-    use evm::test_utils::{tx_gas_limit, VMBuilderTrait};
+    use crate::errors::EVMError;
+    use crate::model::Message;
+    use crate::model::vm::VMTrait;
+    use crate::test_utils::{tx_gas_limit, VMBuilderTrait};
 
     #[test]
     fn test_vm_default() {

@@ -2,7 +2,7 @@ use core::dict::{Felt252Dict, Felt252DictTrait};
 //! Stack implementation.
 //! # Example
 //! ```
-//! use evm::stack::StackTrait;
+//! use crate::stack::StackTrait;
 //!
 //! // Create a new stack instance.
 //! let mut stack = StackTrait::new();
@@ -17,7 +17,7 @@ use core::dict::{Felt252Dict, Felt252DictTrait};
 use core::nullable::{NullableTrait};
 use core::num::traits::Bounded;
 use core::starknet::EthAddress;
-use evm::errors::{ensure, EVMError};
+use crate::errors::{ensure, EVMError};
 
 use utils::constants;
 use utils::i256::i256;
@@ -59,11 +59,7 @@ impl StackImpl of StackTrait {
 
     /// Pushes a new bytes32 word onto the stack.
     ///
-    /// When pushing an item to the stack, we will compute
-    /// an index which corresponds to the index in the dict the item will be stored at.
-    /// The internal index is computed as follows:
-    ///
-    /// index = len(Stack_i) + i * STACK_SEGMENT_SIZE
+    /// The item is stored at the current length of the stack.
     ///
     /// # Errors
     ///
@@ -83,7 +79,7 @@ impl StackImpl of StackTrait {
     ///
     /// # Errors
     ///
-    /// If the stack is empty, returns with a StackOverflow error.
+    /// If the stack is empty, returns with a StackUnderflow error.
     #[inline(always)]
     fn pop(ref self: Stack) -> Result<u256, EVMError> {
         ensure(self.len() != 0, EVMError::StackUnderflow)?;
@@ -236,7 +232,7 @@ impl StackImpl of StackTrait {
     }
 
     /// Peeks at the item at the given index on the stack.
-    /// index is 0-based, 0 being the top of the stack.
+    /// index is 0-based, where 0 is the top of the stack (most recently pushed item).
     ///
     /// # Errors
     ///
@@ -252,7 +248,7 @@ impl StackImpl of StackTrait {
     }
 
     /// Swaps the item at the given index with the item on top of the stack.
-    /// index is 0-based, 0 being the top of the stack (unallocated).
+    /// index is 0-based, where 0 would mean no swap (top item swapped with itself).
     #[inline(always)]
     fn swap_i(ref self: Stack, index: usize) -> Result<(), EVMError> {
         ensure(index < self.len(), EVMError::StackUnderflow)?;
@@ -284,7 +280,7 @@ mod tests {
     // Core lib imports
 
     // Internal imports
-    use evm::stack::StackTrait;
+    use crate::stack::StackTrait;
     use utils::constants;
 
     #[test]
@@ -325,7 +321,7 @@ mod tests {
     }
 
     mod push {
-        use evm::errors::{EVMError};
+        use crate::errors::{EVMError};
         use super::StackTrait;
 
         use super::constants;
@@ -368,7 +364,7 @@ mod tests {
 
     mod pop {
         use core::num::traits::Bounded;
-        use evm::errors::EVMError;
+        use crate::errors::EVMError;
         use super::StackTrait;
         use utils::traits::StorageBaseAddressPartialEq;
 
@@ -516,7 +512,7 @@ mod tests {
     }
 
     mod peek {
-        use evm::errors::{EVMError};
+        use crate::errors::{EVMError};
         use super::StackTrait;
 
         #[test]
@@ -580,7 +576,7 @@ mod tests {
     }
 
     mod swap {
-        use evm::errors::{EVMError};
+        use crate::errors::{EVMError};
         use super::StackTrait;
 
         #[test]

@@ -8,12 +8,12 @@ use core::pedersen::PedersenTrait;
 use core::starknet::{EthAddress, ContractAddress, ClassHash};
 use core::traits::TryInto;
 use core::traits::{DivRem};
+use crate::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
+use crate::constants::{POW_2, POW_256_1, POW_256_REV};
+use crate::math::{Bitshift, WrappingBitshift};
 
 use crate::traits::array::{ArrayExtTrait};
-use utils::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
-use utils::constants::{POW_2, POW_256_1, POW_256_REV};
-use utils::math::{Bitshift, WrappingBitshift};
-use utils::traits::{U256TryIntoContractAddress, EthAddressIntoU256, BoolIntoNumeric};
+use crate::traits::{U256TryIntoContractAddress, EthAddressIntoU256, BoolIntoNumeric};
 
 /// Splits a u128 into two u64 parts, representing the high and low parts of the input.
 ///
@@ -95,6 +95,13 @@ pub fn split_u128_le(ref dest: Array<u8>, mut value: u128, mut len: usize) {
 }
 
 /// Splits a u256 into `len` bytes, little-endian, and returns the bytes array.
+///
+/// # Arguments
+/// * `value` - The u256 value to be split.
+/// * `len` - The number of bytes to split the value into.
+///
+/// # Returns
+/// An `Array<u8>` containing the little-endian byte representation of the input value.
 pub fn split_word_le(mut value: u256, mut len: usize) -> Array<u8> {
     let mut dst: Array<u8> = ArrayTrait::new();
     let low_len = min(len, 16);
@@ -105,19 +112,23 @@ pub fn split_word_le(mut value: u256, mut len: usize) -> Array<u8> {
 }
 
 /// Splits a u256 into 16 bytes, big-endian, and appends the result to `dst`.
+///
+/// # Arguments
+/// * `value` - The u256 value to be split.
+/// * `dst` - The destination array to append the bytes to.
 pub fn split_word_128(value: u256, ref dst: Array<u8>) {
     split_word(value, 16, ref dst)
 }
 
 
-/// Loads a sequence of bytes into a single u256 in big-endian
+/// Loads a sequence of bytes into a single u256 in big-endian order.
 ///
 /// # Arguments
-/// * `len` - The number of bytes to load
-/// * `words` - The bytes to load
+/// * `len` - The number of bytes to load.
+/// * `words` - The span of bytes to load.
 ///
 /// # Returns
-/// The packed u256
+/// A `u256` value representing the loaded bytes in big-endian order.
 pub fn load_word(mut len: usize, words: Span<u8>) -> u256 {
     if len == 0 {
         return 0;
@@ -137,13 +148,13 @@ pub fn load_word(mut len: usize, words: Span<u8>) -> u256 {
     current
 }
 
-/// Converts a u256 to a bytes array represented by an array of u8 values.
+/// Converts a u256 to a bytes array represented by an array of u8 values in big-endian order.
 ///
 /// # Arguments
-/// * `value` - The value to convert
+/// * `value` - The u256 value to convert.
 ///
 /// # Returns
-/// The bytes array representation of the value.
+/// An `Array<u8>` representing the big-endian byte representation of the input value.
 pub fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
     let mut counter = 0;
     let mut bytes_arr: Array<u8> = ArrayTrait::new();
@@ -173,6 +184,15 @@ pub fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
 }
 
 
+/// Computes the Starknet address for a given Kakarot address, EVM address, and class hash.
+///
+/// # Arguments
+/// * `kakarot_address` - The Kakarot contract address.
+/// * `evm_address` - The Ethereum address.
+/// * `class_hash` - The class hash.
+///
+/// # Returns
+/// A `ContractAddress` representing the computed Starknet address.
 pub fn compute_starknet_address(
     kakarot_address: ContractAddress, evm_address: EthAddress, class_hash: ClassHash
 ) -> ContractAddress {
@@ -206,7 +226,7 @@ pub fn compute_starknet_address(
 
 #[cfg(test)]
 mod tests {
-    use utils::helpers;
+    use crate::helpers;
 
     #[test]
     fn test_u256_to_bytes_array() {

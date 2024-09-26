@@ -594,18 +594,18 @@ mod tests {
     use core::num::traits::{WrappingSub, WrappingMul};
     use core::result::ResultTrait;
     use core::traits::Into;
-    use crate::felt_vec::{Felt252VecTrait};
 
-    use utils::crypto::modexp::arith::{
+    use crate::crypto::modexp::arith::{
         mod_inv, monsq, monpro, compute_r_mod_n, in_place_shl, in_place_shr, big_wrapping_pow,
         big_wrapping_mul, big_sq, borrowing_sub, shifted_carrying_mul
     };
-    use utils::crypto::modexp::mpnat::{
+    use crate::crypto::modexp::mpnat::{
         MPNat, MPNatTrait, WORD_MAX, DOUBLE_WORD_MAX, BASE, Word, WORD_BYTES
     };
-    use utils::crypto::modexp::mpnat::{mp_nat_to_u128};
-    use utils::math::{WrappingBitshift, WrappingExponentiation};
-    use utils::traits::bytes::ToBytes;
+    use crate::crypto::modexp::mpnat::{mp_nat_to_u128};
+    use crate::felt_vec::{Felt252VecTrait};
+    use crate::math::{WrappingBitshift, WrappingExponentiation};
+    use crate::traits::bytes::ToBytes;
 
     // the tests are taken from
     // [aurora-engine](https://github.com/aurora-is-near/aurora-engine/blob/1213f2c7c035aa523601fced8f75bef61b4728ab/engine-modexp/src/arith.rs#L401)

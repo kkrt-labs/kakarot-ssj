@@ -4,23 +4,22 @@ pub mod eip2930;
 pub mod legacy;
 pub mod transaction;
 pub mod tx_type;
-use core::cmp::min;
-use core::num::traits::CheckedAdd;
-use core::option::OptionTrait;
-use core::starknet::{EthAddress, secp256_trait::Signature,};
 use crate::errors::{EthTransactionError, RLPErrorImpl};
 use crate::traits::bytes::ByteArrayExt;
 
-#[derive(Drop)]
-pub struct TransactionMetadata {
-    pub address: EthAddress,
-    pub account_nonce: u64,
-    pub chain_id: u64,
-    pub signature: Signature,
-}
 
-/// Checks the effective gas price of a transaction as specfified in EIP-1559 with relevant
-/// checks.
+/// Checks the effective gas price of a transaction as specified in EIP-1559 with relevant checks.
+///
+/// # Arguments
+///
+/// * `max_fee_per_gas` - The maximum fee per gas the user is willing to pay.
+/// * `max_priority_fee_per_gas` - The maximum priority fee per gas the user is willing to pay
+/// (optional).
+/// * `block_base_fee` - The base fee per gas for the current block.
+///
+/// # Returns
+///
+/// * `Result<(), EthTransactionError>` - Ok if the gas fee is valid, or an error if not.
 pub fn check_gas_fee(
     max_fee_per_gas: u128, max_priority_fee_per_gas: Option<u128>, block_base_fee: u128,
 ) -> Result<(), EthTransactionError> {
@@ -40,8 +39,8 @@ pub fn check_gas_fee(
 
 #[cfg(test)]
 mod tests {
+    use crate::errors::EthTransactionError;
     use super::check_gas_fee;
-    use utils::errors::EthTransactionError;
 
     #[test]
     fn test_happy_path() {

@@ -57,12 +57,11 @@ pub fn load_packed_bytes(input: Span<felt252>, bytes_len: u32) -> Array<u8> {
     let (chunk_counts, remainder) = DivRem::div_rem(bytes_len, 31);
     let mut res: Array<u8> = Default::default();
 
-    let mut i = 0;
-    while i != chunk_counts {
-        let mut value: u256 = (*input[i]).into();
-        unpack_chunk(value, 31, ref res);
-        i += 1;
-    };
+    for i in 0
+        ..chunk_counts {
+            let mut value: u256 = (*input[i]).into();
+            unpack_chunk(value, 31, ref res);
+        };
 
     if remainder.is_zero() {
         return res;

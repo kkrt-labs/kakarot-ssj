@@ -1,13 +1,13 @@
 use core::num::traits::OverflowingAdd;
 use core::num::traits::Zero;
-use evm::errors::{ensure, EVMError};
-use evm::gas;
-use evm::memory::MemoryTrait;
-use evm::model::account::{AccountTrait};
-use evm::model::vm::{VM, VMTrait};
-use evm::model::{AddressTrait};
-use evm::stack::StackTrait;
-use evm::state::StateTrait;
+use crate::errors::{ensure, EVMError};
+use crate::gas;
+use crate::memory::MemoryTrait;
+use crate::model::account::{AccountTrait};
+use crate::model::vm::{VM, VMTrait};
+use crate::model::{AddressTrait};
+use crate::stack::StackTrait;
+use crate::state::StateTrait;
 use utils::helpers::{ceil32, load_word};
 use utils::set::SetTrait;
 use utils::traits::{EthAddressIntoU256};
@@ -301,15 +301,15 @@ fn copy_bytes_to_memory(
 mod tests {
     use contracts::test_data::counter_evm_bytecode;
     use core::starknet::EthAddress;
-    use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
-    use evm::instructions::EnvironmentInformationTrait;
-    use evm::memory::{InternalMemoryTrait, MemoryTrait};
+    use crate::errors::{EVMError, TYPE_CONVERSION_ERROR};
+    use crate::instructions::EnvironmentInformationTrait;
+    use crate::memory::{InternalMemoryTrait, MemoryTrait};
 
-    use evm::model::vm::VMTrait;
-    use evm::model::{Account, Address};
-    use evm::stack::StackTrait;
-    use evm::state::StateTrait;
-    use evm::test_utils::{VMBuilderTrait, origin, callvalue, gas_price};
+    use crate::model::vm::VMTrait;
+    use crate::model::{Account, Address};
+    use crate::stack::StackTrait;
+    use crate::state::StateTrait;
+    use crate::test_utils::{VMBuilderTrait, origin, callvalue, gas_price};
     use snforge_std::test_address;
     use utils::constants::EMPTY_KECCAK;
     use utils::helpers::{u256_to_bytes_array, compute_starknet_address};
@@ -319,8 +319,8 @@ mod tests {
 
 
     mod test_internals {
-        use evm::memory::MemoryTrait;
-        use evm::test_utils::VMBuilderTrait;
+        use crate::memory::MemoryTrait;
+        use crate::test_utils::VMBuilderTrait;
         use super::super::copy_bytes_to_memory;
 
         fn test_copy_bytes_to_memory_helper(

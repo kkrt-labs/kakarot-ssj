@@ -7,10 +7,10 @@ use core::starknet::storage::StoragePointerReadAccess;
 use core::starknet::syscalls::{deploy_syscall};
 use core::starknet::syscalls::{emit_event_syscall};
 use core::starknet::{EthAddress, get_block_info, SyscallResultTrait};
-use evm::errors::{ensure, EVMError};
-use evm::model::{Address, AddressTrait, Environment, Account, AccountTrait};
-use evm::model::{Transfer};
-use evm::state::{State, StateTrait};
+use crate::errors::{ensure, EVMError};
+use crate::model::{Address, AddressTrait, Environment, Account, AccountTrait};
+use crate::model::{Transfer};
+use crate::state::{State, StateTrait};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use utils::constants::BURN_ADDRESS;
 use utils::constants;
@@ -247,14 +247,14 @@ fn commit_storage(ref self: State) -> Result<(), EVMError> {
 #[cfg(test)]
 mod tests {
     use core::starknet::ClassHash;
-    use evm::backend::starknet_backend;
-    use evm::model::Address;
-    use evm::model::account::Account;
-    use evm::state::{State, StateTrait};
-    use evm::test_utils::{
+    use crate::backend::starknet_backend;
+    use crate::model::Address;
+    use crate::model::account::Account;
+    use crate::state::{State, StateTrait};
+    use crate::test_utils::{
         setup_test_environment, uninitialized_account, account_contract, register_account
     };
-    use evm::test_utils::{evm_address};
+    use crate::test_utils::{evm_address};
     use snforge_std::{test_address, start_mock_call, get_class_hash};
     use snforge_utils::snforge_utils::{assert_not_called, assert_called};
     use super::commit_storage;

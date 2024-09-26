@@ -1,6 +1,6 @@
 use core::cmp::min;
 use core::num::traits::CheckedAdd;
-use evm::errors::EVMError;
+use crate::errors::EVMError;
 use utils::eth_transaction::common::TxKindTrait;
 use utils::eth_transaction::eip2930::{AccessListItem};
 use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
@@ -275,11 +275,11 @@ pub fn calculate_intrinsic_gas_cost(tx: @Transaction) -> u64 {
 mod tests {
     use core::starknet::EthAddress;
 
-    use evm::gas::{
+    use crate::gas::{
         calculate_intrinsic_gas_cost, calculate_memory_gas_cost, ACCESS_LIST_ADDRESS,
         ACCESS_LIST_STORAGE_KEY
     };
-    use evm::test_utils::evm_address;
+    use crate::test_utils::evm_address;
     use utils::eth_transaction::eip2930::{AccessListItem, TxEip2930};
     use utils::eth_transaction::legacy::TxLegacy;
     use utils::eth_transaction::transaction::Transaction;

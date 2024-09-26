@@ -3,8 +3,8 @@ use contracts::kakarot_core::{KakarotCore, IKakarotCore};
 use core::dict::{Felt252Dict, Felt252DictTrait};
 use core::num::traits::Zero;
 use core::starknet::{ContractAddress, EthAddress};
-use evm::backend::starknet_backend::fetch_balance;
-use evm::model::Address;
+use crate::backend::starknet_backend::fetch_balance;
+use crate::model::Address;
 use utils::constants::EMPTY_KECCAK;
 use utils::traits::bytes::U8SpanExTrait;
 
@@ -276,7 +276,7 @@ pub impl AccountImpl of AccountTrait {
 #[cfg(test)]
 mod tests {
     mod test_has_code_or_nonce {
-        use evm::model::account::{Account, AccountTrait, Address};
+        use crate::model::account::{Account, AccountTrait, Address};
         use utils::constants::EMPTY_KECCAK;
         use utils::traits::bytes::U8SpanExTrait;
 
@@ -329,8 +329,8 @@ mod tests {
     }
 
     mod test_fetch {
-        use evm::model::account::{Account, AccountTrait, Address};
-        use evm::test_utils::{
+        use crate::model::account::{Account, AccountTrait, Address};
+        use crate::test_utils::{
             register_account, setup_test_environment, uninitialized_account, evm_address,
             native_token,
         };
@@ -388,8 +388,8 @@ mod tests {
     }
 
     mod test_fetch_or_create {
-        use evm::model::account::{Account, AccountTrait, Address};
-        use evm::test_utils::{
+        use crate::model::account::{Account, AccountTrait, Address};
+        use crate::test_utils::{
             register_account, setup_test_environment, uninitialized_account, evm_address,
             native_token,
         };

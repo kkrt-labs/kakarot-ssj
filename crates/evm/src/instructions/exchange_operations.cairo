@@ -1,9 +1,9 @@
 //! Exchange Operations.
 
-use evm::errors::EVMError;
-use evm::gas;
-use evm::model::vm::{VM, VMTrait};
-use evm::stack::StackTrait;
+use crate::errors::EVMError;
+use crate::gas;
+use crate::model::vm::{VM, VMTrait};
+use crate::stack::StackTrait;
 
 /// Place i bytes items on stack.
 #[inline(always)]
@@ -131,9 +131,9 @@ pub impl ExchangeOperations of ExchangeOperationsTrait {
 
 #[cfg(test)]
 mod tests {
-    use evm::instructions::exchange_operations::ExchangeOperationsTrait;
-    use evm::stack::StackTrait;
-    use evm::test_utils::VMBuilderTrait;
+    use crate::instructions::exchange_operations::ExchangeOperationsTrait;
+    use crate::stack::StackTrait;
+    use crate::test_utils::VMBuilderTrait;
 
 
     #[test]

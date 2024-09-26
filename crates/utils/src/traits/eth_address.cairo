@@ -4,6 +4,11 @@ use crate::traits::EthAddressIntoU256;
 
 #[generate_trait]
 pub impl EthAddressExImpl of EthAddressExTrait {
+    /// Converts an EthAddress to an array of bytes.
+    ///
+    /// # Returns
+    ///
+    /// * `Array<u8>` - A 20-byte array representation of the EthAddress.
     fn to_bytes(self: EthAddress) -> Array<u8> {
         let bytes_used: u256 = 20;
         let value: u256 = self.into();
@@ -18,12 +23,16 @@ pub impl EthAddressExImpl of EthAddressExTrait {
         bytes
     }
 
-    /// Packs 20 bytes into a EthAddress
+    /// Converts a 20-byte array into an EthAddress.
+    ///
     /// # Arguments
-    /// * `input` a Span<u8> of len == 20
+    ///
+    /// * `input` - A `Span<u8>` of length 20 representing the bytes of an Ethereum address.
+    ///
     /// # Returns
-    /// * Option::Some(EthAddress) if the operation succeeds
-    /// * Option::None otherwise
+    ///
+    /// * `Option<EthAddress>` - `Some(EthAddress)` if the conversion succeeds, `None` if the input
+    /// length is not 20.
     fn from_bytes(input: Span<u8>) -> Option<EthAddress> {
         let len = input.len();
         if len != 20 {

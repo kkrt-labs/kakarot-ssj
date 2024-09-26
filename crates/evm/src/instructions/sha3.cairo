@@ -3,11 +3,11 @@ use core::cmp::min;
 use core::keccak::{cairo_keccak};
 
 // Internal imports
-use evm::errors::EVMError;
-use evm::gas;
-use evm::memory::MemoryTrait;
-use evm::model::vm::{VM, VMTrait};
-use evm::stack::StackTrait;
+use crate::errors::EVMError;
+use crate::gas;
+use crate::memory::MemoryTrait;
+use crate::model::vm::{VM, VMTrait};
+use crate::stack::StackTrait;
 use utils::helpers::ceil32;
 use utils::traits::array::ArrayExtTrait;
 use utils::traits::integer::U256Trait;
@@ -147,11 +147,11 @@ fn prepare_last_input(ref to_hash: Array<u64>, value: u256, size: u32) -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use evm::instructions::Sha3Trait;
-    use evm::instructions::sha3;
-    use evm::memory::MemoryTrait;
-    use evm::stack::StackTrait;
-    use evm::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait};
+    use crate::instructions::Sha3Trait;
+    use crate::instructions::sha3;
+    use crate::memory::MemoryTrait;
+    use crate::stack::StackTrait;
+    use crate::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait};
 
     #[test]
     fn test_exec_sha3_size_0_offset_0() {

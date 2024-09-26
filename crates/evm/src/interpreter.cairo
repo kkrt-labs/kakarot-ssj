@@ -4,26 +4,26 @@ use core::num::traits::{Bounded, Zero};
 use core::ops::SnapshotDeref;
 use core::starknet::EthAddress;
 use core::starknet::storage::{StoragePointerReadAccess};
-use evm::backend::starknet_backend;
-use evm::create_helpers::CreateHelpers;
-use evm::errors::{EVMError, EVMErrorTrait};
+use crate::backend::starknet_backend;
+use crate::create_helpers::CreateHelpers;
+use crate::errors::{EVMError, EVMErrorTrait};
 
-use evm::instructions::{
+use crate::instructions::{
     ExchangeOperationsTrait, LoggingOperationsTrait, StopAndArithmeticOperationsTrait,
     ComparisonAndBitwiseOperationsTrait, SystemOperationsTrait, BlockInformationTrait,
     DuplicationOperationsTrait, EnvironmentInformationTrait, PushOperationsTrait,
     MemoryOperationTrait, Sha3Trait
 };
 
-use evm::model::account::{Account, AccountTrait};
-use evm::model::vm::{VM, VMTrait};
-use evm::model::{
+use crate::model::account::{Account, AccountTrait};
+use crate::model::vm::{VM, VMTrait};
+use crate::model::{
     Message, Environment, Transfer, ExecutionSummary, ExecutionResult, ExecutionResultTrait,
     ExecutionResultStatus, AddressTrait, TransactionResult, TransactionResultTrait, Address
 };
-use evm::precompiles::Precompiles;
-use evm::precompiles::eth_precompile_addresses;
-use evm::state::StateTrait;
+use crate::precompiles::Precompiles;
+use crate::precompiles::eth_precompile_addresses;
+use crate::state::StateTrait;
 use utils::address::compute_contract_address;
 use utils::constants;
 use utils::eth_transaction::common::TxKind;
@@ -1019,9 +1019,9 @@ pub impl EVMImpl of EVMTrait {
 mod tests {
     use contracts::kakarot_core::KakarotCore;
     use core::num::traits::Zero;
-    use evm::model::{Account, Environment, Message};
-    use evm::state::StateTrait;
-    use evm::test_utils::{dual_origin, test_dual_address};
+    use crate::model::{Account, Environment, Message};
+    use crate::state::StateTrait;
+    use crate::test_utils::{dual_origin, test_dual_address};
     use super::EVMTrait;
     use utils::constants::EMPTY_KECCAK;
     use utils::eth_transaction::common::TxKind;

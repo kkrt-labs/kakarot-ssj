@@ -4,7 +4,7 @@ use contracts::kakarot_core::eth_rpc::IEthRPC;
 use core::ops::SnapshotDeref;
 use core::starknet::storage::{StoragePointerReadAccess};
 use core::starknet::{get_caller_address};
-use evm::gas;
+use crate::gas;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::storage::StorageTrait;
 use utils::eth_transaction::check_gas_fee;

@@ -2,13 +2,17 @@ use core::cmp::min;
 use core::keccak::{cairo_keccak};
 use core::num::traits::{Zero, One, Bounded, BitSize, SaturatingAdd};
 use core::traits::{BitAnd};
+use crate::constants::{POW_2, POW_256_1, POW_256_REV};
 use crate::math::{Bitshift};
 use crate::traits::integer::{BytesUsedTrait, ByteSize, U256Trait};
-use utils::constants::{POW_2, POW_256_1, POW_256_REV};
 
 #[generate_trait]
 pub impl U8SpanExImpl of U8SpanExTrait {
-    // keccack256 on a bytes message
+    /// Computes the keccak256 hash of a bytes message
+    /// # Arguments
+    /// * `self` - The input bytes as a Span<u8>
+    /// # Returns
+    /// * The keccak256 hash as a u256
     fn compute_keccak256_hash(self: Span<u8>) -> u256 {
         let (mut keccak_input, last_input_word, last_input_num_bytes) = self.to_u64_words();
         let hash = cairo_keccak(ref keccak_input, :last_input_word, :last_input_num_bytes)
@@ -16,8 +20,16 @@ pub impl U8SpanExImpl of U8SpanExTrait {
 
         hash
     }
+
     /// Transforms a Span<u8> into an Array of u64 full words, a pending u64 word and its length in
     /// bytes
+    /// # Arguments
+    /// * `self` - The input bytes as a Span<u8>
+    /// # Returns
+    /// * A tuple containing:
+    ///   - An Array<u64> of full words
+    ///   - A u64 representing the last (potentially partial) word
+    ///   - A usize representing the number of bytes in the last word
     fn to_u64_words(self: Span<u8>) -> (Array<u64>, u64, usize) {
         let nonzero_8: NonZero<u32> = 8_u32.try_into().unwrap();
         let (full_u64_word_count, last_input_num_bytes) = DivRem::div_rem(self.len(), nonzero_8);
@@ -111,30 +123,20 @@ pub impl U8SpanExImpl of U8SpanExTrait {
         arr.span()
     }
 
-    /// Clones and pads the given span with 0s to the right to the given length, if data is more
-    /// than the given length, it is truncated from the right side
+    /// Clones and pads the given span with 0s to the right to the given length
+    /// If data is more than the given length, it is truncated from the right side
+    /// # Arguments
+    /// * `self` - The input bytes as a Span<u8>
+    /// * `len` - The desired length of the padded span
+    /// # Returns
+    /// * A Span<u8> of length `len` right padded with 0s if the span length is less than `len`,
+    ///   or truncated from the right if the span length is greater than `len`
     /// # Examples
     /// ```
-    ///  let span = [0x01, 0x02, 0x03, 0x04, 0x05].span();
-    ///  let expected = [0x01, 0x02, 0x03, 0x04, 0x05, 0x0, 0x0, 0x0, 0x0, 0x0].span();
-    ///  let result = span.pad_right_with_zeroes(10);
-    ///
-    ///  assert_eq!(result, expected);
-    ///
-    ///  // Truncates the data if it is more than the given length
-    ///  let span = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a].span();
-    ///  let expected = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09].span();
-    ///  let result = span.pad_right_with_zeroes(9);
-    ///
-    ///  assert_eq!(result, expected);
+    /// let span = array![1, 2, 3].span();
+    /// let padded = span.pad_right_with_zeroes(5);
+    /// assert_eq!(padded, array![1, 2, 3, 0, 0].span());
     /// ```
-    /// # Arguments
-    /// * `len` - The length of the padded span
-    ///
-    /// # Returns
-    /// * A span of length `len` right padded with 0s if the span length is less than `len`, returns
-    /// a span of length `len` if the span length is greater than `len` then the data is truncated
-    /// from the right side
     fn pad_right_with_zeroes(self: Span<u8>, len: usize) -> Span<u8> {
         if self.len() >= len {
             return self.slice(0, len);
@@ -155,29 +157,20 @@ pub impl U8SpanExImpl of U8SpanExTrait {
     }
 
 
-    /// Clones and pads the given span with 0s to the given length, if data is more than the given
-    /// length, it is truncated from the right side # Examples
-    /// ```
-    ///  let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-    ///  let expected = [0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x02, 0x03, 0x04, 0x05].span();
-    ///  let result = span.pad_left_with_zeroes(10);
-    ///
-    ///  assert_eq!(result, expected);
-    ///
-    ///  // Truncates the data if it is more than the given length
-    ///  let span = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8, 0x9].span();
-    ///  let expected = [0x0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x8].span();
-    ///  let result = span.pad_left_with_zeroes(9);
-    ///
-    ///  assert_eq!(result, expected);
-    /// ```
+    /// Clones and pads the given span with 0s to the left to the given length
+    /// If data is more than the given length, it is truncated from the right side
     /// # Arguments
-    /// * `len` - The length of the padded span
-    ///
+    /// * `self` - The input bytes as a Span<u8>
+    /// * `len` - The desired length of the padded span
     /// # Returns
-    /// * A span of length `len` left padded with 0s if the span length is less than `len`, returns
-    /// a span of length `len` if the span length is greater than `len` then the data is truncated
-    /// from the right side
+    /// * A Span<u8> of length `len` left padded with 0s if the span length is less than `len`,
+    ///   or truncated from the right if the span length is greater than `len`
+    /// # Examples
+    /// ```
+    /// let span = array![1, 2, 3].span();
+    /// let padded = span.pad_left_with_zeroes(5);
+    /// assert_eq!(padded, array![0, 0, 1, 2, 3].span());
+    /// ```
     fn pad_left_with_zeroes(self: Span<u8>, len: usize) -> Span<u8> {
         if self.len() >= len {
             return self.slice(0, len);
@@ -437,12 +430,21 @@ pub impl FromBytesImpl<
 
 #[generate_trait]
 pub impl ByteArrayExt of ByteArrayExTrait {
+    /// Appends a span of bytes to the ByteArray
+    /// # Arguments
+    /// * `self` - The ByteArray to append to
+    /// * `bytes` - The span of bytes to append
     fn append_span_bytes(ref self: ByteArray, mut bytes: Span<u8>) {
         for val in bytes {
             self.append_byte(*val);
         };
     }
 
+    /// Creates a ByteArray from a span of bytes
+    /// # Arguments
+    /// * `bytes` - The span of bytes to convert
+    /// # Returns
+    /// * A new ByteArray containing the input bytes
     fn from_bytes(mut bytes: Span<u8>) -> ByteArray {
         let mut arr: ByteArray = Default::default();
         let (nb_full_words, pending_word_len) = DivRem::div_rem(
@@ -475,10 +477,20 @@ pub impl ByteArrayExt of ByteArrayExTrait {
         arr
     }
 
+    /// Checks if the ByteArray is empty
+    /// # Arguments
+    /// * `self` - The ByteArray to check
+    /// # Returns
+    /// * true if the ByteArray is empty, false otherwise
     fn is_empty(self: @ByteArray) -> bool {
         self.len() == 0
     }
 
+    /// Converts the ByteArray into a span of bytes
+    /// # Arguments
+    /// * `self` - The ByteArray to convert
+    /// # Returns
+    /// * A Span<u8> containing the bytes from the ByteArray
     fn into_bytes(self: ByteArray) -> Span<u8> {
         let mut output: Array<u8> = Default::default();
         let len = self.len();
@@ -493,6 +505,13 @@ pub impl ByteArrayExt of ByteArrayExTrait {
 
     /// Transforms a ByteArray into an Array of u64 full words, a pending u64 word and its length in
     /// bytes
+    /// # Arguments
+    /// * `self` - The ByteArray to transform
+    /// # Returns
+    /// * A tuple containing:
+    ///   - An Array<u64> of full words
+    ///   - A u64 representing the last (potentially partial) word
+    ///   - A usize representing the number of bytes in the last word
     fn to_u64_words(self: ByteArray) -> (Array<u64>, u64, usize) {
         // We pass it by value because we want to take ownership, but we snap it
         // because `at` takes a snap and if this snap is automatically done by

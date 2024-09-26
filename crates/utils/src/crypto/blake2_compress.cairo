@@ -1,6 +1,6 @@
 use alexandria_data_structures::vec::{Felt252Vec, VecTrait};
 use core::num::traits::{BitSize, WrappingAdd};
-use utils::math::WrappingBitshift;
+use crate::math::WrappingBitshift;
 
 const SIGMA_LINE_1: [usize; 16] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 const SIGMA_LINE_2: [usize; 16] = [14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3];

@@ -1,7 +1,18 @@
 use core::starknet::secp256_trait::{Signature};
-use utils::eth_transaction::tx_type::TxType;
-use utils::traits::BoolIntoNumeric;
+use crate::eth_transaction::tx_type::TxType;
+use crate::traits::BoolIntoNumeric;
 
+/// Deserializes a signature from a span of felt252 values.
+///
+/// # Arguments
+///
+/// * `signature` - A span of felt252 values representing the signature components.
+/// * `chain_id` - The chain ID used for EIP-155 signature recovery.
+///
+/// # Returns
+///
+/// * `Option<Signature>` - The deserialized signature if successful, or None if deserialization
+/// fails.
 pub fn deserialize_signature(signature: Span<felt252>, chain_id: u64) -> Option<Signature> {
     let r_low: u128 = (*signature.at(0)).try_into()?;
     let r_high: u128 = (*signature.at(1)).try_into()?;
@@ -28,6 +39,16 @@ pub fn deserialize_signature(signature: Span<felt252>, chain_id: u64) -> Option<
     )
 }
 
+/// Computes the y-parity value for EIP-155 signature recovery.
+///
+/// # Arguments
+///
+/// * `v` - The v value from the signature.
+/// * `chain_id` - The chain ID used for EIP-155 signature recovery.
+///
+/// # Returns
+///
+/// * `Option<bool>` - The computed y-parity value if valid, or None if invalid.
 fn compute_y_parity(v: u128, chain_id: u64) -> Option<bool> {
     let y_parity = v - (chain_id.into() * 2 + 35);
     if (y_parity == 0 || y_parity == 1) {
@@ -37,6 +58,17 @@ fn compute_y_parity(v: u128, chain_id: u64) -> Option<bool> {
     return Option::None;
 }
 
+/// Serializes a transaction signature into an array of felt252 values.
+///
+/// # Arguments
+///
+/// * `sig` - The signature to serialize.
+/// * `tx_type` - The transaction type (Legacy, EIP-2930, or EIP-1559).
+/// * `chain_id` - The chain ID used for EIP-155 signature recovery.
+///
+/// # Returns
+///
+/// * `Array<felt252>` - The serialized signature as an array of felt252 values.
 pub fn serialize_transaction_signature(
     sig: Signature, tx_type: TxType, chain_id: u64
 ) -> Array<felt252> {
@@ -53,6 +85,15 @@ pub fn serialize_transaction_signature(
     res
 }
 
+/// Deserializes a span of felt252 values into an array of bytes.
+///
+/// # Arguments
+///
+/// * `self` - A span of felt252 values to deserialize.
+///
+/// # Returns
+///
+/// * `Option<Array<u8>>` - The deserialized bytes if successful, or None if deserialization fails.
 pub fn deserialize_bytes(self: Span<felt252>) -> Option<Array<u8>> {
     let mut i = 0;
     let mut bytes: Array<u8> = Default::default();
@@ -76,6 +117,15 @@ pub fn deserialize_bytes(self: Span<felt252>) -> Option<Array<u8>> {
     }
 }
 
+/// Serializes a span of bytes into an array of felt252 values.
+///
+/// # Arguments
+///
+/// * `self` - A span of bytes to serialize.
+///
+/// # Returns
+///
+/// * `Array<felt252>` - The serialized bytes as an array of felt252 values.
 pub fn serialize_bytes(self: Span<u8>) -> Array<felt252> {
     let mut array: Array<felt252> = Default::default();
 
@@ -94,9 +144,9 @@ pub fn serialize_bytes(self: Span<u8>) -> Array<felt252> {
 #[cfg(test)]
 mod tests {
     use core::starknet::secp256_trait::Signature;
-    use utils::constants::CHAIN_ID;
-    use utils::eth_transaction::tx_type::TxType;
-    use utils::serialization::{deserialize_signature, serialize_transaction_signature};
+    use crate::constants::CHAIN_ID;
+    use crate::eth_transaction::tx_type::TxType;
+    use crate::serialization::{deserialize_signature, serialize_transaction_signature};
 
     #[test]
     fn test_serialize_transaction_signature() {
