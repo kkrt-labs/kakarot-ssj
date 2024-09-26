@@ -1,4 +1,3 @@
-use contracts::UninitializedAccount;
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
 use contracts::kakarot_core::{KakarotCore};
@@ -25,7 +24,8 @@ use snforge_utils::snforge_utils::{EventsFilterBuilderTrait, ContractEventsTrait
 use starknet::storage::StorageTrait;
 use utils::eth_transaction::legacy::TxLegacy;
 use utils::eth_transaction::transaction::Transaction;
-use utils::helpers::{EthAddressExTrait, u256_to_bytes_array};
+use utils::helpers::{u256_to_bytes_array};
+use utils::traits::eth_address::EthAddressExTrait;
 
 #[test]
 fn test_kakarot_core_owner() {

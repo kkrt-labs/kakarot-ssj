@@ -6,8 +6,8 @@ use contracts::kakarot_core::interface::{
 };
 use contracts::test_data::{counter_evm_bytecode, eip_2930_rlp_encoded_counter_inc_tx,};
 use contracts::test_utils::{
-    setup_contracts_for_testing, deploy_eoa, deploy_contract_account,
-    fund_account_with_native_token, call_transaction
+    setup_contracts_for_testing, deploy_contract_account, fund_account_with_native_token,
+    call_transaction
 };
 use core::num::traits::Bounded;
 use core::starknet::account::Call;

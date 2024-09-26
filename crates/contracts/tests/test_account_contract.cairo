@@ -4,8 +4,8 @@ use contracts::test_utils::{
     setup_contracts_for_testing, deploy_contract_account, fund_account_with_native_token, deploy_eoa
 };
 use contracts::{IAccountDispatcher, IAccountDispatcherTrait};
+use core::starknet::EthAddress;
 use core::starknet::account::{Call};
-use core::starknet::{EthAddress, ContractAddress};
 use evm::test_utils::{ca_address, eoa_address};
 use openzeppelin::token::erc20::interface::IERC20CamelDispatcherTrait;
 use snforge_std::{start_cheat_caller_address, stop_cheat_caller_address};

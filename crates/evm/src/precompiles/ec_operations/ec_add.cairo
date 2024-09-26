@@ -1,6 +1,5 @@
 use core::circuit::CircuitElement as CE;
 use core::circuit::CircuitInput as CI;
-use core::circuit::u96;
 
 use core::circuit::{
     u384, circuit_sub, circuit_mul, circuit_inverse, EvalCircuitTrait, CircuitOutputsTrait,

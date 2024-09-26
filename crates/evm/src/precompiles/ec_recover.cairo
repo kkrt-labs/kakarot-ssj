@@ -1,6 +1,4 @@
-use core::starknet::secp256_trait::{
-    Signature, recover_public_key, Secp256PointTrait, is_valid_signature
-};
+use core::starknet::secp256_trait::{Signature, recover_public_key, Secp256PointTrait};
 use core::starknet::{
     EthAddress, eth_signature::{public_key_point_to_eth_address}, secp256k1::{Secp256k1Point},
     SyscallResultTrait

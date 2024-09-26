@@ -1,4 +1,3 @@
-use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
 use core::num::traits::{Bounded, Zero};
@@ -30,8 +29,8 @@ use utils::constants;
 use utils::eth_transaction::common::TxKind;
 use utils::eth_transaction::eip2930::{AccessListItem, AccessListItemTrait};
 use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
-use utils::helpers::EthAddressExTrait;
 use utils::set::{Set, SetTrait};
+use utils::traits::eth_address::EthAddressExTrait;
 
 #[generate_trait]
 pub impl EVMImpl of EVMTrait {

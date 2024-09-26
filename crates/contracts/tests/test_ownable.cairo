@@ -1,6 +1,5 @@
 use contracts::components::ownable::{ownable_component};
 use contracts::test_utils::constants::{ZERO, OWNER, OTHER};
-use contracts::test_utils;
 use core::num::traits::Zero;
 use core::starknet::ContractAddress;
 

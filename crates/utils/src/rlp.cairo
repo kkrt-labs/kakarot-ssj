@@ -5,9 +5,9 @@ use core::panic_with_felt252;
 use core::starknet::EthAddress;
 use crate::errors::{RLPError};
 use crate::eth_transaction::eip2930::AccessListItem;
-use crate::helpers::{EthAddressExTrait};
 use crate::traits::array::ArrayExtension;
 use crate::traits::bytes::{ToBytes, FromBytes};
+use crate::traits::eth_address::EthAddressExTrait;
 
 // Possible RLP types
 #[derive(Drop, PartialEq, Debug)]
@@ -239,8 +239,8 @@ pub impl RLPHelpersImpl of RLPHelpersTrait {
                     return Result::Ok(Option::None);
                 }
                 if bytes.len() == 20 {
-                    let value = EthAddressExTrait::from_bytes(bytes);
-                    return Result::Ok(Option::Some(value));
+                    let maybe_value = EthAddressExTrait::from_bytes(bytes);
+                    return Result::Ok(maybe_value);
                 }
                 return Result::Err(RLPError::FailedParsingAddress);
             },
