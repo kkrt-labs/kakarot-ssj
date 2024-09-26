@@ -122,7 +122,6 @@ pub mod embeddable_impls {
     use evm::errors::EVMError;
     use evm::precompiles::EcAdd;
     use evm::precompiles::EcMul;
-    use evm::precompiles::ModExp;
     use evm::precompiles::Sha256;
     use utils::helpers::U256Trait;
 
@@ -137,7 +136,7 @@ pub mod embeddable_impls {
                 1 => Result::Err(EVMError::NotImplemented),
                 2 => Sha256::exec(data),
                 3 | 4 => Result::Err(EVMError::NotImplemented),
-                5 => ModExp::exec(data),
+                5 => Result::Err(EVMError::NotImplemented),
                 6 => EcAdd::exec(data),
                 7 => EcMul::exec(data),
                 _ => Result::Err(EVMError::NotImplemented),
