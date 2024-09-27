@@ -238,7 +238,6 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         }
         ensure(!(last_returndata_index > return_data.len()), EVMError::ReturnDataOutOfBounds)?;
 
-        //TODO: handle overflow in bytes_32_words_size function.
         let words_size = bytes_32_words_size(size).into();
         let copy_gas_cost = gas::COPY * words_size;
 
