@@ -8,7 +8,7 @@ use crate::gas;
 use crate::memory::MemoryTrait;
 use crate::model::vm::{VM, VMTrait};
 use crate::stack::StackTrait;
-use utils::helpers::ceil32;
+use utils::helpers::bytes_32_words_size;
 use utils::traits::array::ArrayExtTrait;
 use utils::traits::integer::U256Trait;
 
@@ -26,7 +26,7 @@ pub impl Sha3Impl of Sha3Trait {
         let offset: usize = self.stack.pop_usize()?;
         let mut size: usize = self.stack.pop_usize()?;
 
-        let words_size = (ceil32(size) / 32).into();
+        let words_size = bytes_32_words_size(size).into();
         let word_gas_cost = gas::KECCAK256WORD * words_size;
         let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);

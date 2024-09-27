@@ -55,6 +55,22 @@ pub fn ceil32(value: usize) -> usize {
     }
 }
 
+/// Computes the number of 32-byte words required to represent `size` bytes
+///
+/// # Arguments
+/// * `size` - The size in bytes
+///
+/// # Returns
+/// The number of 32-byte words required to represent `size` bytes
+///
+/// # Examples
+/// bytes_32_words_size(2) = 1
+/// bytes_32_words_size(34) = 2
+#[inline(always)]
+pub fn bytes_32_words_size(size: usize) -> usize {
+    (size + 31) / 32
+}
+
 /// Computes 256 ** (16 - i) for 0 <= i <= 16.
 pub fn pow256_rev(i: usize) -> u256 {
     if (i > 16) {

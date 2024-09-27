@@ -7,7 +7,7 @@ use crate::memory::MemoryTrait;
 use crate::model::vm::{VM, VMTrait};
 use crate::stack::StackTrait;
 use crate::state::StateTrait;
-use utils::helpers::ceil32;
+use utils::helpers::bytes_32_words_size;
 use utils::set::SetTrait;
 
 #[inline(always)]
@@ -282,7 +282,7 @@ pub impl MemoryOperation of MemoryOperationTrait {
         let source_offset = self.stack.pop_usize()?;
         let size = self.stack.pop_usize()?;
 
-        let words_size = (ceil32(size) / 32).into();
+        let words_size = bytes_32_words_size(size).into();
         let copy_gas_cost = gas::COPY * words_size;
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(max(dest_offset, source_offset), size)].span()
