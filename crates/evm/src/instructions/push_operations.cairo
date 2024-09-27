@@ -333,9 +333,12 @@ mod tests {
     fn get_n_0xFF(mut n: u8) -> Span<u8> {
         let mut array: Array<u8> = ArrayTrait::new();
         array.append(0x00);
-        while n != 0 {
+        // while n != 0 {
+        //     array.append(0xFF);
+        //     n -= 1;
+        // };
+        for _ in 0..n {
             array.append(0xFF);
-            n -= 1;
         };
         array.span()
     }
