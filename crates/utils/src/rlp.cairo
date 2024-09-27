@@ -5,7 +5,9 @@ use core::panic_with_felt252;
 use core::starknet::EthAddress;
 use crate::errors::{RLPError};
 use crate::eth_transaction::eip2930::AccessListItem;
-use crate::helpers::{EthAddressExTrait, ArrayExtension, ToBytes, FromBytes};
+use crate::traits::array::ArrayExtension;
+use crate::traits::bytes::{ToBytes, FromBytes};
+use crate::traits::eth_address::EthAddressExTrait;
 
 // Possible RLP types
 #[derive(Drop, PartialEq, Debug)]
@@ -26,13 +28,16 @@ pub impl RLPImpl of RLPTrait {
     /// its offset in the array as well as its size.
     ///
     /// # Arguments
-    /// * `input` - Array of byte to decode
+    /// * `input` - Span of bytes to decode
+    ///
     /// # Returns
-    /// * `(RLPType, offset, size)` - A tuple containing the RLPType
-    /// the offset and the size of the RLPItem to decode
+    /// * `Result<(RLPType, u32, u32), RLPError>` - A tuple containing the RLPType,
+    ///   the offset, and the size of the RLPItem to decode
+    ///
     /// # Errors
-    /// * RLPError::EmptyInput - if the input is empty
-    /// * RLPError::InputTooShort - if the input is too short for a given
+    /// * `RLPError::EmptyInput` - if the input is empty
+    /// * `RLPError::InputTooShort` - if the input is too short for a given type
+    /// * `RLPError::InvalidInput` - if the input is invalid
     fn decode_type(input: Span<u8>) -> Result<(RLPType, u32, u32), RLPError> {
         let input_len = input.len();
         if input_len == 0 {
@@ -83,13 +88,16 @@ pub impl RLPImpl of RLPTrait {
         }
     }
 
-    /// RLP encodes a sequence of RLPItem
+    /// RLP encodes a sequence of RLPItems
+    ///
     /// # Arguments
-    /// * `input` - Span of RLPItem to encode
+    /// * `input` - Span of RLPItems to encode
+    ///
     /// # Returns
-    /// * `ByteArray - RLP encoded ByteArray
-    /// # Errors
-    /// * RLPError::RlpEmptyInput - if the input is empty
+    /// * `Span<u8>` - RLP encoded byte array
+    ///
+    /// # Panics
+    /// * If encoding a long sequence (should not happen in current implementation)
     fn encode_sequence(mut input: Span<RLPItem>) -> Span<u8> {
         let mut joined_encodings: Array<u8> = Default::default();
         while let Option::Some(item) = input.pop_front() {
@@ -119,15 +127,13 @@ pub impl RLPImpl of RLPTrait {
     }
 
     /// RLP encodes a Span<u8>, which is the underlying type used to represent
-    /// string data in Cairo.  Since RLP encoding is only used for eth_address
-    /// computation by calculating the RLP::encode(deployer_address, deployer_nonce)
-    /// and then hash it, the input is a Span<u8>
+    /// string data in Cairo.
+    ///
     /// # Arguments
-    /// * `input` - ByteArray to encode
+    /// * `input` - Span<u8> to encode
+    ///
     /// # Returns
-    /// * `ByteArray - RLP encoded ByteArray
-    /// # Errors
-    /// * RLPError::RlpEmptyInput - if the input is empty
+    /// * `Span<u8>` - RLP encoded byte array
     fn encode_string(input: Span<u8>) -> Span<u8> {
         let len = input.len();
         if len == 0 {
@@ -155,11 +161,13 @@ pub impl RLPImpl of RLPTrait {
     /// as described in https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp/
     ///
     /// # Arguments
-    /// * `input` - Array of bytes to decode
+    /// * `input` - Span of bytes to decode
+    ///
     /// # Returns
-    /// * `Span<RLPItem>` - Span of RLPItem
+    /// * `Result<Span<RLPItem>, RLPError>` - Span of RLPItems
+    ///
     /// # Errors
-    /// * RLPError::InputTooShort - if the input is too short for a given
+    /// * `RLPError::InputTooShort` - if the input is too short for a given type
     fn decode(input: Span<u8>) -> Result<Span<RLPItem>, RLPError> {
         let mut output: Array<RLPItem> = Default::default();
         let input_len = input.len();
@@ -202,6 +210,13 @@ pub impl RLPImpl of RLPTrait {
 
 #[generate_trait]
 pub impl RLPHelpersImpl of RLPHelpersTrait {
+    /// Parses a u64 from an RLPItem::String
+    ///
+    /// # Returns
+    /// * `Result<u64, RLPError>` - The parsed u64 value
+    ///
+    /// # Errors
+    /// * `RLPError::NotAString` - if the RLPItem is not a String
     fn parse_u64_from_string(self: RLPItem) -> Result<u64, RLPError> {
         match self {
             RLPItem::String(bytes) => {
@@ -216,6 +231,13 @@ pub impl RLPHelpersImpl of RLPHelpersTrait {
         }
     }
 
+    /// Parses a u128 from an RLPItem::String
+    ///
+    /// # Returns
+    /// * `Result<u128, RLPError>` - The parsed u128 value
+    ///
+    /// # Errors
+    /// * `RLPError::NotAString` - if the RLPItem is not a String
     fn parse_u128_from_string(self: RLPItem) -> Result<u128, RLPError> {
         match self {
             RLPItem::String(bytes) => {
@@ -230,6 +252,14 @@ pub impl RLPHelpersImpl of RLPHelpersTrait {
         }
     }
 
+    /// Tries to parse an EthAddress from an RLPItem::String
+    ///
+    /// # Returns
+    /// * `Result<Option<EthAddress>, RLPError>` - The parsed EthAddress, if present
+    ///
+    /// # Errors
+    /// * `RLPError::NotAString` - if the RLPItem is not a String
+    /// * `RLPError::FailedParsingAddress` - if the address parsing fails
     fn try_parse_address_from_string(self: RLPItem) -> Result<Option<EthAddress>, RLPError> {
         match self {
             RLPItem::String(bytes) => {
@@ -237,8 +267,8 @@ pub impl RLPHelpersImpl of RLPHelpersTrait {
                     return Result::Ok(Option::None);
                 }
                 if bytes.len() == 20 {
-                    let value = EthAddressExTrait::from_bytes(bytes);
-                    return Result::Ok(Option::Some(value));
+                    let maybe_value = EthAddressExTrait::from_bytes(bytes);
+                    return Result::Ok(maybe_value);
                 }
                 return Result::Err(RLPError::FailedParsingAddress);
             },
@@ -246,6 +276,13 @@ pub impl RLPHelpersImpl of RLPHelpersTrait {
         }
     }
 
+    /// Parses a u256 from an RLPItem::String
+    ///
+    /// # Returns
+    /// * `Result<u256, RLPError>` - The parsed u256 value
+    ///
+    /// # Errors
+    /// * `RLPError::NotAString` - if the RLPItem is not a String
     fn parse_u256_from_string(self: RLPItem) -> Result<u256, RLPError> {
         match self {
             RLPItem::String(bytes) => {
@@ -260,7 +297,13 @@ pub impl RLPHelpersImpl of RLPHelpersTrait {
         }
     }
 
-
+    /// Parses bytes from an RLPItem::String
+    ///
+    /// # Returns
+    /// * `Result<Span<u8>, RLPError>` - The parsed bytes
+    ///
+    /// # Errors
+    /// * `RLPError::NotAString` - if the RLPItem is not a String
     fn parse_bytes_from_string(self: RLPItem) -> Result<Span<u8>, RLPError> {
         match self {
             RLPItem::String(bytes) => { Result::Ok(bytes) },
@@ -268,6 +311,14 @@ pub impl RLPHelpersImpl of RLPHelpersTrait {
         }
     }
 
+    /// Parses storage keys from an RLPItem
+    ///
+    /// # Returns
+    /// * `Result<Span<u256>, RLPError>` - The parsed storage keys
+    ///
+    /// # Errors
+    /// * `RLPError::NotAList` - if the RLPItem is not a List
+    /// * `RLPError::FailedParsingAddress` - if parsing a storage key fails
     fn parse_storage_keys_from_rlp_item(self: RLPItem) -> Result<Span<u256>, RLPError> {
         match self {
             RLPItem::String(_) => { return Result::Err(RLPError::NotAList); },
@@ -292,9 +343,15 @@ pub impl RLPHelpersImpl of RLPHelpersTrait {
         }
     }
 
-    /// The data passed is in form
-    ///  RLPItem::List([RLPItem::List([RLPItem::String(eth_address), RLPItem::List(storage_keys)]),
-    ///  RLPItem::List([RLPItem::String(eth_address), RLPItem::List(storage_keys)])])
+    /// Parses an access list from an RLPItem
+    ///
+    /// # Returns
+    /// * `Result<Span<AccessListItem>, RLPError>` - The parsed access list
+    ///
+    /// # Errors
+    /// * `RLPError::NotAList` - if the RLPItem is not a List
+    /// * `RLPError::InputTooShort` - if the input is too short
+    /// * `RLPError::FailedParsingAccessList` - if parsing the access list fails
     fn parse_access_list(self: RLPItem) -> Result<Span<AccessListItem>, RLPError> {
         let mut list_of_accessed_tuples: Span<RLPItem> = match self {
             RLPItem::String(_) => { return Result::Err(RLPError::NotAList); },
@@ -343,16 +400,15 @@ pub impl RLPHelpersImpl of RLPHelpersTrait {
         result
     }
 }
-
 #[cfg(test)]
 mod tests {
     use core::array::SpanTrait;
     use core::option::OptionTrait;
 
     use core::result::ResultTrait;
+    use crate::errors::RLPError;
     use crate::eth_transaction::eip2930::AccessListItem;
-    use utils::errors::RLPError;
-    use utils::rlp::{RLPType, RLPTrait, RLPItem, RLPHelpersTrait};
+    use crate::rlp::{RLPType, RLPTrait, RLPItem, RLPHelpersTrait};
 
     // Tests source :
     // https://github.com/HerodotusDev/cairo-lib/blob/main/src/encoding/tests/test_rlp.cairo

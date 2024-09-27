@@ -1,4 +1,4 @@
-use utils::traits::{U8IntoEthAddress};
+use crate::traits::{U8IntoEthAddress};
 
 // FELT PRIME
 // 2^251 + 17 * 2^192 + 1

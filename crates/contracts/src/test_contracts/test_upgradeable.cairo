@@ -1,4 +1,4 @@
-use contracts::components::upgradeable::{upgradeable_component};
+use crate::components::upgradeable::{upgradeable_component};
 
 use upgradeable_component::{UpgradeableImpl};
 
@@ -9,7 +9,7 @@ pub trait IMockContractUpgradeable<TContractState> {
 
 #[starknet::contract]
 pub mod MockContractUpgradeableV0 {
-    use contracts::components::upgradeable::{upgradeable_component};
+    use crate::components::upgradeable::{upgradeable_component};
     use super::IMockContractUpgradeable;
     component!(path: upgradeable_component, storage: upgradeable, event: UpgradeableEvent);
 
@@ -38,7 +38,7 @@ pub mod MockContractUpgradeableV0 {
 
 #[starknet::contract]
 pub mod MockContractUpgradeableV1 {
-    use contracts::components::upgradeable::{upgradeable_component};
+    use crate::components::upgradeable::{upgradeable_component};
     use super::IMockContractUpgradeable;
     component!(path: upgradeable_component, storage: upgradeable, event: upgradeableEvent);
 
@@ -64,8 +64,8 @@ pub mod MockContractUpgradeableV1 {
 
 #[cfg(test)]
 mod tests {
-    use contracts::components::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
     use core::starknet::syscalls::{deploy_syscall};
+    use crate::components::upgradeable::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
     use snforge_std::{declare, DeclareResultTrait};
     use starknet::{ClassHash};
     use super::{IMockContractUpgradeableDispatcher, IMockContractUpgradeableDispatcherTrait};

@@ -3,10 +3,6 @@ const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 
 #[starknet::contract]
 pub mod KakarotCore {
-    use contracts::components::ownable::{ownable_component};
-    use contracts::components::upgradeable::{IUpgradeable, upgradeable_component};
-    use contracts::kakarot_core::eth_rpc;
-    use contracts::kakarot_core::interface::IKakarotCore;
     use core::num::traits::Zero;
     use core::starknet::event::EventEmitter;
     use core::starknet::storage::{
@@ -14,6 +10,10 @@ pub mod KakarotCore {
         StoragePointerWriteAccess
     };
     use core::starknet::{EthAddress, ContractAddress, ClassHash, get_contract_address};
+    use crate::components::ownable::{ownable_component};
+    use crate::components::upgradeable::{IUpgradeable, upgradeable_component};
+    use crate::kakarot_core::eth_rpc;
+    use crate::kakarot_core::interface::IKakarotCore;
     use evm::backend::starknet_backend;
     use utils::helpers::compute_starknet_address;
 

@@ -1,4 +1,3 @@
-use contracts::account_contract::AccountContract::unsafe_new_contract_state as account_contract_state;
 use core::ops::DerefMut;
 use core::ops::SnapshotDeref;
 use core::starknet::storage::{
@@ -7,6 +6,7 @@ use core::starknet::storage::{
 use core::starknet::storage_access::StorageBaseAddress;
 use core::starknet::syscalls::{storage_read_syscall, storage_write_syscall};
 use core::starknet::{SyscallResult, Store, StorageAddress};
+use crate::account_contract::AccountContract::unsafe_new_contract_state as account_contract_state;
 use utils::utils::{pack_bytes, load_packed_bytes};
 
 /// A wrapper type for the bytecode storage. Packing / unpacking is done transparently inside the
@@ -87,8 +87,8 @@ impl StoreBytecode of Store<StorageBytecode> {
 
 #[cfg(test)]
 mod tests {
-    use contracts::account_contract::AccountContract::unsafe_new_contract_state as account_contract_state;
     use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use crate::account_contract::AccountContract::unsafe_new_contract_state as account_contract_state;
     use starknet::storage_access::Store;
     use starknet::storage_access::{
         StorageBaseAddress, StorageAddress, storage_base_address_from_felt252

@@ -1,15 +1,13 @@
 use core::circuit::u384;
 use core::option::Option;
 use core::starknet::{EthAddress};
-use crate::precompiles::ec_operations::ec_add::ec_safe_add;
 
-use crate::precompiles::ec_operations::{
-    eq_mod_p, eq_neg_mod_p, is_on_curve, double_ec_point_unchecked, BN254_ORDER, BN254_PRIME_LIMBS,
-    BN254_PRIME
-};
-use evm::errors::EVMError;
-use evm::precompiles::Precompile;
-use utils::helpers::{load_word, ToBytes, U8SpanExTrait};
+use crate::errors::EVMError;
+use crate::precompiles::Precompile;
+use crate::precompiles::ec_operations::ec_add::ec_safe_add;
+use crate::precompiles::ec_operations::{is_on_curve, double_ec_point_unchecked, BN254_PRIME};
+use utils::helpers::{load_word};
+use utils::traits::bytes::{ToBytes, U8SpanExTrait};
 
 const BASE_COST: u64 = 6000;
 const U256_BYTES_LEN: usize = 32;

@@ -2,10 +2,10 @@ use core::array::ArrayTrait;
 use core::option::OptionTrait;
 use core::starknet::EthAddress;
 
-use evm::errors::{EVMError, ensure};
-use evm::precompiles::Precompile;
+use crate::errors::{EVMError, ensure};
+use crate::precompiles::Precompile;
 use utils::crypto::blake2_compress::compress;
-use utils::helpers::{FromBytes, ToBytes};
+use utils::traits::bytes::{FromBytes, ToBytes};
 
 const GF_ROUND: u64 = 1;
 const INPUT_LENGTH: usize = 213;
@@ -83,21 +83,21 @@ pub impl Blake2f of Precompile {
 #[cfg(test)]
 mod tests {
     use core::array::SpanTrait;
-    use evm::errors::EVMError;
-    use evm::instructions::MemoryOperationTrait;
-    use evm::instructions::SystemOperationsTrait;
-    use evm::memory::MemoryTrait;
-    use evm::precompiles::blake2f::Blake2f;
-    use evm::stack::StackTrait;
-    use evm::test_data::test_data_blake2f::{
+    use crate::errors::EVMError;
+    use crate::instructions::MemoryOperationTrait;
+    use crate::instructions::SystemOperationsTrait;
+    use crate::memory::MemoryTrait;
+    use crate::precompiles::blake2f::Blake2f;
+    use crate::stack::StackTrait;
+    use crate::test_data::test_data_blake2f::{
         blake2_precompile_fail_wrong_length_input_1_test_case,
         blake2_precompile_fail_wrong_length_input_2_test_case,
         blake2_precompile_fail_wrong_length_input_3_test_case, blake2_precompile_pass_1_test_case,
         blake2_precompile_pass_0_test_case, blake2_precompile_pass_2_test_case
     };
-    use evm::test_utils::{VMBuilderTrait, native_token, setup_test_environment};
+    use crate::test_utils::{VMBuilderTrait, native_token, setup_test_environment};
     use snforge_std::start_mock_call;
-    use utils::helpers::FromBytes;
+    use utils::traits::bytes::FromBytes;
 
     #[test]
     fn test_blake2_precompile_fail_empty_input() {

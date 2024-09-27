@@ -1,17 +1,13 @@
-use core::starknet::secp256_trait::{
-    Signature, recover_public_key, Secp256PointTrait, is_valid_signature
-};
-use core::starknet::secp256_trait::{Secp256Trait};
+use core::starknet::secp256_trait::{Signature, recover_public_key, Secp256PointTrait};
 use core::starknet::{
     EthAddress, eth_signature::{public_key_point_to_eth_address}, secp256k1::{Secp256k1Point},
     SyscallResultTrait
 };
 use core::traits::Into;
-use evm::errors::EVMError;
-use evm::precompiles::Precompile;
-use utils::helpers::U8SpanExTrait;
-use utils::helpers::{ToBytes, FromBytes};
+use crate::errors::EVMError;
+use crate::precompiles::Precompile;
 use utils::traits::EthAddressIntoU256;
+use utils::traits::bytes::{U8SpanExTrait, FromBytes, ToBytes};
 use utils::traits::{NumericIntoBool, BoolIntoNumeric};
 
 const EC_RECOVER_PRECOMPILE_GAS_COST: u64 = 3000;
@@ -82,15 +78,15 @@ pub impl EcRecover of Precompile {
 #[cfg(test)]
 mod tests {
     use core::array::ArrayTrait;
-    use evm::instructions::SystemOperationsTrait;
-    use evm::memory::MemoryTrait;
+    use crate::instructions::SystemOperationsTrait;
+    use crate::memory::MemoryTrait;
 
-    use evm::precompiles::ec_recover::EcRecover;
-    use evm::stack::StackTrait;
-    use evm::test_utils::setup_test_environment;
-    use evm::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait, native_token};
+    use crate::precompiles::ec_recover::EcRecover;
+    use crate::stack::StackTrait;
+    use crate::test_utils::setup_test_environment;
+    use crate::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait, native_token};
     use snforge_std::start_mock_call;
-    use utils::helpers::{ToBytes, FromBytes};
+    use utils::traits::bytes::{ToBytes, FromBytes};
 
 
     // source:

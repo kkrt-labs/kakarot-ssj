@@ -1,15 +1,15 @@
-use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
-use contracts::kakarot_core::interface::IKakarotCore;
-use contracts::kakarot_core::kakarot::{KakarotCore, KakarotCore::{KakarotCoreState}};
 use core::num::traits::Zero;
 use core::starknet::get_tx_info;
 use core::starknet::{EthAddress, get_caller_address};
+use crate::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
+use crate::kakarot_core::interface::IKakarotCore;
+use crate::kakarot_core::kakarot::{KakarotCore, KakarotCore::{KakarotCoreState}};
 use evm::backend::starknet_backend;
 use evm::backend::validation::validate_eth_tx;
 use evm::model::{TransactionResult, Address};
 use evm::{EVMTrait};
 use utils::constants::POW_2_53;
-use utils::eth_transaction::transaction::{TransactionTrait, Transaction};
+use utils::eth_transaction::transaction::Transaction;
 
 #[starknet::interface]
 pub trait IEthRPC<T> {
@@ -216,8 +216,8 @@ fn is_view(self: @KakarotCore::ContractState) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use contracts::kakarot_core::KakarotCore;
-    use contracts::kakarot_core::eth_rpc::IEthRPC;
+    use crate::kakarot_core::KakarotCore;
+    use crate::kakarot_core::eth_rpc::IEthRPC;
     use snforge_std::{start_cheat_chain_id_global, stop_cheat_chain_id_global};
     use utils::constants::POW_2_53;
 
@@ -264,4 +264,3 @@ mod tests {
         tear_down();
     }
 }
-

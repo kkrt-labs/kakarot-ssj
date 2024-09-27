@@ -1,5 +1,5 @@
 use core::fmt::{Debug, Formatter, Error, Display};
-use utils::helpers::ToBytes;
+use utils::traits::bytes::ToBytes;
 
 // STACK
 
@@ -58,7 +58,8 @@ pub enum EVMError {
     OutOfGas,
     Assertion,
     DepthLimit,
-    MemoryLimitOOG
+    MemoryLimitOOG,
+    NonceOverflow
 }
 
 #[generate_trait]
@@ -83,6 +84,7 @@ pub impl EVMErrorImpl of EVMErrorTrait {
             EVMError::Assertion => 'assertion failed'.into(),
             EVMError::DepthLimit => 'max call depth exceeded'.into(),
             EVMError::MemoryLimitOOG => 'memory limit out of gas'.into(),
+            EVMError::NonceOverflow => 'nonce overflow'.into(),
         }
     }
 

@@ -72,6 +72,15 @@ pub struct TxEip2930 {
 
 #[generate_trait]
 pub impl _impl of TxEip2930Trait {
+    /// Decodes the RLP-encoded fields into a TxEip2930 struct.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - A span of RLPItems containing the encoded transaction fields
+    ///
+    /// # Returns
+    ///
+    /// A Result containing either the decoded TxEip2930 struct or an EthTransactionError
     fn decode_fields(ref data: Span<RLPItem>) -> Result<TxEip2930, EthTransactionError> {
         let boxed_fields = data
             .multi_pop_front::<8>()

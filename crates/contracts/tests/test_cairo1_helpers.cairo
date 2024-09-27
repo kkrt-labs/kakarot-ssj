@@ -1,5 +1,5 @@
 use contracts::cairo1_helpers::Cairo1Helpers;
-use utils::helpers::BytesUsedTrait;
+use utils::traits::integer::BytesUsedTrait;
 
 #[test]
 fn test_keccak() {

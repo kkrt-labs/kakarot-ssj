@@ -1,13 +1,13 @@
 //! Stop and Arithmetic Operations.
 use core::integer::{u512_safe_div_rem_by_u256};
 use core::num::traits::{OverflowingAdd, OverflowingMul, OverflowingSub};
-use evm::errors::EVMError;
-use evm::gas;
-use evm::model::vm::{VM, VMTrait};
-use evm::stack::StackTrait;
-use utils::helpers::BytesUsedTrait;
+use crate::errors::EVMError;
+use crate::gas;
+use crate::model::vm::{VM, VMTrait};
+use crate::stack::StackTrait;
 use utils::i256::i256;
 use utils::math::{Exponentiation, WrappingExponentiation, u256_wide_add};
+use utils::traits::integer::BytesUsedTrait;
 
 #[generate_trait]
 pub impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
@@ -265,10 +265,10 @@ pub impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
 mod tests {
     use core::num::traits::Bounded;
     use core::result::ResultTrait;
-    use evm::instructions::StopAndArithmeticOperationsTrait;
-    use evm::model::vm::VMTrait;
-    use evm::stack::StackTrait;
-    use evm::test_utils::VMBuilderTrait;
+    use crate::instructions::StopAndArithmeticOperationsTrait;
+    use crate::model::vm::VMTrait;
+    use crate::stack::StackTrait;
+    use crate::test_utils::VMBuilderTrait;
 
 
     #[test]

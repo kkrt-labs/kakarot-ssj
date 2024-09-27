@@ -7,7 +7,18 @@ use core::traits::{BitAnd};
 
 pub trait Exponentiation<T> {
     /// Raise a number to a power.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The base number
+    /// * `exponent` - The exponent to raise the base to
+    ///
+    /// # Returns
+    ///
+    /// The result of raising `self` to the power of `exponent`
+    ///
     /// # Panics
+    ///
     /// Panics if the result overflows the type T.
     fn pow(self: T, exponent: T) -> T;
 }
@@ -54,7 +65,15 @@ pub trait WrappingExponentiation<T> {
     /// Raise a number to a power modulo MAX<T> (max value of type T).
     /// Instead of explicitly providing a modulo, we use overflowing functions
     /// from the core library, which wrap around when overflowing.
-    /// * `T` - The result of base raised to the power of exp modulo MAX<T>.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The base number
+    /// * `exponent` - The exponent to raise the base to
+    ///
+    /// # Returns
+    ///
+    /// The result of base raised to the power of exp modulo MAX<T>.
     fn wrapping_pow(self: T, exponent: T) -> T;
 
     /// Performs exponentiation by repeatedly multiplying the base number with itself.
@@ -64,13 +83,15 @@ pub trait WrappingExponentiation<T> {
     /// The method uses a wrapping strategy to handle overflow, which means if the result
     /// overflows the type `T`, then higher bits are discarded and the result is wrapped.
     ///
-    /// # Parameters
-    /// - `self`: The base number of type `T`.
-    /// - `exponent`: The exponent to which the base number is raised, also of type `T`.
+    /// # Arguments
+    ///
+    /// * `self` - The base number of type `T`.
+    /// * `exponent` - The exponent to which the base number is raised, also of type `T`.
     ///
     /// # Returns
-    /// - Returns the result of raising `self` to the power of `exponent`, of type `T`.
-    ///   The result is wrapped in case of overflow.
+    ///
+    /// The result of raising `self` to the power of `exponent`, of type `T`.
+    /// The result is wrapped in case of overflow.
     fn wrapping_spow(self: T, exponent: T) -> T;
 
     /// Performs exponentiation using the binary exponentiation method.
@@ -81,13 +102,15 @@ pub trait WrappingExponentiation<T> {
     /// a wrapping strategy to handle overflow. This means if intermediate or final results
     /// overflow the type `T`, then the higher bits are discarded and the result is wrapped.
     ///
-    /// # Parameters
-    /// - `self`: The base number of type `T`.
-    /// - `exponent`: The exponent to which the base number is raised, also of type `T`.
+    /// # Arguments
+    ///
+    /// * `self` - The base number of type `T`.
+    /// * `exponent` - The exponent to which the base number is raised, also of type `T`.
     ///
     /// # Returns
-    /// - Returns the result of raising `self` to the power of `exponent`, of type `T`.
-    ///   The result is wrapped in case of overflow.
+    ///
+    /// The result of raising `self` to the power of `exponent`, of type `T`.
+    /// The result is wrapped in case of overflow.
     fn wrapping_fpow(self: T, exponent: T) -> T;
 }
 
@@ -165,15 +188,37 @@ pub impl WrappingExponentiationImpl<
 // === BitShift ===
 
 pub trait Bitshift<T> {
-    // Shift a number left by a given number of bits.
-    // # Panics
-    // Panics if the shift is greater than 255.
-    // Panics if the result overflows the type T.
+    /// Shift a number left by a given number of bits.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The number to shift
+    /// * `shift` - The number of bits to shift by
+    ///
+    /// # Returns
+    ///
+    /// The result of shifting `self` left by `shift` bits
+    ///
+    /// # Panics
+    ///
+    /// Panics if the shift is greater than 255.
+    /// Panics if the result overflows the type T.
     fn shl(self: T, shift: T) -> T;
 
-    // Shift a number right by a given number of bits.
-    // # Panics
-    // Panics if the shift is greater than 255.
+    /// Shift a number right by a given number of bits.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The number to shift
+    /// * `shift` - The number of bits to shift by
+    ///
+    /// # Returns
+    ///
+    /// The result of shifting `self` right by `shift` bits
+    ///
+    /// # Panics
+    ///
+    /// Panics if the shift is greater than 255.
     fn shr(self: T, shift: T) -> T;
 }
 
@@ -213,13 +258,31 @@ impl BitshiftImpl<
 }
 
 pub trait WrappingBitshift<T> {
-    // Shift a number left by a given number of bits.
-    // If the shift is greater than 255, the result is 0.
-    // The bits moved after the 256th one are discarded, the new bits are set to 0.
+    /// Shift a number left by a given number of bits.
+    /// If the shift is greater than 255, the result is 0.
+    /// The bits moved after the 256th one are discarded, the new bits are set to 0.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The number to shift
+    /// * `shift` - The number of bits to shift by
+    ///
+    /// # Returns
+    ///
+    /// The result of shifting `self` left by `shift` bits, wrapped if necessary
     fn wrapping_shl(self: T, shift: T) -> T;
 
-    // Shift a number right by a given number of bits.
-    // If the shift is greater than 255, the result is 0.
+    /// Shift a number right by a given number of bits.
+    /// If the shift is greater than 255, the result is 0.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The number to shift
+    /// * `shift` - The number of bits to shift by
+    ///
+    /// # Returns
+    ///
+    /// The result of shifting `self` right by `shift` bits, or 0 if shift > 255
     fn wrapping_shr(self: T, shift: T) -> T;
 }
 
@@ -261,6 +324,15 @@ pub impl WrappingBitshiftImpl<
 ///
 /// limb3 will always be 0, because the maximum sum of two 256-bit numbers is at most
 /// 2**257 - 2 which fits in 257 bits.
+///
+/// # Arguments
+///
+/// * `a` - First 256-bit unsigned integer
+/// * `b` - Second 256-bit unsigned integer
+///
+/// # Returns
+///
+/// A 512-bit unsigned integer representing the sum of `a` and `b`
 pub fn u256_wide_add(a: u256, b: u256) -> u512 {
     let (sum, overflow) = a.overflowing_add(b);
 
@@ -282,10 +354,10 @@ pub fn u256_wide_add(a: u256, b: u256) -> u512 {
 mod tests {
     use core::integer::{u512};
     use core::num::traits::{OverflowingMul, WrappingMul, SaturatingAdd, Bounded};
-    use super::OverflowingAdd;
-    use utils::math::{
+    use crate::math::{
         Exponentiation, WrappingExponentiation, u256_wide_add, Bitshift, WrappingBitshift,
     };
+    use super::OverflowingAdd;
 
     #[test]
     fn test_wrapping_pow() {

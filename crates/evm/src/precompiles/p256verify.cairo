@@ -1,9 +1,9 @@
 use core::starknet::SyscallResultTrait;
 use core::starknet::secp256_trait::{Secp256Trait};
 use core::starknet::{EthAddress, secp256r1::{Secp256r1Point}, secp256_trait::is_valid_signature};
-use evm::errors::{EVMError};
-use evm::precompiles::Precompile;
-use utils::helpers::FromBytes;
+use crate::errors::{EVMError};
+use crate::precompiles::Precompile;
+use utils::traits::bytes::FromBytes;
 
 const P256VERIFY_PRECOMPILE_GAS_COST: u64 = 3450;
 
@@ -105,15 +105,15 @@ pub impl P256Verify of Precompile {
 #[cfg(test)]
 mod tests {
     use core::array::ArrayTrait;
-    use evm::instructions::SystemOperationsTrait;
-    use evm::memory::MemoryTrait;
+    use crate::instructions::SystemOperationsTrait;
+    use crate::memory::MemoryTrait;
 
-    use evm::precompiles::p256verify::P256Verify;
-    use evm::stack::StackTrait;
-    use evm::test_utils::{VMBuilderTrait};
-    use evm::test_utils::{setup_test_environment, native_token};
+    use crate::precompiles::p256verify::P256Verify;
+    use crate::stack::StackTrait;
+    use crate::test_utils::{VMBuilderTrait};
+    use crate::test_utils::{setup_test_environment, native_token};
     use snforge_std::start_mock_call;
-    use utils::helpers::{ToBytes, FromBytes};
+    use utils::traits::bytes::{ToBytes, FromBytes};
 
 
     // source:

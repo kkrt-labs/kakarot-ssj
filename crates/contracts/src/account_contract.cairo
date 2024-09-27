@@ -46,13 +46,6 @@ pub trait IAccount<TContractState> {
 
 #[starknet::contract(account)]
 pub mod AccountContract {
-    use contracts::components::ownable::IOwnable;
-    use contracts::components::ownable::ownable_component::InternalTrait;
-    use contracts::components::ownable::ownable_component;
-    use contracts::errors::KAKAROT_REENTRANCY;
-    use contracts::kakarot_core::eth_rpc::{IEthRPCDispatcher, IEthRPCDispatcherTrait};
-    use contracts::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
-    use contracts::storage::StorageBytecode;
     use core::cmp::min;
     use core::num::traits::Bounded;
     use core::num::traits::zero::Zero;
@@ -66,6 +59,13 @@ pub mod AccountContract {
     use core::starknet::{
         EthAddress, ClassHash, get_caller_address, get_tx_info, get_block_timestamp
     };
+    use crate::components::ownable::IOwnable;
+    use crate::components::ownable::ownable_component::InternalTrait;
+    use crate::components::ownable::ownable_component;
+    use crate::errors::KAKAROT_REENTRANCY;
+    use crate::kakarot_core::eth_rpc::{IEthRPCDispatcher, IEthRPCDispatcherTrait};
+    use crate::kakarot_core::interface::{IKakarotCoreDispatcher, IKakarotCoreDispatcherTrait};
+    use crate::storage::StorageBytecode;
     use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
     use super::OutsideExecution;
     use utils::eth_transaction::transaction::TransactionUnsignedTrait;

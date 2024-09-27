@@ -1,22 +1,23 @@
 use core::array::ArrayTrait;
 use core::starknet::EthAddress;
 use core::traits::TryInto;
+use crate::rlp::{RLPTrait, RLPItem};
+use crate::traits::bytes::{ToBytes, U8SpanExTrait};
+use crate::traits::eth_address::EthAddressExTrait;
+use crate::traits::{TryIntoResult};
 
 use evm::errors::EVMError;
-use utils::helpers::{U8SpanExTrait, EthAddressExTrait, ToBytes};
-use utils::rlp::{RLPTrait, RLPItem};
-use utils::traits::{TryIntoResult};
 
 /// Computes the address of the new account that needs to be created.
 ///
 /// # Arguments
 ///
-/// * `sender_address`: The address of the account that wants to create the new account.
-/// * `sender_nonce`: The transaction count of the account that wants to create the new account.
+/// * `sender_address` - The address of the account that wants to create the new account.
+/// * `sender_nonce` - The transaction count of the account that wants to create the new account.
 ///
 /// # Returns
 ///
-/// The computed address of the new account.
+/// The computed address of the new account as an `EthAddress`.
 pub fn compute_contract_address(sender_address: EthAddress, sender_nonce: u64) -> EthAddress {
     let mut sender_address: RLPItem = RLPItem::String(sender_address.to_bytes().span());
     let sender_nonce: RLPItem = RLPItem::String(sender_nonce.to_be_bytes());
@@ -29,17 +30,18 @@ pub fn compute_contract_address(sender_address: EthAddress, sender_nonce: u64) -
 
 
 /// Computes the address of the new account that needs to be created, which is
-/// based on the sender address, salt, and the call data.
+/// based on the sender address, salt, and the bytecode.
 ///
-/// # Parameters
+/// # Arguments
 ///
-/// * `sender_address`: The address of the account that wants to create the new account.
-/// * `salt`: Address generation salt.
-/// * `bytecode`: The code of the new account to be created.
+/// * `sender_address` - The address of the account that wants to create the new account.
+/// * `salt` - Address generation salt.
+/// * `bytecode` - The bytecode of the new account to be created.
 ///
 /// # Returns
 ///
-/// The computed address of the new account.
+/// A `Result` containing the computed address of the new account as an `EthAddress`,
+/// or an `EVMError` if the conversion fails.
 pub fn compute_create2_contract_address(
     sender_address: EthAddress, salt: u256, bytecode: Span<u8>
 ) -> Result<EthAddress, EVMError> {
@@ -67,7 +69,7 @@ pub fn compute_create2_contract_address(
 mod tests {
     use contracts::test_data::counter_evm_bytecode;
     use core::starknet::EthAddress;
-    use utils::address::{compute_contract_address, compute_create2_contract_address};
+    use crate::address::{compute_contract_address, compute_create2_contract_address};
 
     #[test]
     fn test_compute_create2_contract_address() {

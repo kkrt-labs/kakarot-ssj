@@ -4,10 +4,10 @@ use core::starknet::storage::{StoragePointerWriteAccess, StoragePathEntry};
 use core::starknet::storage_access::{StorageBaseAddress, storage_base_address_from_felt252};
 use core::starknet::{ContractAddress, EthAddress, contract_address_const, ClassHash};
 use core::traits::TryInto;
-use evm::memory::{Memory, MemoryTrait};
+use crate::memory::{Memory, MemoryTrait};
 
-use evm::model::vm::{VM, VMTrait};
-use evm::model::{Message, Environment, Address, AccountTrait};
+use crate::model::vm::{VM, VMTrait};
+use crate::model::{Message, Environment, Address, AccountTrait};
 use snforge_std::start_cheat_chain_id_global;
 use snforge_std::test_address;
 use starknet::storage::StorageTraitMut;

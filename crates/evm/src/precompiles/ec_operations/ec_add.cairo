@@ -1,23 +1,20 @@
 use core::circuit::CircuitElement as CE;
 use core::circuit::CircuitInput as CI;
-use core::circuit::u96;
 
 use core::circuit::{
-    u384, CircuitElement, CircuitInput, circuit_add, circuit_sub, circuit_mul, circuit_inverse,
-    EvalCircuitTrait, CircuitOutputsTrait, CircuitModulus, CircuitInputs
+    u384, circuit_sub, circuit_mul, circuit_inverse, EvalCircuitTrait, CircuitOutputsTrait,
+    CircuitModulus, CircuitInputs
 };
-use core::num::traits::Zero;
 use core::option::Option;
 use core::starknet::{EthAddress};
+use crate::errors::EVMError;
+use crate::precompiles::Precompile;
 use crate::precompiles::ec_operations::{
-    eq_mod_p, eq_neg_mod_p, is_on_curve, double_ec_point_unchecked, BN254_ORDER, BN254_PRIME_LIMBS,
-    BN254_PRIME
+    eq_mod_p, eq_neg_mod_p, is_on_curve, double_ec_point_unchecked, BN254_PRIME_LIMBS, BN254_PRIME
 };
-use evm::errors::EVMError;
-use evm::precompiles::Precompile;
 use garaga::core::circuit::AddInputResultTrait2;
-use utils::helpers::ToBytes;
-use utils::helpers::{load_word, U8SpanExTrait};
+use utils::helpers::{load_word};
+use utils::traits::bytes::{ToBytes, U8SpanExTrait};
 
 
 const BASE_COST: u64 = 150;
@@ -86,41 +83,39 @@ fn ec_add(x1: u256, y1: u256, x2: u256, y2: u256) -> Option<(u256, u256)> {
                 return Option::None;
             }
         }
+    } else if x2 == 0 && y2 == 0 {
+        // Only second point is at infinity.
+        let x1_u384: u384 = x1.into();
+        let y1_u384: u384 = y1.into();
+        if is_on_curve(x1_u384, y1_u384) {
+            // First point is on the curve, return it.
+            return Option::Some((x1, y1));
+        } else {
+            // First point is not on the curve, return None (error).
+            return Option::None;
+        }
     } else {
-        if x2 == 0 && y2 == 0 {
-            // Only second point is at infinity.
-            let x1_u384: u384 = x1.into();
-            let y1_u384: u384 = y1.into();
-            if is_on_curve(x1_u384, y1_u384) {
-                // First point is on the curve, return it.
-                return Option::Some((x1, y1));
-            } else {
-                // First point is not on the curve, return None (error).
-                return Option::None;
+        // None of the points are at infinity.
+        let x1_u384: u384 = x1.into();
+        let x2_u384: u384 = x2.into();
+        let y1_u384: u384 = y1.into();
+        let y2_u384: u384 = y2.into();
+
+        if is_on_curve(x1_u384, y1_u384) && is_on_curve(x2_u384, y2_u384) {
+            match ec_safe_add(x1_u384, y1_u384, x2_u384, y2_u384) {
+                Option::Some((
+                    x, y
+                )) => Option::Some(
+                    (
+                        TryInto::<u384, u256>::try_into(x).unwrap(),
+                        TryInto::<u384, u256>::try_into(y).unwrap()
+                    )
+                ),
+                Option::None => Option::Some((0, 0)),
             }
         } else {
-            // None of the points are at infinity.
-            let x1_u384: u384 = x1.into();
-            let x2_u384: u384 = x2.into();
-            let y1_u384: u384 = y1.into();
-            let y2_u384: u384 = y2.into();
-
-            if is_on_curve(x1_u384, y1_u384) && is_on_curve(x2_u384, y2_u384) {
-                match ec_safe_add(x1_u384, y1_u384, x2_u384, y2_u384) {
-                    Option::Some((
-                        x, y
-                    )) => Option::Some(
-                        (
-                            TryInto::<u384, u256>::try_into(x).unwrap(),
-                            TryInto::<u384, u256>::try_into(y).unwrap()
-                        )
-                    ),
-                    Option::None => Option::Some((0, 0)),
-                }
-            } else {
-                // None of the points are infinity and at least one of them is not on the curve.
-                return Option::None;
-            }
+            // None of the points are infinity and at least one of them is not on the curve.
+            return Option::None;
         }
     }
 }

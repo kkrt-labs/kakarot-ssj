@@ -1,11 +1,10 @@
 //! Push Operations.
 
-use evm::errors::EVMError;
-use evm::gas;
-use evm::model::vm::{VM, VMTrait};
-use evm::stack::StackTrait;
-use utils::helpers::FromBytes;
-use utils::helpers::U8SpanExTrait;
+use crate::errors::EVMError;
+use crate::gas;
+use crate::model::vm::{VM, VMTrait};
+use crate::stack::StackTrait;
+use utils::traits::bytes::{FromBytes, U8SpanExTrait};
 
 /// Place i bytes items on stack.
 #[inline(always)]
@@ -279,11 +278,11 @@ pub impl PushOperations of PushOperationsTrait {
 
 #[cfg(test)]
 mod tests {
-    use evm::gas;
-    use evm::instructions::PushOperationsTrait;
-    use evm::model::vm::VMTrait;
-    use evm::stack::StackTrait;
-    use evm::test_utils::{VMBuilderTrait};
+    use crate::gas;
+    use crate::instructions::PushOperationsTrait;
+    use crate::model::vm::VMTrait;
+    use crate::stack::StackTrait;
+    use crate::test_utils::{VMBuilderTrait};
     use super::exec_push_i;
 
     #[test]

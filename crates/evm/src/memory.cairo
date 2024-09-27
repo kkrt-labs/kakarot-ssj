@@ -5,11 +5,8 @@ use utils::constants::{
     POW_2_0, POW_2_8, POW_2_16, POW_2_24, POW_2_32, POW_2_40, POW_2_48, POW_2_56, POW_2_64,
     POW_2_72, POW_2_80, POW_2_88, POW_2_96, POW_2_104, POW_2_112, POW_2_120, POW_256_16
 };
-use utils::{helpers, helpers::ArrayExtTrait, math::Bitshift};
-
-// 2**17
-const MEMORY_SEGMENT_SIZE: usize = 131072;
-
+use utils::traits::array::ArrayExtTrait;
+use utils::{helpers, math::Bitshift};
 
 #[derive(Destruct, Default)]
 pub struct Memory {
@@ -46,10 +43,6 @@ impl MemoryImpl of MemoryTrait {
     ///
     /// If the offset is aligned with the 16-bytes words in memory, the element is stored directly.
     /// Otherwise, the element is split and stored in multiple words.
-    ///
-    /// If we want to store an item at offset Y of the memory relative to the execution context of
-    /// id i the internal index will be:
-    /// index = Y + i * MEMORY_SEGMENT_SIZE
     #[inline(always)]
     fn store(ref self: Memory, element: u256, offset: usize) {
         let nonzero_16: NonZero<u32> = 16_u32.try_into().unwrap();
@@ -75,9 +68,6 @@ impl MemoryImpl of MemoryTrait {
 
 
     /// Stores a single byte into memory at a specified offset.
-    /// If we want to store a byte at offset Y of the memory relative to the execution context of id
-    /// i the internal index will be:
-    /// index = Y + i * MEMORY_SEGMENT_SIZE
     ///
     /// # Arguments
     ///
@@ -88,15 +78,11 @@ impl MemoryImpl of MemoryTrait {
     fn store_byte(ref self: Memory, value: u8, offset: usize) {
         let nonzero_16: NonZero<u32> = 16_u32.try_into().unwrap();
 
-        // Compute actual offset in Memory, given active_segment of Memory (current Execution
-        // Context id)
-        // And Memory Segment Size
-
         // Get offset's memory word index and left-based offset of byte in word.
         let (chunk_index, left_offset) = u32_safe_divmod(offset, nonzero_16);
 
         // As the memory words are in big-endian order, we need to convert our left-based offset
-        // to a right-based one.a
+        // to a right-based one.
         let right_offset = 15 - left_offset;
         let mask: u128 = 0xFF * helpers::pow2(right_offset.into() * 8);
 
@@ -114,10 +100,6 @@ impl MemoryImpl of MemoryTrait {
     /// `store_bytes_in_single_chunk` function. If the bytes span multiple words, the function
     /// stores the first word using the `store_first_word` function, the aligned words using the
     /// `store_aligned_words` function, and the last word using the `store_last_word` function.
-    ///
-    /// If we want to store n bytes at offset Y of the memory relative to the execution context of
-    /// id i the internal index will be:
-    /// index = Y + i * MEMORY_SEGMENT_SIZE
     ///
     /// # Arguments
     ///
@@ -173,7 +155,7 @@ impl MemoryImpl of MemoryTrait {
     ///
     /// # Arguments
     ///
-    /// * `self` - The `Memory` instance to store the bytes in.
+    /// * `self` - A mutable reference to the `Memory` instance to store the bytes in.
     /// * `offset` - The offset within memory to store the bytes at.
     /// * `length` - The length of bytes to store in memory.
     /// * `source` - A span of bytes to store in memory.
@@ -201,6 +183,11 @@ impl MemoryImpl of MemoryTrait {
     }
 
     /// Ensures that the memory is at least `length` bytes long. Expands if necessary.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `Memory` instance.
+    /// * `length` - The desired minimum length of the memory.
     #[inline(always)]
     fn ensure_length(ref self: Memory, length: usize) {
         if self.size() < length {
@@ -211,7 +198,14 @@ impl MemoryImpl of MemoryTrait {
     }
 
     /// Expands memory if necessary, then load 32 bytes from it at the given offset.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `Memory` instance.
+    /// * `offset` - The offset within memory to load from.
+    ///
     /// # Returns
+    ///
     /// * `u256` - The loaded value.
     #[inline(always)]
     fn load(ref self: Memory, offset: usize) -> u256 {
@@ -220,12 +214,26 @@ impl MemoryImpl of MemoryTrait {
 
     /// Expands memory if necessary, then load elements_len bytes from the memory at given offset
     /// inside elements.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `Memory` instance.
+    /// * `elements_len` - The number of bytes to load.
+    /// * `elements` - A mutable reference to the array to store the loaded bytes.
+    /// * `offset` - The offset within memory to load from.
     #[inline(always)]
     fn load_n(ref self: Memory, elements_len: usize, ref elements: Array<u8>, offset: usize) {
         self.load_n_internal(elements_len, ref elements, offset);
     }
 
     /// Copies a segment of memory from the source offset to the destination offset.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `Memory` instance.
+    /// * `size` - The number of bytes to copy.
+    /// * `source_offset` - The offset to copy from.
+    /// * `dest_offset` - The offset to copy to.
     #[inline(always)]
     fn copy(ref self: Memory, size: usize, source_offset: usize, dest_offset: usize) {
         let mut data: Array<u8> = Default::default();
@@ -280,10 +288,8 @@ pub(crate) impl InternalMemoryMethods of InternalMemoryTrait {
 
     /// Stores a span of bytes into a single memory chunk.
     ///
-    /// This function computes new word to be stored by multiplying the
-    /// high part of the current word by the `mask_i` value, adding the loaded bytes multiplied by
-    /// the `mask_f`
-    /// value, and adding the low part of the current word.
+    /// This function computes a new word to be stored by combining the existing word with the new
+    /// bytes.
     ///
     /// # Arguments
     ///
@@ -620,9 +626,11 @@ impl Felt252DictExtensionImpl of Felt252DictExtension {
 #[cfg(test)]
 mod tests {
     use core::num::traits::Bounded;
-    use evm::memory::{MemoryTrait, InternalMemoryTrait};
+    use crate::memory::{MemoryTrait, InternalMemoryTrait};
     use utils::constants::{POW_2_8, POW_2_56, POW_2_64, POW_2_120};
-    use utils::{math::Exponentiation, math::WrappingExponentiation, helpers, helpers::SpanExtTrait};
+    use utils::{
+        math::Exponentiation, math::WrappingExponentiation, helpers, traits::array::SpanExtTrait
+    };
 
 
     fn load_should_load_an_element_from_the_memory_with_offset_stored_with_store_n(

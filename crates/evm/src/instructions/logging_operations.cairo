@@ -1,12 +1,12 @@
 //! Logging Operations.
 
-use evm::errors::{EVMError, ensure};
-use evm::gas;
-use evm::memory::MemoryTrait;
-use evm::model::Event;
-use evm::model::vm::{VM, VMTrait};
-use evm::stack::StackTrait;
-use evm::state::StateTrait;
+use crate::errors::{EVMError, ensure};
+use crate::gas;
+use crate::memory::MemoryTrait;
+use crate::model::Event;
+use crate::model::vm::{VM, VMTrait};
+use crate::stack::StackTrait;
+use crate::state::StateTrait;
 
 
 #[generate_trait]
@@ -87,10 +87,10 @@ fn exec_log_i(ref self: VM, topics_len: u8) -> Result<(), EVMError> {
 mod tests {
     use core::num::traits::Bounded;
     use core::result::ResultTrait;
-    use evm::errors::{EVMError, TYPE_CONVERSION_ERROR};
-    use evm::instructions::LoggingOperationsTrait;
-    use evm::stack::StackTrait;
-    use evm::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait};
+    use crate::errors::{EVMError, TYPE_CONVERSION_ERROR};
+    use crate::instructions::LoggingOperationsTrait;
+    use crate::stack::StackTrait;
+    use crate::test_utils::{VMBuilderTrait, MemoryTestUtilsTrait};
     use utils::helpers::u256_to_bytes_array;
 
     #[test]

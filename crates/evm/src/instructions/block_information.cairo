@@ -3,12 +3,12 @@
 use core::starknet::SyscallResultTrait;
 use core::starknet::syscalls::get_block_hash_syscall;
 
-use evm::errors::EVMError;
+use crate::errors::EVMError;
 
-use evm::gas;
-use evm::model::vm::{VM, VMTrait};
-use evm::stack::StackTrait;
-use evm::state::StateTrait;
+use crate::gas;
+use crate::model::vm::{VM, VMTrait};
+use crate::stack::StackTrait;
+use crate::state::StateTrait;
 use utils::constants::MIN_BASE_FEE_PER_BLOB_GAS;
 use utils::traits::{EthAddressTryIntoResultContractAddress, EthAddressIntoU256};
 
@@ -140,12 +140,12 @@ pub impl BlockInformation of BlockInformationTrait {
 #[cfg(test)]
 mod tests {
     use core::result::ResultTrait;
-    use evm::instructions::BlockInformationTrait;
-    use evm::model::account::Account;
-    use evm::model::vm::VMTrait;
-    use evm::stack::StackTrait;
-    use evm::state::StateTrait;
-    use evm::test_utils::{VMBuilderTrait, gas_price, setup_test_environment};
+    use crate::instructions::BlockInformationTrait;
+    use crate::model::account::Account;
+    use crate::model::vm::VMTrait;
+    use crate::stack::StackTrait;
+    use crate::state::StateTrait;
+    use crate::test_utils::{VMBuilderTrait, gas_price, setup_test_environment};
     use snforge_std::{start_cheat_block_number_global, start_cheat_block_timestamp_global};
     use utils::constants::EMPTY_KECCAK;
     use utils::constants;

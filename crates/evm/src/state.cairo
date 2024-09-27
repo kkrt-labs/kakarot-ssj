@@ -5,11 +5,11 @@ use core::num::traits::{OverflowingAdd, OverflowingSub};
 use core::poseidon::PoseidonTrait;
 use core::starknet::storage_access::{StorageBaseAddress, storage_base_address_from_felt252};
 use core::starknet::{EthAddress};
-use evm::backend::starknet_backend::fetch_original_storage;
+use crate::backend::starknet_backend::fetch_original_storage;
 
-use evm::errors::{ensure, EVMError, BALANCE_OVERFLOW};
-use evm::model::account::{AccountTrait};
-use evm::model::{Event, Transfer, Account};
+use crate::errors::{ensure, EVMError, BALANCE_OVERFLOW};
+use crate::model::account::{AccountTrait};
+use crate::model::{Event, Transfer, Account};
 use utils::set::{Set, SetTrait};
 
 /// The `StateChangeLog` tracks the changes applied to storage during the execution of a
@@ -72,7 +72,7 @@ impl StateChangeLogImpl<T, +Drop<T>, +Copy<T>> of StateChangeLogTrait<T> {
     ///
     /// # Arguments
     ///
-    /// * `self` - A reference to a `StateChangeLog` instance.
+    /// * `self` - A mutable reference to a `StateChangeLog` instance.
     /// * `key` - The key of the value to write.
     /// * `value` - The value to write.
     #[inline(always)]
@@ -81,6 +81,15 @@ impl StateChangeLogImpl<T, +Drop<T>, +Copy<T>> of StateChangeLogTrait<T> {
         self.keyset.add(key);
     }
 
+    /// Creates a clone of the current StateChangeLog.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A reference to the `StateChangeLog` instance to clone.
+    ///
+    /// # Returns
+    ///
+    /// A new `StateChangeLog` instance with the same contents as the original.
     fn clone(ref self: StateChangeLog<T>) -> StateChangeLog<T> {
         let mut cloned_changes = Default::default();
         let mut keyset_span = self.keyset.to_span();
@@ -116,6 +125,16 @@ pub struct State {
 
 #[generate_trait]
 pub impl StateImpl of StateTrait {
+    /// Retrieves an account from the state, creating it if it doesn't exist.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `State` instance.
+    /// * `evm_address` - The EVM address of the account to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// The `Account` associated with the given EVM address.
     fn get_account(ref self: State, evm_address: EthAddress) -> Account {
         let maybe_account = self.accounts.read(evm_address.into());
         match maybe_account {
@@ -128,6 +147,12 @@ pub impl StateImpl of StateTrait {
         }
     }
 
+    /// Sets an account in the state.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `State` instance.
+    /// * `account` - The `Account` to set.
     #[inline(always)]
     fn set_account(ref self: State, account: Account) {
         let evm_address = account.evm_address();
@@ -135,6 +160,17 @@ pub impl StateImpl of StateTrait {
         self.accounts.write(evm_address.into(), account)
     }
 
+    /// Reads a value from the state for a given EVM address and key.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `State` instance.
+    /// * `evm_address` - The EVM address of the account.
+    /// * `key` - The storage key.
+    ///
+    /// # Returns
+    ///
+    /// The value stored at the given address and key.
     #[inline(always)]
     fn read_state(ref self: State, evm_address: EthAddress, key: u256) -> u256 {
         let internal_key = compute_storage_key(evm_address, key);
@@ -148,17 +184,41 @@ pub impl StateImpl of StateTrait {
         }
     }
 
+    /// Writes a value to the state for a given EVM address and key.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `State` instance.
+    /// * `evm_address` - The EVM address of the account.
+    /// * `key` - The storage key.
+    /// * `value` - The value to write.
     #[inline(always)]
     fn write_state(ref self: State, evm_address: EthAddress, key: u256, value: u256) {
         let internal_key = compute_storage_key(evm_address, key);
         self.accounts_storage.write(internal_key.into(), (evm_address, key, value));
     }
 
+    /// Adds an event to the state.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `State` instance.
+    /// * `event` - The `Event` to add.
     #[inline(always)]
     fn add_event(ref self: State, event: Event) {
         self.events.append(event)
     }
 
+    /// Adds a transfer to the state and updates account balances.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `State` instance.
+    /// * `transfer` - The `Transfer` to add.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` indicating success or an `EVMError` if the transfer fails.
     #[inline(always)]
     fn add_transfer(ref self: State, transfer: Transfer) -> Result<(), EVMError> {
         if (transfer.amount == 0 || transfer.sender.evm == transfer.recipient.evm) {
@@ -183,6 +243,17 @@ pub impl StateImpl of StateTrait {
         Result::Ok(())
     }
 
+    /// Reads a value from transient storage for a given EVM address and key.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `State` instance.
+    /// * `evm_address` - The EVM address of the account.
+    /// * `key` - The storage key.
+    ///
+    /// # Returns
+    ///
+    /// The value stored in transient storage at the given address and key.
     #[inline(always)]
     fn read_transient_storage(ref self: State, evm_address: EthAddress, key: u256) -> u256 {
         let internal_key = compute_storage_key(evm_address, key);
@@ -193,12 +264,30 @@ pub impl StateImpl of StateTrait {
         }
     }
 
+    /// Writes a value to transient storage for a given EVM address and key.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `State` instance.
+    /// * `evm_address` - The EVM address of the account.
+    /// * `key` - The storage key.
+    /// * `value` - The value to write.
     #[inline(always)]
     fn write_transient_storage(ref self: State, evm_address: EthAddress, key: u256, value: u256) {
         let internal_key = compute_storage_key(evm_address, key);
         self.transient_account_storage.write(internal_key.into(), (evm_address, key, value));
     }
 
+    /// Creates a clone of the current State.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A reference to the `State` instance to clone.
+    ///
+    /// # Returns
+    ///
+    /// A new `State` instance with the same contents as the original.
+    #[inline(always)]
     fn clone(ref self: State) -> State {
         State {
             accounts: self.accounts.clone(),
@@ -209,7 +298,17 @@ pub impl StateImpl of StateTrait {
         }
     }
 
-    // Check whether is an account is both in the global state and non empty.
+    /// Checks if an account is both in the global state and non-empty.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A mutable reference to the `State` instance.
+    /// * `evm_address` - The EVM address of the account to check.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the account exists and is non-empty, `false` otherwise.
+    #[inline(always)]
     fn is_account_alive(ref self: State, evm_address: EthAddress) -> bool {
         let account = self.get_account(evm_address);
         return !(account.nonce == 0 && account.code.len() == 0 && account.balance == 0);
@@ -220,6 +319,7 @@ pub impl StateImpl of StateTrait {
 /// The key is computed as follows:
 /// 1. Compute the hash of the EVM address and the key(low, high) using Poseidon.
 /// 2. Return the hash
+#[inline(always)]
 pub fn compute_storage_key(evm_address: EthAddress, key: u256) -> felt252 {
     let hash = PoseidonTrait::new().update_with(evm_address).update_with(key).finalize();
     hash
@@ -232,6 +332,7 @@ pub fn compute_storage_key(evm_address: EthAddress, key: u256) -> felt252 {
 /// Note: the storage_base_address_from_felt252 function always works for any felt - and returns the
 /// number normalized into the range [0, 2^251 - 256). (x % (2^251 - 256))
 /// https://github.com/starkware-libs/cairo/issues/4187
+#[inline(always)]
 pub fn compute_storage_address(key: u256) -> StorageBaseAddress {
     let hash = PoseidonTrait::new().update_with(key).finalize();
     storage_base_address_from_felt252(hash)
@@ -239,8 +340,8 @@ pub fn compute_storage_address(key: u256) -> StorageBaseAddress {
 
 #[cfg(test)]
 mod tests {
-    use evm::state::compute_storage_key;
-    use evm::test_utils;
+    use crate::state::compute_storage_key;
+    use crate::test_utils;
 
     #[test]
     fn test_compute_storage_key() {
@@ -272,8 +373,8 @@ mod tests {
     }
 
     mod test_state_changelog {
-        use evm::state::{StateChangeLog, StateChangeLogTrait};
-        use evm::test_utils;
+        use crate::state::{StateChangeLog, StateChangeLogTrait};
+        use crate::test_utils;
         use utils::set::SetTrait;
 
         #[test]
@@ -307,15 +408,15 @@ mod tests {
 
     mod test_state {
         use core::starknet::EthAddress;
-        use evm::model::account::{Account, AccountTrait};
-        use evm::model::{Event, Transfer, Address};
-        use evm::state::{State, StateTrait};
-        use evm::test_utils;
+        use crate::model::account::{Account, AccountTrait};
+        use crate::model::{Event, Transfer, Address};
+        use crate::state::{State, StateTrait};
+        use crate::test_utils;
         use snforge_std::{test_address, start_mock_call};
         use utils::constants::EMPTY_KECCAK;
-        use utils::helpers::U8SpanExTrait;
         use utils::helpers::compute_starknet_address;
         use utils::set::SetTrait;
+        use utils::traits::bytes::U8SpanExTrait;
 
         #[test]
         fn test_get_account_when_inexistant() {

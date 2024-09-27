@@ -1,38 +1,36 @@
-use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
-use core::num::traits::Zero;
+use core::num::traits::{Bounded, Zero};
 use core::ops::SnapshotDeref;
 use core::starknet::EthAddress;
-use core::starknet::get_tx_info;
 use core::starknet::storage::{StoragePointerReadAccess};
-use evm::backend::starknet_backend;
-use evm::create_helpers::CreateHelpers;
-use evm::errors::{EVMError, EVMErrorTrait, CONTRACT_ACCOUNT_EXISTS};
+use crate::backend::starknet_backend;
+use crate::create_helpers::CreateHelpers;
+use crate::errors::{EVMError, EVMErrorTrait};
 
-use evm::instructions::{
+use crate::instructions::{
     ExchangeOperationsTrait, LoggingOperationsTrait, StopAndArithmeticOperationsTrait,
     ComparisonAndBitwiseOperationsTrait, SystemOperationsTrait, BlockInformationTrait,
     DuplicationOperationsTrait, EnvironmentInformationTrait, PushOperationsTrait,
     MemoryOperationTrait, Sha3Trait
 };
 
-use evm::model::account::{Account, AccountTrait};
-use evm::model::vm::{VM, VMTrait};
-use evm::model::{
+use crate::model::account::{Account, AccountTrait};
+use crate::model::vm::{VM, VMTrait};
+use crate::model::{
     Message, Environment, Transfer, ExecutionSummary, ExecutionResult, ExecutionResultTrait,
-    ExecutionResultStatus, AddressTrait, TransactionResult, Address
+    ExecutionResultStatus, AddressTrait, TransactionResult, TransactionResultTrait, Address
 };
-use evm::precompiles::Precompiles;
-use evm::precompiles::eth_precompile_addresses;
-use evm::state::StateTrait;
+use crate::precompiles::Precompiles;
+use crate::precompiles::eth_precompile_addresses;
+use crate::state::StateTrait;
 use utils::address::compute_contract_address;
 use utils::constants;
 use utils::eth_transaction::common::TxKind;
 use utils::eth_transaction::eip2930::{AccessListItem, AccessListItemTrait};
 use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
-use utils::helpers::EthAddressExTrait;
 use utils::set::{Set, SetTrait};
+use utils::traits::eth_address::EthAddressExTrait;
 
 #[generate_trait]
 pub impl EVMImpl of EVMTrait {
@@ -117,6 +115,11 @@ pub impl EVMImpl of EVMTrait {
                 .prepare_message(@tx, @sender_account, ref env, gas_left);
 
             // Increment nonce of sender AFTER computing eventual created address
+            if sender_account.nonce() == Bounded::<u64>::MAX {
+                return TransactionResultTrait::exceptional_failure(
+                    EVMError::NonceOverflow.to_bytes(), tx.gas_limit()
+                );
+            }
             sender_account.set_nonce(sender_account.nonce() + 1);
 
             env.state.set_account(sender_account);
@@ -1016,9 +1019,9 @@ pub impl EVMImpl of EVMTrait {
 mod tests {
     use contracts::kakarot_core::KakarotCore;
     use core::num::traits::Zero;
-    use evm::model::{Account, Environment, Message};
-    use evm::state::StateTrait;
-    use evm::test_utils::{dual_origin, test_dual_address};
+    use crate::model::{Account, Environment, Message};
+    use crate::state::StateTrait;
+    use crate::test_utils::{dual_origin, test_dual_address};
     use super::EVMTrait;
     use utils::constants::EMPTY_KECCAK;
     use utils::eth_transaction::common::TxKind;
