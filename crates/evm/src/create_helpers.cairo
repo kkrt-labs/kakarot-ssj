@@ -48,7 +48,7 @@ pub impl CreateHelpersImpl of CreateHelpers {
         let charged_gas = match create_type {
             CreateType::Create => gas::CREATE + memory_expansion.expansion_cost + init_code_gas,
             CreateType::Create2 => {
-                let calldata_words = bytes_32_words_size(size) / 32;
+                let calldata_words = bytes_32_words_size(size);
                 gas::CREATE
                     + gas::KECCAK256WORD * calldata_words.into()
                     + memory_expansion.expansion_cost
