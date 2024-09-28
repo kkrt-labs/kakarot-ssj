@@ -8,8 +8,9 @@ use crate::model::vm::{VM, VMTrait};
 use crate::model::{AddressTrait};
 use crate::stack::StackTrait;
 use crate::state::StateTrait;
-use utils::helpers::{bytes_32_words_size, load_word};
+use utils::helpers::bytes_32_words_size;
 use utils::set::SetTrait;
+use utils::traits::bytes::FromBytes;
 use utils::traits::{EthAddressIntoU256};
 
 
@@ -85,8 +86,10 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let bytes_len = core::cmp::min(32, calldata_len - offset);
         let sliced = calldata.slice(offset, bytes_len);
 
-        // Fill data to load with bytes in calldata
-        let mut data_to_load: u256 = load_word(bytes_len, sliced);
+        // Use from_be_bytes_partial to load the data
+        let mut data_to_load: u256 = sliced
+            .from_be_bytes_partial()
+            .expect('Failed to parse calldata');
 
         // Fill the rest of the data to load with zeros
         // TODO: optimize once we have dw-based exponentiation

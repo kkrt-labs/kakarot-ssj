@@ -112,34 +112,6 @@ pub fn split_word_128(value: u256, ref dst: Array<u8>) {
     split_word(value, 16, ref dst)
 }
 
-
-/// Loads a sequence of bytes into a single u256 in big-endian order.
-///
-/// # Arguments
-/// * `len` - The number of bytes to load.
-/// * `words` - The span of bytes to load.
-///
-/// # Returns
-/// A `u256` value representing the loaded bytes in big-endian order.
-pub fn load_word(mut len: usize, words: Span<u8>) -> u256 {
-    if len == 0 {
-        return 0;
-    }
-
-    let mut current: u256 = 0;
-    let mut counter = 0;
-
-    for _ in 0
-        ..len {
-            let loaded: u8 = *words[counter];
-            let tmp = current * 256;
-            current = tmp + loaded.into();
-            counter += 1;
-        };
-
-    current
-}
-
 /// Converts a u256 to a bytes array represented by an array of u8 values in big-endian order.
 ///
 /// # Arguments
@@ -225,55 +197,6 @@ mod tests {
         let bytes_array = helpers::u256_to_bytes_array(value);
         assert(1 == *bytes_array[30], 'wrong conversion');
     }
-
-    #[test]
-    fn test_load_word() {
-        // No bytes to load
-        let res0 = helpers::load_word(0, ArrayTrait::new().span());
-        assert(0 == res0, 'res0: wrong load');
-
-        // Single bytes value
-        let mut arr1 = ArrayTrait::new();
-        arr1.append(0x01);
-        let res1 = helpers::load_word(1, arr1.span());
-        assert(1 == res1, 'res1: wrong load');
-
-        let mut arr2 = ArrayTrait::new();
-        arr2.append(0xff);
-        let res2 = helpers::load_word(1, arr2.span());
-        assert(255 == res2, 'res2: wrong load');
-
-        // Two byte values
-        let mut arr3 = ArrayTrait::new();
-        arr3.append(0x01);
-        arr3.append(0x00);
-        let res3 = helpers::load_word(2, arr3.span());
-        assert(256 == res3, 'res3: wrong load');
-
-        let mut arr4 = ArrayTrait::new();
-        arr4.append(0xff);
-        arr4.append(0xff);
-        let res4 = helpers::load_word(2, arr4.span());
-        assert(65535 == res4, 'res4: wrong load');
-
-        // Four byte values
-        let mut arr5 = ArrayTrait::new();
-        arr5.append(0xff);
-        arr5.append(0xff);
-        arr5.append(0xff);
-        arr5.append(0xff);
-        let res5 = helpers::load_word(4, arr5.span());
-        assert(4294967295 == res5, 'res5: wrong load');
-
-        // 16 bytes values
-        let mut arr6 = ArrayTrait::new();
-        for _ in 0..16_u8 {
-            arr6.append(0xff);
-        };
-        let res6 = helpers::load_word(16, arr6.span());
-        assert(340282366920938463463374607431768211455 == res6, 'res6: wrong load');
-    }
-
 
     #[test]
     fn test_split_word_le() {
