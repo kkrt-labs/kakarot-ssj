@@ -109,7 +109,7 @@ pub impl SpanU8TryIntoResultEthAddress of TryIntoResult<Span<u8>, EthAddress> {
         let mut i: u32 = 0;
         while i != len {
             let byte: u256 = (*self.at(i)).into();
-            result += byte.shl(8 * (offset - i).into());
+            result += byte.shl(8 * (offset - i));
             i += 1;
         };
         let address: felt252 = result.try_into_result()?;

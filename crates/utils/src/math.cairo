@@ -1,5 +1,5 @@
 use core::integer::{u512};
-use core::num::traits::{Zero, One, BitSize, OverflowingAdd, OverflowingMul};
+use core::num::traits::{Zero, One, BitSize, OverflowingAdd, OverflowingMul, Bounded};
 use core::panic_with_felt252;
 use core::traits::{BitAnd};
 
@@ -203,7 +203,7 @@ pub trait Bitshift<T> {
     ///
     /// Panics if the shift is greater than 255.
     /// Panics if the result overflows the type T.
-    fn shl(self: T, shift: T) -> T;
+    fn shl(self: T, shift: usize) -> T;
 
     /// Shift a number right by a given number of bits.
     ///
@@ -219,7 +219,7 @@ pub trait Bitshift<T> {
     /// # Panics
     ///
     /// Panics if the shift is greater than 255.
-    fn shr(self: T, shift: T) -> T;
+    fn shr(self: T, shift: usize) -> T;
 }
 
 impl BitshiftImpl<
@@ -237,23 +237,35 @@ impl BitshiftImpl<
     +BitSize<T>,
     +TryInto<usize, T>,
 > of Bitshift<T> {
-    fn shl(self: T, shift: T) -> T {
+    fn shl(self: T, shift: usize) -> T {
         // if we shift by more than nb_bits of T, the result is 0
         // we early return to save gas and prevent unexpected behavior
-        if shift > BitSize::<T>::bits().try_into().unwrap() - One::one() {
+        if shift > BitSize::<T>::bits() - One::one() {
             panic_with_felt252('mul Overflow');
         }
+        // if the shift is within the bit size of u256 (<= 255 bits),
+        // use the POW_2 lookup table to get 2^shift for efficient multiplication
+        if shift <= BitSize::<u256>::bits() - One::<u32>::one() {
+            // In case the pow2 is greater than the max value of T, we have an overflow
+            // so we can panic
+            return self * (*POW_2_256.span().at(shift)).try_into().expect('mul Overflow');
+        }
+        // for shifts greater than 255 bits, perform the shift manually
         let two = One::one() + One::one();
-        self * two.pow(shift)
+        self * two.pow(shift.try_into().expect('mul Overflow'))
     }
 
-    fn shr(self: T, shift: T) -> T {
+    fn shr(self: T, shift: usize) -> T {
         // early return to save gas if shift > nb_bits of T
-        if shift > BitSize::<T>::bits().try_into().unwrap() - One::one() {
+        if shift > BitSize::<T>::bits() - One::one() {
             panic_with_felt252('mul Overflow');
         }
+        // use the POW_2 lookup table when the bit size
+        if shift <= BitSize::<u256>::bits() - One::<u32>::one() {
+            return self / (*POW_2_256.span().at(shift)).try_into().expect('mul Overflow');
+        }
         let two = One::one() + One::one();
-        self / two.pow(shift)
+        self / two.pow(shift.try_into().expect('mul Overflow'))
     }
 }
 
@@ -270,7 +282,7 @@ pub trait WrappingBitshift<T> {
     /// # Returns
     ///
     /// The result of shifting `self` left by `shift` bits, wrapped if necessary
-    fn wrapping_shl(self: T, shift: T) -> T;
+    fn wrapping_shl(self: T, shift: usize) -> T;
 
     /// Shift a number right by a given number of bits.
     /// If the shift is greater than 255, the result is 0.
@@ -283,7 +295,7 @@ pub trait WrappingBitshift<T> {
     /// # Returns
     ///
     /// The result of shifting `self` right by `shift` bits, or 0 if shift > 255
-    fn wrapping_shr(self: T, shift: T) -> T;
+    fn wrapping_shr(self: T, shift: usize) -> T;
 }
 
 pub impl WrappingBitshiftImpl<
@@ -300,18 +312,31 @@ pub impl WrappingBitshiftImpl<
     +OverflowingMul<T>,
     +WrappingExponentiation<T>,
     +BitSize<T>,
+    +Bounded<T>,
+    +Into<T, u256>,
     +TryInto<usize, T>,
 > of WrappingBitshift<T> {
-    fn wrapping_shl(self: T, shift: T) -> T {
+    fn wrapping_shl(self: T, shift: usize) -> T {
+        if shift <= BitSize::<u256>::bits() - One::<u32>::one() {
+            let pow_2: u256 = (*POW_2_256.span().at(shift));
+            let pow2_mod_t: u256 = pow_2 % Bounded::<T>::MAX.into();
+            let (result, _) = self.overflowing_mul(pow2_mod_t.try_into().unwrap());
+            return result;
+        }
         let two = One::<T>::one() + One::<T>::one();
         let (result, _) = self.overflowing_mul(two.wrapping_pow(shift));
         result
     }
 
-    fn wrapping_shr(self: T, shift: T) -> T {
+    fn wrapping_shr(self: T, shift: usize) -> T {
+        if shift <= BitSize::<u256>::bits() - One::<u32>::one() {
+            let pow_2: u256 = (*POW_2_256.span().at(shift));
+            let pow2_mod_t: u256 = pow_2 % Bounded::<T>::MAX.into();
+            return self / pow2_mod_t.try_into().unwrap();
+        }
         let two = One::<T>::one() + One::<T>::one();
 
-        if shift > BitSize::<T>::bits().try_into().unwrap() - One::one() {
+        if shift > BitSize::<T>::bits() - One::one() {
             return Zero::zero();
         }
         self / two.pow(shift)
