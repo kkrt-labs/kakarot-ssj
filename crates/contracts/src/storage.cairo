@@ -18,7 +18,7 @@ pub struct StorageBytecode {
 
 const BYTES_PER_FELT: NonZero<u32> = 31;
 
-/// An implamentation of the `Store` trait for our specific `StorageBytecode` type.
+/// An implementation of the `Store` trait for our specific `StorageBytecode` type.
 /// The packing-unpacking is done inside the `read` and `write` methods, thus transparent to the
 /// user.
 /// The bytecode is stored sequentially, starting from storage address 0, for compatibility purposes
