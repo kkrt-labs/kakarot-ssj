@@ -8,9 +8,9 @@ use evm::backend::starknet_backend;
 use evm::backend::validation::validate_eth_tx;
 use evm::model::{TransactionResult, Address};
 use evm::{EVMTrait};
+use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use utils::constants::POW_2_53;
 use utils::eth_transaction::transaction::Transaction;
-use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 
 #[starknet::interface]
 pub trait IEthRPC<T> {
@@ -224,10 +224,10 @@ mod tests {
     use crate::kakarot_core::KakarotCore;
     use crate::kakarot_core::eth_rpc::IEthRPC;
     use crate::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
-    use snforge_std::{start_cheat_chain_id_global, stop_cheat_chain_id_global};
-    use utils::constants::POW_2_53;
     use crate::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
     use evm::test_utils::{sequencer_evm_address, evm_address};
+    use snforge_std::{start_cheat_chain_id_global, stop_cheat_chain_id_global};
+    use utils::constants::POW_2_53;
 
     fn set_up() -> KakarotCore::ContractState {
         // Define the kakarot state to access contract functions

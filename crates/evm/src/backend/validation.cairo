@@ -57,7 +57,6 @@ mod tests {
     use contracts::kakarot_core::KakarotCore;
     use core::num::traits::Bounded;
     use core::ops::SnapshotDeref;
-
     use core::starknet::{EthAddress, ContractAddress};
     use core::starknet::storage::StorageTrait;
     use evm::gas;
