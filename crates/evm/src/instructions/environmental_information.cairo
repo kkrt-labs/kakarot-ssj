@@ -90,11 +90,6 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 
         // Fill the rest of the data to load with zeros
         // TODO: optimize once we have dw-based exponentiation
-        // let mut i = 32 - bytes_len;
-        // while i != 0 {
-        //     data_to_load *= 256;
-        //     i -= 1;
-        // };
         for _ in 0..32 - bytes_len {
             data_to_load *= 256;
         };
@@ -655,21 +650,6 @@ mod tests {
         // Memory initialization with a value to verify that if the offset + size is out of the
         // bound bytes, 0's have been copied.
         // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
-        // let mut i = 0;
-        // while i != (size / 32) + 1 {
-        //     vm
-        //         .memory
-        //         .store(
-        //             0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-        //             dest_offset + (i * 32)
-        //         );
-
-        //     let initial: u256 = vm.memory.load_internal(dest_offset + (i * 32)).into();
-
-        //     assert_eq!(initial, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
-
-        //     i += 1;
-        // };
         for i in 0..(size / 32) + 1 {
             vm
                 .memory
@@ -790,17 +770,6 @@ mod tests {
         let result: u256 = vm.memory.load_internal(dest_offset).into();
         let mut results: Array<u8> = u256_to_bytes_array(result);
 
-        // let mut i = 0;
-        // while i != size {
-        //     // For out of bound bytes, 0s will be copied.
-        //     if (i + offset >= bytecode.len()) {
-        //         assert_eq!(*results[i], 0);
-        //     } else {
-        //         assert_eq!(*results[i], *bytecode[i + offset]);
-        //     }
-
-        //     i += 1;
-        // };
         for i in 0..size {
             // For out of bound bytes, 0s will be copied.
             if (i + offset >= bytecode.len()) {

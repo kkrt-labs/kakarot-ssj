@@ -38,13 +38,6 @@ impl StoreBytecode of Store<StorageBytecode> {
         // afterwards.
         let base: felt252 = 0;
         let mut packed_bytecode = array![];
-        // let mut i = 0;
-        // while i != (chunks_count + 1) {
-        //     let storage_address: StorageAddress = (base + i.into()).try_into().unwrap();
-        //     let chunk = storage_read_syscall(address_domain, storage_address).unwrap();
-        //     packed_bytecode.append(chunk);
-        //     i += 1;
-        // };
         for i in 0..chunks_count + 1 {
             let storage_address: StorageAddress = (base + i.into()).try_into().unwrap();
             let chunk = storage_read_syscall(address_domain, storage_address).unwrap();
@@ -136,11 +129,6 @@ mod tests {
     fn test_store_bytecode_multiple_chunks() {
         let mut state = account_contract_state();
         let mut bytecode_array = array![];
-        // let mut i = 0;
-        // while i != 100 {
-        //     bytecode_array.append(i);
-        //     i += 1;
-        // };
         for i in 0..100_u8 {
             bytecode_array.append(i);
         };

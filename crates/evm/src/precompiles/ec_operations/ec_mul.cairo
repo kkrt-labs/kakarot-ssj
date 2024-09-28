@@ -117,17 +117,6 @@ fn get_bits_little(s: u256) -> Array<felt252> {
 fn ec_mul_inner(pt: (u384, u384), mut bits: Array<felt252>) -> Option<(u384, u384)> {
     let (mut temp_x, mut temp_y) = pt;
     let mut result: Option<(u384, u384)> = Option::None;
-    // while let Option::Some(bit) = bits.pop_front() {
-    //     if bit != 0 {
-    //         match result {
-    //             Option::Some((xr, yr)) => result = ec_safe_add(temp_x, temp_y, xr, yr),
-    //             Option::None => result = Option::Some((temp_x, temp_y)),
-    //         };
-    //     };
-    //     let (_temp_x, _temp_y) = double_ec_point_unchecked(temp_x, temp_y);
-    //     temp_x = _temp_x;
-    //     temp_y = _temp_y;
-    // };
     for bit in bits {
         if bit != 0 {
             match result {

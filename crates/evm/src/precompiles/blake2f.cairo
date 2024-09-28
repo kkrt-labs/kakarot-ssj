@@ -39,28 +39,14 @@ pub impl Blake2f of Precompile {
         let mut h: Array<u64> = Default::default();
         let mut m: Array<u64> = Default::default();
 
-        // let mut i = 0;
         let mut pos = 4;
-        // while i != 8 {
-        //     // safe unwrap, because we have made sure of the input length to be 213
-        //     h.append(input.slice(pos, 8).from_le_bytes().unwrap());
-        //     i += 1;
-        //     pos += 8;
-        // };
         for _ in 0..8_u8 {
            // safe unwrap, because we have made sure of the input length to be 213
            h.append(input.slice(pos, 8).from_le_bytes().unwrap());
            pos += 8;
         };
 
-        // let mut i = 0;
         let mut pos = 68;
-        // while i != 16 {
-        //     // safe unwrap, because we have made sure of the input length to be 213
-        //     m.append(input.slice(pos, 8).from_le_bytes().unwrap());
-        //     i += 1;
-        //     pos += 8;
-        // };
         for _ in 0..16_u8 {
             // safe unwrap, because we have made sure of the input length to be 213
             m.append(input.slice(pos, 8).from_le_bytes().unwrap());
@@ -78,13 +64,6 @@ pub impl Blake2f of Precompile {
 
         let mut return_data: Array<u8> = Default::default();
 
-        // let mut i = 0;
-        // while i != res.len() {
-        //     let bytes = (*res[i]).to_le_bytes_padded();
-        //     return_data.append_span(bytes);
-
-        //     i += 1;
-        // };
         for result in res {
             let bytes = (*result).to_le_bytes_padded();
             return_data.append_span(bytes);

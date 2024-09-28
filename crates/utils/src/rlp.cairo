@@ -100,14 +100,6 @@ pub impl RLPImpl of RLPTrait {
     /// * If encoding a long sequence (should not happen in current implementation)
     fn encode_sequence(mut input: Span<RLPItem>) -> Span<u8> {
         let mut joined_encodings: Array<u8> = Default::default();
-        // while let Option::Some(item) = input.pop_front() {
-        //     match item {
-        //         RLPItem::String(string) => {
-        //             joined_encodings.append_span(Self::encode_string(*string));
-        //         },
-        //         RLPItem::List(_) => { panic_with_felt252('List encoding unimplemented') }
-        //     }
-        // };
         for item in input {
             match item {
                 RLPItem::String(string) => {

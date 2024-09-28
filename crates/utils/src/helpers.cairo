@@ -87,11 +87,6 @@ pub fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
 /// * `value` - The u128 value to split into bytes
 /// * `len` - The number of bytes to split the value into
 pub fn split_u128_le(ref dest: Array<u8>, mut value: u128, mut len: usize) {
-    // while len != 0 {
-    //     dest.append((value % 256).try_into().unwrap());
-    //     value /= 256;
-    //     len -= 1;
-    // };
     for _ in 0..len {
         dest.append((value % 256).try_into().unwrap());
         value /= 256;
@@ -141,13 +136,6 @@ pub fn load_word(mut len: usize, words: Span<u8>) -> u256 {
     let mut current: u256 = 0;
     let mut counter = 0;
 
-    // while len != 0 {
-    //     let loaded: u8 = *words[counter];
-    //     let tmp = current * 256;
-    //     current = tmp + loaded.into();
-    //     len -= 1;
-    //     counter += 1;
-    // };
     for _ in 0..len {
         let loaded: u8 = *words[counter];
         let tmp = current * 256;
@@ -166,26 +154,14 @@ pub fn load_word(mut len: usize, words: Span<u8>) -> u256 {
 /// # Returns
 /// An `Array<u8>` representing the big-endian byte representation of the input value.
 pub fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
-    // let mut counter = 0;
     let mut bytes_arr: Array<u8> = ArrayTrait::new();
     // low part
-    // while counter != 16 {
-    //     bytes_arr.append((value.low & 0xFF).try_into().unwrap());
-    //     value.low /= 256;
-    //     counter += 1;
-    // };
     for _ in 0..16_u8 {
         bytes_arr.append((value.low & 0xFF).try_into().unwrap());
         value.low /= 256;
     };
 
-    // let mut counter = 0;
     // high part
-    // while counter != 16 {
-    //     bytes_arr.append((value.high & 0xFF).try_into().unwrap());
-    //     value.high /= 256;
-    //     counter += 1;
-    // };
     for _ in 0..16_u8 {
         bytes_arr.append((value.high & 0xFF).try_into().unwrap());
         value.high /= 256;
@@ -295,12 +271,6 @@ mod tests {
 
         // 16 bytes values
         let mut arr6 = ArrayTrait::new();
-        // arr6.append(0xff);
-        // let mut counter: u128 = 0;
-        // while counter < 15 {
-        //     arr6.append(0xff);
-        //     counter += 1;
-        // };
         for _ in 0..16_u8 {
             arr6.append(0xff);
         };
@@ -340,11 +310,6 @@ mod tests {
         assert(res4.len() == 16, 'res4: wrong length');
         assert(*res4[0] == 0xfe, 'res4: wrong MSB value');
 
-        // let mut counter: usize = 1;
-        // while counter < 16 {
-        //     assert(*res4[counter] == 0xff, 'res4: wrong value at index');
-        //     counter += 1;
-        // };
         for counter in 1..16_u32 {
             assert(*res4[counter] == 0xff, 'res4: wrong value at index');
         };
@@ -386,10 +351,6 @@ mod tests {
         assert(dst4.len() == 16, 'dst4: wrong length');
         // let mut counter: usize = 0;
         assert(*dst4[15] == 0xfe, 'dst4: wrong LSB value');
-        // while counter < 15 {
-        //     assert_eq!(*dst4[counter], 0xff);
-        //     counter += 1;
-        // };
         for counter in 0..dst4.len() - 1  {
             assert_eq!(*dst4[counter], 0xff);
         };

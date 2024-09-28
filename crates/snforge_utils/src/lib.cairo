@@ -216,36 +216,7 @@ pub mod snforge_utils {
         fn build(self: @EventsFilter) -> ContractEvents {
             let events = (*self.events.events).span();
             let mut filtered_events = array![];
-            // let mut i = 0;
 
-            // while i < events.len() {
-            //     let (from, event) = events.at(i).clone();
-            //     let mut include = true;
-
-            //     if let Option::Some(addr) = self.contract_address {
-            //         if from != *addr {
-            //             include = false;
-            //         }
-            //     }
-
-            //     if include && self.key_filter.is_some() {
-            //         if !(event.keys.span() == (*self.key_filter).unwrap()) {
-            //             include = false;
-            //         }
-            //     }
-
-            //     if include && self.data_filter.is_some() {
-            //         if !event.data.includes((*self.data_filter).unwrap()) {
-            //             include = false;
-            //         }
-            //     }
-
-            //     if include {
-            //         filtered_events.append(event.clone());
-            //     }
-
-            //     i += 1;
-            // };
             for i in 0..events.len() {
                 let (from, event) = events.at(i).clone();
                 let mut include = true;
@@ -294,16 +265,7 @@ pub mod snforge_utils {
             let mut expected_data = array![];
             event.append_keys_and_data(ref expected_keys, ref expected_data);
 
-            // let mut i = 0;
             let mut found = false;
-            // while i < self.events.len() {
-            //     let event = self.events.at(i);
-            //     if event.keys == @expected_keys && event.data == @expected_data {
-            //         found = true;
-            //         break;
-            //     }
-            //     i += 1;
-            // };
             for i in 0..self.events.len() {
                 let event = self.events.at(i);
                 if event.keys == @expected_keys && event.data == @expected_data {
@@ -322,15 +284,6 @@ pub mod snforge_utils {
             let mut expected_data = array![];
             event.append_keys_and_data(ref expected_keys, ref expected_data);
 
-            // let mut i = 0;
-            // while i < self.events.len() {
-            //     let event = self.events.at(i);
-            //     assert(
-            //         event.keys != @expected_keys || event.data != @expected_data,
-            //         'Unexpected event was emitted'
-            //     );
-            //     i += 1;
-            // };
             for i in 0..self.events.len() {
                 let event = self.events.at(i);
                 assert(
@@ -345,13 +298,6 @@ pub mod snforge_utils {
     pub fn store_evm(target: Address, evm_key: u256, evm_value: u256) {
         let storage_address = compute_storage_key(target.evm, evm_key);
         let serialized_value = [evm_value.low.into(), evm_value.high.into()].span();
-        // let mut offset: usize = 0;
-        // while offset != serialized_value.len() {
-        //     store_felt252(
-        //         target.starknet, storage_address + offset.into(), *serialized_value.at(offset)
-        //     );
-        //     offset += 1;
-        // }
         for offset in 0..serialized_value.len() {
             store_felt252(
                 target.starknet, storage_address + offset.into(), *serialized_value.at(offset)

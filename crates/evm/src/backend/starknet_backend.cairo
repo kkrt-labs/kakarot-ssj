@@ -138,10 +138,6 @@ pub fn fetch_balance(self: @Address) -> u256 {
 /// `Ok(())` if the commit was successful, otherwise an `EVMError`.
 fn commit_accounts(ref state: State) -> Result<(), EVMError> {
     let mut account_keys = state.accounts.keyset.to_span();
-    // while let Option::Some(evm_address) = account_keys.pop_front() {
-    //     let account = state.accounts.changes.get(*evm_address).deref();
-    //     commit_account(@account, ref state);
-    // };
     for evm_address in account_keys {
         let account = state.accounts.changes.get(*evm_address).deref();
         commit_account(@account, ref state);
@@ -235,16 +231,6 @@ fn emit_events(ref self: State) -> Result<(), EVMError> {
 /// commit_storage MUST be called after commit_accounts.
 fn commit_storage(ref self: State) -> Result<(), EVMError> {
     let mut storage_keys = self.accounts_storage.keyset.to_span();
-    // while let Option::Some(state_key) = storage_keys.pop_front() {
-    //     let (evm_address, key, value) = self.accounts_storage.changes.get(*state_key).deref();
-    //     let mut account = self.get_account(evm_address);
-    //     // @dev: EIP-6780 - If selfdestruct on an account created, dont commit data
-    //     if account.is_selfdestruct() && account.is_created() {
-    //         continue;
-    //     }
-    //     IAccountDispatcher { contract_address: account.starknet_address() }
-    //         .write_storage(key, value);
-    // };
     for state_key in storage_keys {
         let (evm_address, key, value) = self.accounts_storage.changes.get(*state_key).deref();
         let mut account = self.get_account(evm_address);

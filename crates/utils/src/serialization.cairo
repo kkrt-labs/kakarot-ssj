@@ -95,19 +95,8 @@ pub fn serialize_transaction_signature(
 ///
 /// * `Option<Array<u8>>` - The deserialized bytes if successful, or None if deserialization fails.
 pub fn deserialize_bytes(self: Span<felt252>) -> Option<Array<u8>> {
-    // let mut i = 0;
     let mut bytes: Array<u8> = Default::default();
 
-    // while i != self.len() {
-    //     let v: Option<u8> = (*self[i]).try_into();
-
-    //     match v {
-    //         Option::Some(v) => { bytes.append(v); },
-    //         Option::None => { break; }
-    //     }
-
-    //     i += 1;
-    // };
     for felt in self {
         let v: Option<u8> = (*felt).try_into();
 
@@ -137,14 +126,6 @@ pub fn deserialize_bytes(self: Span<felt252>) -> Option<Array<u8>> {
 pub fn serialize_bytes(self: Span<u8>) -> Array<felt252> {
     let mut array: Array<felt252> = Default::default();
 
-    // let mut i = 0;
-
-    // while i != self.len() {
-    //     let value: felt252 = (*self[i]).into();
-    //     array.append(value);
-
-    //     i += 1;
-    // };
     for item in self {
         let value: felt252 = (*item).into();
         array.append(value);

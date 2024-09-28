@@ -56,17 +56,6 @@ pub impl Felt252VecTraitImpl<
     /// * A Span<u8> representing bytes conversion of `self` in little endian format
     fn to_le_bytes(ref self: Felt252Vec<T>) -> Span<u8> {
         let mut res: Array<u8> = array![];
-        // let mut i = 0;
-
-        // while i != self.len() {
-        //     if self[i] == Zero::zero() {
-        //         res.append(Zero::zero());
-        //     } else {
-        //         res.append_span(self[i].to_le_bytes());
-        //     }
-
-        //     i += 1;
-        // };
 
         for i in 0..self.len() {
             if self[i] == Zero::zero() {
@@ -222,11 +211,6 @@ pub impl Felt252VecTraitImpl<
         }
 
         let stop = idx + vec.len();
-        // let mut i = idx;
-        // while i != stop {
-        //     self.set(i, vec[i - idx]);
-        //     i += 1;
-        // };
         for i in idx..stop {
             self.set(i, vec[i - idx]);
         };
@@ -277,12 +261,6 @@ pub impl Felt252VecTraitImpl<
     fn duplicate(ref self: Felt252Vec<T>) -> Felt252Vec<T> {
         let mut new_vec = Default::default();
 
-        // let mut i: u32 = 0;
-
-        // while i != self.len {
-        //     new_vec.push(self[i]);
-        //     i += 1;
-        // };
         for i in 0..self.len {
             new_vec.push(self[i]);
         };
@@ -311,13 +289,6 @@ pub impl Felt252VecTraitImpl<
     fn clone_slice(ref self: Felt252Vec<T>, idx: usize, len: usize) -> Felt252Vec<T> {
         let mut new_vec = Default::default();
 
-        // let mut i: u32 = 0;
-
-        // while i != len {
-        //     new_vec.push(self[idx + i]);
-
-        //     i += 1;
-        // };
         for i in 0..len {
             new_vec.push(self[idx + i]);
         };
@@ -345,15 +316,7 @@ pub impl Felt252VecTraitImpl<
             return false;
         };
 
-        // let mut i = 0;
         let mut result = true;
-        // while i != lhs.len() {
-        //     if lhs[i] != rhs[i] {
-        //         result = false;
-        //         break;
-        //     }
-        //     i += 1;
-        // };
         for i in 0..lhs.len() {
             if lhs[i] != rhs[i] {
                 result = false;
@@ -391,12 +354,6 @@ pub impl Felt252VecTraitImpl<
             return Result::Err(Felt252VecTraitErrors::Overflow);
         }
 
-        // let mut i = start_idx;
-        // while i != start_idx + len {
-        //     self.set(i, value);
-
-        //     i += 1;
-        // };
         for i in start_idx..start_idx + len {
             self.set(i, value);
         };

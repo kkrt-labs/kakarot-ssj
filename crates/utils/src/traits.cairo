@@ -106,12 +106,6 @@ pub impl SpanU8TryIntoResultEthAddress of TryIntoResult<Span<u8>, EthAddress> {
         ensure(!(len > 20), EVMError::TypeConversionError(TYPE_CONVERSION_ERROR))?;
         let offset: u32 = len.into() - 1;
         let mut result: u256 = 0;
-        // let mut i: u32 = 0;
-        // while i != len {
-        //     let byte: u256 = (*self.at(i)).into();
-        //     result += byte.shl(8 * (offset - i).into());
-        //     i += 1;
-        // };
         for i in 0..len {
             let byte: u256 = (*self.at(i)).into();
             result += byte.shl(8 * (offset - i).into());
