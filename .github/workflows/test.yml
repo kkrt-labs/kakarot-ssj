@@ -9,6 +9,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
+  build:
+    # trunk-ignore(actionlint/runner-label)
+    runs-on: ubuntu-latest-16-cores
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/setup-snfoundry@v3
+      - uses: software-mansion/setup-scarb@v1
+      - run: scarb build
+
   tests:
     # trunk-ignore(actionlint/runner-label)
     runs-on: ubuntu-latest-16-cores
@@ -17,5 +27,106 @@ jobs:
       - uses: foundry-rs/setup-snfoundry@v3
       - uses: software-mansion/setup-scarb@v1
       - run: scarb fmt --check
-      - run: scarb build
       - run: scarb test
+
+    ef-tests:
+    # trunk-ignore(actionlint/runner-label)
+    runs-on: ubuntu-latest-16-cores
+    needs: [build]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache cairo-native setup
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+            ./libcairo_native_runtime.a
+          key: ${{ runner.os }}-cairo-native-${{ hashFiles('**/Cargo.lock', 'scripts/setup_cairo_native.sh') }}
+
+      - name: Make setup script executable
+        run: chmod +x ./scripts/setup_cairo_native.sh
+
+      - name: Setup Cairo Native
+        run: sudo ./scripts/setup_cairo_native.sh
+
+      - name: Set Environment Variables
+        run: |
+          echo "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19/" >> $GITHUB_ENV
+          echo "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19/" >> $GITHUB_ENV
+          echo "TABLEGEN_190_PREFIX=/usr/lib/llvm-19/" >> $GITHUB_ENV
+          echo "CAIRO_NATIVE_RUNTIME_LIBRARY=$(pwd)/libcairo_native_runtime.a" >> $GITHUB_ENV
+
+      - name: Checkout ef-tests
+        uses: actions/checkout@v4
+        with:
+          repository: kkrt-labs/ef-tests
+          ref: feat/cairo-native
+
+      - name: Checkout local skip file
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            blockchain-tests-skip.yml
+          sparse-checkout-cone-mode: false
+          path: skip-file
+
+      - name: Replace the skip files
+        run: mv skip-file/blockchain-tests-skip.yml blockchain-tests-skip.yml
+
+      - name: Setup
+        run: |
+          mkdir -p build/common
+          make setup setup-kakarot-v0
+
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
+
+      - name: Download Kakarot-SSJ build artifacts in v1
+        uses: actions/download-artifact@v3
+        with:
+          name: kakarot-ssj-build
+          path: ./build/v1
+
+      - name: Move Cairo1Helpers
+        run: |
+          mv build/v1/contracts_Cairo1Helpers.compiled_contract_class.json \
+          build/common/cairo1_helpers.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10.14
+
+      - name: Run tests
+        run: |
+          set -o pipefail
+          make ef-test-v1-native | tee data.txt
+          set +o pipefail
+
+      - name: Retrieve ef-tests execution resources
+        run: python scripts/compute_resources.py
+        env:
+          KAKAROT_VERSION: v1
+
+      - name: Upload resources
+        uses: actions/upload-artifact@v3
+        with:
+          path: resources
+          name: resources
+
+      - name: Generate blockchain-tests-skip.yml file
+        if: github.event_name == 'workflow_dispatch'
+        run: make generate-skip-file
+
+      - name: Upload skip file
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v3
+        with:
+          path: blockchain-tests-skip.yml
+          name: blockchain-tests-skip

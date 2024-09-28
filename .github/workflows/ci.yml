@@ -24,12 +24,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - uses: dtolnay/rust-toolchain@1.81.0
+      - uses: Swatinem/rust-cache@v2
+
       - name: Set up Scarb
         uses: software-mansion/setup-scarb@v1
 
       - name: Build contracts
         run: scarb build -p contracts
 
+  upload-artifacts:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -47,15 +54,44 @@ jobs:
       - run: scarb build
       - run: scarb test
 
-  ef-tests:
+    ef-tests:
     # trunk-ignore(actionlint/runner-label)
-    runs-on: ubuntu-latest-32-cores
-    needs: build
+    runs-on: ubuntu-latest-16-cores
+    needs: [build]
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache cairo-native setup
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+            ./libcairo_native_runtime.a
+          key: ${{ runner.os }}-cairo-native-${{ hashFiles('**/Cargo.lock', 'scripts/setup_cairo_native.sh') }}
+
+      - name: Make setup script executable
+        run: chmod +x ./scripts/setup_cairo_native.sh
+
+      - name: Setup Cairo Native
+        run: sudo ./scripts/setup_cairo_native.sh
+
+      - name: Set Environment Variables
+        run: |
+          echo "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19/" >> $GITHUB_ENV
+          echo "LLVM_SYS_191_PREFIX=/usr/lib/llvm-19/" >> $GITHUB_ENV
+          echo "TABLEGEN_190_PREFIX=/usr/lib/llvm-19/" >> $GITHUB_ENV
+          echo "CAIRO_NATIVE_RUNTIME_LIBRARY=$(pwd)/libcairo_native_runtime.a" >> $GITHUB_ENV
+
       - name: Checkout ef-tests
         uses: actions/checkout@v4
         with:
           repository: kkrt-labs/ef-tests
+          ref: feat/cairo-native
 
       - name: Checkout local skip file
         uses: actions/checkout@v4
@@ -67,11 +103,6 @@ jobs:
 
       - name: Replace the skip files
         run: mv skip-file/blockchain-tests-skip.yml blockchain-tests-skip.yml
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          cache-on-failure: "true"
 
       - name: Setup
         run: |
@@ -88,8 +119,8 @@ jobs:
           path: ./build/v1
 
       - name: Move Cairo1Helpers
-        run:
-          mv build/v1/contracts_Cairo1Helpers.compiled_contract_class.json
+        run: |
+          mv build/v1/contracts_Cairo1Helpers.compiled_contract_class.json \
           build/common/cairo1_helpers.json
 
       - name: Set up Python
@@ -100,7 +131,7 @@ jobs:
       - name: Run tests
         run: |
           set -o pipefail
-          make ef-test-v1 | tee data.txt
+          make ef-test-v1-native | tee data.txt
           set +o pipefail
 
       - name: Retrieve ef-tests execution resources
