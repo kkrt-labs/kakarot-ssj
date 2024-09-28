@@ -86,7 +86,6 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let bytes_len = core::cmp::min(32, calldata_len - offset);
         let sliced = calldata.slice(offset, bytes_len);
 
-        // Use from_be_bytes_partial to load the data
         let mut data_to_load: u256 = sliced
             .from_be_bytes_partial()
             .expect('Failed to parse calldata');

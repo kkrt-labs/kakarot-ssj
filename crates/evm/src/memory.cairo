@@ -550,10 +550,8 @@ pub(crate) impl InternalMemoryMethods of InternalMemoryTrait {
         let word = self.items.get(chunk_index.into());
         let word_high = (word.into() / start_mask);
 
-        // Calculate the number of bytes to read
         let bytes_to_read = 16 - start_offset_in_chunk;
 
-        // Slice the elements and convert to u128 using from_be_bytes_partial
         let word_low: u128 = elements
             .slice(0, bytes_to_read)
             .from_be_bytes_partial()
@@ -592,7 +590,6 @@ pub(crate) impl InternalMemoryMethods of InternalMemoryTrait {
         let word = self.items.get(chunk_index.into());
         let word_low = (word.into() % end_mask);
 
-        // Convert the elements to u128 using from_be_bytes_partial
         let low_bytes: u128 = elements
             .slice(0, end_offset_in_chunk)
             .from_be_bytes_partial()

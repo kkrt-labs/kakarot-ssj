@@ -6,7 +6,6 @@ use crate::errors::EVMError;
 use crate::precompiles::Precompile;
 use crate::precompiles::ec_operations::ec_add::ec_safe_add;
 use crate::precompiles::ec_operations::{is_on_curve, double_ec_point_unchecked, BN254_PRIME};
-// use utils::helpers::{load_word};
 use utils::traits::bytes::{ToBytes, U8SpanExTrait, FromBytes};
 
 const BASE_COST: u64 = 6000;
@@ -23,20 +22,11 @@ pub impl EcMul of Precompile {
         // Pad the input to 128 bytes to avoid out-of-bounds accesses
         let mut input = input.pad_right_with_zeroes(96);
 
-        let x1: u256 = match input.slice(0, 32).from_be_bytes() {
-            Option::Some(x1) => x1,
-            Option::None => { return Result::Ok((gas, [].span())); }
-        };
+        let x1: u256 = input.slice(0, 32).from_be_bytes().unwrap();
 
-        let y1: u256 = match input.slice(32, 32).from_be_bytes() {
-            Option::Some(y1) => y1,
-            Option::None => { return Result::Ok((gas, [].span())); }
-        };
+        let y1: u256 = input.slice(32, 32).from_be_bytes().unwrap();
 
-        let s: u256 = match input.slice(64, 32).from_be_bytes() {
-            Option::Some(s) => s,
-            Option::None => { return Result::Ok((gas, [].span())); }
-        };
+        let s: u256 = input.slice(64, 32).from_be_bytes().unwrap();
 
         let (x, y) = match ec_mul(x1, y1, s) {
             Option::Some((x, y)) => { (x, y) },
