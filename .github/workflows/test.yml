@@ -68,6 +68,12 @@ jobs:
       - name: Setup Cairo Native
         run: sudo ./scripts/setup_cairo_native.sh
 
+      # Add this step to verify the file exists
+      - name: Verify libcairo_native_runtime.a
+        run: |
+          ls -l libcairo_native_runtime.a || echo "File not found"
+          pwd
+
       - name: Set Environment Variables
         run: |
           echo "MLIR_SYS_190_PREFIX=/usr/lib/llvm-19/" >> $GITHUB_ENV

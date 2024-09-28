@@ -98,6 +98,7 @@ install_cairo_native_runtime() {
 	pushd ./cairo_native || exit 1
 	make deps
 	make runtime
+	cp libcairo_native_runtime.a ../libcairo_native_runtime.a
 	popd || exit 1
 
 	rm -rf ./cairo_native
