@@ -123,8 +123,6 @@ mod tests {
 
     // ensures all values start from index `from` upto index `to` of stack are `0x0`
     fn ensures_zeros(ref stack: Stack, from: u32, to: u32) {
-        // let mut idx: u32 = from;
-
         if to > from {
             return;
         }

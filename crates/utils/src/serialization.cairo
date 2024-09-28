@@ -97,8 +97,8 @@ pub fn serialize_transaction_signature(
 pub fn deserialize_bytes(self: Span<felt252>) -> Option<Array<u8>> {
     let mut bytes: Array<u8> = Default::default();
 
-    for felt in self {
-        let v: Option<u8> = (*felt).try_into();
+    for item in self {
+        let v: Option<u8> = (*item).try_into();
 
         match v {
             Option::Some(v) => { bytes.append(v); },

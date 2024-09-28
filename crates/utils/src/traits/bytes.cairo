@@ -59,7 +59,6 @@ pub impl U8SpanExImpl of U8SpanExTrait {
 
         // Fill the last input word
         let mut last_input_word: u64 = 0;
-        // let mut byte_counter: u8 = 0;
 
         // We enter a second loop for clarity.
         // O(2n) should be okay
@@ -536,7 +535,6 @@ pub impl ByteArrayExt of ByteArrayExTrait {
 
         // Fill the last input word
         let mut last_input_word: u64 = 0;
-        // let mut byte_counter: u8 = 0;
 
         // We enter a second loop for clarity.
         // O(2n) should be okay

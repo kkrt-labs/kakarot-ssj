@@ -352,7 +352,6 @@ mod tests {
         let mut dst4: Array<u8> = ArrayTrait::new();
         helpers::split_word(max_u128, 16, ref dst4);
         assert(dst4.len() == 16, 'dst4: wrong length');
-        // let mut counter: usize = 0;
         assert(*dst4[15] == 0xfe, 'dst4: wrong LSB value');
         for counter in 0..dst4.len() - 1 {
             assert_eq!(*dst4[counter], 0xff);
