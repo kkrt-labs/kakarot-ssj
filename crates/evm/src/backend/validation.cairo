@@ -58,7 +58,7 @@ mod tests {
     use core::num::traits::Bounded;
     use core::ops::SnapshotDeref;
     use core::starknet::{EthAddress, ContractAddress};
-    use core::starknet::storage::StorageTrait;
+    use core::starknet::storage::{StorageTrait, StoragePathEntry};
     use evm::gas;
     use snforge_std::cheatcodes::storage::{store_felt252};
     use snforge_std::{
@@ -77,10 +77,8 @@ mod tests {
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
         let kakarot_storage = kakarot_state.snapshot_deref().storage();
         let kakarot_address = test_address();
-        let account_evm_address_felt = 'account_evm_address';
-        let account_evm_address: EthAddress = account_evm_address_felt.try_into().unwrap();
-        let account_starknet_address_felt = 'account_starknet_address';
-        let account_starknet_address = account_starknet_address_felt.try_into().unwrap();
+        let account_evm_address: EthAddress = 'account_evm_address'.try_into().unwrap();
+        let account_starknet_address = 'account_starknet_address'.try_into().unwrap();
         let native_token_address = 'native_token_address'.try_into().unwrap();
 
         // Set up the environment
@@ -93,13 +91,15 @@ mod tests {
         store_felt252(kakarot_address, base_fee_storage, 1_000_000_000); // 1 Gwei
         store_felt252(kakarot_address, block_gas_limit_storage, BLOCK_GAS_LIMIT.into());
         store_felt252(kakarot_address, native_token_storage_address, native_token_address.into());
+        let map_entry_address = kakarot_storage
+            .Kakarot_evm_to_starknet_address
+            .entry(account_evm_address)
+            .deref()
+            .__storage_pointer_address__;
         store(
             kakarot_address,
-            map_entry_address(
-                selector!("Kakarot_evm_to_starknet_address"),
-                array![account_evm_address_felt].span(),
-            ),
-            array![account_starknet_address_felt].span()
+            map_entry_address.into(),
+            array![account_starknet_address.into()].span()
         );
 
         // Mock the calls to the account contract and the native token contract
