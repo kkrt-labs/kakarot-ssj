@@ -59,9 +59,9 @@ mod tests {
     use contracts::kakarot_core::KakarotCore;
     use core::num::traits::Bounded;
     use core::ops::SnapshotDeref;
+    use core::starknet::EthAddress;
 
     use core::starknet::storage::StorageTrait;
-    use core::starknet::EthAddress;
     use snforge_std::cheatcodes::storage::{store_felt252, map_entry_address};
     use snforge_std::{
         start_mock_call, test_address, start_cheat_chain_id_global, store,
