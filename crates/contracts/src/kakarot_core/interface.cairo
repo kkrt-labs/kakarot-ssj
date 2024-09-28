@@ -74,6 +74,9 @@ pub trait IExtendedKakarotCore<TContractState> {
         ref self: TContractState, evm_address: EthAddress
     ) -> ContractAddress;
 
+    /// Returns the balance of the specified address.
+    fn eth_get_balance(self: @TContractState, address: EthAddress) -> u256;
+
     /// View entrypoint into the EVM
     /// Performs view calls into the blockchain
     /// It cannot modify the state of the chain
