@@ -29,9 +29,7 @@ pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transacti
     // Validate nonce
     let starknet_caller_address = get_caller_address();
     let account = IAccountDispatcher { contract_address: starknet_caller_address };
-    let eth_address = account.get_evm_address();
-    let nonce = kakarot_state.eth_get_transaction_count(eth_address);
-    assert(nonce == tx.nonce(), 'Invalid nonce');
+    assert(account.get_nonce() == tx.nonce(), 'Invalid nonce');
 
     // Validate gas
     let gas_limit = tx.gas_limit();
