@@ -38,11 +38,13 @@ impl StoreBytecode of Store<StorageBytecode> {
         // afterwards.
         let base: felt252 = 0;
         let mut packed_bytecode = array![];
-        for i in 0..chunks_count + 1 {
-            let storage_address: StorageAddress = (base + i.into()).try_into().unwrap();
-            let chunk = storage_read_syscall(address_domain, storage_address).unwrap();
-            packed_bytecode.append(chunk);
-        };
+        for i in 0
+            ..chunks_count
+                + 1 {
+                    let storage_address: StorageAddress = (base + i.into()).try_into().unwrap();
+                    let chunk = storage_read_syscall(address_domain, storage_address).unwrap();
+                    packed_bytecode.append(chunk);
+                };
         let bytecode = load_packed_bytes(packed_bytecode.span(), bytecode_len);
         SyscallResult::Ok(StorageBytecode { bytecode: bytecode.span() })
     }

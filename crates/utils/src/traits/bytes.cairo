@@ -65,15 +65,16 @@ pub impl U8SpanExImpl of U8SpanExTrait {
         // O(2n) should be okay
         // We might want to regroup every computation into a single loop with appropriate `if`
         // branching For optimisation
-        for byte_counter in 0..last_input_num_bytes {
-            last_input_word += match self.get(full_u64_word_count * 8 + byte_counter.into()) {
-                Option::Some(byte) => {
-                    let byte: u64 = (*byte.unbox()).into();
-                    byte.shl(8_u64 * byte_counter.into())
-                },
-                Option::None => { break; },
+        for byte_counter in 0
+            ..last_input_num_bytes {
+                last_input_word += match self.get(full_u64_word_count * 8 + byte_counter.into()) {
+                    Option::Some(byte) => {
+                        let byte: u64 = (*byte.unbox()).into();
+                        byte.shl(8_u64 * byte_counter.into())
+                    },
+                    Option::None => { break; },
+                };
             };
-        };
 
         (u64_words, last_input_word, last_input_num_bytes)
     }
@@ -254,10 +255,11 @@ pub impl ToBytesImpl<
         let mask = Bounded::<u8>::MAX.into();
 
         let mut bytes: Array<u8> = Default::default();
-        for i in 0..bytes_used {
-            let val = Bitshift::<T>::shr(self, eight * (bytes_used - i - 1).into());
-            bytes.append((val & mask).try_into().unwrap());
-        };
+        for i in 0
+            ..bytes_used {
+                let val = Bitshift::<T>::shr(self, eight * (bytes_used - i - 1).into());
+                bytes.append((val & mask).try_into().unwrap());
+            };
 
         bytes.span()
     }
@@ -278,10 +280,11 @@ pub impl ToBytesImpl<
 
         let mut bytes: Array<u8> = Default::default();
 
-        for i in 0..bytes_used {
-            let val = self.shr(eight * i.into());
-            bytes.append((val & mask).try_into().unwrap());
-        };
+        for i in 0
+            ..bytes_used {
+                let val = self.shr(eight * i.into());
+                bytes.append((val & mask).try_into().unwrap());
+            };
 
         bytes.span()
     }
@@ -443,13 +446,15 @@ pub impl ByteArrayExt of ByteArrayExTrait {
         let (nb_full_words, pending_word_len) = DivRem::div_rem(
             bytes.len(), 31_u32.try_into().unwrap()
         );
-        for _ in 0..nb_full_words {
-            let mut word: felt252 = 0;
-            for _ in 0..31_u8 {
-                word = word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
+        for _ in 0
+            ..nb_full_words {
+                let mut word: felt252 = 0;
+                for _ in 0
+                    ..31_u8 {
+                        word = word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
+                    };
+                arr.append_word(word.try_into().unwrap(), 31);
             };
-            arr.append_word(word.try_into().unwrap(), 31);
-        };
 
         if pending_word_len == 0 {
             return arr;
@@ -457,9 +462,11 @@ pub impl ByteArrayExt of ByteArrayExTrait {
 
         let mut pending_word: felt252 = 0;
 
-        for _ in 0..pending_word_len {
-            pending_word = pending_word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
-        };
+        for _ in 0
+            ..pending_word_len {
+                pending_word = pending_word * POW_256_1.into()
+                    + (*bytes.pop_front().unwrap()).into();
+            };
         arr.append_word(pending_word.try_into().unwrap(), pending_word_len);
         arr
     }
@@ -536,15 +543,16 @@ pub impl ByteArrayExt of ByteArrayExTrait {
         // We might want to regroup every computation into a single loop with appropriate `if`
         // branching For optimisation
 
-        for byte_counter in 0..last_input_num_bytes {
-            last_input_word += match self.at(full_u64_word_count * 8 + byte_counter.into()) {
-                Option::Some(byte) => {
-                    let byte: u64 = byte.into();
-                    byte.shl(8_u64 * byte_counter.into())
-                },
-                Option::None => { break; },
+        for byte_counter in 0
+            ..last_input_num_bytes {
+                last_input_word += match self.at(full_u64_word_count * 8 + byte_counter.into()) {
+                    Option::Some(byte) => {
+                        let byte: u64 = byte.into();
+                        byte.shl(8_u64 * byte_counter.into())
+                    },
+                    Option::None => { break; },
+                };
             };
-        };
 
         (u64_words, last_input_word, last_input_num_bytes)
     }
@@ -599,7 +607,6 @@ mod tests {
             for i in 0..arr.len() {
                 assert(*arr[i] == res[i], 'byte mismatch');
             };
-
         }
 
         #[test]

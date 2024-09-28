@@ -41,9 +41,9 @@ pub impl Blake2f of Precompile {
 
         let mut pos = 4;
         for _ in 0..8_u8 {
-           // safe unwrap, because we have made sure of the input length to be 213
-           h.append(input.slice(pos, 8).from_le_bytes().unwrap());
-           pos += 8;
+            // safe unwrap, because we have made sure of the input length to be 213
+            h.append(input.slice(pos, 8).from_le_bytes().unwrap());
+            pos += 8;
         };
 
         let mut pos = 68;

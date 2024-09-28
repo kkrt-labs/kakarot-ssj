@@ -98,7 +98,6 @@ impl StateChangeLogImpl<T, +Drop<T>, +Copy<T>> of StateChangeLogTrait<T> {
             cloned_changes.insert(*key, NullableTrait::new(value));
         };
 
-
         StateChangeLog { changes: cloned_changes, keyset: self.keyset.clone(), }
     }
 }

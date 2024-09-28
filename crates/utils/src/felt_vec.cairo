@@ -57,13 +57,15 @@ pub impl Felt252VecTraitImpl<
     fn to_le_bytes(ref self: Felt252Vec<T>) -> Span<u8> {
         let mut res: Array<u8> = array![];
 
-        for i in 0..self.len() {
-            if self[i] == Zero::zero() {
-                res.append(Zero::zero());
-            } else {
-                res.append_span(self[i].to_le_bytes());
-            }
-        };
+        for i in 0
+            ..self
+                .len() {
+                    if self[i] == Zero::zero() {
+                        res.append(Zero::zero());
+                    } else {
+                        res.append_span(self[i].to_le_bytes());
+                    }
+                };
 
         res.span()
     }

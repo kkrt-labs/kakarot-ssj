@@ -13,10 +13,11 @@ pub impl EthAddressExImpl of EthAddressExTrait {
         let bytes_used: u256 = 20;
         let value: u256 = self.into();
         let mut bytes: Array<u8> = Default::default();
-        for i in 0..bytes_used {
-            let val = value.shr(8 * (bytes_used - i - 1));
-            bytes.append((val & 0xFF).try_into().unwrap());
-        };
+        for i in 0
+            ..bytes_used {
+                let val = value.shr(8 * (bytes_used - i - 1));
+                bytes.append((val & 0xFF).try_into().unwrap());
+            };
 
         bytes
     }
@@ -38,10 +39,11 @@ pub impl EthAddressExImpl of EthAddressExTrait {
         }
         let offset: u32 = len - 1;
         let mut result: u256 = 0;
-        for i in 0..len {
-            let byte: u256 = (*input.at(i)).into();
-            result += byte.shl((8 * (offset - i)).into());
-        };
+        for i in 0
+            ..len {
+                let byte: u256 = (*input.at(i)).into();
+                result += byte.shl((8 * (offset - i)).into());
+            };
         result.try_into()
     }
 }
