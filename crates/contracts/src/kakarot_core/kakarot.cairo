@@ -211,7 +211,7 @@ pub mod KakarotCore {
         // @return starknet_address The Starknet Account Contract address
         fn get_starknet_address(self: @ContractState, evm_address: EthAddress) -> ContractAddress {
             let registered_starknet_address = self.address_registry(evm_address);
-            if (registered_starknet_address.is_zero()) {
+            if (!registered_starknet_address.is_zero()) {
                 return registered_starknet_address;
             }
 

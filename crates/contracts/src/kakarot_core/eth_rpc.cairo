@@ -10,6 +10,7 @@ use evm::model::{TransactionResult, Address};
 use evm::{EVMTrait};
 use utils::constants::POW_2_53;
 use utils::eth_transaction::transaction::Transaction;
+use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 
 #[starknet::interface]
 pub trait IEthRPC<T> {
@@ -123,7 +124,11 @@ pub impl EthRPC<
     TContractState, impl KakarotState: KakarotCoreState<TContractState>, +Drop<TContractState>
 > of IEthRPC<TContractState> {
     fn eth_get_balance(self: @TContractState, address: EthAddress) -> u256 {
-        panic!("unimplemented")
+        let kakarot_state = KakarotState::get_state();
+        let starknet_address = kakarot_state.get_starknet_address(address);
+        let native_token_address = kakarot_state.get_native_token();
+        let native_token = IERC20CamelDispatcher { contract_address: native_token_address };
+        native_token.balanceOf(starknet_address)
     }
 
     fn eth_get_transaction_count(self: @TContractState, address: EthAddress) -> u64 {
@@ -218,8 +223,11 @@ fn is_view(self: @KakarotCore::ContractState) -> bool {
 mod tests {
     use crate::kakarot_core::KakarotCore;
     use crate::kakarot_core::eth_rpc::IEthRPC;
+    use crate::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
     use snforge_std::{start_cheat_chain_id_global, stop_cheat_chain_id_global};
     use utils::constants::POW_2_53;
+    use crate::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
+    use evm::test_utils::{sequencer_evm_address, evm_address};
 
     fn set_up() -> KakarotCore::ContractState {
         // Define the kakarot state to access contract functions
@@ -232,6 +240,16 @@ mod tests {
         stop_cheat_chain_id_global();
     }
 
+    #[test]
+    fn test_eth_get_balance() {
+        let (native_token, kakarot_core) = setup_contracts_for_testing();
+        // Uninitialized accounts should return a zero balance
+        assert_eq!(kakarot_core.eth_get_balance(evm_address()), 0);
+        let sequencer_starknet_address = kakarot_core.get_starknet_address(sequencer_evm_address());
+        // Fund an initialized account and make sure the balance is correct
+        fund_account_with_native_token(sequencer_starknet_address, native_token, 0x1);
+        assert_eq!(kakarot_core.eth_get_balance(sequencer_evm_address()), 0x1);
+    }
 
     #[test]
     fn test_eth_chain_id_returns_input_when_less_than_pow_2_53() {

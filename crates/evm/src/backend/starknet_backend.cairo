@@ -121,9 +121,7 @@ pub fn fetch_original_storage(account: @Account, key: u256) -> u256 {
 /// The balance of the given address.
 pub fn fetch_balance(self: @Address) -> u256 {
     let kakarot_state = KakarotCore::unsafe_new_contract_state();
-    let native_token_address = kakarot_state.get_native_token();
-    let native_token = IERC20CamelDispatcher { contract_address: native_token_address };
-    native_token.balanceOf(*self.starknet)
+    kakarot_state.eth_get_balance(*self.evm)
 }
 
 
