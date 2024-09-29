@@ -232,6 +232,7 @@ mod tests {
     use evm::test_utils::{sequencer_evm_address, evm_address};
     use snforge_std::{start_cheat_chain_id_global, stop_cheat_chain_id_global};
     use utils::constants::POW_2_53;
+    use evm::test_utils::evm_address;
 
     fn set_up() -> KakarotCore::ContractState {
         // Define the kakarot state to access contract functions
@@ -242,6 +243,14 @@ mod tests {
 
     fn tear_down() {
         stop_cheat_chain_id_global();
+    }
+
+    #[test]
+    fn test_eth_get_transaction_count() {
+        let (_, kakarot_core) = setup_contracts_for_testing();
+        let _ = deploy_eoa(kakarot_core, evm_address());
+        // Deployed eoa should return a zero nonce
+        assert_eq!(kakarot_core.eth_get_transaction_count(evm_address()), 0);
     }
 
     #[test]

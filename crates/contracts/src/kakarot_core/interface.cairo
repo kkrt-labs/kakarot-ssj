@@ -88,6 +88,9 @@ pub trait IExtendedKakarotCore<TContractState> {
     /// Executes an EVM transaction and possibly modifies the state
     fn eth_send_transaction(ref self: TContractState, tx: Transaction) -> (bool, Span<u8>, u64);
 
+    // Returns the transaction count (nonce) of the specified address
+    fn eth_get_transaction_count(self: @TContractState, address: EthAddress) -> u64;
+
     /// Upgrade the KakarotCore smart contract
     /// Using replace_class_syscall
     fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
