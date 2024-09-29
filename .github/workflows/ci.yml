@@ -90,6 +90,7 @@ jobs:
         with:
           repository: kkrt-labs/ef-tests
           ref: feat/cairo-native
+          path: ef-tests # Check out to a subdirectory to avoid cleaning the kakarot-ssj directory
 
       - name: Checkout local skip file
         uses: actions/checkout@v4
@@ -99,11 +100,10 @@ jobs:
           sparse-checkout-cone-mode: false
           path: skip-file
 
-      - name: Replace the skip files
-        run: mv skip-file/blockchain-tests-skip.yml blockchain-tests-skip.yml
-
-      - name: Setup
+      - name: Setup ef-tests
         run: |
+          mv skip-file/blockchain-tests-skip.yml ef-tests/blockchain-tests-skip.yml
+          cd ef-tests
           mkdir -p build/common
           make setup setup-kakarot-v0
 
@@ -114,25 +114,33 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: kakarot-ssj-build
-          path: ./build/v1
+          path: ef-tests/build/v1
 
       - name: Move Cairo1Helpers
         run: |
-          mv build/v1/contracts_Cairo1Helpers.compiled_contract_class.json \
-          build/common/cairo1_helpers.json
+          mv ef-tests/build/v1/contracts_Cairo1Helpers.compiled_contract_class.json \
+          ef-tests/build/common/cairo1_helpers.json
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.10.14
 
+      # Add this step to verify the file exists
+      - name: Verify libcairo_native_runtime.a
+        run: |
+          echo $CAIRO_NATIVE_RUNTIME_LIBRARY
+          ls -l $CAIRO_NATIVE_RUNTIME_LIBRARY
+
       - name: Run tests
+        working-directory: ef-tests
         run: |
           set -o pipefail
-          make ef-test-v1-native | tee data.txt
+          RUST_MIN_STACK=1342177280 make ef-test-v1-native | tee data.txt
           set +o pipefail
 
       - name: Retrieve ef-tests execution resources
+        working-directory: ef-tests
         run: python scripts/compute_resources.py
         env:
           KAKAROT_VERSION: v1
@@ -140,18 +148,19 @@ jobs:
       - name: Upload resources
         uses: actions/upload-artifact@v3
         with:
-          path: resources
+          path: ef-tests/resources
           name: resources
 
       - name: Generate blockchain-tests-skip.yml file
         if: github.event_name == 'workflow_dispatch'
+        working-directory: ef-tests
         run: make generate-skip-file
 
       - name: Upload skip file
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v3
         with:
-          path: blockchain-tests-skip.yml
+          path: ef-tests/blockchain-tests-skip.yml
           name: blockchain-tests-skip
 
   resources:

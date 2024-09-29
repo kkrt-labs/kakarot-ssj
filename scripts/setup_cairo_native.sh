@@ -32,18 +32,30 @@ setup_llvm_deps() {
 		export DEBIAN_FRONTEND=noninteractive
 		export TZ=America/New_York
 
+		# shellcheck disable=SC2312
 		CODENAME=$(grep VERSION_CODENAME /etc/os-release | cut -d= -f2)
-		[[ -z ${CODENAME} ]] && {
+		if [[ -z ${CODENAME} ]]; then
 			echo "Error: Unable to determine OS codename"
 			exit 1
-		}
+		fi
 
+		# shellcheck disable=SC2312
 		echo "deb http://apt.llvm.org/${CODENAME}/ llvm-toolchain-${CODENAME}-19 main" >/etc/apt/sources.list.d/llvm-19.list
 		echo "deb-src http://apt.llvm.org/${CODENAME}/ llvm-toolchain-${CODENAME}-19 main" >>/etc/apt/sources.list.d/llvm-19.list
-		wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+		# shellcheck disable=SC2312
+		if ! wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -; then
+			echo "Error: Failed to add LLVM GPG key"
+			exit 1
+		fi
 
-		apt-get update && apt-get upgrade -y
-		apt-get install -y llvm-19 llvm-19-dev llvm-19-runtime clang-19 clang-tools-19 lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools
+		if ! apt-get update && apt-get upgrade -y; then
+			echo "Error: Failed to update and upgrade packages"
+			exit 1
+		fi
+		if ! apt-get install -y llvm-19 llvm-19-dev llvm-19-runtime clang-19 clang-tools-19 lld-19 libpolly-19-dev libmlir-19-dev mlir-19-tools; then
+			echo "Error: Failed to install LLVM packages"
+			exit 1
+		fi
 
 		MLIR_SYS_190_PREFIX=/usr/lib/llvm-19/
 		LLVM_SYS_191_PREFIX=/usr/lib/llvm-19/
@@ -52,6 +64,12 @@ setup_llvm_deps() {
 		export MLIR_SYS_190_PREFIX
 		export LLVM_SYS_191_PREFIX
 		export TABLEGEN_190_PREFIX
+
+		{
+			echo "MLIR_SYS_190_PREFIX=${MLIR_SYS_190_PREFIX}"
+			echo "LLVM_SYS_191_PREFIX=${LLVM_SYS_191_PREFIX}"
+			echo "TABLEGEN_190_PREFIX=${TABLEGEN_190_PREFIX}"
+		} >>"${GITHUB_ENV}"
 		;;
 	*)
 		echo "Error: Unsupported operating system"
@@ -61,9 +79,11 @@ setup_llvm_deps() {
 
 	# GitHub Actions specific
 	[[ -n ${GITHUB_ACTIONS} ]] && {
-		echo "MLIR_SYS_190_PREFIX=${MLIR_SYS_190_PREFIX}" >>"${GITHUB_ENV}"
-		echo "LLVM_SYS_191_PREFIX=${LLVM_SYS_191_PREFIX}" >>"${GITHUB_ENV}"
-		echo "TABLEGEN_190_PREFIX=${TABLEGEN_190_PREFIX}" >>"${GITHUB_ENV}"
+		{
+			echo "MLIR_SYS_190_PREFIX=${MLIR_SYS_190_PREFIX}"
+			echo "LLVM_SYS_191_PREFIX=${LLVM_SYS_191_PREFIX}"
+			echo "TABLEGEN_190_PREFIX=${TABLEGEN_190_PREFIX}"
+		} >>"${GITHUB_ENV}"
 	}
 }
 
@@ -74,16 +94,19 @@ install_rust() {
 	fi
 
 	echo "cargo not found. Installing Rust..."
+	# shellcheck disable=SC2312
 	if ! curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.81.0 --no-modify-path; then
 		echo >&2 "Failed to install Rust. Aborting."
 		return 1
 	fi
 
-	# shellcheck disable=SC1090
-	source "${HOME}/.cargo/env" || {
-		echo >&2 "Failed to source Rust environment. Aborting."
+	# shellcheck disable=SC1091
+	if [[ -f "${HOME}/.cargo/env" ]]; then
+		. "${HOME}/.cargo/env"
+	else
+		echo >&2 "Failed to find Rust environment file. Aborting."
 		return 1
-	}
+	fi
 
 	echo "Rust installed successfully."
 }
@@ -103,7 +126,11 @@ install_cairo_native_runtime() {
 
 	rm -rf ./cairo_native
 
-	CAIRO_NATIVE_RUNTIME_LIBRARY="$(pwd)/libcairo_native_runtime.a"
+	CAIRO_NATIVE_RUNTIME_LIBRARY=$(pwd)/libcairo_native_runtime.a
+	if [[ -z ${CAIRO_NATIVE_RUNTIME_LIBRARY} ]]; then
+		echo "Error: Failed to set CAIRO_NATIVE_RUNTIME_LIBRARY"
+		exit 1
+	fi
 	export CAIRO_NATIVE_RUNTIME_LIBRARY
 
 	echo "CAIRO_NATIVE_RUNTIME_LIBRARY=${CAIRO_NATIVE_RUNTIME_LIBRARY}"
@@ -112,6 +139,7 @@ install_cairo_native_runtime() {
 }
 
 main() {
+	# shellcheck disable=SC2312
 	[[ "$(uname)" == "Linux" ]] && install_essential_deps_linux
 
 	setup_llvm_deps
