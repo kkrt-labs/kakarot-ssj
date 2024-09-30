@@ -139,13 +139,42 @@ install_cairo_native_runtime() {
 }
 
 main() {
+	# New argument parsing
+	SKIP_RUNTIME=false
+	while getopts ":s" opt; do
+		case ${opt} in
+			s )
+				SKIP_RUNTIME=true
+				;;
+			\? )
+				echo "Invalid option: $OPTARG" 1>&2
+				exit 1
+				;;
+		esac
+	done
+	shift $((OPTIND -1))
+
 	# shellcheck disable=SC2312
 	[[ "$(uname)" == "Linux" ]] && install_essential_deps_linux
 
 	setup_llvm_deps
-	install_cairo_native_runtime
 
-	echo "LLVM and Cairo native runtime dependencies installed successfully."
+	if [ "$SKIP_RUNTIME" = false ]; then
+		install_cairo_native_runtime
+	else
+		echo "Skipping Cairo native runtime installation"
+		# Set the environment variable if the library file exists
+		if [ -f "$(pwd)/libcairo_native_runtime.a" ]; then
+			CAIRO_NATIVE_RUNTIME_LIBRARY=$(pwd)/libcairo_native_runtime.a
+			export CAIRO_NATIVE_RUNTIME_LIBRARY
+			echo "CAIRO_NATIVE_RUNTIME_LIBRARY=${CAIRO_NATIVE_RUNTIME_LIBRARY}"
+			[[ -n ${GITHUB_ACTIONS} ]] && echo "CAIRO_NATIVE_RUNTIME_LIBRARY=${CAIRO_NATIVE_RUNTIME_LIBRARY}" >>"${GITHUB_ENV}"
+		else
+			echo "Warning: libcairo_native_runtime.a not found. CAIRO_NATIVE_RUNTIME_LIBRARY not set."
+		fi
+	fi
+
+	echo "LLVM and Cairo native runtime dependencies setup completed."
 }
 
 main "$@"
