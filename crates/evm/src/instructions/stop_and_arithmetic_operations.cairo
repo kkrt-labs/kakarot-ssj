@@ -187,9 +187,7 @@ pub impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let n = self.stack.pop()?;
 
         let result: u256 = match TryInto::<u256, NonZero<u256>>::try_into(n) {
-            Option::Some(n_nz) => {
-                u256_mul_mod_n(a,b,n_nz)
-            },
+            Option::Some(n_nz) => { u256_mul_mod_n(a, b, n_nz) },
             Option::None => 0,
         };
 
