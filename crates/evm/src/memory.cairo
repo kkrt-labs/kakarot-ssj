@@ -6,6 +6,7 @@ use utils::constants::{
     POW_2_72, POW_2_80, POW_2_88, POW_2_96, POW_2_104, POW_2_112, POW_2_120, POW_256_16
 };
 use utils::traits::array::ArrayExtTrait;
+use utils::traits::bytes::FromBytes;
 use utils::{helpers, math::Bitshift};
 
 #[derive(Destruct, Default)]
@@ -307,7 +308,10 @@ pub(crate) impl InternalMemoryMethods of InternalMemoryTrait {
         let nonzero_mask_f: NonZero<u256> = mask_f.try_into().unwrap();
         let (word_high, word_low) = DivRem::div_rem(word.into(), nonzero_mask_i);
         let (_, word_low_l) = DivRem::div_rem(word_low, nonzero_mask_f);
-        let bytes_as_word = helpers::load_word(elements.len(), elements);
+        let bytes_as_word: u128 = elements
+            .slice(0, elements.len())
+            .from_be_bytes_partial()
+            .expect('Failed to parse word_low');
         let new_w: u128 = (word_high * mask_i + bytes_as_word.into() * mask_f + word_low_l)
             .try_into()
             .unwrap();
@@ -545,7 +549,14 @@ pub(crate) impl InternalMemoryMethods of InternalMemoryTrait {
     ) {
         let word = self.items.get(chunk_index.into());
         let word_high = (word.into() / start_mask);
-        let word_low = helpers::load_word(16 - start_offset_in_chunk, elements);
+
+        let bytes_to_read = 16 - start_offset_in_chunk;
+
+        let word_low: u128 = elements
+            .slice(0, bytes_to_read)
+            .from_be_bytes_partial()
+            .expect('Failed to parse word_low');
+
         let new_word: u128 = (word_high * start_mask + word_low.into()).try_into().unwrap();
         self.items.insert(chunk_index.into(), new_word);
     }
@@ -579,7 +590,10 @@ pub(crate) impl InternalMemoryMethods of InternalMemoryTrait {
         let word = self.items.get(chunk_index.into());
         let word_low = (word.into() % end_mask);
 
-        let low_bytes = helpers::load_word(end_offset_in_chunk, elements);
+        let low_bytes: u128 = elements
+            .slice(0, end_offset_in_chunk)
+            .from_be_bytes_partial()
+            .expect('Failed to parse low_bytes');
         let new_word: u128 = (low_bytes.into() * end_mask + word_low).try_into().unwrap();
         self.items.insert(chunk_index.into(), new_word);
     }

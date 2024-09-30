@@ -387,8 +387,8 @@ mod tests {
     use snforge_std::{test_address, start_mock_call};
     use utils::constants::EMPTY_KECCAK;
     use utils::helpers::compute_starknet_address;
-    use utils::helpers::load_word;
-    use utils::traits::bytes::U8SpanExTrait;
+    use utils::traits::bytes::{U8SpanExTrait, FromBytes};
+
     use utils::traits::{EthAddressIntoU256};
 
 
@@ -405,8 +405,11 @@ mod tests {
         vm.stack.push(0).expect('push failed');
         assert(vm.exec_return().is_ok(), 'Exec return failed');
 
-        // Then
-        assert(1000 == load_word(32, vm.return_data()), 'Wrong return_data');
+        let return_data = vm.return_data();
+        let parsed_return_data: u256 = return_data
+            .from_be_bytes()
+            .expect('Failed to parse return data');
+        assert(1000 == parsed_return_data, 'Wrong return_data');
         assert(!vm.is_running(), 'vm should be stopped');
         assert_eq!(vm.error, false);
     }
@@ -424,8 +427,11 @@ mod tests {
         vm.stack.push(0).expect('push failed');
         assert(vm.exec_revert().is_ok(), 'Exec revert failed');
 
-        // Then
-        assert(1000 == load_word(32, vm.return_data()), 'Wrong return_data');
+        let return_data = vm.return_data();
+        let parsed_return_data: u256 = return_data
+            .from_be_bytes()
+            .expect('Failed to parse return data');
+        assert(1000 == parsed_return_data, 'Wrong return_data');
         assert(!vm.is_running(), 'vm should be stopped');
         assert_eq!(vm.error, true);
     }
@@ -442,9 +448,11 @@ mod tests {
         vm.stack.push(32).expect('push failed');
         vm.stack.push(1).expect('push failed');
         assert(vm.exec_return().is_ok(), 'Exec return failed');
-
-        // Then
-        assert(256 == load_word(32, vm.return_data()), 'Wrong return_data');
+        let return_data = vm.return_data();
+        let parsed_return_data: u256 = return_data
+            .from_be_bytes_partial()
+            .expect('Failed to parse return data');
+        assert(256 == parsed_return_data, 'Wrong return_data');
         assert(!vm.is_running(), 'vm should be stopped');
         assert_eq!(vm.error, false);
     }
