@@ -7,3 +7,4 @@ node_modules/
 cache/
 
 scripts/libcairo_native_runtime.a
+scripts/__pycache__
