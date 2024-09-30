@@ -1,5 +1,6 @@
 //! Stop and Arithmetic Operations.
 use core::integer::{u512_safe_div_rem_by_u256};
+use core::math::u256_mul_mod_n;
 use core::num::traits::{OverflowingAdd, OverflowingMul, OverflowingSub};
 use crate::errors::EVMError;
 use crate::gas;
@@ -186,12 +187,7 @@ pub impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let n = self.stack.pop()?;
 
         let result: u256 = match TryInto::<u256, NonZero<u256>>::try_into(n) {
-            Option::Some(_) => {
-                // (x * y) mod N <=> (x mod N) * (y mod N) mod N
-                // It is more gas-efficient than to use u256_wide_mul
-                // Won't panic because n is not zero
-                (a % n) * (b % n) % n
-            },
+            Option::Some(n_nz) => { u256_mul_mod_n(a, b, n_nz) },
             Option::None => 0,
         };
 
