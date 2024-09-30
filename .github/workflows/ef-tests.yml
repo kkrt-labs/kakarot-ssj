@@ -1,34 +1,18 @@
-name: Common Workflow
+name: EF-Tests
 
 on:
   workflow_call:
+    inputs:
+      artifact-name:
+        required: true
+        type: string
+
+permissions: read-all
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    env:
-      CI_COMMIT_MESSAGE: CI Formatting Auto Commit
-      CI_COMMIT_AUTHOR: ${{ github.event.repository.name }} CI
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Scarb
-        uses: software-mansion/setup-scarb@v1
-
-      - name: Build contracts
-        run: scarb build -p contracts
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: kakarot-ssj-build
-          path: target/dev
-
- ef-tests:
+  ef-tests:
     # trunk-ignore(actionlint/runner-label)
     runs-on: ubuntu-latest-16-cores
-    needs: [build]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,7 +28,9 @@ jobs:
             ~/.cargo/git/db/
             target/
             ./libcairo_native_runtime.a
-          key: ${{ runner.os }}-cairo-native-${{ hashFiles('**/Cargo.lock', 'scripts/setup_cairo_native.sh') }}
+          key:
+            ${{ runner.os }}-cairo-native-${{ hashFiles('**/Cargo.lock',
+            'scripts/setup_cairo_native.sh') }}
 
       - name: Make setup script executable
         run: chmod +x ./scripts/setup_cairo_native.sh
@@ -92,7 +78,7 @@ jobs:
       - name: Download Kakarot-SSJ build artifacts in v1
         uses: actions/download-artifact@v3
         with:
-          name: kakarot-ssj-build
+          name: ${{ inputs.artifact-name }}
           path: ef-tests/build/v1
 
       - name: Move Cairo1Helpers

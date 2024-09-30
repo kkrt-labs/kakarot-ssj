@@ -143,28 +143,33 @@ main() {
 	SKIP_RUNTIME=false
 	while getopts ":s" opt; do
 		case ${opt} in
-			s )
-				SKIP_RUNTIME=true
-				;;
-			\? )
-				echo "Invalid option: $OPTARG" 1>&2
-				exit 1
-				;;
+		s)
+			SKIP_RUNTIME=true
+			;;
+		\?)
+			echo "Invalid option: ${OPTARG}" 1>&2
+			exit 1
+			;;
+		*)
+			echo "Error: Unhandled option" 1>&2
+			exit 1
+			;;
 		esac
 	done
-	shift $((OPTIND -1))
+	shift $((OPTIND - 1))
 
 	# shellcheck disable=SC2312
 	[[ "$(uname)" == "Linux" ]] && install_essential_deps_linux
 
 	setup_llvm_deps
 
-	if [ "$SKIP_RUNTIME" = false ]; then
+	if [[ ${SKIP_RUNTIME} == false ]]; then
 		install_cairo_native_runtime
 	else
 		echo "Skipping Cairo native runtime installation"
 		# Set the environment variable if the library file exists
-		if [ -f "$(pwd)/libcairo_native_runtime.a" ]; then
+		# shellcheck disable=SC2312
+		if [[ -f "$(pwd)/libcairo_native_runtime.a" ]]; then
 			CAIRO_NATIVE_RUNTIME_LIBRARY=$(pwd)/libcairo_native_runtime.a
 			export CAIRO_NATIVE_RUNTIME_LIBRARY
 			echo "CAIRO_NATIVE_RUNTIME_LIBRARY=${CAIRO_NATIVE_RUNTIME_LIBRARY}"
