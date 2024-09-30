@@ -59,22 +59,21 @@ pub impl U8SpanExImpl of U8SpanExTrait {
 
         // Fill the last input word
         let mut last_input_word: u64 = 0;
-        let mut byte_counter: u8 = 0;
 
         // We enter a second loop for clarity.
         // O(2n) should be okay
         // We might want to regroup every computation into a single loop with appropriate `if`
         // branching For optimisation
-        while byte_counter.into() != last_input_num_bytes {
-            last_input_word += match self.get(full_u64_word_count * 8 + byte_counter.into()) {
-                Option::Some(byte) => {
-                    let byte: u64 = (*byte.unbox()).into();
-                    byte.shl(8_u64 * byte_counter.into())
-                },
-                Option::None => { break; },
+        for byte_counter in 0
+            ..last_input_num_bytes {
+                last_input_word += match self.get(full_u64_word_count * 8 + byte_counter.into()) {
+                    Option::Some(byte) => {
+                        let byte: u64 = (*byte.unbox()).into();
+                        byte.shl(8_u64 * byte_counter.into())
+                    },
+                    Option::None => { break; },
+                };
             };
-            byte_counter += 1;
-        };
 
         (u64_words, last_input_word, last_input_num_bytes)
     }
@@ -183,10 +182,8 @@ pub impl U8SpanExImpl of U8SpanExTrait {
         };
 
         // append the data
-        let mut i = 0;
-        while i != self.len() {
-            arr.append(*self[i]);
-            i += 1;
+        for item in self {
+            arr.append(*item);
         };
 
         arr.span()
@@ -257,12 +254,11 @@ pub impl ToBytesImpl<
         let mask = Bounded::<u8>::MAX.into();
 
         let mut bytes: Array<u8> = Default::default();
-        let mut i: u8 = 0;
-        while i != bytes_used {
-            let val = Bitshift::<T>::shr(self, eight * (bytes_used - i - 1).into());
-            bytes.append((val & mask).try_into().unwrap());
-            i += 1;
-        };
+        for i in 0
+            ..bytes_used {
+                let val = Bitshift::<T>::shr(self, eight * (bytes_used - i - 1).into());
+                bytes.append((val & mask).try_into().unwrap());
+            };
 
         bytes.span()
     }
@@ -283,12 +279,11 @@ pub impl ToBytesImpl<
 
         let mut bytes: Array<u8> = Default::default();
 
-        let mut i: u8 = 0;
-        while i != bytes_used {
-            let val = self.shr(eight * i.into());
-            bytes.append((val & mask).try_into().unwrap());
-            i += 1;
-        };
+        for i in 0
+            ..bytes_used {
+                let val = self.shr(eight * i.into());
+                bytes.append((val & mask).try_into().unwrap());
+            };
 
         bytes.span()
     }
@@ -450,29 +445,27 @@ pub impl ByteArrayExt of ByteArrayExTrait {
         let (nb_full_words, pending_word_len) = DivRem::div_rem(
             bytes.len(), 31_u32.try_into().unwrap()
         );
-        let mut i = 0;
-        while i != nb_full_words {
-            let mut word: felt252 = 0;
-            let mut j = 0;
-            while j != 31 {
-                word = word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
-                j += 1;
+        for _ in 0
+            ..nb_full_words {
+                let mut word: felt252 = 0;
+                for _ in 0
+                    ..31_u8 {
+                        word = word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
+                    };
+                arr.append_word(word.try_into().unwrap(), 31);
             };
-            arr.append_word(word.try_into().unwrap(), 31);
-            i += 1;
-        };
 
         if pending_word_len == 0 {
             return arr;
         };
 
         let mut pending_word: felt252 = 0;
-        let mut i = 0;
 
-        while i != pending_word_len {
-            pending_word = pending_word * POW_256_1.into() + (*bytes.pop_front().unwrap()).into();
-            i += 1;
-        };
+        for _ in 0
+            ..pending_word_len {
+                pending_word = pending_word * POW_256_1.into()
+                    + (*bytes.pop_front().unwrap()).into();
+            };
         arr.append_word(pending_word.try_into().unwrap(), pending_word_len);
         arr
     }
@@ -493,11 +486,8 @@ pub impl ByteArrayExt of ByteArrayExTrait {
     /// * A Span<u8> containing the bytes from the ByteArray
     fn into_bytes(self: ByteArray) -> Span<u8> {
         let mut output: Array<u8> = Default::default();
-        let len = self.len();
-        let mut i = 0;
-        while i != len {
+        for i in 0..self.len() {
             output.append(self[i]);
-            i += 1;
         };
         output.span()
     }
@@ -545,22 +535,22 @@ pub impl ByteArrayExt of ByteArrayExTrait {
 
         // Fill the last input word
         let mut last_input_word: u64 = 0;
-        let mut byte_counter: u8 = 0;
 
         // We enter a second loop for clarity.
         // O(2n) should be okay
         // We might want to regroup every computation into a single loop with appropriate `if`
         // branching For optimisation
-        while byte_counter.into() != last_input_num_bytes {
-            last_input_word += match self.at(full_u64_word_count * 8 + byte_counter.into()) {
-                Option::Some(byte) => {
-                    let byte: u64 = byte.into();
-                    byte.shl(8_u64 * byte_counter.into())
-                },
-                Option::None => { break; },
+
+        for byte_counter in 0
+            ..last_input_num_bytes {
+                last_input_word += match self.at(full_u64_word_count * 8 + byte_counter.into()) {
+                    Option::Some(byte) => {
+                        let byte: u64 = byte.into();
+                        byte.shl(8_u64 * byte_counter.into())
+                    },
+                    Option::None => { break; },
+                };
             };
-            byte_counter += 1;
-        };
 
         (u64_words, last_input_word, last_input_num_bytes)
     }
@@ -612,10 +602,8 @@ mod tests {
             let res = ByteArrayExTrait::from_bytes(arr.span());
 
             // Ensure that the result is complete and keeps the same order
-            let mut i = 0;
-            while i != arr.len() {
+            for i in 0..arr.len() {
                 assert(*arr[i] == res[i], 'byte mismatch');
-                i += 1;
             };
         }
 
@@ -685,10 +673,8 @@ mod tests {
             let res = ByteArrayExTrait::from_bytes(arr.span());
 
             // Ensure that the result is complete and keeps the same order
-            let mut i = 0;
-            while i != arr.len() {
+            for i in 0..arr.len() {
                 assert(*arr[i] == res[i], 'byte mismatch');
-                i += 1;
             };
         }
 

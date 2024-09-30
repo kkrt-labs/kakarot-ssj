@@ -369,12 +369,12 @@ pub(crate) impl InternalMemoryMethods of InternalMemoryTrait {
     fn load_aligned_words(
         ref self: Memory, mut chunk_index: usize, final_chunk: usize, ref elements: Array<u8>
     ) {
-        while chunk_index != final_chunk {
-            let value = self.items.get(chunk_index.into());
-            // Pushes 16 items to `elements`
-            helpers::split_word_128(value.into(), ref elements);
-            chunk_index += 1;
-        }
+        for i in chunk_index
+            ..final_chunk {
+                let value = self.items.get(i.into());
+                // Pushes 16 items to `elements`
+                helpers::split_word_128(value.into(), ref elements);
+            };
     }
 
     /// Loads a `u256` element from the memory chunk at a specified offset.
@@ -810,10 +810,8 @@ mod tests {
         memory.load_n_internal(16, ref results, 0);
 
         assert(results.len() == 16, 'error');
-        let mut i = 0;
-        while i != results.len() {
-            assert(*results[i] == 0xFF, 'byte value loaded not correct');
-            i += 1;
+        for result in results {
+            assert(result == 0xFF, 'byte value loaded not correct');
         }
     }
 

@@ -102,17 +102,17 @@ fn compute_memory_words_amount(size: u32, offset: u32, mem_len: u32) -> (u32, u3
 fn fill_array_with_memory_words(
     ref self: VM, ref to_hash: Array<u64>, mut offset: u32, mut amount: u32
 ) -> u32 {
-    while amount != 0 {
-        let loaded = self.memory.load(offset);
-        let ((high_h, low_h), (high_l, low_l)) = loaded.split_into_u64_le();
-        to_hash.append(low_h);
-        to_hash.append(high_h);
-        to_hash.append(low_l);
-        to_hash.append(high_l);
+    for _ in 0
+        ..amount {
+            let loaded = self.memory.load(offset);
+            let ((high_h, low_h), (high_l, low_l)) = loaded.split_into_u64_le();
+            to_hash.append(low_h);
+            to_hash.append(high_h);
+            to_hash.append(low_l);
+            to_hash.append(high_l);
 
-        offset += 32;
-        amount -= 1;
-    };
+            offset += 32;
+        };
     offset
 }
 

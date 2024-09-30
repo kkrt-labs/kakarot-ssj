@@ -17,7 +17,7 @@ pub impl AccessListItemImpl of AccessListItemTrait {
         let AccessListItem { ethereum_address, mut storage_keys } = *self;
 
         let mut storage_keys_arr = array![];
-        while let Option::Some(storage_key) = storage_keys.pop_front() {
+        for storage_key in storage_keys {
             storage_keys_arr.append((ethereum_address, *storage_key));
         };
 

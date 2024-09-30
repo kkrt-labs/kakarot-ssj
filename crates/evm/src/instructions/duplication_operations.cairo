@@ -123,25 +123,20 @@ mod tests {
 
     // ensures all values start from index `from` upto index `to` of stack are `0x0`
     fn ensures_zeros(ref stack: Stack, from: u32, to: u32) {
-        let mut idx: u32 = from;
-
         if to > from {
             return;
         }
 
-        while idx != to {
+        for idx in from..to {
             assert(stack.peek_at(idx).unwrap() == 0x00, 'should be zero');
-            idx += 1;
         };
     }
 
     // push `n` number of `0x0` to the stack
     fn push_zeros(ref stack: Stack, n: u8) {
-        let mut i = 0;
-        while i != n {
+        for _ in 0..n {
             stack.push(0x0).unwrap();
-            i += 1;
-        }
+        };
     }
 
     #[test]
