@@ -279,7 +279,7 @@ pub impl MemoryOperation of MemoryOperationTrait {
     /// # Specification: https://www.evm.codes/#5e?fork=cancun
     fn exec_mcopy(ref self: VM) -> Result<(), EVMError> {
         let dest_offset = self.stack.pop_saturating_usize()?;
-        let source_offset = self.stack.pop_usize()?;
+        let source_offset = self.stack.pop_saturating_usize()?;
         let size = self.stack.pop_usize()?;
 
         let words_size = bytes_32_words_size(size).into();
