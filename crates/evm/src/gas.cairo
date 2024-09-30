@@ -103,27 +103,32 @@ pub fn max_message_call_gas(gas: u64) -> u64 {
 /// * `memory_cost`: The amount needed to extend the memory in the current frame.
 /// * `extra_gas`: The amount of gas needed for transferring value + creating a new account inside a
 /// message call.
-/// * `call_stipend`: The amount of stipend provided to a message call to execute code while
-/// transferring value(native token).
 ///
 /// # Returns
 ///
-/// * `message_call_gas`: `MessageCallGas`
+/// * `Result<MessageCallGas, EVMError>`: The calculated MessageCallGas or an error if overflow occurs.
 pub fn calculate_message_call_gas(
     value: u256, gas: u64, gas_left: u64, memory_cost: u64, extra_gas: u64
-) -> MessageCallGas {
+) -> Result<MessageCallGas, EVMError> {
     let call_stipend = if value == 0 {
         0
     } else {
         CALL_STIPEND
     };
-    let gas = if gas_left < extra_gas + memory_cost {
+
+    // Check for overflow when adding extra_gas and memory_cost
+    let total_extra_cost = extra_gas.checked_add(memory_cost).ok_or(EVMError::OutOfGas)?;
+    let gas = if gas_left < total_extra_cost {
         gas
     } else {
-        min(gas, max_message_call_gas(gas_left - memory_cost - extra_gas))
+        let remaining_gas = gas_left - total_extra_cost; // Safe because of the check above
+        min(gas, max_message_call_gas(remaining_gas))
     };
 
-    return MessageCallGas { cost: gas + extra_gas, stipend: gas + call_stipend };
+    let cost = gas.checked_add(extra_gas).ok_or(EVMError::OutOfGas)?;
+    let stipend = gas.checked_add(call_stipend).ok_or(EVMError::OutOfGas)?;
+
+    Result::Ok(MessageCallGas { cost, stipend })
 }
 
 
