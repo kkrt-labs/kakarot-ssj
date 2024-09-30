@@ -65,7 +65,7 @@ pub impl SystemOperations of SystemOperationsTrait {
             self.gas_left(),
             memory_expansion.expansion_cost,
             access_gas_cost + transfer_gas_cost + create_gas_cost
-        );
+        )?;
         self.charge_gas(message_call_gas.cost + memory_expansion.expansion_cost)?;
         // Only the transfer gas is left to charge.
 
@@ -140,7 +140,7 @@ pub impl SystemOperations of SystemOperationsTrait {
             self.gas_left(),
             memory_expansion.expansion_cost,
             access_gas_cost + transfer_gas_cost
-        );
+        )?;
         self.charge_gas(message_call_gas.cost + memory_expansion.expansion_cost)?;
 
         // If sender_balance < value, return early, pushing
@@ -212,7 +212,7 @@ pub impl SystemOperations of SystemOperationsTrait {
 
         let message_call_gas = gas::calculate_message_call_gas(
             0, gas, self.gas_left(), memory_expansion.expansion_cost, access_gas_cost
-        );
+        )?;
         self.charge_gas(message_call_gas.cost + memory_expansion.expansion_cost)?;
 
         self
@@ -265,7 +265,7 @@ pub impl SystemOperations of SystemOperationsTrait {
 
         let message_call_gas = gas::calculate_message_call_gas(
             0, gas, self.gas_left(), memory_expansion.expansion_cost, access_gas_cost
-        );
+        )?;
         let gas_to_charge = message_call_gas
             .cost
             .checked_add(memory_expansion.expansion_cost)
