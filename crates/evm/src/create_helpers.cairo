@@ -98,21 +98,22 @@ pub impl CreateHelpersImpl of CreateHelpers {
             return self.stack.push(0);
         }
 
+        sender
+            .set_nonce(
+                sender_current_nonce + 1
+            ); // Will not overflow because of the previous check.
+        self.env.state.set_account(sender);
+
         let mut target_account = self.env.state.get_account(create_args.to);
         let target_address = target_account.address();
         // Collision happens if the target account loaded in state has code or nonce set, meaning
         // - it's deployed on SN and is an active EVM contract
         // - it's not deployed on SN and is an active EVM contract in the Kakarot cache
         if target_account.has_code_or_nonce() {
-            sender.set_nonce(sender_current_nonce + 1);
-            self.env.state.set_account(sender);
             return self.stack.push(0);
         };
 
         ensure(create_args.bytecode.len() <= constants::MAX_INITCODE_SIZE, EVMError::OutOfGas)?;
-
-        sender.set_nonce(sender_current_nonce + 1);
-        self.env.state.set_account(sender);
 
         let child_message = Message {
             caller: sender_address,

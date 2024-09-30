@@ -1,3 +1,4 @@
+use core::num::traits::CheckedAdd;
 use crate::call_helpers::CallHelpers;
 use crate::create_helpers::{CreateHelpers, CreateType};
 use crate::errors::{ensure, EVMError};
@@ -265,7 +266,11 @@ pub impl SystemOperations of SystemOperationsTrait {
         let message_call_gas = gas::calculate_message_call_gas(
             0, gas, self.gas_left(), memory_expansion.expansion_cost, access_gas_cost
         );
-        self.charge_gas(message_call_gas.cost + memory_expansion.expansion_cost)?;
+        let gas_to_charge = message_call_gas
+            .cost
+            .checked_add(memory_expansion.expansion_cost)
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(gas_to_charge)?;
 
         self
             .generic_call(
