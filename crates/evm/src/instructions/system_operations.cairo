@@ -10,7 +10,6 @@ use crate::model::vm::{VM, VMTrait};
 use crate::stack::StackTrait;
 use crate::state::StateTrait;
 use utils::set::SetTrait;
-use core::integer::CheckedAdd;
 
 #[generate_trait]
 pub impl SystemOperations of SystemOperationsTrait {

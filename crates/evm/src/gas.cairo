@@ -106,7 +106,8 @@ pub fn max_message_call_gas(gas: u64) -> u64 {
 ///
 /// # Returns
 ///
-/// * `Result<MessageCallGas, EVMError>`: The calculated MessageCallGas or an error if overflow occurs.
+/// * `Result<MessageCallGas, EVMError>`: The calculated MessageCallGas or an error if overflow
+/// occurs.
 pub fn calculate_message_call_gas(
     value: u256, gas: u64, gas_left: u64, memory_cost: u64, extra_gas: u64
 ) -> Result<MessageCallGas, EVMError> {
