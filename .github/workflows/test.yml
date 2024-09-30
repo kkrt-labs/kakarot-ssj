@@ -9,13 +9,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tests:
-    # trunk-ignore(actionlint/runner-label)
-    runs-on: ubuntu-latest-16-cores
-    steps:
-      - uses: actions/checkout@v3
-      - uses: foundry-rs/setup-snfoundry@v3
-      - uses: software-mansion/setup-scarb@v1
-      - run: scarb fmt --check
-      - run: scarb build
-      - run: scarb test
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      artifact-name: kakarot-ssj-build
+
+  tests-unit:
+    uses: ./.github/workflows/tests-unit.yml
+    with:
+      run-fmt-check: true
+
+  ef-tests:
+    uses: ./.github/workflows/ef-tests.yml
+    needs: [build]
+    with:
+      artifact-name: kakarot-ssj-build

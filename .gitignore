@@ -5,3 +5,5 @@ target
 node_modules/
 *.snfoundry_cache
 cache/
+
+scripts/libcairo_native_runtime.a
