@@ -57,8 +57,8 @@ mod tests {
     use contracts::kakarot_core::KakarotCore;
     use core::num::traits::Bounded;
     use core::ops::SnapshotDeref;
-    use core::starknet::{EthAddress, ContractAddress};
     use core::starknet::storage::{StorageTrait, StoragePathEntry};
+    use core::starknet::{EthAddress, ContractAddress};
     use evm::gas;
     use snforge_std::cheatcodes::storage::{store_felt252};
     use snforge_std::{
