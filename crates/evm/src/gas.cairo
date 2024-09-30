@@ -194,7 +194,7 @@ pub fn memory_expansion(
         }
     }?;
 
-    let new_size = helpers::ceil32(max_size);
+    let new_size = helpers::bytes_32_words_size(max_size) * 32;
 
     if new_size <= current_size {
         return Result::Ok(MemoryExpansion { new_size: current_size, expansion_cost: 0 });
@@ -218,7 +218,7 @@ pub fn memory_expansion(
 /// * `init_code_gas` - The gas to be charged for the init code.
 #[inline(always)]
 pub fn init_code_cost(code_size: usize) -> u64 {
-    let code_size_in_words = helpers::ceil32(code_size) / 32;
+    let code_size_in_words = helpers::bytes_32_words_size(code_size);
     code_size_in_words.into() * INITCODE_WORD_COST
 }
 

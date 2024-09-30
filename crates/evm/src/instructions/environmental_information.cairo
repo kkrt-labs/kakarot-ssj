@@ -8,7 +8,7 @@ use crate::model::vm::{VM, VMTrait};
 use crate::model::{AddressTrait};
 use crate::stack::StackTrait;
 use crate::state::StateTrait;
-use utils::helpers::{ceil32, load_word};
+use utils::helpers::{bytes_32_words_size, load_word};
 use utils::set::SetTrait;
 use utils::traits::{EthAddressIntoU256};
 
@@ -113,7 +113,7 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let offset = self.stack.pop_saturating_usize()?;
         let size = self.stack.pop_usize()?;
 
-        let words_size = (ceil32(size) / 32).into();
+        let words_size = bytes_32_words_size(size).into();
         let copy_gas_cost = gas::COPY * words_size;
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(dest_offset, size)].span()
@@ -143,7 +143,7 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let offset = self.stack.pop_saturating_usize()?;
         let size = self.stack.pop_usize()?;
 
-        let words_size = (ceil32(size) / 32).into();
+        let words_size = bytes_32_words_size(size).into();
         let copy_gas_cost = gas::COPY * words_size;
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(dest_offset, size)].span()
@@ -193,7 +193,7 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let size = self.stack.pop_usize()?;
 
         // GAS
-        let words_size = (ceil32(size) / 32).into();
+        let words_size = bytes_32_words_size(size).into();
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(dest_offset, size)].span()
         )?;
@@ -236,8 +236,7 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         }
         ensure(!(last_returndata_index > return_data.len()), EVMError::ReturnDataOutOfBounds)?;
 
-        //TODO: handle overflow in ceil32 function.
-        let words_size = (ceil32(size.into()) / 32).into();
+        let words_size = bytes_32_words_size(size).into();
         let copy_gas_cost = gas::COPY * words_size;
 
         let memory_expansion = gas::memory_expansion(

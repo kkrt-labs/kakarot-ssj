@@ -2,6 +2,7 @@ use core::array::ArrayTrait;
 use core::array::SpanTrait;
 use core::cmp::min;
 use core::hash::{HashStateExTrait, HashStateTrait};
+use core::num::traits::SaturatingAdd;
 
 use core::panic_with_felt252;
 use core::pedersen::PedersenTrait;
@@ -31,28 +32,20 @@ pub fn u128_split(input: u128) -> (u64, u64) {
     (high.try_into().unwrap(), low.try_into().unwrap())
 }
 
-
-/// Converts a value to the next closest multiple of 32
+/// Computes the number of 32-byte words required to represent `size` bytes
 ///
 /// # Arguments
-/// * `value` - The value to ceil to the next multiple of 32
+/// * `size` - The size in bytes
 ///
 /// # Returns
-/// The same value if it's a perfect multiple of 32
-/// else it returns the smallest multiple of 32
-/// that is greater than `value`.
+/// The number of 32-byte words required to represent `size` bytes
 ///
 /// # Examples
-/// ceil32(2) = 32
-/// ceil32(34) = 64
-pub fn ceil32(value: usize) -> usize {
-    let ceiling = 32_u32;
-    let (_q, r) = DivRem::div_rem(value, ceiling.try_into().unwrap());
-    if r == 0_u8.into() {
-        return value;
-    } else {
-        return (value + ceiling - r).into();
-    }
+/// bytes_32_words_size(2) = 1
+/// bytes_32_words_size(34) = 2
+#[inline(always)]
+pub fn bytes_32_words_size(size: usize) -> usize {
+    size.saturating_add(31) / 32
 }
 
 /// Computes 256 ** (16 - i) for 0 <= i <= 16.
@@ -356,5 +349,11 @@ mod tests {
         for counter in 0..dst4.len() - 1 {
             assert_eq!(*dst4[counter], 0xff);
         };
+    }
+
+    #[test]
+    fn test_bytes_32_words_size_edge_case() {
+        let max_usize = core::num::traits::Bounded::<usize>::MAX;
+        assert_eq!(helpers::bytes_32_words_size(max_usize), (max_usize / 32));
     }
 }

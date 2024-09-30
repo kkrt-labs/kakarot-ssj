@@ -13,7 +13,7 @@ use crate::stack::StackTrait;
 use crate::state::StateTrait;
 use utils::address::{compute_contract_address, compute_create2_contract_address};
 use utils::constants;
-use utils::helpers::ceil32;
+use utils::helpers::bytes_32_words_size;
 use utils::set::SetTrait;
 use utils::traits::{
     BoolIntoNumeric, EthAddressIntoU256, U256TryIntoResult, SpanU8TryIntoResultEthAddress
@@ -48,7 +48,7 @@ pub impl CreateHelpersImpl of CreateHelpers {
         let charged_gas = match create_type {
             CreateType::Create => gas::CREATE + memory_expansion.expansion_cost + init_code_gas,
             CreateType::Create2 => {
-                let calldata_words = ceil32(size) / 32;
+                let calldata_words = bytes_32_words_size(size);
                 gas::CREATE
                     + gas::KECCAK256WORD * calldata_words.into()
                     + memory_expansion.expansion_cost
