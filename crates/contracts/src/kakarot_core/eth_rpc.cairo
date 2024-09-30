@@ -134,6 +134,7 @@ pub impl EthRPC<
     fn eth_get_transaction_count(self: @TContractState, address: EthAddress) -> u64 {
         let kakarot_state = KakarotState::get_state();
         let starknet_address = kakarot_state.get_starknet_address(address);
+        println!("starknet_address: {:?}", starknet_address);
         let account = IAccountDispatcher { contract_address: starknet_address };
         let nonce = account.get_nonce();
         nonce
@@ -229,10 +230,10 @@ mod tests {
     use crate::kakarot_core::eth_rpc::IEthRPC;
     use crate::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
     use crate::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
-    use evm::test_utils::{sequencer_evm_address, evm_address};
-    use snforge_std::{start_cheat_chain_id_global, stop_cheat_chain_id_global};
+    use evm::test_utils::{sequencer_evm_address, evm_address, uninitialized_account};
+    use snforge_std::{start_mock_call, start_cheat_chain_id_global, stop_cheat_chain_id_global, test_address};
     use utils::constants::POW_2_53;
-    use evm::test_utils::evm_address;
+    use utils::helpers::compute_starknet_address;
 
     fn set_up() -> KakarotCore::ContractState {
         // Define the kakarot state to access contract functions
@@ -247,10 +248,13 @@ mod tests {
 
     #[test]
     fn test_eth_get_transaction_count() {
-        let (_, kakarot_core) = setup_contracts_for_testing();
-        let _ = deploy_eoa(kakarot_core, evm_address());
+        let kakarot_state = set_up();
         // Deployed eoa should return a zero nonce
-        assert_eq!(kakarot_core.eth_get_transaction_count(evm_address()), 0);
+        let starknet_address = compute_starknet_address(
+            test_address(), evm_address(), 0.try_into().unwrap() // Using 0 as the kakarot storage is empty
+        );
+        start_mock_call::<u256>(starknet_address, selector!("get_nonce"), 1);
+        assert_eq!(kakarot_state.eth_get_transaction_count(evm_address()), 1);
     }
 
     #[test]
