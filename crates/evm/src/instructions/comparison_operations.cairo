@@ -184,7 +184,7 @@ pub impl ComparisonAndBitwiseOperations of ComparisonAndBitwiseOperationsTrait {
             Bounded::<u256>::MAX
         };
 
-        if (shift > 256) {
+        if (shift >= 256) {
             self.stack.push(sign)
         } else {
             // XORing with sign before and after the shift propagates the sign bit of the operation
