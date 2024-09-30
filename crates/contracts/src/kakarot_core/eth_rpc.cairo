@@ -231,7 +231,9 @@ mod tests {
     use crate::kakarot_core::interface::IExtendedKakarotCoreDispatcherTrait;
     use crate::test_utils::{setup_contracts_for_testing, fund_account_with_native_token};
     use evm::test_utils::{sequencer_evm_address, evm_address, uninitialized_account};
-    use snforge_std::{start_mock_call, start_cheat_chain_id_global, stop_cheat_chain_id_global, test_address};
+    use snforge_std::{
+        start_mock_call, start_cheat_chain_id_global, stop_cheat_chain_id_global, test_address
+    };
     use utils::constants::POW_2_53;
     use utils::helpers::compute_starknet_address;
 
@@ -251,7 +253,9 @@ mod tests {
         let kakarot_state = set_up();
         // Deployed eoa should return a zero nonce
         let starknet_address = compute_starknet_address(
-            test_address(), evm_address(), 0.try_into().unwrap() // Using 0 as the kakarot storage is empty
+            test_address(),
+            evm_address(),
+            0.try_into().unwrap() // Using 0 as the kakarot storage is empty
         );
         start_mock_call::<u256>(starknet_address, selector!("get_nonce"), 1);
         assert_eq!(kakarot_state.eth_get_transaction_count(evm_address()), 1);
