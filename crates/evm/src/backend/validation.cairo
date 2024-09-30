@@ -5,7 +5,6 @@ use core::ops::SnapshotDeref;
 use core::starknet::storage::{StoragePointerReadAccess};
 use core::starknet::{get_caller_address};
 use crate::gas;
-use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use starknet::storage::StorageTrait;
 use utils::eth_transaction::check_gas_fee;
 use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
@@ -46,10 +45,7 @@ pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transacti
     assert(gas_limit >= intrinsic_gas, 'Intrinsic gas > gas limit');
 
     // Validate balance
-    let balance = IERC20CamelDispatcher {
-        contract_address: kakarot_storage.Kakarot_native_token_address.read()
-    }
-        .balanceOf(starknet_caller_address);
+    let balance = kakarot_state.eth_get_balance(account.get_evm_address());
     let max_gas_fee = tx.gas_limit().into() * tx.max_fee_per_gas();
     let tx_cost = tx.value() + max_gas_fee.into();
     assert(tx_cost <= balance, 'Not enough ETH');
@@ -61,11 +57,10 @@ mod tests {
     use contracts::kakarot_core::KakarotCore;
     use core::num::traits::Bounded;
     use core::ops::SnapshotDeref;
-
-    use core::starknet::ContractAddress;
-    use core::starknet::storage::StorageTrait;
+    use core::starknet::storage::{StorageTrait, StoragePathEntry};
+    use core::starknet::{EthAddress, ContractAddress};
     use evm::gas;
-    use snforge_std::cheatcodes::storage::store_felt252;
+    use snforge_std::cheatcodes::storage::{store_felt252};
     use snforge_std::{
         start_mock_call, test_address, start_cheat_chain_id_global, store,
         start_cheat_caller_address, mock_call
@@ -82,6 +77,7 @@ mod tests {
         let kakarot_state = KakarotCore::unsafe_new_contract_state();
         let kakarot_storage = kakarot_state.snapshot_deref().storage();
         let kakarot_address = test_address();
+        let account_evm_address: EthAddress = 'account_evm_address'.try_into().unwrap();
         let account_starknet_address = 'account_starknet_address'.try_into().unwrap();
         let native_token_address = 'native_token_address'.try_into().unwrap();
 
@@ -95,10 +91,23 @@ mod tests {
         store_felt252(kakarot_address, base_fee_storage, 1_000_000_000); // 1 Gwei
         store_felt252(kakarot_address, block_gas_limit_storage, BLOCK_GAS_LIMIT.into());
         store_felt252(kakarot_address, native_token_storage_address, native_token_address.into());
+        let map_entry_address = kakarot_storage
+            .Kakarot_evm_to_starknet_address
+            .entry(account_evm_address)
+            .deref()
+            .__storage_pointer_address__;
+        store(
+            kakarot_address,
+            map_entry_address.into(),
+            array![account_starknet_address.into()].span()
+        );
 
         // Mock the calls to the account contract and the native token contract
         start_cheat_caller_address(kakarot_address, account_starknet_address);
         start_mock_call(account_starknet_address, selector!("get_nonce"), 0);
+        start_mock_call(
+            account_starknet_address, selector!("get_evm_address"), account_evm_address
+        );
         start_mock_call(
             native_token_address, selector!("balanceOf"), Bounded::<u256>::MAX
         ); // Min to pay for gas + value
