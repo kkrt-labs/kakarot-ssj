@@ -106,6 +106,7 @@ pub impl EVMImpl of EVMTrait {
 
         let (message, is_deploy_tx) = {
             let mut sender_account = env.state.get_account(origin.evm);
+
             // Charge the intrinsic gas to the sender so that it's not available for the execution
             // of the transaction but don't trigger any actual transfer, as only the actual consumde
             // gas is charged at the end of the transaction
@@ -114,12 +115,8 @@ pub impl EVMImpl of EVMTrait {
             let (message, is_deploy_tx) = self
                 .prepare_message(@tx, @sender_account, ref env, gas_left);
 
-            // Increment nonce of sender AFTER computing eventual created address
-            if sender_account.nonce() == Bounded::<u64>::MAX {
-                return TransactionResultTrait::exceptional_failure(
-                    EVMError::NonceOverflow.to_bytes(), tx.gas_limit()
-                );
-            }
+            // Increment nonce of sender AFTER computing the created address
+            // to use the correct nonce when computing the address.
             sender_account.set_nonce(sender_account.nonce() + 1);
 
             env.state.set_account(sender_account);

@@ -1,6 +1,7 @@
 use contracts::account_contract::{IAccountDispatcher, IAccountDispatcherTrait};
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::eth_rpc::IEthRPC;
+use core::num::traits::Bounded;
 use core::ops::SnapshotDeref;
 use core::starknet::storage::{StoragePointerReadAccess};
 use core::starknet::{get_caller_address};
@@ -29,7 +30,9 @@ pub fn validate_eth_tx(kakarot_state: @KakarotCore::ContractState, tx: Transacti
     // Validate nonce
     let starknet_caller_address = get_caller_address();
     let account = IAccountDispatcher { contract_address: starknet_caller_address };
-    assert(account.get_nonce() == tx.nonce(), 'Invalid nonce');
+    let account_nonce = account.get_nonce();
+    assert(account_nonce == tx.nonce(), 'Invalid nonce');
+    assert(account_nonce != Bounded::<u64>::MAX, 'Nonce overflow');
 
     // Validate gas
     let gas_limit = tx.gas_limit();
