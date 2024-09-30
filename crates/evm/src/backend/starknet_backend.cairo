@@ -479,12 +479,13 @@ mod tests {
         assert_called(starknet_address, selector!("set_code_hash"));
         assert_called(starknet_address, selector!("set_nonce"));
     }
+}
 
-    #[test]
-    #[ignore]
+    // #[test]
+    // #[ignore]
     //TODO(starknet-foundry): it's impossible to deploy an un-declared class, nor is it possible to
     //mock_deploy.
-    fn test_exec_sstore_finalized() { // // Given
+    // fn test_exec_sstore_finalized() { // // Given
     // setup_test_environment();
     // let mut vm = VMBuilderTrait::new_with_presets().build();
     // let evm_address = vm.message().target.evm;
@@ -511,5 +512,5 @@ mod tests {
 
     // // Then
     // assert(fetch_original_storage(@account, key) == value, 'wrong committed value')
-    }
-}
+    // }
+// }
