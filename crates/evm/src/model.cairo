@@ -215,7 +215,7 @@ pub impl TransactionResultImpl of TransactionResultTrait {
 }
 
 /// Represents an EVM event.
-#[derive(Drop, Clone, Default, PartialEq)]
+#[derive(Drop, Clone, Default, PartialEq, starknet::Event)]
 pub struct Event {
     /// The keys of the event.
     pub keys: Array<u256>,

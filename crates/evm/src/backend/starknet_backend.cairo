@@ -216,12 +216,16 @@ fn transfer_native_token(ref self: State) -> Result<(), EVMError> {
 
 /// Iterates through the list of events and emits them.
 fn emit_events(ref self: State) -> Result<(), EVMError> {
+    println!("Entre emit event");
     while let Option::Some(event) = self.events.pop_front() {
         let mut keys = Default::default();
         let mut data = Default::default();
         Serde::<Array<u256>>::serialize(@event.keys, ref keys);
         Serde::<Array<u8>>::serialize(@event.data, ref data);
-        emit_event_syscall(keys.span(), data.span()).unwrap_syscall();
+        println!("keys: {:?}", keys);
+        println!("data: {:?}", data);
+       let mut aux = emit_event_syscall(keys.span(), data.span()).unwrap_syscall();
+       println!("aux: {:?}", aux);
     };
     return Result::Ok(());
 }
@@ -248,18 +252,20 @@ fn commit_storage(ref self: State) -> Result<(), EVMError> {
 mod tests {
     use core::starknet::ClassHash;
     use crate::backend::starknet_backend;
-    use crate::model::Address;
+    use crate::model::{Address, Event};
     use crate::model::account::Account;
     use crate::state::{State, StateTrait};
     use crate::test_utils::{
         setup_test_environment, uninitialized_account, account_contract, register_account
     };
     use crate::test_utils::{evm_address};
-    use snforge_std::{test_address, start_mock_call, get_class_hash};
-    use snforge_utils::snforge_utils::{assert_not_called, assert_called};
-    use super::commit_storage;
+    use snforge_std::{test_address, start_mock_call, get_class_hash, spy_events, EventSpyTrait, EventSpyAssertionsTrait};
+    use snforge_utils::snforge_utils::{assert_not_called, assert_called, EventsFilterBuilderTrait };
+    use super::{commit_storage, emit_events};
     use utils::helpers::compute_starknet_address;
     use utils::traits::bytes::U8SpanExTrait;
+    use core::fmt::Debug;
+
 
     // Helper function to create a test account
     fn create_test_account(is_selfdestruct: bool, is_created: bool, id: felt252) -> Account {
@@ -481,6 +487,63 @@ mod tests {
         assert_called(starknet_address, selector!("set_code_hash"));
         assert_called(starknet_address, selector!("set_nonce"));
     }
+
+//     #[derive(Drop, Clone, Default, PartialEq, starknet::Event)]
+// pub struct Event {
+//     /// The keys of the event.
+//     pub keys: Array<u256>,
+//     /// The data of the event.
+//     pub data: Array<u8>,
+// }
+
+#[test]
+fn test_emit_events() {
+    // Define the event with keys and data
+    let mut event = Event { 
+        keys: array![1.into()], // Single key
+        data: array![2, 3]      // Multiple data
+    };
+
+            // Prepare a variety of events
+            // let events = array![
+            //     Event { keys: array![], data: array![] }, // Empty event
+            //     Event { keys: array![1.into()], data: array![2, 3] }, // Single key, multiple data
+            //     Event { keys: array![4.into(), 5.into()], data: array![6] }, // Multiple keys, single data
+            //     Event { keys: array![7.into(), 8.into(), 9.into()], data: array![10, 11, 12, 13] } // Multiple keys and data
+            // ];
+
+
+    // Create a default state
+    let mut state: State = Default::default();
+    
+    // Create a test account and set it in the state
+    let account = create_test_account(false, false, 0);
+    state.set_account(account);
+
+    // Add the event to the state's event list
+    state.add_event(event.clone());
+
+                // Add events to state
+                // for event in events {
+                //     state.add_event(event);
+                //   };
+
+    // Mock the emit_event_syscall to capture the emitted events
+    let mut spy = spy_events();
+
+    // Call the emit_events function to emit the events
+    emit_events(ref state).expect('emit events failed'); // Assuming the emit_events returns a Result<(), EVMError>
+
+    // Retrieve the events from the spy
+    // let contract_events = EventsFilterBuilderTrait::from_events(@spy.get_events())
+    //     .with_contract_address(account.address.starknet)
+    //     .build();
+
+    // Assert that the correct event was emitted
+    // contract_events.assert_emitted(@eventTest);
+    spy.assert_emitted(@array![(account.address.starknet, event)]);
+}
+
 
     #[test]
     #[ignore]
