@@ -223,6 +223,27 @@ pub struct Event {
     pub data: Array<u8>,
 }
 
+/// Represents a mock event used for assertions in tests.
+#[derive(Drop, Clone, Default, PartialEq)]
+pub struct MockEvent {
+    /// Serialized keys associated with the event.
+    pub keys: Array<felt252>,
+    /// Serialized data associated with the event.
+    pub data: Array<felt252>,
+}
+
+/// Implementation of the EventTrait for testing purposes using MockEvent.
+/// This is used to simulate event handling, specifically appending keys and data,
+impl EventTraitImpl of starknet::Event<MockEvent> {
+    fn append_keys_and_data(self: @MockEvent, ref keys: Array<felt252>, ref data: Array<felt252>) {
+        keys.append_span(self.keys.span());
+        data.append_span(self.data.span());
+    }
+    fn deserialize(ref keys: Span<felt252>, ref data: Span<felt252>) -> Option<MockEvent> {
+        Option::None
+    }
+}
+
 /// Represents an address in both EVM and Starknet formats.
 #[derive(Copy, Drop, PartialEq, Default, Debug)]
 pub struct Address {
