@@ -550,7 +550,7 @@ mod tests {
 
 
     #[test]
-    fn test_calldataload_with_offset_conversion_error() {
+    fn test_calldataload_with_offset_bigger_usize_succeeds() {
         // Given
         let calldata = u256_to_bytes_array(
             0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -563,8 +563,8 @@ mod tests {
         let result = vm.exec_calldataload();
 
         // Then
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), EVMError::TypeConversionError(TYPE_CONVERSION_ERROR));
+        assert!(result.is_ok());
+        assert_eq!(vm.stack.pop().unwrap(), 0);
     }
 
     // *************************************************************************
