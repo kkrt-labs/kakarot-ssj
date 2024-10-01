@@ -188,7 +188,9 @@ pub impl MemoryOperation of MemoryOperationTrait {
     /// The new pc target has to be a JUMPDEST opcode.
     /// # Specification: https://www.evm.codes/#57?fork=shanghai
     fn exec_jumpi(ref self: VM) -> Result<(), EVMError> {
-        let index = self.stack.pop_usize()?;
+        let index = self
+            .stack
+            .pop_saturating_usize()?; // Saturate because if b is 0, we skip the jump but don't want to fail here.
         let b = self.stack.pop()?;
 
         self.charge_gas(gas::HIGH)?;
