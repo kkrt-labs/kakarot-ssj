@@ -502,6 +502,7 @@ mod tests {
         assert_called(starknet_address, selector!("set_code_hash"));
         assert_called(starknet_address, selector!("set_nonce"));
     }
+    
 
     #[test]
     fn test_emit_events() {
