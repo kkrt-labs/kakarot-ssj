@@ -246,14 +246,16 @@ fn commit_storage(ref self: State) -> Result<(), EVMError> {
 mod tests {
     use core::starknet::{ClassHash, ContractAddress};
     use crate::backend::starknet_backend;
-    use crate::model::{Address, Event, MockEvent};
     use crate::model::account::Account;
+    use crate::model::{Address, Event, MockEvent};
     use crate::state::{State, StateTrait};
     use crate::test_utils::{
         setup_test_environment, uninitialized_account, account_contract, register_account
     };
     use crate::test_utils::{evm_address};
-    use snforge_std::{test_address, start_mock_call, get_class_hash, spy_events, EventSpyAssertionsTrait};
+    use snforge_std::{
+        test_address, start_mock_call, get_class_hash, spy_events, EventSpyAssertionsTrait
+    };
     use snforge_utils::snforge_utils::{assert_not_called, assert_called};
     use super::{commit_storage, emit_events};
     use utils::helpers::compute_starknet_address;
@@ -275,18 +277,23 @@ mod tests {
     }
 
     // Helper function to serialize events into mock events
-    fn serialize_mock_events(events: Array<Event>, ref mock_events: Array<(ContractAddress, MockEvent)>) {
+    fn serialize_mock_events(
+        events: Array<Event>, ref mock_events: Array<(ContractAddress, MockEvent)>
+    ) {
         let contract_address = test_address();
-    
+
         // Serialize and append each event
         for event in events {
             let mut serialized_keys = Default::default();
             let mut serialized_data = Default::default();
-            
+
             Serde::<Array<u256>>::serialize(@event.keys, ref serialized_keys);
             Serde::<Array<u8>>::serialize(@event.data, ref serialized_data);
-            
-            mock_events.append((contract_address, MockEvent { keys: serialized_keys, data: serialized_data }));
+
+            mock_events
+                .append(
+                    (contract_address, MockEvent { keys: serialized_keys, data: serialized_data })
+                );
         }
     }
 
@@ -500,13 +507,17 @@ mod tests {
     fn test_emit_events() {
         let mut state: State = Default::default();
         let mut mock_events = ArrayTrait::<(ContractAddress, MockEvent)>::new();
-    
+
         // Prepare events
         let events = array![
             Event { keys: array![], data: array![] }, // Empty event
             Event { keys: array![1.into()], data: array![2, 3] }, // Single key, multiple data
-            Event { keys: array![4.into(), 5.into()], data: array![6] }, // Multiple keys, single data
-            Event { keys: array![7.into(), 8.into(), 9.into()], data: array![10, 11, 12, 13] } // Multiple keys and data
+            Event {
+                keys: array![4.into(), 5.into()], data: array![6]
+            }, // Multiple keys, single data
+            Event {
+                keys: array![7.into(), 8.into(), 9.into()], data: array![10, 11, 12, 13]
+            } // Multiple keys and data
         ];
 
         // Serialize events and store in mock_events
