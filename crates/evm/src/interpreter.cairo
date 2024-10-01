@@ -19,7 +19,7 @@ use crate::model::account::{Account, AccountTrait};
 use crate::model::vm::{VM, VMTrait};
 use crate::model::{
     Message, Environment, Transfer, ExecutionSummary, ExecutionResult, ExecutionResultTrait,
-    ExecutionResultStatus, AddressTrait, TransactionResult, TransactionResultTrait, Address
+    ExecutionResultStatus, AddressTrait, TransactionResult, Address
 };
 use crate::precompiles::Precompiles;
 use crate::precompiles::eth_precompile_addresses;
