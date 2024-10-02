@@ -208,6 +208,24 @@ pub trait ToBytes<T> {
     fn to_le_bytes_padded(self: T) -> Span<u8>;
 }
 
+pub impl U8ToBytes of ToBytes<u8> {
+    fn to_be_bytes(self: u8) -> Span<u8> {
+        [self].span()
+    }
+
+    fn to_be_bytes_padded(self: u8) -> Span<u8> {
+        self.to_be_bytes()
+    }
+
+    fn to_le_bytes(self: u8) -> Span<u8> {
+        [self].span()
+    }
+
+    fn to_le_bytes_padded(self: u8) -> Span<u8> {
+        self.to_le_bytes()
+    }
+}
+
 pub impl ToBytesImpl<
     T,
     +Zero<T>,
@@ -215,11 +233,12 @@ pub impl ToBytesImpl<
     +Add<T>,
     +Sub<T>,
     +Mul<T>,
+    +Div<T>,
     +BitAnd<T>,
     +Bitshift<T>,
     +BitSize<T>,
     +BytesUsedTrait<T>,
-    +Into<u8, T>,
+    +Into<u16, T>,
     +TryInto<T, u8>,
     +Copy<T>,
     +Drop<T>,
@@ -227,19 +246,12 @@ pub impl ToBytesImpl<
     +PartialEq<T>
 > of ToBytes<T> {
     fn to_be_bytes(self: T) -> Span<u8> {
-        let bytes_used = self.bytes_used();
-
-        // 0xFF
-        let mask = Bounded::<u8>::MAX.into();
-
-        let mut bytes: Array<u8> = Default::default();
-        for i in 0
-            ..bytes_used {
-                let val = Bitshift::<T>::shr(self, 8_u32 * (bytes_used.into() - i.into() - 1));
-                bytes.append((val & mask).try_into().unwrap());
-            };
-
-        bytes.span()
+        // U8 type is handled in another impl.
+        let be_bytes = to_be_bytes_recursive(self);
+        if be_bytes.is_empty() {
+            return [0].span();
+        }
+        be_bytes.span()
     }
 
     fn to_be_bytes_padded(mut self: T) -> Span<u8> {
@@ -248,17 +260,21 @@ pub impl ToBytesImpl<
     }
 
     fn to_le_bytes(mut self: T) -> Span<u8> {
+        // U8 type is handled in another impl.
+
         let bytes_used = self.bytes_used();
 
         // 0xFF
-        let mask = Bounded::<u8>::MAX.into();
+        let mask: u16 = Bounded::<u8>::MAX.into();
+        let mask: T = mask.into();
 
         let mut bytes: Array<u8> = Default::default();
+        let mut value = self;
 
-        for i in 0
+        for _ in 0
             ..bytes_used {
-                let val = self.shr(8_u32 * i.into());
-                bytes.append((val & mask).try_into().unwrap());
+                bytes.append((value & mask).try_into().unwrap());
+                value = value / 256_u16.into();
             };
 
         bytes.span()
@@ -268,6 +284,46 @@ pub impl ToBytesImpl<
         let padding = (BitSize::<T>::bits() / 8);
         self.to_le_bytes().slice_right_padded(0, padding)
     }
+}
+
+// Helper function to recursively build the bytes
+fn to_be_bytes_recursive<
+    T,
+    +Zero<T>,
+    +One<T>,
+    +Add<T>,
+    +Sub<T>,
+    +Mul<T>,
+    +Div<T>,
+    +BitAnd<T>,
+    +Bitshift<T>,
+    +BitSize<T>,
+    +BytesUsedTrait<T>,
+    +Into<u16, T>,
+    +TryInto<T, u8>,
+    +Copy<T>,
+    +Drop<T>,
+    +core::ops::AddAssign<T, T>,
+    +PartialEq<T>
+>(
+    value: T
+) -> Array<u8> {
+    // Base case: if value is 0, unpile the call stack
+    if value == 0_u16.into() {
+        return array![];
+    }
+
+    // 0xFF
+    let mask: u16 = Bounded::<u8>::MAX.into();
+    let mask: T = mask.into();
+
+    // Get the least significant byte
+    let byte: u8 = (value & mask).try_into().unwrap();
+
+    // Recurse with the value shifted right by 8 bits
+    let mut be_bytes = to_be_bytes_recursive(value / (256_u16.into()));
+    be_bytes.append(byte);
+    return be_bytes;
 }
 
 pub trait FromBytes<T> {
