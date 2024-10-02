@@ -165,7 +165,7 @@ fn test_kakarot_core_get_starknet_address() {
     let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
 
     let registered_evm_address = test_utils::evm_address();
-    let registered_starknet_address = kakarot_core.compute_starknet_address(registered_evm_address);
+    let registered_starknet_address = test_utils::starknet_address();
     let registered_map_entry_address = kakarot_state
         .snapshot_deref()
         .storage()
