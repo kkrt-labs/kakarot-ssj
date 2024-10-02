@@ -32,21 +32,22 @@ pub impl U8SpanExImpl of U8SpanExTrait {
     ///   - A usize representing the number of bytes in the last word
     fn to_u64_words(self: Span<u8>) -> (Array<u64>, u64, usize) {
         let nonzero_8: NonZero<u32> = 8_u32.try_into().unwrap();
-        let (full_u64_word_count, last_input_num_bytes) = DivRem::div_rem(self.len(), nonzero_8);
+        let (_, last_input_num_bytes) = DivRem::div_rem(self.len(), nonzero_8);
 
-        let mut u64_words: Array<u64> = Default::default();
+        let mut u64_words: Array<u64> = array![];
+        let mut word_index = 0;
         let mut byte_counter: u8 = 0;
         let mut pending_word: u64 = 0;
-        let mut u64_word_counter: usize = 0;
 
-        while u64_word_counter != full_u64_word_count {
+        // Iterate until we have iterated over all the full words and the last word
+        while true {
             if byte_counter == 8 {
                 u64_words.append(pending_word);
+                word_index += 8;
                 byte_counter = 0;
                 pending_word = 0;
-                u64_word_counter += 1;
             }
-            pending_word += match self.get(u64_word_counter * 8 + byte_counter.into()) {
+            pending_word += match self.get(word_index + byte_counter.into()) {
                 Option::Some(byte) => {
                     let byte: u64 = (*byte.unbox()).into();
                     // Accumulate pending_word in a little endian manner
@@ -56,25 +57,7 @@ pub impl U8SpanExImpl of U8SpanExTrait {
             };
             byte_counter += 1;
         };
-
-        // Fill the last input word
-        let mut last_input_word: u64 = 0;
-
-        // We enter a second loop for clarity.
-        // O(2n) should be okay
-        // We might want to regroup every computation into a single loop with appropriate `if`
-        // branching For optimisation
-        for byte_counter in 0
-            ..last_input_num_bytes {
-                last_input_word += match self.get(full_u64_word_count * 8 + byte_counter.into()) {
-                    Option::Some(byte) => {
-                        let byte: u64 = (*byte.unbox()).into();
-                        byte.shl(8_u32 * byte_counter.into())
-                    },
-                    Option::None => { break; },
-                };
-            };
-
+        let last_input_word: u64 = pending_word;
         (u64_words, last_input_word, last_input_num_bytes)
     }
 
@@ -484,69 +467,6 @@ pub impl ByteArrayExt of ByteArrayExTrait {
         };
         output.span()
     }
-
-
-    /// Transforms a ByteArray into an Array of u64 full words, a pending u64 word and its length in
-    /// bytes
-    /// # Arguments
-    /// * `self` - The ByteArray to transform
-    /// # Returns
-    /// * A tuple containing:
-    ///   - An Array<u64> of full words
-    ///   - A u64 representing the last (potentially partial) word
-    ///   - A usize representing the number of bytes in the last word
-    fn to_u64_words(self: ByteArray) -> (Array<u64>, u64, usize) {
-        // We pass it by value because we want to take ownership, but we snap it
-        // because `at` takes a snap and if this snap is automatically done by
-        // the compiler in the loop, it won't compile
-        let self = @self;
-        let nonzero_8: NonZero<u32> = 8_u32.try_into().unwrap();
-        let (full_u64_word_count, last_input_num_bytes) = DivRem::div_rem(self.len(), nonzero_8);
-
-        let mut u64_words: Array<u64> = Default::default();
-        let mut byte_counter: u8 = 0;
-        let mut pending_word: u64 = 0;
-        let mut u64_word_counter: usize = 0;
-
-        while u64_word_counter != full_u64_word_count {
-            if byte_counter == 8 {
-                u64_words.append(pending_word);
-                byte_counter = 0;
-                pending_word = 0;
-                u64_word_counter += 1;
-            }
-            pending_word += match self.at(u64_word_counter * 8 + byte_counter.into()) {
-                Option::Some(byte) => {
-                    let byte: u64 = byte.into();
-                    // Accumulate pending_word in a little endian manner
-                    byte.shl(8_u32 * byte_counter.into())
-                },
-                Option::None => { break; },
-            };
-            byte_counter += 1;
-        };
-
-        // Fill the last input word
-        let mut last_input_word: u64 = 0;
-
-        // We enter a second loop for clarity.
-        // O(2n) should be okay
-        // We might want to regroup every computation into a single loop with appropriate `if`
-        // branching For optimisation
-
-        for byte_counter in 0
-            ..last_input_num_bytes {
-                last_input_word += match self.at(full_u64_word_count * 8 + byte_counter.into()) {
-                    Option::Some(byte) => {
-                        let byte: u64 = byte.into();
-                        byte.shl(8_u32 * byte_counter.into())
-                    },
-                    Option::None => { break; },
-                };
-            };
-
-        (u64_words, last_input_word, last_input_num_bytes)
-    }
 }
 
 
@@ -669,29 +589,6 @@ mod tests {
             for i in 0..arr.len() {
                 assert(*arr[i] == res[i], 'byte mismatch');
             };
-        }
-
-
-        #[test]
-        fn test_bytearray_to_64_words_partial() {
-            let input = ByteArrayExTrait::from_bytes([0x01, 0x02, 0x03, 0x04, 0x05, 0x06].span());
-            let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
-            assert(pending_word == 6618611909121, 'wrong pending word');
-            assert(pending_word_len == 6, 'wrong pending word length');
-            assert(u64_words.len() == 0, 'wrong u64 words length');
-        }
-
-        #[test]
-        fn test_bytearray_to_64_words_full() {
-            let input = ByteArrayExTrait::from_bytes(
-                [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08].span()
-            );
-            let (u64_words, pending_word, pending_word_len) = input.to_u64_words();
-
-            assert(pending_word == 0, 'wrong pending word');
-            assert(pending_word_len == 0, 'wrong pending word length');
-            assert(u64_words.len() == 1, 'wrong u64 words length');
-            assert(*u64_words[0] == 578437695752307201, 'wrong u64 words length');
         }
     }
 
