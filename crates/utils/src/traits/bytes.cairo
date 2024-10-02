@@ -363,7 +363,7 @@ pub impl FromBytesImpl<
         Option::Some(result)
     }
 
-    fn from_le_bytes(self: Span<u8>) -> Option<T> {
+    fn from_le_bytes(mut self: Span<u8>) -> Option<T> {
         let byte_size = ByteSize::<T>::byte_size();
 
         if self.len() != byte_size {
@@ -371,16 +371,19 @@ pub impl FromBytesImpl<
         }
 
         let mut result: T = Zero::zero();
-        let mut i = self.len();
-        while i != 0 {
-            i -= 1;
-            let tmp = result * 256_u16.into();
-            result = tmp + (*self[i]).into();
+        loop {
+            match self.pop_back() {
+                Option::None => { break; },
+                Option::Some(byte) => {
+                    let tmp = result * 256_u16.into();
+                    result = tmp + (*byte).into();
+                }
+            };
         };
         Option::Some(result)
     }
 
-    fn from_le_bytes_partial(self: Span<u8>) -> Option<T> {
+    fn from_le_bytes_partial(mut self: Span<u8>) -> Option<T> {
         let byte_size = ByteSize::<T>::byte_size();
 
         if self.len() > byte_size {
@@ -388,11 +391,14 @@ pub impl FromBytesImpl<
         }
 
         let mut result: T = Zero::zero();
-        let mut i = self.len();
-        while i != 0 {
-            i -= 1;
-            let tmp = result * 256_u16.into();
-            result = tmp + (*self[i]).into();
+        loop {
+            match self.pop_back() {
+                Option::None => { break; },
+                Option::Some(byte) => {
+                    let tmp = result * 256_u16.into();
+                    result = tmp + (*byte).into();
+                }
+            };
         };
         Option::Some(result)
     }
