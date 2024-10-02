@@ -248,9 +248,6 @@ pub impl ToBytesImpl<
     fn to_be_bytes(self: T) -> Span<u8> {
         // U8 type is handled in another impl.
         let be_bytes = to_be_bytes_recursive(self);
-        if be_bytes.is_empty() {
-            return [0].span();
-        }
         be_bytes.span()
     }
 
