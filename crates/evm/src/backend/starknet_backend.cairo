@@ -254,9 +254,12 @@ mod tests {
     };
     use crate::test_utils::{evm_address};
     use snforge_std::{
-        test_address, start_mock_call, get_class_hash, spy_events, EventSpyAssertionsTrait
+        test_address, start_mock_call, get_class_hash, spy_events, EventSpyTrait,
+        Event as StarknetEvent
     };
-    use snforge_utils::snforge_utils::{assert_not_called, assert_called};
+    use snforge_utils::snforge_utils::{
+        assert_not_called, assert_called, EventsFilterBuilderTrait, ContractEventsTrait
+    };
     use super::{commit_storage, emit_events};
     use utils::helpers::compute_starknet_address;
     use utils::traits::bytes::U8SpanExTrait;
