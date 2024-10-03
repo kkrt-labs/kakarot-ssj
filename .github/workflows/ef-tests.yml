@@ -101,7 +101,8 @@ jobs:
         working-directory: ef-tests
         run: |
           set -o pipefail
-          RUST_MIN_STACK=1342177280 make ef-test-v1-native | tee data.txt
+          ulimit -s 16384
+          RUST_TEST_THREADS=4 RUST_MIN_STACK=16777216 make ef-test-v1-native | tee data.txt
           set +o pipefail
 
       - name: Retrieve ef-tests execution resources
