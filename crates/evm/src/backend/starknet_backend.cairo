@@ -279,26 +279,6 @@ mod tests {
         }
     }
 
-    // Helper function to serialize events into mock events
-    fn serialize_mock_events(
-        events: Array<Event>, ref mock_events: Array<(ContractAddress, MockEvent)>
-    ) {
-        let contract_address = test_address();
-
-        // Serialize and append each event
-        for event in events {
-            let mut serialized_keys = Default::default();
-            let mut serialized_data = Default::default();
-
-            Serde::<Array<u256>>::serialize(@event.keys, ref serialized_keys);
-            Serde::<Array<u8>>::serialize(@event.data, ref serialized_data);
-
-            mock_events
-                .append(
-                    (contract_address, MockEvent { keys: serialized_keys, data: serialized_data })
-                );
-        }
-    }
 
     mod test_commit_storage {
         use snforge_std::start_mock_call;
