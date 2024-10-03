@@ -244,10 +244,10 @@ fn commit_storage(ref self: State) -> Result<(), EVMError> {
 
 #[cfg(test)]
 mod tests {
-    use core::starknet::{ClassHash, ContractAddress};
+    use core::starknet::{ClassHash};
     use crate::backend::starknet_backend;
     use crate::model::account::Account;
-    use crate::model::{Address, Event, MockEvent};
+    use crate::model::{Address, Event};
     use crate::state::{State, StateTrait};
     use crate::test_utils::{
         setup_test_environment, uninitialized_account, account_contract, register_account
@@ -276,6 +276,17 @@ mod tests {
             balance: 0,
             selfdestruct: is_selfdestruct,
             is_created: is_created,
+        }
+    }
+
+    // Implementation to convert an `Event` into a serialized `StarknetEvent`
+    impl EventIntoStarknetEvent of Into<Event, StarknetEvent> {
+        fn into(self: Event) -> StarknetEvent {
+            let mut serialized_keys = array![];
+            let mut serialized_data = array![];
+            Serde::<Array<u256>>::serialize(@self.keys, ref serialized_keys);
+            Serde::<Array<u8>>::serialize(@self.data, ref serialized_data);
+            StarknetEvent { keys: serialized_keys, data: serialized_data }
         }
     }
 
@@ -488,11 +499,11 @@ mod tests {
 
     #[test]
     fn test_emit_events() {
+        // Initialize the state
         let mut state: State = Default::default();
-        let mut mock_events = ArrayTrait::<(ContractAddress, MockEvent)>::new();
 
-        // Prepare events
-        let events = array![
+        // Prepare a list of events with different combinations of keys and data
+        let evm_events = array![
             Event { keys: array![], data: array![] }, // Empty event
             Event { keys: array![1.into()], data: array![2, 3] }, // Single key, multiple data
             Event {
@@ -503,19 +514,28 @@ mod tests {
             } // Multiple keys and data
         ];
 
-        // Serialize events and store in mock_events
-        serialize_mock_events(events.clone(), ref mock_events);
-
-        // Add events to state
-        for event in events {
+        // Add each event to the state
+        for event in evm_events.clone() {
             state.add_event(event);
         };
 
-        // Emit and assert events
+        // Emit the events and assert that no events are left in the state
         let mut spy = spy_events();
         emit_events(ref state).expect('emit events failed');
         assert!(state.events.is_empty());
-        spy.assert_emitted(@mock_events);
+
+        // Capture emitted events
+        let contract_events = EventsFilterBuilderTrait::from_events(@spy.get_events())
+            .with_contract_address(test_address())
+            .build();
+
+        // Assert that each original event was emitted as expected
+        for event in evm_events {
+            let starknet_event = EventIntoStarknetEvent::into(
+                event
+            ); // Convert to StarkNet event format
+            contract_events.assert_emitted(@starknet_event);
+        };
     }
 }
 // #[test]
