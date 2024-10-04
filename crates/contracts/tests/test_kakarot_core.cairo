@@ -18,7 +18,7 @@ use evm::test_utils::chain_id;
 use evm::test_utils;
 use snforge_std::{
     declare, DeclareResultTrait, start_cheat_caller_address, spy_events, EventSpyTrait,
-    cheat_caller_address, CheatSpan, store, load, stop_cheat_caller_address_global
+    cheat_caller_address, CheatSpan, store, load
 };
 use snforge_utils::snforge_utils::{EventsFilterBuilderTrait, ContractEventsTrait};
 use starknet::storage::StorageTrait;
@@ -131,16 +131,6 @@ fn test_kakarot_core_eoa_mapping() {
 }
 
 #[test]
-fn test_kakarot_core_compute_starknet_address() {
-    let evm_address = test_utils::evm_address();
-    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
-    let expected_starknet_address = kakarot_core.deploy_externally_owned_account(evm_address);
-
-    let actual_starknet_address = kakarot_core.compute_starknet_address(evm_address);
-    assert_eq!(actual_starknet_address, expected_starknet_address);
-}
-
-#[test]
 fn test_kakarot_core_upgrade_contract() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
 
@@ -160,7 +150,7 @@ fn test_kakarot_core_upgrade_contract() {
 }
 
 #[test]
-fn test_kakarot_core_get_starknet_address() {
+fn test_kakarot_core_get_starknet_address_registered() {
     let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
     let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
 
@@ -183,6 +173,12 @@ fn test_kakarot_core_get_starknet_address() {
     assert_eq!(
         kakarot_core.get_starknet_address(registered_evm_address), registered_starknet_address
     );
+}
+
+#[test]
+fn test_kakarot_core_get_starknet_address_unregistered() {
+    let (_, kakarot_core) = contract_utils::setup_contracts_for_testing();
+    let mut kakarot_state = KakarotCore::unsafe_new_contract_state();
 
     let unregistered_evm_address = test_utils::other_evm_address();
     let unregistered_map_entry_address = kakarot_state
@@ -196,10 +192,12 @@ fn test_kakarot_core_get_starknet_address() {
     // when the map entry is empty
     assert_eq!(*map_data[0], 0);
     // then an unregistered address should return the same as compute_starknet_address
-    assert_eq!(
-        kakarot_core.get_starknet_address(unregistered_evm_address),
-        kakarot_core.compute_starknet_address(unregistered_evm_address)
+    let computed_address = utils::helpers::compute_starknet_address(
+        kakarot_core.contract_address,
+        unregistered_evm_address,
+        kakarot_core.uninitialized_account_class_hash()
     );
+    assert_eq!(kakarot_core.get_starknet_address(unregistered_evm_address), computed_address);
 }
 
 #[test]
@@ -337,7 +335,7 @@ fn test_eth_send_transaction_deploy_tx() {
 
     // Set back the contract address to Kakarot for the calculation of the deployed SN contract
     // address, where we use a kakarot internal functions and thus must "mock" its address.
-    let computed_sn_addr = kakarot_core.compute_starknet_address(expected_address);
+    let computed_sn_addr = kakarot_core.get_starknet_address(expected_address);
     let CA = IAccountDispatcher { contract_address: computed_sn_addr };
     let bytecode = CA.bytecode();
     assert_eq!(bytecode, counter_evm_bytecode());
