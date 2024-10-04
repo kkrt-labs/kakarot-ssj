@@ -175,14 +175,6 @@ pub impl EthRPC<
     fn eth_send_transaction(
         ref self: TContractState, mut tx: Transaction
     ) -> (bool, Span<u8>, u64) {
-        panic!("unimplemented")
-    }
-
-    fn eth_send_raw_unsigned_tx(
-        ref self: TContractState, mut tx_data: Span<u8>
-    ) -> (bool, Span<u8>, u64) {
-        let tx = TransactionTrait::decode_enveloped(ref tx_data).expect('EOA: could not decode tx');
-
         let mut kakarot_state = KakarotState::get_state();
         let intrinsic_gas = validate_eth_tx(@kakarot_state, tx);
 
@@ -196,6 +188,15 @@ pub impl EthRPC<
         );
         starknet_backend::commit(ref state).expect('Committing state failed');
         (success, return_data, gas_used)
+    }
+
+    //TODO: we can't really unit-test this with foundry because we can't generate the RLP-encoding
+    //in Cairo Find another way - perhaps test-data gen with python?
+    fn eth_send_raw_unsigned_tx(
+        ref self: TContractState, mut tx_data: Span<u8>
+    ) -> (bool, Span<u8>, u64) {
+        let tx = TransactionTrait::decode_enveloped(ref tx_data).expect('EOA: could not decode tx');
+        Self::eth_send_transaction(ref self, tx)
     }
 }
 
