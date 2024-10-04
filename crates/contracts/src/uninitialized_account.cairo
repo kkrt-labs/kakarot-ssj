@@ -50,7 +50,7 @@ pub mod UninitializedAccount {
         self.ownable.initializer(owner_address);
         let implementation_class = IKakarotCoreDispatcher { contract_address: owner_address }
             .get_account_contract_class_hash();
-        //TODO: Difference from KakarotZero in that the account contract takes the class
+        //TODO: Difference from KakarotZero is that the account contract takes the class
         //implementation to write it in storage,
         // as it is not a transparent proxy in Cairo1
         calldata.append(implementation_class.into());
