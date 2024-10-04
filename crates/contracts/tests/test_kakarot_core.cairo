@@ -18,7 +18,7 @@ use evm::test_utils::chain_id;
 use evm::test_utils;
 use snforge_std::{
     declare, DeclareResultTrait, start_cheat_caller_address, spy_events, EventSpyTrait,
-    cheat_caller_address, CheatSpan, store, load
+    cheat_caller_address, CheatSpan, store, load, stop_cheat_caller_address_global
 };
 use snforge_utils::snforge_utils::{EventsFilterBuilderTrait, ContractEventsTrait};
 use starknet::storage::StorageTrait;
@@ -274,7 +274,6 @@ fn test_eth_call() {
 
     let evm_address = test_utils::evm_address();
     kakarot_core.deploy_externally_owned_account(evm_address);
-
     let account = contract_utils::deploy_contract_account(
         kakarot_core, test_utils::other_evm_address(), counter_evm_bytecode()
     );
@@ -326,7 +325,7 @@ fn test_eth_send_transaction_deploy_tx() {
         gas_limit,
         input: deploy_counter_calldata()
     };
-    start_cheat_caller_address(kakarot_core.contract_address, eoa);
+    cheat_caller_address(kakarot_core.contract_address, eoa, CheatSpan::TargetCalls(1));
     let (_, deploy_result, _) = kakarot_core.eth_send_transaction(Transaction::Legacy(tx));
 
     // Then

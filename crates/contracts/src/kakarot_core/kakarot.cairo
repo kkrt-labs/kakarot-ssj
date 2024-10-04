@@ -5,6 +5,7 @@ const INVOKE_ETH_CALL_FORBIDDEN: felt252 = 'KKT: Cannot invoke eth_call';
 pub mod KakarotCore {
     use core::num::traits::Zero;
     use core::starknet::event::EventEmitter;
+    use core::starknet::get_caller_address;
     use core::starknet::storage::{
         Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
         StoragePointerWriteAccess
@@ -184,8 +185,9 @@ pub mod KakarotCore {
             assert(existing_address.is_zero(), 'Account already exists');
 
             let starknet_address = self.compute_starknet_address(evm_address);
-            //TODO: enable this assertion. Will require changing test runner to snfoundry
-            // assert!(starknet_address == caller, "Account must be registered by the caller");
+            assert!(
+                starknet_address == get_caller_address(), "Account must be registered by the caller"
+            );
 
             self.Kakarot_evm_to_starknet_address.write(evm_address, starknet_address);
             self.emit(AccountDeployed { evm_address, starknet_address });
