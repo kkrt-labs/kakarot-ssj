@@ -314,7 +314,8 @@ fn test_eth_send_transaction_deploy_tx() {
     let value = 0;
 
     // When
-    // Set the contract address to the EOA address, so that the caller of the `eth_send_transaction`
+    // Set the contract address to the EOA address, so that the caller of the
+    // `eth_send_transaction`
     // is an eoa
     let tx = TxLegacy {
         chain_id: Option::Some(chain_id()),

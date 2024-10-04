@@ -88,6 +88,10 @@ pub trait IExtendedKakarotCore<TContractState> {
     /// Executes an EVM transaction and possibly modifies the state
     fn eth_send_transaction(ref self: TContractState, tx: Transaction) -> (bool, Span<u8>, u64);
 
+    fn eth_send_raw_unsigned_tx(
+        ref self: TContractState, encoded_tx_data: Span<u8>
+    ) -> (bool, Span<u8>, u64);
+
     // Returns the transaction count (nonce) of the specified address
     fn eth_get_transaction_count(self: @TContractState, address: EthAddress) -> u64;
 

@@ -10,7 +10,7 @@ use evm::model::{TransactionResult, Address};
 use evm::{EVMTrait};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use utils::constants::POW_2_53;
-use utils::eth_transaction::transaction::Transaction;
+use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
 
 #[starknet::interface]
 pub trait IEthRPC<T> {
@@ -190,10 +190,13 @@ pub impl EthRPC<
         (success, return_data, gas_used)
     }
 
+    //TODO: we can't really unit-test this with foundry because we can't generate the RLP-encoding
+    //in Cairo Find another way - perhaps test-data gen with python?
     fn eth_send_raw_unsigned_tx(
-        ref self: TContractState, tx_data: Span<u8>
+        ref self: TContractState, mut tx_data: Span<u8>
     ) -> (bool, Span<u8>, u64) {
-        panic!("unimplemented")
+        let tx = TransactionTrait::decode_enveloped(ref tx_data).expect('EOA: could not decode tx');
+        Self::eth_send_transaction(ref self, tx)
     }
 }
 
