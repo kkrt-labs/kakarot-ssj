@@ -10,7 +10,7 @@ use evm::model::{TransactionResult, Address};
 use evm::{EVMTrait};
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
 use utils::constants::POW_2_53;
-use utils::eth_transaction::transaction::Transaction;
+use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
 
 #[starknet::interface]
 pub trait IEthRPC<T> {
@@ -175,6 +175,14 @@ pub impl EthRPC<
     fn eth_send_transaction(
         ref self: TContractState, mut tx: Transaction
     ) -> (bool, Span<u8>, u64) {
+        panic!("unimplemented")
+    }
+
+    fn eth_send_raw_unsigned_tx(
+        ref self: TContractState, mut tx_data: Span<u8>
+    ) -> (bool, Span<u8>, u64) {
+        let tx = TransactionTrait::decode_enveloped(ref tx_data).expect('EOA: could not decode tx');
+
         let mut kakarot_state = KakarotState::get_state();
         let intrinsic_gas = validate_eth_tx(@kakarot_state, tx);
 
@@ -188,12 +196,6 @@ pub impl EthRPC<
         );
         starknet_backend::commit(ref state).expect('Committing state failed');
         (success, return_data, gas_used)
-    }
-
-    fn eth_send_raw_unsigned_tx(
-        ref self: TContractState, tx_data: Span<u8>
-    ) -> (bool, Span<u8>, u64) {
-        panic!("unimplemented")
     }
 }
 
