@@ -51,7 +51,7 @@ pub impl U8SpanExImpl of U8SpanExTrait {
                 Option::Some(byte) => {
                     let byte: u64 = (*byte.unbox()).into();
                     // Accumulate pending_word in a little endian manner
-                    byte * (256 * byte_counter.into())
+                    byte.shl(8_u32 * byte_counter.into())
                 },
                 Option::None => { break; },
             };
