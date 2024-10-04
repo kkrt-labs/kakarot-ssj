@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: kkrt-labs/ef-tests
-          ref: feat/cairo-native
+          ref: dev/bump-native
           path: ef-tests # Check out to a subdirectory to avoid cleaning the kakarot-ssj directory
 
       - name: Checkout local skip file
