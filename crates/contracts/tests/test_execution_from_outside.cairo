@@ -142,8 +142,6 @@ fn set_up() -> (IExtendedKakarotCoreDispatcher, IAccountDispatcher, IERC20CamelD
     let eoa = IAccountDispatcher {
         contract_address: kakarot_core.deploy_externally_owned_account(transaction_signer())
     };
-    start_cheat_caller_address_global(kakarot_core.contract_address);
-
     start_cheat_block_timestamp(eoa.contract_address, 999);
     start_cheat_chain_id_global(chain_id().into());
 
