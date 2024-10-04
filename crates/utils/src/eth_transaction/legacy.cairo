@@ -1,7 +1,7 @@
-use crate::eth_transaction::common::TxKind;
-use crate::traits::SpanDefault;
 use crate::errors::{RLPError, EthTransactionError, RLPErrorTrait};
+use crate::eth_transaction::common::TxKind;
 use crate::rlp::{RLPItem, RLPHelpersTrait};
+use crate::traits::SpanDefault;
 use crate::traits::{DefaultSignature};
 
 
@@ -81,14 +81,16 @@ pub impl _impl of TxLegacyTrait {
             Option::None => { TxKind::Create }
         };
 
-        Result::Ok(TxLegacy {
-            nonce,
-            gas_price,
-            gas_limit,
-            to: transact_to,
-            value,
-            input,
-            chain_id: Option::Some(chain_id),
-        })
+        Result::Ok(
+            TxLegacy {
+                nonce,
+                gas_price,
+                gas_limit,
+                to: transact_to,
+                value,
+                input,
+                chain_id: Option::Some(chain_id),
+            }
+        )
     }
 }
