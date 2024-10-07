@@ -16,6 +16,7 @@ pub mod KakarotCore {
     use crate::kakarot_core::eth_rpc;
     use crate::kakarot_core::interface::IKakarotCore;
     use evm::backend::starknet_backend;
+    use evm::model::account::AccountTrait;
     use utils::helpers::compute_starknet_address;
 
     component!(path: ownable_component, storage: ownable, event: OwnableEvent);
@@ -134,15 +135,6 @@ pub mod KakarotCore {
             self.Kakarot_native_token_address.read()
         }
 
-        fn compute_starknet_address(
-            self: @ContractState, evm_address: EthAddress
-        ) -> ContractAddress {
-            let kakarot_address = get_contract_address();
-            compute_starknet_address(
-                kakarot_address, evm_address, self.Kakarot_uninitialized_account_class_hash.read()
-            )
-        }
-
         fn address_registry(self: @ContractState, evm_address: EthAddress) -> ContractAddress {
             self.Kakarot_evm_to_starknet_address.read(evm_address)
         }
@@ -184,7 +176,11 @@ pub mod KakarotCore {
             let existing_address = self.Kakarot_evm_to_starknet_address.read(evm_address);
             assert(existing_address.is_zero(), 'Account already exists');
 
-            let starknet_address = self.compute_starknet_address(evm_address);
+            let starknet_address = compute_starknet_address(
+                get_contract_address(),
+                evm_address,
+                self.Kakarot_uninitialized_account_class_hash.read()
+            );
             assert!(
                 starknet_address == get_caller_address(), "Account must be registered by the caller"
             );
@@ -206,19 +202,9 @@ pub mod KakarotCore {
             self.Kakarot_base_fee.read()
         }
 
-        // @notice Returns the corresponding Starknet address for a given EVM address.
-        // @dev Returns the registered address if there is one, otherwise returns the deterministic
-        //      address got when Kakarot deploys an account.
-        // @param evm_address The EVM address to transform to a starknet address
-        // @return starknet_address The Starknet Account Contract address
-        fn get_starknet_address(self: @ContractState, evm_address: EthAddress) -> ContractAddress {
-            let registered_starknet_address = self.address_registry(evm_address);
-            if (!registered_starknet_address.is_zero()) {
-                return registered_starknet_address;
-            }
 
-            let computed_starknet_address = self.compute_starknet_address(evm_address);
-            return computed_starknet_address;
+        fn get_starknet_address(self: @ContractState, evm_address: EthAddress) -> ContractAddress {
+            AccountTrait::get_starknet_address(evm_address)
         }
     }
 

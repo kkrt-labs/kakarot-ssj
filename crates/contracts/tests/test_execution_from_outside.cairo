@@ -20,7 +20,7 @@ use snforge_std::{
     start_cheat_caller_address, stop_cheat_caller_address, start_cheat_transaction_hash, spy_events,
     EventSpyTrait, CheatSpan, cheat_caller_address, stop_cheat_block_timestamp,
     start_cheat_block_timestamp, start_cheat_chain_id_global, stop_cheat_chain_id_global,
-    start_cheat_caller_address_global, stop_cheat_caller_address_global
+    stop_cheat_caller_address_global
 };
 
 use snforge_utils::snforge_utils::EventsFilterBuilderTrait;
