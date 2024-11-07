@@ -17,6 +17,9 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag 
 snforge_utils = { path = "../snforge_utils" }
 assert_macros = "2.8.4"
 
+[cairo]
+sierra-replace-ids = false
+
 [tool]
 fmt.workspace = true
 

@@ -5,7 +5,7 @@ target
 node_modules/
 *.snfoundry_cache
 cache/
-*.snfoundry
+*.snfoundry*
 *__pycache__
 
 scripts/libcairo_native_runtime.a
