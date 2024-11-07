@@ -13,7 +13,7 @@ const U256_BYTES_LEN: usize = 32;
 
 pub impl EcMul of Precompile {
     fn address() -> EthAddress {
-        0x7.try_into().unwrap()
+        0x8.try_into().unwrap()
     }
 
     fn exec(mut input: Span<u8>) -> Result<(u64, Span<u8>), EVMError> {
