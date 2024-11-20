@@ -1,6 +1,6 @@
 use contracts::kakarot_core::KakarotCore;
 use contracts::kakarot_core::interface::IKakarotCore;
-use core::num::traits::{Bounded, Zero};
+use core::num::traits::Zero;
 use core::ops::SnapshotDeref;
 use core::starknet::EthAddress;
 use core::starknet::storage::{StoragePointerReadAccess};
@@ -19,7 +19,7 @@ use crate::model::account::{Account, AccountTrait};
 use crate::model::vm::{VM, VMTrait};
 use crate::model::{
     Message, Environment, Transfer, ExecutionSummary, ExecutionResult, ExecutionResultTrait,
-    ExecutionResultStatus, AddressTrait, TransactionResult, TransactionResultTrait, Address
+    ExecutionResultStatus, AddressTrait, TransactionResult, Address
 };
 use crate::precompiles::Precompiles;
 use crate::precompiles::eth_precompile_addresses;
@@ -47,12 +47,12 @@ pub impl EVMImpl of EVMTrait {
                 let to_evm_address = compute_contract_address(
                     sender_account.address().evm, origin_nonce
                 );
-                let to_starknet_address = self.compute_starknet_address(to_evm_address);
+                let to_starknet_address = self.get_starknet_address(to_evm_address);
                 let to = Address { evm: to_evm_address, starknet: to_starknet_address };
                 (to, true, tx.input(), Zero::zero(), [].span())
             },
             TxKind::Call(to) => {
-                let target_starknet_address = self.compute_starknet_address(to);
+                let target_starknet_address = self.get_starknet_address(to);
                 let to = Address { evm: to, starknet: target_starknet_address };
                 let code = env.state.get_account(to.evm).code;
                 (to, false, code, to, tx.input())
@@ -106,20 +106,17 @@ pub impl EVMImpl of EVMTrait {
 
         let (message, is_deploy_tx) = {
             let mut sender_account = env.state.get_account(origin.evm);
+
             // Charge the intrinsic gas to the sender so that it's not available for the execution
-            // of the transaction but don't trigger any actual transfer, as only the actual consumde
+            // of the transaction but don't trigger any actual transfer, as only the actual consumed
             // gas is charged at the end of the transaction
             sender_account.set_balance(sender_account.balance() - max_fee.into());
 
             let (message, is_deploy_tx) = self
                 .prepare_message(@tx, @sender_account, ref env, gas_left);
 
-            // Increment nonce of sender AFTER computing eventual created address
-            if sender_account.nonce() == Bounded::<u64>::MAX {
-                return TransactionResultTrait::exceptional_failure(
-                    EVMError::NonceOverflow.to_bytes(), tx.gas_limit()
-                );
-            }
+            // Increment nonce of sender AFTER computing the created address
+            // to use the correct nonce when computing the address.
             sender_account.set_nonce(sender_account.nonce() + 1);
 
             env.state.set_account(sender_account);

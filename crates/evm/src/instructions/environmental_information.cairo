@@ -1,5 +1,6 @@
 use core::num::traits::OverflowingAdd;
 use core::num::traits::Zero;
+use core::num::traits::{CheckedAdd, CheckedSub};
 use crate::errors::{ensure, EVMError};
 use crate::gas;
 use crate::memory::MemoryTrait;
@@ -8,8 +9,9 @@ use crate::model::vm::{VM, VMTrait};
 use crate::model::{AddressTrait};
 use crate::stack::StackTrait;
 use crate::state::StateTrait;
-use utils::helpers::{ceil32, load_word};
+use utils::helpers::bytes_32_words_size;
 use utils::set::SetTrait;
+use utils::traits::bytes::FromBytes;
 use utils::traits::{EthAddressIntoU256};
 
 
@@ -71,29 +73,34 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_calldataload(ref self: VM) -> Result<(), EVMError> {
         self.charge_gas(gas::VERYLOW)?;
 
-        let offset: usize = self.stack.pop_usize()?;
+        // Don't error out if the offset is too big. It should just push 0.
+        let offset: usize = self.stack.pop_saturating_usize()?;
 
         let calldata = self.message().data;
         let calldata_len = calldata.len();
 
         // All bytes after the end of the calldata are set to 0.
-        if offset >= calldata_len {
-            return self.stack.push(0);
-        }
+        let bytes_len = match calldata_len.checked_sub(offset) {
+            Option::None => { return self.stack.push(0); },
+            Option::Some(remaining_len) => {
+                if remaining_len == 0 {
+                    return self.stack.push(0);
+                }
+                core::cmp::min(32, remaining_len)
+            }
+        };
 
         // Slice the calldata
-        let bytes_len = core::cmp::min(32, calldata_len - offset);
         let sliced = calldata.slice(offset, bytes_len);
 
-        // Fill data to load with bytes in calldata
-        let mut data_to_load: u256 = load_word(bytes_len, sliced);
+        let mut data_to_load: u256 = sliced
+            .from_be_bytes_partial()
+            .expect('Failed to parse calldata');
 
         // Fill the rest of the data to load with zeros
         // TODO: optimize once we have dw-based exponentiation
-        let mut i = 32 - bytes_len;
-        while i != 0 {
+        for _ in 0..32 - bytes_len {
             data_to_load *= 256;
-            i -= 1;
         };
         self.stack.push(data_to_load)
     }
@@ -113,15 +120,21 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_calldatacopy(ref self: VM) -> Result<(), EVMError> {
         let dest_offset = self.stack.pop_saturating_usize()?;
         let offset = self.stack.pop_saturating_usize()?;
-        let size = self.stack.pop_usize()?;
+        let size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
 
-        let words_size = (ceil32(size) / 32).into();
+        let words_size = bytes_32_words_size(size).into();
         let copy_gas_cost = gas::COPY * words_size;
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(dest_offset, size)].span()
         )?;
         self.memory.ensure_length(memory_expansion.new_size);
-        self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
+
+        let total_cost = gas::VERYLOW
+            .checked_add(copy_gas_cost)
+            .ok_or(EVMError::OutOfGas)?
+            .checked_add(memory_expansion.expansion_cost)
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(total_cost)?;
 
         let calldata: Span<u8> = self.message().data;
         copy_bytes_to_memory(ref self, calldata, dest_offset, offset, size);
@@ -143,15 +156,21 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_codecopy(ref self: VM) -> Result<(), EVMError> {
         let dest_offset = self.stack.pop_saturating_usize()?;
         let offset = self.stack.pop_saturating_usize()?;
-        let size = self.stack.pop_usize()?;
+        let size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
 
-        let words_size = (ceil32(size) / 32).into();
+        let words_size = bytes_32_words_size(size).into();
         let copy_gas_cost = gas::COPY * words_size;
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(dest_offset, size)].span()
         )?;
         self.memory.ensure_length(memory_expansion.new_size);
-        self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
+
+        let total_cost = gas::VERYLOW
+            .checked_add(copy_gas_cost)
+            .ok_or(EVMError::OutOfGas)?
+            .checked_add(memory_expansion.expansion_cost)
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(total_cost)?;
 
         let bytecode: Span<u8> = self.message().code;
 
@@ -192,10 +211,10 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         let evm_address = self.stack.pop_eth_address()?;
         let dest_offset = self.stack.pop_saturating_usize()?;
         let offset = self.stack.pop_saturating_usize()?;
-        let size = self.stack.pop_usize()?;
+        let size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
 
         // GAS
-        let words_size = (ceil32(size) / 32).into();
+        let words_size = bytes_32_words_size(size).into();
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(dest_offset, size)].span()
         )?;
@@ -207,7 +226,12 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
             self.accessed_addresses.add(evm_address);
             gas::COLD_ACCOUNT_ACCESS_COST
         };
-        self.charge_gas(access_gas_cost + copy_gas_cost + memory_expansion.expansion_cost)?;
+        let total_cost = access_gas_cost
+            .checked_add(copy_gas_cost)
+            .ok_or(EVMError::OutOfGas)?
+            .checked_add(memory_expansion.expansion_cost)
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(total_cost)?;
 
         let bytecode = self.env.state.get_account(evm_address).code;
         copy_bytes_to_memory(ref self, bytecode, dest_offset, offset, size);
@@ -229,7 +253,7 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
     fn exec_returndatacopy(ref self: VM) -> Result<(), EVMError> {
         let dest_offset = self.stack.pop_saturating_usize()?;
         let offset = self.stack.pop_saturating_usize()?;
-        let size = self.stack.pop_usize()?;
+        let size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
         let return_data: Span<u8> = self.return_data();
 
         let (last_returndata_index, overflow) = offset.overflowing_add(size);
@@ -238,15 +262,19 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
         }
         ensure(!(last_returndata_index > return_data.len()), EVMError::ReturnDataOutOfBounds)?;
 
-        //TODO: handle overflow in ceil32 function.
-        let words_size = (ceil32(size.into()) / 32).into();
+        let words_size = bytes_32_words_size(size).into();
         let copy_gas_cost = gas::COPY * words_size;
 
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(dest_offset, size)].span()
         )?;
         self.memory.ensure_length(memory_expansion.new_size);
-        self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
+        let total_cost = gas::VERYLOW
+            .checked_add(copy_gas_cost)
+            .ok_or(EVMError::OutOfGas)?
+            .checked_add(memory_expansion.expansion_cost)
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(total_cost)?;
 
         let data_to_copy: Span<u8> = return_data.slice(offset, size);
         self.memory.store_n(data_to_copy, dest_offset);
@@ -287,10 +315,9 @@ pub impl EnvironmentInformationImpl of EnvironmentInformationTrait {
 fn copy_bytes_to_memory(
     ref self: VM, bytes: Span<u8>, dest_offset: usize, offset: usize, size: usize
 ) {
-    let bytes_slice = if offset < bytes.len() {
-        bytes.slice(offset, core::cmp::min(size, bytes.len() - offset))
-    } else {
-        [].span()
+    let bytes_slice = match bytes.len().checked_sub(offset) {
+        Option::Some(remaining) => bytes.slice(offset, core::cmp::min(size, remaining)),
+        Option::None => [].span()
     };
 
     self.memory.store_padded_segment(dest_offset, size, bytes_slice);
@@ -550,7 +577,7 @@ mod tests {
 
 
     #[test]
-    fn test_calldataload_with_offset_conversion_error() {
+    fn test_calldataload_with_offset_bigger_usize_succeeds() {
         // Given
         let calldata = u256_to_bytes_array(
             0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -563,8 +590,8 @@ mod tests {
         let result = vm.exec_calldataload();
 
         // Then
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), EVMError::TypeConversionError(TYPE_CONVERSION_ERROR));
+        assert!(result.is_ok());
+        assert_eq!(vm.stack.pop().unwrap(), 0);
     }
 
     // *************************************************************************
@@ -652,21 +679,22 @@ mod tests {
         // Memory initialization with a value to verify that if the offset + size is out of the
         // bound bytes, 0's have been copied.
         // Otherwise, the memory value would be 0, and we wouldn't be able to check it.
-        let mut i = 0;
-        while i != (size / 32) + 1 {
-            vm
-                .memory
-                .store(
-                    0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-                    dest_offset + (i * 32)
-                );
+        for i in 0
+            ..(size / 32)
+                + 1 {
+                    vm
+                        .memory
+                        .store(
+                            0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+                            dest_offset + (i * 32)
+                        );
 
-            let initial: u256 = vm.memory.load_internal(dest_offset + (i * 32)).into();
+                    let initial: u256 = vm.memory.load_internal(dest_offset + (i * 32)).into();
 
-            assert_eq!(initial, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
-
-            i += 1;
-        };
+                    assert_eq!(
+                        initial, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                    );
+                };
 
         // When
         vm.exec_calldatacopy().expect('exec_calldatacopy failed');
@@ -775,17 +803,15 @@ mod tests {
         let result: u256 = vm.memory.load_internal(dest_offset).into();
         let mut results: Array<u8> = u256_to_bytes_array(result);
 
-        let mut i = 0;
-        while i != size {
-            // For out of bound bytes, 0s will be copied.
-            if (i + offset >= bytecode.len()) {
-                assert_eq!(*results[i], 0);
-            } else {
-                assert_eq!(*results[i], *bytecode[i + offset]);
-            }
-
-            i += 1;
-        };
+        for i in 0
+            ..size {
+                // For out of bound bytes, 0s will be copied.
+                if (i + offset >= bytecode.len()) {
+                    assert_eq!(*results[i], 0);
+                } else {
+                    assert_eq!(*results[i], *bytecode[i + offset]);
+                }
+            };
     }
 
     // *************************************************************************

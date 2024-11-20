@@ -39,12 +39,11 @@ pub const FIRST_ROLLUP_PRECOMPILE_ADDRESS: u256 = 0x100;
 /// * `Set<EthAddress>` - A set containing all Ethereum precompile addresses.
 pub fn eth_precompile_addresses() -> Set<EthAddress> {
     let mut precompile_addresses: Array<EthAddress> = array![];
-    //TODO(2.8) use range operator
-    let mut i = FIRST_ETHEREUM_PRECOMPILE_ADDRESS;
-    while i <= LAST_ETHEREUM_PRECOMPILE_ADDRESS {
-        precompile_addresses.append(i.try_into().unwrap());
-        i = i + 1;
-    };
+    for i in FIRST_ETHEREUM_PRECOMPILE_ADDRESS
+        ..LAST_ETHEREUM_PRECOMPILE_ADDRESS
+            + 0x01 {
+                precompile_addresses.append(i.try_into().unwrap());
+            };
     SetTrait::from_array(precompile_addresses)
 }
 

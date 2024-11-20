@@ -1,5 +1,7 @@
 //! Stop and Arithmetic Operations.
 use core::integer::{u512_safe_div_rem_by_u256};
+use core::math::u256_mul_mod_n;
+use core::num::traits::CheckedAdd;
 use core::num::traits::{OverflowingAdd, OverflowingMul, OverflowingSub};
 use crate::errors::EVMError;
 use crate::gas;
@@ -163,7 +165,6 @@ pub impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
 
         let result: u256 = match TryInto::<u256, NonZero<u256>>::try_into(n) {
             Option::Some(nonzero_n) => {
-                // This is more gas efficient than computing (a mod N) + (b mod N) mod N
                 let sum = u256_wide_add(a, b);
                 let (_, r) = u512_safe_div_rem_by_u256(sum, nonzero_n);
                 r
@@ -186,12 +187,7 @@ pub impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
         let n = self.stack.pop()?;
 
         let result: u256 = match TryInto::<u256, NonZero<u256>>::try_into(n) {
-            Option::Some(_) => {
-                // (x * y) mod N <=> (x mod N) * (y mod N) mod N
-                // It is more gas-efficient than to use u256_wide_mul
-                // Won't panic because n is not zero
-                (a % n) * (b % n) % n
-            },
+            Option::Some(n_nz) => { u256_mul_mod_n(a, b, n_nz) },
             Option::None => 0,
         };
 
@@ -208,7 +204,10 @@ pub impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
 
         // Gas
         let bytes_used = exponent.bytes_used();
-        self.charge_gas(gas::EXP + gas::EXP_GAS_PER_BYTE * bytes_used.into())?;
+        let total_cost = gas::EXP
+            .checked_add(gas::EXP_GAS_PER_BYTE * bytes_used.into())
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(total_cost)?;
 
         let result = base.wrapping_pow(exponent);
 
@@ -242,6 +241,7 @@ pub impl StopAndArithmeticOperations of StopAndArithmeticOperationsTrait {
 
         let result = if b < 32 {
             let s = 8 * b + 7;
+            //TODO: use POW_2 table for optimization
             let two_pow_s = 2.pow(s);
             // Get v, the t-th bit of x. To do this we bitshift x by s bits to the right and apply a
             // mask to get the last bit.

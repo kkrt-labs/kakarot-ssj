@@ -186,7 +186,8 @@ impl StackImpl of StackTrait {
         Result::Ok(item.low)
     }
 
-    /// Calls `Stack::pop` and converts it to usize
+    /// Calls `Stack::pop` and converts it to an EthAddress
+    /// If the value is bigger than an EthAddress, it will be truncated to keep the lower 160 bits.
     ///
     /// # Errors
     ///
@@ -208,9 +209,8 @@ impl StackImpl of StackTrait {
     fn pop_n(ref self: Stack, mut n: usize) -> Result<Array<u256>, EVMError> {
         ensure(!(n > self.len()), EVMError::StackUnderflow)?;
         let mut popped_items = ArrayTrait::<u256>::new();
-        while n != 0 {
+        for _ in 0..n {
             popped_items.append(self.pop().unwrap());
-            n -= 1;
         };
         Result::Ok(popped_items)
     }
@@ -346,11 +346,9 @@ mod tests {
         fn test_should_fail_when_overflow() {
             // Given
             let mut stack = StackTrait::new();
-            let mut i = 0;
 
             // When
-            while i != constants::STACK_MAX_DEPTH {
-                i += 1;
+            for _ in 0..constants::STACK_MAX_DEPTH {
                 stack.push(1).unwrap();
             };
 

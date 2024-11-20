@@ -1,4 +1,5 @@
 use core::cmp::max;
+use core::num::traits::CheckedAdd;
 use crate::backend::starknet_backend::fetch_original_storage;
 //! Stack Memory Storage and Flow Operations.
 use crate::errors::{EVMError, ensure};
@@ -7,9 +8,8 @@ use crate::memory::MemoryTrait;
 use crate::model::vm::{VM, VMTrait};
 use crate::stack::StackTrait;
 use crate::state::StateTrait;
-use utils::helpers::ceil32;
+use utils::helpers::bytes_32_words_size;
 use utils::set::SetTrait;
-
 #[inline(always)]
 fn jump(ref self: VM, index: usize) -> Result<(), EVMError> {
     match self.message().code.get(index) {
@@ -36,11 +36,16 @@ pub impl MemoryOperation of MemoryOperationTrait {
     /// MLOAD operation.
     /// Load word from memory and push to stack.
     fn exec_mload(ref self: VM) -> Result<(), EVMError> {
-        let offset: usize = self.stack.pop_usize()?;
+        let offset: usize = self
+            .stack
+            .pop_usize()?; // Any offset bigger than a usize would MemoryOOG.
 
         let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, 32)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);
-        self.charge_gas(gas::VERYLOW + memory_expansion.expansion_cost)?;
+        let total_cost = gas::VERYLOW
+            .checked_add(memory_expansion.expansion_cost)
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(total_cost)?;
 
         let result = self.memory.load(offset);
         self.stack.push(result)
@@ -50,11 +55,16 @@ pub impl MemoryOperation of MemoryOperationTrait {
     /// Save word to memory.
     /// # Specification: https://www.evm.codes/#52?fork=shanghai
     fn exec_mstore(ref self: VM) -> Result<(), EVMError> {
-        let offset: usize = self.stack.pop_usize()?;
+        let offset: usize = self
+            .stack
+            .pop_usize()?; // Any offset bigger than a usize would MemoryOOG.
         let value: u256 = self.stack.pop()?;
         let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, 32)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);
-        self.charge_gas(gas::VERYLOW + memory_expansion.expansion_cost)?;
+        let total_cost = gas::VERYLOW
+            .checked_add(memory_expansion.expansion_cost)
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(total_cost)?;
 
         self.memory.store(value, offset);
         Result::Ok(())
@@ -64,13 +74,16 @@ pub impl MemoryOperation of MemoryOperationTrait {
     /// Save single byte to memory
     /// # Specification: https://www.evm.codes/#53?fork=shanghai
     fn exec_mstore8(ref self: VM) -> Result<(), EVMError> {
-        let offset = self.stack.pop_saturating_usize()?;
+        let offset = self.stack.pop_usize()?; // Any offset bigger than a usize would MemoryOOG.
         let value = self.stack.pop()?;
         let value: u8 = (value.low & 0xFF).try_into().unwrap();
 
         let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, 1)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);
-        self.charge_gas(gas::VERYLOW + memory_expansion.expansion_cost)?;
+        let total_cost = gas::VERYLOW
+            .checked_add(memory_expansion.expansion_cost)
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(total_cost)?;
 
         self.memory.store_byte(value, offset);
 
@@ -188,7 +201,9 @@ pub impl MemoryOperation of MemoryOperationTrait {
     /// The new pc target has to be a JUMPDEST opcode.
     /// # Specification: https://www.evm.codes/#57?fork=shanghai
     fn exec_jumpi(ref self: VM) -> Result<(), EVMError> {
-        let index = self.stack.pop_usize()?;
+        let index = self
+            .stack
+            .pop_saturating_usize()?; // Saturate because if b is 0, we skip the jump but don't want to fail here.
         let b = self.stack.pop()?;
 
         self.charge_gas(gas::HIGH)?;
@@ -279,16 +294,21 @@ pub impl MemoryOperation of MemoryOperationTrait {
     /// # Specification: https://www.evm.codes/#5e?fork=cancun
     fn exec_mcopy(ref self: VM) -> Result<(), EVMError> {
         let dest_offset = self.stack.pop_saturating_usize()?;
-        let source_offset = self.stack.pop_usize()?;
-        let size = self.stack.pop_usize()?;
+        let source_offset = self.stack.pop_saturating_usize()?;
+        let size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
 
-        let words_size = (ceil32(size) / 32).into();
+        let words_size = bytes_32_words_size(size).into();
         let copy_gas_cost = gas::COPY * words_size;
         let memory_expansion = gas::memory_expansion(
             self.memory.size(), [(max(dest_offset, source_offset), size)].span()
         )?;
         self.memory.ensure_length(memory_expansion.new_size);
-        self.charge_gas(gas::VERYLOW + copy_gas_cost + memory_expansion.expansion_cost)?;
+        let total_cost = gas::VERYLOW
+            .checked_add(copy_gas_cost)
+            .ok_or(EVMError::OutOfGas)?
+            .checked_add(memory_expansion.expansion_cost)
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(total_cost)?;
 
         if size == 0 {
             return Result::Ok(());
