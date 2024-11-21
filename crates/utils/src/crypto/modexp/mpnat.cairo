@@ -384,9 +384,13 @@ pub impl MPNatTraitImpl of MPNatTrait {
         }
 
         if modulus.is_power_of_two() { // return
+            println!("Start: modpow_with_power_of_two operation");
             return self.modpow_with_power_of_two(exp, ref modulus);
+            println!("End: modpow_with_power_of_two operation");
         } else if modulus.is_odd() {
+            println!("Start: modpow_montgomery operation");
             return self.modpow_montgomery(exp, ref modulus);
+            println!("End: modpow_montgomery operation");
         }
 
         // If the modulus is not a power of two and not an odd number then
@@ -457,13 +461,18 @@ pub impl MPNatTraitImpl of MPNatTrait {
         };
 
         let mut base_copy = MPNat { digits: self.digits.duplicate(), };
+        println!("Start: modpow_montgomery operation");
         let mut x1 = base_copy.modpow_montgomery(exp, ref odd);
+        println!("End: modpow_montgomery operation");
+        println!("Start: modpow_with_power_of_two operation");
         let mut x2 = self.modpow_with_power_of_two(exp, ref power_of_two);
+        println!("End: modpow_with_power_of_two operation");
 
+        println!("Start: koc_2017_inverse operation");
         let mut odd_inv = Self::koc_2017_inverse(
             ref odd, trailing_zeros * WORD_BITS + additional_zero_bits
         );
-
+        println!("End: koc_2017_inverse operation");
         let s = power_of_two.digits.len();
         let mut scratch: Felt252Vec<Word> = Felt252VecImpl::new();
         scratch.expand(s).unwrap();
