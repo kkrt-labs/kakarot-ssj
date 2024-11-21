@@ -1,4 +1,5 @@
 use core::num::traits::Bounded;
+use core::num::traits::CheckedAdd;
 use core::num::traits::Zero;
 use core::starknet::EthAddress;
 use crate::errors::{ensure, EVMError};
@@ -13,12 +14,11 @@ use crate::stack::StackTrait;
 use crate::state::StateTrait;
 use utils::address::{compute_contract_address, compute_create2_contract_address};
 use utils::constants;
-use utils::helpers::ceil32;
+use utils::helpers::bytes_32_words_size;
 use utils::set::SetTrait;
 use utils::traits::{
     BoolIntoNumeric, EthAddressIntoU256, U256TryIntoResult, SpanU8TryIntoResultEthAddress
 };
-
 /// Helper struct to prepare CREATE and CREATE2 opcodes
 #[derive(Drop)]
 pub struct CreateArgs {
@@ -40,19 +40,26 @@ pub impl CreateHelpersImpl of CreateHelpers {
     fn prepare_create(ref self: VM, create_type: CreateType) -> Result<CreateArgs, EVMError> {
         let value = self.stack.pop()?;
         let offset = self.stack.pop_saturating_usize()?;
-        let size = self.stack.pop_usize()?;
+        let size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
 
         let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);
         let init_code_gas = gas::init_code_cost(size);
         let charged_gas = match create_type {
-            CreateType::Create => gas::CREATE + memory_expansion.expansion_cost + init_code_gas,
+            CreateType::Create => gas::CREATE
+                .checked_add(memory_expansion.expansion_cost)
+                .ok_or(EVMError::OutOfGas)?
+                .checked_add(init_code_gas)
+                .ok_or(EVMError::OutOfGas)?,
             CreateType::Create2 => {
-                let calldata_words = ceil32(size) / 32;
+                let calldata_words = bytes_32_words_size(size);
                 gas::CREATE
-                    + gas::KECCAK256WORD * calldata_words.into()
-                    + memory_expansion.expansion_cost
-                    + init_code_gas
+                    .checked_add(gas::KECCAK256WORD * calldata_words.into())
+                    .ok_or(EVMError::OutOfGas)?
+                    .checked_add(memory_expansion.expansion_cost)
+                    .ok_or(EVMError::OutOfGas)?
+                    .checked_add(init_code_gas)
+                    .ok_or(EVMError::OutOfGas)?
             },
         };
         self.charge_gas(charged_gas)?;
@@ -98,21 +105,22 @@ pub impl CreateHelpersImpl of CreateHelpers {
             return self.stack.push(0);
         }
 
+        sender
+            .set_nonce(
+                sender_current_nonce + 1
+            ); // Will not overflow because of the previous check.
+        self.env.state.set_account(sender);
+
         let mut target_account = self.env.state.get_account(create_args.to);
         let target_address = target_account.address();
         // Collision happens if the target account loaded in state has code or nonce set, meaning
         // - it's deployed on SN and is an active EVM contract
         // - it's not deployed on SN and is an active EVM contract in the Kakarot cache
         if target_account.has_code_or_nonce() {
-            sender.set_nonce(sender_current_nonce + 1);
-            self.env.state.set_account(sender);
             return self.stack.push(0);
         };
 
         ensure(create_args.bytecode.len() <= constants::MAX_INITCODE_SIZE, EVMError::OutOfGas)?;
-
-        sender.set_nonce(sender_current_nonce + 1);
-        self.env.state.set_account(sender);
 
         let child_message = Message {
             caller: sender_address,

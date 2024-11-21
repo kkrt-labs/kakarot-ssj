@@ -1,5 +1,6 @@
 //! Logging Operations.
 
+use core::num::traits::CheckedAdd;
 use crate::errors::{EVMError, ensure};
 use crate::gas;
 use crate::memory::MemoryTrait;
@@ -61,18 +62,21 @@ fn exec_log_i(ref self: VM, topics_len: u8) -> Result<(), EVMError> {
 
     // TODO(optimization): check benefits of n `pop` instead of `pop_n`
     let offset = self.stack.pop_saturating_usize()?;
-    let size = self.stack.pop_usize()?;
+    let size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
     let topics: Array<u256> = self.stack.pop_n(topics_len.into())?;
 
     let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span())?;
     self.memory.ensure_length(memory_expansion.new_size);
-    self
-        .charge_gas(
-            gas::LOG
-                + topics_len.into() * gas::LOGTOPIC
-                + size.into() * gas::LOGDATA
-                + memory_expansion.expansion_cost
-        )?;
+
+    // TODO: avoid addition overflows here. We should use checked arithmetic.
+    let total_cost = gas::LOG
+        .checked_add(topics_len.into() * gas::LOGTOPIC)
+        .ok_or(EVMError::OutOfGas)?
+        .checked_add(size.into() * gas::LOGDATA)
+        .ok_or(EVMError::OutOfGas)?
+        .checked_add(memory_expansion.expansion_cost)
+        .ok_or(EVMError::OutOfGas)?;
+    self.charge_gas(total_cost)?;
 
     let mut data: Array<u8> = Default::default();
     self.memory.load_n(size, ref data, offset);

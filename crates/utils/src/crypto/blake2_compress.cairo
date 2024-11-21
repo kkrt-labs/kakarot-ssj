@@ -54,7 +54,7 @@ fn rotate_right(value: u64, n: u32) -> u64 {
         let bits = BitSize::<u64>::bits(); // The number of bits in a u64
         let n = n % bits; // Ensure n is less than 64
 
-        let res = value.wrapping_shr(n.into()) | value.wrapping_shl((bits - n).into());
+        let res = value.wrapping_shr(n) | value.wrapping_shl((bits - n));
         res
     }
 }
@@ -70,10 +70,8 @@ fn rotate_right(value: u64, n: u32) -> u64 {
 /// updated state vector
 pub fn compress(rounds: usize, h: Span<u64>, m: Span<u64>, t: Span<u64>, f: bool) -> Span<u64> {
     let mut v = VecTrait::<Felt252Vec, u64>::new();
-    let mut i = 0;
-    while i != 16 {
+    for _ in 0..16_u8 {
         v.push(0);
-        i += 1;
     };
 
     let IV = IV();

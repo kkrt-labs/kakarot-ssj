@@ -39,10 +39,8 @@ pub impl ArrayExtension<T, +Drop<T>> of ArrayExtTrait<T> {
     /// * `value` - The value to append.
     /// * `n` - The number of times to append the value.
     fn append_n<+Copy<T>>(ref self: Array<T>, value: T, mut n: usize) {
-        while n != 0 {
+        for _ in 0..n {
             self.append(value);
-
-            n -= 1;
         };
     }
 

@@ -2,16 +2,14 @@ use core::array::ArrayTrait;
 use core::array::SpanTrait;
 use core::cmp::min;
 use core::hash::{HashStateExTrait, HashStateTrait};
+use core::num::traits::SaturatingAdd;
 
 use core::panic_with_felt252;
 use core::pedersen::PedersenTrait;
 use core::starknet::{EthAddress, ContractAddress, ClassHash};
 use core::traits::TryInto;
-use core::traits::{DivRem};
 use crate::constants::{CONTRACT_ADDRESS_PREFIX, MAX_ADDRESS};
 use crate::constants::{POW_2, POW_256_1, POW_256_REV};
-use crate::math::{Bitshift, WrappingBitshift};
-
 use crate::traits::array::{ArrayExtTrait};
 use crate::traits::{U256TryIntoContractAddress, EthAddressIntoU256, BoolIntoNumeric};
 
@@ -31,28 +29,20 @@ pub fn u128_split(input: u128) -> (u64, u64) {
     (high.try_into().unwrap(), low.try_into().unwrap())
 }
 
-
-/// Converts a value to the next closest multiple of 32
+/// Computes the number of 32-byte words required to represent `size` bytes
 ///
 /// # Arguments
-/// * `value` - The value to ceil to the next multiple of 32
+/// * `size` - The size in bytes
 ///
 /// # Returns
-/// The same value if it's a perfect multiple of 32
-/// else it returns the smallest multiple of 32
-/// that is greater than `value`.
+/// The number of 32-byte words required to represent `size` bytes
 ///
 /// # Examples
-/// ceil32(2) = 32
-/// ceil32(34) = 64
-pub fn ceil32(value: usize) -> usize {
-    let ceiling = 32_u32;
-    let (_q, r) = DivRem::div_rem(value, ceiling.try_into().unwrap());
-    if r == 0_u8.into() {
-        return value;
-    } else {
-        return (value + ceiling - r).into();
-    }
+/// bytes_32_words_size(2) = 1
+/// bytes_32_words_size(34) = 2
+#[inline(always)]
+pub fn bytes_32_words_size(size: usize) -> usize {
+    size.saturating_add(31) / 32
 }
 
 /// Computes 256 ** (16 - i) for 0 <= i <= 16.
@@ -87,10 +77,9 @@ pub fn split_word(mut value: u256, mut len: usize, ref dst: Array<u8>) {
 /// * `value` - The u128 value to split into bytes
 /// * `len` - The number of bytes to split the value into
 pub fn split_u128_le(ref dest: Array<u8>, mut value: u128, mut len: usize) {
-    while len != 0 {
+    for _ in 0..len {
         dest.append((value % 256).try_into().unwrap());
         value /= 256;
-        len -= 1;
     };
 }
 
@@ -120,34 +109,6 @@ pub fn split_word_128(value: u256, ref dst: Array<u8>) {
     split_word(value, 16, ref dst)
 }
 
-
-/// Loads a sequence of bytes into a single u256 in big-endian order.
-///
-/// # Arguments
-/// * `len` - The number of bytes to load.
-/// * `words` - The span of bytes to load.
-///
-/// # Returns
-/// A `u256` value representing the loaded bytes in big-endian order.
-pub fn load_word(mut len: usize, words: Span<u8>) -> u256 {
-    if len == 0 {
-        return 0;
-    }
-
-    let mut current: u256 = 0;
-    let mut counter = 0;
-
-    while len != 0 {
-        let loaded: u8 = *words[counter];
-        let tmp = current * 256;
-        current = tmp + loaded.into();
-        len -= 1;
-        counter += 1;
-    };
-
-    current
-}
-
 /// Converts a u256 to a bytes array represented by an array of u8 values in big-endian order.
 ///
 /// # Arguments
@@ -156,22 +117,20 @@ pub fn load_word(mut len: usize, words: Span<u8>) -> u256 {
 /// # Returns
 /// An `Array<u8>` representing the big-endian byte representation of the input value.
 pub fn u256_to_bytes_array(mut value: u256) -> Array<u8> {
-    let mut counter = 0;
     let mut bytes_arr: Array<u8> = ArrayTrait::new();
     // low part
-    while counter != 16 {
-        bytes_arr.append((value.low & 0xFF).try_into().unwrap());
-        value.low /= 256;
-        counter += 1;
-    };
+    for _ in 0
+        ..16_u8 {
+            bytes_arr.append((value.low & 0xFF).try_into().unwrap());
+            value.low /= 256;
+        };
 
-    let mut counter = 0;
     // high part
-    while counter != 16 {
-        bytes_arr.append((value.high & 0xFF).try_into().unwrap());
-        value.high /= 256;
-        counter += 1;
-    };
+    for _ in 0
+        ..16_u8 {
+            bytes_arr.append((value.high & 0xFF).try_into().unwrap());
+            value.high /= 256;
+        };
 
     // Reverse the array as memory is arranged in big endian order.
     let mut counter = bytes_arr.len();
@@ -237,58 +196,6 @@ mod tests {
     }
 
     #[test]
-    fn test_load_word() {
-        // No bytes to load
-        let res0 = helpers::load_word(0, ArrayTrait::new().span());
-        assert(0 == res0, 'res0: wrong load');
-
-        // Single bytes value
-        let mut arr1 = ArrayTrait::new();
-        arr1.append(0x01);
-        let res1 = helpers::load_word(1, arr1.span());
-        assert(1 == res1, 'res1: wrong load');
-
-        let mut arr2 = ArrayTrait::new();
-        arr2.append(0xff);
-        let res2 = helpers::load_word(1, arr2.span());
-        assert(255 == res2, 'res2: wrong load');
-
-        // Two byte values
-        let mut arr3 = ArrayTrait::new();
-        arr3.append(0x01);
-        arr3.append(0x00);
-        let res3 = helpers::load_word(2, arr3.span());
-        assert(256 == res3, 'res3: wrong load');
-
-        let mut arr4 = ArrayTrait::new();
-        arr4.append(0xff);
-        arr4.append(0xff);
-        let res4 = helpers::load_word(2, arr4.span());
-        assert(65535 == res4, 'res4: wrong load');
-
-        // Four byte values
-        let mut arr5 = ArrayTrait::new();
-        arr5.append(0xff);
-        arr5.append(0xff);
-        arr5.append(0xff);
-        arr5.append(0xff);
-        let res5 = helpers::load_word(4, arr5.span());
-        assert(4294967295 == res5, 'res5: wrong load');
-
-        // 16 bytes values
-        let mut arr6 = ArrayTrait::new();
-        arr6.append(0xff);
-        let mut counter: u128 = 0;
-        while counter < 15 {
-            arr6.append(0xff);
-            counter += 1;
-        };
-        let res6 = helpers::load_word(16, arr6.span());
-        assert(340282366920938463463374607431768211455 == res6, 'res6: wrong load');
-    }
-
-
-    #[test]
     fn test_split_word_le() {
         // Test with 0 value and 0 len
         let res0 = helpers::split_word_le(0, 0);
@@ -319,10 +226,8 @@ mod tests {
         assert(res4.len() == 16, 'res4: wrong length');
         assert(*res4[0] == 0xfe, 'res4: wrong MSB value');
 
-        let mut counter: usize = 1;
-        while counter < 16 {
+        for counter in 1..16_u32 {
             assert(*res4[counter] == 0xff, 'res4: wrong value at index');
-            counter += 1;
         };
     }
 
@@ -360,11 +265,15 @@ mod tests {
         let mut dst4: Array<u8> = ArrayTrait::new();
         helpers::split_word(max_u128, 16, ref dst4);
         assert(dst4.len() == 16, 'dst4: wrong length');
-        let mut counter: usize = 0;
         assert(*dst4[15] == 0xfe, 'dst4: wrong LSB value');
-        while counter < 15 {
+        for counter in 0..dst4.len() - 1 {
             assert_eq!(*dst4[counter], 0xff);
-            counter += 1;
         };
+    }
+
+    #[test]
+    fn test_bytes_32_words_size_edge_case() {
+        let max_usize = core::num::traits::Bounded::<usize>::MAX;
+        assert_eq!(helpers::bytes_32_words_size(max_usize), (max_usize / 32));
     }
 }

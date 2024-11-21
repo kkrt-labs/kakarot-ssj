@@ -10,12 +10,15 @@ starknet.workspace = true
 utils = { path = "../utils" }
 contracts = { path = "../contracts" }
 openzeppelin = { path = "../openzeppelin" }
-garaga = { git = "https://github.com/keep-starknet-strange/garaga.git" }
+garaga = { git = "https://github.com/keep-starknet-strange/garaga.git", branch = "g2" }
 
 [dev-dependencies]
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.31.0" }
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.33.0" }
 snforge_utils = { path = "../snforge_utils" }
-assert_macros = "2.8.2"
+assert_macros = "2.8.4"
+
+[cairo]
+sierra-replace-ids = false
 
 [tool]
 fmt.workspace = true

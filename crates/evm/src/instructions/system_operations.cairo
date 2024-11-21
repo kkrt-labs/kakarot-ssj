@@ -1,3 +1,4 @@
+use core::num::traits::CheckedAdd;
 use crate::call_helpers::CallHelpers;
 use crate::create_helpers::{CreateHelpers, CreateType};
 use crate::errors::{ensure, EVMError};
@@ -29,9 +30,9 @@ pub impl SystemOperations of SystemOperationsTrait {
         let to = self.stack.pop_eth_address()?;
         let value = self.stack.pop()?;
         let args_offset = self.stack.pop_saturating_usize()?;
-        let args_size = self.stack.pop_usize()?;
+        let args_size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
         let ret_offset = self.stack.pop_saturating_usize()?;
-        let ret_size = self.stack.pop_usize()?;
+        let ret_size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
 
         // GAS
         let memory_expansion = gas::memory_expansion(
@@ -64,8 +65,12 @@ pub impl SystemOperations of SystemOperationsTrait {
             self.gas_left(),
             memory_expansion.expansion_cost,
             access_gas_cost + transfer_gas_cost + create_gas_cost
-        );
-        self.charge_gas(message_call_gas.cost + memory_expansion.expansion_cost)?;
+        )?;
+        let total_cost = message_call_gas
+            .cost
+            .checked_add(memory_expansion.expansion_cost)
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(total_cost)?;
         // Only the transfer gas is left to charge.
 
         let read_only = self.message().read_only;
@@ -108,9 +113,9 @@ pub impl SystemOperations of SystemOperationsTrait {
         let code_address = self.stack.pop_eth_address()?;
         let value = self.stack.pop()?;
         let args_offset = self.stack.pop_saturating_usize()?;
-        let args_size = self.stack.pop_usize()?;
+        let args_size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
         let ret_offset = self.stack.pop_saturating_usize()?;
-        let ret_size = self.stack.pop_usize()?;
+        let ret_size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
 
         let to = self.message().target.evm;
 
@@ -139,7 +144,7 @@ pub impl SystemOperations of SystemOperationsTrait {
             self.gas_left(),
             memory_expansion.expansion_cost,
             access_gas_cost + transfer_gas_cost
-        );
+        )?;
         self.charge_gas(message_call_gas.cost + memory_expansion.expansion_cost)?;
 
         // If sender_balance < value, return early, pushing
@@ -192,9 +197,9 @@ pub impl SystemOperations of SystemOperationsTrait {
         let gas = self.stack.pop_saturating_u64()?;
         let code_address = self.stack.pop_eth_address()?;
         let args_offset = self.stack.pop_saturating_usize()?;
-        let args_size = self.stack.pop_usize()?;
+        let args_size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
         let ret_offset = self.stack.pop_saturating_usize()?;
-        let ret_size = self.stack.pop_usize()?;
+        let ret_size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
 
         // GAS
         let memory_expansion = gas::memory_expansion(
@@ -211,8 +216,12 @@ pub impl SystemOperations of SystemOperationsTrait {
 
         let message_call_gas = gas::calculate_message_call_gas(
             0, gas, self.gas_left(), memory_expansion.expansion_cost, access_gas_cost
-        );
-        self.charge_gas(message_call_gas.cost + memory_expansion.expansion_cost)?;
+        )?;
+        let total_cost = message_call_gas
+            .cost
+            .checked_add(memory_expansion.expansion_cost)
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(total_cost)?;
 
         self
             .generic_call(
@@ -245,9 +254,9 @@ pub impl SystemOperations of SystemOperationsTrait {
         let gas = self.stack.pop_saturating_u64()?;
         let to = self.stack.pop_eth_address()?;
         let args_offset = self.stack.pop_saturating_usize()?;
-        let args_size = self.stack.pop_usize()?;
+        let args_size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
         let ret_offset = self.stack.pop_saturating_usize()?;
-        let ret_size = self.stack.pop_usize()?;
+        let ret_size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
 
         // GAS
         let memory_expansion = gas::memory_expansion(
@@ -264,8 +273,12 @@ pub impl SystemOperations of SystemOperationsTrait {
 
         let message_call_gas = gas::calculate_message_call_gas(
             0, gas, self.gas_left(), memory_expansion.expansion_cost, access_gas_cost
-        );
-        self.charge_gas(message_call_gas.cost + memory_expansion.expansion_cost)?;
+        )?;
+        let gas_to_charge = message_call_gas
+            .cost
+            .checked_add(memory_expansion.expansion_cost)
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(gas_to_charge)?;
 
         self
             .generic_call(
@@ -288,7 +301,7 @@ pub impl SystemOperations of SystemOperationsTrait {
     /// # Specification: https://www.evm.codes/#fd?fork=shanghai
     fn exec_revert(ref self: VM) -> Result<(), EVMError> {
         let offset = self.stack.pop_saturating_usize()?;
-        let size = self.stack.pop_usize()?;
+        let size = self.stack.pop_usize()?; // Any size bigger than a usize would MemoryOOG.
 
         let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);
@@ -387,8 +400,8 @@ mod tests {
     use snforge_std::{test_address, start_mock_call};
     use utils::constants::EMPTY_KECCAK;
     use utils::helpers::compute_starknet_address;
-    use utils::helpers::load_word;
-    use utils::traits::bytes::U8SpanExTrait;
+    use utils::traits::bytes::{U8SpanExTrait, FromBytes};
+
     use utils::traits::{EthAddressIntoU256};
 
 
@@ -405,8 +418,11 @@ mod tests {
         vm.stack.push(0).expect('push failed');
         assert(vm.exec_return().is_ok(), 'Exec return failed');
 
-        // Then
-        assert(1000 == load_word(32, vm.return_data()), 'Wrong return_data');
+        let return_data = vm.return_data();
+        let parsed_return_data: u256 = return_data
+            .from_be_bytes()
+            .expect('Failed to parse return data');
+        assert(1000 == parsed_return_data, 'Wrong return_data');
         assert(!vm.is_running(), 'vm should be stopped');
         assert_eq!(vm.error, false);
     }
@@ -424,8 +440,11 @@ mod tests {
         vm.stack.push(0).expect('push failed');
         assert(vm.exec_revert().is_ok(), 'Exec revert failed');
 
-        // Then
-        assert(1000 == load_word(32, vm.return_data()), 'Wrong return_data');
+        let return_data = vm.return_data();
+        let parsed_return_data: u256 = return_data
+            .from_be_bytes()
+            .expect('Failed to parse return data');
+        assert(1000 == parsed_return_data, 'Wrong return_data');
         assert(!vm.is_running(), 'vm should be stopped');
         assert_eq!(vm.error, true);
     }
@@ -442,9 +461,11 @@ mod tests {
         vm.stack.push(32).expect('push failed');
         vm.stack.push(1).expect('push failed');
         assert(vm.exec_return().is_ok(), 'Exec return failed');
-
-        // Then
-        assert(256 == load_word(32, vm.return_data()), 'Wrong return_data');
+        let return_data = vm.return_data();
+        let parsed_return_data: u256 = return_data
+            .from_be_bytes_partial()
+            .expect('Failed to parse return data');
+        assert(256 == parsed_return_data, 'Wrong return_data');
         assert(!vm.is_running(), 'vm should be stopped');
         assert_eq!(vm.error, false);
     }

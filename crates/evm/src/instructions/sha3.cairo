@@ -1,6 +1,7 @@
 use core::cmp::min;
 //! SHA3.
 use core::keccak::{cairo_keccak};
+use core::num::traits::CheckedAdd;
 
 // Internal imports
 use crate::errors::EVMError;
@@ -8,10 +9,9 @@ use crate::gas;
 use crate::memory::MemoryTrait;
 use crate::model::vm::{VM, VMTrait};
 use crate::stack::StackTrait;
-use utils::helpers::ceil32;
+use utils::helpers::bytes_32_words_size;
 use utils::traits::array::ArrayExtTrait;
 use utils::traits::integer::U256Trait;
-
 #[generate_trait]
 pub impl Sha3Impl of Sha3Trait {
     /// SHA3 operation : Hashes n bytes in memory at a given offset in memory
@@ -23,14 +23,21 @@ pub impl Sha3Impl of Sha3Trait {
     ///
     /// # Specification: https://www.evm.codes/#20?fork=shanghai
     fn exec_sha3(ref self: VM) -> Result<(), EVMError> {
-        let offset: usize = self.stack.pop_usize()?;
-        let mut size: usize = self.stack.pop_usize()?;
+        let offset: usize = self.stack.pop_saturating_usize()?;
+        let mut size: usize = self
+            .stack
+            .pop_usize()?; // Any size bigger than a usize would MemoryOOG.
 
-        let words_size = (ceil32(size) / 32).into();
+        let words_size = bytes_32_words_size(size).into();
         let word_gas_cost = gas::KECCAK256WORD * words_size;
         let memory_expansion = gas::memory_expansion(self.memory.size(), [(offset, size)].span())?;
         self.memory.ensure_length(memory_expansion.new_size);
-        self.charge_gas(gas::KECCAK256 + word_gas_cost + memory_expansion.expansion_cost)?;
+        let total_cost = gas::KECCAK256
+            .checked_add(word_gas_cost)
+            .ok_or(EVMError::OutOfGas)?
+            .checked_add(memory_expansion.expansion_cost)
+            .ok_or(EVMError::OutOfGas)?;
+        self.charge_gas(total_cost)?;
 
         let mut to_hash: Array<u64> = Default::default();
 
@@ -102,17 +109,17 @@ fn compute_memory_words_amount(size: u32, offset: u32, mem_len: u32) -> (u32, u3
 fn fill_array_with_memory_words(
     ref self: VM, ref to_hash: Array<u64>, mut offset: u32, mut amount: u32
 ) -> u32 {
-    while amount != 0 {
-        let loaded = self.memory.load(offset);
-        let ((high_h, low_h), (high_l, low_l)) = loaded.split_into_u64_le();
-        to_hash.append(low_h);
-        to_hash.append(high_h);
-        to_hash.append(low_l);
-        to_hash.append(high_l);
+    for _ in 0
+        ..amount {
+            let loaded = self.memory.load(offset);
+            let ((high_h, low_h), (high_l, low_l)) = loaded.split_into_u64_le();
+            to_hash.append(low_h);
+            to_hash.append(high_h);
+            to_hash.append(low_l);
+            to_hash.append(high_l);
 
-        offset += 32;
-        amount -= 1;
-    };
+            offset += 32;
+        };
     offset
 }
 

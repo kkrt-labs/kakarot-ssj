@@ -9,6 +9,7 @@ mod sha256;
 pub use blake2f::Blake2f;
 pub use ec_operations::ec_add::EcAdd;
 pub use ec_operations::ec_mul::EcMul;
+pub use ec_operations::ec_pairing::EcPairing;
 pub use ec_recover::EcRecover;
 pub use identity::Identity;
 pub use modexp::ModExp;
@@ -39,12 +40,11 @@ pub const FIRST_ROLLUP_PRECOMPILE_ADDRESS: u256 = 0x100;
 /// * `Set<EthAddress>` - A set containing all Ethereum precompile addresses.
 pub fn eth_precompile_addresses() -> Set<EthAddress> {
     let mut precompile_addresses: Array<EthAddress> = array![];
-    //TODO(2.8) use range operator
-    let mut i = FIRST_ETHEREUM_PRECOMPILE_ADDRESS;
-    while i <= LAST_ETHEREUM_PRECOMPILE_ADDRESS {
-        precompile_addresses.append(i.try_into().unwrap());
-        i = i + 1;
-    };
+    for i in FIRST_ETHEREUM_PRECOMPILE_ADDRESS
+        ..LAST_ETHEREUM_PRECOMPILE_ADDRESS
+            + 0x01 {
+                precompile_addresses.append(i.try_into().unwrap());
+            };
     SetTrait::from_array(precompile_addresses)
 }
 
@@ -105,10 +105,7 @@ pub impl PrecompilesImpl of Precompiles {
                 0x05 => { ModExp::exec(input)? },
                 0x06 => { EcAdd::exec(input)? },
                 0x07 => { EcMul::exec(input)? },
-                0x08 => {
-                    // we should never reach this branch!
-                    panic!("pre-compile at address {:?} isn't implemented yet", precompile_address)
-                },
+                0x08 => { EcPairing::exec(input)? },
                 0x09 => { Blake2f::exec(input)? },
                 0x0a => {
                     // Point Evaluation

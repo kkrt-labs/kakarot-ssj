@@ -6,8 +6,7 @@ use crate::errors::EVMError;
 use crate::precompiles::Precompile;
 use crate::precompiles::ec_operations::ec_add::ec_safe_add;
 use crate::precompiles::ec_operations::{is_on_curve, double_ec_point_unchecked, BN254_PRIME};
-use utils::helpers::{load_word};
-use utils::traits::bytes::{ToBytes, U8SpanExTrait};
+use utils::traits::bytes::{ToBytes, U8SpanExTrait, FromBytes};
 
 const BASE_COST: u64 = 6000;
 const U256_BYTES_LEN: usize = 32;
@@ -23,14 +22,11 @@ pub impl EcMul of Precompile {
         // Pad the input to 128 bytes to avoid out-of-bounds accesses
         let mut input = input.pad_right_with_zeroes(96);
 
-        let x1_bytes = *(input.multi_pop_front::<32>().unwrap());
-        let x1: u256 = load_word(U256_BYTES_LEN, x1_bytes.unbox().span());
+        let x1: u256 = input.slice(0, 32).from_be_bytes().unwrap();
 
-        let y1_bytes = *(input.multi_pop_front::<32>().unwrap());
-        let y1: u256 = load_word(U256_BYTES_LEN, y1_bytes.unbox().span());
+        let y1: u256 = input.slice(32, 32).from_be_bytes().unwrap();
 
-        let s_bytes = *(input.multi_pop_front::<32>().unwrap());
-        let s: u256 = load_word(U256_BYTES_LEN, s_bytes.unbox().span());
+        let s: u256 = input.slice(64, 32).from_be_bytes().unwrap();
 
         let (x, y) = match ec_mul(x1, y1, s) {
             Option::Some((x, y)) => { (x, y) },
@@ -117,7 +113,7 @@ fn get_bits_little(s: u256) -> Array<felt252> {
 fn ec_mul_inner(pt: (u384, u384), mut bits: Array<felt252>) -> Option<(u384, u384)> {
     let (mut temp_x, mut temp_y) = pt;
     let mut result: Option<(u384, u384)> = Option::None;
-    while let Option::Some(bit) = bits.pop_front() {
+    for bit in bits {
         if bit != 0 {
             match result {
                 Option::Some((xr, yr)) => result = ec_safe_add(temp_x, temp_y, xr, yr),

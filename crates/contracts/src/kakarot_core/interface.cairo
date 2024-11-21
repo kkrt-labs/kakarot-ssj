@@ -9,11 +9,6 @@ pub trait IKakarotCore<TContractState> {
     /// Gets the native token used by the Kakarot smart contract
     fn get_native_token(self: @TContractState) -> ContractAddress;
 
-    /// Deterministically computes a Starknet address for an given EVM address
-    /// The address is computed as the Starknet address corresponding to the deployment of an EOA,
-    /// Using its EVM address as salt, and KakarotCore as deployer.
-    fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
-
     /// Checks into KakarotCore storage if an EOA or a CA has been deployed for
     /// a particular EVM address and. If so returns its corresponding address,
     /// otherwise returns 0
@@ -47,7 +42,18 @@ pub trait IKakarotCore<TContractState> {
     /// Setter for the base fee
     fn set_base_fee(ref self: TContractState, base_fee: u64);
 
-    // Getter for the Starknet Address
+    /// Returns the corresponding Starknet address for a given EVM address.
+    ///
+    /// Returns the registered address if there is one, otherwise returns the deterministic
+    /// address got when Kakarot deploys an account.
+    ///
+    /// # Arguments
+    ///
+    /// * `evm_address` - The EVM address to transform to a starknet address
+    ///
+    /// # Returns
+    ///
+    /// * `ContractAddress` - The Starknet Account Contract address
     fn get_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
 }
 
@@ -59,11 +65,6 @@ pub trait IExtendedKakarotCore<TContractState> {
     /// Gets the native token used by the Kakarot smart contract
     fn get_native_token(self: @TContractState) -> ContractAddress;
 
-    /// Deterministically computes a Starknet address for an given EVM address
-    /// The address is computed as the Starknet address corresponding to the deployment of an EOA,
-    /// Using its EVM address as salt, and KakarotCore as deployer.
-    fn compute_starknet_address(self: @TContractState, evm_address: EthAddress) -> ContractAddress;
-
     /// Checks into KakarotCore storage if an EOA or a CA has been deployed for
     /// a particular EVM address and. If so returns its corresponding address,
     /// otherwise returns 0
@@ -73,6 +74,9 @@ pub trait IExtendedKakarotCore<TContractState> {
     fn deploy_externally_owned_account(
         ref self: TContractState, evm_address: EthAddress
     ) -> ContractAddress;
+
+    /// Returns the balance of the specified address.
+    fn eth_get_balance(self: @TContractState, address: EthAddress) -> u256;
 
     /// View entrypoint into the EVM
     /// Performs view calls into the blockchain
@@ -84,6 +88,13 @@ pub trait IExtendedKakarotCore<TContractState> {
     /// Transaction entrypoint into the EVM
     /// Executes an EVM transaction and possibly modifies the state
     fn eth_send_transaction(ref self: TContractState, tx: Transaction) -> (bool, Span<u8>, u64);
+
+    fn eth_send_raw_unsigned_tx(
+        ref self: TContractState, encoded_tx_data: Span<u8>
+    ) -> (bool, Span<u8>, u64);
+
+    // Returns the transaction count (nonce) of the specified address
+    fn eth_get_transaction_count(self: @TContractState, address: EthAddress) -> u64;
 
     /// Upgrade the KakarotCore smart contract
     /// Using replace_class_syscall

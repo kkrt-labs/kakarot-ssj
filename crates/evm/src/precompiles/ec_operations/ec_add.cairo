@@ -13,8 +13,7 @@ use crate::precompiles::ec_operations::{
     eq_mod_p, eq_neg_mod_p, is_on_curve, double_ec_point_unchecked, BN254_PRIME_LIMBS, BN254_PRIME
 };
 use garaga::core::circuit::AddInputResultTrait2;
-use utils::helpers::{load_word};
-use utils::traits::bytes::{ToBytes, U8SpanExTrait};
+use utils::traits::bytes::{ToBytes, U8SpanExTrait, FromBytes};
 
 
 const BASE_COST: u64 = 150;
@@ -31,17 +30,13 @@ pub impl EcAdd of Precompile {
         // Pad the input to 128 bytes to avoid out-of-bounds accesses
         let mut input = input.pad_right_with_zeroes(128);
 
-        let x1_bytes = *(input.multi_pop_front::<32>().unwrap());
-        let x1: u256 = load_word(U256_BYTES_LEN, x1_bytes.unbox().span());
+        let x1: u256 = input.slice(0, 32).from_be_bytes().unwrap();
 
-        let y1_bytes = *(input.multi_pop_front::<32>().unwrap());
-        let y1: u256 = load_word(U256_BYTES_LEN, y1_bytes.unbox().span());
+        let y1: u256 = input.slice(32, 32).from_be_bytes().unwrap();
 
-        let x2_bytes = *(input.multi_pop_front::<32>().unwrap());
-        let x2: u256 = load_word(U256_BYTES_LEN, x2_bytes.unbox().span());
+        let x2: u256 = input.slice(64, 32).from_be_bytes().unwrap();
 
-        let y2_bytes = *(input.multi_pop_front::<32>().unwrap());
-        let y2: u256 = load_word(U256_BYTES_LEN, y2_bytes.unbox().span());
+        let y2: u256 = input.slice(96, 32).from_be_bytes().unwrap();
 
         let (x, y) = match ec_add(x1, y1, x2, y2) {
             Option::Some((x, y)) => { (x, y) },

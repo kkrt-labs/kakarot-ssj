@@ -4,6 +4,7 @@ use crate::errors::EVMError;
 use utils::eth_transaction::common::TxKindTrait;
 use utils::eth_transaction::eip2930::{AccessListItem};
 use utils::eth_transaction::transaction::{Transaction, TransactionTrait};
+use utils::helpers::bytes_32_words_size;
 use utils::helpers;
 
 //! Gas costs for EVM operations
@@ -103,27 +104,33 @@ pub fn max_message_call_gas(gas: u64) -> u64 {
 /// * `memory_cost`: The amount needed to extend the memory in the current frame.
 /// * `extra_gas`: The amount of gas needed for transferring value + creating a new account inside a
 /// message call.
-/// * `call_stipend`: The amount of stipend provided to a message call to execute code while
-/// transferring value(native token).
 ///
 /// # Returns
 ///
-/// * `message_call_gas`: `MessageCallGas`
+/// * `Result<MessageCallGas, EVMError>`: The calculated MessageCallGas or an error if overflow
+/// occurs.
 pub fn calculate_message_call_gas(
     value: u256, gas: u64, gas_left: u64, memory_cost: u64, extra_gas: u64
-) -> MessageCallGas {
+) -> Result<MessageCallGas, EVMError> {
     let call_stipend = if value == 0 {
         0
     } else {
         CALL_STIPEND
     };
-    let gas = if gas_left < extra_gas + memory_cost {
+
+    // Check for overflow when adding extra_gas and memory_cost
+    let total_extra_cost = extra_gas.checked_add(memory_cost).ok_or(EVMError::OutOfGas)?;
+    let gas = if gas_left < total_extra_cost {
         gas
     } else {
-        min(gas, max_message_call_gas(gas_left - memory_cost - extra_gas))
+        let remaining_gas = gas_left - total_extra_cost; // Safe because of the check above
+        min(gas, max_message_call_gas(remaining_gas))
     };
 
-    return MessageCallGas { cost: gas + extra_gas, stipend: gas + call_stipend };
+    let cost = gas.checked_add(extra_gas).ok_or(EVMError::OutOfGas)?;
+    let stipend = gas.checked_add(call_stipend).ok_or(EVMError::OutOfGas)?;
+
+    Result::Ok(MessageCallGas { cost, stipend })
 }
 
 
@@ -147,7 +154,7 @@ pub fn calculate_message_call_gas(
 /// * `total_gas_cost` - The gas cost for storing data in memory.
 pub fn calculate_memory_gas_cost(size_in_bytes: usize) -> u64 {
     let _512: NonZero<u64> = 512_u64.try_into().unwrap();
-    let size_in_words = (size_in_bytes + 31) / 32;
+    let size_in_words = bytes_32_words_size(size_in_bytes);
     let linear_cost = size_in_words.into() * MEMORY;
 
     let (q0, r0) = DivRem::div_rem(size_in_words.into(), _512);
@@ -194,7 +201,7 @@ pub fn memory_expansion(
         }
     }?;
 
-    let new_size = helpers::ceil32(max_size);
+    let new_size = helpers::bytes_32_words_size(max_size) * 32;
 
     if new_size <= current_size {
         return Result::Ok(MemoryExpansion { new_size: current_size, expansion_cost: 0 });
@@ -218,7 +225,7 @@ pub fn memory_expansion(
 /// * `init_code_gas` - The gas to be charged for the init code.
 #[inline(always)]
 pub fn init_code_cost(code_size: usize) -> u64 {
-    let code_size_in_words = helpers::ceil32(code_size) / 32;
+    let code_size_in_words = helpers::bytes_32_words_size(code_size);
     code_size_in_words.into() * INITCODE_WORD_COST
 }
 

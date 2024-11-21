@@ -8,8 +8,9 @@ use crate::stack::StackTrait;
 
 /// Generic DUP operation
 #[inline(always)]
-fn exec_dup_i(ref self: VM, i: u8) -> Result<(), EVMError> {
+fn exec_dup_i(ref self: VM, i: NonZero<u8>) -> Result<(), EVMError> {
     self.charge_gas(gas::VERYLOW)?;
+    let i: u8 = i.into();
     let item = self.stack.peek_at((i - 1).into())?;
     self.stack.push(item)
 }
@@ -123,25 +124,20 @@ mod tests {
 
     // ensures all values start from index `from` upto index `to` of stack are `0x0`
     fn ensures_zeros(ref stack: Stack, from: u32, to: u32) {
-        let mut idx: u32 = from;
-
         if to > from {
             return;
         }
 
-        while idx != to {
+        for idx in from..to {
             assert(stack.peek_at(idx).unwrap() == 0x00, 'should be zero');
-            idx += 1;
         };
     }
 
     // push `n` number of `0x0` to the stack
     fn push_zeros(ref stack: Stack, n: u8) {
-        let mut i = 0;
-        while i != n {
+        for _ in 0..n {
             stack.push(0x0).unwrap();
-            i += 1;
-        }
+        };
     }
 
     #[test]

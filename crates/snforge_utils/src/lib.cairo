@@ -150,7 +150,7 @@ pub mod snforge_utils {
     /// A wrapper structure on an array of events emitted by a given contract.
     #[derive(Drop, Clone)]
     pub struct ContractEvents {
-        pub events: Array<Event>
+        pub events: Span<Event>
     }
 
     pub trait EventsFilterTrait {
@@ -216,88 +216,89 @@ pub mod snforge_utils {
         fn build(self: @EventsFilter) -> ContractEvents {
             let events = (*self.events.events).span();
             let mut filtered_events = array![];
-            let mut i = 0;
 
-            while i < events.len() {
-                let (from, event) = events.at(i).clone();
-                let mut include = true;
+            for i in 0
+                ..events
+                    .len() {
+                        let (from, event) = events.at(i).clone();
+                        let mut include = true;
 
-                if let Option::Some(addr) = self.contract_address {
-                    if from != *addr {
-                        include = false;
-                    }
-                }
+                        if let Option::Some(addr) = self.contract_address {
+                            if from != *addr {
+                                include = false;
+                            }
+                        }
 
-                if include && self.key_filter.is_some() {
-                    if !(event.keys.span() == (*self.key_filter).unwrap()) {
-                        include = false;
-                    }
-                }
+                        if include && self.key_filter.is_some() {
+                            if !(event.keys.span() == (*self.key_filter).unwrap()) {
+                                include = false;
+                            }
+                        }
 
-                if include && self.data_filter.is_some() {
-                    if !event.data.includes((*self.data_filter).unwrap()) {
-                        include = false;
-                    }
-                }
+                        if include && self.data_filter.is_some() {
+                            if !event.data.includes((*self.data_filter).unwrap()) {
+                                include = false;
+                            }
+                        }
 
-                if include {
-                    filtered_events.append(event.clone());
-                }
+                        if include {
+                            filtered_events.append(event.clone());
+                        }
+                    };
 
-                i += 1;
-            };
-
-            ContractEvents { events: filtered_events }
+            ContractEvents { events: filtered_events.span() }
         }
     }
 
     pub trait ContractEventsTrait {
         fn assert_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
-            self: ContractEvents, event: @T
+            self: @ContractEvents, event: @T
         );
         fn assert_not_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
-            self: ContractEvents, event: @T
+            self: @ContractEvents, event: @T
         );
     }
 
     impl ContractEventsTraitImpl of ContractEventsTrait {
         fn assert_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
-            self: ContractEvents, event: @T
+            self: @ContractEvents, event: @T
         ) {
             let mut expected_keys = array![];
             let mut expected_data = array![];
             event.append_keys_and_data(ref expected_keys, ref expected_data);
 
-            let mut i = 0;
+            let contract_events = (*self.events);
             let mut found = false;
-            while i < self.events.len() {
-                let event = self.events.at(i);
-                if event.keys == @expected_keys && event.data == @expected_data {
-                    found = true;
-                    break;
-                }
-                i += 1;
-            };
+            for i in 0
+                ..contract_events
+                    .len() {
+                        let event = contract_events.at(i);
+                        if event.keys == @expected_keys && event.data == @expected_data {
+                            found = true;
+                            break;
+                        }
+                    };
 
             assert(found, 'Expected event was not emitted');
         }
 
         fn assert_not_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
-            self: ContractEvents, event: @T
+            self: @ContractEvents, event: @T
         ) {
             let mut expected_keys = array![];
             let mut expected_data = array![];
             event.append_keys_and_data(ref expected_keys, ref expected_data);
 
-            let mut i = 0;
-            while i < self.events.len() {
-                let event = self.events.at(i);
-                assert(
-                    event.keys != @expected_keys || event.data != @expected_data,
-                    'Unexpected event was emitted'
-                );
-                i += 1;
-            }
+            let contract_events = (*self.events);
+            for i in 0
+                ..contract_events
+                    .len() {
+                        let event = contract_events.at(i);
+                        assert(
+                            event.keys != @expected_keys || event.data != @expected_data,
+                            'Unexpected event was emitted'
+                        );
+                    }
         }
     }
 
@@ -305,12 +306,14 @@ pub mod snforge_utils {
     pub fn store_evm(target: Address, evm_key: u256, evm_value: u256) {
         let storage_address = compute_storage_key(target.evm, evm_key);
         let serialized_value = [evm_value.low.into(), evm_value.high.into()].span();
-        let mut offset: usize = 0;
-        while offset != serialized_value.len() {
-            store_felt252(
-                target.starknet, storage_address + offset.into(), *serialized_value.at(offset)
-            );
-            offset += 1;
-        }
+        for offset in 0
+            ..serialized_value
+                .len() {
+                    store_felt252(
+                        target.starknet,
+                        storage_address + offset.into(),
+                        *serialized_value.at(offset)
+                    );
+                };
     }
 }
