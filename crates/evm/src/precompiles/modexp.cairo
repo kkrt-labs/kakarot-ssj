@@ -26,6 +26,7 @@ pub impl ModExp of Precompile {
     }
 
     fn exec(input: Span<u8>) -> Result<(u64, Span<u8>), EVMError> {
+        println!("Start: Executing Modexp Precompile");
         // The format of input is:
         // <length_of_BASE> <length_of_EXPONENT> <length_of_MODULUS> <BASE> <EXPONENT> <MODULUS>
         // Where every length is a 32-byte left-padded integer representing the number of bytes
@@ -98,6 +99,7 @@ pub impl ModExp of Precompile {
         let output = modexp(base, exponent, modulus);
 
         let return_data = output.pad_left_with_zeroes(mod_len);
+        println!("End: Executing Modexp Precompile");
         Result::Ok((gas.into(), return_data))
     }
 }
