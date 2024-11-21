@@ -120,7 +120,7 @@ install_cairo_native_runtime() {
 	git clone https://github.com/lambdaclass/cairo_native.git
 	pushd ./cairo_native || exit 1
 	git fetch
-	git checkout eee6d1981531c5a4466f83ecf8c851feaa91a1c6
+	git checkout 5e60089288c461eca98bf3dbe03cc882778ff677
 	make deps
 	make runtime
 	cp libcairo_native_runtime.a ../libcairo_native_runtime.a
