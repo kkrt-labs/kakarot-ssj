@@ -38,7 +38,7 @@ file.
 ## Issues and feature requests
 
 You've found a bug in the source code, a mistake in the documentation or maybe
-you'd like a new feature?Take a look at
+you'd like a new feature? Take a look at
 [GitHub Discussions](https://github.com/sayajin-labs/kakarot-ssj/discussions) to
 see if it's already being discussed. You can help us by
 [submitting an issue on GitHub](https://github.com/sayajin-labs/kakarot-ssj/issues).
