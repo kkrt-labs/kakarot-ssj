@@ -1,3 +1,7 @@
+## Update - Archive
+
+The development of `kakarot-ssj` is halted for now. This repository - an Ethereum Virtual Machine (EVM) emulator on Starknet - is frozen, mainly to halt creation of new issues and pull requests. It is MIT licensed, not audited.
+
 <p align="center">
     <img src="docs/img/kakarot_github_banner.png" width="700">
 </p>
